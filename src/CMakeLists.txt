@@ -1,1 +1,1 @@
-add_subfolder( field_solvers )
+add_subdirectory( field_solvers )

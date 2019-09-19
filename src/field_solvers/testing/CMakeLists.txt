@@ -1,2 +1,6 @@
 add_executable ( test_maxwell_yee test_maxwell_yee.cpp )
-target_link_library( test_maxwell_yee gem_fields )
+message("#########")
+message( ${AMReX_DIR} )
+message( " ######")
+target_link_libraries( test_maxwell_yee ${AMReX_LIBRARIES} )
+#target_link_libraries( test_maxwell_yee gem_fields )
