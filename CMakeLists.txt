@@ -16,6 +16,17 @@ include_directories( ${AMReX_ROOT}/include )
 #message("AMReX Dir is ${AMReX_DIR} ${AMReX_ROOT}")
 #set( AMREX ON CACHE BOOL "AMREX found." )
 
+# Set compiler flags
+
+message("####### ${CXX_COMPILER_NAME}")
+#IF (CXX_COMPILER_NAME MATCHES "gcc.*")
+  # gcc
+  set (CMAKE_CXX_FLAGS "")
+  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3")
+  set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
+  message ("Found gcc compiler " ${CMAKE_CXX_COMPILER})
+#ENDIF()
+
 # Add subfolder with source files of the library
 add_subdirectory(src)
 
