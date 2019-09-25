@@ -24,33 +24,32 @@ void init_E_B(amrex::IntVect  lo,
 	      FArrayBox &B_new,
 	      FArrayBox &B_sol,
 	      const double  dx[3],
-	      const double  prob_lo[3],
-	      Real dt) {
+	      const double  prob_lo[3]) {
   
   int k,j,i;
   double x,y,z;
+  double xd, yd, zd; // dual
   
   for(int k=lo[2]; k<=hi[2]; k++){
     z = prob_lo[2] + ((double)k+0.5) * dx[2];
+    zd = prob_lo[2] + (double)k * dx[2];
     for(int j=lo[1]; j<=hi[1]; j++){
       y = prob_lo[1] + ((double)j+0.5) * dx[1];
+      yd = prob_lo[1] + (double)j * dx[1];
       for(int i=lo[0]; i<=hi[0]; i++){
         x = prob_lo[0] + ((double)i+0.5) * dx[0];
+	xd = prob_lo[0] + (double)i * dx[0];
 	
 	// the box for these values:
-	IndexType typ({1,1,1});
 	Box cc({i,j,k}, {i+1,j+1,k+1});
-	Box nc({i,j,k}, {i+1,j+1,k+1}, typ);
 	
-        E_new.setVal(cos(x+y+z), cc, 0, 1);
-	E_new.setVal(-2*cos(x+y+z), cc, 1, 1);
-	E_new.setVal(cos(x+y+z), cc, 2, 1);
+        E_new.setVal(cos(x+yd+zd), cc, 0, 1);
+	E_new.setVal(-2*cos(xd+y+zd), cc, 1, 1);
+	E_new.setVal(cos(xd+yd+z), cc, 2, 1);
 
-	// shift all by dx/2 to get node-centered
-	// shift time by delta_t to get leap-frog scheme
-	B_new.setVal(sqrt(3)*cos(x-dx[0]/2.0+y-dx[1]/2.0+z-dx[2]/2.0-sqrt(3)*dt/2.0), nc, 0, 1);
-	B_new.setVal(0, nc, 1, 1);
-	B_new.setVal(-sqrt(3)*cos(x-dx[0]/2.0+y-dx[1]/2.0+z-dx[2]/2.0-sqrt(3)*dt/2.0), nc, 2, 1);
+	B_new.setVal(sqrt(3)*cos(xd+y+z), cc, 0, 1);
+	B_new.setVal(0, cc, 1, 1);
+	B_new.setVal(-sqrt(3)*cos(x+y+zd), cc, 2, 1);
 	
       }
     }
@@ -80,6 +79,7 @@ void update_E_B(amrex::IntVect lo,
 	        Real time) {
   int i,j,k;
   double x,y,z;
+  double xd, yd, zd; //dual
   Real c1[1];
   Real c2[1];
   Real c3[1];
@@ -88,75 +88,75 @@ void update_E_B(amrex::IntVect lo,
 
   for(int k=lo[2]; k<=hi[2]; k++){
     z = prob_lo[2] + ((double)k+0.5) * dx[2];
+    zd = prob_lo[2] + (double)k * dx[2];
     for(int j=lo[1]; j<=hi[1]; j++){
       y = prob_lo[1] + ((double)j+0.5) * dx[1];
+      yd = prob_lo[1] + (double)j * dx[1];
       for(int i=lo[0]; i<=hi[0]; i++){
 	x = prob_lo[0] + ((double)i+0.5) * dx[0];
+	xd = prob_lo[0] + (double)i * dx[0];
 
 	// the box for these values:
-        IndexType typ({1,1,1});
 	Box cc({i,j,k}, {i+1,j+1,k+1});
-	Box nc({i,j,k}, {i+1,j+1,k+1}, typ);
 
 	// E,B
 	
 	// E_x
 	E_old.getVal(c1, {  i,  j,  k},0,1);
-	B_old.getVal(c2, {  i,j+1,  k},2,1);
-	B_old.getVal(c3, {  i,  j,  k},2,1);
-	B_old.getVal(c4, {  i,  j,k+1},1,1);
-	B_old.getVal(c5, {  i,  j,  k},1,1);
+	B_old.getVal(c2, {  i,  j,  k},2,1);
+	B_old.getVal(c3, {  i,j-1,  k},2,1);
+	B_old.getVal(c4, {  i,  j,  k},1,1);
+	B_old.getVal(c5, {  i,  j,k-1},1,1);
         E_new.setVal(*c1+dt*((*c2-*c3)/dx[1]-(*c4-*c5)/dx[2]), cc, 0, 1);
 
 	// E_y
 	E_old.getVal(c1, {  i,  j,  k},1,1);
-	B_old.getVal(c2, {  i,  j,k+1},0,1);
-	B_old.getVal(c3, {  i,  j,  k},0,1);
-	B_old.getVal(c4, {i+1,  j,  k},2,1);
-	B_old.getVal(c5, {  i,  j,  k},2,1);
+	B_old.getVal(c2, {  i,  j,  k},0,1);
+	B_old.getVal(c3, {  i,  j,k-1},0,1);
+	B_old.getVal(c4, {  i,  j,  k},2,1);
+	B_old.getVal(c5, {i-1,  j,  k},2,1);
         E_new.setVal(*c1+dt*((*c2-*c3)/dx[2]-(*c4-*c5)/dx[0]), cc, 1, 1);
 
 	// E_z
 	E_old.getVal(c1, {  i,  j,  k},2,1);
-	B_old.getVal(c2, {i+1,  j,  k},1,1);
-	B_old.getVal(c3, {  i,  j,  k},1,1);
-	B_old.getVal(c4, {i  ,j+1,  k},0,1);
-	B_old.getVal(c5, {  i,  j,  k},0,1);
+	B_old.getVal(c2, {  i,  j,  k},1,1);
+	B_old.getVal(c3, {i-1,  j,  k},1,1);
+	B_old.getVal(c4, {i  ,  j,  k},0,1);
+	B_old.getVal(c5, {  i,j-1,  k},0,1);
         E_new.setVal(*c1+dt*((*c2-*c3)/dx[0]-(*c4-*c5)/dx[1]), cc, 2, 1);
 
 	// B_x
 	B_old.getVal(c1, {  i,  j,  k},0,1);
-	E_new.getVal(c2, {  i,  j,  k},2,1);
-	E_new.getVal(c3, {  i,j-1,  k},2,1);
-	E_new.getVal(c4, {  i,  j,  k},1,1);
-	E_new.getVal(c5, {  i,  j,k-1},1,1);
-        B_new.setVal(*c1-dt*((*c2-*c3)/dx[1]-(*c4-*c5)/dx[2]), nc, 0, 1);
+	E_old.getVal(c2, {  i,j+1,  k},2,1);
+	E_old.getVal(c3, {  i,  j,  k},2,1);
+	E_old.getVal(c4, {  i,  j,k+1},1,1);
+	E_old.getVal(c5, {  i,  j,  k},1,1);
+        B_new.setVal(*c1-dt*((*c2-*c3)/dx[1]-(*c4-*c5)/dx[2]), cc, 0, 1);
 
 	// B_y
 	B_old.getVal(c1, {  i,  j,  k},1,1);
-	E_new.getVal(c2, {  i,  j,  k},0,1);
-	E_new.getVal(c3, {  i,  j,k-1},0,1);
-	E_new.getVal(c4, {  i,  j,  k},2,1);
-	E_new.getVal(c5, {i-1,  j,  k},2,1);
-        B_new.setVal(*c1-dt*((*c2-*c3)/dx[2]-(*c4-*c5)/dx[0]), nc, 1, 1);
+	E_old.getVal(c2, {  i,  j,k+1},0,1);
+	E_old.getVal(c3, {  i,  j,  k},0,1);
+	E_old.getVal(c4, {i+1,  j,  k},2,1);
+	E_old.getVal(c5, {  i,  j,  k},2,1);
+        B_new.setVal(*c1-dt*((*c2-*c3)/dx[2]-(*c4-*c5)/dx[0]), cc, 1, 1);
 
 	// B_z
 	B_old.getVal(c1, {  i,  j,  k},2,1);
-	E_new.getVal(c2, {  i,  j,  k},1,1);
-	E_new.getVal(c3, {i-1,  j,  k},1,1);
-	E_new.getVal(c4, {i  ,  j,  k},0,1);
-	E_new.getVal(c5, {  i,j-1,  k},0,1);
-        B_new.setVal(*c1-dt*((*c2-*c3)/dx[0]-(*c4-*c5)/dx[1]), nc, 2, 1);
+	E_old.getVal(c2, {i+1,  j,  k},1,1);
+	E_old.getVal(c3, {  i,  j,  k},1,1);
+	E_old.getVal(c4, {i  ,j+1,  k},0,1);
+	E_old.getVal(c5, {  i,  j,  k},0,1);
+        B_new.setVal(*c1-dt*((*c2-*c3)/dx[0]-(*c4-*c5)/dx[1]), cc, 2, 1);
 
         // Analytic values
-	E_sol.setVal(cos(x+y+z-sqrt(3)*time), cc, 0, 1);
-	E_sol.setVal(-2*cos(x+y+z), cc, 1, 1);
-	E_sol.setVal(cos(x+y+z-sqrt(3)*time), cc, 2, 1);
-
-	// shift all by dx/2 to get node-centered
-	B_sol.setVal(sqrt(3)*cos(x-dx[0]/2.0+y-dx[1]/2.0+z-dx[2]/2.0-sqrt(3)*(time+dt/2.0)), cc, 0, 1);
+	E_sol.setVal(cos(x+yd+zd-sqrt(3)*time), cc, 0, 1);
+	E_sol.setVal(-2*cos(xd+y+zd), cc, 1, 1);
+	E_sol.setVal(cos(xd+yd+z-sqrt(3)*time), cc, 2, 1);
+	
+	B_sol.setVal(sqrt(3)*cos(xd+y+z-sqrt(3)*time), cc, 0, 1);
 	B_sol.setVal(0, cc, 1, 1);
-	B_sol.setVal(-sqrt(3)*cos(x-dx[0]/2.0+y-dx[1]/2.0+z-dx[2]/2.0-sqrt(3)*(time+dt/2.0)), cc, 2, 1);
+	B_sol.setVal(-sqrt(3)*cos(x+y+zd-sqrt(3)*time), cc, 2, 1);
 	
       }
     }
@@ -224,22 +224,17 @@ void main_main ()
 //------------------------------------------------------------------------------
   // Box Array and Geometry
   BoxArray ba;
-  BoxArray dba;
   Geometry geom;
   {
     // grid box
     IntVect dom_lo = {       0,        0,        0};
     IntVect dom_hi = {n_cell-1, n_cell-1, n_cell-1};
-    IndexType typ({1,1,1});
-    Box domain(dom_lo, dom_hi); // no type because cell centered by default
-    Box dualdomain(dom_lo, dom_hi, typ);
+    Box domain(dom_lo, dom_hi);
 
     // individual boxes (boxarray)
     ba.define(domain);
-    dba.define(domain);
     // Break up boxarray "ba" into chunks no larger than "max_grid_size" along a direction
     ba.maxSize(max_grid_size);
-    dba.maxSize(max_grid_size);
 
     // physical box (geometry)
     RealBox real_box({-1.0,-1.0,-1.0},
@@ -249,16 +244,7 @@ void main_main ()
   int Nghost = 1; // number of ghost cells for each array
   int Ncomp = 3;  // number of components for each array
   DistributionMapping dm(ba); // how Boxes are distrubuted among MPI processes
-  DistributionMapping ddm(dba); //Dual
 
-//------------------------------------------------------------------------------
-    // time step
-    const Real* dx = geom.CellSize();
-    Real dt = 0.9*dx[0]*dx[0] / (2.0*3);
-
-    // time to start simulation
-    Real time = 0.0;
-  
 //------------------------------------------------------------------------------
   // Initializing E & B
   
@@ -268,9 +254,9 @@ void main_main ()
   MultiFab E_new(ba, dm, Ncomp, Nghost);
   MultiFab E_sol(ba, dm, Ncomp, Nghost);
 
-  MultiFab B_old(dba, ddm, Ncomp, Nghost);
-  MultiFab B_new(dba, ddm, Ncomp, Nghost);
-  MultiFab B_sol(dba, ddm, Ncomp, Nghost);
+  MultiFab B_old(ba, dm, Ncomp, Nghost);
+  MultiFab B_new(ba, dm, Ncomp, Nghost);
+  MultiFab B_sol(ba, dm, Ncomp, Nghost);
 
   // MFIter = MultiFab Iterator
   for ( MFIter mfi(E_new); mfi.isValid(); ++mfi )
@@ -281,9 +267,18 @@ void main_main ()
 	amrex::IntVect hi = {bx.bigEnd()};
 
         init_E_B(lo, hi, E_new[mfi], E_sol[mfi], B_new[mfi], B_sol[mfi],
-		 geom.CellSize(), geom.ProbLo(), dt);
+		 geom.CellSize(), geom.ProbLo());
 
     }
+
+
+//------------------------------------------------------------------------------
+    // time step
+    const Real* dx = geom.CellSize();
+    Real dt = 0.9*dx[0]*dx[0] / (2.0*3);
+
+    // time to start simulation
+    Real time = 0.0;
     
 //------------------------------------------------------------------------------
     // time loop
@@ -314,8 +309,6 @@ void main_main ()
 	  " |Ez error: " << Eerr[2] << endl;
 	cout << "Bx error: " << Berr[0] << " |By error: " << Berr[1] <<
 	  " |Bz error: " << Berr[2] << endl;
-
-        
       
     }
   
