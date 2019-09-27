@@ -1,0 +1,19 @@
+MPI initialized with 1 MPI processes
+AMReX (19.09-160-gf5982cba3cb6) initialized
+step 1
+Ex error: 0.004337213765 |Ey error: 0.004337213765 |Ez error: 0.05132304581
+Bx error: 0.004507886458 |By error: 0.004507886458 |Bz error: 0.004337213765
+step 2
+Ex error: 0.008677601945 |Ey error: 0.008677058111 |Ez error: 0.1026568975
+Bx error: 0.009270224412 |By error: 0.009269773451 |Bz error: 0.008674544092
+step 3
+Ex error: 0.01302435139 |Ey error: 0.01302218066 |Ez error: 0.1540015534
+Bx error: 0.01439001341 |By error: 0.01435574981 |Bz error: 0.01301227831
+step 4
+Ex error: 0.01738064662 |Ey error: 0.01737523591 |Ez error: 0.205357012
+Bx error: 0.01991926678 |By error: 0.0199192669 |Bz error: 0.01735086052
+step 5
+Ex error: 0.02174966869 |Ey error: 0.02173888866 |Ez error: 0.2567233034
+Bx error: 0.02589566261 |By error: 0.02587202955 |Bz error: 0.02169089104
+[The  Pinned Arena] space (MB) used spread across MPI: [8 ... 8]
+AMReX (19.09-160-gf5982cba3cb6) finalized

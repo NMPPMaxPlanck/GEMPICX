@@ -27,6 +27,11 @@ message("####### ${CXX_COMPILER_NAME}")
   message ("Found gcc compiler " ${CMAKE_CXX_COMPILER})
 #ENDIF()
 
+# Enable ctests
+enable_testing()
+# This defines how the ctests are run
+include(cmake/define_ctest.cmake)
+
 # Add subfolder with source files of the library
 add_subdirectory(src)
 
