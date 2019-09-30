@@ -1,12 +1,12 @@
-add_executable ( test_maxwell_yee_node test_maxwell_yee_node.cpp )
-add_executable ( test_maxwell_yee_cell test_maxwell_yee_cell.cpp )
+add_executable ( test_maxwell_yee test_maxwell_yee.cpp )
+add_executable ( test_heat test_heat.cpp)
 
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( test_maxwell_yee_node ${AMReX_LIBRARIES} )
-#target_link_libraries( test_maxwell_yee gem_fields )
-target_link_libraries( test_maxwell_yee_cell ${AMReX_LIBRARIES} )
+target_link_libraries( test_maxwell_yee ${AMReX_LIBRARIES} )
+target_link_libraries( test_heat ${AMReX_LIBRARIES} )
+include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 
 ######## Ctest
 
