@@ -40,7 +40,7 @@ void main_main ()
   int nsteps; // number of simulation steps
   int is_periodic[3]; // periodicity: 1 -> periodic
 
-  n_cell = 128;
+  n_cell = 64;
   max_grid_size = 32;
   nsteps = 5;
   // periodic in all directions:
@@ -60,18 +60,23 @@ void main_main ()
 
   mw_yee.init_E_B(fields);
 
+  ///home/irga/Documents/Projects/gempic/src/field_solvers/testing/
+  std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
   for (int n=1;n<=mw_yee.nsteps;n++){
     mw_yee.advance();
     E_B_error = mw_yee.computeError(fields);
+
     
-    Print() << "step " << n << endl;
-    Print().SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                               " |Ey error: " << E_B_error[1] <<
-                               " |Ez error: " << E_B_error[2] << endl;
-    Print().SetPrecision(5) << "Bx error: " << E_B_error[3] <<
-                               " |By error: " << E_B_error[4] <<
-                               " |Bz error: " << E_B_error[5] << endl;
+    
+    Print(ofs) << "step " << n << endl;
+    Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                                  " |Ey error: " << E_B_error[1] <<
+                                  " |Ez error: " << E_B_error[2] << endl;
+    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[3] <<
+                                  " |By error: " << E_B_error[4] <<
+                                  " |Bz error: " << E_B_error[5] << endl; 
   }
+  ofs.close();
 }
 
 int main(int argc, char* argv[])

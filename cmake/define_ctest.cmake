@@ -1,12 +1,12 @@
 MACRO( _CTEST_FILE_CMP _test )
 
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
-    COMMAND ${_test}_unit_test
+    COMMAND ${_test}
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
-    DEPENDS ${_test}_unit_test
+    DEPENDS ${_test}
     )
   
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff

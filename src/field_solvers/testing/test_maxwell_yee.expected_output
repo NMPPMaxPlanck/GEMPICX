@@ -1,19 +1,15 @@
-MPI initialized with 1 MPI processes
-AMReX (19.09-160-gf5982cba3cb6) initialized
 step 1
-Ex error: 1.7363e-07 |Ey error: 3.4725e-07 |Ez error: 1.7363e-07
-Bx error: 3.0081e-07 |By error: 3.3196e-16 |Bz error: 3.0081e-07
+Ex error: 6.9447e-07 |Ey error: 1.3889e-06 |Ez error: 6.9447e-07
+Bx error: 1.2043e-06 |By error: 9.126e-17 |Bz error: 1.2043e-06
 step 2
-Ex error: 3.4726e-07 |Ey error: 6.9453e-07 |Ez error: 3.4726e-07
-Bx error: 6.0162e-07 |By error: 9.5957e-16 |Bz error: 6.0162e-07
+Ex error: 1.3891e-06 |Ey error: 2.7781e-06 |Ez error: 1.3891e-06
+Bx error: 2.4085e-06 |By error: 2.5646e-16 |Bz error: 2.4085e-06
 step 3
-Ex error: 5.2091e-07 |Ey error: 1.0418e-06 |Ez error: 5.2091e-07
-Bx error: 9.0242e-07 |By error: 1.8817e-15 |Bz error: 9.0242e-07
+Ex error: 2.0838e-06 |Ey error: 4.1675e-06 |Ez error: 2.0838e-06
+Bx error: 3.6127e-06 |By error: 4.9527e-16 |Bz error: 3.6127e-06
 step 4
-Ex error: 6.9457e-07 |Ey error: 1.3891e-06 |Ez error: 6.9457e-07
-Bx error: 1.2032e-06 |By error: 3.0974e-15 |Bz error: 1.2032e-06
+Ex error: 2.7785e-06 |Ey error: 5.5571e-06 |Ez error: 2.7785e-06
+Bx error: 4.8169e-06 |By error: 8.0802e-16 |Bz error: 4.8169e-06
 step 5
-Ex error: 8.6824e-07 |Ey error: 1.7365e-06 |Ez error: 8.6824e-07
-Bx error: 1.504e-06 |By error: 4.6054e-15 |Bz error: 1.504e-06
-[The  Pinned Arena] space (MB) used spread across MPI: [8 ... 8]
-AMReX (19.09-160-gf5982cba3cb6) finalized
+Ex error: 3.4734e-06 |Ey error: 6.9469e-06 |Ez error: 3.4734e-06
+Bx error: 6.0211e-06 |By error: 1.1939e-15 |Bz error: 6.0211e-06
