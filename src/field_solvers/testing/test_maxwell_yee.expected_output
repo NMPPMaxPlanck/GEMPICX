@@ -1,3 +1,4 @@
+Maxwell
 step 1
 Ex error: 6.9447e-07 |Ey error: 1.3889e-06 |Ez error: 6.9447e-07
 Bx error: 1.2043e-06 |By error: 9.126e-17 |Bz error: 1.2043e-06
@@ -13,3 +14,6 @@ Bx error: 4.8169e-06 |By error: 8.0802e-16 |Bz error: 4.8169e-06
 step 5
 Ex error: 3.4734e-06 |Ey error: 6.9469e-06 |Ez error: 3.4734e-06
 Bx error: 6.0211e-06 |By error: 1.1939e-15 |Bz error: 6.0211e-06
+
+Poisson
+Ex error: 3.4734e-06 |Ey error: 6.9469e-06 |Ez error: 3.4734e-06
