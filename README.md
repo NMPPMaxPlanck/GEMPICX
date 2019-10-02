@@ -2,6 +2,11 @@
 
 New gempic code based on AMReX
 
+Install AMReX first enabeling particles:
+Irene's PC
+cmake -D ENABLE_PARTICLES=ON ~/Documents/Projects/warpx_directory/amrex/
+
+
 How to build the code
 =====================
 0.) Create a build directory
