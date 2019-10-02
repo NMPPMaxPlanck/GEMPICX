@@ -16,16 +16,13 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_CoordSys.H>
 #include <AMReX_MFIter.H>
+#include <infrastructure.H>
 
 class maxwell_yee
 {
   public:
 
-  int n_cell; // number of cells
-  int max_grid_size; // maximum number of cells in each direction
   int nsteps; // number of simulation steps
-  int is_periodic[3];
-  amrex::RealBox real_box; // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > E_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > B_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > E_sol_Array;
@@ -34,17 +31,10 @@ class maxwell_yee
 
   private:
   
-  amrex::BoxArray grid;
-  amrex::Geometry geom;
-  amrex::IntVect dom_lo;
-  amrex::IntVect dom_hi;
   std::array<std::unique_ptr<amrex::IndexType>, 3> E_Index;
   std::array<std::unique_ptr<amrex::IndexType>, 3> B_Index;
-  amrex::Box domain;
   int Nghost;
   int Ncomp;
-  amrex::DistributionMapping distriMap;
-  const amrex::Real* dx;
   amrex::Real dt;
   amrex::Real time;
   amrex::MultiFab phi; // for Poisson
@@ -57,17 +47,9 @@ class maxwell_yee
   maxwell_yee ();
 
   // Explicit const
-  maxwell_yee (int nc, int max_s, int ns, int is_per[], amrex::RealBox rb){
-    n_cell = nc;
-    max_grid_size = max_s;
+  maxwell_yee (int ns, amrex::RealBox rb,
+	       infrastructure ifr){
     nsteps = ns;
-    is_periodic[0] = is_per[0];
-    is_periodic[1] = is_per[1];
-    is_periodic[2] = is_per[2];
-    real_box = rb;
-
-    dom_lo = {0, 0, 0};
-    dom_hi = {n_cell-1, n_cell-1, n_cell-1};
     
     E_Index[0].reset(new amrex::IndexType ({0,1,1}));
     E_Index[1].reset(new amrex::IndexType ({1,0,1}));
@@ -77,39 +59,33 @@ class maxwell_yee
     B_Index[1].reset(new amrex::IndexType ({0,1,0}));
     B_Index[2].reset(new amrex::IndexType ({0,0,1}));
 
-    amrex::Box domain(dom_lo, dom_hi);
-    grid.define(domain);
-    grid.maxSize(max_grid_size);
-    geom.define(domain,&real_box,amrex::CoordSys::cartesian,is_periodic);
-
     Nghost = 1;
     Ncomp = 1;
 
-    amrex::DistributionMapping distriMap(grid);
-    dx = geom.CellSize();
-    dt = 0.001; //0.9*dx[0]*dx[0] / (2.0*3);
+    dt = 0.001;
     time = 0.0;
 
     for (int i = 0; i<=2; i++) {
-      E_Array[i].reset(new amrex::MultiFab (convert(grid, *E_Index[i]),distriMap,Ncomp,Nghost));
-      B_Array[i].reset(new amrex::MultiFab (convert(grid, *B_Index[i]),distriMap,Ncomp,Nghost));
+      E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+      B_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
 
-      E_sol_Array[i].reset(new amrex::MultiFab (convert(grid, *E_Index[i]),distriMap,Ncomp,Nghost));
-      B_sol_Array[i].reset(new amrex::MultiFab (convert(grid, *B_Index[i]),distriMap,Ncomp,Nghost));
+      E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+      B_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
     }
 
     // for Poisson:
     //node centered BA:
-    const amrex::BoxArray& nba = amrex::convert(grid,amrex::IntVect::TheNodeVector());
-    phi     .define(nba        , distriMap, 1, 0);
-    rho     .define(nba        , distriMap, 1, 0);
-    phi_init.define(nba        , distriMap, 1, 0);
+    const amrex::BoxArray& nba = amrex::convert(ifr.grid,amrex::IntVect::TheNodeVector());
+    phi     .define(nba        , ifr.distriMap, 1, 0);
+    rho     .define(nba        , ifr.distriMap, 1, 0);
+    phi_init.define(nba        , ifr.distriMap, 1, 0);
     // sigma is cell-centered.
-    sigma   .define(grid, distriMap, 1, 0);
+    sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
     sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
   }
 
-  void init_E_B (double (*fields[6]) (double x,double y,double z, double t)){
+  void init_E_B (double (*fields[6]) (double x,double y,double z, double t),
+		 infrastructure ifr){
 
     int k,j,l;
     double x,y,z;
@@ -124,11 +100,11 @@ class maxwell_yee
 	amrex::IntVect hi = {bx.bigEnd()};
 
 	for(int k=lo[2]; k<=hi[2]; k++){
-	  z = geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*dx[2];
+	  z = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
 	  for(int j=lo[1]; j<=hi[1]; j++){
-	    y = geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*dx[1];
+	    y = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
 	    for(int l=lo[0]; l<=hi[0]; l++){
-	      x = geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*dx[0];
+	      x = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
 	      // the box for these values:
 	      amrex::Box cc({l,j,k}, {l,j,k}, *E_Index[i]);
 	      (*E_Array[i])[mfi].setVal((*fields[i])(x,y,z,0), cc, 0, 1);
@@ -149,11 +125,11 @@ class maxwell_yee
 	amrex::IntVect hi = {bx.bigEnd()};
 	
 	for(int k=lo[2]; k<=hi[2]; k++){
-	  z = geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*dx[2];
+	  z = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
 	  for(int j=lo[1]; j<=hi[1]; j++){
-	    y = geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*dx[1];
+	    y = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
 	    for(int l=lo[0]; l<=hi[0]; l++){
-	      x = geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*dx[0];
+	      x = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 	      // the box for these values:
 	      amrex::Box cc({l,j,k}, {l,j,k}, *B_Index[i]);
 	      (*B_Array[i])[mfi].setVal((*fields[i+3])(x,y,z,half_dt), cc, 0, 1);
@@ -166,7 +142,7 @@ class maxwell_yee
   };
   
   
-  void advance (){
+  void advance (infrastructure ifr){
 
     int l,j,k;
     amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
@@ -176,8 +152,8 @@ class maxwell_yee
     // Fill the ghost cells of each grid from the other grids
     // includes periodic domain boundaries
     for (int i=0; i<=2; i++) {
-      (*E_Array[i]).FillBoundary(geom.periodicity());
-      (*B_Array[i]).FillBoundary(geom.periodicity());
+      (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
+      (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
     }
 
     // E-field
@@ -204,8 +180,8 @@ class maxwell_yee
 	      (*B_Array[(i+1)%3])[mfi].getVal(c4, {  l,  j,  k},0,1);
 	      (*B_Array[(i+1)%3])[mfi].getVal(c5,{l-(i%3==1?1:0),j-(i%3==2?1:0),k-(i%3==0?1:0)},0,1);
 
-	      (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/dx[(i+1)%3]-
-						(*c4-*c5)/dx[(i+2)%3]), cc, 0, 1);
+	      (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
+						(*c4-*c5)/ifr.dx[(i+2)%3]), cc, 0, 1);
 	    }
 	  }
 	}
@@ -237,8 +213,8 @@ class maxwell_yee
 	      (*E_Array[(i+1)%3])[mfi].getVal(c4,{l+(i%3==1?1:0),j+(i%3==2?1:0),k+(i%3==0?1:0)},0,1);
 	      (*E_Array[(i+1)%3])[mfi].getVal(c5, {  l,  j,  k},0,1);
 
-	      (*B_Array[i])[mfi].setVal(*c1-dt*((*c2-*c3)/dx[(i+1)%3]-
-						(*c4-*c5)/dx[(i+2)%3]), cc, 0, 1);
+	      (*B_Array[i])[mfi].setVal(*c1-dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
+						(*c4-*c5)/ifr.dx[(i+2)%3]), cc, 0, 1);
 	    }
 	  }
 	}
@@ -248,7 +224,8 @@ class maxwell_yee
   };
 
   void init_rho_phi(double phi_fun(double x,double y,double z),
-		    double rho_fun(double x,double y,double z)){
+		    double rho_fun(double x,double y,double z),
+		    infrastructure ifr){
     for (amrex::MFIter mfi(rho,amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
       const amrex::Box& bx = mfi.tilebox();
@@ -257,9 +234,9 @@ class maxwell_yee
       //TODO: look into ParallelFor, is this actually working?
       amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept{
 
-	  amrex::Real x = i*dx[0];
-	  amrex::Real y = j*dx[1];
-	  amrex::Real z = k*dx[2];
+	  amrex::Real x = i*ifr.dx[0];
+	  amrex::Real y = j*ifr.dx[1];
+	  amrex::Real z = k*ifr.dx[2];
 
 	  phi_sub(i,j,k) = phi_fun(x,y,z);
 
@@ -267,11 +244,11 @@ class maxwell_yee
 	});
     }
     // box with all interior nodes:
-    const amrex::Box& interior = amrex::surroundingNodes(amrex::grow(geom.Domain(), -1));
+    const amrex::Box& interior = amrex::surroundingNodes(amrex::grow(ifr.geom.Domain(), -1));
     phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
   };
 
-  void solve_poisson(){
+  void solve_poisson(infrastructure ifr){
     //--------------------------------------------------------------------------------
     // rho
     
@@ -283,7 +260,7 @@ class maxwell_yee
     amrex::Real reltol = 1.e-11;
     
     sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
-    amrex::MLNodeLaplacian linop({geom}, {grid}, {distriMap}); // linear operator class
+    amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}); // linear operator class
 
     linop.setDomainBC({amrex::LinOpBCType::Periodic, // for lower ends
 	               amrex::LinOpBCType::Periodic,
@@ -329,7 +306,7 @@ class maxwell_yee
 	      phi[mfi].getVal(c1,{l+(i%3==0?1:0),j+(i%3==1?1:0),k+(i%3==2?1:0)},0,1);
 	      phi[mfi].getVal(c2,{l,j,k},0,1);
 
-	      (*E_Array[i])[mfi].setVal((*c1-*c2)/dx[i], cc, 0, 1);
+	      (*E_Array[i])[mfi].setVal((*c1-*c2)/ifr.dx[i], cc, 0, 1);
 	    }
 	  }
 	}
@@ -340,10 +317,11 @@ class maxwell_yee
   };
   
   std::array<amrex::Real,6> computeError(double (*fields[]) (double x,double y,double z, double t),
-					 bool bool_B){
+					 bool bool_B,
+					 infrastructure ifr){
     std::array<amrex::Real,6> E_B_error;
     
-    exactSolution(fields, bool_B);
+    exactSolution(fields, bool_B, ifr);
 
     for (int i=0; i<=2; i++){
       (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
@@ -360,7 +338,8 @@ class maxwell_yee
   private:
 
   void exactSolution(double (*fields[]) (double x,double y,double z, double t),
-		     bool bool_B){
+		     bool bool_B,
+		     infrastructure ifr){
     int l,j,k;
     double x,y,z;
     amrex::Real btime = time + dt/2.0;
@@ -374,11 +353,11 @@ class maxwell_yee
 	amrex::IntVect hi = {bx.bigEnd()};
 
 	for(int k=lo[2]; k<=hi[2]; k++){
-	  z = geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*dx[2];
+	  z = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
 	  for(int j=lo[1]; j<=hi[1]; j++){
-	    y = geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*dx[1];
+	    y = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
 	    for(int l=lo[0]; l<=hi[0]; l++){
-	      x = geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*dx[0];
+	      x = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
 
 	      // the box for these values:
 	      amrex::Box cc({l,j,k}, {l,j,k}, *E_Index[i]);
@@ -400,11 +379,11 @@ class maxwell_yee
 	  amrex::IntVect hi = {bx.bigEnd()};
 
 	  for(int k=lo[2]; k<=hi[2]; k++){
-	    z = geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*dx[2];
+	    z = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
 	    for(int j=lo[1]; j<=hi[1]; j++){
-	      y = geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*dx[1];
+	      y = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
 	      for(int l=lo[0]; l<=hi[0]; l++){
-	        x = geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*dx[0];
+	        x = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 
 	        // the box for these values:
 	        amrex::Box cc({l,j,k}, {l,j,k}, *B_Index[i]);

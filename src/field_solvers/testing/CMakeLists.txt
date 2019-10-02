@@ -7,6 +7,7 @@ add_executable ( test_heat test_heat.cpp)
 target_link_libraries( test_maxwell_yee ${AMReX_LIBRARIES} )
 target_link_libraries( test_heat ${AMReX_LIBRARIES} )
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
+include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
 
 ######## Ctest
 

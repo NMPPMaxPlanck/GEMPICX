@@ -26,7 +26,7 @@ using namespace std;
 using namespace amrex;
 
 //------------------------------------------------------------------------------
-  // Solution
+  // Solutions and RHS
 
 double E_x(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
 double E_y(double x,double y,double z, double t){return(-2*cos(x+y+z-sqrt(3.0)*t));}
@@ -79,20 +79,23 @@ void main_main ()
   RealBox real_box({0.0, 0.0, 0.0},
 		   {twopi, twopi, twopi});
   array<Real,6> E_B_error; //array for storing errors
-    
+
+//------------------------------------------------------------------------------
+  // Initialize Infrastructure
+  infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
+  
 //------------------------------------------------------------------------------
   // Solve
   
-  maxwell_yee mw_yee(n_cell, max_grid_size, nsteps, is_periodic,
-		       real_box);
+  maxwell_yee mw_yee(nsteps, real_box, infra);
 
-  mw_yee.init_E_B(fields);
+  mw_yee.init_E_B(fields, infra);
 
   std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
   Print(ofs) << "Maxwell" << endl;
   for (int n=1;n<=mw_yee.nsteps;n++){
-    mw_yee.advance();
-    E_B_error = mw_yee.computeError(fields, true);
+    mw_yee.advance(infra);
+    E_B_error = mw_yee.computeError(fields, true, infra);
 
     
     
@@ -108,15 +111,15 @@ void main_main ()
   //------------------------------------------------------------------------------
   // Poisson
 
-  mw_yee.init_rho_phi(phi_fun, rho_fun);
-  mw_yee.solve_poisson();
-  mw_yee.computeError(fields_poisson, false);
+  mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
+  mw_yee.solve_poisson(infra);
+  mw_yee.computeError(fields_poisson, false, infra);
 
   Print(ofs) << endl;
   Print(ofs) << "Poisson" << endl;
   Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                                 " |Ey error: " << E_B_error[1] <<
-                                " |Ez error: " << E_B_error[2] << endl;
+                                " |Ez error: " << E_B_error[2] << endl;  
 
   ofs.close();
 }
