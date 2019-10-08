@@ -27,12 +27,12 @@ class maxwell_yee
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > B_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > E_sol_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > B_sol_Array;
+  std::array<std::unique_ptr<amrex::IndexType>, 3> E_Index;
+  std::array<std::unique_ptr<amrex::IndexType>, 3> B_Index;
   amrex::MultiFab phi_init; // for Poisson
 
   private:
   
-  std::array<std::unique_ptr<amrex::IndexType>, 3> E_Index;
-  std::array<std::unique_ptr<amrex::IndexType>, 3> B_Index;
   int Nghost;
   int Ncomp;
   amrex::Real dt;
