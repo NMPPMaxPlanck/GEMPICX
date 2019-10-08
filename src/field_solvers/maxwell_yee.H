@@ -18,6 +18,9 @@
 #include <AMReX_MFIter.H>
 #include <infrastructure.H>
 
+#ifndef MAXWELL_YEE_H_
+#define MAXWELL_YEE_H_
+
 class maxwell_yee
 {
   public:
@@ -398,3 +401,5 @@ class maxwell_yee
   };
   
 };
+
+#endif

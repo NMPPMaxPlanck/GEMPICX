@@ -9,6 +9,8 @@
 #include <AMReX_Box.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
+#ifndef INFRASTRUCTURE_H_
+#define INFRASTRUCTURE_H_
 
 class infrastructure
 {
@@ -53,3 +55,4 @@ class infrastructure
   }
 };
 
+#endif
