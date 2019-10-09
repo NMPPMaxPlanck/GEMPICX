@@ -27,6 +27,7 @@ class maxwell_yee
 
   int nsteps; // number of simulation steps
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > E_Array;
+  std::array<std::unique_ptr<amrex::MultiFab>, 3 > J_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > B_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > E_sol_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > B_sol_Array;
@@ -70,6 +71,7 @@ class maxwell_yee
 
     for (int i = 0; i<=2; i++) {
       E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+      J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
       B_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
 
       E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
@@ -148,7 +150,7 @@ class maxwell_yee
   void advance (infrastructure ifr){
 
     int l,j,k;
-    amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
+    amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
 
     time = time+dt;
     
@@ -176,6 +178,8 @@ class maxwell_yee
 
 	      // old field_out value
 	      (*E_Array[i])[mfi].getVal(c1, {l,j,k},0,1);
+	      // J value
+	      (*J_Array[i])[mfi].getVal(cj, {l,j,k},0,1);
 
 	      // B-derivatives
 	      (*B_Array[(i+2)%3])[mfi].getVal(c2,{  l,  j  ,k},0,1);
@@ -184,7 +188,7 @@ class maxwell_yee
 	      (*B_Array[(i+1)%3])[mfi].getVal(c5,{l-(i%3==1?1:0),j-(i%3==2?1:0),k-(i%3==0?1:0)},0,1);
 
 	      (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
-						(*c4-*c5)/ifr.dx[(i+2)%3]), cc, 0, 1);
+						(*c4-*c5)/ifr.dx[(i+2)%3])-*cj, cc, 0, 1);
 	    }
 	  }
 	}
