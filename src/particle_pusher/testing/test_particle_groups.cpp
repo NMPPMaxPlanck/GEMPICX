@@ -23,6 +23,7 @@ double B_z(double x,double y,double z, double t){return(-sqrt(3)*cos(x+y+z-sqrt(
 
 void main_main ()
 {
+  double pi = 3.14159265359;
 
   // make pointer-array for functions
   double (*fields[6]) (double x,double y,double z, double t);
@@ -60,8 +61,21 @@ void main_main ()
   const int n_species = 1;
   array<Real, n_species> charge = {1.0};
   array<Real, n_species> mass = {1.0};
-
   particle_groups part_gr(infra, n_species, charge, mass);
+
+  //Add particles one by one
+  int N_parts = 3;
+  int species = 0;
+  array<Real,3> position;
+  array<Real,3> velocity;
+  Real weight;
+
+  for (int pp=0;pp<N_parts;pp++) {
+    position = {(double)pp, (double)(pp%2)*pi, 0.0};
+    velocity = {0.0, 0.0, 0.0};
+    weight = 1.0;
+    part_gr.add_particle(species, position, velocity, weight);
+  }
 
 //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
