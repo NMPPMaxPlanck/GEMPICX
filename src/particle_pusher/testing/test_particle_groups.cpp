@@ -122,8 +122,8 @@ void main_main ()
       for (int cc = 0; cc < nc; cc++){
 	//E-field
 	Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
-	eres[cc] = gempic_interpolate_cic(particles[pp], 1, earr, plo, dxi, //1=#comps
-				       *mw_yee.E_Index[cc], infra.n_cell);
+	eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
+				       *mw_yee.E_Index[cc]);
         esol = (*fields[cc])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
 	if (abs(eres[cc]-esol) > tol) {
 	  Print(ofs) << "check results at particle " << pp << ", E-component " << cc <<  endl;
@@ -131,8 +131,8 @@ void main_main ()
 
 	//B-field
 	Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array();
-	bres[cc] = gempic_interpolate_cic(particles[pp], 1, barr, plo, dxi, //1=#comps
-				       *mw_yee.B_Index[cc], infra.n_cell);
+	bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
+				       *mw_yee.B_Index[cc]);
         bsol = (*fields[cc+3])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
 	if (abs(bres[cc]-bsol) > tol) {
 	  Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
