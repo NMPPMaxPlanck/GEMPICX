@@ -90,80 +90,95 @@ void main_main ()
   Print(ofs) << "field_interpolation" << endl;
   
   Real tol = 0.01;
-    GpuArray<amrex::Real,3> plo;
-    plo[0] = infra.geom.ProbLo()[0];
-    plo[1] = infra.geom.ProbLo()[1];
-    plo[2] = infra.geom.ProbLo()[2];
-    GpuArray<amrex::Real,3> dxi;
-    dxi[0] = 1.0/infra.dx[0];
-    dxi[1] = 1.0/infra.dx[1];
-    dxi[2] = 1.0/infra.dx[2];
+  GpuArray<amrex::Real,3> plo;
+  plo[0] = infra.geom.ProbLo()[0];
+  plo[1] = infra.geom.ProbLo()[1];
+  plo[2] = infra.geom.ProbLo()[2];
+  GpuArray<amrex::Real,3> dxi;
+  dxi[0] = 1.0/infra.dx[0];
+  dxi[1] = 1.0/infra.dx[1];
+  dxi[2] = 1.0/infra.dx[2];
+  int nc = 3; // number of components for J and E
 
-    // fill ghost cells
-    (*mw_yee.E_Array[0]).FillBoundary(infra.geom.periodicity());
-    (*mw_yee.E_Array[1]).FillBoundary(infra.geom.periodicity());
-    (*mw_yee.E_Array[2]).FillBoundary(infra.geom.periodicity());
+  // fill ghost cells
+  (*mw_yee.E_Array[0]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.E_Array[1]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.E_Array[2]).FillBoundary(infra.geom.periodicity());
 
-    (*mw_yee.J_Array[0]).FillBoundary(infra.geom.periodicity());
-    (*mw_yee.J_Array[1]).FillBoundary(infra.geom.periodicity());
-    (*mw_yee.J_Array[2]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.J_Array[0]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.J_Array[1]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.J_Array[2]).FillBoundary(infra.geom.periodicity());
 
-    (*mw_yee.B_Array[0]).FillBoundary(infra.geom.periodicity());
-    (*mw_yee.B_Array[1]).FillBoundary(infra.geom.periodicity());
-    (*mw_yee.B_Array[2]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.B_Array[0]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.B_Array[1]).FillBoundary(infra.geom.periodicity());
+  (*mw_yee.B_Array[2]).FillBoundary(infra.geom.periodicity());
 
-    mw_yee.rho.FillBoundary(infra.geom.periodicity());
+  mw_yee.rho.FillBoundary(infra.geom.periodicity());
 
-    // TODO: iterate over particle species (separate deposit and interpolate)
-    int tmp_spec = 0;
-  for (ParIter<4,0,0,0> pti(*part_gr.mypc[tmp_spec], 0); pti.isValid(); ++pti) {
+  // deposit charge in rho one particle at a time
+  for (int spec=0;spec<n_species;spec++) {
+    for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
+      const Box& box = pti.validbox();
+      auto& particles = pti.GetArrayOfStructs();
+      const long np  = pti.numParticles();
 
-    const Box& box = pti.validbox();
-    auto& particles = pti.GetArrayOfStructs();
-    const long np  = pti.numParticles();
-    int nc = 3; // number of components
-
-    // deposit charge in rho one particle at a time
-    Array4<Real> const& rhoarr = mw_yee.rho[pti].array();
-    for (int pp=0;pp<np;pp++) {
-      gempic_deposit_cic(particles[pp], charge[tmp_spec], rhoarr, plo, dxi);
-    }
-
-    // deposit charge in J one component and particle at a time
-    for(int cc=0;cc<nc;cc++){
-      Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
+      Array4<Real> const& rhoarr = mw_yee.rho[pti].array();
       for (int pp=0;pp<np;pp++) {
-	gempic_deposit_J_cic(particles[pp], charge[tmp_spec], cc, jarr, plo, dxi,
-			     *mw_yee.E_Index[cc]);
+	gempic_deposit_cic(particles[pp], charge[spec], rhoarr, plo, dxi);
       }
     }
-    
-    // interpolate fields at particle positions one particle at a time
-    Real eres[nc], bres[nc];
-    double esol, bsol;
-    for (int cc=0;cc<nc;cc++){
-      Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
-      Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array();
-      for (int pp=0;pp<np;pp++){
-	//E-field
-	eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
-				       *mw_yee.E_Index[cc]);
-        esol = (*fields[cc])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
-	if (abs(eres[cc]-esol) > tol) {
-	  Print(ofs) << "check results at particle " << pp << ", E-component " << cc <<  endl;
-	}
+  }
 
-	//B-field
-	bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
-				       *mw_yee.B_Index[cc]);
-        bsol = (*fields[cc+3])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
-	if (abs(bres[cc]-bsol) > tol) {
-	  Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
+  // deposit charge in J one component and particle at a time
+  for (int spec=0;spec<n_species;spec++) {
+    for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
+      const Box& box = pti.validbox();
+      auto& particles = pti.GetArrayOfStructs();
+      const long np  = pti.numParticles();
+      
+      for(int cc=0;cc<nc;cc++){
+	Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
+	for (int pp=0;pp<np;pp++) {
+	  gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo, dxi,
+			       *mw_yee.E_Index[cc]);
 	}
       }
     }
   }
-  ofs.close();
+
+  // interpolate fields at particle positions one particle at a time
+  Real eres[nc], bres[nc];
+  double esol, bsol;
+  for (int spec=0;spec<n_species;spec++) {
+    for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
+      const Box& box = pti.validbox();
+      auto& particles = pti.GetArrayOfStructs();
+      const long np  = pti.numParticles();
+
+      for (int cc=0;cc<nc;cc++){
+	Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
+	Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array();
+	for (int pp=0;pp<np;pp++){
+	  //E-field
+	  eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
+					    *mw_yee.E_Index[cc]);
+	  esol = (*fields[cc])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
+	  if (abs(eres[cc]-esol) > tol) {
+	    Print(ofs) << "check results at particle " << pp << ", E-component " << cc <<  endl;
+	  }
+
+	  //B-field
+	  bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
+					    *mw_yee.B_Index[cc]);
+	  bsol = (*fields[cc+3])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
+	  if (abs(bres[cc]-bsol) > tol) {
+	    Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
+	  }
+	}
+      }
+    }
+    ofs.close();
+  }
 }
 
 int main(int argc, char* argv[])
