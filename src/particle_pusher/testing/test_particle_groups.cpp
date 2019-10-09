@@ -104,24 +104,48 @@ void main_main ()
     (*mw_yee.E_Array[1]).FillBoundary(infra.geom.periodicity());
     (*mw_yee.E_Array[2]).FillBoundary(infra.geom.periodicity());
 
+    (*mw_yee.J_Array[0]).FillBoundary(infra.geom.periodicity());
+    (*mw_yee.J_Array[1]).FillBoundary(infra.geom.periodicity());
+    (*mw_yee.J_Array[2]).FillBoundary(infra.geom.periodicity());
+
     (*mw_yee.B_Array[0]).FillBoundary(infra.geom.periodicity());
     (*mw_yee.B_Array[1]).FillBoundary(infra.geom.periodicity());
     (*mw_yee.B_Array[2]).FillBoundary(infra.geom.periodicity());
 
-  for (ParIter<4,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+    mw_yee.rho.FillBoundary(infra.geom.periodicity());
+
+    // TODO: iterate over particle species (separate deposit and interpolate)
+    int tmp_spec = 0;
+  for (ParIter<4,0,0,0> pti(*part_gr.mypc[tmp_spec], 0); pti.isValid(); ++pti) {
 
     const Box& box = pti.validbox();
     auto& particles = pti.GetArrayOfStructs();
     const long np  = pti.numParticles();
     int nc = 3; // number of components
 
-    // interpolate one field at one particle position
+    // deposit charge in rho one particle at a time
+    Array4<Real> const& rhoarr = mw_yee.rho[pti].array();
+    for (int pp=0;pp<np;pp++) {
+      gempic_deposit_cic(particles[pp], charge[tmp_spec], rhoarr, plo, dxi);
+    }
+
+    // deposit charge in J one component and particle at a time
+    for(int cc=0;cc<nc;cc++){
+      Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
+      for (int pp=0;pp<np;pp++) {
+	gempic_deposit_J_cic(particles[pp], charge[tmp_spec], cc, jarr, plo, dxi,
+			     *mw_yee.E_Index[cc]);
+      }
+    }
+    
+    // interpolate fields at particle positions one particle at a time
     Real eres[nc], bres[nc];
     double esol, bsol;
-    for (int pp = 0; pp<np; pp++) {
-      for (int cc = 0; cc < nc; cc++){
+    for (int cc=0;cc<nc;cc++){
+      Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
+      Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array();
+      for (int pp=0;pp<np;pp++){
 	//E-field
-	Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
 	eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
 				       *mw_yee.E_Index[cc]);
         esol = (*fields[cc])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
@@ -130,7 +154,6 @@ void main_main ()
 	}
 
 	//B-field
-	Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array();
 	bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
 				       *mw_yee.B_Index[cc]);
         bsol = (*fields[cc+3])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
