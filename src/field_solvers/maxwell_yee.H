@@ -33,6 +33,7 @@ class maxwell_yee
   std::array<std::unique_ptr<amrex::IndexType>, 3> E_Index;
   std::array<std::unique_ptr<amrex::IndexType>, 3> B_Index;
   amrex::MultiFab phi_init; // for Poisson
+  amrex::MultiFab rho; // for Poisson
 
   private:
   
@@ -41,7 +42,6 @@ class maxwell_yee
   amrex::Real dt;
   amrex::Real time;
   amrex::MultiFab phi; // for Poisson
-  amrex::MultiFab rho; // for Poisson
   amrex::MultiFab sigma; //for Poisson
 
   public:
