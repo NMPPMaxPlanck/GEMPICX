@@ -15,6 +15,7 @@
 #include <AMReX_StructOfArrays.H>
 
 #include <infrastructure.H>
+#include <gempic_Particle_mod_K.H>
 
 #ifndef PARTICLE_GROUPS_H_
 #define PARTICLE_GROUPS_H_
@@ -27,7 +28,6 @@ class particle_groups
   
   // array of ParticleContainers (one container per species)
   int n_species;
-  std::vector<int> n_part;
   std::array<amrex::Real, 1> charge;
   std::array<amrex::Real, 1> mass;
   std::array<std::unique_ptr<amrex::ParticleContainer<4, 0, 0, 0>>, 1> mypc;
@@ -49,6 +49,8 @@ class particle_groups
     // set infrastructure for each species
     for (int i=0;i<mypc.size();i++) {
       mypc[i].reset(new amrex::ParticleContainer<4, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+      (*mypc[i]).do_tiling = true;
+      (*mypc[i]).tile_size = {ifr.max_grid_size,ifr.max_grid_size,ifr.max_grid_size};
     }
   };
 
