@@ -43,6 +43,7 @@ void main_main ()
 
   n_cell = 64;
   max_grid_size = 32;
+  Real dt = 0.01;
   // periodic in all directions:
   is_periodic[0] = 1;
   is_periodic[1] = 1;
@@ -57,7 +58,6 @@ void main_main ()
 
 //------------------------------------------------------------------------------
   //Initialize Particle Groups
-
   const int n_species = 1;
   array<Real, n_species> charge = {1.0};
   array<Real, n_species> mass = {1.0};
@@ -72,7 +72,7 @@ void main_main ()
 
   for (int pp=0;pp<N_parts;pp++) {
     position = {(double)pp, (double)(pp%2)*pi, 0.0};
-    velocity = {0.0, 0.0, 0.0};
+    velocity = {1.0, -1.0, 0.0};
     weight = 1.0;
     part_gr.add_particle(species, position, velocity, weight);
   }
@@ -85,7 +85,6 @@ void main_main ()
 
 //------------------------------------------------------------------------------
   //Test CIC
-
   std::ofstream ofs("test_particle_groups.output", std::ofstream::out);
   Print(ofs) << "field_interpolation" << endl;
   
@@ -99,7 +98,6 @@ void main_main ()
   dxi[1] = 1.0/infra.dx[1];
   dxi[2] = 1.0/infra.dx[2];
   int nc = 3; // number of components for J and E
-
   // fill ghost cells
   (*mw_yee.E_Array[0]).FillBoundary(infra.geom.periodicity());
   (*mw_yee.E_Array[1]).FillBoundary(infra.geom.periodicity());
@@ -114,9 +112,9 @@ void main_main ()
   (*mw_yee.B_Array[2]).FillBoundary(infra.geom.periodicity());
 
   mw_yee.rho.FillBoundary(infra.geom.periodicity());
-
   // deposit charge in rho one particle at a time
   for (int spec=0;spec<n_species;spec++) {
+    (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
     for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
       const Box& box = pti.validbox();
       auto& particles = pti.GetArrayOfStructs();
@@ -128,9 +126,9 @@ void main_main ()
       }
     }
   }
-
   // deposit charge in J one component and particle at a time
   for (int spec=0;spec<n_species;spec++) {
+    (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
     for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
       const Box& box = pti.validbox();
       auto& particles = pti.GetArrayOfStructs();
@@ -145,20 +143,23 @@ void main_main ()
       }
     }
   }
-
-  // interpolate fields at particle positions one particle at a time
-  Real eres[nc], bres[nc];
+  // interpolate fields at particle positions one particle at a time (and push them)
+  array<Real,3> eres, bres;
   double esol, bsol;
   for (int spec=0;spec<n_species;spec++) {
+    (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
+    Real chargemass = charge[spec]/mass[spec];
+    
     for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
       const Box& box = pti.validbox();
       auto& particles = pti.GetArrayOfStructs();
       const long np  = pti.numParticles();
 
-      for (int cc=0;cc<nc;cc++){
-	Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
-	Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array();
-	for (int pp=0;pp<np;pp++){
+      for (int pp=0;pp<np;pp++){
+	for (int cc=0;cc<nc;cc++){
+	  Array4<Real> const& earr = (*mw_yee.E_Array[cc])[pti].array();
+	  Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array(); 
+	  
 	  //E-field
 	  eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
 					    *mw_yee.E_Index[cc]);
@@ -175,6 +176,8 @@ void main_main ()
 	    Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
 	  }
 	}
+	array<Real,6> newPos = push_particle(particles[pp], dt, chargemass, eres, bres);
+	copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
       }
     }
     ofs.close();
