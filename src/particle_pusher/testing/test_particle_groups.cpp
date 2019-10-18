@@ -99,17 +99,7 @@ void main_main ()
   dxi[2] = 1.0/infra.dx[2];
   int nc = 3; // number of components for J and E
   // fill ghost cells
-  (*mw_yee.E_Array[0]).FillBoundary(infra.geom.periodicity());
-  (*mw_yee.E_Array[1]).FillBoundary(infra.geom.periodicity());
-  (*mw_yee.E_Array[2]).FillBoundary(infra.geom.periodicity());
-
-  (*mw_yee.J_Array[0]).FillBoundary(infra.geom.periodicity());
-  (*mw_yee.J_Array[1]).FillBoundary(infra.geom.periodicity());
-  (*mw_yee.J_Array[2]).FillBoundary(infra.geom.periodicity());
-
-  (*mw_yee.B_Array[0]).FillBoundary(infra.geom.periodicity());
-  (*mw_yee.B_Array[1]).FillBoundary(infra.geom.periodicity());
-  (*mw_yee.B_Array[2]).FillBoundary(infra.geom.periodicity());
+  mw_yee.FillBD(infra);
 
   mw_yee.rho.FillBoundary(infra.geom.periodicity());
   // deposit charge in rho one particle at a time

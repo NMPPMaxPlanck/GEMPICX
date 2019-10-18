@@ -145,6 +145,20 @@ class maxwell_yee
       }
     }
   };
+
+  void FillBD (infrastructure ifr){
+    (*E_Array[0]).FillBoundary(ifr.geom.periodicity());
+    (*E_Array[1]).FillBoundary(ifr.geom.periodicity());
+    (*E_Array[2]).FillBoundary(ifr.geom.periodicity());
+
+    (*J_Array[0]).FillBoundary(ifr.geom.periodicity());
+    (*J_Array[1]).FillBoundary(ifr.geom.periodicity());
+    (*J_Array[2]).FillBoundary(ifr.geom.periodicity());
+
+    (*B_Array[0]).FillBoundary(ifr.geom.periodicity());
+    (*B_Array[1]).FillBoundary(ifr.geom.periodicity());
+    (*B_Array[2]).FillBoundary(ifr.geom.periodicity());
+  };
   
   
   void advance (infrastructure ifr){
