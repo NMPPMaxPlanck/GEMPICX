@@ -158,6 +158,8 @@ class maxwell_yee
     (*B_Array[0]).FillBoundary(ifr.geom.periodicity());
     (*B_Array[1]).FillBoundary(ifr.geom.periodicity());
     (*B_Array[2]).FillBoundary(ifr.geom.periodicity());
+
+    rho.FillBoundary(infra.geom.periodicity());
   };
   
   

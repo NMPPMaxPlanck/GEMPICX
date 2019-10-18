@@ -101,7 +101,6 @@ void main_main ()
   // fill ghost cells
   mw_yee.FillBD(infra);
 
-  mw_yee.rho.FillBoundary(infra.geom.periodicity());
   // deposit charge in rho one particle at a time
   for (int spec=0;spec<n_species;spec++) {
     (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
