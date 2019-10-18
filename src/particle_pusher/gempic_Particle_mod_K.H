@@ -118,15 +118,17 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
 template <typename P>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::array<amrex::Real,6> push_particle(P const& p,
-		   amrex::Real dt,
-		   amrex::Real chargemass, //charge/mass
-		   std::array<amrex::Real,3> Ep,
-		   std::array<amrex::Real,3> Bp){
+					amrex::Real dt,
+					amrex::Real chargemass, //charge/mass
+					std::array<amrex::Real,3> Ep,
+					std::array<amrex::Real,3> Bp,
+					infrastructure infra){
 
   std::array<amrex::Real,6> newPos;
-  newPos[0] = p.pos(0) + p.rdata(0)*dt;
-  newPos[1] = p.pos(1) + p.rdata(1)*dt;
-  newPos[2] = p.pos(2) + p.rdata(2)*dt;
+  // new positions (modulo the upper bound of the box)
+  newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbLo()[0]);
+  newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbLo()[0]);
+  newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbLo()[0]);
 
   newPos[3] = p.rdata(0) + chargemass*(Ep[0]+Bp[0]*p.rdata(0));
   newPos[4] = p.rdata(1) + chargemass*(Ep[1]+Bp[1]*p.rdata(1));

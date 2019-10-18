@@ -165,7 +165,7 @@ void main_main ()
 	    Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
 	  }
 	}
-	array<Real,6> newPos = push_particle(particles[pp], dt, chargemass, eres, bres);
+	array<Real,6> newPos = push_particle(particles[pp], dt, chargemass, eres, bres, infra);
 	copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
       }
     }
