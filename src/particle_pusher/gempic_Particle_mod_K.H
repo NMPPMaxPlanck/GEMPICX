@@ -126,9 +126,9 @@ std::array<amrex::Real,6> push_particle(P const& p,
 
   std::array<amrex::Real,6> newPos;
   // new positions (modulo the upper bound of the box)
-  newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbLo()[0]);
-  newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbLo()[0]);
-  newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbLo()[0]);
+  newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
+  newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
+  newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
 
   newPos[3] = p.rdata(0) + chargemass*(Ep[0]+Bp[0]*p.rdata(0));
   newPos[4] = p.rdata(1) + chargemass*(Ep[1]+Bp[1]*p.rdata(1));
