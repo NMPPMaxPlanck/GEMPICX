@@ -130,9 +130,9 @@ std::array<amrex::Real,6> push_particle(P const& p,
   newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
   newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
 
-  newPos[3] = p.rdata(0) + chargemass*(Ep[0]+Bp[0]*p.rdata(0));
-  newPos[4] = p.rdata(1) + chargemass*(Ep[1]+Bp[1]*p.rdata(1));
-  newPos[5] = p.rdata(2) + chargemass*(Ep[2]+Bp[2]*p.rdata(2));
+  newPos[3] = p.rdata(0) + dt*chargemass*(Ep[0]+(p.rdata(1)*Bp[2]-p.rdata(2)*Bp[1]));
+  newPos[4] = p.rdata(1) + dt*chargemass*(Ep[1]+(p.rdata(2)*Bp[0]-p.rdata(0)*Bp[2]));
+  newPos[5] = p.rdata(2) + dt*chargemass*(Ep[2]+(p.rdata(0)*Bp[1]-p.rdata(1)*Bp[0]));
 
   return(newPos);
 }

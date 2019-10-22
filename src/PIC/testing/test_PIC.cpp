@@ -13,7 +13,7 @@
 using namespace std;
 using namespace amrex;
 
-// field functions
+// field functions (for initializing the fields)
 double E_x(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
 double E_y(double x,double y,double z, double t){return(-2*cos(x+y+z-sqrt(3.0)*t));}
 double E_z(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
@@ -55,6 +55,11 @@ void main_main ()
   // build infrastructure
   infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
 
+  array<Real,3> L;
+  for(int cc=0;cc<3;cc++){
+    L[cc] = (infra.real_box.hi(cc)-infra.real_box.lo(cc));
+  }
+
   //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
   int n_steps = 5;
@@ -79,7 +84,7 @@ void main_main ()
   // normally distributed random number generator:
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::normal_distribution<> normD(0,1);
+  std::normal_distribution<> normD(0,0.001);
 
   Real x,y,z;
   
@@ -194,6 +199,12 @@ void main_main ()
     //update fields
     
     // deposit charge in J one component and particle at a time
+
+    // set J to 0 before we start depositing values from current particles
+    (*mw_yee.J_Array[0]).setVal(0.0, 0); // value and component
+    (*mw_yee.J_Array[1]).setVal(0.0, 0);
+    (*mw_yee.J_Array[2]).setVal(0.0, 0);
+    
     for (int spec=0;spec<n_species;spec++) {
       (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
       for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
@@ -213,6 +224,32 @@ void main_main ()
     
     // field updates:
     mw_yee.advance(infra);
+
+    // compute electric energy norms
+    array<Real,3> E_n;
+    array<Real,3> B_n;
+    for(int cc=0;cc<nc;cc++){
+      E_n[cc] = infra.dx[cc]*pow((*mw_yee.E_Array[cc]).norm2(),2)/L[cc];
+      B_n[cc] = infra.dx[cc]*pow((*mw_yee.B_Array[cc]).norm2(),2)/L[cc];
+    }
+    cout << E_n[0] << "|" << E_n[1] << "|" << E_n[2] << endl;
+    cout << B_n[0] << "|" << B_n[1] << "|" << B_n[2] << endl;
+
+    // compute kinetic energy norm
+    Real kin = 0;
+    Real vel;
+    for (int spec=0;spec<n_species;spec++){
+      for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
+	auto& particles = pti.GetArrayOfStructs();
+	const long np = pti.numParticles();
+	for (int pp=0;pp<np;pp++) {
+	  vel = abs(particles[pp].rdata(0))+abs(particles[pp].rdata(1)+abs(particles[pp].rdata(2));
+	  kin += particles[pp].rdata(3)*pow(vel,2);
+	}
+      }
+    }
+    cout << kin << endl;
+    cout << "total energy: " << E_n[0]+E_n[1]+E_n[2]+kin << endl;
     
   } // end time loop
   
