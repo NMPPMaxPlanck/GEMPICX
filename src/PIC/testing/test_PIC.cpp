@@ -243,7 +243,7 @@ void main_main ()
 	auto& particles = pti.GetArrayOfStructs();
 	const long np = pti.numParticles();
 	for (int pp=0;pp<np;pp++) {
-	  vel = abs(particles[pp].rdata(0))+abs(particles[pp].rdata(1)+abs(particles[pp].rdata(2));
+	  vel = abs(particles[pp].rdata(0))+abs(particles[pp].rdata(1))+abs(particles[pp].rdata(2));
 	  kin += particles[pp].rdata(3)*pow(vel,2);
 	}
       }
