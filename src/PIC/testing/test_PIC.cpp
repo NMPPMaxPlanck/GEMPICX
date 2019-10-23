@@ -55,6 +55,7 @@ void main_main ()
   // build infrastructure
   infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
 
+  // Length of domain in x,y,z directions
   array<Real,3> L;
   for(int cc=0;cc<3;cc++){
     L[cc] = (infra.real_box.hi(cc)-infra.real_box.lo(cc));
@@ -134,6 +135,11 @@ void main_main ()
   int nc = 3; // number of components for J and E
 
   // initial J by: deposition of particle charge
+  //Set J to 0
+  (*mw_yee.J_Array[0]).setVal(0.0, 0); // value and component
+  (*mw_yee.J_Array[1]).setVal(0.0, 0);
+  (*mw_yee.J_Array[2]).setVal(0.0, 0);
+    // Deposit charges:
     for (int spec=0;spec<n_species;spec++) {
       (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
       for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
@@ -158,6 +164,7 @@ void main_main ()
   
 //------------------------------------------------------------------------------
   //Time loop
+  std::ofstream ofs("PIC.output", std::ofstream::out);
   Real time = 0.0;
   for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
     time += mw_yee.dt;
@@ -235,9 +242,10 @@ void main_main ()
     cout << E_n[0] << "|" << E_n[1] << "|" << E_n[2] << endl;
     cout << B_n[0] << "|" << B_n[1] << "|" << B_n[2] << endl;
 
-    // compute kinetic energy norm
+    // compute kinetic energy norm and momentum
     Real kin = 0;
     Real vel;
+    array<Real,3> mom = {0.0,0.0,0.0};
     for (int spec=0;spec<n_species;spec++){
       for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
 	auto& particles = pti.GetArrayOfStructs();
@@ -245,13 +253,18 @@ void main_main ()
 	for (int pp=0;pp<np;pp++) {
 	  vel = abs(particles[pp].rdata(0))+abs(particles[pp].rdata(1))+abs(particles[pp].rdata(2));
 	  kin += particles[pp].rdata(3)*pow(vel,2);
+	  for (int cmp=0;cmp<3;cmp++) {
+	    mom[cmp] += particles[pp].rdata(3)*abs(particles[pp].rdata(cmp));
+	  }
 	}
       }
     }
     cout << kin << endl;
     cout << "total energy: " << E_n[0]+E_n[1]+E_n[2]+kin << endl;
+    Print(ofs) << time << "," << E_n[0] << "," << E_n[1] << "," << E_n[2] << "," << kin << "," << mom[0] << "," << mom[1] << "," << mom[2] << endl;
     
   } // end time loop
+  ofs.close();
   
 //------------------------------------------------------------------------------
 }
