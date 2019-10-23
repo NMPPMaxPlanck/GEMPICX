@@ -43,8 +43,10 @@ class particle_groups
 		   ){
 
     n_species = n_species_in;
-    charge = charge_in;
-    mass = mass_in;
+    for (int i=0;i<n_species;i++){
+      charge[i] = charge_in[i];
+      mass[i] = mass_in[i];
+    }
 
     // set infrastructure for each species
     for (int i=0;i<mypc.size();i++) {
