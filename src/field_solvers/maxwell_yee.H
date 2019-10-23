@@ -54,7 +54,9 @@ class maxwell_yee
   maxwell_yee (int ns, amrex::RealBox rb,
 	       infrastructure ifr, amrex::Real tstep){
     nsteps = ns;
-    
+
+    // set index indicating nodal-/cell-centered
+    // 0 -> cell-centered | 1 -> node-centered
     E_Index[0].reset(new amrex::IndexType ({0,1,1}));
     E_Index[1].reset(new amrex::IndexType ({1,0,1}));
     E_Index[2].reset(new amrex::IndexType ({1,1,0}));
@@ -69,6 +71,7 @@ class maxwell_yee
     dt = tstep;
     time = 0.0;
 
+    // make the multifabs nodal-/cell-centered according to indices
     for (int i = 0; i<=2; i++) {
       E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
       J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
@@ -84,7 +87,7 @@ class maxwell_yee
     phi     .define(nba        , ifr.distriMap, 1, 0);
     rho     .define(nba        , ifr.distriMap, 1, 0);
     phi_init.define(nba        , ifr.distriMap, 1, 0);
-    // sigma is cell-centered.
+    // sigma is cell-centered (default, so no need to pass IndexVector)
     sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
     sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
   }
@@ -173,6 +176,7 @@ class maxwell_yee
     // Fill the ghost cells of each grid from the other grids
     // includes periodic domain boundaries
     for (int i=0; i<=2; i++) {
+      (*J_Array[2]).FillBoundary(ifr.geom.periodicity());
       (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
       (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
     }
