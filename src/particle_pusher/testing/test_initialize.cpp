@@ -27,6 +27,7 @@ void main_main ()
   is_periodic[0] = 1;
   is_periodic[1] = 1;
   is_periodic[2] = 1;
+  Real dt = 0.01;
 
   // physical box (geometry)  
   double twopi = 2.0*3.14159265359;
@@ -36,7 +37,7 @@ void main_main ()
   infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
 
   //need a multifab to be able to iterate later:
-  maxwell_yee mw_yee(0, real_box, infra);
+  maxwell_yee mw_yee(0, real_box, infra, dt);
 
 //------------------------------------------------------------------------------
   //Initialize Particle Groups

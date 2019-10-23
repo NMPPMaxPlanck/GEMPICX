@@ -80,7 +80,7 @@ void main_main ()
 //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
   int n_steps = 5;
-  maxwell_yee mw_yee(n_steps, real_box, infra);
+  maxwell_yee mw_yee(n_steps, real_box, infra, dt);
   mw_yee.init_E_B(fields, infra);
 
 //------------------------------------------------------------------------------

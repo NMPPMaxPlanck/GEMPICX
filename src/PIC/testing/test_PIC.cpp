@@ -63,7 +63,7 @@ void main_main ()
   //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
   int n_steps = 5;
-  maxwell_yee mw_yee(n_steps, real_box, infra);
+  maxwell_yee mw_yee(n_steps, real_box, infra, dt);
   mw_yee.init_E_B(fields, infra);
   
   //------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ void main_main ()
   //Time loop
   Real time = 0.0;
   for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
-    time += dt;
+    time += mw_yee.dt;
     
     //--------------------------------------------------------------------------
     //push particles
@@ -189,7 +189,7 @@ void main_main ()
 	    bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
 					      *mw_yee.B_Index[cc]);
 	  }
-	  array<Real,6> newPos = push_particle(particles[pp], dt, chargemass, eres, bres, infra);
+	  array<Real,6> newPos = push_particle(particles[pp], mw_yee.dt, chargemass, eres, bres, infra);
 	  copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
 	}
       }

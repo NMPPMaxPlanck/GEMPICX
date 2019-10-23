@@ -79,6 +79,7 @@ void main_main ()
   RealBox real_box({0.0, 0.0, 0.0},
 		   {twopi, twopi, twopi});
   array<Real,6> E_B_error; //array for storing errors
+  Real dt = 0.001;
 
 //------------------------------------------------------------------------------
   // Initialize Infrastructure
@@ -87,7 +88,7 @@ void main_main ()
 //------------------------------------------------------------------------------
   // Solve
   
-  maxwell_yee mw_yee(nsteps, real_box, infra);
+  maxwell_yee mw_yee(nsteps, real_box, infra, dt);
 
   mw_yee.init_E_B(fields, infra);
 

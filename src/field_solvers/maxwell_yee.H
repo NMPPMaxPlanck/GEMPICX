@@ -26,6 +26,7 @@ class maxwell_yee
   public:
 
   int nsteps; // number of simulation steps
+  amrex::Real dt;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > E_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > J_Array;
   std::array<std::unique_ptr<amrex::MultiFab>, 3 > B_Array;
@@ -40,7 +41,6 @@ class maxwell_yee
   
   int Nghost;
   int Ncomp;
-  amrex::Real dt;
   amrex::Real time;
   amrex::MultiFab phi; // for Poisson
   amrex::MultiFab sigma; //for Poisson
@@ -52,7 +52,7 @@ class maxwell_yee
 
   // Explicit const
   maxwell_yee (int ns, amrex::RealBox rb,
-	       infrastructure ifr){
+	       infrastructure ifr, amrex::Real tstep){
     nsteps = ns;
     
     E_Index[0].reset(new amrex::IndexType ({0,1,1}));
@@ -66,7 +66,7 @@ class maxwell_yee
     Nghost = 1;
     Ncomp = 1;
 
-    dt = 0.001;
+    dt = tstep;
     time = 0.0;
 
     for (int i = 0; i<=2; i++) {
