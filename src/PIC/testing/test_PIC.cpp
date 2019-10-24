@@ -165,6 +165,7 @@ void main_main ()
 //------------------------------------------------------------------------------
   //Time loop
   std::ofstream ofs("PIC.output", std::ofstream::out);
+  std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
   Real time = 0.0;
   for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
     time += mw_yee.dt;
@@ -198,6 +199,7 @@ void main_main ()
 	  }
 	  array<Real,6> newPos = push_particle(particles[pp], mw_yee.dt, chargemass, eres, bres, infra);
 	  copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
+	  Print(ofs2) << newPos[0] << "," << newPos[1] << "," << newPos[2] << "," << newPos[3] << "," << newPos[4] << "," << newPos[5] << endl;
 	}
       }
       (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -265,6 +267,7 @@ void main_main ()
     
   } // end time loop
   ofs.close();
+  ofs2.close();
   
 //------------------------------------------------------------------------------
 }
