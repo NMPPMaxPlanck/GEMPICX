@@ -43,6 +43,7 @@ void main_main ()
   n_cell = 32;
   max_grid_size = 4;
   Real dt = 0.01;
+  int n_steps = 5;
   // periodic in all directions:
   is_periodic[0] = 1;
   is_periodic[1] = 1;
@@ -63,7 +64,6 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
-  int n_steps = 5;
   maxwell_yee mw_yee(n_steps, real_box, infra, dt);
   mw_yee.init_E_B(fields, infra);
   

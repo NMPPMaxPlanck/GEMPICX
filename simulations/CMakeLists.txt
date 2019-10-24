@@ -1,9 +1,9 @@
-add_executable ( test_PIC test_PIC.cpp )
+add_executable ( PIC PIC.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( test_PIC ${AMReX_LIBRARIES} )
+target_link_libraries( PIC ${AMReX_LIBRARIES} )
 include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
 include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")

@@ -34,4 +34,6 @@ include(cmake/define_ctest.cmake)
 
 # Add subfolder with source files of the library
 add_subdirectory(src)
+# Add subfolder with simulations
+add_subdirectory(simulations)
 
