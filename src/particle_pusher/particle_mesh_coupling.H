@@ -38,7 +38,7 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
         for (int jj = 0; jj <= 1; ++jj) { 
             for (int ii = 0; ii <= 1; ++ii) {
                 amrex::Gpu::Atomic::Add(&rho(i+ii, j+jj, k+kk, 0),
-                                        sx[ii]*sy[jj]*sz[kk]*charge);
+                                        sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(3));
             }
         }
     }
@@ -72,9 +72,9 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
     for (int kk = 0; kk <= 1; ++kk) { 
         for (int jj = 0; jj <= 1; ++jj) { 
             for (int ii = 0; ii <= 1; ++ii) {
-	      // p.rdata(cmp): velocity-component cmp
+	      // p.rdata(cmp): velocity-component cmp, p.rdata(3): weight
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii, j+jj, k+kk, 0),
-					sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp));
+					sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp)*p.rdata(3));
             }
         }
     }

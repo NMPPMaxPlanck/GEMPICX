@@ -98,7 +98,7 @@ void main_main ()
     velocity[0] = normD(gen);
     velocity[1] = normD(gen);
     velocity[2] = normD(gen);
-    weight = 1.0;
+    weight = 1.0/(Np_cell*n_cell^3); //DIM
 
     //MFI that adds particle from the model cell to all cells
     for ( MFIter mfi(*mw_yee.B_Array[0]); mfi.isValid(); ++mfi ){
