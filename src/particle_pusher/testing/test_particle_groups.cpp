@@ -3,7 +3,7 @@
 #include <AMReX_Print.H>
 #include <particle_groups.H>
 #include <maxwell_yee.H>
-#include <gempic_Particle_mod_K.H>
+#include <particle_mesh_coupling.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
