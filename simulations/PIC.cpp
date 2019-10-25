@@ -13,26 +13,8 @@
 using namespace std;
 using namespace amrex;
 
-// field functions (for initializing the fields)
-double E_x(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
-double E_y(double x,double y,double z, double t){return(-2*cos(x+y+z-sqrt(3.0)*t));}
-double E_z(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
-
-double B_x(double x,double y,double z, double t){return(sqrt(3)*cos(x+y+z-sqrt(3.0)*t));}
-double B_y(double x,double y,double z, double t){return(0);}
-double B_z(double x,double y,double z, double t){return(-sqrt(3)*cos(x+y+z-sqrt(3.0)*t));}
-
 void main_main ()
 {
-  // make pointer-array for functions
-  double (*fields[6]) (double x,double y,double z, double t);
-  fields[0] = E_x;
-  fields[1] = E_y;
-  fields[2] = E_z;
-  fields[3] = B_x;
-  fields[4] = B_y;
-  fields[5] = B_z;
-
   //------------------------------------------------------------------------------
   // Initialize Infrastructure
   
@@ -40,7 +22,7 @@ void main_main ()
   int max_grid_size; // maximum number of cells in each direction
   int is_periodic[3]; // periodicity: 1 -> periodic
 
-  n_cell = 32;
+  n_cell = 8;
   max_grid_size = 4;
   Real dt = 0.01;
   int n_steps = 5;
@@ -65,7 +47,6 @@ void main_main ()
   //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
   maxwell_yee mw_yee(n_steps, real_box, infra, dt);
-  mw_yee.init_E_B(fields, infra);
   
   //------------------------------------------------------------------------------
   //Initialize Particle Groups
@@ -75,7 +56,7 @@ void main_main ()
   particle_groups part_gr(infra, n_species, charge, mass);
 
   //set particles for first cell (and copies in remaining cells)
-  int Np_cell = 10; //number of particles per cell
+  int Np_cell = 1000; //number of particles per cell
   int species = 0; // all particles are same species for now
   array<Real,3> position;
   array<Real,3> shifted_position;
@@ -85,7 +66,7 @@ void main_main ()
   // normally distributed random number generator:
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::normal_distribution<> normD(0,0.001);
+  std::normal_distribution<> normD(0,1);
 
   Real x,y,z;
   
@@ -133,12 +114,10 @@ void main_main ()
   dxi[1] = 1.0/infra.dx[1];
   dxi[2] = 1.0/infra.dx[2];
   int nc = 3; // number of components for J and E
-
-  // initial J by: deposition of particle charge
-  //Set J to 0
-  (*mw_yee.J_Array[0]).setVal(0.0, 0); // value and component
-  (*mw_yee.J_Array[1]).setVal(0.0, 0);
-  (*mw_yee.J_Array[2]).setVal(0.0, 0);
+  
+  // initial rho by: deposition of particle charge
+  //Set rho to 0
+  mw_yee.rho.setVal(0.0, 0); // value and component
     // Deposit charges:
     for (int spec=0;spec<n_species;spec++) {
       (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -147,13 +126,10 @@ void main_main ()
 	auto& particles = pti.GetArrayOfStructs();
 	const long np  = pti.numParticles();
 
-	for(int cc=0;cc<nc;cc++){
-	  Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
+	Array4<Real> const& rhoarr = (mw_yee.rho)[pti].array();
 	  for (int pp=0;pp<np;pp++) {
-	    gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo, dxi,
-				 *mw_yee.E_Index[cc]);
+	    gempic_deposit_cic(particles[pp], charge[spec], rhoarr, plo, dxi);
 	  }
-	}
       }
     }
 
@@ -161,7 +137,19 @@ void main_main ()
     for(int spec=0;spec<n_species;spec++){
       (*part_gr.mypc[spec]).Redistribute();
     }
-  
+
+    //initial E by rho
+    mw_yee.phi_init.setVal(0.0, 0);
+    //mw_yee.solve_poisson(infra);
+    //while poisson solver is not working, set E to 0
+    (*mw_yee.E_Array[0]).setVal(0.0, 0);
+    (*mw_yee.E_Array[1]).setVal(0.0, 0);
+    (*mw_yee.E_Array[2]).setVal(0.0, 0);
+    //initial B  is 0
+    (*mw_yee.B_Array[0]).setVal(0.0, 0);
+    (*mw_yee.B_Array[1]).setVal(0.0, 0);
+    (*mw_yee.B_Array[2]).setVal(0.0, 0);
+
 //------------------------------------------------------------------------------
   //Time loop
   std::ofstream ofs("PIC.output", std::ofstream::out);
