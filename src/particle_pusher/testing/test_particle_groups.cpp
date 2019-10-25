@@ -126,7 +126,7 @@ void main_main ()
       for(int cc=0;cc<nc;cc++){
 	Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
 	for (int pp=0;pp<np;pp++) {
-	  gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo, dxi,
+	  gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo, infra.ploE[cc], dxi,
 			       *mw_yee.E_Index[cc]);
 	}
       }

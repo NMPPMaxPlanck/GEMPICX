@@ -149,7 +149,7 @@ void main_main ()
     (*mw_yee.B_Array[0]).setVal(0.0, 0);
     (*mw_yee.B_Array[1]).setVal(0.0, 0);
     (*mw_yee.B_Array[2]).setVal(0.0, 0);
-
+    
 //------------------------------------------------------------------------------
   //Time loop
   std::ofstream ofs("PIC.output", std::ofstream::out);
@@ -212,13 +212,13 @@ void main_main ()
 	for(int cc=0;cc<nc;cc++){
 	  Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
 	  for (int pp=0;pp<np;pp++) {
-	    gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo, dxi,
+	    gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo,
+				 infra.ploE[cc], dxi,
 				 *mw_yee.E_Index[cc]);
 	  }
 	}
       }
     }
-    
     // field updates:
     mw_yee.advance(infra);
 

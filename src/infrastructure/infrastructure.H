@@ -26,6 +26,8 @@ class infrastructure
   amrex::Box domain;
   amrex::DistributionMapping distriMap;
   const amrex::Real* dx;
+  std::array<std::array<amrex::Real,3>,3> ploE;
+  std::array<std::array<amrex::Real,3>,3> ploB;
 
   // The default constructor.
   infrastructure ();
@@ -50,7 +52,31 @@ class infrastructure
     geom.define(domain,&real_box,amrex::CoordSys::cartesian,is_periodic);
     dx = geom.CellSize();
 
-    distriMap.define(grid);	
+    distriMap.define(grid);
+
+    ploE[0][0] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploE[0][1] = geom.ProbLo()[0]*1.0/dx[0];
+    ploE[0][2] = geom.ProbLo()[0]*1.0/dx[0];
+
+    ploE[1][0] = geom.ProbLo()[0]*1.0/dx[0];
+    ploE[1][1] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploE[1][2] = geom.ProbLo()[0]*1.0/dx[0];
+
+    ploE[2][0] = geom.ProbLo()[0]*1.0/dx[0];
+    ploE[2][1] = geom.ProbLo()[0]*1.0/dx[0];
+    ploE[2][2] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+
+    ploB[0][0] = geom.ProbLo()[0]*1.0/dx[0];
+    ploB[0][1] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploB[0][2] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+
+    ploB[1][0] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploB[1][1] = geom.ProbLo()[0]*1.0/dx[0];
+    ploB[1][2] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+
+    ploB[2][0] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploB[2][1] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploB[2][2] = geom.ProbLo()[0]*1.0/dx[0];
 
   }
 };
