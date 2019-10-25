@@ -72,9 +72,9 @@ void main_main ()
   
   for (int pp=0;pp<Np_cell;pp++) {
     //position in model cell [0,dx]x[0,dy]x[0,dz]:
-    position[0] = ((Real) rand() / (RAND_MAX))/infra.dx[0];
-    position[1] = ((Real) rand() / (RAND_MAX))/infra.dx[1];
-    position[2] = ((Real) rand() / (RAND_MAX))/infra.dx[2];
+    position[0] = ((Real) rand() / (RAND_MAX))*infra.dx[0];
+    position[1] = ((Real) rand() / (RAND_MAX))*infra.dx[1];
+    position[2] = ((Real) rand() / (RAND_MAX))*infra.dx[2];
 
     velocity[0] = normD(gen);
     velocity[1] = normD(gen);
