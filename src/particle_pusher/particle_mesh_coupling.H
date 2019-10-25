@@ -16,7 +16,8 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void gempic_deposit_cic (P const& p, amrex::Real charge,
 			 amrex::Array4<amrex::Real> const& rho,
 			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
-			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi)
+			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+			 std::array<int,3> deg = {1,1,1})
 {
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
     amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
@@ -34,9 +35,9 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     amrex::Real sy[] = {1.-yint, yint};
     amrex::Real sz[] = {1.-zint, zint};
     
-    for (int kk = 0; kk <= 1; ++kk) { 
-        for (int jj = 0; jj <= 1; ++jj) { 
-            for (int ii = 0; ii <= 1; ++ii) {
+    for (int kk = 0; kk <= deg[2]; ++kk) { 
+        for (int jj = 0; jj <= deg[1]; ++jj) { 
+            for (int ii = 0; ii <= deg[0]; ++ii) {
                 amrex::Gpu::Atomic::Add(&rho(i+ii, j+jj, k+kk, 0),
                                         sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(3));
             }
@@ -51,7 +52,8 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
 			   std::array<amrex::Real,3> ploF,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                            amrex::IndexType fieldIndex)
+			   amrex::IndexType fieldIndex,
+			   std::array<int,3> deg = {1,1,1})
 {
   // J is on the same grid as E
   amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0] - 0.5*(1-fieldIndex[0]);
@@ -74,9 +76,9 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
     amrex::Real sy[] = {1.-yint, yint};
     amrex::Real sz[] = {1.-zint, zint};
     
-    for (int kk = 0; kk <= 1; ++kk) { 
-        for (int jj = 0; jj <= 1; ++jj) { 
-            for (int ii = 0; ii <= 1; ++ii) {
+    for (int kk = 0; kk <= deg[2]; ++kk) { 
+        for (int jj = 0; jj <= deg[1]; ++jj) { 
+            for (int ii = 0; ii <= deg[0]; ++ii) {
 	      // p.rdata(cmp): velocity-component cmp, p.rdata(3): weight
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii, j+jj, k+kk, 0),
 					sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp)*p.rdata(3));
@@ -90,7 +92,8 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
                             amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                             amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                            amrex::IndexType fieldIndex)
+				    amrex::IndexType fieldIndex,
+				    std::array<int,3> deg = {1,1,1})
 {
     amrex::Real acceleration = 0.0;
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0] - 0.5*(1-fieldIndex[0]);
@@ -109,9 +112,9 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
     amrex::Real sy[] = {1.-yint, yint};
     amrex::Real sz[] = {1.-zint, zint};
 
-    for (int kk = 0; kk <= 1; ++kk) { 
-            for (int jj = 0; jj <= 1; ++jj) { 
-                for (int ii = 0; ii <= 1; ++ii) {
+    for (int kk = 0; kk <= deg[2]; ++kk) { 
+            for (int jj = 0; jj <= deg[1]; ++jj) { 
+                for (int ii = 0; ii <= deg[0]; ++ii) {
                     acceleration += sx[ii]*sy[jj]*sz[kk]*acc(i+ii,j+jj,k+kk,0);
                 }
             }
