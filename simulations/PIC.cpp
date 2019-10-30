@@ -4,6 +4,7 @@
 #include <particle_groups.H>
 #include <maxwell_yee.H>
 #include <particle_mesh_coupling.H>
+#include <sampler.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -12,7 +13,7 @@
 
 using namespace std;
 using namespace amrex;
-
+double weight_fun(double x,double y,double z,double v_x,double v_y,double v_z,int Np){return(1.0/Np);}
 void main_main ()
 {
   //------------------------------------------------------------------------------
@@ -53,54 +54,13 @@ void main_main ()
   const int n_species = 1;
   array<Real, n_species> charge = {1.0};
   array<Real, n_species> mass = {1.0};
-  particle_groups part_gr(infra, n_species, charge, mass);
 
-  //set particles for first cell (and copies in remaining cells)
+  particle_groups part_gr(infra, n_species, charge, mass);
+  //ppg.n_species;
+  MFIter mfi(*mw_yee.B_Array[0]);
   int Np_cell = 1000; //number of particles per cell
   int species = 0; // all particles are same species for now
-  array<Real,3> position;
-  array<Real,3> shifted_position;
-  array<Real,3> velocity;
-  Real weight;
-
-  // normally distributed random number generator:
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::normal_distribution<> normD(0,1);
-
-  Real x,y,z;
-  
-  for (int pp=0;pp<Np_cell;pp++) {
-    //position in model cell [0,dx]x[0,dy]x[0,dz]:
-    position[0] = ((Real) rand() / (RAND_MAX))*infra.dx[0];
-    position[1] = ((Real) rand() / (RAND_MAX))*infra.dx[1];
-    position[2] = ((Real) rand() / (RAND_MAX))*infra.dx[2];
-
-    velocity[0] = normD(gen);
-    velocity[1] = normD(gen);
-    velocity[2] = normD(gen);
-    weight = 1.0/(Np_cell*n_cell^3); //DIM
-
-    //MFI that adds particle from the model cell to all cells
-    for ( MFIter mfi(*mw_yee.B_Array[0]); mfi.isValid(); ++mfi ){
-	const amrex::Box& bx = mfi.validbox();
-	amrex::IntVect lo = {bx.smallEnd()};
-	amrex::IntVect hi = {bx.bigEnd()};
-	for(int k=lo[2]; k<=hi[2]; k++){
-	  z = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
-	  for(int j=lo[1]; j<=hi[1]; j++){
-	    y = infra.geom.ProbLo()[1] + (double)k*infra.dx[1];
-	    for(int l=lo[0]; l<=hi[0]; l++){
-	      x = infra.geom.ProbLo()[0] + (double)k*infra.dx[0];
-	      shifted_position[0] = position[0] + x;
-	      shifted_position[1] = position[1] + y;
-	      shifted_position[2] = position[2] + z;
-	      part_gr.add_particle(species, shifted_position, velocity, weight);
-	    }
-	  }
-	}
-    }
-  }
+  init_particles_cellwise(infra, &part_gr, Np_cell, &mfi, species, {0.0}, {1.0}, {0.25}, weight_fun);
 
 //------------------------------------------------------------------------------
   // Set variables for loop
