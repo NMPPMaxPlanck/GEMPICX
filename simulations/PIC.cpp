@@ -39,6 +39,10 @@ void main_main ()
   // build infrastructure
   infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
 
+  // empty cell-centered FAB for MFIter
+  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
+  
+
   // Length of domain in x,y,z directions
   array<Real,3> L;
   for(int cc=0;cc<3;cc++){
@@ -60,7 +64,8 @@ void main_main ()
   MFIter mfi(*mw_yee.B_Array[0]);
   int Np_cell = 1000; //number of particles per cell
   int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, Np_cell, &mfi, species, {0.0}, {1.0}, {0.25}, weight_fun);
+  init_particles_cellwise(infra, &part_gr, Np_cell, &mfi, species, {0.0}, {1.0}, {0.25}, weight_fun,
+			  &IteratorFab);
 
 //------------------------------------------------------------------------------
   // Set variables for loop

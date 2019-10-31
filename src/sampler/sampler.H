@@ -2,6 +2,7 @@
 #include <AMReX_Print.H>
 #include <particle_groups.H>
 #include <infrastructure.H>
+#include <maxwell_yee.H>
 
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
@@ -24,7 +25,8 @@ void init_particles_cellwise(infrastructure infra,
 			     std::array<amrex::Real,1> vel_weights,
 			     double weight_fun(double x,double y,double z,
 					       double v_x,double v_y,double v_z,
-					       int Np)){
+					       int Np),
+			     amrex::MultiFab *IteratorFab){
   amrex::Real x,y,z;
   std::array<amrex::Real,3> position;
   std::array<amrex::Real,3> shifted_position;
@@ -64,13 +66,14 @@ void init_particles_cellwise(infrastructure infra,
     velocity[2] = normArray[gauss_idx](gen);
     weight = weight_fun(position[0], position[1], position[2],
 			velocity[0], velocity[1], velocity[2],
-			Npart_cell*infra.n_cell^3); //DIM
+			Npart_cell*pow(infra.n_cell,3)); //DIM
 
     //MFI that adds particle from the model cell to all cells
-    for (*mfi; (*mfi).isValid(); ++(*mfi) ){
-      const amrex::Box& bx = (*mfi).validbox();
+    for (amrex::MFIter mfi(*(IteratorFab)); mfi.isValid(); ++mfi ){
+      const amrex::Box& bx = mfi.validbox();
       amrex::IntVect lo = {bx.smallEnd()};
       amrex::IntVect hi = {bx.bigEnd()};
+
       for(int k=lo[2]; k<=hi[2]; k++){
 	z = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
 	for(int j=lo[1]; j<=hi[1]; j++){
