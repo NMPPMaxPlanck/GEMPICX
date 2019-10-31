@@ -61,10 +61,9 @@ void main_main ()
 
   particle_groups part_gr(infra, n_species, charge, mass);
   //ppg.n_species;
-  MFIter mfi(*mw_yee.B_Array[0]);
   int Np_cell = 1000; //number of particles per cell
   int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, Np_cell, &mfi, species, {0.0}, {1.0}, {0.25}, weight_fun,
+  init_particles_cellwise(infra, &part_gr, Np_cell, species, {0.0}, {1.0}, {0.25}, weight_fun,
 			  &IteratorFab);
 
 //------------------------------------------------------------------------------

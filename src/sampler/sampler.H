@@ -18,7 +18,6 @@
 void init_particles_cellwise(infrastructure infra,
 			     particle_groups *ppg,
 			     int Npart_cell,
-			     amrex::MFIter *mfi,
 			     int species,
 			     std::array<amrex::Real,1> mu,
 			     std::array<amrex::Real,1> sigma,
