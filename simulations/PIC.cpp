@@ -13,9 +13,14 @@
 
 using namespace std;
 using namespace amrex;
-double weight_fun(double x,double y,double z,double v_x,double v_y,double v_z,int Np){return(1.0/Np);}
+double weight_fun(double x,double y,double z,double v_x,double v_y,double v_z,int Np){
+  double alpha = 0.5;
+  double k = 0.5;
+  return((1.0 + alpha*cos(k*x))/Np);
+}
 void main_main ()
 {
+  double k = 0.5;
   //------------------------------------------------------------------------------
   // Initialize Infrastructure
   
@@ -35,7 +40,7 @@ void main_main ()
   // physical box (geometry)
   double twopi = 2.0*3.14159265359;
   RealBox real_box({0.0, 0.0, 0.0},
-		   {twopi, twopi, twopi});
+		   {twopi/k, twopi/k, twopi/k});
   // build infrastructure
   infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
 
@@ -63,7 +68,7 @@ void main_main ()
   //ppg.n_species;
   int Np_cell = 1000; //number of particles per cell
   int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, Np_cell, species, {0.0}, {1.0}, {0.25}, weight_fun,
+  init_particles_cellwise(infra, &part_gr, Np_cell, species, {0.0}, {1.0}, {1.0}, weight_fun,
 			  &IteratorFab);
 
 //------------------------------------------------------------------------------
@@ -96,7 +101,6 @@ void main_main ()
 	  }
       }
     }
-
     //assign particles to tiles they are in
     for(int spec=0;spec<n_species;spec++){
       (*part_gr.mypc[spec]).Redistribute();
