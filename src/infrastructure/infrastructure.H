@@ -20,7 +20,8 @@ class infrastructure
   int max_grid_size; // maximum number of cells in each direction
   int is_periodic[3];
   amrex::RealBox real_box; // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
-  
+
+  amrex::Real Length[3]; // Length of domain in x,y,z directions
   amrex::BoxArray grid;
   amrex::Geometry geom;
   amrex::Box domain;
@@ -41,6 +42,10 @@ class infrastructure
     is_periodic[1] = is_per[1];
     is_periodic[2] = is_per[2];
     real_box = rb;
+
+    for(int cc=0;cc<3;cc++){
+      Length[cc] = (real_box.hi(cc)-real_box.lo(cc));
+    }
 
     amrex::IntVect dom_lo = {0, 0, 0};
     amrex::IntVect dom_hi = {n_cell-1, n_cell-1, n_cell-1};

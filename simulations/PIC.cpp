@@ -46,13 +46,6 @@ void main_main ()
 
   // empty cell-centered FAB for MFIter
   MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
-  
-
-  // Length of domain in x,y,z directions
-  array<Real,3> L;
-  for(int cc=0;cc<3;cc++){
-    L[cc] = (infra.real_box.hi(cc)-infra.real_box.lo(cc));
-  }
 
   //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
@@ -194,8 +187,8 @@ void main_main ()
     array<Real,3> E_n;
     array<Real,3> B_n;
     for(int cc=0;cc<nc;cc++){
-      E_n[cc] = infra.dx[cc]*pow((*mw_yee.E_Array[cc]).norm2(),2)/L[cc];
-      B_n[cc] = infra.dx[cc]*pow((*mw_yee.B_Array[cc]).norm2(),2)/L[cc];
+      E_n[cc] = infra.dx[cc]*pow((*mw_yee.E_Array[cc]).norm2(),2)/infra.Length[cc];
+      B_n[cc] = infra.dx[cc]*pow((*mw_yee.B_Array[cc]).norm2(),2)/infra.Length[cc];
     }
     cout << E_n[0] << "|" << E_n[1] << "|" << E_n[2] << endl;
     cout << B_n[0] << "|" << B_n[1] << "|" << B_n[2] << endl;
