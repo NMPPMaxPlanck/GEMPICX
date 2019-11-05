@@ -5,6 +5,7 @@
 #include <maxwell_yee.H>
 #include <particle_mesh_coupling.H>
 #include <sampler.H>
+//#include <initializer.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -43,6 +44,7 @@ void main_main ()
 		   {twopi/k, twopi/k, twopi/k});
   // build infrastructure
   infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
+  //infrastructure infra = initialize_ifr();
 
   // empty cell-centered FAB for MFIter
   MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
