@@ -9,6 +9,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
 include_directories("${CMAKE_SOURCE_DIR}/src/initializer")
+include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
 
 ######## Ctest
 
