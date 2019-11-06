@@ -8,7 +8,7 @@ import numpy as np
 from tabulate import tabulate
 
 # path needs to be adapted to build directory!
-filename = "/home/irga/build/gempic/PIC.output"
+filename = "/home/irga/build/gempic/PIC_save.output"
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
 
 ########### energy and mom ####################

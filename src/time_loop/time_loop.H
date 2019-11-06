@@ -3,6 +3,7 @@
 #include <particle_groups.H>
 #include <infrastructure.H>
 #include <maxwell_yee.H>
+#include <diagnostics.H>
 
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
@@ -12,12 +13,15 @@
 #include <AMReX_Box.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
+
 #ifndef TIME_LOOP_H_
 #define TIME_LOOP_H_
 
 void time_loop (infrastructure infra,
 		maxwell_yee *mw_yee,
 		particle_groups *part_gr) {
+
+  diagnostics diagn((*mw_yee).nsteps);
   
   amrex::GpuArray<amrex::Real,3> plo;
   plo[0] = infra.geom.ProbLo()[0];
@@ -65,7 +69,6 @@ void time_loop (infrastructure infra,
     
 //------------------------------------------------------------------------------
   //Time loop
-  std::ofstream ofs("PIC.output", std::ofstream::out);
   std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
   amrex::Real time = 0.0;
   for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
@@ -132,43 +135,15 @@ void time_loop (infrastructure infra,
 	}
       }
     }
-    // field updates:
+     // field updates:
      (*mw_yee).advance(infra);
 
-    // compute electric energy norms
-    std::array<amrex::Real,3> E_n;
-    std::array<amrex::Real,3> B_n;
-    for(int cc=0;cc<nc;cc++){
-      E_n[cc] = infra.dx[cc]*pow((*(*mw_yee).E_Array[cc]).norm2(),2)/infra.Length[cc];
-      B_n[cc] = infra.dx[cc]*pow((*(*mw_yee).B_Array[cc]).norm2(),2)/infra.Length[cc];
-    }
-    std::cout << E_n[0] << "|" << E_n[1] << "|" << E_n[2] << std::endl;
-    std::cout << B_n[0] << "|" << B_n[1] << "|" << B_n[2] << std::endl;
-
-    // compute kinetic energy norm and momentum
-    amrex::Real kin = 0;
-    amrex::Real vel;
-    std::array<amrex::Real,3> mom = {0.0,0.0,0.0};
-     for (int spec=0;spec<(*part_gr).n_species;spec++){
-       for (amrex::ParIter<4,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-	auto& particles = pti.GetArrayOfStructs();
-	const long np = pti.numParticles();
-	for (int pp=0;pp<np;pp++) {
-	  vel = abs(particles[pp].rdata(0))+abs(particles[pp].rdata(1))+abs(particles[pp].rdata(2));
-	  kin += particles[pp].rdata(3)*pow(vel,2);
-	  for (int cmp=0;cmp<3;cmp++) {
-	    mom[cmp] += particles[pp].rdata(3)*abs(particles[pp].rdata(cmp));
-	  }
-	}
-      }
-    }
-    std::cout << kin << std::endl;
-    std::cout << "total energy: " << E_n[0]+E_n[1]+E_n[2]+kin << std::endl;
-    amrex::Print(ofs) << time << "," << E_n[0] << "," << E_n[1] << "," << E_n[2] << "," << kin << "," << mom[0] << "," << mom[1] << "," << mom[2] << std::endl;
+     // save norms for diagnostics
+     diagn.save_step_data(t_step, infra, mw_yee, part_gr);
     
   } // end time loop
-  ofs.close();
   ofs2.close();
+  diagn.save_all_to_textfile((*mw_yee).dt);
 }
 
 
