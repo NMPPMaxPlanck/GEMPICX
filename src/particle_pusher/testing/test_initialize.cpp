@@ -80,9 +80,9 @@ void main_main ()
 	for(int k=lo[2]; k<=hi[2]; k++){
 	  z = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
 	  for(int j=lo[1]; j<=hi[1]; j++){
-	    y = infra.geom.ProbLo()[1] + (double)k*infra.dx[1];
+	    y = infra.geom.ProbLo()[1] + (double)j*infra.dx[1];
 	    for(int l=lo[0]; l<=hi[0]; l++){
-	      x = infra.geom.ProbLo()[0] + (double)k*infra.dx[0];
+	      x = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
 	      shifted_position[0] = position[0] + x;
 	      shifted_position[1] = position[1] + y;
 	      shifted_position[2] = position[2] + z;
