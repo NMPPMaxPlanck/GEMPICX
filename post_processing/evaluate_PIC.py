@@ -10,6 +10,7 @@ from tabulate import tabulate
 # path needs to be adapted to build directory!
 filename = "/home/irga/build/gempic/PIC_save.output"
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
+filename_3d = "/home/irga/build/gempic/PIC_particle.output"
 
 ########### energy and mom ####################
 
@@ -75,3 +76,25 @@ v_tot = abs(vx) + abs(vy) + abs(vz)
 for i in range(0,n_lines-1):
     plt.figure()
     plt.hist(vx[range(i*n_part,(i+1)*n_part-1)], bins=50)
+
+########### pos at beginning ####################
+    
+n_lines_part = sum(1 for line in open(filename_3d))
+
+x = np.empty(n_lines_part)
+y = np.empty(n_lines_part)
+z = np.empty(n_lines_part)
+
+file = open(filename_3d, 'r')
+
+line_num = 0
+for line in file.readlines():
+    vals = line.rstrip().split(',') #using rstrip to remove the \n
+    x[line_num] = vals[0]
+    y[line_num] = vals[1]
+    z[line_num] = vals[2]
+    line_num = line_num + 1
+    
+plt.scatter(x, y)
+plt.scatter(x, z)
+plt.scatter(y, z)
