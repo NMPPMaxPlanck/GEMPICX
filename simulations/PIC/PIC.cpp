@@ -6,6 +6,7 @@
 #include <particle_mesh_coupling.H>
 #include <sampler.H>
 #include <initializer.H>
+#include <initializer2.H>
 #include <time_loop.H>
 
 #include <AMReX_PlotFileUtil.H>
@@ -38,6 +39,16 @@ void main_main ()
   int species = 0; // all particles are same species for now
   init_particles_cellwise(infra, &part_gr, Np_cell, species, {0.0}, {1.0}, {1.0}, weight_fun,
 			  &IteratorFab);
+  std::ofstream ofss("PIC_particle.output", std::ofstream::out);
+  for (amrex::ParIter<4,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+
+    const auto& particles = pti.GetArrayOfStructs();
+    const long np = pti.numParticles();
+    for (int pp=0;pp<np;pp++) {
+      amrex::Print(ofss) << particles[pp].pos(0) << "," << particles[pp].pos(1) << "," << particles[pp].pos(2) << std::endl;
+    }
+  }
+  ofss.close();
 
   //------------------------------------------------------------------------------
   // solve:
