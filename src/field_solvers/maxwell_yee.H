@@ -36,10 +36,10 @@ class maxwell_yee
   std::array<std::unique_ptr<amrex::IndexType>, 3> B_Index;
   amrex::MultiFab phi_init; // for Poisson
   amrex::MultiFab rho; // for Poisson
+  int Nghost;
 
   private:
   
-  int Nghost;
   int Ncomp;
   amrex::Real time;
   amrex::MultiFab phi; // for Poisson
@@ -280,7 +280,7 @@ class maxwell_yee
     // rho
     
     // For MLMG solver
-    int verbose = 0;
+    int verbose = 2;
     int bottom_verbose = 0;
     int max_iter = 100;
     int max_fmg_iter = 0;
@@ -303,6 +303,8 @@ class maxwell_yee
     mlmg.setMaxFmgIter(max_fmg_iter);
     mlmg.setVerbose(verbose);
     mlmg.setBottomVerbose(bottom_verbose);
+
+    //mlmg.setBottomSolver (amrex::MLMG::BottomSolver::smoother);
   
     mlmg.solve({&phi}, {&rho}, reltol, 0.0);
 
