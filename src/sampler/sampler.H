@@ -2,7 +2,6 @@
 #include <AMReX_Print.H>
 #include <particle_groups.H>
 #include <infrastructure.H>
-#include <maxwell_yee.H>
 
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>

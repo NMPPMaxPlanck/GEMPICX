@@ -4,8 +4,8 @@
 // (amrex/Src/Particle/AMReX_Particle_mod_K.H) pulled on 07.10.2019
 //------------------------------------------------------------------------------
 
-#ifndef GEMPIC_PARTICLE_MOD_K_H_
-#define GEMPIC_PARTICLE_MOD_K_H_
+#ifndef PARTICLE_MESH_COUPLING_H_
+#define PARTICLE_MESH_COUPLING_H_
 
 #include <AMReX_Particles.H>
 #include <AMReX_FArrayBox.H>

@@ -15,7 +15,6 @@
 #include <AMReX_StructOfArrays.H>
 
 #include <infrastructure.H>
-#include <particle_mesh_coupling.H>
 
 #ifndef PARTICLE_GROUPS_H_
 #define PARTICLE_GROUPS_H_
