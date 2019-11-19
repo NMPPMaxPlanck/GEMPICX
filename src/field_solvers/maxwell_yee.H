@@ -37,12 +37,12 @@ class maxwell_yee
   amrex::MultiFab phi_init; // for Poisson
   amrex::MultiFab rho; // for Poisson
   int Nghost;
-
+  amrex::MultiFab phi; // for Poisson
+  
   private:
   
   int Ncomp;
   amrex::Real time;
-  amrex::MultiFab phi; // for Poisson
   amrex::MultiFab sigma; //for Poisson
 
   public:
