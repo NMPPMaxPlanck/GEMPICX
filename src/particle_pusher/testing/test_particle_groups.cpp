@@ -21,6 +21,10 @@ double B_x(double x,double y,double z, double t){return(sqrt(3)*cos(x+y+z-sqrt(3
 double B_y(double x,double y,double z, double t){return(0);}
 double B_z(double x,double y,double z, double t){return(-sqrt(3)*cos(x+y+z-sqrt(3.0)*t));}
 
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
+  return(0.0);
+}
+
 void main_main ()
 {
   double pi = 3.14159265359;
@@ -35,33 +39,17 @@ void main_main ()
   fields[5] = B_z;
 
 //------------------------------------------------------------------------------
-  // Initialize Infrastructure
-  
-  int n_cell; // number of cells
-  int max_grid_size; // maximum number of cells in each direction
-  int is_periodic[3]; // periodicity: 1 -> periodic
-
-  n_cell = 64;
-  max_grid_size = 32;
-  Real dt = 0.01;
-  // periodic in all directions:
-  is_periodic[0] = 1;
-  is_periodic[1] = 1;
-  is_periodic[2] = 1;
-
-  // physical box (geometry)
-  double twopi = 2.0*3.14159265359;
-  RealBox real_box({0.0, 0.0, 0.0},
-		   {twopi, twopi, twopi});
   // build infrastructure
-  infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
+  initializer init;
+  int is_periodic[3] = {1,1,1};
+  init.initialize_from_parameters(64,32,is_periodic,0.01,5,1,{1.0},{1.0},1000,1,
+                  {0.0},{1.0},{1.0},WF);
+
+  infrastructure infra(init);
 
 //------------------------------------------------------------------------------
   //Initialize Particle Groups
-  const int n_species = 1;
-  array<Real, n_species> charge = {1.0};
-  array<Real, n_species> mass = {1.0};
-  particle_groups part_gr(infra, n_species, charge, mass);
+  particle_groups part_gr(init, infra);
 
   //Add particles one by one
   int N_parts = 3;
@@ -80,7 +68,7 @@ void main_main ()
 //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
   int n_steps = 5;
-  maxwell_yee mw_yee(n_steps, real_box, infra, dt);
+  maxwell_yee mw_yee(init, infra);
   mw_yee.init_E_B(fields, infra);
 
 //------------------------------------------------------------------------------
@@ -102,7 +90,7 @@ void main_main ()
   mw_yee.FillBD(infra);
 
   // deposit charge in rho one particle at a time
-  for (int spec=0;spec<n_species;spec++) {
+  for (int spec=0;spec<init.n_species;spec++) {
     (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
     for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
       const Box& box = pti.validbox();
@@ -111,12 +99,12 @@ void main_main ()
 
       Array4<Real> const& rhoarr = mw_yee.rho[pti].array();
       for (int pp=0;pp<np;pp++) {
-	gempic_deposit_cic(particles[pp], charge[spec], rhoarr, plo, dxi);
+    gempic_deposit_cic(particles[pp], init.charge[spec], rhoarr, plo, dxi);
       }
     }
   }
   // deposit charge in J one component and particle at a time
-  for (int spec=0;spec<n_species;spec++) {
+  for (int spec=0;spec<init.n_species;spec++) {
     (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
     for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
       const Box& box = pti.validbox();
@@ -126,7 +114,7 @@ void main_main ()
       for(int cc=0;cc<nc;cc++){
 	Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
 	for (int pp=0;pp<np;pp++) {
-	  gempic_deposit_J_cic(particles[pp], charge[spec], cc, jarr, plo, infra.ploE[cc], dxi,
+      gempic_deposit_J_cic(particles[pp], init.charge[spec], cc, jarr, plo, infra.ploE[cc], dxi,
 			       *mw_yee.E_Index[cc]);
 	}
       }
@@ -135,9 +123,9 @@ void main_main ()
   // interpolate fields at particle positions one particle at a time (and push them)
   array<Real,3> eres, bres;
   double esol, bsol;
-  for (int spec=0;spec<n_species;spec++) {
+  for (int spec=0;spec<init.n_species;spec++) {
     (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
-    Real chargemass = charge[spec]/mass[spec];
+    Real chargemass = init.charge[spec]/init.mass[spec];
     
     for (ParIter<4,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
       const Box& box = pti.validbox();
@@ -165,7 +153,7 @@ void main_main ()
 	    Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
 	  }
 	}
-	array<Real,6> newPos = push_particle(particles[pp], dt, chargemass, eres, bres, infra);
+    array<Real,6> newPos = push_particle(particles[pp], init.dt, chargemass, eres, bres, infra);
 	copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
       }
     }

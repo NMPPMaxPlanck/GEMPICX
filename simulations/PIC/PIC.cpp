@@ -34,22 +34,21 @@ void main_main ()
 				  {0.0},{1.0},{1.0},WF);
     
   // infrastructure
-  infrastructure infra(init.n_cell, init.max_grid_size, init.is_periodic, init.real_box);
+  infrastructure infra(init);
 
   // empty cell-centered FAB for MFIter
   MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
 
   // maxwell_yee
-  maxwell_yee mw_yee(init.n_steps, init.real_box, infra, init.dt);
+  maxwell_yee mw_yee(init, infra);
   
   // particles
-  particle_groups part_gr(infra, init.n_species, init.charge, init.mass);
+  particle_groups part_gr(init, infra);
 
   //------------------------------------------------------------------------------
   // initialize particles:
   int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, init.Np_cell, species, init.Vmean, init.Vdev,
-  			  init.Vweight, init.weight_fun, &IteratorFab);
+  init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
   
   std::ofstream ofss("PIC_particle.output", std::ofstream::out);
   for (amrex::ParIter<4,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {

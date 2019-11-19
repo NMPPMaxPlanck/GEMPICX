@@ -42,6 +42,10 @@ double Ep_x(double x,double y,double z,double t){return(-sin(x)*cos(y)*cos(z)-0.
 double Ep_y(double x,double y,double z,double t){return(-cos(x)*sin(y)*cos(z)-0.5*cos(2.0*x)*sin(2.0*y)*cos(2.0*z));}
 double Ep_z(double x,double y,double z,double t){return(-cos(x)*cos(y)*sin(z)-0.5*cos(2.0*x)*cos(2.0*y)*sin(2.0*z));}
 
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
+  return(0.0);
+}
+
 void main_main ()
 {
 
@@ -60,35 +64,20 @@ void main_main ()
   fields_poisson[2] = Ep_z;
   
 //------------------------------------------------------------------------------
-  // Parameters
-  int n_cell; // number of cells
-  int max_grid_size; // maximum number of cells in each direction
-  int nsteps; // number of simulation steps
-  int is_periodic[3]; // periodicity: 1 -> periodic
-
-  n_cell = 64;
-  max_grid_size = 32;
-  nsteps = 5;
-  // periodic in all directions:
-  is_periodic[0] = 1;
-  is_periodic[1] = 1;
-  is_periodic[2] = 1;
-
-  // physical box (geometry)
-  double twopi = 2.0*3.14159265359;
-  RealBox real_box({0.0, 0.0, 0.0},
-		   {twopi, twopi, twopi});
   array<Real,6> E_B_error; //array for storing errors
-  Real dt = 0.001;
 
 //------------------------------------------------------------------------------
   // Initialize Infrastructure
-  infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
+  initializer init;
+  int is_periodic[3] = {1,1,1};
+  init.initialize_from_parameters(64,32,is_periodic,0.01,5,1,{1.0},{1.0},1000,0.5,
+                  {0.0},{1.0},{1.0},WF);
+  infrastructure infra(init);
   
 //------------------------------------------------------------------------------
   // Solve
   
-  maxwell_yee mw_yee(nsteps, real_box, infra, dt);
+  maxwell_yee mw_yee(init, infra);
 
   mw_yee.init_E_B(fields, infra);
 

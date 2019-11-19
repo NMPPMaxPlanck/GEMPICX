@@ -51,9 +51,8 @@ class maxwell_yee
   maxwell_yee ();
 
   // Explicit const
-  maxwell_yee (int ns, amrex::RealBox rb,
-	       infrastructure ifr, amrex::Real tstep){
-    nsteps = ns;
+  maxwell_yee (initializer init, infrastructure ifr){
+    nsteps = init.n_steps;
 
     // set index indicating nodal-/cell-centered
     // 0 -> cell-centered | 1 -> node-centered
@@ -68,7 +67,7 @@ class maxwell_yee
     Nghost = 1;
     Ncomp = 1;
 
-    dt = tstep;
+    dt = init.dt;
     time = 0.0;
 
     // make the multifabs nodal-/cell-centered according to indices

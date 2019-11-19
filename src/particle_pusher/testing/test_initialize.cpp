@@ -3,6 +3,7 @@
 #include <AMReX_Print.H>
 #include <particle_groups.H>
 #include <maxwell_yee.H>
+#include <initializer.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -12,39 +13,30 @@
 using namespace std;
 using namespace amrex;
 
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
+  return(0.0);
+}
+
 void main_main ()
 {
 //------------------------------------------------------------------------------
   // Initialize Infrastructure
-  
-  int n_cell; // number of cells
-  int max_grid_size; // maximum number of cells in each direction
-  int is_periodic[3]; // periodicity: 1 -> periodic
 
-  n_cell = 64;
-  max_grid_size = 32;
-  // periodic in all directions:
-  is_periodic[0] = 1;
-  is_periodic[1] = 1;
-  is_periodic[2] = 1;
-  Real dt = 0.01;
-
-  // physical box (geometry)  
-  double twopi = 2.0*3.14159265359;
-  RealBox real_box({0.0, 0.0, 0.0},
-		   {twopi, twopi, twopi});
-  // build infrastructure
-  infrastructure infra(n_cell, max_grid_size, is_periodic, real_box);
+  initializer init;
+  int is_periodic[3] = {1,1,1};
+  init.initialize_from_parameters(64,32,is_periodic,0.01,5,1,{1.0},{1.0},1000,1,
+                  {0.0},{1.0},{1.0},WF);
+  infrastructure infra(init);
 
   //need a multifab to be able to iterate later:
-  maxwell_yee mw_yee(0, real_box, infra, dt);
+  maxwell_yee mw_yee(init, infra);
 
 //------------------------------------------------------------------------------
   //Initialize Particle Groups
   const int n_species = 1;
   array<Real, n_species> charge = {1.0};
   array<Real, n_species> mass = {1.0};
-  particle_groups part_gr(infra, n_species, charge, mass);
+  particle_groups part_gr(init, infra);
 
   //set particles for first cell (and copies in remaining cells)
   int Np_cell = 100; //number of particles per cell

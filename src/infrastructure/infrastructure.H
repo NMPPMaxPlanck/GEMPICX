@@ -1,6 +1,8 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
 
+#include <initializer.H>
+
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
 #include <AMReX_BoxArray.H>
@@ -34,14 +36,14 @@ class infrastructure
   infrastructure ();
 
   // Explicit const
-  infrastructure (int nc, int max_s, int is_per[], amrex::RealBox rb){
-    n_cell = nc;
-    max_grid_size = max_s;
+  infrastructure (initializer init){
+    n_cell = init.n_cell;
+    max_grid_size = init.max_grid_size;
 
-    is_periodic[0] = is_per[0];
-    is_periodic[1] = is_per[1];
-    is_periodic[2] = is_per[2];
-    real_box = rb;
+    is_periodic[0] = init.is_periodic[0];
+    is_periodic[1] = init.is_periodic[1];
+    is_periodic[2] = init.is_periodic[2];
+    real_box = init.real_box;
 
     for(int cc=0;cc<3;cc++){
       Length[cc] = (real_box.hi(cc)-real_box.lo(cc));

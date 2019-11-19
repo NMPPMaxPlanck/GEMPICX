@@ -35,16 +35,13 @@ class particle_groups
   particle_groups ();
 
   // Explicit const
-  particle_groups (infrastructure ifr,
-		   int n_species_in,
-		   std::array<amrex::Real, 1> charge_in,
-		   std::array<amrex::Real, 1> mass_in
-		   ){
+  particle_groups (initializer init,
+                   infrastructure ifr){
 
-    n_species = n_species_in;
+    n_species = init.n_species;
     for (int i=0;i<n_species;i++){
-      charge[i] = charge_in[i];
-      mass[i] = mass_in[i];
+      charge[i] = init.charge[i];
+      mass[i] = init.mass[i];
     }
 
     // set infrastructure for each species

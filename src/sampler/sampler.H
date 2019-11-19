@@ -15,37 +15,31 @@
 #define SAMPLER_H_
 
 void init_particles_cellwise(infrastructure infra,
-			     particle_groups *ppg,
-			     int Npart_cell,
+                 particle_groups *ppg,
+                             initializer init,
 			     int species,
-			     std::array<amrex::Real,1> mu,
-			     std::array<amrex::Real,1> sigma,
-			     std::array<amrex::Real,1> vel_weights,
-			     double weight_fun(double x,double y,double z,
-					       double v_x,double v_y,double v_z,
-					       int Np),
 			     amrex::MultiFab *IteratorFab){
   amrex::Real x,y,z;
   std::array<amrex::Real,3> position;
   std::array<amrex::Real,3> shifted_position;
   std::array<amrex::Real,3> velocity;
   amrex::Real weight;
-  const int numDistri = mu.size();
+  const int numDistri = init.Vmean.size();
 
   // cumulative sum of vel_weights
   std::array<amrex::Real,numDistri> vel_cum;
-  std::partial_sum(vel_weights.begin(), vel_weights.end(), vel_cum.begin());
+  std::partial_sum(init.Vweight.begin(), init.Vweight.end(), vel_cum.begin());
 
   // normally distributed random number generator:
   std::random_device rd;
   std::mt19937 gen(rd());
   std::array<std::normal_distribution<>,numDistri> normArray;
   for (int dis=0;dis<numDistri;dis++){
-    std::normal_distribution<> normD(mu[dis],sigma[dis]);
+    std::normal_distribution<> normD(init.Vmean[dis],init.Vdev[dis]);
     normArray[dis] = normD;
   }
   
-  for (int pp=0;pp<Npart_cell;pp++) {
+  for (int pp=0;pp<init.Np_cell;pp++) {
     //position in model cell [0,dx]x[0,dy]x[0,dz]:
     position[0] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[0];
     position[1] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[1];
@@ -62,9 +56,9 @@ void init_particles_cellwise(infrastructure infra,
     velocity[0] = normArray[gauss_idx](gen);
     velocity[1] = normArray[gauss_idx](gen);
     velocity[2] = normArray[gauss_idx](gen);
-    weight = weight_fun(position[0], position[1], position[2],
+    weight = init.weight_fun(position[0], position[1], position[2],
 			velocity[0], velocity[1], velocity[2],
-			Npart_cell*pow(infra.n_cell,3)); //DIM
+            init.Np_cell*pow(infra.n_cell,3)); //DIM
 
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi(*(IteratorFab)); mfi.isValid(); ++mfi ){
