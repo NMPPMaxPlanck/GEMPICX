@@ -40,7 +40,6 @@ void time_loop (infrastructure infra,
   //Set rho to 0
   (*mw_yee).rho.setVal(0.0, 0); // value and component
     // Deposit charges:
-
   for (int spec=0;spec<(*part_gr).n_species;spec++) {
     (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
     for (amrex::ParIter<4,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -52,7 +51,7 @@ void time_loop (infrastructure infra,
 	tilebox.grow((*mw_yee).Nghost);
 	const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
 	
-	local_rho.resize(tb,1);
+	local_rho.resize(tb,1); // second arg: number of comps
 	local_rho.setVal(0.0);
 	
 	auto& particles = pti.GetArrayOfStructs();
@@ -65,25 +64,36 @@ void time_loop (infrastructure infra,
 	((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
       }
     }
-  
+
     //assign particles to tiles they are in
   for(int spec=0;spec<(*part_gr).n_species;spec++){
     (*(*part_gr).mypc[spec]).Redistribute();
     }
 
-  std::ofstream ofs("rho.output", std::ofstream::out);
-  for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) { 
-        amrex::Print(ofs) << (*mw_yee).rho[mfi] << std::endl;
-      }
-  ofs.close();
+  //add values from ghost cells and periodic boundary
+  (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
   
-  amrex::Real rhomean = (*mw_yee).rho.sum(0)/1000;
+  amrex::Real rhomean = (*mw_yee).rho.sum(0)/1000.0;
   (*mw_yee).rho.plus(-rhomean,0,1);
 
     //initial E by rho
     (*mw_yee).phi_init.setVal(0.0, 0);
 
-    //(*mw_yee).solve_poisson(infra);
+    std::ofstream ofs("rho.output", std::ofstream::out);
+    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
+      amrex::Print(ofs) << (*mw_yee).rho[mfi] << std::endl;
+    }
+    ofs.close();
+    
+    const amrex::Vector<std::string> varnames = {"rho"};
+    WriteSingleLevelPlotfile ("rho_plotfile",
+			      (*mw_yee).rho,
+                              varnames,
+                              infra.geom,
+			      0.0, //time
+			      0); //level_step
+
+    (*mw_yee).solve_poisson(infra);
     //while poisson solver is not working, set E to 0
     (*(*mw_yee).E_Array[0]).setVal(0.0, 0);
     (*(*mw_yee).E_Array[1]).setVal(0.0, 0);
@@ -92,7 +102,7 @@ void time_loop (infrastructure infra,
     (*(*mw_yee).B_Array[0]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[1]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[2]).setVal(0.0, 0);
-    
+
 //------------------------------------------------------------------------------
   //Time loop
   std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
@@ -113,7 +123,7 @@ void time_loop (infrastructure infra,
 	const amrex::Box& box = pti.validbox();
 	auto& particles = pti.GetArrayOfStructs(); // get particles
 	const long np  = pti.numParticles();
-
+	
 	// loop over particles
 	for (int pp=0;pp<np;pp++){
 	  for (int cc=0;cc<nc;cc++){
@@ -137,7 +147,6 @@ void time_loop (infrastructure infra,
     }
     //--------------------------------------------------------------------------
     //update fields
-    
     // deposit charge in J one component and particle at a time
 
     // set J to 0 before we start depositing values from current particles
@@ -162,9 +171,13 @@ void time_loop (infrastructure infra,
 	}
       }
     }
+     //add values from ghost cells and periodic boundary
+     (*(*mw_yee).J_Array[0]).SumBoundary(infra.geom.periodicity());
+     (*(*mw_yee).J_Array[1]).SumBoundary(infra.geom.periodicity());
+     (*(*mw_yee).J_Array[2]).SumBoundary(infra.geom.periodicity());
+     
      // field updates:
      (*mw_yee).advance(infra);
-
      // save norms for diagnostics
      diagn.save_step_data(t_step, infra, mw_yee, part_gr);
     
