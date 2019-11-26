@@ -61,29 +61,29 @@ class infrastructure
 
     distriMap.define(grid);
 
-    ploE[0][0] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
-    ploE[0][1] = geom.ProbLo()[0]*1.0/dx[0];
-    ploE[0][2] = geom.ProbLo()[0]*1.0/dx[0];
+    ploE[0][0] = geom.ProbLo()[0]*1.0/dx[0]+0.5;
+    ploE[0][1] = geom.ProbLo()[1]*1.0/dx[1];
+    ploE[0][2] = geom.ProbLo()[2]*1.0/dx[2];
 
     ploE[1][0] = geom.ProbLo()[0]*1.0/dx[0];
-    ploE[1][1] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
-    ploE[1][2] = geom.ProbLo()[0]*1.0/dx[0];
+    ploE[1][1] = geom.ProbLo()[1]*1.0/dx[1]+0.5;
+    ploE[1][2] = geom.ProbLo()[2]*1.0/dx[2];
 
     ploE[2][0] = geom.ProbLo()[0]*1.0/dx[0];
-    ploE[2][1] = geom.ProbLo()[0]*1.0/dx[0];
-    ploE[2][2] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploE[2][1] = geom.ProbLo()[1]*1.0/dx[1];
+    ploE[2][2] = geom.ProbLo()[2]*1.0/dx[2]+0.5;
 
     ploB[0][0] = geom.ProbLo()[0]*1.0/dx[0];
-    ploB[0][1] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
-    ploB[0][2] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploB[0][1] = geom.ProbLo()[1]*1.0/dx[1]+0.5;
+    ploB[0][2] = geom.ProbLo()[2]*1.0/dx[2]+0.5;
 
-    ploB[1][0] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
-    ploB[1][1] = geom.ProbLo()[0]*1.0/dx[0];
-    ploB[1][2] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
+    ploB[1][0] = geom.ProbLo()[0]*1.0/dx[0]+0.5;
+    ploB[1][1] = geom.ProbLo()[1]*1.0/dx[1];
+    ploB[1][2] = geom.ProbLo()[2]*1.0/dx[2]+0.5;
 
-    ploB[2][0] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
-    ploB[2][1] = geom.ProbLo()[0]*1.0/dx[0]-0.5;
-    ploB[2][2] = geom.ProbLo()[0]*1.0/dx[0];
+    ploB[2][0] = geom.ProbLo()[0]*1.0/dx[0]+0.5;
+    ploB[2][1] = geom.ProbLo()[1]*1.0/dx[1]+0.5;
+    ploB[2][2] = geom.ProbLo()[2]*1.0/dx[2];
 
   }
 };

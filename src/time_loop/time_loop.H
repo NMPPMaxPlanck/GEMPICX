@@ -131,12 +131,10 @@ void time_loop (infrastructure infra,
 	    amrex::Array4<amrex::Real> const& barr = (*(*mw_yee).B_Array[cc])[pti].array(); 
 
 	    //E-field at particle position
-	    eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
-					      *(*mw_yee).E_Index[cc]);
+        eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, infra.ploE[cc], dxi);
 
 	    //B-field at particle position
-	    bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
-					      *(*mw_yee).B_Index[cc]);
+        bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, infra.ploB[cc], dxi);
 	  }
 	  std::array<amrex::Real,6> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
 	  std::copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
@@ -165,8 +163,7 @@ void time_loop (infrastructure infra,
 	  amrex::Array4<amrex::Real> const& jarr = (*(*mw_yee).J_Array[cc])[pti].array();
 	  for (int pp=0;pp<np;pp++) {
 	    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, jarr, plo,
-				 infra.ploE[cc], dxi,
-				 *(*mw_yee).E_Index[cc]);
+                 infra.ploE[cc], dxi);
 	  }
 	}
       }

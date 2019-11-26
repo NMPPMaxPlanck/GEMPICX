@@ -52,17 +52,12 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
 			   std::array<amrex::Real,3> ploF,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-			   amrex::IndexType fieldIndex,
-			   std::array<int,3> deg = {1,1,1})
+               std::array<int,3> deg = {1,1,1})
 {
-  // J is on the same grid as E
-  amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0] - 0.5*(1-fieldIndex[0]);
-  amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1] - 0.5*(1-fieldIndex[0]);
-  amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2] - 0.5*(1-fieldIndex[0]);
-  // alternative, leads to an MPI_abort in the field pushing
-  //amrex::Real lx2 = p.pos(0)*dxi[0] - ploF[0];
-  //amrex::Real ly2 = p.pos(1)*dxi[0] - ploF[1];
-  //amrex::Real lz2 = p.pos(2)*dxi[0] - ploF[2];
+
+  amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
+  amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
+  amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
 
     int i = std::floor(lx);
     int j = std::floor(ly);
@@ -91,14 +86,15 @@ template <typename P>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
                             amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
+                                    std::array<amrex::Real,3> ploF,
                             amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-				    amrex::IndexType fieldIndex,
 				    std::array<int,3> deg = {1,1,1})
 {
     amrex::Real acceleration = 0.0;
-    amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0] - 0.5*(1-fieldIndex[0]);
-    amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1] - 0.5*(1-fieldIndex[1]);
-    amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2] - 0.5*(1-fieldIndex[2]);
+
+    amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
+    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
+    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
     
     int i = std::floor(lx);
     int j = std::floor(ly);

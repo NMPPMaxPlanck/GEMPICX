@@ -114,8 +114,7 @@ void main_main ()
       for(int cc=0;cc<nc;cc++){
 	Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
 	for (int pp=0;pp<np;pp++) {
-      gempic_deposit_J_cic(particles[pp], init.charge[spec], cc, jarr, plo, infra.ploE[cc], dxi,
-			       *mw_yee.E_Index[cc]);
+      gempic_deposit_J_cic(particles[pp], init.charge[spec], cc, jarr, plo, infra.ploE[cc], dxi);
 	}
       }
     }
@@ -138,16 +137,14 @@ void main_main ()
 	  Array4<Real> const& barr = (*mw_yee.B_Array[cc])[pti].array(); 
 	  
 	  //E-field
-	  eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, dxi,
-					    *mw_yee.E_Index[cc]);
+      eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, infra.ploE[cc], dxi);
 	  esol = (*fields[cc])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
 	  if (abs(eres[cc]-esol) > tol) {
 	    Print(ofs) << "check results at particle " << pp << ", E-component " << cc <<  endl;
 	  }
 
 	  //B-field
-	  bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, dxi,
-					    *mw_yee.B_Index[cc]);
+      bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, infra.ploB[cc], dxi);
 	  bsol = (*fields[cc+3])(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2),0.0);
 	  if (abs(bres[cc]-bsol) > tol) {
 	    Print(ofs) << "check results at particle " << pp << ", B-component " << cc <<  endl;
