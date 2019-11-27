@@ -207,7 +207,7 @@ class maxwell_yee
 	      (*B_Array[(i+1)%3])[mfi].getVal(c5,{l-(i%3==1?1:0),j-(i%3==2?1:0),k-(i%3==0?1:0)},0,1);
 
 	      (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
-						(*c4-*c5)/ifr.dx[(i+2)%3])-*cj, cc, 0, 1);
+                        (*c4-*c5)/ifr.dx[(i+2)%3]-*cj), cc, 0, 1);
 	    }
 	  }
 	}
