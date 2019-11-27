@@ -56,9 +56,6 @@ void init_particles_cellwise(infrastructure infra,
     velocity[0] = normArray[gauss_idx](gen);
     velocity[1] = normArray[gauss_idx](gen);
     velocity[2] = normArray[gauss_idx](gen);
-    weight = init.weight_fun(position[0], position[1], position[2],
-			velocity[0], velocity[1], velocity[2],
-            init.Np_cell*pow(infra.n_cell,3)); //DIM
 
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi(*(IteratorFab)); mfi.isValid(); ++mfi ){
@@ -75,6 +72,9 @@ void init_particles_cellwise(infrastructure infra,
 	    shifted_position[0] = position[0] + x;
 	    shifted_position[1] = position[1] + y;
 	    shifted_position[2] = position[2] + z;
+        weight = init.weight_fun(shifted_position[0], shifted_position[1], shifted_position[2],
+                velocity[0], velocity[1], velocity[2],
+                init.Np_cell*pow(infra.n_cell,3)); //DIM
 	    (*ppg).add_particle(species, shifted_position, velocity, weight);
 	  }
 	}
