@@ -85,28 +85,20 @@ void time_loop (infrastructure infra,
     }
     ofs.close();
     
-    const amrex::Vector<std::string> varnames = {"rho"};
-    WriteSingleLevelPlotfile ("rho_plotfile",
-			      (*mw_yee).rho,
-                              varnames,
-                              infra.geom,
-			      0.0, //time
-			      0); //level_step
-
     (*mw_yee).solve_poisson(infra);
     //while poisson solver is not working, set E to 0
-    (*(*mw_yee).E_Array[0]).setVal(0.0, 0);
-    (*(*mw_yee).E_Array[1]).setVal(0.0, 0);
-    (*(*mw_yee).E_Array[2]).setVal(0.0, 0);
+    //(*(*mw_yee).E_Array[0]).setVal(0.0, 0);
+    //(*(*mw_yee).E_Array[1]).setVal(0.0, 0);
+    //(*(*mw_yee).E_Array[2]).setVal(0.0, 0);
     //initial B  is 0
     (*(*mw_yee).B_Array[0]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[1]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[2]).setVal(0.0, 0);
-
 //------------------------------------------------------------------------------
   //Time loop
   std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
   amrex::Real time = 0.0;
+  diagn.save_step_data(0, infra, mw_yee, part_gr, true);
 
   for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
     time += (*mw_yee).dt;
@@ -176,8 +168,8 @@ void time_loop (infrastructure infra,
      // field updates:
      (*mw_yee).advance(infra);
      // save norms for diagnostics
-     diagn.save_step_data(t_step, infra, mw_yee, part_gr);
-    
+     diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, true);
+
   } // end time loop
   ofs2.close();
   diagn.save_all_to_textfile((*mw_yee).dt);

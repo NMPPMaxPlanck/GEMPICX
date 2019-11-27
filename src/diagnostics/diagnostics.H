@@ -1,5 +1,6 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
+#include <AMReX_PlotFileUtil.H>
 
 #include <particle_groups.H>
 #include <infrastructure.H>
@@ -20,9 +21,9 @@ class diagnostics
 {
   public:
   int n_time; // number of timesteps
-  // 5 static so far!! need to fix this
-  std::array<std::array<amrex::Real,3>,5> Efield, Bfield, mom;
-  std::array<amrex::Real,5> kin;
+  // 9 static so far!! need to fix this
+  std::array<std::array<amrex::Real,3>,9> Efield, Bfield, mom;
+  std::array<amrex::Real,9> kin;
 
   // The default constructor.
   diagnostics ();
@@ -36,7 +37,8 @@ class diagnostics
   void save_step_data(int step,
 		  infrastructure infra,
 		  maxwell_yee *mw_yee,
-		  particle_groups *part_gr){
+          particle_groups *part_gr,
+                      bool bl_plotfile){
     int nc = 3;
     amrex::Real vel;
 
@@ -65,12 +67,36 @@ class diagnostics
 	}
       }
     }
+
+     // save Plotfile
+     if(bl_plotfile) {
+         amrex::Vector<std::string> varnames = {"rho"};
+         if (step == 0) {
+             WriteSingleLevelPlotfile ("SliceData/rho_plotfile_0", (*mw_yee).rho, varnames,
+                                       infra.geom, step*(*mw_yee).dt, 0); //level_step
+         }
+
+         varnames[0] = "Ex";
+         WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[0]), varnames, infra.geom, 0.0, 0); // last two args: time and level_step
+         varnames[0] = "Ey";
+         WriteSingleLevelPlotfile ("SliceData/Ey_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[1]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "Ez";
+         WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[2]), varnames, infra.geom, 0.0, 0);
+
+         varnames[0] = "Jx";
+         WriteSingleLevelPlotfile ("SliceData/Jx_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[0]), varnames, infra.geom, 0.0, 0); // last two args: time and level_step
+         varnames[0] = "Jy";
+         WriteSingleLevelPlotfile ("SliceData/Jy_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[1]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "Jz";
+         WriteSingleLevelPlotfile ("SliceData/Jz_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[2]), varnames, infra.geom, 0.0, 0);
+
+     }
   }
 
   void save_all_to_textfile(amrex::Real dt){
     std::ofstream ofsfun("PIC_save.output", std::ofstream::out);
-    for (int step=0;step<n_time;step++){
-      amrex::Print(ofsfun) << dt*(step+1) << "," << Efield[step][0] << "," << Efield[step][1] << "," << Efield[step][2] << "," << kin[step] << "," << mom[step][0] << "," << mom[step][1] << "," << mom[step][2] << std::endl;
+    for (int step=0;step<=n_time;step++){
+      amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0] << "," << Efield[step][1] << "," << Efield[step][2] << "," << kin[step] << "," << mom[step][0] << "," << mom[step][1] << "," << mom[step][2] << std::endl;
     }
     ofsfun.close();
   }
