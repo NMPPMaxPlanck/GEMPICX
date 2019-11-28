@@ -25,12 +25,10 @@ void time_loop (infrastructure infra,
   diagnostics diagn((*mw_yee).nsteps);
   
   amrex::GpuArray<amrex::Real,3> plo;
-  std::array<amrex::Real,3> ploA;
   plo[0] = infra.geom.ProbLo()[0];
   plo[1] = infra.geom.ProbLo()[1];
   plo[2] = infra.geom.ProbLo()[2];
   amrex::GpuArray<amrex::Real,3> dxi;
-  std::array<amrex::Real,3> dxiA;
   dxi[0] = 1.0/infra.dx[0];
   dxi[1] = 1.0/infra.dx[1];
   dxi[2] = 1.0/infra.dx[2];
