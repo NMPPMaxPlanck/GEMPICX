@@ -134,12 +134,20 @@ void time_loop_global (infrastructure infra,
                   }
                   amrex::Real part_weight = particles[pp].rdata(3);
                   std::array<amrex::Real,6> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
+                  std::array<amrex::Real,6> avgPos = newPos;
+                  avgPos[0] = 0.5*(avgPos[0] + particles[pp].pos(0));
+                  avgPos[1] = 0.5*(avgPos[0] + particles[pp].pos(1));
+                  avgPos[2] = 0.5*(avgPos[0] + particles[pp].pos(2));
+                  avgPos[3] = 0.5*(avgPos[0] + particles[pp].rdata(0));
+                  avgPos[4] = 0.5*(avgPos[0] + particles[pp].rdata(1));
+                  avgPos[5] = 0.5*(avgPos[0] + particles[pp].rdata(2));
+
                   std::copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
                   amrex::Print(ofs2) << newPos[0] << "," << newPos[1] << "," << newPos[2] << "," << newPos[3] << "," << newPos[4] << "," << newPos[5] << std::endl;
 
-                  gempic_deposit_J_cic_global(newPos, part_weight, (*part_gr).charge[spec], 0, mw_yee, infra.ploE[0], dxi);
-                  gempic_deposit_J_cic_global(newPos, part_weight, (*part_gr).charge[spec], 1, mw_yee, infra.ploE[1], dxi);
-                  gempic_deposit_J_cic_global(newPos, part_weight, (*part_gr).charge[spec], 2, mw_yee, infra.ploE[2], dxi);
+                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 0, mw_yee, infra.ploE[0], dxi);
+                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 1, mw_yee, infra.ploE[1], dxi);
+                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 2, mw_yee, infra.ploE[2], dxi);
               }
           }
           (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
