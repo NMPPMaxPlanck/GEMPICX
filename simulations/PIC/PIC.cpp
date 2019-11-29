@@ -7,6 +7,8 @@
 #include <sampler.H>
 #include <initializer.H>
 #include <time_loop.H>
+#include <time_loop_gobal.H>
+#include <time_loop_avg.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -20,7 +22,7 @@ double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
   double k = 0.5;
   double alpha = 0.5;
   return((1.0 + alpha*cos(k*x))/Np);
-};
+}
 
 void main_main ()
 {
@@ -30,8 +32,9 @@ void main_main ()
   //initializer
   initializer init;
   int is_periodic[3] = {1,1,1};
-  init.initialize_from_parameters(8,4,is_periodic,0.01,1,1,{1.0},{1.0},1000,0.5,
-				  {0.0},{1.0},{1.0},WF);
+  init.initialize_from_parameters(8,4,is_periodic,0.01,8,1,{1.0},{1.0},1000,0.5,
+                  {0.0},{1.0},{1.0},WF);
+  //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
   // infrastructure
   infrastructure infra(init);
@@ -63,7 +66,7 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // solve:
-  time_loop(infra, &mw_yee, &part_gr);
+  time_loop_avg(infra, &mw_yee, &part_gr);
 }
 
 int main(int argc, char* argv[])
