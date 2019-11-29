@@ -51,6 +51,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 			   amrex::Array4<amrex::Real> const& j_comp,
 			   std::array<amrex::Real,3> ploF,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+                           amrex::Real coefficient = 1.0,
                std::array<int,3> deg = {1,1,1})
 {
 
@@ -75,7 +76,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
             for (int ii = 0; ii <= deg[0]; ++ii) {
 	      // p.rdata(cmp): velocity-component cmp, p.rdata(3): weight
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii, j+jj, k+kk, 0),
-					sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp)*p.rdata(3));
+                    coefficient*sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp)*p.rdata(3));
             }
         }
     }
