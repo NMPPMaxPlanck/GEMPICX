@@ -84,10 +84,7 @@ void time_loop (infrastructure infra,
     ofs.close();
     
     (*mw_yee).solve_poisson(infra);
-    //while poisson solver is not working, set E to 0
-    //(*(*mw_yee).E_Array[0]).setVal(0.0, 0);
-    //(*(*mw_yee).E_Array[1]).setVal(0.0, 0);
-    //(*(*mw_yee).E_Array[2]).setVal(0.0, 0);
+
     //initial B  is 0
     (*(*mw_yee).B_Array[0]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[1]).setVal(0.0, 0);
@@ -121,10 +118,10 @@ void time_loop (infrastructure infra,
 	    amrex::Array4<amrex::Real> const& barr = (*(*mw_yee).B_Array[cc])[pti].array(); 
 
 	    //E-field at particle position
-        eres[cc] = gempic_interpolate_cic(particles[pp], earr, plo, infra.ploE[cc], dxi);
+        eres[cc] = gempic_interpolate_cic(particles[pp], earr, infra.ploE[cc], dxi);
 
 	    //B-field at particle position
-        bres[cc] = gempic_interpolate_cic(particles[pp], barr, plo, infra.ploB[cc], dxi);
+        bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], dxi);
 	  }
 	  std::array<amrex::Real,6> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
 	  std::copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
@@ -152,7 +149,7 @@ void time_loop (infrastructure infra,
 	for(int cc=0;cc<nc;cc++){
 	  amrex::Array4<amrex::Real> const& jarr = (*(*mw_yee).J_Array[cc])[pti].array();
 	  for (int pp=0;pp<np;pp++) {
-	    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, jarr, plo,
+        gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, jarr,
                  infra.ploE[cc], dxi);
 	  }
 	}

@@ -49,7 +49,6 @@ template <typename P>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 			   amrex::Array4<amrex::Real> const& j_comp,
-			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
 			   std::array<amrex::Real,3> ploF,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                std::array<int,3> deg = {1,1,1})
@@ -82,10 +81,43 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
     }
 }
 
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+void gempic_deposit_J_cic_global (std::array<amrex::Real,6> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
+               maxwell_yee *mw_yee,
+               std::array<amrex::Real,3> ploF,
+               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+               std::array<int,3> deg = {1,1,1})
+{
+
+  amrex::Real lx = partInfo[0]*dxi[0] - ploF[0];
+  amrex::Real ly = partInfo[1]*dxi[1] - ploF[1];
+  amrex::Real lz = partInfo[2]*dxi[2] - ploF[2];
+
+    int i = std::floor(lx);
+    int j = std::floor(ly);
+    int k = std::floor(lz);
+
+    amrex::Real xint = lx - i;
+    amrex::Real yint = ly - j;
+    amrex::Real zint = lz - k;
+
+    amrex::Real sx[] = {1.-xint, xint};
+    amrex::Real sy[] = {1.-yint, yint};
+    amrex::Real sz[] = {1.-zint, zint};
+
+    for (int kk = 0; kk <= deg[2]; ++kk) {
+        for (int jj = 0; jj <= deg[1]; ++jj) {
+            for (int ii = 0; ii <= deg[0]; ++ii) {
+                amrex::Box cc({i+ii,j+jj,k+kk}, {i+ii,j+jj,k+kk}, (*(*mw_yee).E_Index[cmp]));
+                (*(*mw_yee).J_Array[cmp]).plus(sx[ii]*sy[jj]*sz[kk]*charge*partInfo[cmp+3]*part_weight, cc, 0, 1);
+            }
+        }
+    }
+}
+
 template <typename P>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
-                            amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                                     std::array<amrex::Real,3> ploF,
                             amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
 				    std::array<int,3> deg = {1,1,1})
