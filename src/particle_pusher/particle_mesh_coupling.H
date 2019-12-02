@@ -17,7 +17,7 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
 			 amrex::Array4<amrex::Real> const& rho,
 			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
 			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-			 std::array<int,3> deg = {1,1,1})
+             std::array<int,3> deg = {3,3,3})
 {
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
     amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
@@ -31,13 +31,39 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     amrex::Real yint = ly - j;
     amrex::Real zint = lz - k;
 
-    amrex::Real sx[] = {1.-xint, xint};
-    amrex::Real sy[] = {1.-yint, yint};
-    amrex::Real sz[] = {1.-zint, zint};
+    // ---- interpolation in x-dir
+    std::vector<amrex::Real> sx;
+    switch (deg[0]) {
+        case 1:
+            sx = {1.-xint, xint};
+        case 3:
+            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
+                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+    }
+
+    // ---- interpolation in y-dir
+    std::vector<amrex::Real> sy;
+    switch (deg[1]) {
+        case 1:
+            sy = {1.-yint, yint};
+        case 3:
+            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
+                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+    }
+
+    // ---- interpolation in z-dir
+    std::vector<amrex::Real> sz;
+    switch (deg[2]) {
+        case 1:
+            sz = {1.-zint, zint};
+        case 3:
+            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
+                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+    }
     
-    for (int kk = 0; kk <= deg[2]; ++kk) { 
-        for (int jj = 0; jj <= deg[1]; ++jj) { 
-            for (int ii = 0; ii <= deg[0]; ++ii) {
+    for (int kk = -1; kk <= deg[2]-1; ++kk) {
+        for (int jj = -1; jj <= deg[1]-1; ++jj) {
+            for (int ii = -1; ii <= deg[0]-1; ++ii) {
                 amrex::Gpu::Atomic::Add(&rho(i+ii, j+jj, k+kk, 0),
                                         sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(3));
             }

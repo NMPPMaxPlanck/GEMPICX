@@ -64,7 +64,7 @@ class maxwell_yee
     B_Index[1].reset(new amrex::IndexType ({0,1,0}));
     B_Index[2].reset(new amrex::IndexType ({0,0,1}));
 
-    Nghost = 1;
+    Nghost = 3;
     Ncomp = 1;
 
     dt = init.dt;
@@ -83,9 +83,9 @@ class maxwell_yee
     // for Poisson:
     //node centered BA:
     const amrex::BoxArray& nba = amrex::convert(ifr.grid,amrex::IntVect::TheNodeVector());
-    phi     .define(nba        , ifr.distriMap, 1, 0);
-    rho     .define(nba        , ifr.distriMap, 1, 0);
-    phi_init.define(nba        , ifr.distriMap, 1, 0);
+    phi     .define(nba        , ifr.distriMap, 1, Nghost); //box, distriMap, nVar, nGrow
+    rho     .define(nba        , ifr.distriMap, 1, Nghost);
+    phi_init.define(nba        , ifr.distriMap, 1, Nghost);
     // sigma is cell-centered (default, so no need to pass IndexVector)
     sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
     sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
