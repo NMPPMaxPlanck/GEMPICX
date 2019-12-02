@@ -78,7 +78,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 			   std::array<amrex::Real,3> ploF,
 			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
                            amrex::Real coefficient = 1.0,
-               std::array<int,3> deg = {1,1,1})
+               std::array<int,3> deg = {3,3,3})
 {
 
   amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
@@ -93,13 +93,39 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
     amrex::Real yint = ly - j;
     amrex::Real zint = lz - k;
 
-    amrex::Real sx[] = {1.-xint, xint};
-    amrex::Real sy[] = {1.-yint, yint};
-    amrex::Real sz[] = {1.-zint, zint};
+    // ---- interpolation in x-dir
+    std::vector<amrex::Real> sx;
+    switch (deg[0]) {
+        case 1:
+            sx = {1.-xint, xint};
+        case 3:
+            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
+                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+    }
+
+    // ---- interpolation in y-dir
+    std::vector<amrex::Real> sy;
+    switch (deg[1]) {
+        case 1:
+            sy = {1.-yint, yint};
+        case 3:
+            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
+                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+    }
+
+    // ---- interpolation in z-dir
+    std::vector<amrex::Real> sz;
+    switch (deg[2]) {
+        case 1:
+            sz = {1.-zint, zint};
+        case 3:
+            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
+                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+    }
     
-    for (int kk = 0; kk <= deg[2]; ++kk) { 
-        for (int jj = 0; jj <= deg[1]; ++jj) { 
-            for (int ii = 0; ii <= deg[0]; ++ii) {
+    for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+        for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+            for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
 	      // p.rdata(cmp): velocity-component cmp, p.rdata(3): weight
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii, j+jj, k+kk, 0),
                     coefficient*sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp)*p.rdata(3));
@@ -128,13 +154,39 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,6> partInfo, amrex::Rea
     amrex::Real yint = ly - j;
     amrex::Real zint = lz - k;
 
-    amrex::Real sx[] = {1.-xint, xint};
-    amrex::Real sy[] = {1.-yint, yint};
-    amrex::Real sz[] = {1.-zint, zint};
+    // ---- interpolation in x-dir
+    std::vector<amrex::Real> sx;
+    switch (deg[0]) {
+        case 1:
+            sx = {1.-xint, xint};
+        case 3:
+            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
+                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+    }
 
-    for (int kk = 0; kk <= deg[2]; ++kk) {
-        for (int jj = 0; jj <= deg[1]; ++jj) {
-            for (int ii = 0; ii <= deg[0]; ++ii) {
+    // ---- interpolation in y-dir
+    std::vector<amrex::Real> sy;
+    switch (deg[1]) {
+        case 1:
+            sy = {1.-yint, yint};
+        case 3:
+            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
+                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+    }
+
+    // ---- interpolation in z-dir
+    std::vector<amrex::Real> sz;
+    switch (deg[2]) {
+        case 1:
+            sz = {1.-zint, zint};
+        case 3:
+            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
+                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+    }
+
+    for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+        for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+            for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
                 amrex::Box cc({i+ii,j+jj,k+kk}, {i+ii,j+jj,k+kk}, (*(*mw_yee).E_Index[cmp]));
                 (*(*mw_yee).J_Array[cmp]).plus(sx[ii]*sy[jj]*sz[kk]*charge*partInfo[cmp+3]*part_weight, cc, 0, 1);
             }
