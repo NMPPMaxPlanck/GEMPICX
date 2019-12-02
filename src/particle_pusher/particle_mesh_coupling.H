@@ -61,9 +61,9 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
                   -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
     }
     
-    for (int kk = -1; kk <= deg[2]-1; ++kk) {
-        for (int jj = -1; jj <= deg[1]-1; ++jj) {
-            for (int ii = -1; ii <= deg[0]-1; ++ii) {
+    for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+        for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+            for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
                 amrex::Gpu::Atomic::Add(&rho(i+ii, j+jj, k+kk, 0),
                                         sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(3));
             }
