@@ -11,6 +11,7 @@ from tabulate import tabulate
 filename = "/home/irga/build/gempic/PIC_save.output"
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
 filename_3d = "/home/irga/build/gempic/PIC_particle.output"
+filename_weights = "/home/irga/build/gempic/weights.output"
 
 ########### energy and mom ####################
 
@@ -44,6 +45,7 @@ for line in file.readlines():
 
 print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'Ekin', 'mx', 'my', 'mz']))
 plt.plot(t,E1+E2+E3+kin,'-o',t,mom1+mom2+mom3,'-*')
+plt.semilogy(t,E1,'-o')
 
 ########### pos and vel ####################
 
@@ -98,3 +100,50 @@ for line in file.readlines():
 plt.scatter(x, y)
 plt.scatter(x, z)
 plt.scatter(y, z)
+
+########### weights ####################
+    
+n_lines_w = sum(1 for line in open(filename_weights))
+
+weights = np.empty(n_lines_w)
+x1 = np.empty(n_lines_w)
+
+file = open(filename_weights, 'r')
+
+line_num = 0
+for line in file.readlines():
+    vals = line.rstrip().split(',') #using rstrip to remove the \n
+    weights[line_num] = vals[0]
+    x1[line_num] = vals[1]
+    line_num = line_num + 1
+    
+n_lines_w
+np.sum(weights)
+plt.hist(x1, bins = 100)
+
+########### compute weights with python and compare ####################
+
+
+def weight_fun(x):
+  return((1.0 + 0.5*np.cos(0.5*x))/n_lines_w*0.5/(2*np.pi))
+  
+n_lines_w = sum(1 for line in open(filename_weights))
+weights = np.empty(n_lines_w)
+x1 = np.empty(n_lines_w)
+weight_diff = np.empty(n_lines_w)
+
+file = open(filename_weights, 'r')
+
+line_num = 0
+for line in file.readlines():
+    vals = line.rstrip().split(',') #using rstrip to remove the \n
+    weights[line_num] = vals[0]
+    x1[line_num] = vals[1]
+    line_num = line_num + 1
+    
+weight_diff = np.abs(weights-weight_fun(x1))
+    
+plt.scatter(weights, weight_fun(x1))
+plt.xlim(0, 2.4e-07)
+plt.ylim(0, 2.4e-07)
+

@@ -26,6 +26,7 @@ void init_particles_cellwise(infrastructure infra,
   amrex::Real weight;
   const int numDistri = init.Vmean.size();
 
+  std::ofstream ofsfun("weights.output", std::ofstream::out);
   // cumulative sum of vel_weights
   std::array<amrex::Real,numDistri> vel_cum;
   std::partial_sum(init.Vweight.begin(), init.Vweight.end(), vel_cum.begin());
@@ -76,11 +77,14 @@ void init_particles_cellwise(infrastructure infra,
                 velocity[0], velocity[1], velocity[2],
                 init.Np_cell*pow(infra.n_cell,3)); //DIM
 	    (*ppg).add_particle(species, shifted_position, velocity, weight);
+        amrex::Print(ofsfun) << weight << "," << shifted_position[0] << std::endl;
 	  }
 	}
       }
     }
   }
+
+  ofsfun.close();
 }
 
 
