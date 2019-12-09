@@ -146,7 +146,7 @@ class maxwell_yee
 	// next mfi
       }
     }
-  };
+  }
 
   void FillBD (infrastructure ifr){
     (*E_Array[0]).FillBoundary(ifr.geom.periodicity());
@@ -162,92 +162,98 @@ class maxwell_yee
     (*B_Array[2]).FillBoundary(ifr.geom.periodicity());
 
     rho.FillBoundary(ifr.geom.periodicity());
-  };
+  }
   
-  
-  void advance (infrastructure ifr){
+  void advance_time () {
+      time = time+dt;
+  }
 
-    int l,j,k;
+  void advance_E (infrastructure ifr){
+
     amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
-
-    time = time+dt;
-    
-    // Fill the ghost cells of each grid from the other grids
-    // includes periodic domain boundaries
-    for (int i=0; i<=2; i++) {
-      (*J_Array[2]).FillBoundary(ifr.geom.periodicity());
-      (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
-      (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
-    }
 
     // E-field
     for (int i=0; i<=2; i++) {
       for (amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ) {
-	const amrex::Box& bx = mfi.validbox();
+    const amrex::Box& bx = mfi.validbox();
 
-	amrex::IntVect lo = {bx.smallEnd()};
-	amrex::IntVect hi = {bx.bigEnd()};
+    amrex::IntVect lo = {bx.smallEnd()};
+    amrex::IntVect hi = {bx.bigEnd()};
 
-	for(int k=lo[2]; k<=hi[2]; k++){
-	  for(int j=lo[1]; j<=hi[1]; j++){
-	    for(int l=lo[0]; l<=hi[0]; l++){
+    for(int k=lo[2]; k<=hi[2]; k++){
+      for(int j=lo[1]; j<=hi[1]; j++){
+        for(int l=lo[0]; l<=hi[0]; l++){
 
-	      // the box for these values:
-	      amrex::Box cc({l,j,k}, {l,j,k}, *E_Index[i]);
+          // the box for these values:
+          amrex::Box cc({l,j,k}, {l,j,k}, *E_Index[i]);
 
-	      // old field_out value
-	      (*E_Array[i])[mfi].getVal(c1, {l,j,k},0,1);
-	      // J value
-	      (*J_Array[i])[mfi].getVal(cj, {l,j,k},0,1);
+          // old field_out value
+          (*E_Array[i])[mfi].getVal(c1, {l,j,k},0,1);
+          // J value
+          (*J_Array[i])[mfi].getVal(cj, {l,j,k},0,1);
 
-	      // B-derivatives
-	      (*B_Array[(i+2)%3])[mfi].getVal(c2,{  l,  j  ,k},0,1);
-	      (*B_Array[(i+2)%3])[mfi].getVal(c3,{l-(i%3==2?1:0),j-(i%3==0?1:0),k-(i%3==1?1:0)},0,1);
-	      (*B_Array[(i+1)%3])[mfi].getVal(c4, {  l,  j,  k},0,1);
-	      (*B_Array[(i+1)%3])[mfi].getVal(c5,{l-(i%3==1?1:0),j-(i%3==2?1:0),k-(i%3==0?1:0)},0,1);
+          // B-derivatives
+          (*B_Array[(i+2)%3])[mfi].getVal(c2,{  l,  j  ,k},0,1);
+          (*B_Array[(i+2)%3])[mfi].getVal(c3,{l-(i%3==2?1:0),j-(i%3==0?1:0),k-(i%3==1?1:0)},0,1);
+          (*B_Array[(i+1)%3])[mfi].getVal(c4, {  l,  j,  k},0,1);
+          (*B_Array[(i+1)%3])[mfi].getVal(c5,{l-(i%3==1?1:0),j-(i%3==2?1:0),k-(i%3==0?1:0)},0,1);
 
-	      (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
+          (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
                         (*c4-*c5)/ifr.dx[(i+2)%3]-*cj), cc, 0, 1);
-	    }
-	  }
-	}
-	// next mfi
+        }
       }
     }
+    // next mfi
+      }
+    }
+  }
+
+  void advance_B (infrastructure ifr){
+
+    amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
 
     // B-field
     for (int i=0; i<=2; i++) {
       for (amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
-	const amrex::Box& bx = mfi.validbox();
+    const amrex::Box& bx = mfi.validbox();
 
-	amrex::IntVect lo = {bx.smallEnd()};
-	amrex::IntVect hi = {bx.bigEnd()};
+    amrex::IntVect lo = {bx.smallEnd()};
+    amrex::IntVect hi = {bx.bigEnd()};
 
-	for(int k=lo[2]; k<=hi[2]; k++){
-	  for(int j=lo[1]; j<=hi[1]; j++){
-	    for(int l=lo[0]; l<=hi[0]; l++){
+    for(int k=lo[2]; k<=hi[2]; k++){
+      for(int j=lo[1]; j<=hi[1]; j++){
+        for(int l=lo[0]; l<=hi[0]; l++){
 
-	      // the box for these values:
-	      amrex::Box cc({l,j,k}, {l,j,k}, *B_Index[i]);
+          // the box for these values:
+          amrex::Box cc({l,j,k}, {l,j,k}, *B_Index[i]);
 
-	      // old field_out value
-	      (*B_Array[i])[mfi].getVal(c1, {l,j,k},0,1);
+          // old field_out value
+          (*B_Array[i])[mfi].getVal(c1, {l,j,k},0,1);
 
-	      // E-derivatives
-	      (*E_Array[(i+2)%3])[mfi].getVal(c2,{l+(i%3==2?1:0),j+(i%3==0?1:0),k+(i%3==1?1:0)},0,1);
-	      (*E_Array[(i+2)%3])[mfi].getVal(c3,{  l,  j  ,k},0,1);
-	      (*E_Array[(i+1)%3])[mfi].getVal(c4,{l+(i%3==1?1:0),j+(i%3==2?1:0),k+(i%3==0?1:0)},0,1);
-	      (*E_Array[(i+1)%3])[mfi].getVal(c5, {  l,  j,  k},0,1);
+          // E-derivatives
+          (*E_Array[(i+2)%3])[mfi].getVal(c2,{l+(i%3==2?1:0),j+(i%3==0?1:0),k+(i%3==1?1:0)},0,1);
+          (*E_Array[(i+2)%3])[mfi].getVal(c3,{  l,  j  ,k},0,1);
+          (*E_Array[(i+1)%3])[mfi].getVal(c4,{l+(i%3==1?1:0),j+(i%3==2?1:0),k+(i%3==0?1:0)},0,1);
+          (*E_Array[(i+1)%3])[mfi].getVal(c5, {  l,  j,  k},0,1);
 
-	      (*B_Array[i])[mfi].setVal(*c1-dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
-						(*c4-*c5)/ifr.dx[(i+2)%3]), cc, 0, 1);
-	    }
-	  }
-	}
-	// next mfi
+          (*B_Array[i])[mfi].setVal(*c1-dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
+                        (*c4-*c5)/ifr.dx[(i+2)%3]), cc, 0, 1);
+        }
       }
-    }  
-  };
+    }
+    // next mfi
+      }
+    }
+  }
+
+  void advance (infrastructure ifr){
+
+    time = time+dt;
+    FillBD(ifr);
+
+    advance_E(ifr);
+    advance_B(ifr);
+  }
 
   void init_rho_phi(double phi_fun(double x,double y,double z),
 		    double rho_fun(double x,double y,double z),
@@ -272,7 +278,7 @@ class maxwell_yee
     // box with all interior nodes:
     const amrex::Box& interior = amrex::surroundingNodes(amrex::grow(ifr.geom.Domain(), -1));
     phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
-  };
+  }
 
   void solve_poisson(infrastructure ifr){
     //--------------------------------------------------------------------------------
@@ -342,7 +348,7 @@ class maxwell_yee
       }
     }
     
-  };
+  }
   
   std::array<amrex::Real,6> computeError(double (*fields[]) (double x,double y,double z, double t),
 					 bool bool_B,
@@ -361,7 +367,7 @@ class maxwell_yee
       }
     }
     return(E_B_error);
-  };
+  }
 
   private:
 
@@ -423,7 +429,7 @@ class maxwell_yee
         }
       }
     }
-  };
+  }
   
 };
 
