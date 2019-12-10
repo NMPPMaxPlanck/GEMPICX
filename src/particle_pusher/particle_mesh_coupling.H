@@ -278,4 +278,51 @@ std::array<amrex::Real,6> push_particle(P const& p,
   return(newPos);
 }
 
+template <typename P>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+std::array<amrex::Real,6> push_particle_boris(P const& p,
+                    amrex::Real dt,
+                    amrex::Real chargemass, //charge/mass
+                    std::array<amrex::Real,3> Ep,
+                    std::array<amrex::Real,3> Bp,
+                    infrastructure infra){
+
+  std::array<amrex::Real,6> newPos;
+  std::array<amrex::Real,3> vm;
+  std::array<amrex::Real,3> vt;
+  std::array<amrex::Real,3> vp;
+  amrex::Real S;
+
+  // v-
+  vm[0] = p.rdata(0) + dt*chargemass/2*Ep[0];
+  vm[1] = p.rdata(1) + dt*chargemass/2*Ep[1];
+  vm[2] = p.rdata(2) + dt*chargemass/2*Ep[2];
+
+  // v'
+  vt[0] = vm[0] + (vm[1]*dt*chargemass/2*Bp[2]-vm[2]*dt*chargemass/2*Bp[1]);
+  vt[1] = vm[1] + (vm[2]*dt*chargemass/2*Bp[0]-vm[0]*dt*chargemass/2*Bp[2]);
+  vt[2] = vm[2] + (vm[0]*dt*chargemass/2*Bp[1]-vm[1]*dt*chargemass/2*Bp[0]);
+
+  S = pow(dt*chargemass/2*Bp[0], 2.)+pow(dt*chargemass/2*Bp[1], 2.)+pow(dt*chargemass/2*Bp[2], 2.);
+
+  // v+
+  vp[0] = vm[0] + (vt[1]*dt*chargemass/(1.+S)*Bp[2]-vt[2]*dt*chargemass/2*Bp[1]);
+  vp[1] = vm[1] + (vt[2]*dt*chargemass/(1.+S)*Bp[0]-vt[0]*dt*chargemass/2*Bp[2]);
+  vp[2] = vm[2] + (vt[0]*dt*chargemass/(1.+S)*Bp[1]-vt[1]*dt*chargemass/2*Bp[0]);
+
+  // v
+  newPos[3] = vp[0] + dt*chargemass/2*Ep[0];
+  newPos[4] = vp[1] + dt*chargemass/2*Ep[1];
+  newPos[5] = vp[2] + dt*chargemass/2*Ep[2];
+
+  // new positions (modulo the upper bound of the box)
+  newPos[0] = fmod(p.pos(0) + newPos[0]*dt, infra.geom.ProbHi()[0]);
+  newPos[1] = fmod(p.pos(1) + newPos[1]*dt, infra.geom.ProbHi()[1]);
+  newPos[2] = fmod(p.pos(2) + newPos[2]*dt, infra.geom.ProbHi()[2]);
+
+
+
+  return(newPos);
+}
+
 #endif

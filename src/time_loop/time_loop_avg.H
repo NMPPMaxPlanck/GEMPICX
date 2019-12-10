@@ -70,6 +70,7 @@ void time_loop_avg (infrastructure infra,
 
     //add values from ghost cells and periodic boundary
     (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
+    (*mw_yee).FillBD(infra);
 
     amrex::Real rhomean = (*mw_yee).rho.sum(0)/1000.0;
     (*mw_yee).rho.plus(-rhomean,0,1);
@@ -97,15 +98,22 @@ void time_loop_avg (infrastructure infra,
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         time += (*mw_yee).dt;
+        (*mw_yee).advance_time();
+
+        //--------------------------------------------------------------------------
+        // update B
+        (*mw_yee).FillBD(infra);
+        (*mw_yee).advance_B(infra);
 
         //--------------------------------------------------------------------------
         //push particles
-        (*mw_yee).FillBD(infra);
 
         // set J to 0 before we start depositing values from current particles
         (*(*mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
         (*(*mw_yee).J_Array[1]).setVal(0.0, 0);
         (*(*mw_yee).J_Array[2]).setVal(0.0, 0);
+
+        (*mw_yee).FillBD(infra);
 
         std::array<amrex::Real,3> eres, bres;
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
@@ -138,7 +146,7 @@ void time_loop_avg (infrastructure infra,
                         //B-field at particle position
                         bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], dxi);
                     }
-                    std::array<amrex::Real,6> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
+                    std::array<amrex::Real,6> newPos = push_particle_boris(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
                     amrex::Print(ofs2) << newPos[0] << "," << newPos[1] << "," << newPos[2] << "," << newPos[3] << "," << newPos[4] << "," << newPos[5] << std::endl;
                 }
@@ -173,7 +181,9 @@ void time_loop_avg (infrastructure infra,
         std::cout << "finished step " << t_step+1 << std::endl;
 
         // field updates:
-        (*mw_yee).advance(infra);
+        (*mw_yee).FillBD(infra);
+
+        (*mw_yee).advance_E(infra);
         // save norms for diagnostics
         diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, true);
 
