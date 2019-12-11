@@ -280,6 +280,26 @@ std::array<amrex::Real,6> push_particle(P const& p,
 
 template <typename P>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+std::array<amrex::Real,6> push_particle_pos(P const& p,
+                    amrex::Real dt,
+                    infrastructure infra,
+                    amrex::Real coefficient){
+
+  std::array<amrex::Real,6> newPos;
+  // new positions (modulo the upper bound of the box)
+  newPos[0] = fmod(p.pos(0) + p.rdata(0)*coefficient*dt, infra.geom.ProbHi()[0]);
+  newPos[1] = fmod(p.pos(1) + p.rdata(1)*coefficient*dt, infra.geom.ProbHi()[1]);
+  newPos[2] = fmod(p.pos(2) + p.rdata(2)*coefficient*dt, infra.geom.ProbHi()[2]);
+
+  newPos[3] = p.rdata(0);
+  newPos[4] = p.rdata(1);
+  newPos[5] = p.rdata(2);
+
+  return(newPos);
+}
+
+template <typename P>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::array<amrex::Real,6> push_particle_boris(P const& p,
                     amrex::Real dt,
                     amrex::Real chargemass, //charge/mass
