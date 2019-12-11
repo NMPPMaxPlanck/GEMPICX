@@ -187,6 +187,11 @@ void time_loop_avg (infrastructure infra,
         // save norms for diagnostics
         diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, true);
 
+        // save temporary results every n steps
+        if ((t_step+1)%3 == 0) {
+            diagn.save_all_to_textfile((*mw_yee).dt, "tmp/PIC_save.output"+std::to_string(t_step+1), t_step+1);
+        }
+
     } // end time loop
     ofs2.close();
     diagn.save_all_to_textfile((*mw_yee).dt);

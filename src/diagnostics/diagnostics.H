@@ -93,9 +93,12 @@ class diagnostics
      }
   }
 
-  void save_all_to_textfile(amrex::Real dt){
-    std::ofstream ofsfun("PIC_save.output", std::ofstream::out);
-    for (int step=0;step<=n_time;step++){
+  void save_all_to_textfile(amrex::Real dt, std::string filename = "PIC_save.output", int partial = 0){
+      if (partial == 0){
+          partial = n_time;
+      }
+      std::ofstream ofsfun(filename, std::ofstream::out);
+    for (int step=0;step<=partial;step++){
       amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0] << "," << Efield[step][1] << "," << Efield[step][2] << "," << kin[step] << "," << mom[step][0] << "," << mom[step][1] << "," << mom[step][2] << std::endl;
     }
     ofsfun.close();
