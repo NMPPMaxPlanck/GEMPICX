@@ -18,7 +18,7 @@ class infrastructure
 {
   public:
 
-  int n_cell; // number of cells
+  int n_cell[3]; // number of cells
   int max_grid_size; // maximum number of cells in each direction
   int is_periodic[3];
   amrex::RealBox real_box; // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
@@ -37,7 +37,9 @@ class infrastructure
 
   // Explicit const
   infrastructure (initializer init){
-    n_cell = init.n_cell;
+    n_cell[0] = init.n_cell[0];
+    n_cell[1] = init.n_cell[1];
+    n_cell[2] = init.n_cell[2];
     max_grid_size = init.max_grid_size;
 
     is_periodic[0] = init.is_periodic[0];
@@ -50,7 +52,7 @@ class infrastructure
     }
 
     amrex::IntVect dom_lo = {0, 0, 0};
-    amrex::IntVect dom_hi = {n_cell-1, n_cell-1, n_cell-1};
+    amrex::IntVect dom_hi = {n_cell[0]-1, n_cell[1]-1, n_cell[2]-1};
 
     domain.setSmall(dom_lo);
     domain.setBig(dom_hi);

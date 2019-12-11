@@ -16,7 +16,7 @@ class initializer
 {
   public:
   // parameters for infrastructure:
-  int n_cell;
+  int n_cell[3];
   int max_grid_size;
   int is_periodic[3];
 
@@ -44,7 +44,7 @@ class initializer
   // constructor
   initializer (){};
 
-  void initialize_from_parameters(int NC, int MG, int PER[3], amrex::Real DT, int NST, int NSP,
+  void initialize_from_parameters(int NC[3], int MG, int PER[3], amrex::Real DT, int NST, int NSP,
 				  std::array<amrex::Real, 1> CH,
 				  std::array<amrex::Real, 1> MS,
 				  int NPC,
@@ -54,7 +54,9 @@ class initializer
 				  std::array<amrex::Real, 1> VW,
 				  double WF (double x,double y,double z,
 					     double v_x,double v_y,double v_z,int Np)){
-    n_cell = NC;
+    n_cell[0] = NC[0];
+    n_cell[1] = NC[1];
+    n_cell[2] = NC[2];
     max_grid_size = MG;
     is_periodic[0] = PER[0];
     is_periodic[1] = PER[1];

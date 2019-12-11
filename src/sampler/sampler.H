@@ -75,7 +75,7 @@ void init_particles_cellwise(infrastructure infra,
 	    shifted_position[2] = position[2] + z;
         weight = init.weight_fun(shifted_position[0], shifted_position[1], shifted_position[2],
                 velocity[0], velocity[1], velocity[2],
-                init.Np_cell*pow(infra.n_cell,3)); //DIM
+                init.Np_cell*infra.n_cell[0]*infra.n_cell[1]*infra.n_cell[2]); //DIM
 	    (*ppg).add_particle(species, shifted_position, velocity, weight);
         amrex::Print(ofsfun) << weight << "," << shifted_position[0] << std::endl;
 	  }

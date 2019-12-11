@@ -30,7 +30,8 @@ void main_main ()
   //initializer
   initializer init;
   int is_periodic[3] = {1,1,1};
-  init.initialize_from_parameters(8,4,is_periodic,0.01,0,1,{1.0},{1.0},1000,0.5,
+  int n_cell[3] = {8,8,8};
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,0,1,{1.0},{1.0},1000,0.5,
 				  {0.0},{1.0},{1.0},WF);
     
   // infrastructure

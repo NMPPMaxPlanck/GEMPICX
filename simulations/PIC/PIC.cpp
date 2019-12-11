@@ -32,7 +32,8 @@ void main_main ()
   //initializer
   initializer init;
   int is_periodic[3] = {1,1,1};
-  init.initialize_from_parameters(8,4,is_periodic,0.01,8,1,{1.0},{1.0},1000,0.5,
+  int n_cell[3] = {8,8,8};
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,8,1,{1.0},{1.0},1000,0.5,
                   {0.0},{1.0},{1.0},WF);
   //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     

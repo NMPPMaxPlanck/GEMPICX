@@ -24,7 +24,8 @@ void main_main ()
 
   initializer init;
   int is_periodic[3] = {1,1,1};
-  init.initialize_from_parameters(64,32,is_periodic,0.01,5,1,{1.0},{1.0},1000,1,
+  int n_cell[3] = {64,64,64};
+  init.initialize_from_parameters(n_cell,32,is_periodic,0.01,5,1,{1.0},{1.0},1000,1,
                   {0.0},{1.0},{1.0},WF);
   infrastructure infra(init);
 
