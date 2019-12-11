@@ -103,7 +103,7 @@ void time_loop_avg (infrastructure infra,
         //--------------------------------------------------------------------------
         // update B
         (*mw_yee).FillBD(infra);
-        (*mw_yee).advance_B(infra);
+        (*mw_yee).advance_B(infra, 1.);
 
         //--------------------------------------------------------------------------
         //push particles
@@ -183,7 +183,7 @@ void time_loop_avg (infrastructure infra,
         // field updates:
         (*mw_yee).FillBD(infra);
 
-        (*mw_yee).advance_E(infra);
+        (*mw_yee).advance_E(infra, 1.);
         // save norms for diagnostics
         diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, true);
 

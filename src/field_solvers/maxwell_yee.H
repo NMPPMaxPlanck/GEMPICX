@@ -168,7 +168,7 @@ class maxwell_yee
       time = time+dt;
   }
 
-  void advance_E (infrastructure ifr){
+  void advance_E (infrastructure ifr, amrex::Real coefficient){
 
     amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
 
@@ -198,7 +198,7 @@ class maxwell_yee
           (*B_Array[(i+1)%3])[mfi].getVal(c4, {  l,  j,  k},0,1);
           (*B_Array[(i+1)%3])[mfi].getVal(c5,{l-(i%3==1?1:0),j-(i%3==2?1:0),k-(i%3==0?1:0)},0,1);
 
-          (*E_Array[i])[mfi].setVal(*c1+dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
+          (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[(i+1)%3]-
                         (*c4-*c5)/ifr.dx[(i+2)%3]-*cj), cc, 0, 1);
         }
       }
@@ -208,7 +208,7 @@ class maxwell_yee
     }
   }
 
-  void advance_B (infrastructure ifr){
+  void advance_B (infrastructure ifr, amrex::Real coefficient){
 
     amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
 
@@ -236,7 +236,7 @@ class maxwell_yee
           (*E_Array[(i+1)%3])[mfi].getVal(c4,{l+(i%3==1?1:0),j+(i%3==2?1:0),k+(i%3==0?1:0)},0,1);
           (*E_Array[(i+1)%3])[mfi].getVal(c5, {  l,  j,  k},0,1);
 
-          (*B_Array[i])[mfi].setVal(*c1-dt*((*c2-*c3)/ifr.dx[(i+1)%3]-
+          (*B_Array[i])[mfi].setVal(*c1-dt*coefficient*((*c2-*c3)/ifr.dx[(i+1)%3]-
                         (*c4-*c5)/ifr.dx[(i+2)%3]), cc, 0, 1);
         }
       }
@@ -251,8 +251,8 @@ class maxwell_yee
     time = time+dt;
     FillBD(ifr);
 
-    advance_E(ifr);
-    advance_B(ifr);
+    advance_E(ifr, 1.);
+    advance_B(ifr, 1.);
   }
 
   void init_rho_phi(double phi_fun(double x,double y,double z),
