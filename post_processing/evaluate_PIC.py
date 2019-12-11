@@ -21,11 +21,14 @@ t = np.empty(n_lines)
 E1 = np.empty(n_lines)
 E2 = np.empty(n_lines)
 E3 = np.empty(n_lines)
+B1 = np.empty(n_lines)
+B2 = np.empty(n_lines)
+B3 = np.empty(n_lines)
 kin = np.empty(n_lines)
 mom1 = np.empty(n_lines)
 mom2 = np.empty(n_lines)
 mom3 = np.empty(n_lines)
-table = np.empty([n_lines, 8])
+table = np.empty([n_lines, 11])
 
 file = open(filename, 'r')
 
@@ -37,15 +40,18 @@ for line in file.readlines():
     E1[line_num] = vals[1]
     E2[line_num] = vals[2]
     E3[line_num] = vals[3]
-    kin[line_num] = vals[4]
-    mom1[line_num] = vals[5]
-    mom2[line_num] = vals[6]
-    mom3[line_num] = vals[7]
+    B1[line_num] = vals[4]
+    B2[line_num] = vals[5]
+    B3[line_num] = vals[6]
+    kin[line_num] = vals[7]
+    mom1[line_num] = vals[8]
+    mom2[line_num] = vals[9]
+    mom3[line_num] = vals[10]
     line_num = line_num + 1
 
-print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'Ekin', 'mx', 'my', 'mz']))
-plt.plot(t,E1+E2+E3+kin,'-o',t,mom1+mom2+mom3,'-*')
-plt.semilogy(t,E1,'-o')
+print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))
+#plt.plot(t,E1+E2+E3+B1+B2+B3+kin,'-o',t,mom1+mom2+mom3,'-*')
+plt.plot(t,E1,'-o')
 
 ########### pos and vel ####################
 

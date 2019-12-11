@@ -22,8 +22,8 @@ class diagnostics
   public:
   int n_time; // number of timesteps
   // 9 static so far!! need to fix this
-  std::array<std::array<amrex::Real,3>,9> Efield, Bfield, mom;
-  std::array<amrex::Real,9> kin;
+  std::array<std::array<amrex::Real,3>,51> Efield, Bfield, mom;
+  std::array<amrex::Real,51> kin;
 
   // The default constructor.
   diagnostics ();
@@ -99,7 +99,7 @@ class diagnostics
       }
       std::ofstream ofsfun(filename, std::ofstream::out);
     for (int step=0;step<=partial;step++){
-      amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0] << "," << Efield[step][1] << "," << Efield[step][2] << "," << kin[step] << "," << mom[step][0] << "," << mom[step][1] << "," << mom[step][2] << std::endl;
+      amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0] << "," << Efield[step][1] << "," << Efield[step][2] << "," << Bfield[step][0] << "," << Bfield[step][1] << "," << Bfield[step][2] << "," << kin[step] << "," << mom[step][0] << "," << mom[step][1] << "," << mom[step][2] << std::endl;
     }
     ofsfun.close();
   }
