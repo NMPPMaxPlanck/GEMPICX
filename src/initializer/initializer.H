@@ -34,9 +34,9 @@ class initializer
   amrex::RealBox real_box;
 
   //parameters for velocity distribution
-  std::array<amrex::Real, 1> Vmean;
-  std::array<amrex::Real, 1> Vdev;
-  std::array<amrex::Real, 1> Vweight;
+  std::array<std::array<amrex::Real, 1>, 3> Vmean;
+  std::array<std::array<amrex::Real, 1>, 3> Vdev;
+  std::array<std::array<amrex::Real, 1>, 3> Vweight;
 
   // function for weights
   double (*weight_fun) (double x,double y,double z,double v_x,double v_y,double v_z,int Np);
@@ -49,9 +49,9 @@ class initializer
 				  std::array<amrex::Real, 1> MS,
 				  int NPC,
 				  amrex::Real K,
-				  std::array<amrex::Real, 1> VM,
-				  std::array<amrex::Real, 1> VD,
-				  std::array<amrex::Real, 1> VW,
+                  std::array<std::array<amrex::Real, 1>, 3> VM,
+                  std::array<std::array<amrex::Real, 1>, 3> VD,
+                  std::array<std::array<amrex::Real, 1>, 3> VW,
 				  double WF (double x,double y,double z,
 					     double v_x,double v_y,double v_z,int Np)){
     n_cell[0] = NC[0];
@@ -71,13 +71,20 @@ class initializer
 
     double twopi = 2.0*3.14159265359;
     amrex::Real boxLo[3] = {0.0,0.0,0.0};
-    amrex::Real boxHi[3] = {twopi/k,twopi/k,twopi/k};
+    //amrex::Real boxHi[3] = {twopi/k,twopi/k,twopi/k};
+    amrex::Real boxHi[3] = {twopi/k,twopi/k/((double)n_cell[0]/(double)n_cell[1]),twopi/k/((double)n_cell[0]/(double)n_cell[2])};
     real_box.setLo(boxLo);
     real_box.setHi(boxHi);
 
-    Vmean[0] = VM[0];
-    Vdev[0] = VD[0];
-    Vweight[0] = VW[0];
+    Vmean[0][0] = VM[0][0];
+    Vmean[1][0] = VM[1][0];
+    Vmean[2][0] = VM[2][0];
+    Vdev[0][0] = VD[0][0];
+    Vdev[1][0] = VD[1][0];
+    Vdev[2][0] = VD[2][0];
+    Vweight[0][0] = VW[0][0];
+    Vweight[1][0] = VW[1][0];
+    Vweight[2][0] = VW[2][0];
     
     weight_fun = *WF;
   };

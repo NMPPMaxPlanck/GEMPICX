@@ -20,7 +20,7 @@ using namespace amrex;
 
 double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
   double k = 0.5;
-  double alpha = 0.5;
+  double alpha = 0.;
   return((1.0 + alpha*cos(k*x))/Np);
 }
 
@@ -32,7 +32,7 @@ void main_main ()
   //initializer
   initializer init;
   int is_periodic[3] = {1,1,1};
-  int n_cell[3] = {8,8,8};
+  int n_cell[3] = {32,4,4};
   std::array<std::array<amrex::Real, 1>, 3> VM{};
   std::array<std::array<amrex::Real, 1>, 3> VD{};
   std::array<std::array<amrex::Real, 1>, 3> VW{};
@@ -40,15 +40,16 @@ void main_main ()
   VM[1][0] = 0.0;
   VM[2][0] = 0.0;
 
-  VD[0][0] = 1.0;
-  VD[1][0] = 1.0;
-  VD[2][0] = 1.0;
+  VD[0][0] = 0.02/sqrt(2);
+  VD[1][0] = sqrt(12)*VD[0][0];
+  VD[2][0] = VD[1][0];
 
   VW[0][0] = 1.0;
   VW[1][0] = 1.0;
   VW[2][0] = 1.0;
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,300,1,{1.0},{1.0},1000,0.5,
-                  VM,VD,VW,WF);
+
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,300,1,{1.0},{1.0},500,0.5,
+                  VW,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
   //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
   // infrastructure
