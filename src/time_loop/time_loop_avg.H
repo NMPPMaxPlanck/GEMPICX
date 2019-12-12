@@ -90,6 +90,22 @@ void time_loop_avg (infrastructure infra,
     (*(*mw_yee).B_Array[0]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[1]).setVal(0.0, 0);
     (*(*mw_yee).B_Array[2]).setVal(0.0, 0);
+
+    //------------------------------------------------------------------------------
+    //approximate x^1/2 and e^1/2
+    (*mw_yee).advance_E(infra, 0.5);
+    for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (amrex::ParIter<4,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            auto& particles = pti.GetArrayOfStructs(); // get particles
+            const long np  = pti.numParticles();
+            for (int pp=0;pp<np;pp++){
+                std::array<amrex::Real,6> newPos = push_particle_pos(particles[pp], (*mw_yee).dt, infra, 0.5);
+                std::copy(begin(newPos),end(newPos),&particles.data()[pp*8]);
+            }
+        }
+        (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+    }
+
     //------------------------------------------------------------------------------
     //Time loop
     std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
