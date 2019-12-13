@@ -39,7 +39,7 @@ class initializer
   std::array<std::array<amrex::Real, 1>, 3> Vweight;
 
   // function for weights
-  double (*weight_fun) (double x,double y,double z,double v_x,double v_y,double v_z,int Np);
+  double (*weight_fun) (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k);
   
   // constructor
   initializer (){};
@@ -53,7 +53,7 @@ class initializer
                   std::array<std::array<amrex::Real, 1>, 3> VD,
                   std::array<std::array<amrex::Real, 1>, 3> VW,
 				  double WF (double x,double y,double z,
-					     double v_x,double v_y,double v_z,int Np)){
+                         double v_x,double v_y,double v_z,int Np,double k)){
     n_cell[0] = NC[0];
     n_cell[1] = NC[1];
     n_cell[2] = NC[2];

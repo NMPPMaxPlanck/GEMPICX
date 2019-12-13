@@ -16,8 +16,7 @@
 using namespace std;
 using namespace amrex;
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
-  double k = 0.5;
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
   double alpha = 0.5;
   return((1.0 + alpha*cos(k*x))/Np);
 };

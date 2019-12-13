@@ -21,7 +21,7 @@ double B_x(double x,double y,double z, double t){return(sqrt(3)*cos(x+y+z-sqrt(3
 double B_y(double x,double y,double z, double t){return(0);}
 double B_z(double x,double y,double z, double t){return(-sqrt(3)*cos(x+y+z-sqrt(3.0)*t));}
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
   return(0.0);
 }
 

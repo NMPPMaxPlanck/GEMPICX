@@ -18,21 +18,20 @@
 using namespace std;
 using namespace amrex;
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
-  double k = 0.5;
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
   double alpha = 0.5;
   return((1.0 + alpha*cos(k*x))/Np);
 }
 
-double B_x(double x,double y,double z){return(0);}
-double B_y(double x,double y,double z){return(0);}
-double B_z(double x,double y,double z){return(0);}
+double B_x(double x,double y,double z,double k){return(0);}
+double B_y(double x,double y,double z,double k){return(0);}
+double B_z(double x,double y,double z,double k){return(0);}
 
 void main_main ()
 {
   //------------------------------------------------------------------------------
   //build objects:
-    double (*initB[3]) (double x,double y,double z);
+    double (*initB[3]) (double x,double y,double z,double k);
     initB[0] = B_x;
     initB[1] = B_y;
     initB[2] = B_z;
@@ -89,7 +88,7 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // solve:
-  time_loop_avg(infra, &mw_yee, &part_gr, initB);
+  time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
 }
 
 int main(int argc, char* argv[])

@@ -42,7 +42,7 @@ double Ep_x(double x,double y,double z,double t){return(-sin(x)*cos(y)*cos(z)-0.
 double Ep_y(double x,double y,double z,double t){return(-cos(x)*sin(y)*cos(z)-0.5*cos(2.0*x)*sin(2.0*y)*cos(2.0*z));}
 double Ep_z(double x,double y,double z,double t){return(-cos(x)*cos(y)*sin(z)-0.5*cos(2.0*x)*cos(2.0*y)*sin(2.0*z));}
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
   return(0.0);
 }
 

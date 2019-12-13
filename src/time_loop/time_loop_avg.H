@@ -21,7 +21,8 @@
 void time_loop_avg (infrastructure infra,
                     maxwell_yee *mw_yee,
                     particle_groups *part_gr,
-                    double (*initB[3]) (double x,double y,double z)) {
+                    double (*initB[3]) (double x,double y,double z,double k),
+amrex::Real initk) {
 
     diagnostics diagn((*mw_yee).nsteps);
 
@@ -104,7 +105,7 @@ void time_loop_avg (infrastructure infra,
           x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*(*mw_yee).B_Index[i])[0])*infra.dx[0];
           // the box for these values:
           amrex::Box cc({l,j,k}, {l,j,k}, *(*mw_yee).B_Index[i]);
-          (*(*mw_yee).B_Array[i])[mfi].setVal((*initB[i])(x,y,z), cc, 0, 1);
+          (*(*mw_yee).B_Array[i])[mfi].setVal((*initB[i])(x,y,z,initk), cc, 0, 1);
         }
       }
     }

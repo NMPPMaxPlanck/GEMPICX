@@ -13,7 +13,7 @@
 using namespace std;
 using namespace amrex;
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
+double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
   return(0.0);
 }
 
