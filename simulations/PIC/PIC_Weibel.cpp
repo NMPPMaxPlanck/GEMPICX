@@ -24,10 +24,22 @@ double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np) {
   return((1.0 + alpha*cos(k*x))/Np);
 }
 
+double B_x(double x,double y,double z){return(0);}
+double B_y(double x,double y,double z){return(0);}
+double B_z(double x,double y,double z){
+    amrex::Real beta = 1e-3;
+    amrex::Real k = 0.5;
+    return(beta*cos(k*x));
+}
+
 void main_main ()
 {
   //------------------------------------------------------------------------------
   //build objects:
+    double (*initB[3]) (double x,double y,double z);
+    initB[0] = B_x;
+    initB[1] = B_y;
+    initB[2] = B_z;
 
   //initializer
   initializer init;
@@ -48,7 +60,7 @@ void main_main ()
   VW[1][0] = 1.0;
   VW[2][0] = 1.0;
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,300,1,{1.0},{1.0},500,0.5,
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,2000,1,{1.0},{1.0},500,0.5,
                   VW,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
   //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
@@ -82,7 +94,7 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // solve:
-  time_loop_avg(infra, &mw_yee, &part_gr);
+  time_loop_avg(infra, &mw_yee, &part_gr, initB);
 }
 
 int main(int argc, char* argv[])

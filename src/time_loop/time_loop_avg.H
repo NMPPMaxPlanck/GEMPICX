@@ -20,7 +20,8 @@
 
 void time_loop_avg (infrastructure infra,
                     maxwell_yee *mw_yee,
-                    particle_groups *part_gr) {
+                    particle_groups *part_gr,
+                    double (*initB[3]) (double x,double y,double z)) {
 
     diagnostics diagn((*mw_yee).nsteps);
 
@@ -86,10 +87,30 @@ void time_loop_avg (infrastructure infra,
     
     (*mw_yee).solve_poisson(infra);
 
-    //initial B  is 0
-    (*(*mw_yee).B_Array[0]).setVal(0.0, 0);
-    (*(*mw_yee).B_Array[1]).setVal(0.0, 0);
-    (*(*mw_yee).B_Array[2]).setVal(0.0, 0);
+    // initial B_field
+    double x,y,z;
+    for (int i = 0; i<=2; i++) {
+      for ( amrex::MFIter mfi(*(*mw_yee).B_Array[i]); mfi.isValid(); ++mfi )
+      {
+    const amrex::Box& bx = mfi.validbox();
+    amrex::IntVect lo = {bx.smallEnd()};
+    amrex::IntVect hi = {bx.bigEnd()};
+
+    for(int k=lo[2]; k<=hi[2]; k++){
+      z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*(*mw_yee).B_Index[i])[2])*infra.dx[2];
+      for(int j=lo[1]; j<=hi[1]; j++){
+        y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*(*mw_yee).B_Index[i])[1])*infra.dx[1];
+        for(int l=lo[0]; l<=hi[0]; l++){
+          x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*(*mw_yee).B_Index[i])[0])*infra.dx[0];
+          // the box for these values:
+          amrex::Box cc({l,j,k}, {l,j,k}, *(*mw_yee).B_Index[i]);
+          (*(*mw_yee).B_Array[i])[mfi].setVal((*initB[i])(x,y,z), cc, 0, 1);
+        }
+      }
+    }
+    // next mfi
+      }
+    }
 
     //------------------------------------------------------------------------------
     //approximate x^1/2 and e^1/2
