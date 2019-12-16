@@ -326,9 +326,10 @@ std::array<amrex::Real,6> push_particle_boris(P const& p,
   S = pow(dt*chargemass/2*Bp[0], 2.)+pow(dt*chargemass/2*Bp[1], 2.)+pow(dt*chargemass/2*Bp[2], 2.);
 
   // v+
-  vp[0] = vm[0] + (vt[1]*dt*chargemass/(1.+S)*Bp[2]-vt[2]*dt*chargemass/2*Bp[1]);
-  vp[1] = vm[1] + (vt[2]*dt*chargemass/(1.+S)*Bp[0]-vt[0]*dt*chargemass/2*Bp[2]);
-  vp[2] = vm[2] + (vt[0]*dt*chargemass/(1.+S)*Bp[1]-vt[1]*dt*chargemass/2*Bp[0]);
+  amrex::Real coeff = dt*chargemass/(1.+S);
+  vp[0] = vm[0] + coeff*(vt[1]*Bp[2]-vt[2]*Bp[1]);
+  vp[1] = vm[1] + coeff*(vt[2]*Bp[0]-vt[0]*Bp[2]);
+  vp[2] = vm[2] + coeff*(vt[0]*Bp[1]-vt[1]*Bp[0]);
 
   // v
   newPos[3] = vp[0] + dt*chargemass/2*Ep[0];
@@ -336,9 +337,9 @@ std::array<amrex::Real,6> push_particle_boris(P const& p,
   newPos[5] = vp[2] + dt*chargemass/2*Ep[2];
 
   // new positions (modulo the upper bound of the box)
-  newPos[0] = fmod(p.pos(0) + newPos[0]*dt, infra.geom.ProbHi()[0]);
-  newPos[1] = fmod(p.pos(1) + newPos[1]*dt, infra.geom.ProbHi()[1]);
-  newPos[2] = fmod(p.pos(2) + newPos[2]*dt, infra.geom.ProbHi()[2]);
+  newPos[0] = fmod(p.pos(0) + newPos[3]*dt, infra.geom.ProbHi()[0]);
+  newPos[1] = fmod(p.pos(1) + newPos[4]*dt, infra.geom.ProbHi()[1]);
+  newPos[2] = fmod(p.pos(2) + newPos[5]*dt, infra.geom.ProbHi()[2]);
 
 
 
