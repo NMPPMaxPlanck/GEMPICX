@@ -9,6 +9,7 @@
 #include <time_loop.H>
 #include <time_loop_gobal.H>
 #include <time_loop_avg.H>
+#include <gempic_Config.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -58,7 +59,7 @@ void main_main ()
   VW[1][0] = 1.0;
   VW[2][0] = 1.0;
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,2000,1,{1.0},{1.0},500,1.25,
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,2000,1,{1.0},{1.0},500,0.5,
                   VW,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
   //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     

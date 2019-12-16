@@ -1,0 +1,7 @@
+#ifndef GEMPIC_CONFIG_H_
+#define GEMPIC_CONFIG_H_
+
+//#define GEMPIC_SPACEDIM 3
+#define GEMPIC_SPACEDIM AMREX_SPACEDIM
+
+#endif
