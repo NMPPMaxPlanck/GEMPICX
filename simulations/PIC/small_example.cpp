@@ -7,6 +7,7 @@
 #include <sampler.H>
 #include <initializer.H>
 #include <time_loop.H>
+#include <gempic_Config.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -16,9 +17,9 @@
 using namespace std;
 using namespace amrex;
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
   double alpha = 0.5;
-  return((1.0 + alpha*cos(k*x))/Np);
+  return((1.0 + alpha*cos(k*x[0]))/Np);
 };
 
 void main_main ()
@@ -28,9 +29,9 @@ void main_main ()
 
   //initializer
   initializer init;
-  int is_periodic[3] = {1,1,1};
-  int n_cell[3] = {8,8,8};
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,0,1,{1.0},{1.0},1000,0.5,
+  amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
+  amrex::IntVect n_cell(AMREX_D_DECL(8,8,8));
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,0,{1.0},{1.0},1000,0.5,
 				  {0.0},{1.0},{1.0},WF);
     
   // infrastructure
@@ -47,20 +48,27 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // initialize particles:
-  part_gr.add_particle(0, {0.5,0.0,0.0}, {0.0,0.0,0.0}, 0.25);
-  part_gr.add_particle(0, {0.0,0.5,0.0}, {0.0,0.0,0.0}, 0.25);
-  part_gr.add_particle(0, {0.5,0.5,0.5}, {0.0,0.0,0.0}, 0.25);
-  //part_gr.add_particle(0, {10.996,10.996,10.996}, {0.0,0.0,0.0}, 0.25);
-  part_gr.add_particle(0, {12.56637,12.56637,12.56637}, {0.0,0.0,0.0}, 0.25);
-  //part_gr.add_particle(0, {0.5*12.56637,0.5*12.56637,0.5*12.56637}, {0.0,0.0,0.0}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(0.0,0.5,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.5,0.5)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle(0, {AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle(0, {AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
 
   //check positions
-  for (amrex::ParIter<4,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+  for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
 
     const auto& particles = pti.GetArrayOfStructs();
     const long np = pti.numParticles();
     for (int pp=0;pp<np;pp++) {
-      std::cout << particles[pp].pos(0) << "," << particles[pp].pos(1) << "," << particles[pp].pos(2) << std::endl;
+      std::cout << particles[pp].pos(0) << "," <<
+             #if (GEMPIC_SPACEDIM > 1)
+                   particles[pp].pos(1) << "," <<
+             #endif
+             #if (GEMPIC_SPACEDIM > 2)
+                   particles[pp].pos(2) <<
+             #endif
+                   std::endl;
     }
   }
 

@@ -3,5 +3,7 @@
 
 //#define GEMPIC_SPACEDIM 3
 #define GEMPIC_SPACEDIM AMREX_SPACEDIM
+#define GEMPIC_NUMSPEC 1
+#define GEMPIC_NUMGAUS 1
 
 #endif

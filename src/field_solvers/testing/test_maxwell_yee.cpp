@@ -17,6 +17,7 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
 #include <maxwell_yee.H>
+#include <gempic_Config.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -28,21 +29,21 @@ using namespace amrex;
 //------------------------------------------------------------------------------
   // Solutions and RHS
 
-double E_x(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
-double E_y(double x,double y,double z, double t){return(-2*cos(x+y+z-sqrt(3.0)*t));}
-double E_z(double x,double y,double z, double t){return(cos(x+y+z-sqrt(3.0)*t));}
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
+double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
 
-double B_x(double x,double y,double z, double t){return(sqrt(3)*cos(x+y+z-sqrt(3.0)*t));}
-double B_y(double x,double y,double z, double t){return(0);}
-double B_z(double x,double y,double z, double t){return(-sqrt(3)*cos(x+y+z-sqrt(3.0)*t));}
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
+double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
+double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
 
-double phi_fun(double x,double y,double z){return(cos(x)*cos(y)*cos(z)+1/4.0*cos(2.0*x)*cos(2.0*y)*cos(2.0*z));}
-double rho_fun(double x,double y,double z){return(-3.0*(cos(x)*cos(y)*cos(z)+cos(2.0*x)*cos(2.0*y)*cos(2.0*z)));}
-double Ep_x(double x,double y,double z,double t){return(-sin(x)*cos(y)*cos(z)-0.5*sin(2.0*x)*cos(2.0*y)*cos(2.0*z));}
-double Ep_y(double x,double y,double z,double t){return(-cos(x)*sin(y)*cos(z)-0.5*cos(2.0*x)*sin(2.0*y)*cos(2.0*z));}
-double Ep_z(double x,double y,double z,double t){return(-cos(x)*cos(y)*sin(z)-0.5*cos(2.0*x)*cos(2.0*y)*sin(2.0*z));}
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cos(x[0])*cos(x[1])*cos(x[2])+1/4.0*cos(2.0*x[0])*cos(2.0*x[1])*cos(2.0*x[2]));}
+double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-3.0*(cos(x[0])*cos(x[1])*cos(x[2])+cos(2.0*x[0])*cos(2.0*x[1])*cos(2.0*x[2])));}
+double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-sin(x[0])*cos(x[1])*cos(x[2])-0.5*sin(2.0*x[0])*cos(2.0*x[1])*cos(2.0*x[2]));}
+double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cos(x[0])*sin(x[1])*cos(x[2])-0.5*cos(2.0*x[0])*sin(2.0*x[1])*cos(2.0*x[2]));}
+double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cos(x[0])*cos(x[1])*sin(x[2])-0.5*cos(2.0*x[0])*cos(2.0*x[1])*sin(2.0*x[2]));}
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
   return(0.0);
 }
 
@@ -50,28 +51,36 @@ void main_main ()
 {
 
   // make pointer-array for functions
-  double (*fields[6]) (double x,double y,double z, double t);
+  double (*fields[2*GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
   fields[0] = E_x;
+  fields[GEMPIC_SPACEDIM] = B_x;
+#if (GEMPIC_SPACEDIM > 1)
   fields[1] = E_y;
+  fields[GEMPIC_SPACEDIM+1] = B_y;
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   fields[2] = E_z;
-  fields[3] = B_x;
-  fields[4] = B_y;
-  fields[5] = B_z;
+  fields[GEMPIC_SPACEDIM+2] = B_z;
+#endif
 
-  double (*fields_poisson[3]) (double x,double y,double z,double t);
+  double (*fields_poisson[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
   fields_poisson[0] = Ep_x;
+#if (GEMPIC_SPACEDIM > 1)
   fields_poisson[1] = Ep_y;
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   fields_poisson[2] = Ep_z;
+#endif
   
 //------------------------------------------------------------------------------
-  array<Real,6> E_B_error; //array for storing errors
+  array<Real,2*GEMPIC_SPACEDIM> E_B_error; //array for storing errors
 
 //------------------------------------------------------------------------------
   // Initialize Infrastructure
   initializer init;
-  int is_periodic[3] = {1,1,1};
-  int n_cell[3] = {64,64,64};
-  init.initialize_from_parameters(n_cell,32,is_periodic,0.01,5,1,{1.0},{1.0},1000,0.5,
+  amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
+  amrex::IntVect n_cell(AMREX_D_DECL(64,64,64));
+  init.initialize_from_parameters(n_cell,32,is_periodic,0.01,5,{1.0},{1.0},1000,0.5,
                   {0.0},{1.0},{1.0},WF);
   infrastructure infra(init);
   
@@ -87,8 +96,6 @@ void main_main ()
   for (int n=1;n<=mw_yee.nsteps;n++){
     mw_yee.advance(infra);
     E_B_error = mw_yee.computeError(fields, true, infra);
-
-    
     
     Print(ofs) << "step " << n << endl;
     Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<

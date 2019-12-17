@@ -10,46 +10,50 @@
 #include <AMReX_Particles.H>
 #include <AMReX_FArrayBox.H>
 #include <cmath>
+#include <gempic_Config.H>
 
 template <typename P>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void gempic_deposit_cic (P const& p, amrex::Real charge,
-			 amrex::Array4<amrex::Real> const& rho,
-			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
-			 amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-             std::array<int,3> deg = {1,1,1})
+             maxwell_yee *mw_yee,
+             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+             amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
+
 {
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
+    int i = std::floor(lx);
+    amrex::Real xint = lx - i;
+
+    // ---- interpolation in x-dir
+    std::vector<amrex::Real> sx;
+    switch (deg[0]) {
+        case 1:
+            sx = {1.-xint, xint};
+        case 3:
+            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
+                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+    }
+
+#if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
+    int j = std::floor(ly);
+    amrex::Real yint = ly - j;
+
+    // ---- interpolation in y-dir
+    std::vector<amrex::Real> sy;
+    switch (deg[1]) {
+        case 1:
+            sy = {1.-yint, yint};
+        case 3:
+            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
+                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+    }
+
+#endif
+#if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2];
-
-    int i = std::floor(lx);
-    int j = std::floor(ly);
     int k = std::floor(lz);
-
-    amrex::Real xint = lx - i;
-    amrex::Real yint = ly - j;
     amrex::Real zint = lz - k;
-
-    // ---- interpolation in x-dir
-    std::vector<amrex::Real> sx;
-    switch (deg[0]) {
-        case 1:
-            sx = {1.-xint, xint};
-        case 3:
-            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
-    }
-
-    // ---- interpolation in y-dir
-    std::vector<amrex::Real> sy;
-    switch (deg[1]) {
-        case 1:
-            sy = {1.-yint, yint};
-        case 3:
-            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
-    }
 
     // ---- interpolation in z-dir
     std::vector<amrex::Real> sz;
@@ -60,161 +64,200 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
             sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
                   -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
     }
-    
+
+#endif
+
+#if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+#endif
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                amrex::Gpu::Atomic::Add(&rho(i+ii, j+jj, k+kk, 0),
-                                        sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(3));
+                double s_coeff = sx[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        + sy[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        + sz[kk]
+        #endif
+                        ;
+                amrex::Box cc({i+ii,j+jj,k+kk}, {i+ii,j+jj,k+kk}, amrex::IntVect::TheNodeVector());
+                ((*mw_yee).rho).plus(s_coeff*charge*p.rdata(GEMPIC_SPACEDIM), cc, 0, 1); //p.rdata(GEMPIC_SPACEDIM) = weight
             }
+#if (GEMPIC_SPACEDIM > 1)
         }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
     }
+#endif
 }
 
 template <typename P>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
-			   amrex::Array4<amrex::Real> const& j_comp,
-			   std::array<amrex::Real,3> ploF,
-			   amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
+               maxwell_yee *mw_yee,
+               std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
+               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                            amrex::Real coefficient = 1.0,
-               std::array<int,3> deg = {1,1,1})
+               amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 {
-
   amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
+  int i = std::floor(lx);
+  amrex::Real xint = lx - i;
+
+  // ---- interpolation in x-dir
+  std::vector<amrex::Real> sx;
+  switch (deg[0]) {
+      case 1:
+          sx = {1.-xint, xint};
+      case 3:
+          sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
+                  -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+  }
+
+#if (GEMPIC_SPACEDIM > 1)
   amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
+  int j = std::floor(ly);
+  amrex::Real yint = ly - j;
+
+  // ---- interpolation in y-dir
+  std::vector<amrex::Real> sy;
+  switch (deg[1]) {
+      case 1:
+          sy = {1.-yint, yint};
+      case 3:
+          sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
+                -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+  }
+
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
+  int k = std::floor(lz);
+  amrex::Real zint = lz - k;
 
-    int i = std::floor(lx);
-    int j = std::floor(ly);
-    int k = std::floor(lz);
+  // ---- interpolation in z-dir
+  std::vector<amrex::Real> sz;
+  switch (deg[2]) {
+      case 1:
+          sz = {1.-zint, zint};
+      case 3:
+          sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
+                -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+  }
 
-    amrex::Real xint = lx - i;
-    amrex::Real yint = ly - j;
-    amrex::Real zint = lz - k;
+#endif
 
-    // ---- interpolation in x-dir
-    std::vector<amrex::Real> sx;
-    switch (deg[0]) {
-        case 1:
-            sx = {1.-xint, xint};
-        case 3:
-            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
-    }
-
-    // ---- interpolation in y-dir
-    std::vector<amrex::Real> sy;
-    switch (deg[1]) {
-        case 1:
-            sy = {1.-yint, yint};
-        case 3:
-            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
-    }
-
-    // ---- interpolation in z-dir
-    std::vector<amrex::Real> sz;
-    switch (deg[2]) {
-        case 1:
-            sz = {1.-zint, zint};
-        case 3:
-            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
-                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
-    }
-    
+#if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+#endif
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-	      // p.rdata(cmp): velocity-component cmp, p.rdata(3): weight
-                amrex::Gpu::Atomic::Add(&j_comp(i+ii, j+jj, k+kk, 0),
-                    coefficient*sx[ii]*sy[jj]*sz[kk]*charge*p.rdata(cmp)*p.rdata(3));
+                double s_coeff = sx[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        + sy[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        + sz[kk]
+        #endif
+                        ;
+          // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_SPACEDIM): weight
+                amrex::Box cc({AMREX_D_DECL(i+ii,j+jj,k+kk)}, {AMREX_D_DECL(i+ii,j+jj,k+kk)}, (*(*mw_yee).E_Index[cmp]));
+                (*(*mw_yee).J_Array[cmp]).plus(coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_SPACEDIM), cc, 0, 1);
             }
+#if (GEMPIC_SPACEDIM > 1)
         }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
     }
+#endif
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-void gempic_deposit_J_cic_global (std::array<amrex::Real,6> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
+void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
                maxwell_yee *mw_yee,
-               std::array<amrex::Real,3> ploF,
-               amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-               std::array<int,3> deg = {1,1,1})
+               std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
+               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+               amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 {
-
   amrex::Real lx = partInfo[0]*dxi[0] - ploF[0];
+  int i = std::floor(lx);
+  amrex::Real xint = lx - i;
+
+  // ---- interpolation in x-dir
+  std::vector<amrex::Real> sx;
+  switch (deg[0]) {
+      case 1:
+          sx = {1.-xint, xint};
+      case 3:
+          sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
+                  -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+  }
+
+#if (GEMPIC_SPACEDIM > 1)
   amrex::Real ly = partInfo[1]*dxi[1] - ploF[1];
+  int j = std::floor(ly);
+  amrex::Real yint = ly - j;
+
+  // ---- interpolation in y-dir
+  std::vector<amrex::Real> sy;
+  switch (deg[1]) {
+      case 1:
+          sy = {1.-yint, yint};
+      case 3:
+          sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
+                -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+  }
+
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   amrex::Real lz = partInfo[2]*dxi[2] - ploF[2];
+  int k = std::floor(lz);
+  amrex::Real zint = lz - k;
 
-    int i = std::floor(lx);
-    int j = std::floor(ly);
-    int k = std::floor(lz);
+  // ---- interpolation in z-dir
+  std::vector<amrex::Real> sz;
+  switch (deg[2]) {
+      case 1:
+          sz = {1.-zint, zint};
+      case 3:
+          sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
+                -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+  }
 
-    amrex::Real xint = lx - i;
-    amrex::Real yint = ly - j;
-    amrex::Real zint = lz - k;
-
-    // ---- interpolation in x-dir
-    std::vector<amrex::Real> sx;
-    switch (deg[0]) {
-        case 1:
-            sx = {1.-xint, xint};
-        case 3:
-            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
-    }
-
-    // ---- interpolation in y-dir
-    std::vector<amrex::Real> sy;
-    switch (deg[1]) {
-        case 1:
-            sy = {1.-yint, yint};
-        case 3:
-            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
-    }
-
-    // ---- interpolation in z-dir
-    std::vector<amrex::Real> sz;
-    switch (deg[2]) {
-        case 1:
-            sz = {1.-zint, zint};
-        case 3:
-            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
-                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
-    }
+#endif
 
     for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                amrex::Box cc({i+ii,j+jj,k+kk}, {i+ii,j+jj,k+kk}, (*(*mw_yee).E_Index[cmp]));
-                (*(*mw_yee).J_Array[cmp]).plus(sx[ii]*sy[jj]*sz[kk]*charge*partInfo[cmp+3]*part_weight, cc, 0, 1);
+                double s_coeff = sx[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        + sy[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        + sz[kk]
+        #endif
+                        ;
+                amrex::Box cc({AMREX_D_DECL(i+ii,j+jj,k+kk)}, {AMREX_D_DECL(i+ii,j+jj,k+kk)}, (*(*mw_yee).E_Index[cmp]));
+                (*(*mw_yee).J_Array[cmp]).plus(s_coeff*charge*partInfo[cmp+GEMPIC_SPACEDIM]*part_weight, cc, 0, 1);
             }
         }
     }
 }
 
 template <typename P>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
-                                    std::array<amrex::Real,3> ploF,
-                            amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
-                    std::array<int,3> deg = {3,3,3})
+                                    std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+                    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 {
     amrex::Real acceleration = 0.0;
 
     amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
-    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
-    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
-    
     int i = std::floor(lx);
-    int j = std::floor(ly);
-    int k = std::floor(lz);
-    
     amrex::Real xint = lx - i;
-    amrex::Real yint = ly - j;
-    amrex::Real zint = lz - k;
-    
+
     // ---- interpolation in x-dir
     std::vector<amrex::Real> sx;
     switch (deg[0]) {
@@ -224,6 +267,11 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
             sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
                     -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
     }
+
+#if (GEMPIC_SPACEDIM > 1)
+    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
+    int j = std::floor(ly);
+    amrex::Real yint = ly - j;
 
     // ---- interpolation in y-dir
     std::vector<amrex::Real> sy;
@@ -235,6 +283,12 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
                   -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
     }
 
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
+    int k = std::floor(lz);
+    amrex::Real zint = lz - k;
+
     // ---- interpolation in z-dir
     std::vector<amrex::Real> sz;
     switch (deg[2]) {
@@ -245,27 +299,51 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
                   -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
     }
 
+#endif
+
+#if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+#endif
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                    acceleration += sx[ii]*sy[jj]*sz[kk]*acc(i+ii,j+jj,k+kk,0);
+                double s_coeff = sx[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        + sy[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        + sz[kk]
+        #endif
+                        ;
+                    acceleration += s_coeff*acc(i+ii
+                            #if(GEMPIC_SPACEDIM > 1)
+                                                ,j+jj
+                            #endif
+                            #if(GEMPIC_SPACEDIM > 2)
+                                                ,k+kk
+                            #endif
+                                                ,0);
                 }
+#if (GEMPIC_SPACEDIM > 1)
             }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         }
+#endif
     
  return(acceleration);
 }
 
 template <typename P>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-std::array<amrex::Real,6> push_particle(P const& p,
+std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle(P const& p,
 					amrex::Real dt,
 					amrex::Real chargemass, //charge/mass
-					std::array<amrex::Real,3> Ep,
-					std::array<amrex::Real,3> Bp,
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> Ep,
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> Bp,
 					infrastructure infra){
 
-  std::array<amrex::Real,6> newPos;
+  std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
   // new positions (modulo the upper bound of the box)
   newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
   newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
@@ -279,13 +357,12 @@ std::array<amrex::Real,6> push_particle(P const& p,
 }
 
 template <typename P>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-std::array<amrex::Real,6> push_particle_pos(P const& p,
+std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle_pos(P const& p,
                     amrex::Real dt,
                     infrastructure infra,
                     amrex::Real coefficient){
 
-  std::array<amrex::Real,6> newPos;
+  std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
   // new positions (modulo the upper bound of the box)
   newPos[0] = fmod(p.pos(0) + p.rdata(0)*coefficient*dt, infra.geom.ProbHi()[0]);
   newPos[1] = fmod(p.pos(1) + p.rdata(1)*coefficient*dt, infra.geom.ProbHi()[1]);
@@ -299,18 +376,17 @@ std::array<amrex::Real,6> push_particle_pos(P const& p,
 }
 
 template <typename P>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::array<amrex::Real,6> push_particle_boris(P const& p,
                     amrex::Real dt,
                     amrex::Real chargemass, //charge/mass
-                    std::array<amrex::Real,3> Ep,
-                    std::array<amrex::Real,3> Bp,
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> Ep,
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> Bp,
                     infrastructure infra){
 
-  std::array<amrex::Real,6> newPos;
-  std::array<amrex::Real,3> vm;
-  std::array<amrex::Real,3> vt;
-  std::array<amrex::Real,3> vp;
+  std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
+  std::array<amrex::Real,GEMPIC_SPACEDIM> vm;
+  std::array<amrex::Real,GEMPIC_SPACEDIM> vt;
+  std::array<amrex::Real,GEMPIC_SPACEDIM> vp;
   amrex::Real S;
 
   // v-

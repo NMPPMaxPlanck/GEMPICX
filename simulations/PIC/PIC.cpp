@@ -9,6 +9,7 @@
 #include <time_loop.H>
 #include <time_loop_gobal.H>
 #include <time_loop_avg.H>
+#include <gempic_Config.H>
 
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -18,43 +19,46 @@
 using namespace std;
 using namespace amrex;
 
-double WF (double x,double y,double z,double v_x,double v_y,double v_z,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
   double alpha = 0.5;
-  return((1.0 + alpha*cos(k*x))/Np);
+  return((1.0 + alpha*cos(k*x[0]))/Np);
 }
 
-double B_x(double x,double y,double z,double k){return(0);}
-double B_y(double x,double y,double z,double k){return(0);}
-double B_z(double x,double y,double z,double k){return(0);}
+double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
+double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
+double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 
 void main_main ()
 {
   //------------------------------------------------------------------------------
-  //build objects:
-    double (*initB[3]) (double x,double y,double z,double k);
+    //build objects:
+      double (*initB[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
+
+    //initializer
+    initializer init;
+    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
+    amrex::IntVect n_cell(AMREX_D_DECL(32,4,4));
+    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VM{};
+    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VD{};
+    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VW{};
     initB[0] = B_x;
+    VM[0][0] = 0.0;
+    VD[0][0] = 1.0;
+    VW[0][0] = 1.0;
+#if (GEMPIC_SPACEDIM > 1)
     initB[1] = B_y;
+    VM[1][0] = 0.0;
+    VD[1][0] = 1.0;
+    VW[1][0] = 1.0;
+#endif
+#if (GEMPIC_SPACEDIM > 2)
     initB[2] = B_z;
+    VM[2][0] = 0.0;
+    VD[2][0] = 1.0;
+    VW[2][0] = 1.0;
+#endif
 
-  //initializer
-  initializer init;
-  int is_periodic[3] = {1,1,1};
-  int n_cell[3] = {8,8,8};
-  std::array<std::array<amrex::Real, 1>, 3> VM{};
-  std::array<std::array<amrex::Real, 1>, 3> VD{};
-  std::array<std::array<amrex::Real, 1>, 3> VW{};
-  VM[0][0] = 0.0;
-  VM[1][0] = 0.0;
-  VM[2][0] = 0.0;
-
-  VD[0][0] = 1.0;
-  VD[1][0] = 1.0;
-  VD[2][0] = 1.0;
-
-  VW[0][0] = 1.0;
-  VW[1][0] = 1.0;
-  VW[2][0] = 1.0;
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,300,1,{1.0},{1.0},1000,0.5,
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,2000,{1.0},{1.0},1000,0.5,
                   VM,VD,VW,WF);
   //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
@@ -76,12 +80,19 @@ void main_main ()
   init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
   
   std::ofstream ofss("PIC_particle.output", std::ofstream::out);
-  for (amrex::ParIter<4,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+  for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
 
     const auto& particles = pti.GetArrayOfStructs();
     const long np = pti.numParticles();
     for (int pp=0;pp<np;pp++) {
-      amrex::Print(ofss) << particles[pp].pos(0) << "," << particles[pp].pos(1) << "," << particles[pp].pos(2) << std::endl;
+      amrex::Print(ofss) << particles[pp].pos(0) << "," <<
+                      #if (GEMPIC_SPACEDIM > 1)
+                            particles[pp].pos(1) << "," <<
+                      #endif
+                      #if (GEMPIC_SPACEDIM > 2)
+                            particles[pp].pos(2) <<
+                      #endif
+                            std::endl;
     }
   }
   ofss.close();
