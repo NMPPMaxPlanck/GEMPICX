@@ -107,8 +107,12 @@ void init_particles_cellwise(infrastructure infra,
 	    (*ppg).add_particle(species, shifted_position, velocity, weight);
         amrex::Print(ofsfun) << weight << "," << shifted_position[0] << std::endl;
 	  }
+#if (GEMPIC_SPACEDIM > 1)
 	}
+#endif
+#if (GEMPIC_SPACEDIM > 2)
       }
+#endif
     }
   }
 

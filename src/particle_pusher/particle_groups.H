@@ -44,7 +44,7 @@ class particle_groups
     for (int i=0;i<mypc.size();i++) {
       mypc[i].reset(new amrex::ParticleContainer<GEMPIC_SPACEDIM+1, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
       (*mypc[i]).do_tiling = true;
-      (*mypc[i]).tile_size = {ifr.max_grid_size,ifr.max_grid_size,ifr.max_grid_size};
+      (*mypc[i]).tile_size = {AMREX_D_DECL(ifr.max_grid_size,ifr.max_grid_size,ifr.max_grid_size)};
     }
   };
 

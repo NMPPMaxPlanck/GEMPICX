@@ -54,8 +54,9 @@ void time_loop (infrastructure infra,
 	auto& particles = pti.GetArrayOfStructs();
 	const long np  = pti.numParticles();
 
+    amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
 	for (int pp=0;pp<np;pp++) {
-      gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], mw_yee, plo, dxi);
+      gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], rhoarr, plo, dxi);
 	}
 	((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
       }
@@ -158,8 +159,9 @@ void time_loop (infrastructure infra,
 	const long np  = pti.numParticles();
 
 	for(int cc=0;cc<nc;cc++){
+        amrex::Array4<amrex::Real> const& jarr = (*(*mw_yee).J_Array[cc])[pti].array();
 	  for (int pp=0;pp<np;pp++) {
-        gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, mw_yee,
+        gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, jarr,
                  infra.ploE[cc], dxi);
 	  }
 	}

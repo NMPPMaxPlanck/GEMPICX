@@ -7,6 +7,7 @@
 #include <sampler.H>
 #include <initializer.H>
 #include <time_loop.H>
+#include <time_loop_avg.H>
 #include <gempic_Config.H>
 
 #include <AMReX_PlotFileUtil.H>
@@ -22,10 +23,27 @@ double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACED
   return((1.0 + alpha*cos(k*x[0]))/Np);
 };
 
+double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
+#if (GEMPIC_SPACEDIM > 1)
+double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
+#endif
+
 void main_main ()
 {
   //------------------------------------------------------------------------------
   //build objects:
+
+    double (*initB[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
+    initB[0] = B_x;
+  #if (GEMPIC_SPACEDIM > 1)
+    initB[1] = B_y;
+  #endif
+  #if (GEMPIC_SPACEDIM > 2)
+    initB[2] = B_z;
+  #endif
 
   //initializer
   initializer init;
@@ -49,8 +67,8 @@ void main_main ()
   //------------------------------------------------------------------------------
   // initialize particles:
   part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(0.0,0.5,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.5,0.5)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
   //part_gr.add_particle(0, {AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
   part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
   //part_gr.add_particle(0, {AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
@@ -74,7 +92,7 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // solve:
-  time_loop(infra, &mw_yee, &part_gr);
+  time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
 }
 
 int main(int argc, char* argv[])

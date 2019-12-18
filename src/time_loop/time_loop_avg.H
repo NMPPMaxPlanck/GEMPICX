@@ -53,8 +53,9 @@ amrex::Real initk) {
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();
 
+            amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], mw_yee, plo, dxi);
+                gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], rhoarr, plo, dxi);
             }
             ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
         }
@@ -64,13 +65,39 @@ amrex::Real initk) {
     for(int spec=0;spec<(*part_gr).n_species;spec++){
         (*(*part_gr).mypc[spec]).Redistribute();
     }
+    std::ofstream ofsA("rhoA.output", std::ofstream::out);
+    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
+        amrex::Print(ofsA) << (*mw_yee).rho[mfi] << std::endl;
+    }
+    ofsA.close();
+    amrex::Real rhosum = (*mw_yee).rho.sum(0);
 
     //add values from ghost cells and periodic boundary
     (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
+    std::ofstream ofsB("rhoB.output", std::ofstream::out);
+    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
+        amrex::Print(ofsB) << (*mw_yee).rho[mfi] << std::endl;
+    }
+    ofsB.close();
+    //(*mw_yee).FillBD(infra);
+    std::ofstream ofsC("rhoC.output", std::ofstream::out);
+    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
+        amrex::Print(ofsC) << (*mw_yee).rho[mfi] << std::endl;
+    }
+    ofsC.close();
+
+    amrex::Real rhomean = rhosum/(infra.n_cell[0]
+        #if (GEMPIC_SPACEDIM > 1)
+            *infra.n_cell[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+            *infra.n_cell[2]
+        #endif
+            );
+    std::cout << (*mw_yee).rho.sum(0, false) << "|" << rhomean << std::endl;
+    (*mw_yee).rho.plus(-rhomean,0,1);
     (*mw_yee).FillBD(infra);
 
-    amrex::Real rhomean = (*mw_yee).rho.sum(0)/1000.0;
-    (*mw_yee).rho.plus(-rhomean,0,1);
 
     //initial E by rho
     (*mw_yee).phi_init.setVal(0.0, 0);
@@ -167,16 +194,20 @@ amrex::Real initk) {
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
+                amrex::Array4<amrex::Real> const& jarrx = (*(*mw_yee).J_Array[0])[pti].array();
+                amrex::Array4<amrex::Real> const& jarry = (*(*mw_yee).J_Array[1])[pti].array();
+                amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
+
                 // loop over particles: add contribution of old particle position and push
                 for (int pp=0;pp<np;pp++){
-                    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 0, mw_yee,
+                    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 0, jarrx,
                                               infra.ploE[0], dxi, 0.5);
 #if (GEMPIC_SPACEDIM > 1)
-                    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 1, mw_yee,
+                    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 1, jarry,
                                               infra.ploE[1], dxi, 0.5);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-                    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 2, mw_yee,
+                    gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 2, jarrz,
                                               infra.ploE[2], dxi, 0.5);
 #endif
                     for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
@@ -215,8 +246,9 @@ amrex::Real initk) {
                 const long np  = pti.numParticles();
 
                 for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+                    amrex::Array4<amrex::Real> const& jarr = (*(*mw_yee).J_Array[cc])[pti].array();
                     for (int pp=0;pp<np;pp++) {
-                        gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, mw_yee,
+                        gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, jarr,
                                              infra.ploE[cc], dxi, 0.5);
                     }
                 }

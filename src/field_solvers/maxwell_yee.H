@@ -73,7 +73,7 @@ class maxwell_yee
     B_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 #endif
 
-    Nghost = 3;
+    Nghost = 1;
     Ncomp = 1;
 
     dt = init.dt;
@@ -218,6 +218,12 @@ class maxwell_yee
           (*J_Array[i])[mfi].getVal(cj, {AMREX_D_DECL(l,j,k)},0,1);
 
           // B-derivatives
+#if (GEMPIC_SPACEDIM == 1)
+          (*B_Array[0])[mfi].getVal(c2,{ l },0,1);
+          (*B_Array[0])[mfi].getVal(c3,{l-1},0,1);
+          (*E_Array[0])[mfi].setVal(*c1+dt*coefficient*((*c3-*c2)/ifr.dx[0]-*cj), cc, 0, 1);
+#elif (GEMPIC_SPACEDIM == 2)
+#elif (GEMPIC_SPACEDIM == 3)
           (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{  l,  j  ,k},0,1);
           (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0)},0,1);
           (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {  l,  j,  k},0,1);
@@ -225,6 +231,7 @@ class maxwell_yee
 
           (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                         (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]-*cj), cc, 0, 1);
+#endif
         }
 #if (GEMPIC_SPACEDIM > 1)
       }
@@ -264,6 +271,12 @@ class maxwell_yee
           (*B_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1);
 
           // E-derivatives
+#if (GEMPIC_SPACEDIM == 1)
+          (*E_Array[0])[mfi].getVal(c2,{ l },0,1);
+          (*E_Array[0])[mfi].getVal(c3,{l+1},0,1);
+          (*B_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[0]), cc, 0, 1);
+#elif (GEMPIC_SPACEDIM == 2)
+#elif (GEMPIC_SPACEDIM == 3)
           (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0)},0,1);
           (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{  l,  j  ,k},0,1);
           (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4,{l+(i%GEMPIC_SPACEDIM==1?1:0),j+(i%GEMPIC_SPACEDIM==2?1:0),k+(i%GEMPIC_SPACEDIM==0?1:0)},0,1);
@@ -271,6 +284,7 @@ class maxwell_yee
 
           (*B_Array[i])[mfi].setVal(*c1-dt*coefficient*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                         (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
+#endif
         }
 #if (GEMPIC_SPACEDIM > 1)
       }
@@ -311,7 +325,7 @@ class maxwell_yee
         for(int l=lo[0]; l<=hi[0]; l++){
 
           // the box for these values:
-          std::array<double,GEMPIC_SPACEDIM> x = {l*ifr.dx[0], j*ifr.dx[1], k*ifr.dx[2]};
+          std::array<double,GEMPIC_SPACEDIM> x = {AMREX_D_DECL(l*ifr.dx[0], j*ifr.dx[1], k*ifr.dx[2])};
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
 
           phi[mfi].setVal(phi_fun(x), cc, 0, 1);
@@ -390,8 +404,8 @@ class maxwell_yee
           (*E_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1);
 
 	      // phi-derivative
-          phi[mfi].getVal(c1,{l+(i%GEMPIC_SPACEDIM==0?1:0),j+(i%GEMPIC_SPACEDIM==1?1:0),k+(i%GEMPIC_SPACEDIM==2?1:0)},0,1);
-	      phi[mfi].getVal(c2,{l,j,k},0,1);
+          phi[mfi].getVal(c1,{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==0?1:0),j+(i%GEMPIC_SPACEDIM==1?1:0),k+(i%GEMPIC_SPACEDIM==2?1:0))},0,1);
+          phi[mfi].getVal(c2,{AMREX_D_DECL(l,j,k)},0,1);
 
 	      (*E_Array[i])[mfi].setVal((*c1-*c2)/ifr.dx[i], cc, 0, 1);
 	    }

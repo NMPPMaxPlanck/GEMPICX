@@ -53,8 +53,9 @@ void time_loop_global (infrastructure infra,
           auto& particles = pti.GetArrayOfStructs();
           const long np  = pti.numParticles();
 
+          amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
           for (int pp=0;pp<np;pp++) {
-              gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], mw_yee, plo, dxi);
+              gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], rhoarr, plo, dxi);
           }
           ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
       }
@@ -120,6 +121,10 @@ void time_loop_global (infrastructure infra,
               auto& particles = pti.GetArrayOfStructs(); // get particles
               const long np  = pti.numParticles();
 
+              amrex::Array4<amrex::Real> const& jarrx = (*(*mw_yee).J_Array[0])[pti].array();
+              amrex::Array4<amrex::Real> const& jarry = (*(*mw_yee).J_Array[1])[pti].array();
+              amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
+
               // loop over particles
               for (int pp=0;pp<np;pp++){
                   for (int cc=0;cc<nc;cc++){
@@ -149,12 +154,12 @@ void time_loop_global (infrastructure infra,
                                    #endif
                                                      std::endl;
 
-                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 0, mw_yee, infra.ploE[0], dxi);
+                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 0, jarrx, infra.ploE[0], dxi);
 #if (GEMPIC_SPACEDIM > 1)
-                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 1, mw_yee, infra.ploE[1], dxi);
+                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 1, jarry, infra.ploE[1], dxi);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 2, mw_yee, infra.ploE[2], dxi);
+                  gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 2, jarrz, infra.ploE[2], dxi);
 #endif
               }
           }

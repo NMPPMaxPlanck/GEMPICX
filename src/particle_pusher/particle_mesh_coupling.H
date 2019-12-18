@@ -14,7 +14,7 @@
 
 template <typename P>
 void gempic_deposit_cic (P const& p, amrex::Real charge,
-             maxwell_yee *mw_yee,
+             amrex::Array4<amrex::Real> const& rho,
              amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
              amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
              amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
@@ -29,9 +29,11 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     switch (deg[0]) {
         case 1:
             sx = {1.-xint, xint};
+        break;
         case 3:
             sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
                     -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+        break;
     }
 
 #if (GEMPIC_SPACEDIM > 1)
@@ -44,9 +46,11 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     switch (deg[1]) {
         case 1:
             sy = {1.-yint, yint};
+        break;
         case 3:
             sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
                   -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+        break;
     }
 
 #endif
@@ -60,9 +64,11 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     switch (deg[2]) {
         case 1:
             sz = {1.-zint, zint};
+        break;
         case 3:
             sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
                   -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+        break;
     }
 
 #endif
@@ -76,14 +82,23 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
                 double s_coeff = sx[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        + sy[jj]
+                        * sy[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        + sz[kk]
+                        * sz[kk]
         #endif
                         ;
-                amrex::Box cc({i+ii,j+jj,k+kk}, {i+ii,j+jj,k+kk}, amrex::IntVect::TheNodeVector());
-                ((*mw_yee).rho).plus(s_coeff*charge*p.rdata(GEMPIC_SPACEDIM), cc, 0, 1); //p.rdata(GEMPIC_SPACEDIM) = weight
+                //TODO: try exchanging for amrex::Add()
+                amrex::Gpu::Atomic::Add(&rho(i+ii
+                             #if (GEMPIC_SPACEDIM > 1)
+                                             , j+jj
+                             #endif
+                             #if (GEMPIC_SPACEDIM > 2)
+                                             , k+kk
+                             #endif
+                                             , 0), s_coeff*charge*p.rdata(GEMPIC_SPACEDIM));
+
+
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -95,7 +110,7 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
 
 template <typename P>
 void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
-               maxwell_yee *mw_yee,
+                           amrex::Array4<amrex::Real> const& j_comp,
                std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                            amrex::Real coefficient = 1.0,
@@ -110,9 +125,11 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
   switch (deg[0]) {
       case 1:
           sx = {1.-xint, xint};
+      break;
       case 3:
           sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
                   -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+      break;
   }
 
 #if (GEMPIC_SPACEDIM > 1)
@@ -125,9 +142,11 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
   switch (deg[1]) {
       case 1:
           sy = {1.-yint, yint};
+      break;
       case 3:
           sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
                 -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+      break;
   }
 
 #endif
@@ -141,9 +160,11 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
   switch (deg[2]) {
       case 1:
           sz = {1.-zint, zint};
+      break;
       case 3:
           sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
                 -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+      break;
   }
 
 #endif
@@ -157,15 +178,22 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
                 double s_coeff = sx[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        + sy[jj]
+                        * sy[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        + sz[kk]
+                        * sz[kk]
         #endif
                         ;
           // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_SPACEDIM): weight
-                amrex::Box cc({AMREX_D_DECL(i+ii,j+jj,k+kk)}, {AMREX_D_DECL(i+ii,j+jj,k+kk)}, (*(*mw_yee).E_Index[cmp]));
-                (*(*mw_yee).J_Array[cmp]).plus(coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_SPACEDIM), cc, 0, 1);
+                amrex::Gpu::Atomic::Add(&j_comp(i+ii
+                             #if (GEMPIC_SPACEDIM > 1)
+                                             , j+jj
+                             #endif
+                             #if (GEMPIC_SPACEDIM > 2)
+                                             , k+kk
+                             #endif
+                                             , 0), coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_SPACEDIM));
+
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -176,7 +204,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 }
 
 void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
-               maxwell_yee *mw_yee,
+                                  amrex::Array4<amrex::Real> const& j_comp,
                std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
@@ -190,9 +218,11 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> part
   switch (deg[0]) {
       case 1:
           sx = {1.-xint, xint};
+      break;
       case 3:
           sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
                   -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+      break;
   }
 
 #if (GEMPIC_SPACEDIM > 1)
@@ -205,9 +235,11 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> part
   switch (deg[1]) {
       case 1:
           sy = {1.-yint, yint};
+      break;
       case 3:
           sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
                 -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+      break;
   }
 
 #endif
@@ -221,9 +253,11 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> part
   switch (deg[2]) {
       case 1:
           sz = {1.-zint, zint};
+      break;
       case 3:
           sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
                 -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+      break;
   }
 
 #endif
@@ -233,14 +267,20 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> part
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
                 double s_coeff = sx[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        + sy[jj]
+                        * sy[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        + sz[kk]
+                        * sz[kk]
         #endif
                         ;
-                amrex::Box cc({AMREX_D_DECL(i+ii,j+jj,k+kk)}, {AMREX_D_DECL(i+ii,j+jj,k+kk)}, (*(*mw_yee).E_Index[cmp]));
-                (*(*mw_yee).J_Array[cmp]).plus(s_coeff*charge*partInfo[cmp+GEMPIC_SPACEDIM]*part_weight, cc, 0, 1);
+                amrex::Gpu::Atomic::Add(&j_comp(i+ii
+                             #if (GEMPIC_SPACEDIM > 1)
+                                             , j+jj
+                             #endif
+                             #if (GEMPIC_SPACEDIM > 2)
+                                             , k+kk
+                             #endif
+                                             , 0), s_coeff*charge*partInfo[cmp+GEMPIC_SPACEDIM]*part_weight);
             }
         }
     }
@@ -263,9 +303,11 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
     switch (deg[0]) {
         case 1:
             sx = {1.-xint, xint};
+        break;
         case 3:
             sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
                     -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+        break;
     }
 
 #if (GEMPIC_SPACEDIM > 1)
@@ -278,9 +320,11 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
     switch (deg[1]) {
         case 1:
             sy = {1.-yint, yint};
+        break;
         case 3:
             sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
                   -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+        break;
     }
 
 #endif
@@ -294,9 +338,11 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
     switch (deg[2]) {
         case 1:
             sz = {1.-zint, zint};
+        break;
         case 3:
             sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
                   -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+        break;
     }
 
 #endif
@@ -310,10 +356,10 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
                 double s_coeff = sx[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        + sy[jj]
+                        * sy[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        + sz[kk]
+                        * sz[kk]
         #endif
                         ;
                     acceleration += s_coeff*acc(i+ii
@@ -346,13 +392,21 @@ std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle(P const& p,
   std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
   // new positions (modulo the upper bound of the box)
   newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
+#if (GEMPIC_SPACEDIM > 1)
   newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
+#endif
 
+#if (GEMPIC_SPACEDIM == 1)
+  newPos[1] = p.rdata(0) + dt*chargemass*(Ep[0]);
+#elif (GEMPIC_SPACEDIM == 2)
+#elif (GEMPIC_SPACEDIM == 3)
   newPos[3] = p.rdata(0) + dt*chargemass*(Ep[0]+(p.rdata(1)*Bp[2]-p.rdata(2)*Bp[1]));
   newPos[4] = p.rdata(1) + dt*chargemass*(Ep[1]+(p.rdata(2)*Bp[0]-p.rdata(0)*Bp[2]));
   newPos[5] = p.rdata(2) + dt*chargemass*(Ep[2]+(p.rdata(0)*Bp[1]-p.rdata(1)*Bp[0]));
-
+#endif
   return(newPos);
 }
 
@@ -365,18 +419,20 @@ std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle_pos(P const& p,
   std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
   // new positions (modulo the upper bound of the box)
   newPos[0] = fmod(p.pos(0) + p.rdata(0)*coefficient*dt, infra.geom.ProbHi()[0]);
+  newPos[GEMPIC_SPACEDIM] = p.rdata(0);
+#if (GEMPIC_SPACEDIM > 1)
   newPos[1] = fmod(p.pos(1) + p.rdata(1)*coefficient*dt, infra.geom.ProbHi()[1]);
+  newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   newPos[2] = fmod(p.pos(2) + p.rdata(2)*coefficient*dt, infra.geom.ProbHi()[2]);
-
-  newPos[3] = p.rdata(0);
-  newPos[4] = p.rdata(1);
-  newPos[5] = p.rdata(2);
-
+  newPos[GEMPIC_SPACEDIM+2] = p.rdata(2);
+#endif
   return(newPos);
 }
 
 template <typename P>
-std::array<amrex::Real,6> push_particle_boris(P const& p,
+std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle_boris(P const& p,
                     amrex::Real dt,
                     amrex::Real chargemass, //charge/mass
                     std::array<amrex::Real,GEMPIC_SPACEDIM> Ep,
@@ -391,13 +447,23 @@ std::array<amrex::Real,6> push_particle_boris(P const& p,
 
   // v-
   vm[0] = p.rdata(0) + dt*chargemass/2*Ep[0];
+#if (GEMPIC_SPACEDIM > 1)
   vm[1] = p.rdata(1) + dt*chargemass/2*Ep[1];
+#endif
+#if (GEMPIC_SPACEDIM > 2)
   vm[2] = p.rdata(2) + dt*chargemass/2*Ep[2];
+#endif
 
+#if (GEMPIC_SPACEDIM == 1)
+  vp[0] = vm[0];
+#elif (GEMPIC_SPACEDIM == 2)
+
+#elif (GEMPIC_SPACEDIM == 3)
   // v'
-  vt[0] = vm[0] + (vm[1]*dt*chargemass/2*Bp[2]-vm[2]*dt*chargemass/2*Bp[1]);
-  vt[1] = vm[1] + (vm[2]*dt*chargemass/2*Bp[0]-vm[0]*dt*chargemass/2*Bp[2]);
-  vt[2] = vm[2] + (vm[0]*dt*chargemass/2*Bp[1]-vm[1]*dt*chargemass/2*Bp[0]);
+  amrex::Real coeff_t = dt*chargemass/2;
+  vt[0] = vm[0] + coeff_t*(vm[1]*Bp[2]-vm[2]*Bp[1]);
+  vt[1] = vm[1] + coeff_t*(vm[2]*Bp[0]-vm[0]*Bp[2]);
+  vt[2] = vm[2] + coeff_t*(vm[0]*Bp[1]-vm[1]*Bp[0]);
 
   S = pow(dt*chargemass/2*Bp[0], 2.)+pow(dt*chargemass/2*Bp[1], 2.)+pow(dt*chargemass/2*Bp[2], 2.);
 
@@ -406,16 +472,25 @@ std::array<amrex::Real,6> push_particle_boris(P const& p,
   vp[0] = vm[0] + coeff*(vt[1]*Bp[2]-vt[2]*Bp[1]);
   vp[1] = vm[1] + coeff*(vt[2]*Bp[0]-vt[0]*Bp[2]);
   vp[2] = vm[2] + coeff*(vt[0]*Bp[1]-vt[1]*Bp[0]);
+#endif
 
   // v
-  newPos[3] = vp[0] + dt*chargemass/2*Ep[0];
-  newPos[4] = vp[1] + dt*chargemass/2*Ep[1];
-  newPos[5] = vp[2] + dt*chargemass/2*Ep[2];
+  newPos[GEMPIC_SPACEDIM] = vp[0] + dt*chargemass/2*Ep[0];
+#if (GEMPIC_SPACEDIM > 1)
+  newPos[GEMPIC_SPACEDIM+1] = vp[1] + dt*chargemass/2*Ep[1];
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+  newPos[GEMPIC_SPACEDIM+2] = vp[2] + dt*chargemass/2*Ep[2];
+#endif
 
   // new positions (modulo the upper bound of the box)
-  newPos[0] = fmod(p.pos(0) + newPos[3]*dt, infra.geom.ProbHi()[0]);
-  newPos[1] = fmod(p.pos(1) + newPos[4]*dt, infra.geom.ProbHi()[1]);
-  newPos[2] = fmod(p.pos(2) + newPos[5]*dt, infra.geom.ProbHi()[2]);
+  newPos[0] = fmod(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.geom.ProbHi()[0]);
+#if (GEMPIC_SPACEDIM > 1)
+  newPos[1] = fmod(p.pos(1) + newPos[GEMPIC_SPACEDIM+1]*dt, infra.geom.ProbHi()[1]);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+  newPos[2] = fmod(p.pos(2) + newPos[GEMPIC_SPACEDIM+2]*dt, infra.geom.ProbHi()[2]);
+#endif
 
 
 

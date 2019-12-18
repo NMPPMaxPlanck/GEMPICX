@@ -109,7 +109,7 @@ void main_main ()
 
       Array4<Real> const& rhoarr = mw_yee.rho[pti].array();
       for (int pp=0;pp<np;pp++) {
-    gempic_deposit_cic(particles[pp], init.charge[spec], &mw_yee, plo, dxi);
+    gempic_deposit_cic(particles[pp], init.charge[spec], rhoarr, plo, dxi);
       }
     }
   }
@@ -123,7 +123,7 @@ void main_main ()
       for(int cc=0;cc<nc;cc++){
 	Array4<Real> const& jarr = (*mw_yee.J_Array[cc])[pti].array();
 	for (int pp=0;pp<np;pp++) {
-      gempic_deposit_J_cic(particles[pp], init.charge[spec], cc, &mw_yee, infra.ploE[cc], dxi);
+      gempic_deposit_J_cic(particles[pp], init.charge[spec], cc, jarr, infra.ploE[cc], dxi);
 	}
       }
     }
@@ -146,7 +146,7 @@ void main_main ()
 	  
 	  //E-field
       eres[cc] = gempic_interpolate_cic(particles[pp], earr, infra.ploE[cc], dxi);
-      std::array<double,GEMPIC_SPACEDIM> x = {particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2)};
+      std::array<double,GEMPIC_SPACEDIM> x = {AMREX_D_DECL(particles[pp].pos(0),particles[pp].pos(1),particles[pp].pos(2))};
       esol = (*fields[cc])(x,0.0);
       if (std::abs(eres[cc]-esol) > tol) {
 	    Print(ofs) << "check results at particle " << pp << ", E-component " << cc <<  endl;

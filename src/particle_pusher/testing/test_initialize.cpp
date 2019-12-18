@@ -94,8 +94,12 @@ void main_main ()
           shifted_position[0] = position[0] + x[0];
 	      part_gr.add_particle(species, shifted_position, velocity, weight);
 	    }
+#if (GEMPIC_SPACEDIM > 1)
 	  }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
 	}
+#endif
     }
   }
 }
