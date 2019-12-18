@@ -69,7 +69,7 @@ class initializer
 
       double twopi = 2.0*3.14159265359;
 
-      amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(1,1,1)};
+      amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
       //amrex::Real boxHi[GEMPIC_SPACEDIM] = {twopi/k,twopi/k,twopi/k};
       amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k,twopi/k/((double)n_cell[0]/(double)n_cell[1]),twopi/k/((double)n_cell[0]/(double)n_cell[2]))};
       real_box.setLo(boxLo);
