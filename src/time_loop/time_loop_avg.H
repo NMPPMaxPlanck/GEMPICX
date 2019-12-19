@@ -26,8 +26,8 @@ amrex::Real initk) {
 
     diagnostics diagn((*mw_yee).nsteps);
 
-    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo;
-    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dxi;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> dxi;
     for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
         plo[cc] = infra.geom.ProbLo()[cc];
         dxi[cc] = 1.0/infra.dx[cc];

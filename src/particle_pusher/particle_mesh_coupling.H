@@ -15,8 +15,8 @@
 template <typename P>
 void gempic_deposit_cic (P const& p, amrex::Real charge,
              amrex::Array4<amrex::Real> const& rho,
-             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+             std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+             std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
              amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 
 {
@@ -112,7 +112,7 @@ template <typename P>
 void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
                            amrex::Array4<amrex::Real> const& j_comp,
                std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+               std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                            amrex::Real coefficient = 1.0,
                amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 {
@@ -206,7 +206,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
                                   amrex::Array4<amrex::Real> const& j_comp,
                std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+               std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 {
   amrex::Real lx = partInfo[0]*dxi[0] - ploF[0];
@@ -289,7 +289,7 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> part
 template <typename P>
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
                                     std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
+                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                     amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
 {
     amrex::Real acceleration = 0.0;
