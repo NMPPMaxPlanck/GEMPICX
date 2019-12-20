@@ -9,6 +9,14 @@ from tabulate import tabulate
 
 # path needs to be adapted to build directory!
 filename = "/home/irga/build/gempic/PIC_save.output"
+
+filename = "/home/irga/build/gempic/saved_results/PIC_save.output"
+filename = "/home/irga/build/gempic/saved_results/PIC_save.output_1D"
+filename = "/home/irga/build/gempic/saved_results/PIC_save.output_ref"
+filename = "/home/irga/build/gempic/saved_results/PIC_save.outputWeibel"
+filename = "/home/irga/build/gempic/saved_results/PIC_save.outputWeibelK"
+
+filename = "/home/irga/build/gempic/tmp2/PIC_save.output111"
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
 filename_3d = "/home/irga/build/gempic/PIC_particle.output"
 filename_weights = "/home/irga/build/gempic/weights.output"
@@ -49,9 +57,60 @@ for line in file.readlines():
     mom3[line_num] = vals[10]
     line_num = line_num + 1
 
-print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))
+#print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))
 #plt.plot(t,E1+E2+E3+B1+B2+B3+kin,'-o',t,mom1+mom2+mom3,'-*')
-plt.plot(t,E1,'-o')
+plt.plot(t[0:30],B3[0:30],'-')
+
+########### energy and mom (1D version) ####################
+
+n_lines = sum(1 for line in open(filename))
+
+t = np.empty(n_lines)
+E = np.empty(n_lines)
+B = np.empty(n_lines)
+kin = np.empty(n_lines)
+mom = np.empty(n_lines)
+table = np.empty([n_lines, 5])
+
+file = open(filename, 'r')
+
+line_num = 0
+for line in file.readlines():
+    vals = line.rstrip().split(',') #using rstrip to remove the \n
+    vals = vals[:-1]
+    table[line_num,] = vals
+    t[line_num] = vals[0]
+    E[line_num] = vals[1]
+    B[line_num] = vals[2]
+    kin[line_num] = vals[3]
+    mom[line_num] = vals[4]
+    line_num = line_num + 1
+
+#print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))
+#plt.plot(t,E1+E2+E3+B1+B2+B3+kin,'-o',t,mom1+mom2+mom3,'-*')
+plt.plot(t,E,'-')
+
+########### rho 1D ####################
+
+rho = [
+-6.93889e-18, 0, -2.42861e-17, 2.08167e-17, 6.93889e-18, -5.20417e-17,
+-3.46945e-18, 1.38778e-17, 1.38778e-17, 2.08167e-17, -2.42861e-17,
+-1.04083e-17, 6.245e-17, -2.42861e-17, 4.16334e-17, -6.93889e-18,
+-2.77556e-17, 5.55112e-17, -3.1225e-17, 4.85723e-17, -1.2837e-16,
+4.85723e-17, 4.16334e-17, -9.71445e-17, 4.85723e-17, 4.16334e-17,
+5.55112e-17, -9.02056e-17, 4.85723e-17, 4.85723e-17, -1.249e-16,
+2.77556e-17
+]
+rho = [0.0155743, 0.0152751, 0.0143888, 0.0129496, 0.0110127, 0.00865268,
+       0.00596009, 0.00303846, 6.38626e-08, -0.00303833, -0.00595997,
+       -0.00865257, -0.0110127, -0.0129495, -0.0143888, -0.015275, -0.0155743,
+       -0.0152751, -0.0143888, -0.0129496, -0.0110127, -0.00865268, -0.00596009,
+       -0.00303846, -6.38626e-08, 0.00303833, 0.00595997, 0.00865257, 0.0110127,
+       0.0129495, 0.0143888, 0.015275
+]
+
+
+plt.plot(range(32),rho,'-')
 
 ########### pos and vel ####################
 
