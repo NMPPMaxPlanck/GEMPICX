@@ -21,7 +21,7 @@
 void time_loop_avg (infrastructure infra,
                     maxwell_yee *mw_yee,
                     particle_groups *part_gr,
-                    double (*initB[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
+                    double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
 amrex::Real initk) {
 
     diagnostics diagn((*mw_yee).nsteps);
@@ -39,7 +39,7 @@ amrex::Real initk) {
     // Deposit charges:
     for (int spec=0;spec<(*part_gr).n_species;spec++) {
         (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
             amrex::Box tilebox;
             amrex::FArrayBox local_rho;
 
@@ -65,26 +65,11 @@ amrex::Real initk) {
     for(int spec=0;spec<(*part_gr).n_species;spec++){
         (*(*part_gr).mypc[spec]).Redistribute();
     }
-    std::ofstream ofsA("rhoA.output", std::ofstream::out);
-    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
-        amrex::Print(ofsA) << (*mw_yee).rho[mfi] << std::endl;
-    }
-    ofsA.close();
     amrex::Real rhosum = (*mw_yee).rho.sum(0);
 
     //add values from ghost cells and periodic boundary
     (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
-    std::ofstream ofsB("rhoB.output", std::ofstream::out);
-    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
-        amrex::Print(ofsB) << (*mw_yee).rho[mfi] << std::endl;
-    }
-    ofsB.close();
     //(*mw_yee).FillBD(infra);
-    std::ofstream ofsC("rhoC.output", std::ofstream::out);
-    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
-        amrex::Print(ofsC) << (*mw_yee).rho[mfi] << std::endl;
-    }
-    ofsC.close();
 
     amrex::Real rhomean = rhosum/(infra.n_cell[0]
         #if (GEMPIC_SPACEDIM > 1)
@@ -94,10 +79,11 @@ amrex::Real initk) {
             *infra.n_cell[2]
         #endif
             );
-    std::cout << (*mw_yee).rho.sum(0, false) << "|" << rhomean << std::endl;
     (*mw_yee).rho.plus(-rhomean,0,1);
     (*mw_yee).FillBD(infra);
-
+    amrex::Vector<std::string> varnames = {"rho"};
+    WriteSingleLevelPlotfile ("SliceData/rho_plotfile_0", (*mw_yee).rho, varnames,
+                              infra.geom, 0, 0);
 
     //initial E by rho
     (*mw_yee).phi_init.setVal(0.0, 0);
@@ -112,7 +98,7 @@ amrex::Real initk) {
 
     // initial B_field
     std::array<double,GEMPIC_SPACEDIM> x;
-    for (int i = 0; i<GEMPIC_SPACEDIM; i++) {
+    for (int i = 0; i<GEMPIC_BDIM; i++) {
       for ( amrex::MFIter mfi(*(*mw_yee).B_Array[i]); mfi.isValid(); ++mfi )
       {
     const amrex::Box& bx = mfi.validbox();
@@ -146,12 +132,12 @@ amrex::Real initk) {
     //approximate x^1/2 and e^1/2
     (*mw_yee).advance_E(infra, 0.5);
     for (int spec=0;spec<(*part_gr).n_species;spec++) {
-        for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
             auto& particles = pti.GetArrayOfStructs(); // get particles
             const long np  = pti.numParticles();
             for (int pp=0;pp<np;pp++){
-                std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos = push_particle_pos(particles[pp], (*mw_yee).dt, infra, 0.5);
-                std::copy(begin(newPos),end(newPos),&particles.data()[pp*(2*GEMPIC_SPACEDIM+2)]);
+                std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_pos(particles[pp], (*mw_yee).dt, infra, 0.5);
+                std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
             }
         }
         (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -177,52 +163,61 @@ amrex::Real initk) {
 
         // set J to 0 before we start depositing values from current particles
         (*(*mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
         (*(*mw_yee).J_Array[1]).setVal(0.0, 0);
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
         (*(*mw_yee).J_Array[2]).setVal(0.0, 0);
 #endif
 
         (*mw_yee).FillBD(infra);
 
-        std::array<amrex::Real,GEMPIC_SPACEDIM> eres, bres;
+        std::array<amrex::Real,GEMPIC_VDIM> eres;
+        std::array<amrex::Real,GEMPIC_BDIM> bres;
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
-            for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
                 amrex::Array4<amrex::Real> const& jarrx = (*(*mw_yee).J_Array[0])[pti].array();
+#if (GEMPIC_VDIM > 1)
                 amrex::Array4<amrex::Real> const& jarry = (*(*mw_yee).J_Array[1])[pti].array();
+#endif
+#if (GEMPIC_VDIM > 1)
                 amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
+#endif
 
                 // loop over particles: add contribution of old particle position and push
                 for (int pp=0;pp<np;pp++){
                     gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 0, jarrx,
                                               infra.ploE[0], dxi, 0.5);
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
                     gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 1, jarry,
                                               infra.ploE[1], dxi, 0.5);
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
                     gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 2, jarrz,
                                               infra.ploE[2], dxi, 0.5);
 #endif
-                    for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+                    for (int cc=0;cc<GEMPIC_VDIM;cc++){
 
                         amrex::Array4<amrex::Real> const& earr = (*(*mw_yee).E_Array[cc])[pti].array();
-                        amrex::Array4<amrex::Real> const& barr = (*(*mw_yee).B_Array[cc])[pti].array();
 
                         //E-field at particle position
                         eres[cc] = gempic_interpolate_cic(particles[pp], earr, infra.ploE[cc], dxi);
 
+                    }
+                    for (int cc=0;cc<GEMPIC_BDIM;cc++){
+
+                        amrex::Array4<amrex::Real> const& barr = (*(*mw_yee).B_Array[cc])[pti].array();
+
                         //B-field at particle position
                         bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], dxi);
                     }
-                    std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos = push_particle_boris(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(2*GEMPIC_SPACEDIM+2)]);
+                    std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
+                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
                     amrex::Print(ofs2) << newPos[0] << "," << newPos[1] << "," <<
                                    #if (GEMPIC_SPACEDIM > 1)
                                                        newPos[2] << "," << newPos[3] << "," <<
@@ -241,11 +236,11 @@ amrex::Real initk) {
 
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-            for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+                for(int cc=0;cc<GEMPIC_VDIM;cc++){
                     amrex::Array4<amrex::Real> const& jarr = (*(*mw_yee).J_Array[cc])[pti].array();
                     for (int pp=0;pp<np;pp++) {
                         gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], cc, jarr,
@@ -256,10 +251,10 @@ amrex::Real initk) {
         }
         //add values from ghost cells and periodic boundary
         (*(*mw_yee).J_Array[0]).SumBoundary(infra.geom.periodicity());
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
         (*(*mw_yee).J_Array[1]).SumBoundary(infra.geom.periodicity());
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
         (*(*mw_yee).J_Array[2]).SumBoundary(infra.geom.periodicity());
 #endif
 

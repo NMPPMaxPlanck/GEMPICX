@@ -27,7 +27,7 @@ class particle_groups
   int n_species;
   std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
   std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
-  std::array<std::unique_ptr<amrex::ParticleContainer<GEMPIC_SPACEDIM+1, 0, 0, 0>>, GEMPIC_NUMSPEC> mypc;
+  std::array<std::unique_ptr<amrex::ParticleContainer<GEMPIC_VDIM+1, 0, 0, 0>>, GEMPIC_NUMSPEC> mypc;
 
   // The default constructor.
   particle_groups ();
@@ -42,7 +42,7 @@ class particle_groups
 
     // set infrastructure for each species
     for (int i=0;i<mypc.size();i++) {
-      mypc[i].reset(new amrex::ParticleContainer<GEMPIC_SPACEDIM+1, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+      mypc[i].reset(new amrex::ParticleContainer<GEMPIC_VDIM+1, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
       (*mypc[i]).do_tiling = true;
       (*mypc[i]).tile_size = {AMREX_D_DECL(ifr.max_grid_size,ifr.max_grid_size,ifr.max_grid_size)};
     }
@@ -50,10 +50,10 @@ class particle_groups
 
   void add_particle(int species,
             std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-            std::array<amrex::Real,GEMPIC_SPACEDIM> velocity,
+            std::array<amrex::Real,GEMPIC_VDIM> velocity,
 		    amrex::Real weight){
 
-    using ParticleType = amrex::Particle<GEMPIC_SPACEDIM+1, 0>; // Particle template
+    using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
 
     auto& particles = (*mypc[species]).GetParticles(0)[std::make_pair(0,0)];
     
@@ -71,13 +71,13 @@ class particle_groups
 
 	// AoS real data
 	p.rdata(0) = velocity[0]; //vx
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
     p.rdata(1)  = velocity[1]; //vy
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
     p.rdata(2) = velocity[2]; //vz
 #endif
-    p.rdata(GEMPIC_SPACEDIM) = weight; //weight
+    p.rdata(GEMPIC_VDIM) = weight; //weight
 
 	particles.push_back(p);
 

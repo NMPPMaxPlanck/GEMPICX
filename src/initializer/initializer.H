@@ -36,12 +36,12 @@ class initializer
   amrex::RealBox real_box;
 
   //parameters for velocity distribution
-  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> Vmean;
-  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> Vdev;
-  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> Vweight;
+  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vmean;
+  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vdev;
+  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vweight;
 
   // function for weights
-  double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k);
+  double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k);
   
   // constructor
   initializer (){};
@@ -51,10 +51,10 @@ class initializer
                                   std::array<amrex::Real, GEMPIC_NUMSPEC> MS,
                                   int NPC,
                                   amrex::Real K,
-                                  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VM,
-                                  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VD,
-                                  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VW,
-                                  double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,
+                                  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM,
+                                  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD,
+                                  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW,
+                                  double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,
                                              int Np,double k)){
       n_cell = NC;
       max_grid_size = MG;

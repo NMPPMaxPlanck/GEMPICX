@@ -27,13 +27,13 @@ class maxwell_yee
 
   int nsteps; // number of simulation steps
   amrex::Real dt;
-  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_SPACEDIM > E_Array;
-  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_SPACEDIM > J_Array;
-  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_SPACEDIM > B_Array;
-  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_SPACEDIM > E_sol_Array;
-  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_SPACEDIM > B_sol_Array;
-  std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_SPACEDIM> E_Index;
-  std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_SPACEDIM> B_Index;
+  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_VDIM > E_Array;
+  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_VDIM > J_Array;
+  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_BDIM > B_Array;
+  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_VDIM > E_sol_Array;
+  std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_BDIM > B_sol_Array;
+  std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_VDIM> E_Index;
+  std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_BDIM> B_Index;
   amrex::MultiFab phi_init; // for Poisson
   amrex::MultiFab rho; // for Poisson
   int Nghost;
@@ -58,18 +58,18 @@ class maxwell_yee
     // 0 -> cell-centered | 1 -> node-centered
 
     E_Index[0].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,1,1)}));
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
     E_Index[1].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(1,0,1)}));
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
     E_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(1,1,0)}));
 #endif
 
     B_Index[0].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(1,0,0)}));
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_BDIM > 1)
     B_Index[1].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,1,0)}));
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_BDIM > 2)
     B_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 #endif
 
@@ -80,12 +80,13 @@ class maxwell_yee
     time = 0.0;
 
     // make the multifabs nodal-/cell-centered according to indices
-    for (int i = 0; i<GEMPIC_SPACEDIM; i++) {
-      E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
-      J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+    for (int i = 0; i<GEMPIC_VDIM; i++) {
+        E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+        E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+        J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+    }
+    for (int i = 0; i<GEMPIC_BDIM; i++) {
       B_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
-
-      E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
       B_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
     }
 
@@ -100,14 +101,14 @@ class maxwell_yee
     sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
   }
 
-  void init_E_B (double (*fields[2*GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
+  void init_E_B (double (*fields[GEMPIC_VDIM+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
 		 infrastructure ifr){
 
     std::array<double,GEMPIC_SPACEDIM> x;
     double half_dt = dt/2.0; // for leap frog initialization
 
     // E_field
-    for (int i = 0; i<GEMPIC_SPACEDIM; i++) {
+    for (int i = 0; i<GEMPIC_VDIM; i++) {
       for ( amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi )
       {
 	const amrex::Box& bx = mfi.validbox();
@@ -140,7 +141,7 @@ class maxwell_yee
 
 
     // B_field
-    for (int i = 0; i<=2; i++) {
+    for (int i = 0; i<=GEMPIC_BDIM; i++) {
       for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi )
       {
 	const amrex::Box& bx = mfi.validbox();
@@ -159,7 +160,7 @@ class maxwell_yee
           x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 	      // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-          (*B_Array[i])[mfi].setVal((*fields[i+GEMPIC_SPACEDIM])(x,half_dt), cc, 0, 1);
+          (*B_Array[i])[mfi].setVal((*fields[i+GEMPIC_VDIM])(x,half_dt), cc, 0, 1);
 	    }
 #if (GEMPIC_SPACEDIM > 1)
 	  }
@@ -173,13 +174,13 @@ class maxwell_yee
   }
 
   void FillBD (infrastructure ifr){
-      for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+      for(int cc=0;cc<GEMPIC_VDIM;cc++){
           (*E_Array[cc]).FillBoundary(ifr.geom.periodicity());
       }
-      for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+      for(int cc=0;cc<GEMPIC_VDIM;cc++){
           (*J_Array[cc]).FillBoundary(ifr.geom.periodicity());
       }
-      for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+      for(int cc=0;cc<GEMPIC_BDIM;cc++){
           (*B_Array[cc]).FillBoundary(ifr.geom.periodicity());
       }
       rho.FillBoundary(ifr.geom.periodicity());
@@ -194,7 +195,7 @@ class maxwell_yee
     amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
 
     // E-field
-    for (int i=0; i<GEMPIC_SPACEDIM; i++) {
+    for (int i=0; i<GEMPIC_VDIM; i++) {
       for (amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ) {
     const amrex::Box& bx = mfi.validbox();
 
@@ -218,16 +219,22 @@ class maxwell_yee
           (*J_Array[i])[mfi].getVal(cj, {AMREX_D_DECL(l,j,k)},0,1);
 
           // B-derivatives
-#if (GEMPIC_SPACEDIM == 1)
-          (*B_Array[0])[mfi].getVal(c2,{ l },0,1);
-          (*B_Array[0])[mfi].getVal(c3,{l-1},0,1);
-          (*E_Array[0])[mfi].setVal(*c1+dt*coefficient*((*c3-*c2)/ifr.dx[0]-*cj), cc, 0, 1);
-#elif (GEMPIC_SPACEDIM == 2)
-#elif (GEMPIC_SPACEDIM == 3)
-          (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{  l,  j  ,k},0,1);
-          (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0)},0,1);
-          (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {  l,  j,  k},0,1);
-          (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5,{l-(i%GEMPIC_SPACEDIM==1?1:0),j-(i%GEMPIC_SPACEDIM==2?1:0),k-(i%GEMPIC_SPACEDIM==0?1:0)},0,1);
+#if (GEMPIC_VDIM < 3)
+          if(i == 0) {
+              (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-*cj), cc, 0, 1);
+          }
+#if (GEMPIC_VDIM == 2)
+          if (i == 1) {
+              (*B_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(  l,j,k)},0,1);
+              (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l+1,j,k)},0,1);
+              (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-(*c3-*c2)/ifr.dx[0]-*cj), cc, 0, 1);
+          }
+#endif
+#elif (GEMPIC_VDIM == 3)
+          (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{AMREX_D_DECL(  l,  j  ,k)},0,1);
+          (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
+          (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {AMREX_D_DECL(  l,  j,  k)},0,1);
+          (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5,{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==1?1:0),j-(i%GEMPIC_SPACEDIM==2?1:0),k-(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
 
           (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                         (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]-*cj), cc, 0, 1);
@@ -249,7 +256,7 @@ class maxwell_yee
     amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
 
     // B-field
-    for (int i=0; i<GEMPIC_SPACEDIM; i++) {
+    for (int i=0; i<GEMPIC_BDIM; i++) {
       for (amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
     const amrex::Box& bx = mfi.validbox();
 
@@ -271,16 +278,18 @@ class maxwell_yee
           (*B_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1);
 
           // E-derivatives
-#if (GEMPIC_SPACEDIM == 1)
-          (*E_Array[0])[mfi].getVal(c2,{ l },0,1);
-          (*E_Array[0])[mfi].getVal(c3,{l+1},0,1);
-          (*B_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[0]), cc, 0, 1);
-#elif (GEMPIC_SPACEDIM == 2)
-#elif (GEMPIC_SPACEDIM == 3)
-          (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0)},0,1);
-          (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{  l,  j  ,k},0,1);
-          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4,{l+(i%GEMPIC_SPACEDIM==1?1:0),j+(i%GEMPIC_SPACEDIM==2?1:0),k+(i%GEMPIC_SPACEDIM==0?1:0)},0,1);
-          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, {  l,  j,  k},0,1);
+#if (GEMPIC_VDIM == 1)
+          //no B
+#elif (GEMPIC_BDIM == 1)
+          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {AMREX_D_DECL(l+1,j,k)},0,1);
+          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, {AMREX_D_DECL(l  ,j,k)},0,1);
+
+          (*B_Array[i])[mfi].setVal(*c1-dt*coefficient*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
+#elif (GEMPIC_BDIM == 3)
+          (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
+          (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{AMREX_D_DECL(  l,  j  ,k)},0,1);
+          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4,{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==1?1:0),j+(i%GEMPIC_SPACEDIM==2?1:0),k+(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
+          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, {AMREX_D_DECL(  l,  j,  k)},0,1);
 
           (*B_Array[i])[mfi].setVal(*c1-dt*coefficient*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                         (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
@@ -342,7 +351,7 @@ class maxwell_yee
 
     // box with all interior nodes:
     const amrex::Box& interior = amrex::surroundingNodes(amrex::grow(ifr.geom.Domain(), -1));
-    phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
+    //phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
   }
 
   void solve_poisson(infrastructure ifr){
@@ -421,21 +430,22 @@ class maxwell_yee
     
   }
   
-  std::array<amrex::Real,2*GEMPIC_SPACEDIM> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
+  std::array<amrex::Real,GEMPIC_VDIM+GEMPIC_BDIM> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
 					 bool bool_B,
 					 infrastructure ifr){
-    std::array<amrex::Real,2*GEMPIC_SPACEDIM> E_B_error;
+    std::array<amrex::Real,GEMPIC_VDIM+GEMPIC_BDIM> E_B_error;
     
     exactSolution(fields, bool_B, ifr);
 
-    for (int i=0; i<=2; i++){
+    for (int i=0; i<GEMPIC_VDIM; i++){
       (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
       E_B_error[i] = (*E_sol_Array[i]).norm0();
-
-      if (bool_B) {
-	(*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
-    E_B_error[i+GEMPIC_SPACEDIM] = (*B_sol_Array[i]).norm0();
-      }
+    }
+    if (bool_B) {
+        for (int i=0; i<GEMPIC_BDIM; i++){
+            (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
+            E_B_error[i+GEMPIC_VDIM] = (*B_sol_Array[i]).norm0();
+        }
     }
     return(E_B_error);
   }

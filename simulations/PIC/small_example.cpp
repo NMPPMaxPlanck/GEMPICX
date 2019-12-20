@@ -18,16 +18,16 @@
 using namespace std;
 using namespace amrex;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
   double alpha = 0.5;
   return((1.0 + alpha*cos(k*x[0]))/Np);
 };
 
 double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_BDIM > 1)
 double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_BDIM > 2)
 double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 #endif
 
@@ -36,12 +36,12 @@ void main_main ()
   //------------------------------------------------------------------------------
   //build objects:
 
-    double (*initB[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
+    double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
     initB[0] = B_x;
-  #if (GEMPIC_SPACEDIM > 1)
+  #if (GEMPIC_BDIM > 1)
     initB[1] = B_y;
   #endif
-  #if (GEMPIC_SPACEDIM > 2)
+  #if (GEMPIC_BDIM > 2)
     initB[2] = B_z;
   #endif
 
@@ -66,15 +66,15 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // initialize particles:
-  part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
   //part_gr.add_particle(0, {AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
   //part_gr.add_particle(0, {AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
 
   //check positions
-  for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+  for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
 
     const auto& particles = pti.GetArrayOfStructs();
     const long np = pti.numParticles();

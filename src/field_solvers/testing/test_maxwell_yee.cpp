@@ -28,52 +28,66 @@ using namespace amrex;
 
 //------------------------------------------------------------------------------
   // Solutions and RHS
+double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std::array<int,GEMPIC_SPACEDIM> sinInd = {AMREX_D_DECL(0,0,0)}) {
+    double res = sinInd[0]?sin(coefficient*x[0]):cos(coefficient*x[0]);
+#if (GEMPIC_SPACEDIM > 1)
+    res *= sinInd[1]?sin(coefficient*x[1]):cos(coefficient*x[1]);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    res *= sinInd[2]?sin(coefficient*x[2]):cos(coefficient*x[2]);
+#endif
+    return(res);
+}
 
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
-double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0)-sqrt(3.0)*t));}
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0)-sqrt(3.0)*t));}
+double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0)-sqrt(3.0)*t));}
 
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0)-sqrt(3.0)*t));}
 double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
-double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(x[0]+x[1]+x[2]-sqrt(3.0)*t));}
+double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0)-sqrt(3.0)*t));}
 
-double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cos(x[0])*cos(x[1])*cos(x[2])+1/4.0*cos(2.0*x[0])*cos(2.0*x[1])*cos(2.0*x[2]));}
-double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-3.0*(cos(x[0])*cos(x[1])*cos(x[2])+cos(2.0*x[0])*cos(2.0*x[1])*cos(2.0*x[2])));}
-double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-sin(x[0])*cos(x[1])*cos(x[2])-0.5*sin(2.0*x[0])*cos(2.0*x[1])*cos(2.0*x[2]));}
-double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cos(x[0])*sin(x[1])*cos(x[2])-0.5*cos(2.0*x[0])*sin(2.0*x[1])*cos(2.0*x[2]));}
-double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cos(x[0])*cos(x[1])*sin(x[2])-0.5*cos(2.0*x[0])*cos(2.0*x[1])*sin(2.0*x[2]));}
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cosMult(x)+1/4.0*cosMult(x, 2.));}
+double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-3.0*(cosMult(x)+cosMult(x, 2.)));}
+double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*-cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
+double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*-cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));}
+double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*-cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
   return(0.0);
 }
 
 void main_main ()
 {
-
   // make pointer-array for functions
-  double (*fields[2*GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
+  double (*fields[GEMPIC_VDIM+GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
   fields[0] = E_x;
-  fields[GEMPIC_SPACEDIM] = B_x;
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
   fields[1] = E_y;
-  fields[GEMPIC_SPACEDIM+1] = B_y;
+#endif
+#if (GEMPIC_VDIM > 2)
+  fields[2] = E_z;
+#endif
+
+  fields[GEMPIC_SPACEDIM] = B_x;
+#if (GEMPIC_VDIM > 1)
+  fields[GEMPIC_BDIM+1] = B_y;
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-  fields[2] = E_z;
-  fields[GEMPIC_SPACEDIM+2] = B_z;
+  fields[GEMPIC_BDIM+2] = B_z;
 #endif
 
-  double (*fields_poisson[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
+  double (*fields_poisson[GEMPIC_VDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
   fields_poisson[0] = Ep_x;
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
   fields_poisson[1] = Ep_y;
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
   fields_poisson[2] = Ep_z;
 #endif
-  
+
 //------------------------------------------------------------------------------
-  array<Real,2*GEMPIC_SPACEDIM> E_B_error; //array for storing errors
+  array<Real,GEMPIC_VDIM+GEMPIC_BDIM> E_B_error; //array for storing errors
 
 //------------------------------------------------------------------------------
   // Initialize Infrastructure
@@ -83,7 +97,7 @@ void main_main ()
   init.initialize_from_parameters(n_cell,32,is_periodic,0.01,5,{1.0},{1.0},1000,0.5,
                   {0.0},{1.0},{1.0},WF);
   infrastructure infra(init);
-  
+
 //------------------------------------------------------------------------------
   // Solve
   
@@ -93,17 +107,28 @@ void main_main ()
 
   std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
   Print(ofs) << "Maxwell" << endl;
+
   for (int n=1;n<=mw_yee.nsteps;n++){
     mw_yee.advance(infra);
     E_B_error = mw_yee.computeError(fields, true, infra);
     
     Print(ofs) << "step " << n << endl;
     Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                              #if (GEMPIC_VDIM > 1)
                                   " |Ey error: " << E_B_error[1] <<
-                                  " |Ez error: " << E_B_error[2] << endl;
-    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[3] <<
-                                  " |By error: " << E_B_error[4] <<
-                                  " |Bz error: " << E_B_error[5] << endl; 
+                              #endif
+                              #if (GEMPIC_VDIM > 2)
+                                  " |Ez error: " << E_B_error[2] <<
+                              #endif
+                                  endl;
+    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+                              #if (GEMPIC_BDIM > 1)
+                                  " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                              #endif
+                              #if (GEMPIC_BDIM > 2)
+                                  " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                              #endif
+                                  endl;
   }
 
   //------------------------------------------------------------------------------
@@ -116,8 +141,13 @@ void main_main ()
   Print(ofs) << endl;
   Print(ofs) << "Poisson" << endl;
   Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                              #if (GEMPIC_VDIM > 1)
                                 " |Ey error: " << E_B_error[1] <<
-                                " |Ez error: " << E_B_error[2] << endl;  
+                              #endif
+                              #if (GEMPIC_VDIM > 2)
+                                " |Ez error: " << E_B_error[2] <<
+                              #endif
+                                endl;
 
   ofs.close();
 }

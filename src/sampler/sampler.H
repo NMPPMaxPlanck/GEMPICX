@@ -22,21 +22,21 @@ void init_particles_cellwise(infrastructure infra,
   amrex::Real x,y,z;
   std::array<amrex::Real,GEMPIC_SPACEDIM> position;
   std::array<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
-  std::array<amrex::Real,GEMPIC_SPACEDIM> velocity;
+  std::array<amrex::Real,GEMPIC_VDIM> velocity;
   amrex::Real weight;
 
   std::ofstream ofsfun("weights.output", std::ofstream::out);
   // cumulative sum of vel_weights
-  std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_SPACEDIM> vel_cum;
-  for(int i=0;i<GEMPIC_SPACEDIM;i++) {
+  std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
+  for(int i=0;i<GEMPIC_VDIM;i++) {
       std::partial_sum(init.Vweight[i].begin(), init.Vweight[i].end(), vel_cum[i].begin());
   }
 
   // normally distributed random number generator:
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::array<std::array<std::normal_distribution<>,GEMPIC_NUMGAUS>,GEMPIC_SPACEDIM> normArray;
-  for(int i=0;i<GEMPIC_SPACEDIM;i++){
+  std::array<std::array<std::normal_distribution<>,GEMPIC_NUMGAUS>,GEMPIC_VDIM> normArray;
+  for(int i=0;i<GEMPIC_VDIM;i++){
       for (int dis=0;dis<GEMPIC_NUMGAUS;dis++){
         std::normal_distribution<> normD(init.Vmean[i][dis],init.Vdev[i][dis]);
         normArray[i][dis] = normD;
@@ -61,12 +61,12 @@ void init_particles_cellwise(infrastructure infra,
     position[2] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[2];
 #endif
 
-    amrex::Real gauss_choice[GEMPIC_SPACEDIM];
-    for(int i=0;i<GEMPIC_SPACEDIM;i++){
+    amrex::Real gauss_choice[GEMPIC_VDIM];
+    for(int i=0;i<GEMPIC_VDIM;i++){
         gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
     }
-    amrex::IntVect gauss_idx(AMREX_D_DECL(0,0,0));
-    for(int i=0;i<GEMPIC_SPACEDIM;i++){
+    std::array<int,GEMPIC_VDIM> gauss_idx = {AMREX_V_DECL(0,0,0)};
+    for(int i=0;i<GEMPIC_VDIM;i++){
         for (int gg=1;gg<GEMPIC_NUMGAUS;gg++){
           if (vel_cum[i][gg-1]-gauss_choice[i] < 0 & vel_cum[i][gg]-gauss_choice[i] >= 0){
               gauss_idx[i] = gg;
@@ -75,10 +75,10 @@ void init_particles_cellwise(infrastructure infra,
     }
     
     velocity[0] = normArray[0][gauss_idx[0]](gen);
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
     velocity[1] = normArray[1][gauss_idx[1]](gen);
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
     velocity[2] = normArray[2][gauss_idx[2]](gen);
 #endif
 

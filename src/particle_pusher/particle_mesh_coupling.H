@@ -96,7 +96,7 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
                              #if (GEMPIC_SPACEDIM > 2)
                                              , k+kk
                              #endif
-                                             , 0), s_coeff*charge*p.rdata(GEMPIC_SPACEDIM));
+                                             , 0), s_coeff*charge*p.rdata(GEMPIC_VDIM));
 
 
             }
@@ -184,7 +184,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
                         * sz[kk]
         #endif
                         ;
-          // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_SPACEDIM): weight
+          // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_VDIM): weight
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii
                              #if (GEMPIC_SPACEDIM > 1)
                                              , j+jj
@@ -192,7 +192,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
                              #if (GEMPIC_SPACEDIM > 2)
                                              , k+kk
                              #endif
-                                             , 0), coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_SPACEDIM));
+                                             , 0), coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_VDIM));
 
             }
 #if (GEMPIC_SPACEDIM > 1)
@@ -203,7 +203,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
 #endif
 }
 
-void gempic_deposit_J_cic_global (std::array<amrex::Real,2*GEMPIC_SPACEDIM> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
+void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
                                   amrex::Array4<amrex::Real> const& j_comp,
                std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
@@ -382,14 +382,14 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
 }
 
 template <typename P>
-std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle(P const& p,
+std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle(P const& p,
 					amrex::Real dt,
 					amrex::Real chargemass, //charge/mass
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> Ep,
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> Bp,
+                    std::array<amrex::Real,GEMPIC_VDIM> Ep,
+                    std::array<amrex::Real,GEMPIC_BDIM> Bp,
 					infrastructure infra){
 
-  std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
+  std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
   // new positions (modulo the upper bound of the box)
   newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
 #if (GEMPIC_SPACEDIM > 1)
@@ -399,10 +399,12 @@ std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle(P const& p,
   newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
 #endif
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (GEMPIC_VDIM == 1)
   newPos[1] = p.rdata(0) + dt*chargemass*(Ep[0]);
-#elif (GEMPIC_SPACEDIM == 2)
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (GEMPIC_VDIM == 2)
+  newPos[2] = p.rdata(0) + dt*chargemass*(Ep[0]+p.rdata(1)*Bp[0]);
+  newPos[3] = p.rdata(1) + dt*chargemass*(Ep[1]+p.rdata(0)*Bp[0]);
+#elif (GEMPIC_VDIM == 3)
   newPos[3] = p.rdata(0) + dt*chargemass*(Ep[0]+(p.rdata(1)*Bp[2]-p.rdata(2)*Bp[1]));
   newPos[4] = p.rdata(1) + dt*chargemass*(Ep[1]+(p.rdata(2)*Bp[0]-p.rdata(0)*Bp[2]));
   newPos[5] = p.rdata(2) + dt*chargemass*(Ep[2]+(p.rdata(0)*Bp[1]-p.rdata(1)*Bp[0]));
@@ -411,38 +413,42 @@ std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle(P const& p,
 }
 
 template <typename P>
-std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle_pos(P const& p,
+std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_pos(P const& p,
                     amrex::Real dt,
                     infrastructure infra,
                     amrex::Real coefficient){
 
-  std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
+  std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
   // new positions (modulo the upper bound of the box)
   newPos[0] = fmod(p.pos(0) + p.rdata(0)*coefficient*dt, infra.geom.ProbHi()[0]);
   newPos[GEMPIC_SPACEDIM] = p.rdata(0);
 #if (GEMPIC_SPACEDIM > 1)
   newPos[1] = fmod(p.pos(1) + p.rdata(1)*coefficient*dt, infra.geom.ProbHi()[1]);
-  newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
   newPos[2] = fmod(p.pos(2) + p.rdata(2)*coefficient*dt, infra.geom.ProbHi()[2]);
+#endif
+#if (GEMPIC_VDIM > 1)
+  newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
+#endif
+#if (GEMPIC_VDIM > 2)
   newPos[GEMPIC_SPACEDIM+2] = p.rdata(2);
 #endif
   return(newPos);
 }
 
 template <typename P>
-std::array<amrex::Real,2*GEMPIC_SPACEDIM> push_particle_boris(P const& p,
+std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const& p,
                     amrex::Real dt,
                     amrex::Real chargemass, //charge/mass
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> Ep,
+                    std::array<amrex::Real,GEMPIC_VDIM> Ep,
                     std::array<amrex::Real,GEMPIC_SPACEDIM> Bp,
                     infrastructure infra){
 
-  std::array<amrex::Real,2*GEMPIC_SPACEDIM> newPos;
-  std::array<amrex::Real,GEMPIC_SPACEDIM> vm;
-  std::array<amrex::Real,GEMPIC_SPACEDIM> vt;
-  std::array<amrex::Real,GEMPIC_SPACEDIM> vp;
+  std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
+  std::array<amrex::Real,GEMPIC_VDIM> vm;
+  std::array<amrex::Real,GEMPIC_VDIM> vt;
+  std::array<amrex::Real,GEMPIC_VDIM> vp;
   amrex::Real S;
 
   // v-

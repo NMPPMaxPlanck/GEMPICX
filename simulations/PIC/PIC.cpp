@@ -19,7 +19,7 @@
 using namespace std;
 using namespace amrex;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
   double alpha = 0.5;
   return((1.0 + alpha*cos(k*x[0]))/Np);
 }
@@ -28,31 +28,39 @@ double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.5*cos(0.5*x[0])*1/sqrt(2*3.14159265359));}
+double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0);}
+
 void main_main ()
 {
   //------------------------------------------------------------------------------
     //build objects:
-      double (*initB[GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
+      double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
 
     //initializer
     initializer init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(32,4,4));
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VM{};
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VD{};
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_SPACEDIM> VW{};
+    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
+    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
+    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
     initB[0] = B_x;
+#if (GEMPIC_BDIM > 1)
+    initB[1] = B_y;
+#endif
+#if (GEMPIC_BDIM > 2)
+    initB[2] = B_z;
+#endif
+
     VM[0][0] = 0.0;
     VD[0][0] = 1.0;
     VW[0][0] = 1.0;
-#if (GEMPIC_SPACEDIM > 1)
-    initB[1] = B_y;
+#if (GEMPIC_VDIM > 1)
     VM[1][0] = 0.0;
     VD[1][0] = 1.0;
     VW[1][0] = 1.0;
 #endif
-#if (GEMPIC_SPACEDIM > 2)
-    initB[2] = B_z;
+#if (GEMPIC_VDIM > 2)
     VM[2][0] = 0.0;
     VD[2][0] = 1.0;
     VW[2][0] = 1.0;
@@ -70,6 +78,7 @@ void main_main ()
 
   // maxwell_yee
   maxwell_yee mw_yee(init, infra);
+  mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
   
   // particles
   particle_groups part_gr(init, infra);
@@ -80,7 +89,7 @@ void main_main ()
   init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
   
   std::ofstream ofss("PIC_particle.output", std::ofstream::out);
-  for (amrex::ParIter<GEMPIC_SPACEDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+  for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
 
     const auto& particles = pti.GetArrayOfStructs();
     const long np = pti.numParticles();
