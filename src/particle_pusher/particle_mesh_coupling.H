@@ -27,6 +27,9 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     // ---- interpolation in x-dir
     std::vector<amrex::Real> sx;
     switch (deg[0]) {
+        case 0:
+            sx = {1.};
+        break;
         case 1:
             sx = {1.-xint, xint};
         break;
@@ -44,6 +47,9 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     // ---- interpolation in y-dir
     std::vector<amrex::Real> sy;
     switch (deg[1]) {
+        case 0:
+            sy = {1.};
+        break;
         case 1:
             sy = {1.-yint, yint};
         break;
@@ -62,6 +68,9 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     // ---- interpolation in z-dir
     std::vector<amrex::Real> sz;
     switch (deg[2]) {
+        case 0:
+            sz = {1.};
+        break;
         case 1:
             sz = {1.-zint, zint};
         break;
@@ -74,20 +83,21 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
-    for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
+    for (int kk = floor(0-(deg[2]-1)/2); kk <= floor((deg[2]+1)/2); ++kk) {
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
+        for (int jj = floor(0-(deg[1]-1)/2); jj <= floor((deg[1]+1)/2); ++jj) {
 #endif
-            for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                double s_coeff = sx[ii]
+            for (int ii = floor(0-(deg[0]-1)/2); ii <= floor((deg[0]+1)/2); ++ii) {
+                double s_coeff = sx[ii]*dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]
+                        * sy[jj]*dxi[1]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]
+                        * sz[kk]*dxi[2]
         #endif
                         ;
+
                 //TODO: try exchanging for amrex::Add()
                 amrex::Gpu::Atomic::Add(&rho(i+ii
                              #if (GEMPIC_SPACEDIM > 1)
@@ -176,12 +186,12 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
 #endif
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                double s_coeff = sx[ii]
+                double s_coeff = sx[ii]*dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]
+                        * sy[jj]*dxi[1]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]
+                        * sz[kk]*dxi[2]
         #endif
                         ;
           // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_VDIM): weight
@@ -265,12 +275,12 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_
     for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                double s_coeff = sx[ii]
+                double s_coeff = sx[ii]*dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]
+                        * sy[jj]*dxi[0]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]
+                        * sz[kk]*dxi[0]
         #endif
                         ;
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii
@@ -442,7 +452,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
                     amrex::Real dt,
                     amrex::Real chargemass, //charge/mass
                     std::array<amrex::Real,GEMPIC_VDIM> Ep,
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> Bp,
+                    std::array<amrex::Real,GEMPIC_BDIM> Bp,
                     infrastructure infra){
 
   std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
@@ -463,7 +473,9 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
 #if (GEMPIC_SPACEDIM == 1)
   vp[0] = vm[0];
 #elif (GEMPIC_SPACEDIM == 2)
-
+  amrex::Real alpha = chargemass*dt/2*Bp[0];
+  vp[0] = (1-pow(alpha,2))/(1+pow(alpha,2))*vm[0] + 2*alpha/(1+pow(alpha,2))*vm[1];
+  vp[1] = -2*alpha/(1+pow(alpha,2))*vm[0] + (1-pow(alpha,2))/(1+pow(alpha,2))*vm[1];
 #elif (GEMPIC_SPACEDIM == 3)
   // v'
   amrex::Real coeff_t = dt*chargemass/2;
