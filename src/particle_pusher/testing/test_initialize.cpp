@@ -14,7 +14,7 @@
 using namespace std;
 using namespace amrex;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_SPACEDIM> v,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
   return(0.0);
 }
 
@@ -45,7 +45,7 @@ void main_main ()
   int species = 0; // all particles are same species for now
   std::array<double,GEMPIC_SPACEDIM> position;
   std::array<double,GEMPIC_SPACEDIM> shifted_position;
-  std::array<double,GEMPIC_SPACEDIM> velocity;
+  std::array<double,GEMPIC_VDIM> velocity;
   Real weight;
 
   // normally distributed random number generator:
@@ -66,10 +66,10 @@ void main_main ()
 #endif
 
     velocity[0] = normD(gen);
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
     velocity[1] = normD(gen);
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
     velocity[2] = normD(gen);
 #endif
     weight = 1.0;
