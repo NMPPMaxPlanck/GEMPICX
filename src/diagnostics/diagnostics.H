@@ -22,8 +22,8 @@ class diagnostics
   public:
   int n_time; // number of timesteps
   // 9 static so far!! need to fix this
-  std::array<std::array<amrex::Real,GEMPIC_BDIM>,2001> Bfield;
-  std::array<std::array<amrex::Real,GEMPIC_VDIM>,2001> Efield, mom;
+  std::array<std::array<amrex::Real,GEMPIC_BDIM>,10001> Bfield;
+  std::array<std::array<amrex::Real,GEMPIC_VDIM>,10001> Efield, mom;
   std::array<amrex::Real,2001> kin;
 
   // The default constructor.
@@ -44,10 +44,25 @@ class diagnostics
 
     // E and B field
     for(int cc=0;cc<GEMPIC_VDIM;cc++){
-      Efield[step][cc] = infra.dx[cc]*pow((*(*mw_yee).E_Array[cc]).norm2(),2)/infra.Length[cc];
+      Efield[step][cc] = pow((*(*mw_yee).E_Array[cc]).norm2(),2)*infra.dx[0]/infra.Length[0]
+#if(GEMPIC_SPACEDIM > 1)
+              *infra.dx[1]/infra.Length[1]
+#endif
+#if(GEMPIC_SPACEDIM > 2)
+              *infra.dx[2]/infra.Length[2]
+#endif
+                        ;
     }
+
     for(int cc=0;cc<GEMPIC_BDIM;cc++){
-      Bfield[step][cc] = infra.dx[cc]*pow((*(*mw_yee).B_Array[cc]).norm2(),2)/infra.Length[cc];
+        Bfield[step][cc] = pow((*(*mw_yee).B_Array[cc]).norm2(),2)*infra.dx[0]/infra.Length[0]
+#if(GEMPIC_SPACEDIM > 1)
+                *infra.dx[1]/infra.Length[1]
+#endif
+#if(GEMPIC_SPACEDIM > 2)
+                *infra.dx[2]/infra.Length[2]
+#endif
+                          ;
     }
 
     // compute kinetic energy norm and momentum
@@ -59,11 +74,12 @@ class diagnostics
 #if (GEMPIC_VDIM > 2)
     mom[step][2] = 0.0;
 #endif
-    
+
      for (int spec=0;spec<(*part_gr).n_species;spec++){
        for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 	auto& particles = pti.GetArrayOfStructs();
-	const long np = pti.numParticles();
+    const long np = pti.numParticles();
+
 	for (int pp=0;pp<np;pp++) {
         std::array<double,GEMPIC_VDIM> absvel = {AMREX_V_DECL(std::abs(particles[pp].rdata(0)),std::abs(particles[pp].rdata(1)),std::abs(particles[pp].rdata(2)))};
         vel = std::accumulate(absvel.begin(), absvel.end(), 0);
@@ -88,17 +104,23 @@ class diagnostics
          WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[0]), varnames, infra.geom, 0.0, 0); // last two args: time and level_step
          varnames[0] = "Jx";
          WriteSingleLevelPlotfile ("SliceData/Jx_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[0]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "Bx";
+         WriteSingleLevelPlotfile ("SliceData/Bx_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[0]), varnames, infra.geom, 0.0, 0);
 #if (GEMPIC_VDIM > 1)
          varnames[0] = "Ey";
          WriteSingleLevelPlotfile ("SliceData/Ey_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[1]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Jy";
          WriteSingleLevelPlotfile ("SliceData/Jy_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[1]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "By";
+         WriteSingleLevelPlotfile ("SliceData/By_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[1]), varnames, infra.geom, 0.0, 0);
 #endif
 #if (GEMPIC_VDIM > 2)
          varnames[0] = "Ez";
          WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[2]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Jz";
          WriteSingleLevelPlotfile ("SliceData/Jz_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[2]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "Bz";
+         WriteSingleLevelPlotfile ("SliceData/Bz_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[2]), varnames, infra.geom, 0.0, 0);
 #endif
 
      }
@@ -110,28 +132,28 @@ class diagnostics
       }
       std::ofstream ofsfun(filename, std::ofstream::out);
     for (int step=0;step<=partial;step++){
-      amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0] << "," <<
+      amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0]
                         #if (GEMPIC_VDIM > 1)
-                              Efield[step][1] << "," <<
+                              << "," << Efield[step][1]
                         #endif
                         #if (GEMPIC_VDIM > 2)
-                              Efield[step][2] << "," <<
+                              << "," << Efield[step][2]
                         #endif
-                              Bfield[step][0] << "," <<
+                              << "," << Bfield[step][0]
                         #if (GEMPIC_BDIM > 1)
-                              Bfield[step][1] << "," <<
+                              << "," << Bfield[step][1]
                         #endif
                         #if (GEMPIC_BDIM > 2)
-                              Bfield[step][2] << "," <<
+                              << "," << Bfield[step][2]
                         #endif
-                              kin[step] << "," << mom[step][0] << "," <<
+                              << "," << kin[step] << "," << mom[step][0]
                         #if (GEMPIC_VDIM > 1)
-                              mom[step][1] << "," <<
+                               << "," << mom[step][1]
                         #endif
                         #if (GEMPIC_VDIM > 2)
-                              mom[step][2] <<
+                               << "," << mom[step][2]
                         #endif
-                              std::endl;
+                              << std::endl;
     }
     ofsfun.close();
   }
