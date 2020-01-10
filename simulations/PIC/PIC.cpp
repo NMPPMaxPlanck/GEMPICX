@@ -28,7 +28,7 @@ double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 
-double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.5*cos(0.5*x[0])*1/sqrt(2*3.14159265359));}
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(4*0.5*cos(0.5*x[0]));} // 1/k^2*alpha = 4*0.5
 double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0);}
 
 void main_main ()
@@ -66,9 +66,9 @@ void main_main ()
     VW[2][0] = 1.0;
 #endif
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,2000,{1.0},{1.0},1000,0.5,
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,2000,{-1.0},{1.0},1000,0.5,
                   VM,VD,VW,WF);
-  //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
+  //n_cell, max_grid_size, periodic, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
   // infrastructure
   infrastructure infra(init);
@@ -87,7 +87,7 @@ void main_main ()
   // initialize particles:
   int species = 0; // all particles are same species for now
   init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
-  
+
   std::ofstream ofss("PIC_particle.output", std::ofstream::out);
   for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
 
