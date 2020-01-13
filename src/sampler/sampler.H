@@ -25,6 +25,15 @@ void init_particles_cellwise(infrastructure infra,
   std::array<amrex::Real,GEMPIC_VDIM> velocity;
   amrex::Real weight;
 
+  amrex::Real dom_vol = infra.Length[0]
+#if (GEMPIC_SPACEDIM > 1)
+          *infra.Length[1]
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+          *infra.Length[2]
+#endif
+          ;
+
   std::ofstream ofsfun("weights.output", std::ofstream::out);
   // cumulative sum of vel_weights
   std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
@@ -50,7 +59,9 @@ void init_particles_cellwise(infrastructure infra,
 #if (GEMPIC_SPACEDIM > 2)
   tot_n_cell *= infra.n_cell[2];
 #endif
-  
+amrex::Real tot_weight = 0.;
+int tot_num_part = 0;
+amrex::Real tot_vel = 0.;
   for (int pp=0;pp<init.Np_cell;pp++) {
     //position in model cell [0,dx]x[0,dy]x[0,dz]:
     position[0] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[0];
@@ -81,7 +92,7 @@ void init_particles_cellwise(infrastructure infra,
 #if (GEMPIC_VDIM > 2)
     velocity[2] = normArray[2][gauss_idx[2]](gen);
 #endif
-
+tot_vel += velocity[1];
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi(*(IteratorFab)); mfi.isValid(); ++mfi ){
       const amrex::Box& bx = mfi.validbox();
@@ -103,7 +114,9 @@ void init_particles_cellwise(infrastructure infra,
 	    shifted_position[0] = position[0] + x;
 
         weight = init.weight_fun(shifted_position, velocity,
-                init.Np_cell*tot_n_cell,init.k); //DIM
+                init.Np_cell*tot_n_cell,init.k)*dom_vol; //DIM
+        tot_weight += weight;
+        tot_num_part++;
 	    (*ppg).add_particle(species, shifted_position, velocity, weight);
         amrex::Print(ofsfun) << weight << "," << shifted_position[0] << std::endl;
 	  }
@@ -115,7 +128,9 @@ void init_particles_cellwise(infrastructure infra,
 #endif
     }
   }
-
+std::cout << "Total weight: " << tot_weight << std::endl;
+std::cout << "Domain volume: " << dom_vol << std::endl;
+std::cout << "Number of parts: " << tot_num_part << std::endl;
   ofsfun.close();
 }
 
