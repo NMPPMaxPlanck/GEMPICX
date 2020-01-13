@@ -176,6 +176,7 @@ class maxwell_yee
   void FillBD (infrastructure ifr){
       for(int cc=0;cc<GEMPIC_VDIM;cc++){
           (*E_Array[cc]).FillBoundary(ifr.geom.periodicity());
+          (*E_sol_Array[cc]).FillBoundary(ifr.geom.periodicity());
       }
       for(int cc=0;cc<GEMPIC_VDIM;cc++){
           (*J_Array[cc]).FillBoundary(ifr.geom.periodicity());
@@ -545,7 +546,7 @@ class maxwell_yee
     amrex::Real btime = time + dt/2.0;
 
     // E-field
-    for (int i=0; i<GEMPIC_SPACEDIM; i++) {
+    for (int i=0; i<GEMPIC_VDIM; i++) {
       for (amrex::MFIter mfi(*E_sol_Array[i]); mfi.isValid(); ++mfi ) {
 	const amrex::Box& bx = mfi.validbox();
 
@@ -579,7 +580,7 @@ class maxwell_yee
 
     if (bool_B){
       // B-field
-      for (int i=0; i<GEMPIC_SPACEDIM; i++) {
+      for (int i=0; i<GEMPIC_BDIM; i++) {
         for (amrex::MFIter mfi(*B_sol_Array[i]); mfi.isValid(); ++mfi ) {
 	  const amrex::Box& bx = mfi.validbox();
 
@@ -599,7 +600,7 @@ class maxwell_yee
 
 	        // the box for these values:
             amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-            (*B_sol_Array[i])[mfi].setVal((*fields[i+GEMPIC_SPACEDIM])(x,btime), cc, 0, 1);
+            (*B_sol_Array[i])[mfi].setVal((*fields[i+GEMPIC_VDIM])(x,btime), cc, 0, 1);
 	      }
 #if (GEMPIC_SPACEDIM > 1)
 	    }
