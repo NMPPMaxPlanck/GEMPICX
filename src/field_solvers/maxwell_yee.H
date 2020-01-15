@@ -227,8 +227,8 @@ class maxwell_yee
 #if (GEMPIC_VDIM == 2)
           if (i == 1) {
               (*B_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(  l,j,k)},0,1);
-              (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l+1,j,k)},0,1);
-              (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-(*c3-*c2)/ifr.dx[0]-*cj), cc, 0, 1);
+              (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l-1,j,k)},0,1);
+              (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-(*c2-*c3)/ifr.dx[0]-*cj), cc, 0, 1);
               //(*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-*cj), cc, 0, 1);
               //(*E_Array[i])[mfi].setVal(0., cc, 0, 1);
           }
