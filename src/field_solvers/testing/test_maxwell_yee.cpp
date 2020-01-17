@@ -39,6 +39,24 @@ double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std:
     return(res);
 }
 
+#if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 1)
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)));}
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0.);}
+#endif
+
+#if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 2)
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]));}
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0])*cos(t));}
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sin(x[0])*sin(t));}
+#endif
+
+#if (GEMPIC_SPACEDIM == 2 & GEMPIC_VDIM == 2)
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0])*sin(x[1])*sin(sqrt(2)*t)/sqrt(2));}
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sin(x[0])*cos(x[1])*sin(sqrt(2)*t)/sqrt(2));}
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-cos(x[0])*cos(x[1])*cos(sqrt(2)*t));}
+#endif
+
+#if (GEMPIC_SPACEDIM == 3 & GEMPIC_VDIM == 3)
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
@@ -46,6 +64,7 @@ double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accum
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
 double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+#endif
 
 double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cosMult(x)+1/4.0*cosMult(x, 2.)+0.05*cos(8*x[0]));}
 double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-3.0*(cosMult(x)+cosMult(x, 2.)));}
