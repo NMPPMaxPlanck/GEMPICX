@@ -187,10 +187,9 @@ amrex::Real initk) {
 #if (GEMPIC_VDIM > 1)
                 amrex::Array4<amrex::Real> const& jarry = (*(*mw_yee).J_Array[1])[pti].array();
 #endif
-#if (GEMPIC_VDIM > 1)
+#if (GEMPIC_VDIM > 2)
                 amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
 #endif
-
                 // loop over particles: add contribution of old particle position and push
                 for (int pp=0;pp<np;pp++){
                     gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 0, jarrx,
