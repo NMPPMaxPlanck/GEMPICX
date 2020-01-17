@@ -77,9 +77,9 @@ double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> 
 }
 
 void main_main ()
-{
+{std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << GEMPIC_VDIM << " | B: " << GEMPIC_BDIM << std::endl;
   // make pointer-array for functions
-  double (*fields[GEMPIC_VDIM+GEMPIC_SPACEDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
+  double (*fields[GEMPIC_VDIM+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
   fields[0] = E_x;
 #if (GEMPIC_VDIM > 1)
   fields[1] = E_y;
@@ -88,12 +88,12 @@ void main_main ()
   fields[2] = E_z;
 #endif
 
-  fields[GEMPIC_SPACEDIM] = B_x;
-#if (GEMPIC_VDIM > 1)
-  fields[GEMPIC_BDIM+1] = B_y;
+  fields[GEMPIC_VDIM] = B_x;
+#if (GEMPIC_BDIM > 1)
+  fields[GEMPIC_VDIM+1] = B_y;
 #endif
-#if (GEMPIC_SPACEDIM > 2)
-  fields[GEMPIC_BDIM+2] = B_z;
+#if (GEMPIC_BDIM > 2)
+  fields[GEMPIC_VDIM+2] = B_z;
 #endif
 
   double (*fields_poisson[GEMPIC_VDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
