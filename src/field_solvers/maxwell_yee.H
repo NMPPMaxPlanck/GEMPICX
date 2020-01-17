@@ -160,7 +160,7 @@ class maxwell_yee
           x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 	      // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-          (*B_Array[i])[mfi].setVal((*fields[i+GEMPIC_SPACEDIM])(x,half_dt), cc, 0, 1);
+          (*B_Array[i])[mfi].setVal((*fields[i+GEMPIC_VDIM])(x,half_dt), cc, 0, 1);
 	    }
 #if (GEMPIC_SPACEDIM > 1)
 	  }
