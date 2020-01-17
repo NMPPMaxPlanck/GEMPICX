@@ -220,20 +220,27 @@ class maxwell_yee
           (*J_Array[i])[mfi].getVal(cj, {AMREX_D_DECL(l,j,k)},0,1);
 
           // B-derivatives
-#if (GEMPIC_VDIM < 3)
-          if(i == 0) {
+#if (GEMPIC_VDIM < 3 & GEMPIC_SPACEDIM == 1)
+          if (i == 0){
               (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-*cj), cc, 0, 1);
           }
+#endif
+#if (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
+          //Ex for 2D2V
+          if (i == 0) {
+              (*B_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(  l,j,k)},0,1);
+              (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l,j-1,k)},0,1);
+              (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[1]-*cj), cc, 0, 1);
+          }
+#endif
 #if (GEMPIC_VDIM == 2)
           if (i == 1) {
               (*B_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(  l,j,k)},0,1);
               (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l-1,j,k)},0,1);
               (*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-(*c2-*c3)/ifr.dx[0]-*cj), cc, 0, 1);
-              //(*E_Array[i])[mfi].setVal(*c1+dt*coefficient*(-*cj), cc, 0, 1);
-              //(*E_Array[i])[mfi].setVal(0., cc, 0, 1);
           }
 #endif
-#elif (GEMPIC_VDIM == 3)
+#if (GEMPIC_VDIM == 3)
           (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{AMREX_D_DECL(  l,  j  ,k)},0,1);
           (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
           (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {AMREX_D_DECL(  l,  j,  k)},0,1);
@@ -283,11 +290,19 @@ class maxwell_yee
           // E-derivatives
 #if (GEMPIC_VDIM == 1)
           //no B
-#elif (GEMPIC_BDIM == 1)
-          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {AMREX_D_DECL(l+1,j,k)},0,1);
-          (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, {AMREX_D_DECL(l  ,j,k)},0,1);
+#elif (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 1)
+          (*E_Array[1])[mfi].getVal(c4, {AMREX_D_DECL(l+1,j,k)},0,1);
+          (*E_Array[1])[mfi].getVal(c5, {AMREX_D_DECL(l  ,j,k)},0,1);
 
           (*B_Array[i])[mfi].setVal(*c1-dt*coefficient*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
+#elif (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
+          (*E_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(l,j+1,k)},0,1);
+          (*E_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
+          (*E_Array[1])[mfi].getVal(c4,{AMREX_D_DECL(l+1,j,k)},0,1);
+          (*E_Array[1])[mfi].getVal(c5, {AMREX_D_DECL(l,j,k)},0,1);
+
+          (*B_Array[i])[mfi].setVal(*c1+dt*coefficient*((*c2-*c3)/ifr.dx[1]-
+                        (*c4-*c5)/ifr.dx[0]), cc, 0, 1);
 #elif (GEMPIC_BDIM == 3)
           (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
           (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{AMREX_D_DECL(  l,  j  ,k)},0,1);
