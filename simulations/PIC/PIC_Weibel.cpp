@@ -40,8 +40,8 @@ double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
 
 void main_main ()
 {
-    std::cout << AMREX_SPACEDIM << std::endl;
-    std::cout << GEMPIC_SPACEDIM << std::endl;
+    std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
+    std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
   //------------------------------------------------------------------------------
   //build objects:
     double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);

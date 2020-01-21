@@ -416,7 +416,6 @@ class maxwell_yee
             amrex::IntVect hi = {bx.bigEnd()};
 
             if (lo[0] == fbid*4){
-                std::cout << lo[0] << std::endl;
                 for(int l=lo[0]; l<hi[0]; l++){
                     rho[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
                     amrex::Print(ofsRHO2) << c3[0] << std::endl;
@@ -435,7 +434,6 @@ class maxwell_yee
             amrex::IntVect hi = {bx.bigEnd()};
 
             if (lo[0] == fbid*4){
-                std::cout << lo[0] << std::endl;
                 for(int l=lo[0]; l<hi[0]; l++){
                     phi[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
                     amrex::Print(ofsPHI2) << c3[0] << std::endl;
@@ -474,7 +472,6 @@ class maxwell_yee
             amrex::IntVect hi = {bx.bigEnd()};
 
             if (lo[0] == fbid*4){
-                std::cout << lo[0] << std::endl;
                 for(int l=lo[0]; l<hi[0]; l++){
                     phi[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
                     amrex::Print(ofsPHI3) << c3[0] << std::endl;

@@ -36,7 +36,7 @@ amrex::Real initk) {
     // initial rho by: deposition of particle charge
     //Set rho to 0
     (*mw_yee).rho.setVal(0.0, 0); // value and component
-    std::ofstream ofs_part("cout_particles.output", std::ofstream::out);
+
     // Deposit charges:
     for (int spec=0;spec<(*part_gr).n_species;spec++) {
         (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -56,7 +56,6 @@ amrex::Real initk) {
 
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
-                amrex::Print(ofs_part) << 1 << std::endl;
                 gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], rhoarr, plo, dxi);
             }
             ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);

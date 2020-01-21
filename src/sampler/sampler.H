@@ -34,7 +34,6 @@ void init_particles_cellwise(infrastructure infra,
 #endif
           ;
 
-  std::ofstream ofsfun("weights.output", std::ofstream::out);
   // cumulative sum of vel_weights
   std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
   for(int i=0;i<GEMPIC_VDIM;i++) {
@@ -59,8 +58,6 @@ void init_particles_cellwise(infrastructure infra,
 #if (GEMPIC_SPACEDIM > 2)
   tot_n_cell *= infra.n_cell[2];
 #endif
-amrex::Real tot_weight = 0.;
-int tot_num_part = 0;
 amrex::Real tot_vel = 0.;
   for (int pp=0;pp<init.Np_cell;pp++) {
     //position in model cell [0,dx]x[0,dy]x[0,dz]:
@@ -115,10 +112,7 @@ tot_vel += velocity[1];
 
         weight = init.weight_fun(shifted_position, velocity,
                 init.Np_cell*tot_n_cell,init.k)*dom_vol; //DIM
-        tot_weight += weight;
-        tot_num_part++;
 	    (*ppg).add_particle(species, shifted_position, velocity, weight);
-        amrex::Print(ofsfun) << weight << "," << shifted_position[0] << std::endl;
 	  }
 #if (GEMPIC_SPACEDIM > 1)
 	}
@@ -128,10 +122,6 @@ tot_vel += velocity[1];
 #endif
     }
   }
-std::cout << "Total weight: " << tot_weight << std::endl;
-std::cout << "Domain volume: " << dom_vol << std::endl;
-std::cout << "Number of parts: " << tot_num_part << std::endl;
-  ofsfun.close();
 }
 
 
