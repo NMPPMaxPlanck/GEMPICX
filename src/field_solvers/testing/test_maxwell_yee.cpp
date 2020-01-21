@@ -66,11 +66,15 @@ double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
 double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 #endif
 
-double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cosMult(x)+1/4.0*cosMult(x, 2.)+0.05*cos(8*x[0]));}
-double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-3.0*(cosMult(x)+cosMult(x, 2.)));}
-double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*-cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
-double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*-cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));}
-double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*-cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cosMult(x)+1/4.0*cosMult(x, 2.));}
+double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-GEMPIC_SPACEDIM*(cosMult(x)+cosMult(x, 2.)));}
+double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
+#if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 2)
+double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
+#else
+double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));}
+#endif
+double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
 
 double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
   return(0.0);
@@ -119,18 +123,26 @@ void main_main ()
 
 //------------------------------------------------------------------------------
   // Solve
-  
   maxwell_yee mw_yee(init, infra);
 
+  (*(mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
+  (*(mw_yee).J_Array[1]).setVal(0.0, 0);
+  (*(mw_yee).J_Array[2]).setVal(0.0, 0);
+
   mw_yee.init_E_B(fields, infra);
+  mw_yee.FillBD(infra);
 
   std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
   Print(ofs) << "Maxwell" << endl;
+  std::cout << "step: " << 0 << std::endl;
+  E_B_error = mw_yee.computeError(fields, true, infra);
 
   for (int n=1;n<=mw_yee.nsteps;n++){
+      std::cout << "step: " << n << std::endl;
     mw_yee.advance(infra);
+    mw_yee.FillBD(infra);
     E_B_error = mw_yee.computeError(fields, true, infra);
-    
+
     Print(ofs) << "step " << n << endl;
     Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                               #if (GEMPIC_VDIM > 1)
@@ -155,7 +167,7 @@ void main_main ()
 
   mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
   mw_yee.solve_poisson(infra);
-  mw_yee.computeError(fields_poisson, false, infra);
+  E_B_error = mw_yee.computeError(fields_poisson, false, infra);
 
   Print(ofs) << endl;
   Print(ofs) << "Poisson" << endl;
