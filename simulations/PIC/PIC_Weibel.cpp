@@ -49,7 +49,7 @@ void main_main ()
   //initializer
   initializer init;
   amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-  amrex::IntVect n_cell(AMREX_D_DECL(32,4,4));
+  amrex::IntVect n_cell(AMREX_D_DECL(24,8,8));
   std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
   std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
   std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
@@ -76,9 +76,9 @@ void main_main ()
 #endif
 
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.1,2000,{1.0},{1.0},500,0.5,
-                  VW,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
-  //n_cell, max_grid_size, periodic, dt, n_steps, n_species, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.02,100000,{-1.0},{1.0},100,0.5,
+                  VM,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
+  //n_cell, max_grid_size, periodic, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
   // infrastructure
   infrastructure infra(init);
