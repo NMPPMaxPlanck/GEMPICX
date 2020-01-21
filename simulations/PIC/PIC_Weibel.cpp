@@ -35,6 +35,9 @@ double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){
 }
 #endif
 
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(4*0.5*cos(0.5*x[0]));}
+double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
+
 void main_main ()
 {
     std::cout << AMREX_SPACEDIM << std::endl;
@@ -85,6 +88,7 @@ void main_main ()
 
   // maxwell_yee
   maxwell_yee mw_yee(init, infra);
+  mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
   
   // particles
   particle_groups part_gr(init, infra);
