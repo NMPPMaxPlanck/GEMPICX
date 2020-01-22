@@ -372,7 +372,7 @@ class maxwell_yee
     //phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
   }
 
-  void solve_poisson(infrastructure ifr){
+  void solve_poisson(infrastructure ifr, bool slices = false){
     //--------------------------------------------------------------------------------
     // rho
 #if GEMPIC_SPACEDIM > 1
@@ -404,6 +404,7 @@ class maxwell_yee
 
     //mlmg.setBottomSolver (amrex::MLMG::BottomSolver::smoother);
 
+    if(slices){
 #if (GEMPIC_SPACEDIM < 2)
     // rho output for 1D
     std::ofstream ofsRHO2("rho2.output", std::ofstream::out);
@@ -442,19 +443,26 @@ class maxwell_yee
         }
     }
     ofsPHI2.close();
-#elif (GEMPIC_SPACEDIM < 3)
+#elif (GEMPIC_SPACEDIM < 4)
     amrex::Vector<std::string> varnames = {"phi_init"};
     WriteSingleLevelPlotfile ("SliceData2D/phi_init_plotfile_0", phi, varnames,
                               ifr.geom, 0*dt, 0);
 
+    amrex::MultiFab rho_copy;
+    const amrex::BoxArray& nba = amrex::convert(ifr.grid,amrex::IntVect::TheNodeVector());
+    rho_copy.define(nba, ifr.distriMap, 1, 0);
+    Copy (rho_copy, rho, 0, 0, 1, 0);
     varnames = {"rho"};
-    WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0", rho, varnames,
+    WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0_test", rho_copy, varnames,
                               ifr.geom, 0*dt, 0);
 #endif
   
     amrex::Print() << "rho " << rho.norm0(0) << std::endl;
+    }
+
     mlmg.solve({&phi}, {&rho}, reltol, 0.0);
 
+    if(slices){
     std::ofstream ofsPHI("phi.output", std::ofstream::out);
     for (amrex::MFIter mfi(phi); mfi.isValid(); ++mfi ) {
         amrex::Print(ofsPHI) << phi[mfi] << std::endl;
@@ -480,12 +488,14 @@ class maxwell_yee
         }
     }
     ofsPHI3.close();
-#elif (GEMPIC_SPACEDIM < 3)
-    varnames = {"phi_end"};
+#elif (GEMPIC_SPACEDIM < 4)
+    amrex::Vector<std::string> varnames = {"phi_end"};
     WriteSingleLevelPlotfile ("SliceData2D/phi_end_plotfile_0", phi, varnames,
                               ifr.geom, 0*dt, 0);
 #endif
+    }
 #endif
+
     //----------------------------------------------------------------------------------
     // E
 
@@ -526,7 +536,19 @@ class maxwell_yee
 	// next mfi
       }
     }
-    
+if(slices){
+    amrex::Vector<std::string> varnamesE = {"Ex_0"};
+    WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_0", *E_Array[0], varnamesE, ifr.geom, 0*dt, 0);
+
+#if (GEMPIC_VDIM > 1)
+    varnamesE = {"Ey_0"};
+    WriteSingleLevelPlotfile ("SliceData/Ey_plotfile_0", *E_Array[1], varnamesE, ifr.geom, 0*dt, 0);
+#endif
+#if (GEMPIC_VDIM > 2)
+    varnamesE = {"Ez_0"};
+    WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_0", *E_Array[2], varnamesE, ifr.geom, 0*dt, 0);
+#endif
+}
   }
   
   std::array<amrex::Real,GEMPIC_VDIM+GEMPIC_BDIM> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),

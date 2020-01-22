@@ -24,6 +24,7 @@ void time_loop_avg (infrastructure infra,
                     double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
 amrex::Real initk) {
 
+    bool output_bool = false;
     diagnostics diagn((*mw_yee).nsteps);
 
     std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
@@ -95,7 +96,7 @@ amrex::Real initk) {
     }
     ofs.close();
     
-    (*mw_yee).solve_poisson(infra);
+    (*mw_yee).solve_poisson(infra, output_bool);
 
     // initial B_field
     std::array<double,GEMPIC_SPACEDIM> x;
@@ -148,7 +149,7 @@ amrex::Real initk) {
     //Time loop
     std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
     amrex::Real time = 0.0;
-    diagn.save_step_data(0, infra, mw_yee, part_gr, true);
+    diagn.save_step_data(0, infra, mw_yee, part_gr, output_bool); //false: slices are not saved
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         time += (*mw_yee).dt;
@@ -175,10 +176,13 @@ amrex::Real initk) {
 
         std::array<amrex::Real,GEMPIC_VDIM> eres;
         std::array<amrex::Real,GEMPIC_BDIM> bres;
+
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
+            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
 
             for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
@@ -190,6 +194,7 @@ amrex::Real initk) {
                 amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
 #endif
                 // loop over particles: add contribution of old particle position and push
+
                 for (int pp=0;pp<np;pp++){
                     gempic_deposit_J_cic(particles[pp], (*part_gr).charge[spec], 0, jarrx,
                                               infra.ploE[0], dxi, 0.5);
@@ -216,6 +221,7 @@ amrex::Real initk) {
                         //B-field at particle position
                         bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], dxi);
                     }
+
                     //std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_boris(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
@@ -231,6 +237,7 @@ amrex::Real initk) {
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         }
+
         //--------------------------------------------------------------------------
         //update fields
         // deposit remaining charge in J one component and particle at a time
@@ -266,10 +273,10 @@ amrex::Real initk) {
 
         (*mw_yee).advance_E(infra, 1.);
         // save norms for diagnostics
-        diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, true);
+        diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, output_bool); // false: slices are not saved
 
         // save temporary results every n steps
-        if ((t_step+1)%3 == 0) {
+        if ((t_step+1)%3 == 0 & output_bool) {
             diagn.save_all_to_textfile((*mw_yee).dt, "tmp/PIC_save.output"+std::to_string(t_step+1), t_step+1);
         }
 

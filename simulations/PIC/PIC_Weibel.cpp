@@ -51,6 +51,8 @@ void main_main ()
     std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
     std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
   //------------------------------------------------------------------------------
+
+  bool output_bool = false;
   //build objects:
     double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
 
@@ -105,23 +107,26 @@ void main_main ()
   int species = 0; // all particles are same species for now
   init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
   
-  std::ofstream ofss("PIC_particle.output", std::ofstream::out);
-  for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
+  if (output_bool){
+      std::ofstream ofss("PIC_particle.output", std::ofstream::out);
+      for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
 
-    const auto& particles = pti.GetArrayOfStructs();
-    const long np = pti.numParticles();
-    for (int pp=0;pp<np;pp++) {
-      amrex::Print(ofss) << particles[pp].pos(0) << "," <<
-                      #if (GEMPIC_SPACEDIM > 1)
-                            particles[pp].pos(1) << "," <<
-                      #endif
-                      #if (GEMPIC_SPACEDIM > 2)
-                            particles[pp].pos(2) <<
-                      #endif
-                            std::endl;
-    }
+        const auto& particles = pti.GetArrayOfStructs();
+        const long np = pti.numParticles();
+        for (int pp=0;pp<np;pp++) {
+          amrex::Print(ofss) << particles[pp].pos(0) << "," <<
+                          #if (GEMPIC_SPACEDIM > 1)
+                                particles[pp].pos(1) << "," <<
+                          #endif
+                          #if (GEMPIC_SPACEDIM > 2)
+                                particles[pp].pos(2) <<
+                          #endif
+                                std::endl;
+        }
+      }
+      ofss.close();
   }
-  ofss.close();
+
 
   //------------------------------------------------------------------------------
   // solve:
