@@ -49,17 +49,17 @@ void main_main ()
   initializer init;
   amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
   amrex::IntVect n_cell(AMREX_D_DECL(8,8,8));
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,0,{1.0},{1.0},1000,0.5,
+  init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,0,{1.0},{1.0},1000,0.5,
 				  {0.0},{1.0},{1.0},WF);
     
   // infrastructure
   infrastructure infra(init);
 
   // empty cell-centered FAB for MFIter
-  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
+  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, init.Nghost);
 
   // maxwell_yee
-  maxwell_yee mw_yee(init, infra);
+  maxwell_yee mw_yee(init, infra, init.Nghost);
   
   // particles
   particle_groups part_gr(init, infra);

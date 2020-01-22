@@ -83,18 +83,18 @@ void main_main ()
 #endif
 
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
-                  VM,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
-  //n_cell, max_grid_size, periodic, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
+  init.initialize_from_parameters(n_cell,4,is_periodic,1,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
+                  VM,VD,VW,WF);
+  //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
   // infrastructure
   infrastructure infra(init);
 
   // empty cell-centered FAB for MFIter
-  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
+  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, init.Nghost);
 
   // maxwell_yee
-  maxwell_yee mw_yee(init, infra);
+  maxwell_yee mw_yee(init, infra, init.Nghost);
   mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
   
   // particles

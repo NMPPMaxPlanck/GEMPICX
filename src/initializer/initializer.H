@@ -21,6 +21,7 @@ class initializer
   amrex::IntVect n_cell;
   int max_grid_size;
   amrex::IntVect is_periodic;
+  int Nghost;
 
   // parameters for time evolution:
   amrex::Real dt;
@@ -44,9 +45,9 @@ class initializer
   double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k);
   
   // constructor
-  initializer (){};
+  initializer (){}
 
-  void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, amrex::Real DT, int NST,
+  void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
                                   std::array<amrex::Real, GEMPIC_NUMSPEC> CH,
                                   std::array<amrex::Real, GEMPIC_NUMSPEC> MS,
                                   int NPC,
@@ -59,6 +60,7 @@ class initializer
       n_cell = NC;
       max_grid_size = MG;
       is_periodic = PER;
+      Nghost = NG;
       dt = DT;
       n_steps = NST;
       n_species = GEMPIC_NUMSPEC;
@@ -70,8 +72,9 @@ class initializer
       double twopi = 2.0*3.14159265359;
 
       amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
-      //amrex::Real boxHi[GEMPIC_SPACEDIM] = {twopi/k,twopi/k,twopi/k};
-      amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k,twopi/k/((double)n_cell[0]/(double)n_cell[1]),twopi/k/((double)n_cell[0]/(double)n_cell[2]))};
+      amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k,twopi/k,twopi/k)};
+      //amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k,twopi/k/((double)n_cell[0]/(double)n_cell[1]),twopi/k/((double)n_cell[0]/(double)n_cell[2]))};
+      //amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k/((double)n_cell[1]/(double)n_cell[0]),twopi/k,twopi/k/((double)n_cell[1]/(double)n_cell[2]))};
       real_box.setLo(boxLo);
       real_box.setHi(boxHi);
 
@@ -80,11 +83,11 @@ class initializer
       Vweight = VW;
     
       weight_fun = *WF;
-  };
+  }
 
   void initialize_from_file(){
     
-  };
+  }
 };
 
 #endif

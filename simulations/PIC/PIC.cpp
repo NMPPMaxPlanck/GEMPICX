@@ -40,7 +40,8 @@ void main_main ()
     //initializer
     initializer init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(32,4,4));
+    //amrex::IntVect n_cell(AMREX_D_DECL(32,4,4));
+    amrex::IntVect n_cell(AMREX_D_DECL(24,8,8));
     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
@@ -66,7 +67,7 @@ void main_main ()
     VW[2][0] = 1.0;
 #endif
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.01,2000,{-1.0},{1.0},1000,0.5,
+  init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,2000,{-1.0},{1.0},1000,0.5,
                   VM,VD,VW,WF);
   //n_cell, max_grid_size, periodic, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
@@ -74,10 +75,10 @@ void main_main ()
   infrastructure infra(init);
 
   // empty cell-centered FAB for MFIter
-  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, 0);
+  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, init.Nghost);
 
   // maxwell_yee
-  maxwell_yee mw_yee(init, infra);
+  maxwell_yee mw_yee(init, infra, init.Nghost);
   mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
   
   // particles

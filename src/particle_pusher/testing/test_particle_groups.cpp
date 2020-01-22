@@ -53,7 +53,7 @@ void main_main ()
   initializer init;
   amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
   amrex::IntVect n_cell(AMREX_D_DECL(64,64,64));
-  init.initialize_from_parameters(n_cell,32,is_periodic,0.01,5,{1.0},{1.0},1000,1,
+  init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,1,
                   {0.0},{1.0},{1.0},WF);
 
   infrastructure infra(init);
@@ -79,7 +79,7 @@ void main_main ()
 //------------------------------------------------------------------------------
   //Initialize Maxwell Yee
   int n_steps = 5;
-  maxwell_yee mw_yee(init, infra);
+  maxwell_yee mw_yee(init, infra, init.Nghost);
   mw_yee.init_E_B(fields, infra);
 
 //------------------------------------------------------------------------------

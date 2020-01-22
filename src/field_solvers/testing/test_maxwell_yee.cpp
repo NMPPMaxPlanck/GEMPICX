@@ -116,14 +116,14 @@ void main_main ()
   // Initialize Infrastructure
   initializer init;
   amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-  amrex::IntVect n_cell(AMREX_D_DECL(64,64,64));
-  init.initialize_from_parameters(n_cell,32,is_periodic,0.01,5,{1.0},{1.0},1000,0.5,
+  amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
+  init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,0.5,
                   {0.0},{1.0},{1.0},WF);
   infrastructure infra(init);
 
 //------------------------------------------------------------------------------
   // Solve
-  maxwell_yee mw_yee(init, infra);
+  maxwell_yee mw_yee(init, infra, init.Nghost);
 
   (*(mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
   (*(mw_yee).J_Array[1]).setVal(0.0, 0);

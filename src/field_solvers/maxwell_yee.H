@@ -52,7 +52,7 @@ class maxwell_yee
   maxwell_yee ();
 
   // Explicit const
-  maxwell_yee (initializer init, infrastructure ifr){
+  maxwell_yee (initializer init, infrastructure ifr, int NG){
     nsteps = init.n_steps;
 
     // set index indicating nodal-/cell-centered
@@ -74,7 +74,7 @@ class maxwell_yee
     B_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 #endif
 
-    Nghost = 1;
+    Nghost = NG;
     Ncomp = 1;
 
     dt = init.dt;
