@@ -40,6 +40,14 @@ double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
 
 void main_main ()
 {
+    // ------------------------------------------------------------------------------
+    // ------------PARAMETERS--------------------------------------------------------
+    amrex::IntVect n_cell(AMREX_D_DECL(24,8,8)); //number of cells in the three dimensions, ratio should not be too big
+    int n_part_per_cell = 100; // number of particles per cell
+    int n_steps = 100000; // number of steps
+    // ------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
+
     std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
     std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
   //------------------------------------------------------------------------------
@@ -49,7 +57,6 @@ void main_main ()
   //initializer
   initializer init;
   amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-  amrex::IntVect n_cell(AMREX_D_DECL(24,8,8));
   std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
   std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
   std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
@@ -76,7 +83,7 @@ void main_main ()
 #endif
 
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,0.02,100000,{-1.0},{1.0},100,0.5,
+  init.initialize_from_parameters(n_cell,4,is_periodic,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
                   VM,VD,VW,WF); //{{0.0},{0.0},{0.0}},{{1.0},{1.0},{1.0}},{{1.0},{1.0},{1.0}}
   //n_cell, max_grid_size, periodic, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
