@@ -42,14 +42,14 @@ void main_main ()
 {
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
-    amrex::IntVect n_cell(AMREX_D_DECL(24,8,8)); //number of cells in the three dimensions, ratio should not be too big
-    int n_part_per_cell = 100; // number of particles per cell
-    int n_steps = 100000; // number of steps
+    amrex::IntVect n_cell(AMREX_D_DECL(32,32,32)); //number of cells in the three dimensions, ratio should not be too big
+    int n_part_per_cell = 10; // number of particles per cell
+    int n_steps = 10; // number of steps
     // ------------------------------------------------------------------------------
     // ------------------------------------------------------------------------------
 
-    std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
-    std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
+    //std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
+    //std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
   //------------------------------------------------------------------------------
 
   bool output_bool = false;

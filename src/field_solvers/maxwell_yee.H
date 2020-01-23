@@ -377,7 +377,7 @@ class maxwell_yee
     // rho
 #if GEMPIC_SPACEDIM > 1
     // For MLMG solver
-    int verbose = 2;
+    int verbose = 0;
     int bottom_verbose = 0;
     int max_iter = 100;
     int max_fmg_iter = 0;
