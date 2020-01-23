@@ -149,9 +149,7 @@ amrex::Real initk) {
 
     //------------------------------------------------------------------------------
     //Time loop
-    if (output_bool) {
-        std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
-    }
+
     amrex::Real time = 0.0;
     diagn.save_step_data(0, infra, mw_yee, part_gr, output_bool); //false: slices are not saved
 
@@ -229,16 +227,7 @@ amrex::Real initk) {
                     //std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_boris(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
-                    if (output_bool) {
-                        amrex::Print(ofs2) << newPos[0] << "," << newPos[1] << "," <<
-                                       #if (GEMPIC_SPACEDIM > 1)
-                                                           newPos[2] << "," << newPos[3] << "," <<
-                                       #endif
-                                       #if (GEMPIC_SPACEDIM > 2)
-                                                           newPos[4] << "," << newPos[5] <<
-                                       #endif
-                                                           std::endl;
-                    }
+
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -286,9 +275,7 @@ amrex::Real initk) {
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
     } // end time loop
-    if (output_bool) {
-        ofs2.close();
-    }
+
     diagn.save_all_to_textfile((*mw_yee).dt);
 }
 
