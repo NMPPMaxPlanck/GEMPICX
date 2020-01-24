@@ -18,7 +18,8 @@ void init_particles_cellwise(infrastructure infra,
                  particle_groups *ppg,
                              initializer init,
 			     int species,
-			     amrex::MultiFab *IteratorFab){
+                 amrex::MultiFab *IteratorFab,
+                             int rSeed = 925){
   amrex::Real x,y,z;
   std::array<amrex::Real,GEMPIC_SPACEDIM> position;
   std::array<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
@@ -34,6 +35,7 @@ void init_particles_cellwise(infrastructure infra,
 #endif
           ;
 
+  srand(rSeed);
   // cumulative sum of vel_weights
   std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
   for(int i=0;i<GEMPIC_VDIM;i++) {
@@ -41,8 +43,7 @@ void init_particles_cellwise(infrastructure infra,
   }
 
   // normally distributed random number generator:
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  std::mt19937 gen(rSeed);
   std::array<std::array<std::normal_distribution<>,GEMPIC_NUMGAUS>,GEMPIC_VDIM> normArray;
   for(int i=0;i<GEMPIC_VDIM;i++){
       for (int dis=0;dis<GEMPIC_NUMGAUS;dis++){
