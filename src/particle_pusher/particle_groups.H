@@ -51,16 +51,17 @@ class particle_groups
   void add_particle(int species,
             std::array<amrex::Real,GEMPIC_SPACEDIM> position,
             std::array<amrex::Real,GEMPIC_VDIM> velocity,
-		    amrex::Real weight){
+            amrex::Real weight,
+                    auto& particles){
 
     using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
 
-    auto& particles = (*mypc[species]).GetParticles(0)[std::make_pair(0,0)];
-    
+    //auto& particles = (*mypc[species]).GetParticles(0)[std::make_pair(0,0)];
+
 	// new particle:
 	ParticleType p;
 	p.id() = ParticleType::NextID();
-	p.cpu() = amrex::ParallelDescriptor::MyProc();
+    p.cpu() = amrex::ParallelDescriptor::MyProc();
     p.pos(0) = position[0]; //x
 #if (GEMPIC_SPACEDIM > 1)
     p.pos(1) = position[1]; //y
@@ -79,7 +80,7 @@ class particle_groups
 #endif
     p.rdata(GEMPIC_VDIM) = weight; //weight
 
-	particles.push_back(p);
+    particles.push_back(p);
 
   };
   
