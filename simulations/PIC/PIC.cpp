@@ -74,9 +74,6 @@ void main_main ()
   // infrastructure
   infrastructure infra(init);
 
-  // empty cell-centered FAB for MFIter
-  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, init.Nghost);
-
   // maxwell_yee
   maxwell_yee mw_yee(init, infra, init.Nghost);
   mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
@@ -87,7 +84,7 @@ void main_main ()
   //------------------------------------------------------------------------------
   // initialize particles:
   int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
+  init_particles_cellwise(infra, &part_gr, init, species);
 
   std::ofstream ofss("PIC_particle.output", std::ofstream::out);
   for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {

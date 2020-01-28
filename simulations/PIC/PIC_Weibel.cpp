@@ -92,9 +92,6 @@ void main_main ()
   // infrastructure
   infrastructure infra(init);
 
-  // empty cell-centered FAB for MFIter
-  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, init.Nghost);
-
   // maxwell_yee
   maxwell_yee mw_yee(init, infra, init.Nghost);
   mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
@@ -105,7 +102,7 @@ void main_main ()
   //------------------------------------------------------------------------------
   // initialize particles:
   int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, init, species, &IteratorFab);
+  init_particles_cellwise(infra, &part_gr, init, species);
   
   if (output_bool){
       std::ofstream ofss("PIC_particle.output", std::ofstream::out);

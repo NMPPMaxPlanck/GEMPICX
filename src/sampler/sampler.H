@@ -9,6 +9,7 @@
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
 #include <AMReX_Box.H>
+#include <AMReX_Particles.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
 #ifndef SAMPLER_H_
@@ -17,8 +18,7 @@
 void init_particles_cellwise(infrastructure infra,
                  particle_groups *ppg,
                              initializer init,
-			     int species,
-                 amrex::MultiFab *IteratorFab,
+                 int species,
                              int rSeed = 925){
   amrex::Real x,y,z;
   std::array<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -92,10 +92,13 @@ amrex::Real tot_vel = 0.;
 #endif
 tot_vel += velocity[1];
     //MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi(*(IteratorFab)); mfi.isValid(); ++mfi ){
+    for (amrex::MFIter mfi= (*(*ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
       const amrex::Box& bx = mfi.validbox();
       amrex::IntVect lo = {bx.smallEnd()};
       amrex::IntVect hi = {bx.bigEnd()};
+
+      using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
+      auto& particles = (*(*ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
       for(int k=lo[2]; k<=hi[2]; k++){
@@ -113,7 +116,7 @@ tot_vel += velocity[1];
 
         weight = init.weight_fun(shifted_position, velocity,
                 init.Np_cell*tot_n_cell,init.k)*dom_vol; //DIM
-	    (*ppg).add_particle(species, shifted_position, velocity, weight);
+        (*ppg).add_particle(species, shifted_position, velocity, weight, particles);
 	  }
 #if (GEMPIC_SPACEDIM > 1)
 	}
