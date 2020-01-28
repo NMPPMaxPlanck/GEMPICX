@@ -75,10 +75,14 @@ void main_main ()
     weight = 1.0;
 
     //MFI that adds particle from the modell cell to all cells
-    for ( MFIter mfi(*mw_yee.B_Array[0]); mfi.isValid(); ++mfi ){
+    for ( MFIter mfi= (*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
 	const amrex::Box& bx = mfi.validbox();
 	amrex::IntVect lo = {bx.smallEnd()};
 	amrex::IntVect hi = {bx.bigEnd()};
+
+    using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
+    auto& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+
 #if (GEMPIC_SPACEDIM > 2)
 	for(int k=lo[2]; k<=hi[2]; k++){
       x[2] = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
@@ -92,7 +96,7 @@ void main_main ()
 	    for(int l=lo[0]; l<=hi[0]; l++){
           x[0] = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
           shifted_position[0] = position[0] + x[0];
-	      part_gr.add_particle(species, shifted_position, velocity, weight);
+          part_gr.add_particle(species, shifted_position, velocity, weight, particles);
 	    }
 #if (GEMPIC_SPACEDIM > 1)
 	  }

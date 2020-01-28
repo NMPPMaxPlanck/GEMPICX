@@ -69,11 +69,14 @@ void main_main ()
   std::array<double,GEMPIC_VDIM> velocity;
   Real weight;
 
+  using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
+  auto& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(0, 0)];
+
   for (int pp=0;pp<N_parts;pp++) {
     position = {AMREX_D_DECL((double)pp, (double)(pp%2)*pi, 0.0)};
     velocity = {AMREX_V_DECL(1.0, -1.0, 0.0)};
     weight = 1.0;
-    part_gr.add_particle(species, position, velocity, weight);
+    part_gr.add_particle(species, position, velocity, weight, particles);
   }
 
 //------------------------------------------------------------------------------

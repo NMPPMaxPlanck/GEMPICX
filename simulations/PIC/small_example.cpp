@@ -55,9 +55,6 @@ void main_main ()
   // infrastructure
   infrastructure infra(init);
 
-  // empty cell-centered FAB for MFIter
-  MultiFab IteratorFab(infra.grid, infra.distriMap, 1, init.Nghost);
-
   // maxwell_yee
   maxwell_yee mw_yee(init, infra, init.Nghost);
   
@@ -66,12 +63,49 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // initialize particles:
-  part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  //part_gr.add_particle(0, {AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  //part_gr.add_particle(0, {AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle(0, {AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle(0, {AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  // //part_gr.add_particle(0, {AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  // //part_gr.add_particle(0, {AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+
+  std::array<amrex::Real,GEMPIC_VDIM> velocity = {0.,0.,0.};
+  amrex::Real weight = 1.;
+  int species = 1;
+  std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+
+  for (amrex::MFIter mfi= (*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
+    const amrex::Box& bx = mfi.validbox();
+    amrex::IntVect lo = {bx.smallEnd()};
+    amrex::IntVect hi = {bx.bigEnd()};
+
+    using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
+    auto& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+
+#if (GEMPIC_SPACEDIM > 2)
+    for(int k=lo[2]; k<=hi[2]; k++){
+  position[2] = infra.geom.ProbLo()[2] + ((double)k+0.5)*infra.dx[2];
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+  for(int j=lo[1]; j<=hi[1]; j++){
+      position[1] = infra.geom.ProbLo()[1] + ((double)j+0.5)*infra.dx[1];
+#endif
+    for(int l=lo[0]; l<=hi[0]; l++){
+      position[0] = infra.geom.ProbLo()[0] + ((double)l+0.5)*infra.dx[0];
+std::cout << "a" << std::endl;
+std::cout << position[0] << "|" << position[1] << "|" << position[2] << std::endl;
+
+      part_gr.add_particle(species, position, velocity, weight, particles);
+      std::cout << "b" << std::endl;
+    }
+#if (GEMPIC_SPACEDIM > 1)
+  }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    }
+#endif
+  }
 
   //check positions
   for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*part_gr.mypc[0], 0); pti.isValid(); ++pti) {
@@ -92,7 +126,7 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // solve:
-  time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
+  //time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
 }
 
 int main(int argc, char* argv[])
