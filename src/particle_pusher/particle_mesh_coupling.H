@@ -12,12 +12,17 @@
 #include <cmath>
 #include <gempic_Config.H>
 
+std::vector<amrex::Real> spline1 (amrex::Real var){
+    std::vector<amrex::Real> sx = {1.-var, var};
+    return(sx);
+}
+
 template <typename P>
 void gempic_deposit_cic (P const& p, amrex::Real charge,
              amrex::Array4<amrex::Real> const& rho,
              std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
              std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-             amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
+             amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
 
 {
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
@@ -31,11 +36,12 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
             sx = {1.};
         break;
         case 1:
-            sx = {1.-xint, xint};
+        sx = {1.-xint, xint};
+            //sx = spline1(xint);//{1.-xint, xint};
         break;
         case 3:
-            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+            sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
+                  2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
         break;
     }
 
@@ -54,8 +60,8 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
             sy = {1.-yint, yint};
         break;
         case 3:
-            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+            sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
+                  2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
         break;
     }
 
@@ -75,8 +81,8 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
             sz = {1.-zint, zint};
         break;
         case 3:
-            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
-                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+            sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
+                  2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow((zint),3)};
         break;
     }
 
@@ -124,7 +130,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
                std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                            amrex::Real coefficient = 1.0,
-               amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
+               amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
 {
   amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
   int i = std::floor(lx);
@@ -137,8 +143,8 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
           sx = {1.-xint, xint};
       break;
       case 3:
-          sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                  -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+        sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
+              2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
       break;
   }
 
@@ -154,8 +160,8 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
           sy = {1.-yint, yint};
       break;
       case 3:
-          sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+        sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
+              2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
       break;
   }
 
@@ -172,8 +178,8 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
           sz = {1.-zint, zint};
       break;
       case 3:
-          sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
-                -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+        sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
+              2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow(zint,3)};
       break;
   }
 
@@ -194,6 +200,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
                         * sz[kk]*dxi[2]
         #endif
                         ;
+
           // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_VDIM): weight
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii
                              #if (GEMPIC_SPACEDIM > 1)
@@ -230,8 +237,8 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_
           sx = {1.-xint, xint};
       break;
       case 3:
-          sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                  -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+        sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
+              2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
       break;
   }
 
@@ -247,8 +254,8 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_
           sy = {1.-yint, yint};
       break;
       case 3:
-          sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+        sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
+              2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
       break;
   }
 
@@ -265,8 +272,8 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_
           sz = {1.-zint, zint};
       break;
       case 3:
-          sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
-                -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+        sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
+              2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow(zint,3)};
       break;
   }
 
@@ -300,7 +307,7 @@ template <typename P>
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
                                     std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                             std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
+                    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
 {
     amrex::Real acceleration = 0.0;
 
@@ -315,8 +322,8 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
             sx = {1.-xint, xint};
         break;
         case 3:
-            sx = {-1./6.*xint*(xint-1)*(xint-2), 1./2.*(xint+1)*(xint-1)*(xint-2),
-                    -1./2.*(xint+1)*xint*(xint-2), 1./6.*(xint+1)*xint*(xint-1)};
+            sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
+                  2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
         break;
     }
 
@@ -332,8 +339,8 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
             sy = {1.-yint, yint};
         break;
         case 3:
-            sy = {-1./6.*yint*(yint-1)*(yint-2), 1./2.*(yint+1)*(yint-1)*(yint-2),
-                  -1./2.*(yint+1)*yint*(yint-2), 1./6.*(yint+1)*yint*(yint-1)};
+            sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
+                  2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
         break;
     }
 
@@ -350,8 +357,8 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
             sz = {1.-zint, zint};
         break;
         case 3:
-            sz = {-1./6.*zint*(zint-1)*(zint-2), 1./2.*(zint+1)*(zint-1)*(zint-2),
-                  -1./2.*(zint+1)*zint*(zint-2), 1./6.*(zint+1)*zint*(zint-1)};
+            sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
+                  2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow(zint,3)};
         break;
     }
 
