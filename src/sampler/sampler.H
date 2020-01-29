@@ -114,8 +114,14 @@ tot_vel += velocity[1];
 	    x = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
 	    shifted_position[0] = position[0] + x;
 
-        weight = init.weight_fun(shifted_position, velocity,
-                init.Np_cell*tot_n_cell,init.k)*dom_vol; //DIM
+        weight = init.weight_fun(shifted_position, velocity,init.Np_cell*tot_n_cell,init.k)*tot_n_cell*infra.dx[0]
+                #if (GEMPIC_SPACEDIM > 1)
+                *infra.dx[1]
+                #endif
+                #if (GEMPIC_SPACEDIM > 2)
+                *infra.dx[2]
+                #endif
+                ;
         (*ppg).add_particle(species, shifted_position, velocity, weight, particles);
 	  }
 #if (GEMPIC_SPACEDIM > 1)
