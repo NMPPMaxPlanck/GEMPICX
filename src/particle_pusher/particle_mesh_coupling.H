@@ -95,12 +95,12 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
         for (int jj = floor(0-(deg[1]-1)/2); jj <= floor((deg[1]+1)/2); ++jj) {
 #endif
             for (int ii = floor(0-(deg[0]-1)/2); ii <= floor((deg[0]+1)/2); ++ii) {
-                double s_coeff = sx[ii]*dxi[0]
+                double s_coeff = sx[ii+(deg[0]-1)/2]*dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]*dxi[1]
+                        * sy[jj+(deg[1]-1)/2]*dxi[1]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]*dxi[2]
+                        * sz[kk+(deg[2]-1)/2]*dxi[2]
         #endif
                         ;
 
@@ -113,7 +113,6 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
                                              , k+kk
                              #endif
                                              , 0), s_coeff*charge*p.rdata(GEMPIC_VDIM));
-
 
             }
 #if (GEMPIC_SPACEDIM > 1)
@@ -192,12 +191,12 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
 #endif
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                double s_coeff = sx[ii]*dxi[0]
+                double s_coeff = sx[ii+(deg[0]-1)/2]*dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]*dxi[1]
+                        * sy[jj+(deg[1]-1)/2]*dxi[1]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]*dxi[2]
+                        * sz[kk+(deg[2]-1)/2]*dxi[2]
         #endif
                         ;
 
@@ -282,12 +281,12 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_
     for (int kk = 0-(deg[2]-1)/2; kk <= (deg[2]+1)/2; ++kk) {
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                double s_coeff = sx[ii]*dxi[0]
+                double s_coeff = sx[ii+(deg[0]-1)/2]*dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]*dxi[0]
+                        * sy[jj+(deg[1]-1)/2]*dxi[0]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]*dxi[0]
+                        * sz[kk+(deg[2]-1)/2]*dxi[0]
         #endif
                         ;
                 amrex::Gpu::Atomic::Add(&j_comp(i+ii
@@ -371,12 +370,12 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
         for (int jj = 0-(deg[1]-1)/2; jj <= (deg[1]+1)/2; ++jj) {
 #endif
             for (int ii = 0-(deg[0]-1)/2; ii <= (deg[0]+1)/2; ++ii) {
-                double s_coeff = sx[ii]
+                double s_coeff = sx[ii+(deg[0]-1)/2]
         #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj]
+                        * sy[jj+(deg[1]-1)/2]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk]
+                        * sz[kk+(deg[2]-1)/2]
         #endif
                         ;
                     acceleration += s_coeff*acc(i+ii
