@@ -132,6 +132,8 @@ amrex::Real initk) {
       }
     }
 
+    (*mw_yee).FillBD(infra);
+
     //------------------------------------------------------------------------------
     //approximate x^1/2 and e^1/2
     (*mw_yee).advance_E(infra, 0.5);
