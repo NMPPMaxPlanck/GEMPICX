@@ -44,7 +44,7 @@ class diagnostics
 
     // E and B field
     for(int cc=0;cc<GEMPIC_VDIM;cc++){
-      Efield[step][cc] = pow((*(*mw_yee).E_Array[cc]).norm2(),2)*infra.dx[0]/infra.Length[0]
+      Efield[step][cc] = pow((*(*mw_yee).E_Array[cc]).norm2(0, infra.geom.periodicity()),2)*infra.dx[0]/infra.Length[0]
 #if(GEMPIC_SPACEDIM > 1)
               *infra.dx[1]/infra.Length[1]
 #endif
@@ -55,7 +55,7 @@ class diagnostics
     }
 
     for(int cc=0;cc<GEMPIC_BDIM;cc++){
-        Bfield[step][cc] = pow((*(*mw_yee).B_Array[cc]).norm2(),2)*infra.dx[0]/infra.Length[0]
+        Bfield[step][cc] = pow((*(*mw_yee).B_Array[cc]).norm2(0, infra.geom.periodicity()),2)*infra.dx[0]/infra.Length[0]
 #if(GEMPIC_SPACEDIM > 1)
                 *infra.dx[1]/infra.Length[1]
 #endif
