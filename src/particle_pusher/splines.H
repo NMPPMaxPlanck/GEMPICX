@@ -64,7 +64,7 @@ class splines
   }
 
   amrex::Real shifted_x (amrex::Real x, int dimension) {
-      if (degree[dimension]%2==0) {
+      if (degree[dimension]%2==0 ^ centered_evaluation[dimension]) { //even XOR not centered
           if (x>1./2.) {
               return(3./2.-x);
           } else {
@@ -89,15 +89,28 @@ class splines
   }
   
    int compute_cell_index (int cell_index, int dimension, amrex::Real x) {
-       if(degree[dimension]%2 == 0) { //even
-           if (x < 1./2.) { //TODO not x but...
-               return(cell_index-int(degree[dimension]/2.));
-           } else {
-               return(cell_index-int(degree[dimension]/2.)+1);
+       if (centered_evaluation[dimension]) {
+           if(degree[dimension]%2 == 0) {
+               if (x < 1./2.) {
+                   return(cell_index-int(degree[dimension]/2.));
+               } else {
+                   return(cell_index-int(degree[dimension]/2.)+1);
+               }
+           } else { //odd
+               return(cell_index-int((degree[dimension]-1.)/2.));
            }
-       } else { //odd
-           return(cell_index-int((degree[dimension]-1.)/2.));
+       } else {
+           if(degree[dimension]%2 == 1) {
+               if (x < 1./2.) {
+                   return(cell_index-int((degree[dimension]-1)/2.));
+               } else {
+                   return(cell_index-int(degree[dimension]/2.)+1);
+               }
+           } else { //even
+               return(cell_index-int(degree[dimension]/2.));
+           }
        }
+
   }
 
 };
