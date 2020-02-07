@@ -64,7 +64,7 @@ class splines
   }
 
   amrex::Real shifted_x (amrex::Real x, int dimension) {
-      if (degree[dimension]%2==0 ^ centered_evaluation[dimension]) { //even XOR not centered
+      if (degree[dimension]%2==0 ^ centered_evaluation[dimension]) { //even XOR centered
           if (x>1./2.) {
               return(3./2.-x);
           } else {
@@ -78,12 +78,12 @@ class splines
   amrex::Real deposition_coefficient (std::array<amrex::Real, GEMPIC_SPACEDIM> x,
                                       std::array<int, GEMPIC_SPACEDIM> cell) {
       amrex::Real coeff = 1.;
-      coeff *= spline_eval(x[0], 0, cell[0]);
+      coeff *= spline_eval(shifted_x(x[0], 0), 0, cell[0]);
 #if GEMPIC_SPACEDIM > 1
-      coeff *= spline_eval(x[1], 1, cell[1]);
+      coeff *= spline_eval(shifted_x(x[1], 1), 1, cell[1]);
 #endif
 #if GEMPIC_SPACEDIM > 2
-      coeff *= spline_eval(x[2], 2, cell[2]);
+      coeff *= spline_eval(shifted_x(x[2], 2), 2, cell[2]);
 #endif
       return(coeff);
   }
