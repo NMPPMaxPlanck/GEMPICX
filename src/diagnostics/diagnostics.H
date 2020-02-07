@@ -22,9 +22,9 @@ class diagnostics
   public:
   int n_time; // number of timesteps
   // 9 static so far!! need to fix this
-  std::array<std::array<amrex::Real,GEMPIC_BDIM>,10001> Bfield;
-  std::array<std::array<amrex::Real,GEMPIC_VDIM>,10001> Efield, mom;
-  std::array<amrex::Real,2001> kin;
+  std::array<std::array<amrex::Real,GEMPIC_BDIM>,100001> Bfield;
+  std::array<std::array<amrex::Real,GEMPIC_VDIM>,100001> Efield, mom;
+  std::array<amrex::Real,100001> kin;
 
   // The default constructor.
   diagnostics ();
@@ -75,21 +75,21 @@ class diagnostics
     mom[step][2] = 0.0;
 #endif
 
-     for (int spec=0;spec<(*part_gr).n_species;spec++){
-       for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-	auto& particles = pti.GetArrayOfStructs();
-    const long np = pti.numParticles();
+    for (int spec=0;spec<(*part_gr).n_species;spec++){
+        for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            auto& particles = pti.GetArrayOfStructs();
+            const long np = pti.numParticles();
 
-	for (int pp=0;pp<np;pp++) {
-        std::array<double,GEMPIC_VDIM> absvel = {AMREX_V_DECL(std::abs(particles[pp].rdata(0)),std::abs(particles[pp].rdata(1)),std::abs(particles[pp].rdata(2)))};
-        vel = std::accumulate(absvel.begin(), absvel.end(), 0);
-      //vel = std::abs(particles[pp].rdata(0))+std::abs(particles[pp].rdata(1))+std::abs(particles[pp].rdata(2));
-      kin[step] += particles[pp].rdata(GEMPIC_VDIM)*pow(vel,2);
-      for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
-        mom[step][cmp] += particles[pp].rdata(GEMPIC_VDIM)*std::abs(particles[pp].rdata(cmp));
-	  }
-	}
-      }
+            for (int pp=0;pp<np;pp++) {
+                std::array<double,GEMPIC_VDIM> absvel = {AMREX_V_DECL(std::abs(particles[pp].rdata(0)),std::abs(particles[pp].rdata(1)),std::abs(particles[pp].rdata(2)))};
+                vel = std::accumulate(absvel.begin(), absvel.end(), 0.);
+                vel = std::abs(particles[pp].rdata(0))+std::abs(particles[pp].rdata(1))+std::abs(particles[pp].rdata(2));
+                kin[step] += particles[pp].rdata(GEMPIC_VDIM)*pow(vel,2);
+                for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+                    mom[step][cmp] += particles[pp].rdata(GEMPIC_VDIM)*std::abs(particles[pp].rdata(cmp));
+                }
+            }
+        }
     }
 
      // save Plotfile
@@ -102,25 +102,39 @@ class diagnostics
 
          varnames[0] = "Ex";
          WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[0]), varnames, infra.geom, 0.0, 0); // last two args: time and level_step
+         varnames[0] = "E_solx";
+         WriteSingleLevelPlotfile ("SliceData/E_solx_plotfile_" + std::to_string(step), (*(*mw_yee).E_sol_Array[0]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Jx";
          WriteSingleLevelPlotfile ("SliceData/Jx_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[0]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Bx";
          WriteSingleLevelPlotfile ("SliceData/Bx_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[0]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "B_solx";
+         WriteSingleLevelPlotfile ("SliceData/B_solx_plotfile_" + std::to_string(step), (*(*mw_yee).B_sol_Array[0]), varnames, infra.geom, 0.0, 0);
 #if (GEMPIC_VDIM > 1)
          varnames[0] = "Ey";
          WriteSingleLevelPlotfile ("SliceData/Ey_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[1]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "E_soly";
+         WriteSingleLevelPlotfile ("SliceData/E_soly_plotfile_" + std::to_string(step), (*(*mw_yee).E_sol_Array[1]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Jy";
          WriteSingleLevelPlotfile ("SliceData/Jy_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[1]), varnames, infra.geom, 0.0, 0);
+#endif
+#if (GEMPIC_BDIM > 1)
          varnames[0] = "By";
          WriteSingleLevelPlotfile ("SliceData/By_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[1]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "B_soly";
+         WriteSingleLevelPlotfile ("SliceData/B_soly_plotfile_" + std::to_string(step), (*(*mw_yee).B_sol_Array[1]), varnames, infra.geom, 0.0, 0);
 #endif
 #if (GEMPIC_VDIM > 2)
          varnames[0] = "Ez";
          WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[2]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "E_solz";
+         WriteSingleLevelPlotfile ("SliceData/E_solz_plotfile_" + std::to_string(step), (*(*mw_yee).E_sol_Array[2]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Jz";
          WriteSingleLevelPlotfile ("SliceData/Jz_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[2]), varnames, infra.geom, 0.0, 0);
          varnames[0] = "Bz";
-         WriteSingleLevelPlotfile ("SliceData/Bz_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[2]), varnames, infra.geom, 0.0, 0);
+         WriteSingleLevelPlotfile ("SliceDataTMP/Bz_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[2]), varnames, infra.geom, 0.0, 0);
+         varnames[0] = "B_solz";
+         WriteSingleLevelPlotfile ("SliceData/B_solz_plotfile_" + std::to_string(step), (*(*mw_yee).B_sol_Array[2]), varnames, infra.geom, 0.0, 0);
 #endif
 
      }
