@@ -21,8 +21,8 @@ using namespace std;
 using namespace amrex;
 
 double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
-  double alpha = 0.5;
-  return((1.0 + alpha*cos(k*x[0]))/Np);
+    double alpha = 0.5;
+    return((1.0 + alpha*cos(k*x[0]))/Np);
 }
 
 double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
@@ -50,7 +50,7 @@ void main_main ()
     //std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
     //std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
 
-  //------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
 
     bool output_bool = false;
 
@@ -85,41 +85,41 @@ void main_main ()
     VW[2][0] = 1.0;
 #endif
 
-  init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
-                  VM,VD,VW,WF);
-  //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
+    init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
+                                    VM,VD,VW,WF);
+    //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
-  // infrastructure
-  infrastructure infra(init);
+    // infrastructure
+    infrastructure infra(init);
 
-  // maxwell_yee
-  maxwell_yee mw_yee(init, infra, init.Nghost);
-  mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
-  
-  // particles
-  particle_groups part_gr(init, infra);
+    // maxwell_yee
+    maxwell_yee mw_yee(init, infra, init.Nghost);
+    mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
 
-  //------------------------------------------------------------------------------
-  // initialize particles:
-  int species = 0; // all particles are same species for now
-  init_particles_cellwise(infra, &part_gr, init, species);
+    // particles
+    particle_groups part_gr(init, infra);
 
-  if (output_bool){
-      save_particle_positions(&part_gr);
-  }
+    //------------------------------------------------------------------------------
+    // initialize particles:
+    int species = 0; // all particles are same species for now
+    init_particles_cellwise(infra, &part_gr, init, species);
 
-  //------------------------------------------------------------------------------
-  // solve:
-  time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
+    if (output_bool){
+        save_particle_positions(&part_gr);
+    }
+
+    //------------------------------------------------------------------------------
+    // solve:
+    time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
 }
 
 int main(int argc, char* argv[])
 {
-  amrex::Initialize(argc,argv);
+    amrex::Initialize(argc,argv);
 
-  main_main();
+    main_main();
 
-  amrex::Finalize();
+    amrex::Finalize();
 }
 
 

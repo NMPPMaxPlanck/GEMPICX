@@ -27,7 +27,7 @@ using namespace std;
 using namespace amrex;
 
 //------------------------------------------------------------------------------
-  // Solutions and RHS
+// Solutions and RHS
 double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std::array<int,GEMPIC_SPACEDIM> sinInd = {AMREX_D_DECL(0,0,0)}) {
     double res = sinInd[0]?sin(coefficient*x[0]):cos(coefficient*x[0]);
 #if (GEMPIC_SPACEDIM > 1)
@@ -77,73 +77,100 @@ double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1.
 double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
 
 double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
-  return(0.0);
+    return(0.0);
 }
 
 void main_main ()
 {std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << GEMPIC_VDIM << " | B: " << GEMPIC_BDIM << std::endl;
-  // make pointer-array for functions
-  double (*fields[GEMPIC_VDIM+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
-  fields[0] = E_x;
+    // make pointer-array for functions
+    double (*fields[GEMPIC_VDIM+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
+    fields[0] = E_x;
 #if (GEMPIC_VDIM > 1)
-  fields[1] = E_y;
+    fields[1] = E_y;
 #endif
 #if (GEMPIC_VDIM > 2)
-  fields[2] = E_z;
+    fields[2] = E_z;
 #endif
 
-  fields[GEMPIC_VDIM] = B_x;
+    fields[GEMPIC_VDIM] = B_x;
 #if (GEMPIC_BDIM > 1)
-  fields[GEMPIC_VDIM+1] = B_y;
+    fields[GEMPIC_VDIM+1] = B_y;
 #endif
 #if (GEMPIC_BDIM > 2)
-  fields[GEMPIC_VDIM+2] = B_z;
+    fields[GEMPIC_VDIM+2] = B_z;
 #endif
 
-  double (*fields_poisson[GEMPIC_VDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
-  fields_poisson[0] = Ep_x;
+    double (*fields_poisson[GEMPIC_VDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
+    fields_poisson[0] = Ep_x;
 #if (GEMPIC_VDIM > 1)
-  fields_poisson[1] = Ep_y;
+    fields_poisson[1] = Ep_y;
 #endif
 #if (GEMPIC_VDIM > 2)
-  fields_poisson[2] = Ep_z;
+    fields_poisson[2] = Ep_z;
 #endif
 
-//------------------------------------------------------------------------------
-  array<Real,GEMPIC_VDIM+GEMPIC_BDIM> E_B_error; //array for storing errors
+    //------------------------------------------------------------------------------
+    array<Real,GEMPIC_VDIM+GEMPIC_BDIM> E_B_error; //array for storing errors
 
-//------------------------------------------------------------------------------
-  // Initialize Infrastructure
-  initializer init;
-  amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-  amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
-  init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,0.5,
-                  {0.0},{1.0},{1.0},WF);
-  infrastructure infra(init);
+    //------------------------------------------------------------------------------
+    // Initialize Infrastructure
+    initializer init;
+    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
+    amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
+    init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,0.5,
+    {0.0},{1.0},{1.0},WF);
+    infrastructure infra(init);
 
-//------------------------------------------------------------------------------
-  // Solve
-  maxwell_yee mw_yee(init, infra, init.Nghost);
+    //------------------------------------------------------------------------------
+    // Solve
+    maxwell_yee mw_yee(init, infra, init.Nghost);
 
-  (*(mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
-  (*(mw_yee).J_Array[1]).setVal(0.0, 0);
-  (*(mw_yee).J_Array[2]).setVal(0.0, 0);
+    (*(mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
+    (*(mw_yee).J_Array[1]).setVal(0.0, 0);
+    (*(mw_yee).J_Array[2]).setVal(0.0, 0);
 
-  mw_yee.init_E_B(fields, infra);
-  mw_yee.FillBD(infra);
-
-  std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
-  Print(ofs) << "Maxwell" << endl;
-  std::cout << "step: " << 0 << std::endl;
-  E_B_error = mw_yee.computeError(fields, true, infra);
-
-  for (int n=1;n<=mw_yee.nsteps;n++){
-      std::cout << "step: " << n << std::endl;
-    mw_yee.advance(infra);
+    mw_yee.init_E_B(fields, infra);
     mw_yee.FillBD(infra);
+
+    std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
+    Print(ofs) << "Maxwell" << endl;
+    std::cout << "step: " << 0 << std::endl;
     E_B_error = mw_yee.computeError(fields, true, infra);
 
-    Print(ofs) << "step " << n << endl;
+    for (int n=1;n<=mw_yee.nsteps;n++){
+        std::cout << "step: " << n << std::endl;
+        mw_yee.advance(infra);
+        mw_yee.FillBD(infra);
+        E_B_error = mw_yee.computeError(fields, true, infra);
+
+        Print(ofs) << "step " << n << endl;
+        Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                              #if (GEMPIC_VDIM > 1)
+                                      " |Ey error: " << E_B_error[1] <<
+                              #endif
+                              #if (GEMPIC_VDIM > 2)
+                                      " |Ez error: " << E_B_error[2] <<
+                              #endif
+                                      endl;
+        Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+                              #if (GEMPIC_BDIM > 1)
+                                      " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                              #endif
+                              #if (GEMPIC_BDIM > 2)
+                                      " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                              #endif
+                                      endl;
+    }
+
+    //------------------------------------------------------------------------------
+    // Poisson
+
+    mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
+    mw_yee.solve_poisson(infra);
+    E_B_error = mw_yee.computeError(fields_poisson, false, infra);
+
+    Print(ofs) << endl;
+    Print(ofs) << "Poisson" << endl;
     Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                               #if (GEMPIC_VDIM > 1)
                                   " |Ey error: " << E_B_error[1] <<
@@ -152,44 +179,17 @@ void main_main ()
                                   " |Ez error: " << E_B_error[2] <<
                               #endif
                                   endl;
-    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
-                              #if (GEMPIC_BDIM > 1)
-                                  " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
-                              #endif
-                              #if (GEMPIC_BDIM > 2)
-                                  " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
-                              #endif
-                                  endl;
-  }
 
-  //------------------------------------------------------------------------------
-  // Poisson
-
-  mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
-  mw_yee.solve_poisson(infra);
-  E_B_error = mw_yee.computeError(fields_poisson, false, infra);
-
-  Print(ofs) << endl;
-  Print(ofs) << "Poisson" << endl;
-  Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (GEMPIC_VDIM > 1)
-                                " |Ey error: " << E_B_error[1] <<
-                              #endif
-                              #if (GEMPIC_VDIM > 2)
-                                " |Ez error: " << E_B_error[2] <<
-                              #endif
-                                endl;
-
-  ofs.close();
+    ofs.close();
 }
 
 int main(int argc, char* argv[])
 {
-  amrex::Initialize(argc,argv);
+    amrex::Initialize(argc,argv);
 
-  main_main();
+    main_main();
 
-  amrex::Finalize();
+    amrex::Finalize();
 }
 
 

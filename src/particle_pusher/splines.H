@@ -21,97 +21,97 @@
 
 class splines
 {
-  public:
-  
-  // parameters for splines
-  amrex::IntVect degree;
-  std::array<bool,GEMPIC_SPACEDIM> centered_evaluation;
-  std::array<bool,GEMPIC_SPACEDIM> integral_evaluation;
+public:
 
-  // The default constructor.
-  splines ();
+    // parameters for splines
+    amrex::IntVect degree;
+    std::array<bool,GEMPIC_SPACEDIM> centered_evaluation;
+    std::array<bool,GEMPIC_SPACEDIM> integral_evaluation;
 
-  // Explicit const
-  splines (amrex::IntVect deg,
-                   std::array<bool,GEMPIC_SPACEDIM> cent_eval,
-                   std::array<bool,GEMPIC_SPACEDIM> int_eval){
+    // The default constructor.
+    splines ();
 
-    degree = deg;
-    centered_evaluation = cent_eval;
-    integral_evaluation = int_eval;
-  }
+    // Explicit const
+    splines (amrex::IntVect deg,
+             std::array<bool,GEMPIC_SPACEDIM> cent_eval,
+             std::array<bool,GEMPIC_SPACEDIM> int_eval){
 
-  amrex::Real spline_eval (amrex::Real x,
-                           int dimension,
-                           int cell) {
+        degree = deg;
+        centered_evaluation = cent_eval;
+        integral_evaluation = int_eval;
+    }
 
-      std::vector<amrex::Real> s;
-      switch (degree[dimension]) {
-          case 0:
-              s = {1.};
-              break;
-          case 1:
-              s = {x, 1.-x};
-              break;
-          case 2:
-              s = {pow(x,2)/2., 1./2.+x-pow(x,2), 1./2.-x+pow(x,2)/2};
-              break;
-          case 3:
-              s = {1./6.*pow(x,3), 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3)), 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3)), 1./6.*pow((1.-x),3)};
-              break;
-      }
-      return(s[cell]);
-  }
+    amrex::Real spline_eval (amrex::Real x,
+                             int dimension,
+                             int cell) {
 
-  amrex::Real shifted_x (amrex::Real x, int dimension) {
-      if (degree[dimension]%2==0 ^ centered_evaluation[dimension]) { //even XOR centered
-          if (x>1./2.) {
-              return(3./2.-x);
-          } else {
-              return(1./2.-x);
-          }
-      } else {
-          return(1.-x);
-      }
-  }
+        std::vector<amrex::Real> s;
+        switch (degree[dimension]) {
+        case 0:
+            s = {1.};
+            break;
+        case 1:
+            s = {x, 1.-x};
+            break;
+        case 2:
+            s = {pow(x,2)/2., 1./2.+x-pow(x,2), 1./2.-x+pow(x,2)/2};
+            break;
+        case 3:
+            s = {1./6.*pow(x,3), 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3)), 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3)), 1./6.*pow((1.-x),3)};
+            break;
+        }
+        return(s[cell]);
+    }
 
-  amrex::Real deposition_coefficient (std::array<amrex::Real, GEMPIC_SPACEDIM> x,
-                                      std::array<int, GEMPIC_SPACEDIM> cell) {
-      amrex::Real coeff = 1.;
-      coeff *= spline_eval(shifted_x(x[0], 0), 0, cell[0]);
+    amrex::Real shifted_x (amrex::Real x, int dimension) {
+        if (degree[dimension]%2==0 ^ centered_evaluation[dimension]) { //even XOR centered
+            if (x>1./2.) {
+                return(3./2.-x);
+            } else {
+                return(1./2.-x);
+            }
+        } else {
+            return(1.-x);
+        }
+    }
+
+    amrex::Real deposition_coefficient (std::array<amrex::Real, GEMPIC_SPACEDIM> x,
+                                        std::array<int, GEMPIC_SPACEDIM> cell) {
+        amrex::Real coeff = 1.;
+        coeff *= spline_eval(shifted_x(x[0], 0), 0, cell[0]);
 #if GEMPIC_SPACEDIM > 1
-      coeff *= spline_eval(shifted_x(x[1], 1), 1, cell[1]);
+        coeff *= spline_eval(shifted_x(x[1], 1), 1, cell[1]);
 #endif
 #if GEMPIC_SPACEDIM > 2
-      coeff *= spline_eval(shifted_x(x[2], 2), 2, cell[2]);
+        coeff *= spline_eval(shifted_x(x[2], 2), 2, cell[2]);
 #endif
-      return(coeff);
-  }
-  
-   int compute_cell_index (int cell_index, int dimension, amrex::Real x) {
-       if (centered_evaluation[dimension]) {
-           if(degree[dimension]%2 == 0) {
-               if (x < 1./2.) {
-                   return(cell_index-int(degree[dimension]/2.));
-               } else {
-                   return(cell_index-int(degree[dimension]/2.)+1);
-               }
-           } else { //odd
-               return(cell_index-int((degree[dimension]-1.)/2.));
-           }
-       } else {
-           if(degree[dimension]%2 == 1) {
-               if (x < 1./2.) {
-                   return(cell_index-int((degree[dimension]-1)/2.));
-               } else {
-                   return(cell_index-int(degree[dimension]/2.)+1);
-               }
-           } else { //even
-               return(cell_index-int(degree[dimension]/2.));
-           }
-       }
+        return(coeff);
+    }
 
-  }
+    int compute_cell_index (int cell_index, int dimension, amrex::Real x) {
+        if (centered_evaluation[dimension]) {
+            if(degree[dimension]%2 == 0) {
+                if (x < 1./2.) {
+                    return(cell_index-int(degree[dimension]/2.));
+                } else {
+                    return(cell_index-int(degree[dimension]/2.)+1);
+                }
+            } else { //odd
+                return(cell_index-int((degree[dimension]-1.)/2.));
+            }
+        } else {
+            if(degree[dimension]%2 == 1) {
+                if (x < 1./2.) {
+                    return(cell_index-int((degree[dimension]-1)/2.));
+                } else {
+                    return(cell_index-int(degree[dimension]/2.)+1);
+                }
+            } else { //even
+                return(cell_index-int(degree[dimension]/2.));
+            }
+        }
+
+    }
 
 };
 
