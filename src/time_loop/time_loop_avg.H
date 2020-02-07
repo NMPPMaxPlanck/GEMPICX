@@ -101,37 +101,7 @@ amrex::Real initk) {
     (*mw_yee).solve_poisson(infra, output_bool);
 
     // initial B_field
-    std::array<double,GEMPIC_SPACEDIM> x;
-    for (int i = 0; i<GEMPIC_BDIM; i++) {
-      for ( amrex::MFIter mfi(*(*mw_yee).B_Array[i]); mfi.isValid(); ++mfi )
-      {
-    const amrex::Box& bx = mfi.validbox();
-    amrex::IntVect lo = {bx.smallEnd()};
-    amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-    for(int k=lo[2]; k<=hi[2]-(*(*mw_yee).B_Index[i])[2]; k++){
-      x[2] = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*(*mw_yee).B_Index[i])[2])*infra.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-      for(int j=lo[1]; j<=hi[1]-(*(*mw_yee).B_Index[i])[1]; j++){
-        x[1] = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*(*mw_yee).B_Index[i])[1])*infra.dx[1];
-#endif
-        for(int l=lo[0]; l<=hi[0]-(*(*mw_yee).B_Index[i])[0]; l++){
-          x[0] = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*(*mw_yee).B_Index[i])[0])*infra.dx[0];
-          // the box for these values:
-          amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *(*mw_yee).B_Index[i]);
-          (*(*mw_yee).B_Array[i])[mfi].setVal((*initB[i])(x,initk), cc, 0, 1);
-        }
-#if (GEMPIC_SPACEDIM > 2)
-      }
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-    }
-#endif
-    // next mfi
-      }
-    }
-
+    (*mw_yee).initB(infra, initB, initk);
     (*mw_yee).FillBD(infra);
 
     //------------------------------------------------------------------------------

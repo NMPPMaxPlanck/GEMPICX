@@ -172,6 +172,41 @@ class maxwell_yee
     }
   }
 
+  void initB (infrastructure infra,
+              double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
+              amrex::Real initk) {
+
+      std::array<double,GEMPIC_SPACEDIM> x;
+      for (int i = 0; i<GEMPIC_BDIM; i++) {
+        for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
+            const amrex::Box& bx = mfi.validbox();
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+  #if (GEMPIC_SPACEDIM > 2)
+            for(int k=lo[2]; k<=hi[2]-(*B_Index[i])[2]; k++){
+                x[2] = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
+  #endif
+  #if (GEMPIC_SPACEDIM > 1)
+                for(int j=lo[1]; j<=hi[1]-(*B_Index[i])[1]; j++){
+                    x[1] = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
+  #endif
+                    for(int l=lo[0]; l<=hi[0]-(*B_Index[i])[0]; l++){
+                        x[0] = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
+                        // the box for these values:
+                        amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                        (*B_Array[i])[mfi].setVal((*initB[i])(x,initk), cc, 0, 1);
+                    }
+  #if (GEMPIC_SPACEDIM > 2)
+                }
+  #endif
+  #if (GEMPIC_SPACEDIM > 1)
+            }
+  #endif
+            // next mfi
+        }
+      }
+  }
+
   void FillBD (infrastructure ifr){
       for(int cc=0;cc<GEMPIC_VDIM;cc++){
           (*E_Array[cc]).FillBoundary(ifr.geom.periodicity());
