@@ -60,15 +60,12 @@ void main_main ()
   //------------------------------------------------------------------------------
 
   bool output_bool = false;
-  //build objects:
-    double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
 
   //initializer
   initializer init;
   amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
-  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
-  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
+
+  double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
   initB[0] = B_x;
 #if (GEMPIC_BDIM > 1)
   initB[1] = B_y;
@@ -76,6 +73,10 @@ void main_main ()
 #if (GEMPIC_BDIM > 2)
   initB[2] = B_z;
 #endif
+
+  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
+  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
+  std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
 
   VM[0][0] = 0.0;
   VD[0][0] = 0.02/sqrt(2);
