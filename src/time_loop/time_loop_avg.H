@@ -109,14 +109,14 @@ amrex::Real initk) {
     amrex::IntVect lo = {bx.smallEnd()};
     amrex::IntVect hi = {bx.bigEnd()};
 #if (GEMPIC_SPACEDIM > 2)
-    for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*(*mw_yee).B_Index[i])[2]; k++){
       x[2] = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*(*mw_yee).B_Index[i])[2])*infra.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-      for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*(*mw_yee).B_Index[i])[1]; j++){
         x[1] = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*(*mw_yee).B_Index[i])[1])*infra.dx[1];
 #endif
-        for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*(*mw_yee).B_Index[i])[0]; l++){
           x[0] = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*(*mw_yee).B_Index[i])[0])*infra.dx[0];
           // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *(*mw_yee).B_Index[i]);
@@ -153,7 +153,7 @@ amrex::Real initk) {
     //Time loop
 
     amrex::Real time = 0.0;
-    diagn.save_step_data(0, infra, mw_yee, part_gr, output_bool); //false: slices are not saved
+    diagn.save_step_data(0, infra, mw_yee, part_gr, true); //false: slices are not saved
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         time += (*mw_yee).dt;
@@ -272,8 +272,8 @@ amrex::Real initk) {
         diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, output_bool); // false: slices are not saved
 
         // save temporary results every n steps
-        if ((t_step+1)%3 == 0 & output_bool) {
-            diagn.save_all_to_textfile((*mw_yee).dt, "tmp/PIC_save.output"+std::to_string(t_step+1), t_step+1);
+        if ((t_step+1)%5 == 0) { //& output_bool
+            diagn.save_all_to_textfile((*mw_yee).dt, "tmp2/PIC_save.output"+std::to_string(t_step+1), t_step+1);
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
     } // end time loop
