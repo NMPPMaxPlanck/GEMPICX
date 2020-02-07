@@ -115,16 +115,15 @@ class maxwell_yee
 	const amrex::Box& bx = mfi.validbox();
 	amrex::IntVect lo = {bx.smallEnd()};
 	amrex::IntVect hi = {bx.bigEnd()};
-
 #if (GEMPIC_SPACEDIM > 2)
-	for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*E_Index[i])[2]; k++){
       x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-	  for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*E_Index[i])[1]; j++){
         x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
 #endif
-	    for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*E_Index[i])[0]; l++){
           x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
 	      // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
@@ -149,14 +148,14 @@ class maxwell_yee
 	amrex::IntVect hi = {bx.bigEnd()};
 
 #if (GEMPIC_SPACEDIM > 2)
-	for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*B_Index[i])[2]; k++){
       x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-	  for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*B_Index[i])[1]; j++){
         x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
 #endif
-	    for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*B_Index[i])[0]; l++){
           x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 	      // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
@@ -204,12 +203,12 @@ class maxwell_yee
     amrex::IntVect hi = {bx.bigEnd()};
 
 #if (GEMPIC_SPACEDIM > 2)
-    for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*E_Index[i])[2]; k++){
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-      for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*E_Index[i])[2]; j++){
 #endif
-        for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*E_Index[i])[2]; l++){
 
           // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
@@ -274,12 +273,12 @@ class maxwell_yee
     amrex::IntVect hi = {bx.bigEnd()};
 
 #if (GEMPIC_SPACEDIM > 2)
-    for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*B_Index[i])[2]; k++){
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-      for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*B_Index[i])[1]; j++){
 #endif
-        for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*B_Index[i])[0]; l++){
 
           // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
@@ -344,12 +343,12 @@ class maxwell_yee
           amrex::IntVect hi = {bx.bigEnd()};
 
 #if (GEMPIC_SPACEDIM > 2)
-    for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<hi[2]; k++){
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-      for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<hi[1]; j++){
 #endif
-        for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<hi[0]; l++){
 
           // the box for these values:
           std::array<double,GEMPIC_SPACEDIM> x = {AMREX_D_DECL(l*ifr.dx[0], j*ifr.dx[1], k*ifr.dx[2])};
@@ -508,12 +507,12 @@ class maxwell_yee
 	amrex::IntVect lo = {bx.smallEnd()};
 	amrex::IntVect hi = {bx.bigEnd()};
 #if (GEMPIC_SPACEDIM > 2)
-	for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*E_Index[i])[2]; k++){
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-	  for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*E_Index[i])[1]; j++){
 #endif
-	    for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*E_Index[i])[0]; l++){
 
 	      // the box for these values:
           amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
@@ -588,14 +587,14 @@ if(slices){
 	amrex::IntVect hi = {bx.bigEnd()};
 
 #if (GEMPIC_SPACEDIM > 2)
-	for(int k=lo[2]; k<=hi[2]; k++){
+    for(int k=lo[2]; k<=hi[2]-(*E_Index[i])[2]; k++){
       x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-	  for(int j=lo[1]; j<=hi[1]; j++){
+      for(int j=lo[1]; j<=hi[1]-(*E_Index[i])[1]; j++){
         x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
 #endif
-	    for(int l=lo[0]; l<=hi[0]; l++){
+        for(int l=lo[0]; l<=hi[0]-(*E_Index[i])[0]; l++){
           x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
 
 	      // the box for these values:
@@ -622,14 +621,14 @@ if(slices){
 	  amrex::IntVect hi = {bx.bigEnd()};
 
 #if (GEMPIC_SPACEDIM > 2)
-	  for(int k=lo[2]; k<=hi[2]; k++){
+      for(int k=lo[2]; k<=hi[2]-(*B_Index[i])[2]; k++){
         x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-	    for(int j=lo[1]; j<=hi[1]; j++){
+        for(int j=lo[1]; j<=hi[1]-(*B_Index[i])[1]; j++){
           x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
 #endif
-	      for(int l=lo[0]; l<=hi[0]; l++){
+          for(int l=lo[0]; l<=hi[0]-(*B_Index[i])[0]; l++){
             x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 
 	        // the box for these values:
