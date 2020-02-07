@@ -1,3 +1,5 @@
+add_subdirectory( reference_results )
+
 add_executable ( PIC PIC.cpp )
 add_executable ( PIC_Weibel PIC_Weibel.cpp )
 add_executable ( small_example small_example.cpp )
