@@ -20,6 +20,9 @@ filename = "/home/irga/build/gempic/tmp2/PIC_save.output111"
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
 filename_3d = "/home/irga/build/gempic/PIC_particle.output"
 filename_weights = "/home/irga/build/gempic/weights.output"
+filename_phi_init = "/home/irga/build/gempic/phi2.output"
+filename_phi_end = "/home/irga/build/gempic/phi3.output"
+filename_rho = "/home/irga/build/gempic/rho2.output"
 
 ########### energy and mom ####################
 
@@ -90,27 +93,38 @@ for line in file.readlines():
 #plt.plot(t,E1+E2+E3+B1+B2+B3+kin,'-o',t,mom1+mom2+mom3,'-*')
 plt.plot(t,E,'-')
 
-########### rho 1D ####################
+########### rho and phi 1D ####################
 
-rho = [
--6.93889e-18, 0, -2.42861e-17, 2.08167e-17, 6.93889e-18, -5.20417e-17,
--3.46945e-18, 1.38778e-17, 1.38778e-17, 2.08167e-17, -2.42861e-17,
--1.04083e-17, 6.245e-17, -2.42861e-17, 4.16334e-17, -6.93889e-18,
--2.77556e-17, 5.55112e-17, -3.1225e-17, 4.85723e-17, -1.2837e-16,
-4.85723e-17, 4.16334e-17, -9.71445e-17, 4.85723e-17, 4.16334e-17,
-5.55112e-17, -9.02056e-17, 4.85723e-17, 4.85723e-17, -1.249e-16,
-2.77556e-17
-]
-rho = [0.0155743, 0.0152751, 0.0143888, 0.0129496, 0.0110127, 0.00865268,
-       0.00596009, 0.00303846, 6.38626e-08, -0.00303833, -0.00595997,
-       -0.00865257, -0.0110127, -0.0129495, -0.0143888, -0.015275, -0.0155743,
-       -0.0152751, -0.0143888, -0.0129496, -0.0110127, -0.00865268, -0.00596009,
-       -0.00303846, -6.38626e-08, 0.00303833, 0.00595997, 0.00865257, 0.0110127,
-       0.0129495, 0.0143888, 0.015275
-]
+n_lines = sum(1 for line in open(filename_phi_init))
+rho = np.empty(n_lines)
+phi_init = np.empty(n_lines)
+phi_end = np.empty(n_lines)
 
+file = open(filename_phi_init, 'r')
+
+line_num = 0
+for line in file.readlines():
+    phi_init[line_num] = line.rstrip() #using rstrip to remove the \n
+    line_num = line_num + 1
+
+file = open(filename_phi_end, 'r')
+
+line_num = 0
+for line in file.readlines():
+    phi_end[line_num] = line.rstrip() #using rstrip to remove the \n
+    line_num = line_num + 1
+
+file = open(filename_rho, 'r')
+
+line_num = 0
+for line in file.readlines():
+    rho[line_num] = line.rstrip() #using rstrip to remove the \n
+    line_num = line_num + 1
 
 plt.plot(range(32),rho,'-')
+plt.plot(range(32),phi_init,'-')
+plt.plot(range(32),phi_end,'-')
+plt.plot(range(32),abs(4*rho-phi_init),'-')
 
 ########### pos and vel ####################
 
@@ -162,9 +176,35 @@ for line in file.readlines():
     z[line_num] = vals[2]
     line_num = line_num + 1
     
+#plt.hist(x, bins = 8)
 plt.scatter(x, y)
 plt.scatter(x, z)
 plt.scatter(y, z)
+
+ind = 0.
+plt.scatter(x[abs(z - 4.*np.pi/16.*(1./2.+ind))<0.1], y[abs(z - 4.*np.pi/16.*(1./2.+ind))<0.1])
+
+########### vel at beginning ####################
+filename_3v = "/home/irga/build/gempic/PIC_particleV.output"    
+n_lines_part = sum(1 for line in open(filename_3d))
+
+vx = np.empty(n_lines_part)
+vy = np.empty(n_lines_part)
+vz = np.empty(n_lines_part)
+
+file = open(filename_3v, 'r')
+
+line_num = 0
+for line in file.readlines():
+    vals = line.rstrip().split(',') #using rstrip to remove the \n
+    vx[line_num] = vals[0]
+    vy[line_num] = vals[1]
+    vz[line_num] = vals[2]
+    line_num = line_num + 1
+    
+plt.hist(vx, bins = 20)
+plt.hist(vy, bins = 20)
+plt.hist(vz, bins = 20)
 
 ########### weights ####################
     
