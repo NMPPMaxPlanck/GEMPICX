@@ -96,7 +96,7 @@ void main_main ()
 	    for(int l=lo[0]; l<=hi[0]; l++){
           x[0] = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
           shifted_position[0] = position[0] + x[0];
-          part_gr.add_particle(species, shifted_position, velocity, weight, particles);
+          part_gr.add_particle(shifted_position, velocity, weight, particles);
 	    }
 #if (GEMPIC_SPACEDIM > 1)
 	  }

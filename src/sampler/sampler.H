@@ -123,7 +123,7 @@ tot_vel += velocity[1];
                 *infra.dx[2]
                 #endif
                 ;
-        (*ppg).add_particle(species, shifted_position, velocity, weight, particles);
+        (*ppg).add_particle(shifted_position, velocity, weight, particles);
 	  }
 #if (GEMPIC_SPACEDIM > 1)
 	}
@@ -244,7 +244,7 @@ amrex::Real tot_vel = 0.;
         *infra.dx[2]
         #endif
         ;
-        (*ppg).add_particle(species, shifted_position, velocity, weight, particles);
+        (*ppg).add_particle(shifted_position, velocity, weight, particles);
       }
 #if (GEMPIC_SPACEDIM > 1)
     }
@@ -315,7 +315,7 @@ void init_one_particle_cellwise(infrastructure infra,
                     shifted_position[0] = position[0] + x;
 
                     weight = 1.; //DIM
-                    (*ppg).add_particle(species, shifted_position, velocity, weight, particles);
+                    (*ppg).add_particle(shifted_position, velocity, weight, particles);
                 }
 #if (GEMPIC_SPACEDIM > 1)
             }

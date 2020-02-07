@@ -63,12 +63,12 @@ void main_main ()
 
   //------------------------------------------------------------------------------
   // initialize particles:
-  //part_gr.add_particle(0, {AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  //part_gr.add_particle(0, {AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  //part_gr.add_particle(0, {AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  // //part_gr.add_particle(0, {AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
-  //part_gr.add_particle(0, {AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
-  // //part_gr.add_particle(0, {AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle({AMREX_D_DECL(0.5,0.0,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle({AMREX_D_DECL(2.0,0.5,0.0)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle({AMREX_D_DECL(7.0,0.5,0.5)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  // //part_gr.add_particle({AMREX_D_DECL(10.996,10.996,10.996)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
+  //part_gr.add_particle({AMREX_D_DECL(12.56637,12.56637,12.56637)}, {AMREX_V_DECL(0.0,0.0,0.0)}, 0.25);
+  // //part_gr.add_particle({AMREX_D_DECL(0.5*12.56637,0.5*12.56637,0.5*12.56637)}, {AMREX_D_DECL(0.0,0.0,0.0)}, 0.25);
 
   std::array<amrex::Real,GEMPIC_VDIM> velocity = {0.,0.,0.};
   amrex::Real weight = 1.;
@@ -96,7 +96,7 @@ void main_main ()
 std::cout << "a" << std::endl;
 std::cout << position[0] << "|" << position[1] << "|" << position[2] << std::endl;
 
-      part_gr.add_particle(species, position, velocity, weight, particles);
+      part_gr.add_particle(position, velocity, weight, particles);
       std::cout << "b" << std::endl;
     }
 #if (GEMPIC_SPACEDIM > 1)

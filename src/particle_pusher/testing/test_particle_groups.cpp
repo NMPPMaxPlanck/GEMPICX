@@ -76,7 +76,7 @@ void main_main ()
     position = {AMREX_D_DECL((double)pp, (double)(pp%2)*pi, 0.0)};
     velocity = {AMREX_V_DECL(1.0, -1.0, 0.0)};
     weight = 1.0;
-    part_gr.add_particle(species, position, velocity, weight, particles);
+    part_gr.add_particle(position, velocity, weight, particles);
   }
 
 //------------------------------------------------------------------------------
