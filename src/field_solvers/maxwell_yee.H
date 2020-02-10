@@ -408,14 +408,13 @@ public:
     void solve_poisson(infrastructure ifr, bool slices = false){
         //--------------------------------------------------------------------------------
         // rho
-#if GEMPIC_SPACEDIM > 1
+#if GEMPIC_SPACEDIM > 1 // for == 1: use analytical solution instead of MLMG solver
         // For MLMG solver
         int verbose = 0;
         int bottom_verbose = 0;
         int max_iter = 100;
         int max_fmg_iter = 0;
         amrex::Real reltol = 1.e-11;
-        //amrex::Real reltol = 1.e-6;
 
         sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
         amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}); // linear operator class
@@ -435,93 +434,23 @@ public:
         mlmg.setVerbose(verbose);
         mlmg.setBottomVerbose(bottom_verbose);
 
-        //mlmg.setBottomSolver (amrex::MLMG::BottomSolver::smoother);
-
         if(slices){
-#if (GEMPIC_SPACEDIM < 2)
-            // rho output for 1D
-            std::ofstream ofsRHO2("rho2.output", std::ofstream::out);
-            amrex::Real c3[1];
-            for (int fbid = 0; fbid<8; fbid++){
-                for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi )
-                {
-                    const amrex::Box& bx = mfi.validbox();
-                    amrex::IntVect lo = {bx.smallEnd()};
-                    amrex::IntVect hi = {bx.bigEnd()};
-
-                    if (lo[0] == fbid*4){
-                        for(int l=lo[0]; l<hi[0]; l++){
-                            rho[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
-                            amrex::Print(ofsRHO2) << c3[0] << std::endl;
-                        }
-                    }
-                }
-            }
-            ofsRHO2.close();
-            // phi output for 1D
-            std::ofstream ofsPHI2("phi2.output", std::ofstream::out);
-            for (int fbid = 0; fbid<8; fbid++){
-                for (amrex::MFIter mfi(phi); mfi.isValid(); ++mfi )
-                {
-                    const amrex::Box& bx = mfi.validbox();
-                    amrex::IntVect lo = {bx.smallEnd()};
-                    amrex::IntVect hi = {bx.bigEnd()};
-
-                    if (lo[0] == fbid*4){
-                        for(int l=lo[0]; l<hi[0]; l++){
-                            phi[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
-                            amrex::Print(ofsPHI2) << c3[0] << std::endl;
-                        }
-                    }
-                }
-            }
-            ofsPHI2.close();
-#elif (GEMPIC_SPACEDIM < 4)
+#if (GEMPIC_SPACEDIM > 1)
             amrex::Vector<std::string> varnames = {"phi_init"};
             WriteSingleLevelPlotfile ("SliceData2D/phi_init_plotfile_0", phi, varnames,
                                       ifr.geom, 0*dt, 0);
 
-            amrex::MultiFab rho_copy;
-            const amrex::BoxArray& nba = amrex::convert(ifr.grid,amrex::IntVect::TheNodeVector());
-            rho_copy.define(nba, ifr.distriMap, 1, 0);
-            Copy (rho_copy, rho, 0, 0, 1, 0);
             varnames = {"rho"};
-            WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0_test", rho_copy, varnames,
+            WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0", rho, varnames,
                                       ifr.geom, 0*dt, 0);
 #endif
-
             amrex::Print() << "rho " << rho.norm0(0) << std::endl;
         }
 
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
 
         if(slices){
-            std::ofstream ofsPHI("phi.output", std::ofstream::out);
-            for (amrex::MFIter mfi(phi); mfi.isValid(); ++mfi ) {
-                amrex::Print(ofsPHI) << phi[mfi] << std::endl;
-            }
-            ofsPHI.close();
-
-#if (GEMPIC_SPACEDIM < 2)
-            // phi output for 1D
-            std::ofstream ofsPHI3("phi3.output", std::ofstream::out);
-            for (int fbid = 0; fbid<8; fbid++){
-                for (amrex::MFIter mfi(phi); mfi.isValid(); ++mfi )
-                {
-                    const amrex::Box& bx = mfi.validbox();
-                    amrex::IntVect lo = {bx.smallEnd()};
-                    amrex::IntVect hi = {bx.bigEnd()};
-
-                    if (lo[0] == fbid*4){
-                        for(int l=lo[0]; l<hi[0]; l++){
-                            phi[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
-                            amrex::Print(ofsPHI3) << c3[0] << std::endl;
-                        }
-                    }
-                }
-            }
-            ofsPHI3.close();
-#elif (GEMPIC_SPACEDIM < 4)
+#if (GEMPIC_SPACEDIM > 1)
             amrex::Vector<std::string> varnames = {"phi_end"};
             WriteSingleLevelPlotfile ("SliceData2D/phi_end_plotfile_0", phi, varnames,
                                       ifr.geom, 0*dt, 0);
