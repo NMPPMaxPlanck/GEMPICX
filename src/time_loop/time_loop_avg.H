@@ -133,7 +133,6 @@ void time_loop_avg (infrastructure infra,
 
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in // TODO: necessary?
 
             for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
@@ -188,7 +187,6 @@ void time_loop_avg (infrastructure infra,
         // deposit remaining charge in J one particle at a time
 
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in //TODO: necessary?
             for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
