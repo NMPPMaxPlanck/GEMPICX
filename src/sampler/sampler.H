@@ -27,15 +27,6 @@ void init_particles_cellwise(infrastructure infra,
     std::array<amrex::Real,GEMPIC_VDIM> velocity;
     amrex::Real weight;
 
-    amrex::Real dom_vol = infra.Length[0]
-#if (GEMPIC_SPACEDIM > 1)
-            *infra.Length[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            *infra.Length[2]
-#endif
-            ;
-
     srand(rSeed);
     // cumulative sum of vel_weights
     std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
@@ -53,15 +44,14 @@ void init_particles_cellwise(infrastructure infra,
         }
     }
 
-    amrex::Real tot_n_cell = infra.n_cell[0];
-#if (GEMPIC_SPACEDIM > 1)
-    tot_n_cell *= infra.n_cell[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    tot_n_cell *= infra.n_cell[2];
-#endif
-
-    amrex::Real tot_vel = 0.;
+    amrex::Real tot_n_cell = infra.n_cell[0]
+        #if (GEMPIC_SPACEDIM > 1)
+            *infra.n_cell[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+            *infra.n_cell[2]
+        #endif
+            ;
 
     for (int pp=0;pp<init.Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
@@ -86,14 +76,10 @@ void init_particles_cellwise(infrastructure infra,
             }
         }
 
-        velocity[0] = normArray[0][gauss_idx[0]](gen);
-#if (GEMPIC_VDIM > 1)
-        velocity[1] = normArray[1][gauss_idx[1]](gen);
-#endif
-#if (GEMPIC_VDIM > 2)
-        velocity[2] = normArray[2][gauss_idx[2]](gen);
-#endif
-        tot_vel += velocity[1];
+        for (int cc = 0; cc < GEMPIC_VDIM; cc++) {
+            velocity[cc] = normArray[cc][gauss_idx[cc]](gen);
+        }
+
         //MFI that adds particle from the model cell to all cells
         for (amrex::MFIter mfi= (*(*ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
             const amrex::Box& bx = mfi.validbox();
@@ -118,12 +104,12 @@ void init_particles_cellwise(infrastructure infra,
                         shifted_position[0] = position[0] + x;
 
                         weight = init.weight_fun(shifted_position, velocity,init.Np_cell*tot_n_cell,init.k)*tot_n_cell*infra.dx[0]
-#if (GEMPIC_SPACEDIM > 1)
+        #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
                                 *infra.dx[2]
-#endif
+        #endif
                                 ;
                         (*ppg).add_particle(shifted_position, velocity, weight, particles);
                     }
@@ -148,15 +134,6 @@ void init_particles_full_domain(infrastructure infra,
     std::array<amrex::Real,GEMPIC_VDIM> velocity;
     amrex::Real weight;
 
-    amrex::Real dom_vol = infra.Length[0]
-#if (GEMPIC_SPACEDIM > 1)
-            *infra.Length[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            *infra.Length[2]
-#endif
-            ;
-
     srand(rSeed);
     // cumulative sum of vel_weights
     std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
@@ -174,14 +151,14 @@ void init_particles_full_domain(infrastructure infra,
         }
     }
 
-    amrex::Real tot_n_cell = infra.n_cell[0];
-#if (GEMPIC_SPACEDIM > 1)
-    tot_n_cell *= infra.n_cell[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    tot_n_cell *= infra.n_cell[2];
-#endif
-    amrex::Real tot_vel = 0.;
+    amrex::Real tot_n_cell = infra.n_cell[0]
+        #if (GEMPIC_SPACEDIM > 1)
+            *infra.n_cell[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+            *infra.n_cell[2]
+        #endif
+            ;
 
     for (int pp=0;pp<init.Np_cell;pp++) {
 
@@ -191,13 +168,9 @@ void init_particles_full_domain(infrastructure infra,
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
-            position[0] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[0];
-#if (GEMPIC_SPACEDIM > 1)
-            position[1] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            position[2] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[2];
-#endif
+            for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
+                position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+            }
 
             amrex::Real gauss_choice[GEMPIC_VDIM];
             for(int i=0;i<GEMPIC_VDIM;i++){
@@ -212,14 +185,9 @@ void init_particles_full_domain(infrastructure infra,
                 }
             }
 
-            velocity[0] = normArray[0][gauss_idx[0]](gen);
-#if (GEMPIC_VDIM > 1)
-            velocity[1] = normArray[1][gauss_idx[1]](gen);
-#endif
-#if (GEMPIC_VDIM > 2)
-            velocity[2] = normArray[2][gauss_idx[2]](gen);
-#endif
-            tot_vel += velocity[1];
+            for (int i=0; i < GEMPIC_VDIM; i++) {
+                velocity[i] = normArray[i][gauss_idx[i]](gen);
+            }
 
             using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
             auto& particles = (*(*ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
@@ -239,12 +207,12 @@ void init_particles_full_domain(infrastructure infra,
                         shifted_position[0] = position[0] + x;
 
                         weight = init.weight_fun(shifted_position, velocity, init.Np_cell*tot_n_cell,init.k)*tot_n_cell*infra.dx[0]
-#if (GEMPIC_SPACEDIM > 1)
+        #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
                                 *infra.dx[2]
-#endif
+        #endif
                                 ;
                         (*ppg).add_particle(shifted_position, velocity, weight, particles);
                     }
@@ -267,14 +235,6 @@ void init_one_particle_cellwise(infrastructure infra,
     std::array<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
     std::array<amrex::Real,GEMPIC_VDIM> velocity;
     amrex::Real weight;
-
-    amrex::Real tot_n_cell = infra.n_cell[0];
-#if (GEMPIC_SPACEDIM > 1)
-    tot_n_cell *= infra.n_cell[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    tot_n_cell *= infra.n_cell[2];
-#endif
 
     //position in model cell [0,dx]x[0,dy]x[0,dz]:
     position[0] = 0.5*infra.dx[0];
