@@ -122,13 +122,15 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     switch (testcase) {
     case 0:
-        init.initialize_from_parameters(n_cell,4,is_periodic,3,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,1.25,
+        init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,1.25,
                                         VM,VD,VW,WF_Weibel);
         break;
     case 1:
-        init.initialize_from_parameters(n_cell,4,is_periodic,3,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
+        init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
                                         VM,VD,VW,WF_Landau);
         break;
     }

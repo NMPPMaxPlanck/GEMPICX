@@ -19,7 +19,7 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                         amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
+                         amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
 
 {
     splines spl(deg, {AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
@@ -80,7 +80,7 @@ void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
                            std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                            amrex::Real coefficient = 1.0,
-                           amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
+                           amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
 {
     amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
     int i = std::floor(lx);
@@ -223,7 +223,7 @@ void gempic_deposit_J_cic_class (P const& p, amrex::Real charge, int cmp,
                                  std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                                  amrex::IndexType indType,
                                  amrex::Real coefficient = 1.0,
-                                 amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(2,2,2)})
+                                 amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
 
 {
     splines spl(deg, {AMREX_D_DECL(indType[0] == 0, indType[1] == 0, indType[2] == 0)}, {AMREX_D_DECL(false, false, false)});
@@ -280,7 +280,7 @@ void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_
                                   amrex::Array4<amrex::Real> const& j_comp,
                                   std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                                   std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                                  amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,1,1)})
+                                  amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
 {
     amrex::Real lx = partInfo[0]*dxi[0] - ploF[0];
     int i = std::floor(lx);
@@ -409,7 +409,7 @@ template <typename P>
 amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
                                     std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                                     std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                                    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
+                                    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
 {
     amrex::Real acceleration = 0.0;
 
@@ -551,7 +551,7 @@ amrex::Real gempic_interpolate_cic_class (P const& p, amrex::Array4<amrex::Real 
                                           std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
                                           std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
                                           amrex::IndexType indType,
-                                          amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
+                                          amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
 {
     splines spl(deg, {AMREX_D_DECL(indType[0] == 0, indType[1] == 0, indType[2] == 0)}, {AMREX_D_DECL(false, false, false)});
     amrex::Real acceleration = 0.0;
