@@ -27,20 +27,23 @@ void init_particles_cellwise(infrastructure infra,
     std::array<amrex::Real,GEMPIC_VDIM> velocity;
     amrex::Real weight;
 
+    int num_gauss = init.Vmean[0].size();
+
     srand(rSeed);
     // cumulative sum of vel_weights
-    std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
+    std::array<std::vector<amrex::Real>,GEMPIC_VDIM> vel_cum;
     for(int i=0;i<GEMPIC_VDIM;i++) {
+        vel_cum[i].resize(num_gauss);
         std::partial_sum(init.Vweight[i].begin(), init.Vweight[i].end(), vel_cum[i].begin());
     }
 
     // normally distributed random number generator:
     std::mt19937 gen(rSeed);
-    std::array<std::array<std::normal_distribution<>,GEMPIC_NUMGAUS>,GEMPIC_VDIM> normArray;
+    std::array<std::vector<std::normal_distribution<>>,GEMPIC_VDIM> normArray;
     for(int i=0;i<GEMPIC_VDIM;i++){
-        for (int dis=0;dis<GEMPIC_NUMGAUS;dis++){
+        for (int dis=0;dis<num_gauss;dis++){
             std::normal_distribution<> normD(init.Vmean[i][dis],init.Vdev[i][dis]);
-            normArray[i][dis] = normD;
+            normArray[i].push_back(normD);
         }
     }
 
@@ -69,7 +72,7 @@ void init_particles_cellwise(infrastructure infra,
         }
         std::array<int,GEMPIC_VDIM> gauss_idx = {AMREX_V_DECL(0,0,0)};
         for(int i=0;i<GEMPIC_VDIM;i++){
-            for (int gg=1;gg<GEMPIC_NUMGAUS;gg++){
+            for (int gg=1;gg<num_gauss;gg++){
                 if (vel_cum[i][gg-1]-gauss_choice[i] < 0 & vel_cum[i][gg]-gauss_choice[i] >= 0){
                     gauss_idx[i] = gg;
                 }
@@ -135,20 +138,23 @@ void init_particles_full_domain(infrastructure infra,
     std::array<amrex::Real,GEMPIC_VDIM> velocity;
     amrex::Real weight;
 
+    int num_gauss = init.Vmean[0].size();
+
     srand(rSeed);
     // cumulative sum of vel_weights
-    std::array<std::array<amrex::Real,GEMPIC_NUMGAUS>,GEMPIC_VDIM> vel_cum;
+    std::array<std::vector<amrex::Real>,GEMPIC_VDIM> vel_cum;
     for(int i=0;i<GEMPIC_VDIM;i++) {
+        vel_cum[i].resize(num_gauss);
         std::partial_sum(init.Vweight[i].begin(), init.Vweight[i].end(), vel_cum[i].begin());
     }
 
     // normally distributed random number generator:
     std::mt19937 gen(rSeed);
-    std::array<std::array<std::normal_distribution<>,GEMPIC_NUMGAUS>,GEMPIC_VDIM> normArray;
+    std::array<std::vector<std::normal_distribution<>>,GEMPIC_VDIM> normArray;
     for(int i=0;i<GEMPIC_VDIM;i++){
-        for (int dis=0;dis<GEMPIC_NUMGAUS;dis++){
+        for (int dis=0;dis<num_gauss;dis++){
             std::normal_distribution<> normD(init.Vmean[i][dis],init.Vdev[i][dis]);
-            normArray[i][dis] = normD;
+            normArray[i].push_back(normD);
         }
     }
 
@@ -179,7 +185,7 @@ void init_particles_full_domain(infrastructure infra,
             }
             std::array<int,GEMPIC_VDIM> gauss_idx = {AMREX_V_DECL(0,0,0)};
             for(int i=0;i<GEMPIC_VDIM;i++){
-                for (int gg=1;gg<GEMPIC_NUMGAUS;gg++){
+                for (int gg=1;gg<num_gauss;gg++){
                     if (vel_cum[i][gg-1]-gauss_choice[i] < 0 & vel_cum[i][gg]-gauss_choice[i] >= 0){
                         gauss_idx[i] = gg;
                     }

@@ -53,8 +53,27 @@ void main_main ()
     initializer init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(64,64,64));
+
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+
+    VM[0].push_back(0.0);
+    VD[0].push_back(1.0);
+    VW[0].push_back(1.0);
+#if (GEMPIC_VDIM > 1)
+    VM[1].push_back(0.0);
+    VD[1].push_back(1.0);
+    VW[1].push_back(1.0);
+#endif
+#if (GEMPIC_VDIM > 2)
+    VM[2].push_back(0.0);
+    VD[2].push_back(1.0);
+    VW[2].push_back(1.0);
+#endif
+
     init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,1,
-    {0.0},{1.0},{1.0},WF);
+    VM,VD,VW,WF);
 
     infrastructure infra(init);
 

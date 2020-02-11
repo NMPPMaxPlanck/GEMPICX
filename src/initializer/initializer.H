@@ -37,9 +37,9 @@ public:
     amrex::RealBox real_box;
 
     //parameters for velocity distribution
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vmean;
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vdev;
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vweight;
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vmean;
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vdev;
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vweight;
 
     // function for weights
     double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k);
@@ -52,9 +52,9 @@ public:
                                     std::array<amrex::Real, GEMPIC_NUMSPEC> MS,
                                     int NPC,
                                     amrex::Real K,
-                                    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM,
-                                    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD,
-                                    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW,
+                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM,
+                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD,
+                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW,
                                     double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,
                                                double k)){
         n_cell = NC;

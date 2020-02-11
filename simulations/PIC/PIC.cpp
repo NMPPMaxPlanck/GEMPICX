@@ -90,36 +90,36 @@ void main_main ()
 
 #endif
 
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD{};
-    std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
 
-    VM[0][0] = 0.0;
+    VM[0].push_back(0.0);
     switch (testcase) {
     case 0:
-        VD[0][0] = 0.02/sqrt(2);
+        VD[0].push_back(0.02/sqrt(2));
         break;
     case 1:
-        VD[0][0] = 1.0;
+        VD[0].push_back(1.0);
         break;
     }
-    VW[0][0] = 1.0;
+    VW[0].push_back(1.0);
 #if (GEMPIC_VDIM > 1)
-    VM[1][0] = 0.0;
+    VM[1].push_back(0.0);
     switch (testcase) {
     case 0:
-        VD[1][0] = sqrt(12)*VD[0][0];
+        VD[1].push_back(sqrt(12)*VD[0][0]);
         break;
     case 1:
-        VD[1][0] = 1.0;
+        VD[1].push_back(1.0);
         break;
     }
-    VW[1][0] = 1.0;
+    VW[1].push_back(1.0);
 #endif
 #if (GEMPIC_VDIM > 2)
-    VM[2][0] = 0.0;
-    VD[2][0] = VD[1][0];
-    VW[2][0] = 1.0;
+    VM[2].push_back(0.0);
+    VD[2].push_back(VD[1][0]);
+    VW[2].push_back(1.0);
 #endif
 
     switch (testcase) {
