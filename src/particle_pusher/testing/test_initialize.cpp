@@ -14,7 +14,7 @@
 using namespace std;
 using namespace amrex;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
+double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
     return(0.0);
 }
 

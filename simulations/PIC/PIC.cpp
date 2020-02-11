@@ -21,14 +21,14 @@
 using namespace std;
 using namespace amrex;
 
-double WF_Weibel (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, int Np,double k) {
+double WF_Weibel (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, double k) {
     double alpha = 0.;
-    return((1.0 + alpha*cos(k*x[0]))/Np);
+    return((1.0 + alpha*cos(k*x[0])));
 }
 
-double WF_Landau (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, int Np,double k) {
+double WF_Landau (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, double k) {
     double alpha = 0.5;
-    return((1.0 + alpha*cos(k*x[0]))/Np);
+    return((1.0 + alpha*cos(k*x[0])));
 }
 
 double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}

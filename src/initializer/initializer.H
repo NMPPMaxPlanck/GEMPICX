@@ -42,7 +42,7 @@ public:
     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> Vweight;
 
     // function for weights
-    double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k);
+    double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k);
 
     // constructor
     initializer (){}
@@ -56,7 +56,7 @@ public:
                                     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VD,
                                     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW,
                                     double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,
-                                               int Np,double k)){
+                                               double k)){
         n_cell = NC;
         max_grid_size = MG;
         is_periodic = PER;

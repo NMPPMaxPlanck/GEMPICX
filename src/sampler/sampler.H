@@ -104,7 +104,7 @@ void init_particles_cellwise(infrastructure infra,
                         shifted_position[0] = position[0] + x;
 
                         //TODOrefine
-                        weight = init.weight_fun(shifted_position, velocity,init.Np_cell*tot_n_cell,init.k)*tot_n_cell*infra.dx[0]
+                        weight = init.weight_fun(shifted_position, velocity,init.k)/init.Np_cell*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
@@ -207,7 +207,7 @@ void init_particles_full_domain(infrastructure infra,
                         x = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
                         shifted_position[0] = position[0] + x;
 
-                        weight = init.weight_fun(shifted_position, velocity, init.Np_cell*tot_n_cell,init.k)*tot_n_cell*infra.dx[0]
+                        weight = init.weight_fun(shifted_position, velocity, init.k)/init.Np_cell*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
