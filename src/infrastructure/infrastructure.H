@@ -29,8 +29,8 @@ public:
     amrex::Box domain;
     amrex::DistributionMapping distriMap;
     const amrex::Real* dx;
-    std::array<std::array<amrex::Real, GEMPIC_SPACEDIM>,GEMPIC_SPACEDIM> ploE;
-    std::array<std::array<amrex::Real,GEMPIC_SPACEDIM>,GEMPIC_SPACEDIM> ploB;
+    std::array<std::array<amrex::Real, GEMPIC_SPACEDIM>,GEMPIC_VDIM> ploE;
+    std::array<std::array<amrex::Real,GEMPIC_SPACEDIM>,GEMPIC_BDIM> ploB;
 
     // The default constructor.
     infrastructure ();

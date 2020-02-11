@@ -91,7 +91,7 @@ public:
     int compute_cell_index (int cell_index, int dimension, amrex::Real x) {
         if (centered_evaluation[dimension]) {
             if(degree[dimension]%2 == 0) {
-                if (x < 1./2.) {
+                if (x < 0.5) {
                     return(cell_index-int(degree[dimension]/2.));
                 } else {
                     return(cell_index-int(degree[dimension]/2.)+1);
@@ -101,7 +101,7 @@ public:
             }
         } else {
             if(degree[dimension]%2 == 1) {
-                if (x < 1./2.) {
+                if (x < 0.5) {
                     return(cell_index-int((degree[dimension]-1)/2.));
                 } else {
                     return(cell_index-int(degree[dimension]/2.)+1);

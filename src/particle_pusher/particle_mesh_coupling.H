@@ -26,6 +26,7 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
+
 #if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
     int j = std::floor(ly);
@@ -37,13 +38,14 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
     amrex::Real zint = lz - k;
 #endif
 
+    //TODOrefine
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= deg[2]; ++kk) {
 #endif
 #if (GEMPIC_SPACEDIM > 1)
         for (int jj = 0; jj <= deg[1]; ++jj) {
 #endif
-            for (int ii = 0; ii <= deg[0]; ++ii) {
+            for (int ii = 0; ii <= deg[0]; ++ii) {                
                 double s_coeff = spl.deposition_coefficient ({AMREX_D_DECL(xint, yint, zint)},{AMREX_D_DECL(ii, jj, kk)});
                 s_coeff *= dxi[0]
         #if(GEMPIC_SPACEDIM > 1)
@@ -54,7 +56,6 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
         #endif
                         ;
 
-                //TODO: try exchanging for amrex::Add()
                 amrex::Gpu::Atomic::Add(&rho(spl.compute_cell_index(i+ii, 0, xint)
                              #if (GEMPIC_SPACEDIM > 1)
                                              , spl.compute_cell_index(j+jj, 0, yint)
@@ -552,7 +553,7 @@ amrex::Real gempic_interpolate_cic_class (P const& p, amrex::Array4<amrex::Real 
                                           amrex::IndexType indType,
                                           amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(3,3,3)})
 {
-    splines spl(deg, {AMREX_D_DECL(indType[0] == 0, indType[1] == 0, indType[2] == 0)}, {AMREX_D_DECL(false, false, false)}); //TODO: indType
+    splines spl(deg, {AMREX_D_DECL(indType[0] == 0, indType[1] == 0, indType[2] == 0)}, {AMREX_D_DECL(false, false, false)});
     amrex::Real acceleration = 0.0;
 
     amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];

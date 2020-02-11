@@ -44,6 +44,7 @@ public:
 
         // E and B field
         for(int cc=0;cc<GEMPIC_VDIM;cc++){
+            //TODOrefine
             Efield[step][cc] = pow((*(*mw_yee).E_Array[cc]).norm2(0, infra.geom.periodicity()),2)*infra.dx[0]/infra.Length[0]
         #if(GEMPIC_SPACEDIM > 1)
                     *infra.dx[1]/infra.Length[1]

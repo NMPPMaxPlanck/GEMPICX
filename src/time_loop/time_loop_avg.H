@@ -63,14 +63,14 @@ void time_loop_avg (infrastructure infra,
         }
     }
 
-    //assign particles to tiles they are in
+    //assign particles to tiles they are in TODO: do I need this?
     for(int spec=0;spec<(*part_gr).n_species;spec++){
         (*(*part_gr).mypc[spec]).Redistribute();
     }
 
     //add values from ghost cells and periodic boundary
     (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
-    (*mw_yee).FillBD(infra);
+    (*mw_yee).FillBD(infra); // TODO: do I need this?
 
     // output rho
     if (output_bool){
@@ -82,7 +82,7 @@ void time_loop_avg (infrastructure infra,
     }
 
     //initial E by rho
-    (*mw_yee).phi_init.setVal(0.0, 0);
+    (*mw_yee).phi_init.setVal(0.0, 0); // TODO
     (*mw_yee).solve_poisson(infra, output_bool);
 
     // initial B_field
@@ -219,7 +219,7 @@ void time_loop_avg (infrastructure infra,
             (*(*mw_yee).J_Array[i]).SumBoundary(infra.geom.periodicity());
         }
 
-        (*mw_yee).FillBD(infra);
+        (*mw_yee).FillBD(infra); //TODO
 
         // advance E
         (*mw_yee).advance_E(infra, 1.);

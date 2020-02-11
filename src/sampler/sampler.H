@@ -55,7 +55,7 @@ void init_particles_cellwise(infrastructure infra,
 
     for (int pp=0;pp<init.Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
-        position[0] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[0];
+        position[0] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[0]; // uniform in [0, dx]
 #if (GEMPIC_SPACEDIM > 1)
         position[1] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[1];
 #endif
@@ -65,7 +65,7 @@ void init_particles_cellwise(infrastructure infra,
 
         amrex::Real gauss_choice[GEMPIC_VDIM];
         for(int i=0;i<GEMPIC_VDIM;i++){
-            gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+            gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX)); // uniform in [0, 1]
         }
         std::array<int,GEMPIC_VDIM> gauss_idx = {AMREX_V_DECL(0,0,0)};
         for(int i=0;i<GEMPIC_VDIM;i++){
@@ -103,6 +103,7 @@ void init_particles_cellwise(infrastructure infra,
                         x = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
                         shifted_position[0] = position[0] + x;
 
+                        //TODOrefine
                         weight = init.weight_fun(shifted_position, velocity,init.Np_cell*tot_n_cell,init.k)*tot_n_cell*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]

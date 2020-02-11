@@ -209,7 +209,7 @@ public:
     void FillBD (infrastructure ifr){
         for(int cc=0;cc<GEMPIC_VDIM;cc++){
             (*E_Array[cc]).FillBoundary(ifr.geom.periodicity());
-            (*E_sol_Array[cc]).FillBoundary(ifr.geom.periodicity());
+            (*E_sol_Array[cc]).FillBoundary(ifr.geom.periodicity()); //TODO: remove
         }
         for(int cc=0;cc<GEMPIC_VDIM;cc++){
             (*J_Array[cc]).FillBoundary(ifr.geom.periodicity());
@@ -224,7 +224,7 @@ public:
         time = time+dt;
     }
 
-    void advance_E (infrastructure ifr, amrex::Real coefficient){
+    void advance_E (infrastructure ifr, amrex::Real coefficient=1.0){
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
 
@@ -363,6 +363,7 @@ public:
         FillBD(ifr);
 
         advance_E(ifr, 1.);
+        FillBD(ifr);
         advance_B(ifr, 1.);
     }
 
@@ -413,7 +414,7 @@ public:
         int verbose = 0;
         int bottom_verbose = 0;
         int max_iter = 100;
-        int max_fmg_iter = 0;
+        int max_fmg_iter = 0; //TODO
         amrex::Real reltol = 1.e-11;
 
         sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
@@ -481,7 +482,7 @@ public:
                             amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
 
                             // old field_out value
-                            (*E_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1); //remove
+                            (*E_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1); //TODO remove
 
                             // phi-derivative
                             phi[mfi].getVal(c1,{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
