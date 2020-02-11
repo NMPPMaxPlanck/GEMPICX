@@ -9,6 +9,7 @@
 #include <time_loop.H>
 #include <time_loop_gobal.H>
 #include <time_loop_avg.H>
+#include <loop_preparation.H>
 #include <gempic_Config.H>
 #include <particle_positions.H>
 
@@ -119,7 +120,9 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // solve:
-    time_loop_avg(infra, &mw_yee, &part_gr, initB, init.k);
+    diagnostics diagn(mw_yee.nsteps);
+    loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k, output_bool);
+    time_loop_avg(infra, &mw_yee, &part_gr, &diagn);
 }
 
 int main(int argc, char* argv[])

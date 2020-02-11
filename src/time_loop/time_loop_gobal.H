@@ -20,83 +20,10 @@
 
 void time_loop_global (infrastructure infra,
                        maxwell_yee *mw_yee,
-                       particle_groups *part_gr) {
-
-    diagnostics diagn((*mw_yee).nsteps);
-
-    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> dxi;
-    for (int cc=0;cc<GEMPIC_SPACEDIM;cc++) {
-        plo[cc] = infra.geom.ProbLo()[cc];
-        dxi[cc] = 1.0/infra.dx[cc];
-    }
-
-    // initial rho by: deposition of particle charge
-    //Set rho to 0
-    (*mw_yee).rho.setVal(0.0, 0); // value and component
-    // Deposit charges:
-    for (int spec=0;spec<(*part_gr).n_species;spec++) {
-        (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-            amrex::Box tilebox;
-            amrex::FArrayBox local_rho;
-
-            tilebox = pti.tilebox();
-            tilebox.grow((*mw_yee).Nghost);
-            const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
-
-            local_rho.resize(tb,1); // second arg: number of comps
-            local_rho.setVal(0.0);
-
-            auto& particles = pti.GetArrayOfStructs();
-            const long np  = pti.numParticles();
-
-            amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
-            for (int pp=0;pp<np;pp++) {
-                gempic_deposit_cic(particles[pp], (*part_gr).charge[spec], rhoarr, plo, dxi);
-            }
-            ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
-        }
-    }
-
-    //assign particles to tiles they are in
-    for(int spec=0;spec<(*part_gr).n_species;spec++){
-        (*(*part_gr).mypc[spec]).Redistribute();
-    }
-
-    //add values from ghost cells and periodic boundary
-    (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
-
-    amrex::Real rhomean = (*mw_yee).rho.sum(0)/1000.0;
-    (*mw_yee).rho.plus(-rhomean,0,1);
-
-    //initial E by rho
-    (*mw_yee).phi_init.setVal(0.0, 0);
-
-    std::ofstream ofs("rho.output", std::ofstream::out);
-    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
-        amrex::Print(ofs) << (*mw_yee).rho[mfi] << std::endl;
-    }
-    ofs.close();
-
-    (*mw_yee).solve_poisson(infra);
-    //initial B  is 0
-    (*(*mw_yee).B_Array[0]).setVal(0.0, 0);
-#if (GEMPIC_BDIM > 1)
-    (*(*mw_yee).B_Array[1]).setVal(0.0, 0);
-#endif
-#if (GEMPIC_BDIM > 2)
-    (*(*mw_yee).B_Array[2]).setVal(0.0, 0);
-#endif
-
-    //-----------------------------------------------------------------------------
-    //Time loop
-    std::ofstream ofs2("PIC_6dim.output", std::ofstream::out);
-    amrex::Real time = 0.0;
-    diagn.save_step_data(0, infra, mw_yee, part_gr, true);
+                       particle_groups *part_gr,
+                       diagnostics *diagn) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
-        time += (*mw_yee).dt;
 
         //-------------------------------------------------------------------------
         //push particles & get J
@@ -134,13 +61,13 @@ void time_loop_global (infrastructure infra,
                         amrex::Array4<amrex::Real> const& earr = (*(*mw_yee).E_Array[cc])[pti].array();
 
                         //E-field at particle position
-                        eres[cc] = gempic_interpolate_cic(particles[pp], earr, infra.ploE[cc], dxi);
+                        eres[cc] = gempic_interpolate_cic(particles[pp], earr, infra.ploE[cc], infra.dxi);
                     }
                     for (int cc=0;cc<GEMPIC_BDIM;cc++){
                         amrex::Array4<amrex::Real> const& barr = (*(*mw_yee).B_Array[cc])[pti].array();
 
                         //B-field at particle position
-                        bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], dxi);
+                        bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], infra.dxi);
                     }
                     amrex::Real part_weight = particles[pp].rdata(GEMPIC_VDIM);
                     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
@@ -150,21 +77,13 @@ void time_loop_global (infrastructure infra,
                         avgPos[cc+GEMPIC_SPACEDIM] = 0.5*(avgPos[cc+GEMPIC_SPACEDIM] + particles[pp].rdata(cc));
                     }
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
-                    amrex::Print(ofs2) << newPos[0] << "," << newPos[1] << "," <<
-                                   #if( GEMPIC_SPACEDIM > 1)
-                                                       newPos[2] << "," << newPos[3] << "," <<
-                                   #endif
-                                   #if (GEMPIC_SPACEDIM > 2)
-                                                       newPos[4] << "," << newPos[5] <<
-                                   #endif
-                                                       std::endl;
 
-                    gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 0, jarrx, infra.ploE[0], dxi);
+                    gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 0, jarrx, infra.ploE[0], infra.dxi);
 #if (GEMPIC_VDIM > 1)
-                    gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 1, jarry, infra.ploE[1], dxi);
+                    gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 1, jarry, infra.ploE[1], infra.dxi);
 #endif
 #if (GEMPIC_VDIM > 2)
-                    gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 2, jarrz, infra.ploE[2], dxi);
+                    gempic_deposit_J_cic_global(avgPos, part_weight, (*part_gr).charge[spec], 2, jarrz, infra.ploE[2], infra.dxi);
 #endif
                 }
             }
@@ -186,11 +105,10 @@ void time_loop_global (infrastructure infra,
         // field updates:
         (*mw_yee).advance(infra);
         // save norms for diagnostics
-        diagn.save_step_data(t_step+1, infra, mw_yee, part_gr, true);
+        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr, true);
 
     } // end time loop
-    ofs2.close();
-    diagn.save_all_to_textfile((*mw_yee).dt);
+    (*diagn).save_all_to_textfile((*mw_yee).dt);
 }
 
 

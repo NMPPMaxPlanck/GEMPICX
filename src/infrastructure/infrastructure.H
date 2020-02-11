@@ -31,6 +31,8 @@ public:
     const amrex::Real* dx;
     std::array<std::array<amrex::Real, GEMPIC_SPACEDIM>,GEMPIC_VDIM> ploE;
     std::array<std::array<amrex::Real,GEMPIC_SPACEDIM>,GEMPIC_BDIM> ploB;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> dxi;
 
     // The default constructor.
     infrastructure ();
@@ -102,6 +104,10 @@ public:
         ploB[2][2] = geom.ProbLo()[2]*1.0/dx[2];
 #endif
 
+        for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            plo[cc] = geom.ProbLo()[cc];
+            dxi[cc] = 1.0/dx[cc];
+        }
     }
 };
 
