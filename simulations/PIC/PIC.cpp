@@ -21,7 +21,12 @@
 using namespace std;
 using namespace amrex;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,int Np,double k) {
+double WF_Weibel (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, int Np,double k) {
+    double alpha = 0.;
+    return((1.0 + alpha*cos(k*x[0]))/Np);
+}
+
+double WF_Landau (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, int Np,double k) {
     double alpha = 0.5;
     return((1.0 + alpha*cos(k*x[0]))/Np);
 }
@@ -31,26 +36,35 @@ double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 #endif
 #if (GEMPIC_BDIM > 2)
-double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
+double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){
+    amrex::Real beta = 1e-3;
+    return(beta*cos(k*x[0]));
+}
 #endif
 
-double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(4*0.5*cos(0.5*x[0]));} // 1/k^2*alpha = 4*0.5
-double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0);}
+double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(4*0.5*cos(0.5*x[0]));}
+double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
 
 void main_main ()
 {
+    int testcase = 0; // 0 -> Weibel, 1 -> Landau
+
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
     amrex::IntVect n_cell(AMREX_D_DECL(24,8,8)); //number of cells in the three dimensions, ratio should not be too big
-    int n_part_per_cell = 1000; // number of particles per cell
-    int n_steps = 2000; // number of steps
+    int n_part_per_cell = 100; // number of particles per cell
+    int n_steps = 100000; // number of steps
+
+    // for running on SUPER-MUC:
+    //amrex::IntVect n_cell(AMREX_D_DECL(32,32,32)); //number of cells in the three dimensions, ratio should not be too big
+    //int n_part_per_cell = 1000; // number of particles per cell
+    //int n_steps = 10; // number of steps
 
     // ------------------------------------------------------------------------------
     // ------------------------------------------------------------------------------
 
     //std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
     //std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
-
     //------------------------------------------------------------------------------
 
     bool output_bool = false;
@@ -65,7 +79,15 @@ void main_main ()
     initB[1] = B_y;
 #endif
 #if (GEMPIC_BDIM > 2)
-    initB[2] = B_z;
+    switch (testcase) {
+    case 0:
+        initB[2] = B_z;
+        break;
+    case 1:
+        initB[2] = B_x;
+        break;
+    }
+
 #endif
 
     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VM{};
@@ -73,21 +95,43 @@ void main_main ()
     std::array<std::array<amrex::Real, GEMPIC_NUMGAUS>, GEMPIC_VDIM> VW{};
 
     VM[0][0] = 0.0;
-    VD[0][0] = 1.0;
+    switch (testcase) {
+    case 0:
+        VD[0][0] = 0.02/sqrt(2);
+        break;
+    case 1:
+        VD[0][0] = 1.0;
+        break;
+    }
     VW[0][0] = 1.0;
 #if (GEMPIC_VDIM > 1)
     VM[1][0] = 0.0;
-    VD[1][0] = 1.0;
+    switch (testcase) {
+    case 0:
+        VD[1][0] = sqrt(12)*VD[0][0];
+        break;
+    case 1:
+        VD[1][0] = 1.0;
+        break;
+    }
     VW[1][0] = 1.0;
 #endif
 #if (GEMPIC_VDIM > 2)
     VM[2][0] = 0.0;
-    VD[2][0] = 1.0;
+    VD[2][0] = VD[1][0];
     VW[2][0] = 1.0;
 #endif
 
-    init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
-                                    VM,VD,VW,WF);
+    switch (testcase) {
+    case 0:
+        init.initialize_from_parameters(n_cell,4,is_periodic,3,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,1.25,
+                                        VM,VD,VW,WF_Weibel);
+        break;
+    case 1:
+        init.initialize_from_parameters(n_cell,4,is_periodic,3,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
+                                        VM,VD,VW,WF_Landau);
+        break;
+    }
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
     // infrastructure
@@ -108,6 +152,7 @@ void main_main ()
     if (output_bool){
         save_particle_positions(&part_gr);
     }
+
 
     //------------------------------------------------------------------------------
     // solve:
