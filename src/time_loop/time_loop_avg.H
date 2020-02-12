@@ -30,7 +30,7 @@ void time_loop_avg (infrastructure infra,
         //--------------------------------------------------------------------------
         // update B
         (*mw_yee).FillBD(infra);
-        (*mw_yee).advance_B(infra, 1.);
+        (*mw_yee).advance_B(infra);
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
@@ -136,7 +136,7 @@ void time_loop_avg (infrastructure infra,
         (*mw_yee).FillBD(infra); //TODO
 
         // advance E
-        (*mw_yee).advance_E(infra, 1.);
+        (*mw_yee).advance_E(infra);
 
         // save norms for diagnostics
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr, output_bool); // false: slices are not saved

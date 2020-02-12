@@ -83,7 +83,7 @@ void loop_preparation (infrastructure infra,
 
     //------------------------------------------------------------------------------
     //approximate e^1/2
-    (*mw_yee).advance_E(infra, 0.5);
+    (*mw_yee).advance_E(infra, 0.5*(*mw_yee).dt);
     //------------------------------------------------------------------------------
     //approximate x^1/2
     for (int spec=0;spec<(*part_gr).n_species;spec++) {
