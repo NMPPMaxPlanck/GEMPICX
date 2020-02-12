@@ -145,8 +145,8 @@ void main_main ()
     maxwell_yee mw_yee(init, infra, init.Nghost);
 
     for (int i=0; i<GEMPIC_VDIM; i++) {
-        (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        (*(mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
+        (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
     mw_yee.init_E_B(fields, infra);
