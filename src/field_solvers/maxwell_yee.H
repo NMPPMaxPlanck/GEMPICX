@@ -170,8 +170,8 @@ public:
 #endif
                 // next mfi
             }
+            (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
-        (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
     }
 
     void initB (infrastructure infra,
