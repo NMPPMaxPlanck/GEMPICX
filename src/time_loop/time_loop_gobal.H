@@ -103,7 +103,7 @@ void time_loop_global (infrastructure infra,
         std::cout << "finished step " << t_step+1 << std::endl;
 
         // field updates:
-        (*mw_yee).advance(infra);
+        (*mw_yee).advance(infra, (*mw_yee).dt);
         // save norms for diagnostics
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr, true);
 

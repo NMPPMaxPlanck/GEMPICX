@@ -225,7 +225,7 @@ public:
         time = time+dt;
     }
 
-    void advance_E (infrastructure ifr, amrex::Real dt_step = dt){
+    void advance_E (infrastructure ifr, amrex::Real dt_step){
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
 
@@ -295,7 +295,7 @@ public:
         }
     }
 
-    void advance_B (infrastructure ifr, amrex::Real dt_step = dt){
+    void advance_B (infrastructure ifr, amrex::Real dt_step){
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
 
@@ -358,7 +358,7 @@ public:
         }
     }
 
-    void advance (infrastructure ifr, amrex::Real dt_step = dt){
+    void advance (infrastructure ifr, amrex::Real dt_step){
 
         time = time+dt_step;
         FillBD(ifr);

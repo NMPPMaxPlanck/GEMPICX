@@ -158,7 +158,7 @@ void main_main ()
 
     for (int n=1;n<=mw_yee.nsteps;n++){
         std::cout << "step: " << n << std::endl;
-        mw_yee.advance(infra);
+        mw_yee.advance(infra, mw_yee.dt);
         mw_yee.FillBD(infra);
         E_B_error = mw_yee.computeError(fields, true, infra);
 
