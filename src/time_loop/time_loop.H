@@ -28,7 +28,6 @@ void time_loop (infrastructure infra,
 
         //--------------------------------------------------------------------------
         //push particles
-        (*mw_yee).FillBD(infra);
 
         std::array<amrex::Real,GEMPIC_VDIM> eres;
         std::array<amrex::Real,GEMPIC_BDIM> bres;
@@ -68,13 +67,10 @@ void time_loop (infrastructure infra,
         // deposit charge in J one component and particle at a time
 
         // set J to 0 before we start depositing values from current particles
-        (*(*mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
-#if (GEMPIC_VDIM > 1)
-        (*(*mw_yee).J_Array[1]).setVal(0.0, 0);
-#endif
-#if (GEMPIC_VDIM > 2)
-        (*(*mw_yee).J_Array[2]).setVal(0.0, 0);
-#endif
+        for (int i=0; i<GEMPIC_VDIM; i++) {
+            (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
+            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        }
 
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -94,9 +90,8 @@ void time_loop (infrastructure infra,
         //add values from ghost cells and periodic boundary
         for (int i=0; i<GEMPIC_VDIM; i++) {
             (*(*mw_yee).J_Array[i]).SumBoundary(infra.geom.periodicity());
+            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
-
-        (*mw_yee).FillBD(infra);
 
         // field updates:
         (*mw_yee).advance(infra, (*mw_yee).dt);

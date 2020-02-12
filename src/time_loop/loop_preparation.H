@@ -62,7 +62,7 @@ void loop_preparation (infrastructure infra,
 
     //add values from ghost cells and periodic boundary
     (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
-    (*mw_yee).FillBD(infra); // TODO: do I need this?
+    (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     // output rho
     if (output_bool){
@@ -79,7 +79,6 @@ void loop_preparation (infrastructure infra,
 
     // initial B_field
     (*mw_yee).initB(infra, initB, initk);
-    (*mw_yee).FillBD(infra);
 
     //------------------------------------------------------------------------------
     //approximate e^1/2

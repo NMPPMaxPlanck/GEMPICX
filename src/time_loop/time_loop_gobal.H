@@ -27,16 +27,12 @@ void time_loop_global (infrastructure infra,
 
         //-------------------------------------------------------------------------
         //push particles & get J
-        (*mw_yee).FillBD(infra);
 
         // set J to 0 before we start depositing values from current particles
-        (*(*mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
-#if (GEMPIC_VDIM > 1)
-        (*(*mw_yee).J_Array[1]).setVal(0.0, 0);
-#endif
-#if (GEMPIC_VDIM > 2)
-        (*(*mw_yee).J_Array[2]).setVal(0.0, 0);
-#endif
+        for (int i=0; i<GEMPIC_VDIM; i++) {
+            (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
+            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        }
 
         std::array<amrex::Real,GEMPIC_VDIM> eres;
         std::array<amrex::Real,GEMPIC_BDIM> bres;
@@ -93,19 +89,16 @@ void time_loop_global (infrastructure infra,
         //update fields
 
         //add values from ghost cells and periodic boundary
-        (*(*mw_yee).J_Array[0]).SumBoundary(infra.geom.periodicity());
-#if (GEMPIC_VDIM > 1)
-        (*(*mw_yee).J_Array[1]).SumBoundary(infra.geom.periodicity());
-#endif
-#if (GEMPIC_VDIM > 2)
-        (*(*mw_yee).J_Array[2]).SumBoundary(infra.geom.periodicity());
-#endif
-        std::cout << "finished step " << t_step+1 << std::endl;
+        for (int i=0; i<GEMPIC_VDIM; i++) {
+            (*(*mw_yee).J_Array[i]).SumBoundary(infra.geom.periodicity());
+            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        }
 
         // field updates:
         (*mw_yee).advance(infra, (*mw_yee).dt);
         // save norms for diagnostics
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr, true);
+        std::cout << "finished step " << t_step+1 << std::endl;
 
     } // end time loop
     (*diagn).save_all_to_textfile((*mw_yee).dt);

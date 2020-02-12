@@ -123,9 +123,6 @@ void main_main ()
     dxi[2] = 1.0/infra.dx[2];
 #endif
 
-    // fill ghost cells
-    mw_yee.FillBD(infra);
-
     // deposit charge in rho one particle at a time
     for (int spec=0;spec<init.n_species;spec++) {
         (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in

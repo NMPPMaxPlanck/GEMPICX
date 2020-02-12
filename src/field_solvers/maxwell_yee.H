@@ -137,6 +137,7 @@ public:
 #endif
                 // next mfi
             }
+            (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
 
         // B_field
@@ -170,6 +171,7 @@ public:
                 // next mfi
             }
         }
+        (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
     }
 
     void initB (infrastructure infra,
@@ -204,6 +206,7 @@ public:
 #endif
                 // next mfi
             }
+            (*B_Array[i]).FillBoundary(infra.geom.periodicity());
         }
     }
 
@@ -292,6 +295,7 @@ public:
 #endif
                 // next mfi
             }
+            (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
@@ -355,16 +359,15 @@ public:
 #endif
                 // next mfi
             }
+            (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
     void advance (infrastructure ifr, amrex::Real dt_step){
 
         time = time+dt_step;
-        FillBD(ifr);
 
         advance_E(ifr, dt_step);
-        FillBD(ifr);
         advance_B(ifr, dt_step);
     }
 
@@ -405,6 +408,8 @@ public:
         // box with all interior nodes:
         const amrex::Box& interior = amrex::surroundingNodes(amrex::grow(ifr.geom.Domain(), -1));
         //phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
+        rho.FillBoundary(ifr.geom.periodicity());
+        phi.FillBoundary(ifr.geom.periodicity());
     }
 
     void solve_poisson(infrastructure ifr, bool slices = false){
@@ -450,6 +455,7 @@ public:
         }
 
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
+        phi.FillBoundary(ifr.geom.periodicity());
 
         if(slices){
 #if (GEMPIC_SPACEDIM > 1)
@@ -499,6 +505,7 @@ public:
 #endif
                 // next mfi
             }
+            (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
         if(slices){
             amrex::Vector<std::string> varnamesE = {"Ex_0"};

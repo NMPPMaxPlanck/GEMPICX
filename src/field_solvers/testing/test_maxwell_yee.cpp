@@ -144,12 +144,12 @@ void main_main ()
     // Solve
     maxwell_yee mw_yee(init, infra, init.Nghost);
 
-    (*(mw_yee).J_Array[0]).setVal(0.0, 0); // value and component
-    (*(mw_yee).J_Array[1]).setVal(0.0, 0);
-    (*(mw_yee).J_Array[2]).setVal(0.0, 0);
+    for (int i=0; i<GEMPIC_VDIM; i++) {
+        (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
+        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+    }
 
     mw_yee.init_E_B(fields, infra);
-    mw_yee.FillBD(infra);
 
     std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
     Print(ofs) << "Maxwell" << endl;
@@ -159,7 +159,6 @@ void main_main ()
     for (int n=1;n<=mw_yee.nsteps;n++){
         std::cout << "step: " << n << std::endl;
         mw_yee.advance(infra, mw_yee.dt);
-        mw_yee.FillBD(infra);
         E_B_error = mw_yee.computeError(fields, true, infra);
 
         Print(ofs) << "step " << n << endl;
