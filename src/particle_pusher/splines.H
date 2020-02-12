@@ -32,21 +32,20 @@ public:
     splines ();
 
     // Explicit const
-    splines (amrex::IntVect deg,
-             std::array<bool,GEMPIC_SPACEDIM> cent_eval,
+    splines (std::array<bool,GEMPIC_SPACEDIM> cent_eval,
              std::array<bool,GEMPIC_SPACEDIM> int_eval){
 
-        degree = deg;
+        degree = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X,GEMPIC_DEG_Y,GEMPIC_DEG_Z)};
         centered_evaluation = cent_eval;
         integral_evaluation = int_eval;
     }
 
     amrex::Real spline_eval (amrex::Real x,
-                             int dimension,
+                             int degr,
                              int cell) {
 
         std::vector<amrex::Real> s;
-        switch (degree[dimension]) {
+        switch (degr) {
         case 0:
             s = {1.};
             break;
@@ -78,12 +77,12 @@ public:
     amrex::Real deposition_coefficient (std::array<amrex::Real, GEMPIC_SPACEDIM> x,
                                         std::array<int, GEMPIC_SPACEDIM> cell) {
         amrex::Real coeff = 1.;
-        coeff *= spline_eval(shifted_x(x[0], 0), 0, cell[0]);
+        coeff *= spline_eval(shifted_x(x[0], 0), GEMPIC_DEG_X, cell[0]);
 #if GEMPIC_SPACEDIM > 1
-        coeff *= spline_eval(shifted_x(x[1], 1), 1, cell[1]);
+        coeff *= spline_eval(shifted_x(x[1], 1), GEMPIC_DEG_Y, cell[1]);
 #endif
 #if GEMPIC_SPACEDIM > 2
-        coeff *= spline_eval(shifted_x(x[2], 2), 2, cell[2]);
+        coeff *= spline_eval(shifted_x(x[2], 2), GEMPIC_DEG_Z, cell[2]);
 #endif
         return(coeff);
     }

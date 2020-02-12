@@ -28,7 +28,7 @@ void main_main ()
     amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,2,1)};
     std::array<bool,GEMPIC_SPACEDIM> cent_eval = {false, false, true};
     std::array<bool,GEMPIC_SPACEDIM> int_eval = {false, false, false};
-    splines spl(deg, cent_eval, int_eval);
+    splines spl(cent_eval, int_eval);
 
     int cell_index = 0;
     int dimension = 0;
