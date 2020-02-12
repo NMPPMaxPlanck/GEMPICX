@@ -47,14 +47,6 @@ void init_particles_cellwise(infrastructure infra,
         }
     }
 
-    amrex::Real tot_n_cell = infra.n_cell[0]
-        #if (GEMPIC_SPACEDIM > 1)
-            *infra.n_cell[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-            *infra.n_cell[2]
-        #endif
-            ;
 
     for (int pp=0;pp<init.Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
@@ -157,15 +149,6 @@ void init_particles_full_domain(infrastructure infra,
             normArray[i].push_back(normD);
         }
     }
-
-    amrex::Real tot_n_cell = infra.n_cell[0]
-        #if (GEMPIC_SPACEDIM > 1)
-            *infra.n_cell[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-            *infra.n_cell[2]
-        #endif
-            ;
 
     for (int pp=0;pp<init.Np_cell;pp++) {
 
