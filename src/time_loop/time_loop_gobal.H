@@ -14,6 +14,7 @@
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
 #include <AMReX_PlotFileUtil.H>
+#include <particle_mesh_coupling.H>
 
 #ifndef TIME_LOOP_GLOBAL_H_
 #define TIME_LOOP_GLOBAL_H_

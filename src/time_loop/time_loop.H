@@ -4,6 +4,7 @@
 #include <infrastructure.H>
 #include <maxwell_yee.H>
 #include <diagnostics.H>
+#include <particle_mesh_coupling.H>
 
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>

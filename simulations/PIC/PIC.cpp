@@ -3,7 +3,6 @@
 #include <AMReX_Print.H>
 #include <particle_groups.H>
 #include <maxwell_yee.H>
-#include <particle_mesh_coupling.H>
 #include <sampler.H>
 #include <initializer.H>
 #include <time_loop.H>
