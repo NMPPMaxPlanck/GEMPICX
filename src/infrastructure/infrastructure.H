@@ -29,8 +29,6 @@ public:
     amrex::Box domain;
     amrex::DistributionMapping distriMap;
     const amrex::Real* dx;
-    std::array<std::array<amrex::Real, GEMPIC_SPACEDIM>,GEMPIC_VDIM> ploE;
-    std::array<std::array<amrex::Real,GEMPIC_SPACEDIM>,GEMPIC_BDIM> ploB;
     std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
     std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
@@ -62,47 +60,6 @@ public:
         dx = geom.CellSize();
 
         distriMap.define(grid);
-
-        // Ex
-        ploE[0][0] = geom.ProbLo()[0]*1.0/dx[0]+0.5;
-        // Bx
-        ploB[0][0] = geom.ProbLo()[0]*1.0/dx[0];
-#if (GEMPIC_SPACEDIM > 1)
-        // Ex
-        ploE[0][1] = geom.ProbLo()[1]*1.0/dx[1];
-        // Bx
-        ploB[0][1] = geom.ProbLo()[1]*1.0/dx[1]+0.5;
-#endif
-#if (GEMPIC_VDIM > 1)
-        //Ey
-        ploE[1][0] = geom.ProbLo()[0]*1.0/dx[0];
-        //By
-        ploB[1][0] = geom.ProbLo()[0]*1.0/dx[0]+0.5;
-#if (GEMPIC_SPACEDIM > 1)
-        //Ey
-        ploE[1][1] = geom.ProbLo()[1]*1.0/dx[1]+0.5;
-        //By
-        ploB[1][1] = geom.ProbLo()[1]*1.0/dx[1];
-#endif
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        //Ex
-        ploE[0][2] = geom.ProbLo()[2]*1.0/dx[2];
-        //Bx
-        ploB[0][2] = geom.ProbLo()[2]*1.0/dx[2]+0.5;
-        //Ey
-        ploE[1][2] = geom.ProbLo()[2]*1.0/dx[2];
-        //By
-        ploB[1][2] = geom.ProbLo()[2]*1.0/dx[2]+0.5;
-        //Ez
-        ploE[2][0] = geom.ProbLo()[0]*1.0/dx[0];
-        ploE[2][1] = geom.ProbLo()[1]*1.0/dx[1];
-        ploE[2][2] = geom.ProbLo()[2]*1.0/dx[2]+0.5;
-        //Bz
-        ploB[2][0] = geom.ProbLo()[0]*1.0/dx[0]+0.5;
-        ploB[2][1] = geom.ProbLo()[1]*1.0/dx[1]+0.5;
-        ploB[2][2] = geom.ProbLo()[2]*1.0/dx[2];
-#endif
 
         dxi[GEMPIC_SPACEDIM] = 1.;
         for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
