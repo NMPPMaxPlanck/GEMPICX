@@ -41,9 +41,6 @@ void time_loop_avg (infrastructure infra,
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
-        std::array<amrex::Real,GEMPIC_VDIM> eres; //field values interpolated at particle position
-        std::array<amrex::Real,GEMPIC_BDIM> bres;
-
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
@@ -52,44 +49,30 @@ void time_loop_avg (infrastructure infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                amrex::Array4<amrex::Real> const& jarrx = (*(*mw_yee).J_Array[0])[pti].array();
-#if (GEMPIC_VDIM > 1)
-                amrex::Array4<amrex::Real> const& jarry = (*(*mw_yee).J_Array[1])[pti].array();
-#endif
-#if (GEMPIC_VDIM > 2)
-                amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
-#endif
+                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jA;
+                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eA;
+                std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
+
+                for (int cc=0;cc < GEMPIC_VDIM;cc++) {
+                    jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
+                    eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
+                }
+                for (int cc=0;cc < GEMPIC_VDIM;cc++) {
+                    bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
+                }
+
                 // loop over particles: add contribution of old particle position to J and push
 
                 for (int pp=0;pp<np;pp++){
-                    // charge deposition
-                    gempic_deposit_J_cic_class(particles[pp], (*part_gr).charge[spec], 0, jarrx,
-                                               infra.ploE[0], infra.dxi, *((*mw_yee).E_Index[0]), 0.5);
-#if (GEMPIC_VDIM > 1)
-                    gempic_deposit_J_cic_class(particles[pp], (*part_gr).charge[spec], 1, jarry,
-                                               infra.ploE[1], infra.dxi, *((*mw_yee).E_Index[1]), 0.5);
-#endif
-#if (GEMPIC_VDIM > 2)
-                    gempic_deposit_J_cic_class(particles[pp], (*part_gr).charge[spec], 2, jarrz,
-                                               infra.ploE[2], infra.dxi, *((*mw_yee).E_Index[2]), 0.5);
-#endif
-                    //field interpolation
-                    for (int cc=0;cc<GEMPIC_VDIM;cc++){
-                        amrex::Array4<amrex::Real> const& earr = (*(*mw_yee).E_Array[cc])[pti].array();
 
-                        //E-field at particle position
-                        eres[cc] = gempic_interpolate_cic(particles[pp], earr, infra.ploE[cc], infra.dxi);
-                    }
-                    for (int cc=0;cc<GEMPIC_BDIM;cc++){
-                        amrex::Array4<amrex::Real> const& barr = (*(*mw_yee).B_Array[cc])[pti].array();
+                    std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate (particles[pp], (*part_gr).charge[spec],
+                                                                                                                      infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
-                        //B-field at particle position
-                        bres[cc] = gempic_interpolate_cic(particles[pp], barr, infra.ploB[cc], infra.dxi);
-                    }
+                    std::array<amrex::Real,GEMPIC_VDIM> eres = {AMREX_D_DECL(field_interp[0],field_interp[1],field_interp[2])};
+                    std::array<amrex::Real,GEMPIC_BDIM> bres = {AMREX_B_DECL(field_interp[GEMPIC_VDIM],field_interp[GEMPIC_VDIM+1],field_interp[GEMPIC_VDIM+2])};
 
                     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_boris(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
-
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -104,26 +87,17 @@ void time_loop_avg (infrastructure infra,
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                amrex::Array4<amrex::Real> const& jarrx = (*(*mw_yee).J_Array[0])[pti].array();
-#if (GEMPIC_VDIM > 1)
-                amrex::Array4<amrex::Real> const& jarry = (*(*mw_yee).J_Array[1])[pti].array();
-#endif
-#if (GEMPIC_VDIM > 2)
-                amrex::Array4<amrex::Real> const& jarrz = (*(*mw_yee).J_Array[2])[pti].array();
-#endif
+                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jA;
+                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eA;
+                std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
 
-                for (int pp=0;pp<np;pp++) {
-                    gempic_deposit_J_cic_class(particles[pp], (*part_gr).charge[spec], 0, jarrx,
-                                               infra.ploE[0], infra.dxi, *((*mw_yee).E_Index[0]), 0.5);
-#if (GEMPIC_VDIM > 1)
-                    gempic_deposit_J_cic_class(particles[pp], (*part_gr).charge[spec], 1, jarry,
-                                               infra.ploE[1], infra.dxi, *((*mw_yee).E_Index[1]), 0.5);
-#endif
-#if (GEMPIC_VDIM > 2)
-                    gempic_deposit_J_cic_class(particles[pp], (*part_gr).charge[spec], 2, jarrz,
-                                               infra.ploE[2], infra.dxi, *((*mw_yee).E_Index[2]), 0.5);
-#endif
+                for (int cc=0;cc < GEMPIC_VDIM;cc++) {
+                    jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
+                }
 
+                for (int pp=0;pp<np;pp++){
+                    std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate (particles[pp], (*part_gr).charge[spec],
+                                                                                                                      infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }
         }

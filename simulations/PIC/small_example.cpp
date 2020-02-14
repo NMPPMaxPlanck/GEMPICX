@@ -6,7 +6,6 @@
 #include <particle_mesh_coupling.H>
 #include <sampler.H>
 #include <initializer.H>
-#include <time_loop.H>
 #include <time_loop_avg.H>
 #include <gempic_Config.H>
 

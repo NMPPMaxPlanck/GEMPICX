@@ -12,31 +12,32 @@
 #include <cmath>
 #include <gempic_Config.H>
 #include <splines.H>
-amrex::Real disp = -0.5;
 
 template <typename P>
-void gempic_deposit_cic (P const& p, amrex::Real charge,
+void gempic_deposit_rho (P const& p, amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                         std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                         amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
+                         std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
 
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
     amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
-
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, 0, false), GEMPIC_DEG_X);
 #if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, 0, false), GEMPIC_DEG_Y);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, 0, false), GEMPIC_DEG_Z);
 #endif
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(GEMPIC_VDIM);
 
     //TODOrefine
 #if (GEMPIC_SPACEDIM > 2)
@@ -46,25 +47,26 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
         for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
 #endif
             for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
-                double s_coeff = spl.deposition_coefficient ({AMREX_D_DECL(xint, yint, zint)},{AMREX_D_DECL(ii, jj, kk)});
-                s_coeff *= dxi[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        *dxi[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        *dxi[2]
-        #endif
-                        ;
+                double s_coeff = sx_node[ii]
+                                   #if(GEMPIC_SPACEDIM > 1)
+                                                       *sy_node[jj]
+                                               #endif
+                                               #if(GEMPIC_SPACEDIM > 2)
+                                                                   *sz_node[kk]
+                                                           #endif
+                                                                               ;
+                std::array<int,GEMPIC_VDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, 0, xint, false),
+                                                          spl.compute_cell_index(j+jj, 1, yint, false),
+                                                          spl.compute_cell_index(k+kk, 2, zint, false))};
 
-                amrex::Gpu::Atomic::Add(&rho(spl.compute_cell_index(i+ii, 0, xint)
+                amrex::Gpu::Atomic::Add(&rho(cell_index[0]
                              #if (GEMPIC_SPACEDIM > 1)
-                                             , spl.compute_cell_index(j+jj, 0, yint)
+                                             , cell_index[1]
                              #endif
                              #if (GEMPIC_SPACEDIM > 2)
-                                             , spl.compute_cell_index(k+kk, 0, zint)
+                                             , cell_index[2]
                              #endif
-                                             , 0), s_coeff*charge*p.rdata(GEMPIC_VDIM));
-
+                                             , 0), s_coeff*particle_coeff);
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -75,171 +77,42 @@ void gempic_deposit_cic (P const& p, amrex::Real charge,
 }
 
 template <typename P>
-void gempic_deposit_J_cic (P const& p, amrex::Real charge, int cmp,
-                           amrex::Array4<amrex::Real> const& j_comp,
-                           std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-                           std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                           amrex::Real coefficient = 1.0,
-                           amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
-{
-    amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::array<int,GEMPIC_SPACEDIM> low_idx, high_idx;
-
-    // ---- interpolation in x-dir
-    std::vector<amrex::Real> sx;
-    switch (deg[0]) {
-    case 1:
-        sx = {1.-xint, xint};
-        low_idx[0] = 0;
-        high_idx[0] = 0;
-        break;
-    case 2:
-        if (xint < 1./2.) {
-            sx = {pow(1./2.-xint,2)/2., 1./2.+(1./2.-xint)-pow(1./2.-xint,2), 1./2.-(1./2.-xint)+pow(1./2.-xint,2)/2};
-            low_idx[0] = -1;
-            high_idx[0] = 1;
-        } else {
-            sx = {pow(3./2.-xint,2)/2., 1./2.+(3./2.-xint)-pow(3./2.-xint,2), 1./2.-(3./2.-xint)+pow(3./2.-xint,2)/2};
-            low_idx[0] = 0;
-            high_idx[0] = 2;
-        }
-        break;
-    case 3:
-        sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
-              2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
-        low_idx[0] = -1;
-        high_idx[0] = 2;
-        break;
-    }
-
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-
-    // ---- interpolation in y-dir
-    std::vector<amrex::Real> sy;
-    switch (deg[1]) {
-    case 1:
-        sy = {1.-yint, yint};
-        low_idx[1] = 0;
-        high_idx[1] = 0;
-        break;
-    case 2:
-        if (yint < 1./2.) {
-            sy = {pow(1./2.-yint,2)/2., 1./2.+(1./2.-yint)-pow(1./2.-yint,2), 1./2.-(1./2.-yint)+pow(1./2.-yint,2)/2};
-            low_idx[1] = -1;
-            high_idx[1] = 1;
-        } else {
-            sy = {pow(3./2.-yint,2)/2., 1./2.+(3./2.-yint)-pow(3./2.-yint,2), 1./2.-(3./2.-yint)+pow(3./2.-yint,2)/2};
-            low_idx[1] = 0;
-            high_idx[1] = 2;
-        }
-        break;
-    case 3:
-        sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
-              2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
-        low_idx[1] = -1;
-        high_idx[1] = 2;
-        break;
-    }
-
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-
-    // ---- interpolation in z-dir
-    std::vector<amrex::Real> sz;
-    switch (deg[2]) {
-    case 1:
-        sz = {1.-zint, zint};
-        low_idx[2] = 0;
-        high_idx[2] = 0;
-        break;
-    case 2:
-        if (zint < 1./2.) {
-            sz = {pow(1./2.-zint,2)/2., 1./2.+(1./2.-zint)-pow(1./2.-zint,2), 1./2.-(1./2.-zint)+pow(1./2.-zint,2)/2};
-            low_idx[2] = -1;
-            high_idx[2] = 1;
-        } else {
-            sz = {pow(3./2.-zint,2)/2., 1./2.+(3./2.-zint)-pow(3./2.-zint,2), 1./2.-(3./2.-zint)+pow(3./2.-zint,2)/2};
-            low_idx[2] = 0;
-            high_idx[2] = 2;
-        }
-        break;
-    case 3:
-        sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
-              2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow(zint,3)};
-        low_idx[2] = -1;
-        high_idx[2] = 2;
-        break;
-    }
-
-#endif
-
-#if (GEMPIC_SPACEDIM > 2)
-    for (int kk = low_idx[2]; kk <= high_idx[2]; ++kk) {
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-        for (int jj = low_idx[1]; jj <= high_idx[1]; ++jj) {
-#endif
-            for (int ii = low_idx[0]; ii <= high_idx[0]; ++ii) {
-                double s_coeff = sx[ii-low_idx[0]]*dxi[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj-low_idx[1]]*dxi[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk-low_idx[2]]*dxi[2]
-        #endif
-                        ;
-
-                // p.rdata(cmp): velocity-component cmp, p.rdata(GEMPIC_VDIM): weight
-                amrex::Gpu::Atomic::Add(&j_comp(i+ii
-                                #if (GEMPIC_SPACEDIM > 1)
-                                                , j+jj
-                                #endif
-                                #if (GEMPIC_SPACEDIM > 2)
-                                                , k+kk
-                                #endif
-                                                , 0), coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_VDIM));
-
-            }
-#if (GEMPIC_SPACEDIM > 1)
-        }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    }
-#endif
-}
-
-template <typename P>
-void gempic_deposit_J_cic_class (P const& p, amrex::Real charge, int cmp,
-                                 amrex::Array4<amrex::Real> const& j_comp,
-                                 std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-                                 std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                                 amrex::IndexType indType,
-                                 amrex::Real coefficient = 1.0,
-                                 amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
+std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
+                                                                                   std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                                                   std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray,
+                                                                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eArray,
+                                                                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray,
+                                                                                   amrex::Real coefficient = 1.,
+                                                                                   bool field_int = false)
 
 {
-    splines spl({AMREX_D_DECL(indType[0] == 0, indType[1] == 0, indType[2] == 0)}, {AMREX_D_DECL(false, false, false)});
-    amrex::Real lx = p.pos(0)*dxi[0] - ploF[0]; // don't need to displace because rho is nodal
+    std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> fields = {AMREX_D_DECL(0.,0.,0.)};
+
+    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
+    amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(xint, 0, true), GEMPIC_DEG_X);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, 0, false), GEMPIC_DEG_X);
+    std::array<std::vector<amrex::Real>,2> sx = {sx_cell, sx_node};
 #if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
+    amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, 0, true), GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, 0, false), GEMPIC_DEG_Y);
+    std::array<std::vector<amrex::Real>,2> sy = {sy_cell, sy_node};
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
+    amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, 0, true), GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, 0, false), GEMPIC_DEG_Z);
+    std::array<std::vector<amrex::Real>,2> sz = {sz_cell, sz_node};
 #endif
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*p.rdata(GEMPIC_VDIM);
 
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
@@ -248,293 +121,68 @@ void gempic_deposit_J_cic_class (P const& p, amrex::Real charge, int cmp,
         for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
 #endif
             for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
-                double s_coeff = spl.deposition_coefficient ({AMREX_D_DECL(xint, yint, zint)},{AMREX_D_DECL(ii, jj, kk)});
-                s_coeff *= dxi[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        *dxi[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        *dxi[2]
-        #endif
-                        ;
 
-                amrex::Gpu::Atomic::Add(&j_comp(spl.compute_cell_index(i+ii, 0, xint)
-                                #if (GEMPIC_SPACEDIM > 1)
-                                                , spl.compute_cell_index(j+jj, 0, yint)
-                                #endif
-                                #if (GEMPIC_SPACEDIM > 2)
-                                                , spl.compute_cell_index(k+kk, 0, zint)
-                                #endif
-                                                , 0), coefficient*s_coeff*charge*p.rdata(cmp)*p.rdata(GEMPIC_VDIM));
-
-            }
-#if (GEMPIC_SPACEDIM > 1)
-        }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    }
-#endif
-}
-
-void gempic_deposit_J_cic_global (std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> partInfo, amrex::Real part_weight, amrex::Real charge, int cmp,
-                                  amrex::Array4<amrex::Real> const& j_comp,
-                                  std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-                                  std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                                  amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
-{
-    amrex::Real lx = partInfo[0]*dxi[0] - ploF[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::array<int,GEMPIC_SPACEDIM> low_idx, high_idx;
-
-    // ---- interpolation in x-dir
-    std::vector<amrex::Real> sx;
-    switch (deg[0]) {
-    case 1:
-        sx = {1.-xint, xint};
-        low_idx[0] = 0;
-        high_idx[0] = 0;
-        break;
-    case 2:
-        if (xint < 1./2.) {
-            sx = {pow(1./2.-xint,2)/2., 1./2.+(1./2.-xint)-pow(1./2.-xint,2), 1./2.-(1./2.-xint)+pow(1./2.-xint,2)/2};
-            low_idx[0] = -1;
-            high_idx[0] = 1;
-        } else {
-            sx = {pow(3./2.-xint,2)/2., 1./2.+(3./2.-xint)-pow(3./2.-xint,2), 1./2.-(3./2.-xint)+pow(3./2.-xint,2)/2};
-            low_idx[0] = 0;
-            high_idx[0] = 2;
-        }
-        break;
-    case 3:
-        sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
-              2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
-        low_idx[0] = -1;
-        high_idx[0] = 2;
-        break;
-    }
-
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = partInfo[1]*dxi[1] - ploF[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-
-    // ---- interpolation in y-dir
-    std::vector<amrex::Real> sy;
-    switch (deg[1]) {
-    case 1:
-        sy = {1.-yint, yint};
-        low_idx[1] = 0;
-        high_idx[1] = 0;
-        break;
-    case 2:
-        if (yint < 1./2.) {
-            sy = {pow(1./2.-yint,2)/2., 1./2.+(1./2.-yint)-pow(1./2.-yint,2), 1./2.-(1./2.-yint)+pow(1./2.-yint,2)/2};
-            low_idx[1] = -1;
-            high_idx[1] = 1;
-        } else {
-            sy = {pow(3./2.-yint,2)/2., 1./2.+(3./2.-yint)-pow(3./2.-yint,2), 1./2.-(3./2.-yint)+pow(3./2.-yint,2)/2};
-            low_idx[1] = 0;
-            high_idx[1] = 2;
-        }
-        break;
-    case 3:
-        sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
-              2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
-        low_idx[1] = -1;
-        high_idx[1] = 2;
-        break;
-    }
-
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = partInfo[2]*dxi[2] - ploF[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-
-    // ---- interpolation in z-dir
-    std::vector<amrex::Real> sz;
-    switch (deg[2]) {
-    case 1:
-        sz = {1.-zint, zint};
-        low_idx[2] = 0;
-        high_idx[2] = 0;
-        break;
-    case 2:
-        if (zint < 1./2.) {
-            sz = {pow(1./2.-zint,2)/2., 1./2.+(1./2.-zint)-pow(1./2.-zint,2), 1./2.-(1./2.-zint)+pow(1./2.-zint,2)/2};
-            low_idx[2] = -1;
-            high_idx[2] = 1;
-        } else {
-            sx = {pow(3./2.-zint,2)/2., 1./2.+(3./2.-zint)-pow(3./2.-zint,2), 1./2.-(3./2.-zint)+pow(3./2.-zint,2)/2};
-            low_idx[2] = 0;
-            high_idx[2] = 2;
-        }
-        break;
-    case 3:
-        sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
-              2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow(zint,3)};
-        low_idx[2] = -1;
-        high_idx[2] = 2;
-        break;
-    }
-
-#endif
-
-    for (int kk = low_idx[2]; kk <= high_idx[2]; ++kk) {
-        for (int jj = low_idx[1]; jj <= high_idx[1]; ++jj) {
-            for (int ii = low_idx[0]; ii <= high_idx[0]; ++ii) {
-                double s_coeff = sx[ii-low_idx[0]]*dxi[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj-low_idx[1]]*dxi[0]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk-low_idx[2]]*dxi[0]
-        #endif
-                        ;
-                amrex::Gpu::Atomic::Add(&j_comp(i+ii
-                                #if (GEMPIC_SPACEDIM > 1)
-                                                , j+jj
-                                #endif
-                                #if (GEMPIC_SPACEDIM > 2)
-                                                , k+kk
-                                #endif
-                                                , 0), s_coeff*charge*partInfo[cmp+GEMPIC_SPACEDIM]*part_weight);
-            }
-        }
-    }
-}
-
-template <typename P>
-amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const> const& acc,
-                                    std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-                                    std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                                    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
-{
-    amrex::Real acceleration = 0.0;
-
-    amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::array<int,GEMPIC_SPACEDIM> low_idx, high_idx;
-
-    // ---- interpolation in x-dir
-    std::vector<amrex::Real> sx;
-    switch (deg[0]) {
-    case 1:
-        sx = {1.-xint, xint};
-        low_idx[0] = 0;
-        high_idx[0] = 0;
-        break;
-    case 2:
-        if (xint < 1./2.) {
-            sx = {pow(1./2.-xint,2)/2., 1./2.+(1./2.-xint)-pow(1./2.-xint,2), 1./2.-(1./2.-xint)+pow(1./2.-xint,2)/2};
-            low_idx[0] = -1;
-            high_idx[0] = 1;
-        } else {
-            sx = {pow(3./2.-xint,2)/2., 1./2.+(3./2.-xint)-pow(3./2.-xint,2), 1./2.-(3./2.-xint)+pow(3./2.-xint,2)/2};
-            low_idx[0] = 0;
-            high_idx[0] = 2;
-        }
-        break;
-    case 3:
-        sx = {1./6.*pow((1.-xint),3), 2./3.-pow(xint,2.)+pow(xint,3)/2,
-              2./3.-pow(xint-1,2.)-pow(xint-1,3)/2, 1./6.*pow(xint,3)};
-        low_idx[0] = -1;
-        high_idx[0] = 2;
-        break;
-    }
-
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-
-    // ---- interpolation in y-dir
-    std::vector<amrex::Real> sy;
-    switch (deg[1]) {
-    case 1:
-        sy = {1.-yint, yint};
-        low_idx[1] = 0;
-        high_idx[1] = 0;
-        break;
-    case 2:
-        if (yint < 1./2.) {
-            sy = {pow(1./2.-yint,2)/2., 1./2.+(1./2.-yint)-pow(1./2.-yint,2), 1./2.-(1./2.-yint)+pow(1./2.-yint,2)/2};
-            low_idx[1] = -1;
-            high_idx[1] = 1;
-        } else {
-            sy = {pow(3./2.-yint,2)/2., 1./2.+(3./2.-yint)-pow(3./2.-yint,2), 1./2.-(3./2.-yint)+pow(3./2.-yint,2)/2};
-            low_idx[1] = 0;
-            high_idx[1] = 2;
-        }
-        break;
-    case 3:
-        sy = {1./6.*pow((1.-yint),3), 2./3.-pow(yint,2.)+pow(yint,3)/2,
-              2./3.-pow(yint-1,2.)-pow(yint-1,3)/2, 1./6.*pow(yint,3)};
-        low_idx[1] = -1;
-        high_idx[1] = 2;
-        break;
-    }
-
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-
-    // ---- interpolation in z-dir
-    std::vector<amrex::Real> sz;
-    switch (deg[2]) {
-    case 1:
-        sz = {1.-zint, zint};
-        low_idx[2] = 0;
-        high_idx[2] = 0;
-        break;
-    case 2:
-        if (zint < 1./2.) {
-            sz = {pow(1./2.-zint,2)/2., 1./2.+(1./2.-zint)-pow(1./2.-zint,2), 1./2.-(1./2.-zint)+pow(1./2.-zint,2)/2};
-            low_idx[2] = -1;
-            high_idx[2] = 1;
-        } else {
-            sz = {pow(3./2.-zint,2)/2., 1./2.+(3./2.-zint)-pow(3./2.-zint,2), 1./2.-(3./2.-zint)+pow(3./2.-zint,2)/2};
-            low_idx[2] = 0;
-            high_idx[2] = 2;
-        }
-        break;
-    case 3:
-        sz = {1./6.*pow((1.-zint),3), 2./3.-pow(zint,2.)+pow(zint,3)/2,
-              2./3.-pow(zint-1,2.)-pow(zint-1,3)/2, 1./6.*pow(zint,3)};
-        low_idx[2] = -1;
-        high_idx[2] = 2;
-        break;
-    }
-
-#endif
-
-#if (GEMPIC_SPACEDIM > 2)
-    for (int kk = low_idx[2]; kk <= high_idx[2]; ++kk) {
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-        for (int jj = low_idx[1]; jj <= high_idx[1]; ++jj) {
-#endif
-            for (int ii = low_idx[0]; ii <= high_idx[0]; ++ii) {
-                double s_coeff = sx[ii-low_idx[0]]
-        #if(GEMPIC_SPACEDIM > 1)
-                        * sy[jj-low_idx[1]]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        * sz[kk-low_idx[2]]
-        #endif
-                        ;
-                acceleration += s_coeff*acc(i+ii
+                // deposit in J and interpolate in E
+                for (int cc=0;cc<GEMPIC_VDIM;cc++) {
+                    double s_coeff = sx[cc%3==0?0:1][ii]
                             #if(GEMPIC_SPACEDIM > 1)
-                                            ,j+jj
-                            #endif
-                            #if(GEMPIC_SPACEDIM > 2)
-                                            ,k+kk
-                            #endif
-                                            ,0);
+                                                *sy[cc%3==1?0:1][jj]
+                                        #endif
+                                        #if(GEMPIC_SPACEDIM > 2)
+                                                            *sz[cc%3==2?0:1][kk]
+                                                    #endif
+                                                                        ;
+                    std::array<int,GEMPIC_VDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, 0, xint, cc%3==0?true:false),
+                                                              spl.compute_cell_index(j+jj, 1, yint, cc%3==1?true:false),
+                                                              spl.compute_cell_index(k+kk, 2, zint, cc%3==2?true:false))};
+
+                    amrex::Gpu::Atomic::Add(&(jArray[cc])(cell_index[0]
+                        #if (GEMPIC_SPACEDIM > 1)
+                                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*particle_coeff*p.rdata(cc));
+
+                    if (field_int) {
+                        fields[cc] += s_coeff*(eArray[cc])(cell_index[0]
+            #if(GEMPIC_SPACEDIM > 1)
+                                ,cell_index[1]
+            #endif
+            #if(GEMPIC_SPACEDIM > 2)
+                                ,cell_index[2]
+            #endif
+                                ,0);
+                    }
+                }
+
+                if (field_int) {
+                    // deposit in B
+                    for (int cc=0;cc<GEMPIC_VDIM;cc++) {
+                        double s_coeff = sx[cc%3==0?1:0][ii]
+                                #if(GEMPIC_SPACEDIM > 1)
+                                                    *sy[cc%3==1?1:0][jj]
+                                            #endif
+                                            #if(GEMPIC_SPACEDIM > 2)
+                                                                *sz[cc%3==2?1:0][kk]
+                                                        #endif
+                                                                            ;
+                        std::array<int,GEMPIC_VDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, 0, xint, cc%3==0?false:true),
+                                                                  spl.compute_cell_index(j+jj, 1, yint, cc%3==1?false:true),
+                                                                  spl.compute_cell_index(k+kk, 2, zint, cc%3==2?false:true))};
+
+                        fields[cc+GEMPIC_VDIM] += s_coeff*(bArray[cc])(cell_index[0]
+            #if(GEMPIC_SPACEDIM > 1)
+                                ,cell_index[1]
+            #endif
+            #if(GEMPIC_SPACEDIM > 2)
+                                ,cell_index[2]
+            #endif
+                                ,0);
+                    }
+                }
+
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -542,67 +190,7 @@ amrex::Real gempic_interpolate_cic (P const& p, amrex::Array4<amrex::Real const>
 #if (GEMPIC_SPACEDIM > 2)
     }
 #endif
-    
-    return(acceleration);
-}
-
-template <typename P>
-amrex::Real gempic_interpolate_cic_class (P const& p, amrex::Array4<amrex::Real const> const& acc,
-                                          std::array<amrex::Real,GEMPIC_SPACEDIM> ploF,
-                                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& dxi,
-                                          amrex::IndexType indType,
-                                          amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)})
-{
-    splines spl({AMREX_D_DECL(indType[0] == 0, indType[1] == 0, indType[2] == 0)}, {AMREX_D_DECL(false, false, false)});
-    amrex::Real acceleration = 0.0;
-
-    amrex::Real lx = p.pos(0)*dxi[0] - ploF[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = p.pos(1)*dxi[1] - ploF[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = p.pos(2)*dxi[2] - ploF[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-#endif
-
-#if (GEMPIC_SPACEDIM > 2)
-    for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
-#endif
-            for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
-                double s_coeff = spl.deposition_coefficient ({AMREX_D_DECL(xint, yint, zint)},{AMREX_D_DECL(ii, jj, kk)});
-                s_coeff *= dxi[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        * dxi[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        * dxi[2]
-        #endif
-                        ;
-                acceleration += s_coeff*acc(spl.compute_cell_index(i+ii, 0, xint)
-                            #if(GEMPIC_SPACEDIM > 1)
-                                            ,spl.compute_cell_index(j+jj, 0, yint)
-                            #endif
-                            #if(GEMPIC_SPACEDIM > 2)
-                                            ,spl.compute_cell_index(k+kk, 0, zint)
-                            #endif
-                                            ,0);
-            }
-#if (GEMPIC_SPACEDIM > 1)
-        }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    }
-#endif
-
-    return(acceleration);
+    return(fields);
 }
 
 template <typename P>

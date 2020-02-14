@@ -33,10 +33,10 @@ void main_main ()
     int cell_index = 0;
     int dimension = 0;
     std::array<amrex::Real, GEMPIC_SPACEDIM> x = {AMREX_D_DECL(0.25, 0.25, 0.25)};
-    std::cout << spl.compute_cell_index (cell_index, dimension, x[0]) << std::endl;
+    std::cout << spl.compute_cell_index (cell_index, dimension, x[0], cent_eval[0]) << std::endl;
 
     std::array<int, GEMPIC_SPACEDIM> cell_vec = {AMREX_D_DECL(0,0,0)};
-    std::cout << spl.deposition_coefficient (x, cell_vec) << std::endl;
+    //std::cout << spl.deposition_coefficient (x, cell_vec) << std::endl;
 
 }
 
