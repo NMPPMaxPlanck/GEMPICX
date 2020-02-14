@@ -37,16 +37,9 @@ void init_particles_cellwise(infrastructure infra,
         std::partial_sum(init.Vweight[i].begin(), init.Vweight[i].end(), vel_cum[i].begin());
     }
 
-    // normally distributed random number generator:
+    // (0,1)-normally distributed random number generator:
     std::mt19937 gen(rSeed);
-    std::array<std::vector<std::normal_distribution<>>,GEMPIC_VDIM> normArray;
-    for(int i=0;i<GEMPIC_VDIM;i++){
-        for (int dis=0;dis<num_gauss;dis++){
-            std::normal_distribution<> normD(init.Vmean[i][dis],init.Vdev[i][dis]);
-            normArray[i].push_back(normD);
-        }
-    }
-
+    std::normal_distribution<> norm01(0,1);
 
     for (int pp=0;pp<init.Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
@@ -72,7 +65,7 @@ void init_particles_cellwise(infrastructure infra,
         }
 
         for (int cc = 0; cc < GEMPIC_VDIM; cc++) {
-            velocity[cc] = normArray[cc][gauss_idx[cc]](gen);
+            velocity[cc] = init.Vdev[cc][gauss_idx[cc]]*norm01(gen)+init.Vmean[cc][gauss_idx[cc]];
         }
 
         //MFI that adds particle from the model cell to all cells
@@ -140,15 +133,9 @@ void init_particles_full_domain(infrastructure infra,
         std::partial_sum(init.Vweight[i].begin(), init.Vweight[i].end(), vel_cum[i].begin());
     }
 
-    // normally distributed random number generator:
+    // (0,1)-normally distributed random number generator:
     std::mt19937 gen(rSeed);
-    std::array<std::vector<std::normal_distribution<>>,GEMPIC_VDIM> normArray;
-    for(int i=0;i<GEMPIC_VDIM;i++){
-        for (int dis=0;dis<num_gauss;dis++){
-            std::normal_distribution<> normD(init.Vmean[i][dis],init.Vdev[i][dis]);
-            normArray[i].push_back(normD);
-        }
-    }
+    std::normal_distribution<> norm01(0,1);
 
     for (int pp=0;pp<init.Np_cell;pp++) {
 
@@ -175,8 +162,8 @@ void init_particles_full_domain(infrastructure infra,
                 }
             }
 
-            for (int i=0; i < GEMPIC_VDIM; i++) {
-                velocity[i] = normArray[i][gauss_idx[i]](gen);
+            for (int cc = 0; cc < GEMPIC_VDIM; cc++) {
+                velocity[cc] = init.Vdev[cc][gauss_idx[cc]]*norm01(gen)+init.Vmean[cc][gauss_idx[cc]];
             }
 
             using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
