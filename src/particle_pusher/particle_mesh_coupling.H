@@ -29,13 +29,13 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
     amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, 0, false), GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, 1, false), GEMPIC_DEG_Y);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, 0, false), GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, 2, false), GEMPIC_DEG_Z);
 #endif
     amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(GEMPIC_VDIM);
 
@@ -100,16 +100,16 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
     amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, 0, true), GEMPIC_DEG_Y);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, 0, false), GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, 1, true), GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, 1, false), GEMPIC_DEG_Y);
     std::array<std::vector<amrex::Real>,2> sy = {sy_cell, sy_node};
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, 0, true), GEMPIC_DEG_Z);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, 0, false), GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, 2, true), GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, 2, false), GEMPIC_DEG_Z);
     std::array<std::vector<amrex::Real>,2> sz = {sz_cell, sz_node};
 #endif
     amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*p.rdata(GEMPIC_VDIM);
