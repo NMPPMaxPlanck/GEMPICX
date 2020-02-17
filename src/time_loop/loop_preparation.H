@@ -24,8 +24,7 @@ void loop_preparation (infrastructure infra,
                        particle_groups *part_gr,
                        diagnostics *diagn,
                        double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
-                       amrex::Real initk,
-                       bool output_bool) {
+                       amrex::Real initk) {
 
     // initial rho by: deposition of particle charge
     //Set rho to 0
@@ -66,17 +65,15 @@ void loop_preparation (infrastructure infra,
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     // output rho
-    if (output_bool){
-        std::ofstream ofs("rho.output", std::ofstream::out);
-        for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
-            amrex::Print(ofs) << (*mw_yee).rho[mfi] << std::endl;
-        }
-        ofs.close();
+    std::ofstream ofs("rho.output", std::ofstream::out);
+    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
+        amrex::Print(ofs) << (*mw_yee).rho[mfi] << std::endl;
     }
+    ofs.close();
 
     //initial E by rho
     (*mw_yee).phi_init.setVal(0.0, 0); // TODO
-    (*mw_yee).solve_poisson(infra, output_bool);
+    (*mw_yee).solve_poisson(infra);
 
     // initial B_field
     (*mw_yee).initB(infra, initB, initk);
@@ -100,7 +97,7 @@ void loop_preparation (infrastructure infra,
 
     //------------------------------------------------------------------------------
     //Save "step 0" data
-    (*diagn).save_step_data(0, infra, mw_yee, part_gr, output_bool); //false: slices are not saved
+    (*diagn).save_step_data(0, infra, mw_yee, part_gr); //false: slices are not saved
 
 }
 

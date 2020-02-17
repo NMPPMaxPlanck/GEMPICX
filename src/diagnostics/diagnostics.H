@@ -27,16 +27,18 @@ public:
     std::array<amrex::Real,100001> kin;
     int freq_x;
     int freq_v;
+    int freq_slice;
     std::string sim_name;
 
     // The default constructor.
     diagnostics ();
 
     // Explicit const
-    diagnostics (int n_t, int fx, int fv, std::string sim_n){
+    diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n){
         n_time = n_t;
         freq_x = fx;
         freq_v = fv;
+        freq_slice = fs;
         sim_name = sim_n;
     }
 
@@ -44,8 +46,7 @@ public:
     void save_step_data(int step,
                         infrastructure infra,
                         maxwell_yee *mw_yee,
-                        particle_groups *part_gr,
-                        bool bl_plotfile){
+                        particle_groups *part_gr){
         amrex::Real vel;
 
         // E and B field
@@ -100,7 +101,7 @@ public:
         }
 
         // save Plotfile
-        if(bl_plotfile) {
+        if(step%freq_slice==0) {
             amrex::Vector<std::string> varnames = {"rho"};
             if (step == 0) {
                 WriteSingleLevelPlotfile ("SliceData/rho_plotfile_0", (*mw_yee).rho, varnames,

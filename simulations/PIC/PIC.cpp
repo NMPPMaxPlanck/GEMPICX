@@ -59,8 +59,9 @@ void main_main ()
     //int n_steps = 10; // number of steps
 
     // ------------OUTPUT-FREQUENCY--------------------------------------------------------
-    int freq_x = 10; //n_steps+1
-    int freq_v = 10;
+    int freq_x = n_steps+1;
+    int freq_v = n_steps+1;
+    int freq_slice = n_steps+1;
 
     // ------------------------------------------------------------------------------
     // ------------------------------------------------------------------------------
@@ -68,8 +69,6 @@ void main_main ()
     //std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
     //std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
     //------------------------------------------------------------------------------
-
-    bool output_bool = false;
 
     //initializer
     initializer init;
@@ -153,15 +152,14 @@ void main_main ()
     int species = 0; // all particles are same species for now
     init_particles_cellwise(infra, &part_gr, init, species);
 
-    if (output_bool){
-        save_particle_positions(&part_gr, sim_name + "_0");
-    }
+    save_particle_positions(&part_gr, sim_name + "_0");
+    save_particle_velocities(&part_gr, sim_name + "_0");
 
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, sim_name);
-    loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k, output_bool);
+    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k);
     time_loop_avg(infra, &mw_yee, &part_gr, &diagn);
 }
 

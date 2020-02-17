@@ -23,8 +23,7 @@
 void time_loop_avg (infrastructure infra,
                     maxwell_yee *mw_yee,
                     particle_groups *part_gr,
-                    diagnostics *diagn,
-                    bool output_bool = false) {
+                    diagnostics *diagn) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
@@ -112,16 +111,16 @@ void time_loop_avg (infrastructure infra,
         (*mw_yee).advance_E(infra, (*mw_yee).dt);
 
         // save norms for diagnostics
-        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr, output_bool); // false: slices are not saved
+        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
 
         // save temporary results every n steps
-        if ((t_step+1)%5 == 0) { //& output_bool
+        if ((t_step+1)%5 == 0) {
             (*diagn).save_all_to_textfile((*mw_yee).dt, "tmp2/PIC_save.output"+std::to_string(t_step+1), t_step+1);
         }
-        if ((t_step+1)%diagn->freq_x == 0) { //& output_bool
+        if ((t_step+1)%diagn->freq_x == 0) {
             save_particle_positions(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
         }
-        if ((t_step+1)%diagn->freq_v == 0) { //& output_bool
+        if ((t_step+1)%diagn->freq_v == 0) {
             save_particle_velocities(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
