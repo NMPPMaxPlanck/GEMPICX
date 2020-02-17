@@ -40,15 +40,16 @@ void init_particles_cellwise(infrastructure infra,
     // (0,1)-normally distributed random number generator:
     std::mt19937 gen(rSeed);
     std::normal_distribution<> norm01(0,1);
+    std::uniform_real_distribution<> unif(0.0, 1.0);
 
     for (int pp=0;pp<init.Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
-        position[0] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[0]; // uniform in [0, dx]
+        position[0] = unif(gen)*infra.dx[0]; // uniform in [0, dx]
 #if (GEMPIC_SPACEDIM > 1)
-        position[1] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[1];
+        position[1] = unif(gen)*infra.dx[1];
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-        position[2] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[2];
+        position[2] = unif(gen)*infra.dx[2];
 #endif
 
         amrex::Real gauss_choice[GEMPIC_VDIM];
