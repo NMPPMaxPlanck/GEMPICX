@@ -227,18 +227,17 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle(P const& p,
 template <typename P>
 std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_pos(P const& p,
                                                                       amrex::Real dt,
-                                                                      infrastructure infra,
-                                                                      amrex::Real coefficient){
+                                                                      infrastructure infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
     // new positions (modulo the upper bound of the box)
-    newPos[0] = fmod(p.pos(0) + p.rdata(0)*coefficient*dt, infra.geom.ProbHi()[0]);
+    newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
     newPos[GEMPIC_SPACEDIM] = p.rdata(0);
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = fmod(p.pos(1) + p.rdata(1)*coefficient*dt, infra.geom.ProbHi()[1]);
+    newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = fmod(p.pos(2) + p.rdata(2)*coefficient*dt, infra.geom.ProbHi()[2]);
+    newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
 #endif
 #if (GEMPIC_VDIM > 1)
     newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);

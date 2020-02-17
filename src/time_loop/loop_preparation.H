@@ -88,7 +88,7 @@ void loop_preparation (infrastructure infra,
             auto& particles = pti.GetArrayOfStructs(); // get particles
             const long np  = pti.numParticles();
             for (int pp=0;pp<np;pp++){
-                std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_pos(particles[pp], (*mw_yee).dt, infra, 0.5);
+                std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_pos(particles[pp], 0.5*(*mw_yee).dt, infra);
                 std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
             }
         }
