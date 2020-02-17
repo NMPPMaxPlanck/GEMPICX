@@ -25,13 +25,19 @@ public:
     std::array<std::array<amrex::Real,GEMPIC_BDIM>,100001> Bfield;
     std::array<std::array<amrex::Real,GEMPIC_VDIM>,100001> Efield, mom;
     std::array<amrex::Real,100001> kin;
+    int freq_x;
+    int freq_v;
+    std::string sim_name;
 
     // The default constructor.
     diagnostics ();
 
     // Explicit const
-    diagnostics (int n_t){
+    diagnostics (int n_t, int fx, int fv, std::string sim_n){
         n_time = n_t;
+        freq_x = fx;
+        freq_v = fv;
+        sim_name = sim_n;
     }
 
     // save position and velocities

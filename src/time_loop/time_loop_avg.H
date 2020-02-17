@@ -5,6 +5,7 @@
 #include <maxwell_yee.H>
 #include <diagnostics.H>
 #include <particle_mesh_coupling.H>
+#include <particle_positions.H>
 
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
@@ -116,6 +117,12 @@ void time_loop_avg (infrastructure infra,
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) { //& output_bool
             (*diagn).save_all_to_textfile((*mw_yee).dt, "tmp2/PIC_save.output"+std::to_string(t_step+1), t_step+1);
+        }
+        if ((t_step+1)%diagn->freq_x == 0) { //& output_bool
+            save_particle_positions(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
+        }
+        if ((t_step+1)%diagn->freq_v == 0) { //& output_bool
+            save_particle_velocities(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
     } // end time loop

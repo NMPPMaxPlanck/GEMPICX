@@ -58,6 +58,10 @@ void main_main ()
     //int n_part_per_cell = 1000; // number of particles per cell
     //int n_steps = 10; // number of steps
 
+    // ------------OUTPUT-FREQUENCY--------------------------------------------------------
+    int freq_x = 10; //n_steps+1
+    int freq_v = 10;
+
     // ------------------------------------------------------------------------------
     // ------------------------------------------------------------------------------
 
@@ -156,7 +160,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics diagn(mw_yee.nsteps);
+    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, sim_name);
     loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k, output_bool);
     time_loop_avg(infra, &mw_yee, &part_gr, &diagn);
 }
