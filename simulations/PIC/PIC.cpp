@@ -45,6 +45,7 @@ double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
 void main_main ()
 {
     int testcase = 0; // 0 -> Weibel, 1 -> Landau
+    std::string sim_name = "Weibel";
 
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
@@ -149,7 +150,7 @@ void main_main ()
     init_particles_cellwise(infra, &part_gr, init, species);
 
     if (output_bool){
-        save_particle_positions(&part_gr);
+        save_particle_positions(&part_gr, sim_name + "_0");
     }
 
 

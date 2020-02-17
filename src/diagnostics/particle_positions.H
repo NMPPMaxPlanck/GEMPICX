@@ -18,7 +18,7 @@
 #define PARTICLE_POSITION_H_
 
 void save_particle_positions (particle_groups *ppg, std::string ID = "", int species = 0){
-    std::ofstream ofss("/particle_output/x/P_", + ID + ".output", std::ofstream::out);
+    std::ofstream ofss("particle_output/x/P_" + ID + ".output", std::ofstream::out);
     for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
         const auto& particles = pti.GetArrayOfStructs();
@@ -38,7 +38,7 @@ void save_particle_positions (particle_groups *ppg, std::string ID = "", int spe
 }
 
 void save_particle_velocities (particle_groups *ppg, std::string ID = "", int species = 0){
-    std::ofstream ofss("/particle_output/v/P_", + ID + ".output", std::ofstream::out);
+    std::ofstream ofss("particle_output/v/P_" + ID + ".output", std::ofstream::out);
     for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
         const auto& particles = pti.GetArrayOfStructs();
