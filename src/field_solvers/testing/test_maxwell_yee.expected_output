@@ -1,19 +1,22 @@
 Maxwell
+step 0
+Ex error: 0 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 0 |Bz error: 0
 step 1
-Ex error: 6.9447e-07 |Ey error: 1.3889e-06 |Ez error: 6.9447e-07
-Bx error: 1.2043e-06 |By error: 9.126e-17 |Bz error: 1.2043e-06
+Ex error: 6.733e-06 |Ey error: 1.3466e-05 |Ez error: 6.733e-06
+Bx error: 1.1668e-05 |By error: 1.5419e-14 |Bz error: 1.1668e-05
 step 2
-Ex error: 1.3891e-06 |Ey error: 2.7781e-06 |Ez error: 1.3891e-06
-Bx error: 2.4085e-06 |By error: 2.5646e-16 |Bz error: 2.4085e-06
+Ex error: 1.3471e-05 |Ey error: 2.6943e-05 |Ez error: 1.3471e-05
+Bx error: 2.3328e-05 |By error: 4.5389e-14 |Bz error: 2.3328e-05
 step 3
-Ex error: 2.0838e-06 |Ey error: 4.1675e-06 |Ez error: 2.0838e-06
-Bx error: 3.6127e-06 |By error: 4.9527e-16 |Bz error: 3.6127e-06
+Ex error: 2.0209e-05 |Ey error: 4.0418e-05 |Ez error: 2.0209e-05
+Bx error: 3.5021e-05 |By error: 8.8938e-14 |Bz error: 3.5021e-05
 step 4
-Ex error: 2.7785e-06 |Ey error: 5.5571e-06 |Ez error: 2.7785e-06
-Bx error: 4.8169e-06 |By error: 8.0802e-16 |Bz error: 4.8169e-06
+Ex error: 2.694e-05 |Ey error: 5.388e-05 |Ez error: 2.694e-05
+Bx error: 4.6717e-05 |By error: 1.4465e-13 |Bz error: 4.6717e-05
 step 5
-Ex error: 3.4734e-06 |Ey error: 6.9469e-06 |Ez error: 3.4734e-06
-Bx error: 6.0211e-06 |By error: 1.1939e-15 |Bz error: 6.0211e-06
+Ex error: 3.3658e-05 |Ey error: 6.7317e-05 |Ez error: 3.3658e-05
+Bx error: 5.8408e-05 |By error: 2.1073e-13 |Bz error: 5.8408e-05
 
 Poisson
-Ex error: 3.4734e-06 |Ey error: 6.9469e-06 |Ez error: 3.4734e-06
+Ex error: 0.0099293 |Ey error: 0.0099293 |Ez error: 0.0099293
