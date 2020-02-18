@@ -136,8 +136,13 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
-    init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,0.5,
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
+
+    init.initialize_from_parameters(n_cell,32,is_periodic,maxdeg,0.01,5,{1.0},{1.0},1000,0.5,
     VM,VD,VW,WF);
+    //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
+
     infrastructure infra(init);
 
     //------------------------------------------------------------------------------
@@ -155,6 +160,23 @@ void main_main ()
     Print(ofs) << "Maxwell" << endl;
     std::cout << "step: " << 0 << std::endl;
     E_B_error = mw_yee.computeError(fields, true, infra);
+    Print(ofs) << "step " << 0 << endl;
+    Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                          #if (GEMPIC_VDIM > 1)
+                                  " |Ey error: " << E_B_error[1] <<
+                          #endif
+                          #if (GEMPIC_VDIM > 2)
+                                  " |Ez error: " << E_B_error[2] <<
+                          #endif
+                                  endl;
+    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+                          #if (GEMPIC_BDIM > 1)
+                                  " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                          #endif
+                          #if (GEMPIC_BDIM > 2)
+                                  " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                          #endif
+                                  endl;
 
     for (int n=1;n<=mw_yee.nsteps;n++){
         std::cout << "step: " << n << std::endl;
@@ -178,6 +200,12 @@ void main_main ()
                                       " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
                               #endif
                                       endl;
+
+        std::ofstream ofsPHI("mw_yee_E0.output", std::ofstream::out);
+            for (amrex::MFIter mfi(*(mw_yee.E_Array[0])); mfi.isValid(); ++mfi ) {
+                amrex::Print(ofsPHI) << (*(mw_yee.E_Array[0]))[mfi] << std::endl;
+            }
+            ofsPHI.close();
     }
 
     //------------------------------------------------------------------------------
