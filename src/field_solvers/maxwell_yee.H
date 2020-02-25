@@ -126,7 +126,7 @@ public:
                         for(int l=lo[0]; l<=hi[0]; l++){
                             x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
                             (*E_Array[i])[mfi].setVal((*fields[i])(x,0), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -159,7 +159,7 @@ public:
                         for(int l=lo[0]; l<=hi[0]; l++){
                             x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
                             (*B_Array[i])[mfi].setVal((*fields[i+GEMPIC_VDIM])(x,half_dt), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -195,7 +195,7 @@ public:
                         for(int l=lo[0]; l<=hi[0]-(*B_Index[i])[0]; l++){
                             x[0] = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
                             (*B_Array[i])[mfi].setVal((*initB[i])(x,initk), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 2)
@@ -249,12 +249,12 @@ public:
                         for(int l=lo[0]; l<=hi[0]; l++){
 
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
 
                             // old field_out value
-                            (*E_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1);
+                            (*E_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
                             // J value
-                            (*J_Array[i])[mfi].getVal(cj, {AMREX_D_DECL(l,j,k)},0,1);
+                            (*J_Array[i])[mfi].getVal(cj, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             // B-derivatives
 #if (GEMPIC_VDIM < 3 & GEMPIC_SPACEDIM == 1)
@@ -265,23 +265,23 @@ public:
 #if (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
                             //Ex for 2D2V
                             if (i == 0) {
-                                (*B_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(  l,j,k)},0,1);
-                                (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l,j-1,k)},0,1);
+                                (*B_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
+                                (*B_Array[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l,j-1,k)},0,1);
                                 (*E_Array[0])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[1]-*cj), cc, 0, 1);
                             }
 #endif
 #if (GEMPIC_VDIM == 2)
                             if (i == 1) {
-                                (*B_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(  l,j,k)},0,1);
-                                (*B_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l-1,j,k)},0,1);
+                                (*B_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
+                                (*B_Array[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
                                 (*E_Array[1])[mfi].setVal(*c1+dt_step*(-(*c2-*c3)/ifr.dx[0]-*cj), cc, 0, 1);
                             }
 #endif
 #if (GEMPIC_VDIM == 3)
-                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
-                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, {AMREX_D_DECL(  l,  j,  k)},0,1);
-                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5,{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==1?1:0),j-(i%GEMPIC_SPACEDIM==2?1:0),k-(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
+                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
+                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==1?1:0),j-(i%GEMPIC_SPACEDIM==2?1:0),k-(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
 
                             (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                                                       (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]-*cj), cc, 0, 1);
@@ -320,32 +320,32 @@ public:
                         for(int l=lo[0]; l<=hi[0]; l++){
 
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
 
                             // old field_out value
-                            (*B_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1);
+                            (*B_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             // E-derivatives
 #if (GEMPIC_VDIM == 1)
                             //no B
 #elif (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 1)
-                            (*E_Array[1])[mfi].getVal(c4, {AMREX_D_DECL(l+1,j,k)},0,1);
-                            (*E_Array[1])[mfi].getVal(c5, {AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*E_Array[1])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+                            (*E_Array[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
 
                             (*B_Array[0])[mfi].setVal(*c1-dt_step*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
 #elif (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
-                            (*E_Array[0])[mfi].getVal(c2,{AMREX_D_DECL(l,j+1,k)},0,1);
-                            (*E_Array[0])[mfi].getVal(c3,{AMREX_D_DECL(l,j,k)},0,1);
-                            (*E_Array[1])[mfi].getVal(c4,{AMREX_D_DECL(l+1,j,k)},0,1);
-                            (*E_Array[1])[mfi].getVal(c5, {AMREX_D_DECL(l,j,k)},0,1);
+                            (*E_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j+1,k)},0,1);
+                            (*E_Array[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+                            (*E_Array[1])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+                            (*E_Array[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             (*B_Array[0])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[1]-
                                                       (*c4-*c5)/ifr.dx[0]), cc, 0, 1);
 #elif (GEMPIC_BDIM == 3)
-                            (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
-                            (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                            (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4,{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==1?1:0),j+(i%GEMPIC_SPACEDIM==2?1:0),k+(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
-                            (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, {AMREX_D_DECL(  l,  j,  k)},0,1);
+                            (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
+                            (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                            (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==1?1:0),j+(i%GEMPIC_SPACEDIM==2?1:0),k+(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
+                            (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
 
                             (*B_Array[i])[mfi].setVal(*c1-dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                                                       (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
@@ -391,7 +391,7 @@ public:
 
                         // the box for these values:
                         std::array<double,GEMPIC_SPACEDIM> x = {AMREX_D_DECL(l*ifr.dx[0], j*ifr.dx[1], k*ifr.dx[2])};
-                        amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
+                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
 
                         phi[mfi].setVal(phi_fun(x), cc, 0, 1);
                         rho[mfi].setVal(rho_fun(x), cc, 0, 1);
@@ -482,14 +482,14 @@ public:
                         for(int l=lo[0]; l<=hi[0]; l++){
 
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
 
                             // old field_out value
-                            (*E_Array[i])[mfi].getVal(c1, {AMREX_D_DECL(l,j,k)},0,1); //TODO remove
+                            (*E_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1); //TODO remove
 
                             // phi-derivative
-                            phi[mfi].getVal(c1,{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
-                            phi[mfi].getVal(c2,{AMREX_D_DECL(l,j,k)},0,1);
+                            phi[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
+                            phi[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             (*E_Array[i])[mfi].setVal((*c1-*c2)/ifr.dx[i], cc, 0, 1);
                         }
@@ -571,7 +571,7 @@ private:
                             x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
 
                             // the box for these values:
-                            amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
                             (*E_sol_Array[i])[mfi].setVal((*fields[i])(x,time), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -606,7 +606,7 @@ private:
                                 x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
 
                                 // the box for these values:
-                                amrex::Box cc({AMREX_D_DECL(l,j,k)}, {AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                                amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
                                 (*B_sol_Array[i])[mfi].setVal((*fields[i+GEMPIC_VDIM])(x,btime), cc, 0, 1);
                             }
 #if (GEMPIC_SPACEDIM > 1)
