@@ -185,14 +185,14 @@ public:
                 amrex::IntVect lo = {bx.smallEnd()};
                 amrex::IntVect hi = {bx.bigEnd()};
 #if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]-(*B_Index[i])[2]; k++){
+                for(int k=lo[2]; k<=hi[2]; k++){
                     x[2] = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]-(*B_Index[i])[1]; j++){
+                    for(int j=lo[1]; j<=hi[1]; j++){
                         x[1] = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
 #endif
-                        for(int l=lo[0]; l<=hi[0]-(*B_Index[i])[0]; l++){
+                        for(int l=lo[0]; l<=hi[0]; l++){
                             x[0] = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
                             // the box for these values:
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
