@@ -144,6 +144,10 @@ void main_main ()
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
 
     infrastructure infra(init);
+    //std::cout << "[" << infra.real_box.lo()[0] << ", " << infra.real_box.hi()[0] << "]x[" << infra.real_box.lo()[1] << "," << infra.real_box.hi()[1] << "]x[" << infra.real_box.lo()[2] << ", " << infra.real_box.hi()[2] << "]" << std::endl;
+    //std::array<double,GEMPIC_SPACEDIM> x = {0.0,0.0,0.75};
+    //double t = 2.0-0.25/sqrt(3);
+    //std::cout << fields[0](x,t) << "|" << fields[1](x,t) << "|" << fields[2](x,t) << "|" << fields[3](x,t) << "|" << fields[4](x,t) << "|" << fields[5](x,t) << "|" << std::endl;
 
     //------------------------------------------------------------------------------
     // Solve
@@ -201,7 +205,7 @@ void main_main ()
                               #endif
                                       endl;
 
-        std::ofstream ofsPHI("mw_yee_E0.output", std::ofstream::out);
+        std::ofstream ofsPHI("mw_yee_E" + std::to_string(n) + ".output", std::ofstream::out);
             for (amrex::MFIter mfi(*(mw_yee.E_Array[0])); mfi.isValid(); ++mfi ) {
                 amrex::Print(ofsPHI) << (*(mw_yee.E_Array[0]))[mfi] << std::endl;
             }
