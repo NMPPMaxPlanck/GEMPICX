@@ -156,10 +156,9 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
                                 ,0);
                     }
                 }
-
                 if (field_int) {
                     // deposit in B
-                    for (int cc=0;cc<GEMPIC_VDIM;cc++) {
+                    for (int cc=0;cc<GEMPIC_BDIM;cc++) {
                         double s_coeff = sx[cc%3==0?1:0][ii]
                                 #if(GEMPIC_SPACEDIM > 1)
                                                     *sy[cc%3==1?1:0][jj]
