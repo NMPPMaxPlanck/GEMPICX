@@ -17,6 +17,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
 include_directories("${CMAKE_SOURCE_DIR}/src/initializer")
 include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
 include_directories("${CMAKE_SOURCE_DIR}/src/diagnostics")
+include_directories("${CMAKE_SOURCE_DIR}/src/utils")
 include_directories("${CMAKE_SOURCE_DIR}")
 
 

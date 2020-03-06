@@ -14,6 +14,8 @@
 #include <AMReX_Box.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
+#include <gempic_norm.H>
+
 #ifndef DIAGNOSTICS_H_
 #define DIAGNOSTICS_H_
 

@@ -18,6 +18,7 @@
 #include <AMReX_CoordSys.H>
 #include <AMReX_MFIter.H>
 #include <infrastructure.H>
+#include <gempic_norm.H>
 
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
