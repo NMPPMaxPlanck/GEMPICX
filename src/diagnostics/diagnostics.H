@@ -53,26 +53,11 @@ public:
 
         // E and B field
         for(int cc=0;cc<GEMPIC_VDIM;cc++){
-            //TODOrefine
-            Efield[step][cc] = pow((*(*mw_yee).E_Array[cc]).norm2(0, infra.geom.periodicity()),2)*infra.dx[0]/infra.Length[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                    *infra.dx[1]/infra.Length[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                    *infra.dx[2]/infra.Length[2]
-        #endif
-                    ;
+            Efield[step][cc] = gempic_norm(*(*mw_yee).E_Array[cc], infra, 2);
         }
 
         for(int cc=0;cc<GEMPIC_BDIM;cc++){
-            Bfield[step][cc] = pow((*(*mw_yee).B_Array[cc]).norm2(0, infra.geom.periodicity()),2)*infra.dx[0]/infra.Length[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                    *infra.dx[1]/infra.Length[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                    *infra.dx[2]/infra.Length[2]
-        #endif
-                    ;
+            Bfield[step][cc] = gempic_norm(*(*mw_yee).B_Array[cc], infra, 2);
         }
 
         // compute kinetic energy norm and momentum

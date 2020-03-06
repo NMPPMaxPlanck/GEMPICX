@@ -40,6 +40,7 @@ public:
     amrex::MultiFab rho; // for Poisson
     int Nghost;
     amrex::MultiFab phi; // for Poisson
+    //amrex::MLMG* mlmg_ptr;
 
 private:
 
@@ -286,6 +287,10 @@ public:
 
                             (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                                                       (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]-*cj), cc, 0, 1);
+                            if (l==1 & j==0 & k==0 & i == 0) {
+                                //std::cout << *c1 << "|" << *c2 << "|" << *c3 << "|" << *c4 << "|" << *c5 << "|" << *cj << std::endl;
+                                //std::cout << *c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-(*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]-*cj) << std::endl;
+                            }
 #endif
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -417,13 +422,12 @@ public:
         //--------------------------------------------------------------------------------
         // rho
 #if GEMPIC_SPACEDIM > 1 // for == 1: use analytical solution instead of MLMG solver
-        // For MLMG solver
+
         int verbose = 0;
         int bottom_verbose = 0;
         int max_iter = 100;
         int max_fmg_iter = 0; //TODO
 
-        sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
         amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}); // linear operator class
 
         linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for lower ends
@@ -432,14 +436,13 @@ public:
         {AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for higher ends
          amrex::LinOpBCType::Periodic,
          amrex::LinOpBCType::Periodic)});
-
         linop.setSigma(0, sigma); // first argument: level-nr
-
         amrex::MLMG mlmg(linop); // solver class
         mlmg.setMaxIter(max_iter);
         mlmg.setMaxFmgIter(max_fmg_iter);
         mlmg.setVerbose(verbose);
         mlmg.setBottomVerbose(bottom_verbose);
+        //mlmg_ptr = &mlmg;
 
 #if (GEMPIC_SPACEDIM > 1)
         amrex::Vector<std::string> varnames = {"phi_init"};
@@ -450,7 +453,7 @@ public:
         WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0", rho, varnames,
                                   ifr.geom, 0*dt, 0);
 #endif
-        amrex::Print() << "rho " << rho.norm0(0) << std::endl;
+        amrex::Print() << "rho " << gempic_norm(rho, ifr, 0) << std::endl;
         //(*mlmg_ptr).solve({&phi}, {&rho}, reltol, 0.0);
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
         phi.FillBoundary(ifr.geom.periodicity());
@@ -533,12 +536,11 @@ public:
             WriteSingleLevelPlotfile ("SliceDataTest/E"+std::to_string(i)+"sol"+"_plotfile_0", *E_sol_Array[i], varnames,
                                       ifr.geom, dt, 0); //level_step
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
-            E_B_error[i] = (*E_sol_Array[i]).norm0();
+            E_B_error[i] = gempic_norm(*E_sol_Array[i], ifr, 2);
         }
         if (bool_B) {
             for (int i=0; i<GEMPIC_BDIM; i++){
-                (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
-                E_B_error[i+GEMPIC_VDIM] = (*B_sol_Array[i]).norm0();
+                gempic_norm(*B_sol_Array[i], ifr, 2);
             }
         }
         return(E_B_error);
