@@ -39,7 +39,7 @@ Using QT-creator with gempic
 =====================
 Do NOT open amrex as a project with QT-creator. This will build a second instance of amrex and gempic will not be able to find either of them. Building gempic as a project automatically links it to amrex, so amrex doesn't need to be set up as project itself.
 
-Steps to set up gempic in QT-creator:
-1.) In QT-creator: File -> Open file or project -> click on CMakeLists.txt file
-2.) On Sidebar, click Projects and set correct build directory
-3.) If project doesn't compile automatically: close qccreator and reopen it, load project
+Steps to set up gempic in QT-creator:  
+1.) In QT-creator: File -> Open file or project -> click on CMakeLists.txt file  
+2.) On Sidebar, click Projects and set correct build directory  
+3.) If project doesn't compile automatically: close qccreator and reopen it, load project  
