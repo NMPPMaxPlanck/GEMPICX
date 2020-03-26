@@ -24,7 +24,7 @@ amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
     } else if (p==1) {
         result = (*MultiF).norm1(0, ifr.geom.periodicity());
     } else if (p==2) {
-        result = pow((*MultiF).norm2(0, ifr.geom.periodicity()),2);
+        result = pow((*MultiF).norm2(0, ifr.geom.periodicity()),2.);
     }
     if (p > 0) {
         result *= ifr.dx[0]/ifr.Length[0]
