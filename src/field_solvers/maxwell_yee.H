@@ -453,7 +453,7 @@ public:
         WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0", rho, varnames,
                                   ifr.geom, 0*dt, 0);
 #endif
-        amrex::Print() << "rho " << gempic_norm(rho, ifr, 0) << std::endl;
+        amrex::Print() << "rho " << gempic_norm(&rho, ifr, 0) << std::endl;
         //(*mlmg_ptr).solve({&phi}, {&rho}, reltol, 0.0);
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
         phi.FillBoundary(ifr.geom.periodicity());
@@ -536,11 +536,11 @@ public:
             WriteSingleLevelPlotfile ("SliceDataTest/E"+std::to_string(i)+"sol"+"_plotfile_0", *E_sol_Array[i], varnames,
                                       ifr.geom, dt, 0); //level_step
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
-            E_B_error[i] = gempic_norm(*E_sol_Array[i], ifr, 2);
+            E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
         }
         if (bool_B) {
             for (int i=0; i<GEMPIC_BDIM; i++){
-                gempic_norm(*B_sol_Array[i], ifr, 2);
+                E_B_error[i] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
             }
         }
         return(E_B_error);

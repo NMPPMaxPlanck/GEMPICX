@@ -53,11 +53,11 @@ public:
 
         // E and B field
         for(int cc=0;cc<GEMPIC_VDIM;cc++){
-            Efield[step][cc] = gempic_norm(*(*mw_yee).E_Array[cc], infra, 2);
+            Efield[step][cc] = gempic_norm(&(*(*mw_yee).E_Array[cc]), infra, 2);
         }
 
         for(int cc=0;cc<GEMPIC_BDIM;cc++){
-            Bfield[step][cc] = gempic_norm(*(*mw_yee).B_Array[cc], infra, 2);
+            Bfield[step][cc] = gempic_norm(&(*(*mw_yee).B_Array[cc]), infra, 2);
         }
 
         // compute kinetic energy norm and momentum
