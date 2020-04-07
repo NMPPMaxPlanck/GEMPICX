@@ -76,7 +76,7 @@ void init_particles_cellwise(infrastructure infra,
             amrex::IntVect hi = {bx.bigEnd()};
 
             using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
-            auto& particles = (*(*ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<4, 0, 0, 0> particles = (*(*ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
             for(int k=lo[2]; k<=hi[2]; k++){
