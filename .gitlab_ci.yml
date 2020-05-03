@@ -1,0 +1,5 @@
+ubuntu1804_openmpi:
+  only:
+    - master
+  script:
+    - "scripts/gempic-ci.sh"
