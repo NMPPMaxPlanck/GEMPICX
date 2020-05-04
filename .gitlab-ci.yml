@@ -3,6 +3,8 @@ ubuntu2004_openmpi:
   only:
     - master
   script:
+    - mkdir build
+    - export BUILD_DIR=`readlink -f ./build`
     - cd scripts
     - bash gempic_ci.sh
   tags:
