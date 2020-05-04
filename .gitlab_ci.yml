@@ -1,4 +1,5 @@
 ubuntu1804_openmpi:
+  image: gitlab-registry.mpcdf.mpg.de/khr/docker/selalib/ubuntu1804
   only:
     - master
   script:
@@ -6,3 +7,4 @@ ubuntu1804_openmpi:
   tags:
     - avx2
     - docker
+
