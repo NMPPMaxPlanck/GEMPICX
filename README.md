@@ -25,7 +25,7 @@ cmake -D AMReX_ROOT=/u/kako/amrex/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_
 Irene's PC:  
 cmake -D AMReX_ROOT=~/Documents/Projects/warpx_directory/amrex/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx -D CMAKE_CXX_FLAGS="-std=c++11" -D CMAKE_FC_COMPILER=mpif95 ~/Documents/Projects/gempic
 
-SUPERMUC-NG
+SUPERMUC-NG:  
 cmake -D AMReX_ROOT=/dss/dsshome1/0C/ga39wih2/projects/amrex/installdir \
 -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx \
 -D CMAKE_CXX_FLAGS="-std=c++14" -D CMAKE_FC_COMPILER=mpif90 \
