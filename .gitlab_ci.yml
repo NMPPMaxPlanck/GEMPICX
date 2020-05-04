@@ -3,3 +3,6 @@ ubuntu1804_openmpi:
     - master
   script:
     - "scripts/gempic-ci.sh"
+  tags:
+    - avx2
+    - docker
