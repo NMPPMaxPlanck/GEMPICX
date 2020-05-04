@@ -1,9 +1,10 @@
-ubuntu1804_openmpi:
-  image: gitlab-registry.mpcdf.mpg.de/khr/docker/selalib/ubuntu1804
+ubuntu2004_openmpi:
+  image: gitlab-registry.mpcdf.mpg.de/khr/docker/gempic/ubuntu2004
   only:
     - master
   script:
-    - "scripts/gempic-ci.sh"
+    - cd scripts
+    - bash gempic_ci.sh
   tags:
     - avx2
     - docker

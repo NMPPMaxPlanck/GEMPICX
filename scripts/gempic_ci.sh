@@ -34,3 +34,4 @@ cmake $GEMPIC_BASE \
       -D CMAKE_FC_COMPILER=mpif95
 
 make -j 4
+
