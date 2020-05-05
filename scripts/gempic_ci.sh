@@ -35,3 +35,4 @@ cmake $GEMPIC_BASE \
 
 make -j 4
 
+ctest
