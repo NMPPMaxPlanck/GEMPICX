@@ -540,7 +540,8 @@ public:
         }
         if (bool_B) {
             for (int i=0; i<GEMPIC_BDIM; i++){
-                E_B_error[i] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
+                E_B_error[i+GEMPIC_VDIM] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
             }
         }
         return(E_B_error);
