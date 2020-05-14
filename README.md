@@ -49,3 +49,9 @@ Steps to set up gempic in QT-creator:
 1.) In QT-creator: File -> Open file or project -> click on CMakeLists.txt file  
 2.) On Sidebar, click Projects and set correct build directory  
 3.) If project doesn't compile automatically: close qccreator and reopen it, load project  
+
+Output of simulation
+=====================
+The executable simulations/PIC/PIC generates output. At the end of the simulation it generates the output PIC\_save.output containing information about all the steps. This information is also written into a file called PIC\_save_tmp.output every 5 steps in case the simulation is interrupted. Each row contains the following information for one step:  
+time | Ex | Ey | Ez | Bx | By | Bz | kinetic energy | momentumx | momentumy | momentumz  
+where the 2-norm has been applied to all the fields. If the simulation is run for dimensions other than 3d3v, then the corresponding components are not part of the output.
