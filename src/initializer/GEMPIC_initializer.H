@@ -1,6 +1,5 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
-
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
 #include <AMReX_BoxArray.H>
@@ -10,7 +9,8 @@
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
 
-#include <gempic_Config.H>
+#include <GEMPIC_Config.H>
+
 #ifndef INITIALIZER_H_
 #define INITIALIZER_H_
 

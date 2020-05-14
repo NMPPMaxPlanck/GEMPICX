@@ -16,12 +16,12 @@
 
 #include <AMReX.H>
 #include <AMReX_Print.H>
-#include <maxwell_yee.H>
-#include <gempic_Config.H>
-
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Print.H>
+
+#include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_Config.H>
 
 using namespace std;
 using namespace amrex;

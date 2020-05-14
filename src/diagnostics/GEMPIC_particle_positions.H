@@ -1,11 +1,6 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
 #include <AMReX_PlotFileUtil.H>
-
-#include <particle_groups.H>
-#include <infrastructure.H>
-#include <maxwell_yee.H>
-
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
 #include <AMReX_BoxArray.H>
@@ -14,6 +9,11 @@
 #include <AMReX_Box.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
+
+#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_maxwell_yee.H>
+
 #ifndef PARTICLE_POSITION_H_
 #define PARTICLE_POSITION_H_
 

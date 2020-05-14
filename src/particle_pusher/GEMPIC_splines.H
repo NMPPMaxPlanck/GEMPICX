@@ -8,13 +8,12 @@
 #include <AMReX_Box.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
-
 #include <AMReX_Particle.H>
 #include <AMReX_Particles.H>
 #include <AMReX_ArrayOfStructs.H>
 #include <AMReX_StructOfArrays.H>
 
-#include <infrastructure.H>
+#include <GEMPIC_infrastructure.H>
 
 #ifndef SPLINES_H_
 #define SPLINES_H_

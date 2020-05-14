@@ -1,8 +1,5 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
-#include <particle_groups.H>
-#include <infrastructure.H>
-
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
 #include <AMReX_BoxArray.H>
@@ -12,6 +9,10 @@
 #include <AMReX_Particles.H>
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_CoordSys.H>
+
+#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_infrastructure.H>
+
 #ifndef SAMPLER_H_
 #define SAMPLER_H_
 

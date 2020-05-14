@@ -10,8 +10,9 @@
 #include <AMReX_Particles.H>
 #include <AMReX_FArrayBox.H>
 #include <cmath>
-#include <gempic_Config.H>
-#include <splines.H>
+
+#include <GEMPIC_Config.H>
+#include <GEMPIC_splines.H>
 
 template <typename P>
 void gempic_deposit_rho (P const& p, amrex::Real charge,

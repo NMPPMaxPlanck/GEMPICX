@@ -5,7 +5,6 @@
 #include <AMReX_FillPatchUtil.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_PlotFileUtil.H>
-
 #include <AMReX_RealBox.H>
 #include <AMReX_REAL.H>
 #include <AMReX_BoxArray.H>
@@ -17,8 +16,9 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_CoordSys.H>
 #include <AMReX_MFIter.H>
-#include <infrastructure.H>
-#include <gempic_norm.H>
+
+#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_gempic_norm.H>
 
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
