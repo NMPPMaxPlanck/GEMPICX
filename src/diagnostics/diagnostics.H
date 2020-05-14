@@ -140,27 +140,28 @@ public:
             partial = n_time;
         }
         std::ofstream ofsfun(filename, std::ofstream::out);
+        amrex::Print(ofsfun) << "# time   E components   B components   kinetic energy   momentum components " << std::endl;
         for (int step=0;step<=partial;step++){
-            amrex::Print(ofsfun) << dt*(step) << "," << Efield[step][0]
+            amrex::Print(ofsfun) << dt*(step) << " " << Efield[step][0]
                         #if (GEMPIC_VDIM > 1)
-                                 << "," << Efield[step][1]
+                                 << " " << Efield[step][1]
                         #endif
                         #if (GEMPIC_VDIM > 2)
-                                 << "," << Efield[step][2]
+                                 << " " << Efield[step][2]
                         #endif
-                                 << "," << Bfield[step][0]
+                                 << " " << Bfield[step][0]
                         #if (GEMPIC_BDIM > 1)
-                                 << "," << Bfield[step][1]
+                                 << " " << Bfield[step][1]
                         #endif
                         #if (GEMPIC_BDIM > 2)
-                                 << "," << Bfield[step][2]
+                                 << " " << Bfield[step][2]
                         #endif
-                                 << "," << kin[step] << "," << mom[step][0]
+                                 << " " << kin[step] << " " << mom[step][0]
                         #if (GEMPIC_VDIM > 1)
-                                 << "," << mom[step][1]
+                                 << " " << mom[step][1]
                         #endif
                         #if (GEMPIC_VDIM > 2)
-                                 << "," << mom[step][2]
+                                 << " " << mom[step][2]
                         #endif
                                  << std::endl;
         }
