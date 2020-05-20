@@ -168,7 +168,8 @@ void main_main ()
     // solve:
     diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
     loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k);
-    time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest);
+    std::ofstream ofs("PIC.output", std::ofstream::out);
+    time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
 }
 
 int main(int argc, char* argv[])

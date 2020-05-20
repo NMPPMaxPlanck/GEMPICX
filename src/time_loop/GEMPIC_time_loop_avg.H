@@ -24,7 +24,8 @@ void time_loop_avg (infrastructure infra,
                     maxwell_yee *mw_yee,
                     particle_groups *part_gr,
                     diagnostics *diagn,
-                    bool ctest = false) {
+                    bool ctest,
+                    std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
@@ -127,7 +128,7 @@ void time_loop_avg (infrastructure infra,
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
         if (ctest) {
-            std::cout << t_step << " " << (*diagn).Efield[t_step][0]
+            amrex::Print(*ofs) << t_step << " " << (*diagn).Efield[t_step][0]
                         #if (GEMPIC_VDIM > 1)
                                  << " " << (*diagn).Efield[t_step][1]
                         #endif
