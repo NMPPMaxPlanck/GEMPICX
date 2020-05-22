@@ -10,7 +10,9 @@ message("AMReX Dir is ${AMReX_ROOT}")
 
 # Find the AMReX library
 find_package( AMReX REQUIRED HINTS ${AMReX_ROOT}/lib/cmake/AMReX )
-set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;gfortran )
+# This is an old version to link with amrex (gfortran and intel versions, respectively
+#set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;gfortran )
+#set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;ifcore )
 include_directories( ${AMReX_ROOT}/include )
 #message("AMReX_LIBRARIES ${AMReX_LIBRARIES}")
 #message("AMReX Dir is ${AMReX_DIR} ${AMReX_ROOT}")
