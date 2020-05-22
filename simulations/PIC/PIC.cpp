@@ -6,17 +6,25 @@
 #include <AMReX_Print.H>
 #include <AMReX_Particles.H>
 
-#include <GEMPIC_particle_groups.H>
-#include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_sampler.H>
-#include <GEMPIC_initializer.H>
-#include <GEMPIC_time_loop_avg.H>
-#include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_initializer.H>
+#include <GEMPIC_loop_preparation.H>
+#include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
+#include <GEMPIC_sampler.H>
+#include <GEMPIC_time_loop_avg.H>
 
 using namespace std;
 using namespace amrex;
+using namespace Gempic;
+
+using namespace Diagnostics_Output;
+using namespace Field_solvers;
+using namespace Init;
+using namespace Particles;
+using namespace Sampling;
+using namespace Time_Loop;
 
 double WF_Weibel (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, double k) {
     double alpha = 0.;

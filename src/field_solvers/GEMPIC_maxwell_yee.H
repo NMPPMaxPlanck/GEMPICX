@@ -1,28 +1,33 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_MLNodeLaplacian.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_FillPatchUtil.H>
-#include <AMReX_MLMG.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
-#include <AMReX_BoxArray.H>
-#include <AMReX_Geometry.H>
-#include <AMReX_IntVect.H>
-#include <AMReX_IndexType.H>
 #include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_MultiFab.H>
+#include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
+#include <AMReX_FillPatchUtil.H>
+#include <AMReX_Geometry.H>
+#include <AMReX_IndexType.H>
+#include <AMReX_IntVect.H>
 #include <AMReX_MFIter.H>
+#include <AMReX_MLMG.H>
+#include <AMReX_MLNodeLaplacian.H>
+#include <AMReX_MultiFab.H>
+#include <AMReX_ParmParse.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
-#include <GEMPIC_infrastructure.H>
 #include <GEMPIC_gempic_norm.H>
+#include <GEMPIC_infrastructure.H>
+
+using namespace Infra;
+using namespace Utils;
 
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
 
+namespace Gempic {
+namespace Field_solvers {
 class maxwell_yee
 {
 public:
@@ -627,5 +632,7 @@ private:
     }
 
 };
+}
+}
 
 #endif

@@ -1,23 +1,31 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
 #include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
-#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_diagnostics.H>
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_diagnostics.H>
+#include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
+
+using namespace Diagnostics_Output;
+using namespace Field_solvers;
+using namespace Infra;
+using namespace Particles;
 
 #ifndef LOOP_PREPARATION_H_
 #define LOOP_PREPARATION_H_
+
+namespace Gempic {
+namespace Time_Loop {
 
 void loop_preparation (infrastructure infra,
                        maxwell_yee *mw_yee,
@@ -99,6 +107,8 @@ void loop_preparation (infrastructure infra,
     //Save "step 0" data
     (*diagn).save_step_data(0, infra, mw_yee, part_gr); //false: slices are not saved
 
+}
+}
 }
 
 

@@ -1,23 +1,30 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
-#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_gempic_norm.H>
+#include <GEMPIC_particle_groups.H>
+
+using namespace Field_solvers;
+using namespace Infra;
+using namespace Particles;
+using namespace Utils;
 
 #ifndef DIAGNOSTICS_H_
 #define DIAGNOSTICS_H_
 
+namespace Gempic {
+namespace Diagnostics_Output {
 class diagnostics
 {
 public:
@@ -167,5 +174,7 @@ public:
         ofsfun.close();
     }
 };
+}
+}
 
 #endif
