@@ -1,14 +1,12 @@
 add_subdirectory( reference_results )
 
 add_executable ( PIC PIC.cpp )
-add_executable ( small_example small_example.cpp )
 add_executable ( AmrexSolver AmrexSolver.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
 target_link_libraries( PIC ${AMReX_LIBRARIES} )
-target_link_libraries( small_example ${AMReX_LIBRARIES} )
 target_link_libraries( AmrexSolver ${AMReX_LIBRARIES} )
 include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
 include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
