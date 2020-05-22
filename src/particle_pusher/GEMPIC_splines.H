@@ -1,22 +1,27 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_ArrayOfStructs.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
 #include <AMReX_Particle.H>
 #include <AMReX_Particles.H>
-#include <AMReX_ArrayOfStructs.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 
 #include <GEMPIC_infrastructure.H>
 
 #ifndef SPLINES_H_
 #define SPLINES_H_
+
+using namespace Infra;
+
+namespace Gempic {
+namespace Particles {
 
 class splines
 {
@@ -96,6 +101,8 @@ public:
     }
 
 };
+}
+}
 
 #endif
 

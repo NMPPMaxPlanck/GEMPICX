@@ -1,19 +1,23 @@
 
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
 #include <AMReX_Particles.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
 
-#include <GEMPIC_particle_groups.H>
-#include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_initializer.H>
-#include <GEMPIC_splines.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_initializer.H>
+#include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_splines.H>
 
 using namespace std;
 using namespace amrex;
+using namespace Gempic;
+
+using namespace Field_solvers;
+using namespace Init;
+using namespace Particles;
 
 double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
     return(0.0);

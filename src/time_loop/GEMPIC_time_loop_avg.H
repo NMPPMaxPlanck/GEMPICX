@@ -1,24 +1,32 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
 #include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
-#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_diagnostics.H>
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_diagnostics.H>
+#include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_positions.H>
 
+using namespace Diagnostics_Output;
+using namespace Field_solvers;
+using namespace Infra;
+using namespace Particles;
+
 #ifndef TIME_LOOP_AVG_H_
 #define TIME_LOOP_AVG_H_
+
+namespace Gempic {
+namespace Time_Loop {
 
 void time_loop_avg (infrastructure infra,
                     maxwell_yee *mw_yee,
@@ -154,6 +162,8 @@ void time_loop_avg (infrastructure infra,
     } // end time loop
 
     (*diagn).save_all_to_textfile((*mw_yee).dt);
+}
+}
 }
 
 

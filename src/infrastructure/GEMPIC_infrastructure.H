@@ -1,18 +1,25 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
+
 #include <GEMPIC_initializer.H>
+
+using namespace Gempic;
+
+using namespace Init;
 
 #ifndef INFRASTRUCTURE_H_
 #define INFRASTRUCTURE_H_
 
+namespace Gempic {
+namespace Infra {
 class infrastructure
 {
 public:
@@ -68,5 +75,7 @@ public:
         }
     }
 };
+}
+}
 
 #endif

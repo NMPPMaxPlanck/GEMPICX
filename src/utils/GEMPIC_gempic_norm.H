@@ -1,19 +1,24 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
 #include <GEMPIC_infrastructure.H>
 
+using namespace Infra;
+
 #ifndef GEMPIC_NORM_H_
 #define GEMPIC_NORM_H_
+
+namespace Gempic {
+namespace Utils {
 
 amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
     //TODOrefine
@@ -36,6 +41,8 @@ amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
                 ;
     }
     return(result);
+}
+}
 }
 
 #endif

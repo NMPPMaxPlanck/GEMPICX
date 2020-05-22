@@ -7,12 +7,16 @@
 #ifndef PARTICLE_MESH_COUPLING_H_
 #define PARTICLE_MESH_COUPLING_H_
 
-#include <AMReX_Particles.H>
-#include <AMReX_FArrayBox.H>
 #include <cmath>
+
+#include <AMReX_FArrayBox.H>
+#include <AMReX_Particles.H>
 
 #include <GEMPIC_Config.H>
 #include <GEMPIC_splines.H>
+
+namespace Gempic {
+namespace Particles {
 
 template <typename P>
 void gempic_deposit_rho (P const& p, amrex::Real charge,
@@ -314,6 +318,9 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
 
 
     return(newPos);
+}
+
+}
 }
 
 #endif

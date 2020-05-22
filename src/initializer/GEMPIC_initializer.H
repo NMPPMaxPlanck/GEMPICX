@@ -1,18 +1,21 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
 #include <GEMPIC_Config.H>
 
 #ifndef INITIALIZER_H_
 #define INITIALIZER_H_
+
+namespace Gempic {
+namespace Init {
 
 class initializer
 {
@@ -88,5 +91,7 @@ public:
 
     }
 };
+}
+}
 
 #endif

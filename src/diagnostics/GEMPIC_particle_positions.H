@@ -1,22 +1,28 @@
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_RealBox.H>
-#include <AMReX_REAL.H>
+#include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
+#include <AMReX_CoordSys.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
-#include <AMReX_Box.H>
-#include <AMReX_DistributionMapping.H>
-#include <AMReX_CoordSys.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+#include <AMReX_REAL.H>
+#include <AMReX_RealBox.H>
 
-#include <GEMPIC_particle_groups.H>
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_particle_groups.H>
+
+using namespace Field_solvers;
+using namespace Infra;
+using namespace Particles;
 
 #ifndef PARTICLE_POSITION_H_
 #define PARTICLE_POSITION_H_
 
+namespace Gempic {
+namespace Diagnostics_Output {
 void save_particle_positions (particle_groups *ppg, std::string ID = "", int species = 0){
     std::ofstream ofss("particle_output/x/P_" + ID + ".output", std::ofstream::out);
     for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
@@ -55,6 +61,8 @@ void save_particle_velocities (particle_groups *ppg, std::string ID = "", int sp
         }
     }
     ofss.close();
+}
+}
 }
 
 

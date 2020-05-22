@@ -1,6 +1,6 @@
 #include <AMReX.H>
-#include <AMReX_MLNodeLaplacian.H>
 #include <AMReX_MLMG.H>
+#include <AMReX_MLNodeLaplacian.H>
 
 using namespace amrex;
 
