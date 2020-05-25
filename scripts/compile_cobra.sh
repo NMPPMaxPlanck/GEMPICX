@@ -1,0 +1,36 @@
+SOURCE_DIRECTORY=`pwd`/../
+SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
+AMREX_DIRECTORY=`pwd`/../../amrex
+AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
+
+echo $SOURCE_DIRECTORY
+echo $AMREX_DIRECTORY
+
+module purge
+module load  intel/19.0.4
+module load  impi/2019.4    
+module load  mkl/2019.4 
+module load cmake/3.15
+
+BUILD_DIR=/ptmp/$USER/gempic_obj
+
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
+
+mkdir -p amrex
+cd amrex
+
+#cmake -DDIM=3 -DCMAKE_INSTALL_PREFIX=$BUILD_DIR/amrex_install -DENABLE_PARTICLES=ON -D ENABLE_FORTRAN=NO $AMREX_DIRECTORY
+#cmake -DDIM=3 -DCMAKE_INSTALL_PREFIX=$BUILD_DIR/amrex_install -DENABLE_PARTICLES=NO $AMREX_DIRECTORY
+#cmake -DDIM=3 -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D ENABLE_FORTRAN=NO -D ENABLE_PARTICLES=ON -D CMAKE_INSTALL_PREFIX=$BUILD_DIR/amrex_install $AMREX_DIRECTORY
+
+cmake -DDIM=3 -D USE_RPATH=true -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_FORTRAN_COMPILER=mpiifort -D ENABLE_PARTICLES=ON -D CMAKE_INSTALL_PREFIX=$BUILD_DIR/amrex_install $AMREX_DIRECTORY
+
+make -j 10
+make install
+
+cd ..
+mkdir -p gempic
+cd gempic
+cmake -D AMReX_ROOT=$BUILD_DIR/amrex_install -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_FORTRAN_COMPILER=mpiifort -D CMAKE_CXX_FLAGS="-std=c++14" $SOURCE_DIRECTORY
+make
