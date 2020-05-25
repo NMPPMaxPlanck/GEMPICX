@@ -17,6 +17,9 @@
 namespace Gempic {
 namespace Init {
 
+/**
+ * Class containing all initialization parameters.
+ */
 class initializer
 {
 public:
@@ -48,8 +51,15 @@ public:
     double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k);
 
     // constructor
+    /**
+     * Constructor.
+     */
     initializer (){}
 
+    /**
+     * Manually set the attributes of initializer. The attributes are the number
+     * of cells @p NC, ...
+     */
     void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
                                     std::array<amrex::Real, GEMPIC_NUMSPEC> CH,
                                     std::array<amrex::Real, GEMPIC_NUMSPEC> MS,

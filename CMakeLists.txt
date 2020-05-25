@@ -36,4 +36,6 @@ include(cmake/define_ctest.cmake)
 add_subdirectory(src)
 # Add subfolder with simulations
 add_subdirectory(simulations)
+# Add doxygen documentation
+add_subdirectory(doc)
 
