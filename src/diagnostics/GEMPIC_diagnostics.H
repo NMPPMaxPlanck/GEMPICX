@@ -25,6 +25,10 @@ using namespace Utils;
 
 namespace Gempic {
 namespace Diagnostics_Output {
+
+/**
+ * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored and written into files. Slice Data of fields can be generated.
+ */
 class diagnostics
 {
 public:
@@ -39,9 +43,16 @@ public:
     std::string sim_name;
 
     // The default constructor.
+    /**
+     * Default Constructor.
+     */
     diagnostics ();
 
     // Explicit const
+    /**
+     * Explicit constructor: object can be initialized by passing the parameters: number of time steps @p n_t, the frequency with which to output positins @p fx and velocities @p fv,
+     * the frequency with which to generate slices and the name of the simulation @p sim_name.
+     */
     diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n){
         n_time = n_t;
         freq_x = fx;
@@ -51,6 +62,9 @@ public:
     }
 
     // save position and velocities
+    /**
+     * This function saves all the relevant data for the step in field arrays and saves SlicePlots if needed according to the Slice Plot frequency.
+     */
     void save_step_data(int step,
                         infrastructure infra,
                         maxwell_yee *mw_yee,
@@ -141,6 +155,10 @@ public:
         }
     }
 
+    /**
+     * This function writes the data from all steps so far (at time @p dt) into an output file PIC_save.output or a file of alternative name if @p filename is passed. If only a
+     * subset of the data should be saved, the argument @p partial, setting the last index to be saved, should be passed.
+     */
     void save_all_to_textfile(amrex::Real dt, std::string filename = "PIC_save.output", int partial = 0){
         if (partial == 0){
             partial = n_time;

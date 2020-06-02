@@ -18,7 +18,7 @@ namespace Gempic {
 namespace Init {
 
 /**
- * Class containing all initialization parameters.
+ * Class containing all initialization parameters. At the moment it is possible to initialize by passing the parameters. In the future it will also be possible to initialize by passing a file.
  */
 class initializer
 {
@@ -58,7 +58,9 @@ public:
 
     /**
      * Manually set the attributes of initializer. The attributes are the number
-     * of cells @p NC, ...
+     * of cells @p NC, the maximal grid size @p MG, the periodicity @p PER, the number of ghost cells @p NG, the time step @p DT, the number of time steps @p NST, the particle charges @p CH,
+     * the particle masses @p MS, the number of particles per cell @p NPC, the mean of the velocity distributions @p VM, the deviation of the velicity distributions @p VD, the weight of the velocity
+     * distributions @p VW and the particle distribution function @p WF.
      */
     void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
                                     std::array<amrex::Real, GEMPIC_NUMSPEC> CH,
@@ -97,6 +99,9 @@ public:
         weight_fun = *WF;
     }
 
+    /**
+     * TODO: initialize the parameters of class by reading in a file
+     */
     void initialize_from_file(){
 
     }

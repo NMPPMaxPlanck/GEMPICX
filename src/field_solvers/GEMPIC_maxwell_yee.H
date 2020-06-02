@@ -28,6 +28,13 @@ using namespace Utils;
 
 namespace Gempic {
 namespace Field_solvers {
+/**
+ * Class storing all the field information (both analytical (@p E_sol_Array, @p B_sol_Array) and numerical (@p E_Array, @p B_Array, @p J_Array), infrastructure information
+ * for the fields (@p E_Index, @p B_Index, @p Nghost, @p Ncomp, @p time) and the necessary components to solve the Poisson problem for the first step (@p phi_init, @p rho,
+ * @p phi, @p sigma). In addition, the class can initialize the fields (init_E_B, init_B) and the functions for the Poisson problem (init_rho_phi), advance the complete
+ * problem (advance) or parts of it (advance_E, advance_B, advance_time), initialize E by solving the Poisson problem (solve_poisson), fill ghost cells of all relevant MultiFabs
+ * (FillBD), compute the analytical solution (exactSolution) and compute the error of the numerical solution (computeError).
+ */
 class maxwell_yee
 {
 public:
@@ -56,9 +63,15 @@ private:
 public:
 
     // The default constructor.
+    /**
+     * Default Constructor.
+     */
     maxwell_yee ();
 
     // Explicit const
+    /**
+     * Explicit constructor: all class attributes can be initialized by passing an object of class initializer, infrastructure and the number of ghost cells.
+     */
     maxwell_yee (initializer init, infrastructure ifr, int NG){
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
@@ -110,6 +123,9 @@ public:
 
     }
 
+    /**
+     * Initialize E and B field for time t=0 with a given array of functions.
+     */
     void init_E_B (double (*fields[GEMPIC_VDIM+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t),infrastructure ifr){
 
         std::array<double,GEMPIC_SPACEDIM> x;
@@ -181,6 +197,9 @@ public:
         }
     }
 
+    /**
+     * Initialize B field for time t=0 with a given array of functions.
+     */
     void initB (infrastructure infra,
                 double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
                 amrex::Real initk) {
@@ -217,6 +236,9 @@ public:
         }
     }
 
+    /**
+     * Fill Boundaries of all relevant Fabs (E, J, B, rho).
+     */
     void FillBD (infrastructure ifr){
         for(int cc=0;cc<GEMPIC_VDIM;cc++){
             (*E_Array[cc]).FillBoundary(ifr.geom.periodicity());
@@ -231,10 +253,16 @@ public:
         rho.FillBoundary(ifr.geom.periodicity());
     }
 
+    /**
+     * Advance time
+     */
     void advance_time () {
         time = time+dt;
     }
 
+    /**
+     * Advance E by a time step of length @p dt_step with a Yee scheme
+     */
     void advance_E (infrastructure ifr, amrex::Real dt_step){
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
@@ -310,6 +338,9 @@ public:
         }
     }
 
+    /**
+     * Advance B by a time step of length @p dt_step with a Yee scheme
+     */
     void advance_B (infrastructure ifr, amrex::Real dt_step){
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
@@ -374,6 +405,9 @@ public:
         }
     }
 
+    /**
+     * Advance time and both fields by a time step of length @p dt_step with a Yee scheme
+     */
     void advance (infrastructure ifr, amrex::Real dt_step){
 
         time = time+dt_step;
@@ -382,6 +416,9 @@ public:
         advance_B(ifr, dt_step);
     }
 
+    /**
+     * Initialize rho and phi with given funtions
+     */
     void init_rho_phi(double phi_fun(std::array<double,GEMPIC_SPACEDIM> x),
                       double rho_fun(std::array<double,GEMPIC_SPACEDIM> x),
                       infrastructure ifr){
@@ -423,6 +460,9 @@ public:
         phi.FillBoundary(ifr.geom.periodicity());
     }
 
+    /**
+     * Initialize E by solving Poisson problem in two steps: 1) use the MLMG solver of amrex to solve rho -> phi 2) use differences for phi -> E
+     */
     void solve_poisson(infrastructure ifr, amrex::Real reltol = 1.e-11){
         //--------------------------------------------------------------------------------
         // rho
@@ -526,6 +566,9 @@ public:
 
     }
 
+    /**
+     * Compute norm of errors of E and B field from function with exact solution
+     */
     std::array<amrex::Real,GEMPIC_VDIM+GEMPIC_BDIM> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
                                                                  bool bool_B,
                                                                  infrastructure ifr){
@@ -554,6 +597,9 @@ public:
 
 private:
 
+    /**
+     * Fill the MultiFabs containing the analytical solution with the solution by evaluating the given function.
+     */
     void exactSolution(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
                        bool bool_B,
                        infrastructure ifr){

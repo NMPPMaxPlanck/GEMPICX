@@ -20,6 +20,10 @@ using namespace Init;
 
 namespace Gempic {
 namespace Infra {
+
+/**
+ * Class containing all the necessary structures (such as the @p domain and the @p distriMap) and information (such as @p dx and @p n_cell).
+ */
 class infrastructure
 {
 public:
@@ -39,9 +43,15 @@ public:
     std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
     // The default constructor.
+    /**
+     * Default Constructor.
+     */
     infrastructure ();
 
     // Explicit const
+    /**
+     * Explicit constructor: all class attributes can be initialized by passing an object of class initializer.
+     */
     infrastructure (initializer init){
         n_cell = init.n_cell;
         max_grid_size = init.max_grid_size;
