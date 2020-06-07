@@ -52,44 +52,55 @@ double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
 
 void main_main ()
 {
-    int testcase = 0; // 0 -> Weibel, 1 -> Landau
-    std::string sim_name = "Weibel";
-    bool ctest = false;
 
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
-    // ctest:
-    amrex::IntVect n_cell(AMREX_D_DECL(24,8,8)); //number of cells in the three dimensions, ratio should not be too big
-    int n_part_per_cell = 100; // number of particles per cell
-    int n_steps = 10; // number of steps
-    ctest = true;
 
-    // regular:
-    //amrex::IntVect n_cell(AMREX_D_DECL(24,8,8)); //number of cells in the three dimensions, ratio should not be too big
-    //int n_part_per_cell = 100; // number of particles per cell
-    //int n_steps = 100000; // number of steps
+    // compile parameters
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
+    int Nghost = maxdeg;
 
-    // for running on SUPER-MUC:
-    //amrex::IntVect n_cell(AMREX_D_DECL(32,32,32)); //number of cells in the three dimensions, ratio should not be too big
-    //int n_part_per_cell = 1000; // number of particles per cell
-    //int n_steps = 10; // number of steps
+    // initialize parameters
+    int testcase;
+    std::string sim_name;
+    bool ctest;
+    std::array<int,3> n_cell_vector;
+    int n_part_per_cell;
+    int n_steps;
+    int freq_x;
+    int freq_v;
+    int freq_slice;
+    std::array<int,3> is_periodic_vector;
+    int max_grid_size;
+    amrex::Real dt;
+    std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
+    std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
+    amrex::Real k;
 
-    // ------------OUTPUT-FREQUENCY--------------------------------------------------------
-    int freq_x = n_steps+1;
-    int freq_v = n_steps+1;
-    int freq_slice = n_steps+1;
+    // parse parameters
+    amrex::ParmParse pp;
+    pp.get("testcase",testcase);
+    pp.get("sim_name",sim_name);
+    pp.get("ctest",ctest);
+    pp.get("n_cell_vector",n_cell_vector);
+    pp.get("n_part_per_cell",n_part_per_cell);
+    pp.get("n_steps",n_steps);
+    pp.get("freq_x",freq_x);
+    pp.get("freq_v",freq_v);
+    pp.get("freq_slice",freq_slice);
+    pp.get("is_periodic_vector",is_periodic_vector);
+    pp.get("max_grid_size",max_grid_size);
+    pp.get("dt",dt);
+    pp.get("charge",charge);
+    pp.get("mass",mass);
+    pp.get("k",k);
 
-    // ------------------------------------------------------------------------------
-    // ------------------------------------------------------------------------------
+    // initialize amrex data structures from parameters
+    amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
+    amrex::IntVect is_periodic(AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2]));
 
-    //std::cout << "x-dim: " << AMREX_SPACEDIM << std::endl;
-    //std::cout << "v-dim: " << GEMPIC_SPACEDIM << std::endl;
-    //------------------------------------------------------------------------------
-
-    //initializer
-    initializer init;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-
+    // parameters not yet parsed in
     double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
     initB[0] = B_x;
 #if (GEMPIC_BDIM > 1)
@@ -139,19 +150,13 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
-    switch (testcase) {
-    case 0:
-        init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,1.25,
+    // ------------------------------------------------------------------------------
+    // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
+
+    //initializer
+    initializer init;
+    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                         VM,VD,VW,WF_Weibel);
-        break;
-    case 1:
-        init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,n_steps,{-1.0},{1.0},n_part_per_cell,0.5,
-                                        VM,VD,VW,WF_Landau);
-        break;
-    }
-    //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
     
     // infrastructure
     infrastructure infra(init);

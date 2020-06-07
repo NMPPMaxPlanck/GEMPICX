@@ -1,0 +1,24 @@
+# General setting
+testcase = 0 # 0 -> Weibel, 1 -> Landau
+sim_name = "Weibel"
+ctest = false
+
+# Grid parameters
+n_cell_vector = 32 32 32
+max_grid_size = 4
+is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+n_part_per_cell = 1000 # number of particles per cell
+charge = -1.0 # vector (one entry per species)
+mass = 1.0 # vector (one entry per species)
+
+# Case parameters
+k = 1.25 # 1.25 for Weibel, 0.5 for Landau
+
+# Simulation parameters
+n_steps = 10
+dt = 0.02
+freq_x = 11
+freq_v = 11 
+freq_slice = 11 
