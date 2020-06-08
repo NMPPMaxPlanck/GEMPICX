@@ -182,6 +182,7 @@ void main_main ()
     diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
     loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k);
     std::ofstream ofs("PIC.output", std::ofstream::out);
+    amrex::Print(ofs) << endl;
     time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
 }
 

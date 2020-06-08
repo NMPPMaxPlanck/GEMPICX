@@ -92,7 +92,7 @@ void main_main ()
 
     // Constant case
     mw_yee.rho.setVal(C, 0);
-    Print(ofs) << "Constant case: " << endl;
+    Print(ofs) << endl << "Constant case: " << endl;
     Print(ofs).SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
     Print(ofs).SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
     Print(ofs).SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;

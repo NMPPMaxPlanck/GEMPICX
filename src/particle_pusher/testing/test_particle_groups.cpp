@@ -88,6 +88,7 @@ void main_main ()
     std::array<amrex::Real,GEMPIC_SPACEDIM> position;
 
     std::ofstream ofs("test_particle_groups.output", std::ofstream::out);
+    amrex::Print(ofs) << endl;
 
     for (amrex::MFIter mfi= (*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
         const amrex::Box& bx = mfi.validbox();

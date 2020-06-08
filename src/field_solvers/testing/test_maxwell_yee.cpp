@@ -163,9 +163,10 @@ void main_main ()
     mw_yee.init_E_B(fields, infra);
 
     std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
-    Print(ofs) << "Maxwell" << endl;
-    std::cout << "step: " << 0 << std::endl;
+    std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.computeError(fields, true, infra);
+    Print(ofs) << endl;
+    Print(ofs) << "Maxwell" << endl;
     Print(ofs) << "step " << 0 << endl;
     Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                           #if (GEMPIC_VDIM > 1)
