@@ -1,0 +1,25 @@
+# General setting
+testcase = 0        # (integer) 0 -> Weibel, 1 -> Landau
+sim_name = "Weibel" # (string) name to include in saved files
+ctest = false       # (bool) is the simulation a ctest?
+
+# Grid parameters
+n_cell_vector = 24 8 8      # (integers) GEMPIC_DIM many: each describes the number of cells in each direction
+max_grid_size = 4           # (integer) biggest possible size of a tile for dividing grid into tiles
+is_periodic_vector = 1 1 1  # (integers) GEMPIC_DIM many, one for each direction: 1 -> periodic, 0 -> else
+
+# Particle parameters
+n_part_per_cell = 100   # (integer) number of particles per cell
+charge = -1.0           # (doubles) GEMPIC_NUMSPEC many, one entry per species
+mass = 1.0              # (doubles) GEMPIC_NUMSPEC many, one entry per species
+
+# Case parameters
+k = 1.25    # (double) 1.25 for Weibel, 0.5 for Landau
+
+# Simulation parameters
+n_steps = 100000    # (integer) number of simulation steps
+dt = 0.02           # (double) size of time step
+freq_x = 100001     # (integer) how often should the x-Coordinates of particles be saved into a file
+freq_v = 100001     # (integer) how often should the v-Coordinates of particles be saved into a file
+freq_slice = 100001 # (integer) how often should slices of the fields be saved into a file
+
