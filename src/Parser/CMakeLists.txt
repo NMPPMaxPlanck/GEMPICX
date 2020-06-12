@@ -1,4 +1,4 @@
-add_executable ( Parser GpuParser.cpp WarpXParser.cpp WarpXUtil.cpp wp_parser_c.c wp_parser_y.c wp_parser.lex.c wp_parser.tab.c)
+add_executable ( Parser test_parse.cpp WarpXParser.cpp WarpXUtil.cpp wp_parser_c.c wp_parser_y.c wp_parser.lex.c wp_parser.tab.c)
 #add_executable ( GpuParser GpuParser.cpp )
 #add_executable ( WarpXParser WarpXParser.cpp )
 #add_executable ( WarpXUtil WarpXUtil.cpp )
@@ -19,6 +19,6 @@ target_link_libraries( Parser AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran
 #target_link_libraries( wp_parser_lex AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 #target_link_libraries( wp_parser_tab AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
-add_subdirectory(testing)
+#add_subdirectory(testing)
 
 

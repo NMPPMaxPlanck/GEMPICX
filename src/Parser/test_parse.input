@@ -1,2 +1,2 @@
-function_sin(x) = "sin(x)"
+function_sin = "sin(x)"
 

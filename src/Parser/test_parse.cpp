@@ -1,25 +1,46 @@
-# General setting
-testcase = 0 # 0 -> Weibel, 1 -> Landau
-sim_name = "Weibel"
-ctest = true
+#include <AMReX.H>
+#include <AMReX_ParmParse.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
 
-# Grid parameters
-n_cell_vector = 24 8 8
-max_grid_size = 4
-is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
+#include <WarpXParser.H>
+#include <WarpXParserWrapper.H>
+#include <WarpXUtil.H>
 
-# Particle parameters
-n_part_per_cell = 100 # number of particles per cell
-charge = -1.0 # vector (one entry per species)
-mass = 1.0 # vector (one entry per species)
+void main_main ()
+{
+    std::cout << "Parsing test for parsing functions: " << std::endl;
+   
+    std::ofstream ofs("test_parse.output", std::ofstream::out);
+    amrex::Print(ofs) << "Parsing" << std::endl;
+    
+    //---------------------------------------------------------------------------
+    amrex::ParmParse pp;
+    std::string str_function;
+    
+    pp.get("function_sin", str_function);
+    
+    const int N = 3;
+    std::unique_ptr<ParserWrapper<N> > function_parser;
+    function_parser.reset(new ParserWrapper<N>(makeParser(str_function,{"x", "y", "z"})));
+    ParserWrapper<3> *fct_par = function_parser.get();
 
-# Case parameters
-k = 1.25 # 1.25 for Weibel, 0.5 for Landau
+    amrex::Real value = 0.0;
+    //std::cout << "sin(" << value << ") is " << (*fct_par)(value) << std::endl;
+    //---------------------------------------------------------------------------
+    
+    ofs.close();
+    
+}
 
-# Simulation parameters
-n_steps = 10
-dt = 0.02
-freq_x = 11 
-freq_v = 11 
-freq_slice = 11 
+int main(int argc, char* argv[])
+{
+    amrex::Initialize(argc,argv);
+
+    main_main();
+
+    amrex::Finalize();
+}
+
+
 
