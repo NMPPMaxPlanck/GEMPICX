@@ -3,6 +3,7 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include <GpuParser.H>
 #include <WarpXParser.H>
 #include <WarpXParserWrapper.H>
 #include <WarpXUtil.H>
