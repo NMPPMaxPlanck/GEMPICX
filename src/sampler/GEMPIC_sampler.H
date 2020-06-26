@@ -23,7 +23,7 @@ namespace Gempic {
 namespace Sampling {
 
 void init_particles_cellwise(infrastructure infra,
-                             particle_groups *ppg,
+                             particle_groups &ppg,
                              initializer init,
                              int species,
                              int rSeed = 925){
@@ -77,13 +77,13 @@ void init_particles_cellwise(infrastructure infra,
         }
 
         //MFI that adds particle from the model cell to all cells
-        for (amrex::MFIter mfi= (*(*ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
+        for (amrex::MFIter mfi= (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
             using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
-            amrex::ParticleTile<4, 0, 0, 0> particles = (*(*ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<4, 0, 0, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
             for(int k=lo[2]; k<=hi[2]; k++){
@@ -108,7 +108,7 @@ void init_particles_cellwise(infrastructure infra,
                                 *infra.dx[2]
         #endif
                                 ;
-                        (*ppg).add_particle(shifted_position, velocity, weight, particles);
+                        (ppg).add_particle(shifted_position, velocity, weight, particles);
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }

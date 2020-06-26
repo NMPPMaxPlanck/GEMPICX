@@ -171,7 +171,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise(infra, &part_gr, init, species);
+    init_particles_cellwise(infra, part_gr, init, species);
+    //init_particles_cellwise_2(infra, &part_gr, init, species, WF_parse, &x, &y, &z);
 
     save_particle_positions(&part_gr, sim_name + "_0");
     save_particle_velocities(&part_gr, sim_name + "_0");
