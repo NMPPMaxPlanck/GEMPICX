@@ -23,3 +23,6 @@ freq_x = 100001     # (integer) how often should the x-Coordinates of particles 
 freq_v = 100001     # (integer) how often should the v-Coordinates of particles be saved into a file
 freq_slice = 100001 # (integer) how often should slices of the fields be saved into a file
 
+# Function parameters
+alpha = 0.0                         # (double) parameter for weight function (see below)
+WF = "1.0 + alpha * cos(kvar * x)"  # (string) is parsed into weight function for particle distibution

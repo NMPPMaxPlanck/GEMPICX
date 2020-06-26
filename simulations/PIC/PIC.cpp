@@ -1,3 +1,4 @@
+#include <tinyexpr.h>
 
 #include <AMReX.H>
 #include <AMReX_Print.H>
@@ -77,6 +78,8 @@ void main_main ()
     std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
     std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
     amrex::Real k;
+    amrex::Real alpha;
+    std::string WF;
 
     // parse parameters
     amrex::ParmParse pp;
@@ -95,10 +98,19 @@ void main_main ()
     pp.get("charge",charge);
     pp.get("mass",mass);
     pp.get("k",k);
+    pp.get("alpha", alpha);
+    pp.get("WF",WF);
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
     amrex::IntVect is_periodic(AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2]));
+
+    // functions
+    double x, y, z;
+    int err;
+    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}, {"alpha", &alpha}};
+    int varcount = 5;
+    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
     // parameters not yet parsed in
     double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
@@ -171,8 +183,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise(infra, part_gr, init, species);
-    //init_particles_cellwise_2(infra, &part_gr, init, species, WF_parse, &x, &y, &z);
+    //init_particles_cellwise(infra, part_gr, init, species);
+    init_particles_cellwise_2(infra, part_gr, init, species, WF_parse, &x, &y, &z);
 
     save_particle_positions(&part_gr, sim_name + "_0");
     save_particle_velocities(&part_gr, sim_name + "_0");

@@ -23,3 +23,6 @@ freq_x = 100001
 freq_v = 100001 
 freq_slice = 100001 
 
+# Function parameters
+alpha = 0.0
+WF = "1.0 + alpha * cos(kvar * x)"
