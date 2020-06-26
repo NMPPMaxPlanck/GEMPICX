@@ -78,10 +78,6 @@ double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1.
 #endif
 double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
-    return(0.0);
-}
-
 void main_main ()
 {std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << GEMPIC_VDIM << " | B: " << GEMPIC_BDIM << std::endl;
     // make pointer-array for functions
@@ -142,7 +138,7 @@ void main_main ()
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
     init.initialize_from_parameters(n_cell,32,is_periodic,maxdeg,0.01,5,{1.0},{1.0},1000,0.5,
-    VM,VD,VW,WF);
+    VM,VD,VW);
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
 
     infrastructure infra(init);

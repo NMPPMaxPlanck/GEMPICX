@@ -49,10 +49,6 @@ double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){ret
         #endif
             );}
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
-    return(0.0);
-}
-
 void main_main ()
 {
     double C = 2.;
@@ -84,7 +80,7 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
-    init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},1,1,VM,VD,VW,WF);
+    init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},1,1,VM,VD,VW);
     infrastructure infra(init);
 
     maxwell_yee mw_yee(init, infra, init.Nghost);

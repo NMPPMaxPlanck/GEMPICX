@@ -18,11 +18,6 @@ using namespace Field_solvers;
 using namespace Init;
 using namespace Particles;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
-    double alpha = 0.5;
-    return((1.0 + alpha*cos(k*x[0])));
-};
-
 double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 #if (GEMPIC_BDIM > 1)
 double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
@@ -68,8 +63,7 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
-    init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,0,{1.0},{1.0},1000,0.5,
-    VM,VD,VW,WF);
+    init.initialize_from_parameters(n_cell,4,is_periodic,1,0.01,0,{1.0},{1.0},1000,0.5,VM,VD,VW);
 
     // infrastructure
     infrastructure infra(init);

@@ -47,9 +47,6 @@ public:
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vdev;
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vweight;
 
-    // function for weights
-    double (*weight_fun) (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k);
-
     // constructor
     /**
      * Constructor.
@@ -69,9 +66,7 @@ public:
                                     amrex::Real K,
                                     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM,
                                     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW,
-                                    double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,
-                                               double k)){
+                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW){
         n_cell = NC;
         max_grid_size = MG;
         is_periodic = PER;
@@ -96,15 +91,8 @@ public:
         Vdev = VD;
         Vweight = VW;
 
-        weight_fun = *WF;
     }
 
-    /**
-     * TODO: initialize the parameters of class by reading in a file
-     */
-    void initialize_from_file(){
-
-    }
 };
 }
 }

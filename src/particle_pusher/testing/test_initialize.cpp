@@ -18,10 +18,6 @@ using namespace Field_solvers;
 using namespace Init;
 using namespace Particles;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
-    return(0.0);
-}
-
 void main_main ()
 {
     //------------------------------------------------------------------------------
@@ -50,7 +46,7 @@ void main_main ()
 #endif
 
     init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,1,
-    VM,VD,VW,WF);
+    VM,VD,VW);
     infrastructure infra(init);
 
     //need a multifab to be able to iterate later:

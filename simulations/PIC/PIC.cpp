@@ -27,16 +27,6 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-double WF_Weibel (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, double k) {
-    double alpha = 0.;
-    return((1.0 + alpha*cos(k*x[0])));
-}
-
-double WF_Landau (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v, double k) {
-    double alpha = 0.5;
-    return((1.0 + alpha*cos(k*x[0])));
-}
-
 double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
 #if (GEMPIC_BDIM > 1)
 double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
@@ -168,7 +158,7 @@ void main_main ()
     //initializer
     initializer init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW,WF_Weibel);
+                                        VM,VD,VW);
     
     // infrastructure
     infrastructure infra(init);
