@@ -1,6 +1,6 @@
 add_subdirectory( reference_results )
 
-add_executable ( PIC PIC.cpp )
+add_executable ( PIC PIC.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c )
 add_executable ( AmrexSolver AmrexSolver.cpp )
 
 #message("#########")
