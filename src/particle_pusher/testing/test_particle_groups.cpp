@@ -18,27 +18,10 @@ using namespace Field_solvers;
 using namespace Init;
 using namespace Particles;
 
-double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
-#if (GEMPIC_BDIM > 1)
-double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
-#endif
-#if (GEMPIC_BDIM > 2)
-double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
-#endif
-
 void main_main ()
 {
     //------------------------------------------------------------------------------
     //build objects:
-
-    double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
-    initB[0] = B_x;
-#if (GEMPIC_BDIM > 1)
-    initB[1] = B_y;
-#endif
-#if (GEMPIC_BDIM > 2)
-    initB[2] = B_z;
-#endif
 
     //initializer
     initializer init;

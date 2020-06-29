@@ -27,17 +27,6 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-double B_x(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
-#if (GEMPIC_BDIM > 1)
-double B_y(std::array<double,GEMPIC_SPACEDIM> x,double k){return(0);}
-#endif
-#if (GEMPIC_BDIM > 2)
-double B_z(std::array<double,GEMPIC_SPACEDIM> x,double k){
-    amrex::Real beta = 1e-3;
-    return(beta*cos(k*x[0]));
-}
-#endif
-
 double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(4*0.5*cos(0.5*x[0]));}
 double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
 
@@ -70,6 +59,10 @@ void main_main ()
     amrex::Real k;
     amrex::Real alpha;
     std::string WF;
+    amrex::Real beta;
+    std::string Bx;
+    std::string By;
+    std::string Bz;
 
     // parse parameters
     amrex::ParmParse pp;
@@ -90,6 +83,10 @@ void main_main ()
     pp.get("k",k);
     pp.get("alpha", alpha);
     pp.get("WF",WF);
+    pp.get("beta", beta);
+    pp.get("Bx",Bx);
+    pp.get("By",By);
+    pp.get("Bz",Bz);
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
@@ -102,23 +99,12 @@ void main_main ()
     int varcount = 5;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
-    // parameters not yet parsed in
-    double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k);
-    initB[0] = B_x;
-#if (GEMPIC_BDIM > 1)
-    initB[1] = B_y;
-#endif
-#if (GEMPIC_BDIM > 2)
-    switch (testcase) {
-    case 0:
-        initB[2] = B_z;
-        break;
-    case 1:
-        initB[2] = B_x;
-        break;
-    }
+    te_variable read_vars_B[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}, {"beta", &beta}};
+    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars_B, varcount, &err);
+    te_expr *By_parse = te_compile(By.c_str(), read_vars_B, varcount, &err);
+    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars_B, varcount, &err);
 
-#endif
+    // parameters not yet parsed in
 
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
@@ -182,7 +168,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // solve:
     diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation(infra, &mw_yee, &part_gr, &diagn, initB, init.k);
+    loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);

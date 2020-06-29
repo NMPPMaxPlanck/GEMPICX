@@ -1,3 +1,5 @@
+#include <tinyexpr.h>
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -31,8 +33,12 @@ void loop_preparation (infrastructure infra,
                        maxwell_yee *mw_yee,
                        particle_groups *part_gr,
                        diagnostics *diagn,
-                       double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
-                       amrex::Real initk) {
+                       te_expr *Bx_parse,
+                       te_expr *By_parse,
+                       te_expr *Bz_parse,
+                       double *x,
+                       double *y,
+                       double *z) {
 
     // initial rho by: deposition of particle charge
     //Set rho to 0
@@ -84,7 +90,7 @@ void loop_preparation (infrastructure infra,
     (*mw_yee).solve_poisson(infra);
 
     // initial B_field
-    (*mw_yee).initB(infra, initB, initk);
+    (*mw_yee).initB(infra, Bx_parse, By_parse, Bz_parse, x, y, z);
 
     //------------------------------------------------------------------------------
     //approximate e^1/2

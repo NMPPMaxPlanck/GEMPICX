@@ -1,3 +1,5 @@
+#include <tinyexpr.h>
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -201,10 +203,15 @@ public:
      * Initialize B field for time t=0 with a given array of functions.
      */
     void initB (infrastructure infra,
-                double (*initB[GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double k),
-                amrex::Real initk) {
+                te_expr *Bx_parse,
+                te_expr *By_parse,
+                te_expr *Bz_parse,
+                double *x,
+                double *y,
+                double *z) {
 
-        std::array<double,GEMPIC_SPACEDIM> x;
+
+
         for (int i = 0; i<GEMPIC_BDIM; i++) {
             for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
@@ -212,17 +219,18 @@ public:
                 amrex::IntVect hi = {bx.bigEnd()};
 #if (GEMPIC_SPACEDIM > 2)
                 for(int k=lo[2]; k<=hi[2]; k++){
-                    x[2] = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
+                    *z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
                     for(int j=lo[1]; j<=hi[1]; j++){
-                        x[1] = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
+                        *y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
 #endif
                         for(int l=lo[0]; l<=hi[0]; l++){
-                            x[0] = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
+                            *x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
                             // the box for these values:
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-                            (*B_Array[i])[mfi].setVal((*initB[i])(x,initk), cc, 0, 1);
+                            const double result = (i==0 ? te_eval(Bx_parse) : (i==1 ? te_eval(By_parse) : te_eval(Bz_parse)));
+                            (*B_Array[i])[mfi].setVal(result, cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 2)
                     }

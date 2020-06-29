@@ -26,3 +26,7 @@ freq_slice = 100001 # (integer) how often should slices of the fields be saved i
 # Function parameters
 alpha = 0.0                         # (double) parameter for weight function (see below)
 WF = "1.0 + alpha * cos(kvar * x)"  # (string) is parsed into weight function for particle distibution
+beta = 1e-3                         # (double) parameter for initial B-field (see below)
+Bx = "0.0"                          # (string) function: initial Bx-field
+By = "0.0"                          # (string) function: initial By-field
+Bz = "beta * cos(kvar * x)"         # (string) function: initial Bz-field

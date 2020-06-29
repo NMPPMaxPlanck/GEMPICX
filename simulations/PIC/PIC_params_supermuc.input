@@ -26,3 +26,7 @@ freq_slice = 11
 # Function parameters
 alpha = 0.0
 WF = "1.0 + alpha * cos(kvar * x)"
+beta = 1e-3
+Bx = "0.0"
+By = "0.0"
+Bz = "beta * cos(kvar * x)"
