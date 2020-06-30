@@ -13,6 +13,7 @@
 //                          -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
 //------------------------------------------------------------------------------
 
+#include <tinyexpr.h>
 
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
@@ -68,8 +69,6 @@ double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
 double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 #endif
 
-double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(cosMult(x)+1/4.0*cosMult(x, 2.));}
-double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(-GEMPIC_SPACEDIM*(cosMult(x)+cosMult(x, 2.)));}
 double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
 #if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 2)
 double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
@@ -214,7 +213,25 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Poisson
 
-    mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
+#if (GEMPIC_SPACEDIM == 1)
+    std::string phi = "cos(x) + 1.0/4.0*cos(2*x))";
+    std::string rho = "cos(x)+cos(2*x)";
+#elif (GEMPIC_SPACEDIM == 2)
+    std::string phi = "cos(x)*cos(y) + 1.0/4.0*cos(2*x)*cos(2*y)";
+    std::string rho = "2*(cos(x)*cos(y)+cos(2*x)*cos(2*y))";
+#else
+    std::string phi = "cos(x)*cos(y)*cos(z) + 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
+    std::string rho = "3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
+#endif
+
+    double x, y, z;
+    int err;
+    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
+    int varcount = 3;
+    te_expr *rho_parse = te_compile(rho.c_str(), read_vars, varcount, &err);
+    te_expr *phi_parse = te_compile(phi.c_str(), read_vars, varcount, &err);
+
+    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
     mw_yee.solve_poisson(infra);
     E_B_error = mw_yee.computeError(fields_poisson, false, infra);
 

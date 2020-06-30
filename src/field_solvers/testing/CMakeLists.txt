@@ -1,4 +1,4 @@
-add_executable ( test_maxwell_yee test_maxwell_yee.cpp )
+add_executable ( test_maxwell_yee test_maxwell_yee.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c)
 #add_executable ( test_FillBD test_FillBD.cpp )
 #add_executable ( test_heat test_heat.cpp)
 

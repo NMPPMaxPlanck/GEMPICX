@@ -27,9 +27,6 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-double phi_fun(std::array<double,GEMPIC_SPACEDIM> x){return(4*0.5*cos(0.5*x[0]));}
-double rho_fun(std::array<double,GEMPIC_SPACEDIM> x){return(0.);}
-
 void main_main ()
 {
 
@@ -63,6 +60,8 @@ void main_main ()
     std::string Bx;
     std::string By;
     std::string Bz;
+    std::string phi;
+    std::string rho;
 
     // parse parameters
     amrex::ParmParse pp;
@@ -87,6 +86,8 @@ void main_main ()
     pp.get("Bx",Bx);
     pp.get("By",By);
     pp.get("Bz",Bz);
+    pp.get("rho",rho);
+    pp.get("phi",phi);
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
@@ -103,6 +104,11 @@ void main_main ()
     te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars_B, varcount, &err);
     te_expr *By_parse = te_compile(By.c_str(), read_vars_B, varcount, &err);
     te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars_B, varcount, &err);
+
+    te_variable read_vars_poi[] = {{"x", &x}, {"y", &y}, {"z", &z}};
+    varcount = 3;
+    te_expr *rho_parse = te_compile(rho.c_str(), read_vars_poi, varcount, &err);
+    te_expr *phi_parse = te_compile(phi.c_str(), read_vars_poi, varcount, &err);
 
     // parameters not yet parsed in
 
@@ -151,7 +157,7 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee mw_yee(init, infra, init.Nghost);
-    mw_yee.init_rho_phi(phi_fun, rho_fun, infra);
+    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
     particle_groups part_gr(init, infra);

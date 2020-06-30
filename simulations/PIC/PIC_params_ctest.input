@@ -30,4 +30,5 @@ beta = 1e-3
 Bx = "0.0"
 By = "0.0"
 Bz = "beta * cos(kvar * x)"
-
+phi = "4 * 0.5 * cos(0.5 * x)"
+rho = "0.0"

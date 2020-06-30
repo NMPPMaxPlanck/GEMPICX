@@ -427,9 +427,12 @@ public:
     /**
      * Initialize rho and phi with given funtions
      */
-    void init_rho_phi(double phi_fun(std::array<double,GEMPIC_SPACEDIM> x),
-                      double rho_fun(std::array<double,GEMPIC_SPACEDIM> x),
-                      infrastructure ifr){
+    void init_rho_phi(infrastructure ifr,
+                      te_expr *phi_parse,
+                      te_expr *rho_parse,
+                      double *x,
+                      double *y,
+                      double *z){
 
         for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
             const amrex::Box& bx = mfi.validbox();
@@ -446,11 +449,19 @@ public:
                     for(int l=lo[0]; l<=hi[0]; l++){
 
                         // the box for these values:
-                        std::array<double,GEMPIC_SPACEDIM> x = {AMREX_D_DECL(l*ifr.dx[0], j*ifr.dx[1], k*ifr.dx[2])};
+                        *x = l*ifr.dx[0];
+                        #if (GEMPIC_SPACEDIM > 1)
+                        *y = j*ifr.dx[1];
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                        *z = k*ifr.dx[2];
+#endif
                         amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
 
-                        phi[mfi].setVal(phi_fun(x), cc, 0, 1);
-                        rho[mfi].setVal(rho_fun(x), cc, 0, 1);
+                        const double result_phi = te_eval(phi_parse);
+                        const double result_rho = te_eval(phi_parse);
+                        phi[mfi].setVal(result_phi, cc, 0, 1);
+                        rho[mfi].setVal(result_rho, cc, 0, 1);
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
