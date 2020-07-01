@@ -17,15 +17,15 @@ num_gaussians = 2       # (integer) how many gaussians will be passed for veloci
 # Gaussian parameters # each 'paragraph' corresponds to the parameters for one gaussian. Include index of paragraph in variable name as in this example. Each component of the weight vector should sum up to 1 when added over all paragraphs.
 
 velocity_mean_0 = 0.0 0.0 0.0       # (doubles) means of gaussian vx, vy and vz
-velocity_deviation_0 = 0.1 0.4 0.4  # (doubles) deviations of gaussian vx, vy and vz
+velocity_deviation_0 = 0.1 0.4 0.4  # (doubles) standard deviations of gaussian vx, vy and vz
 velocity_weight_0 = 0.5 0.5 0.2     # (doubles) weighting of gaussian vx, vy and vz
 
 velocity_mean_1 = 0.0 0.0 0.0
 velocity_deviation_1 = 0.2 0.8 0.8
 velocity_weight_1 = 0.5 0.5 0.8
 
-# Case parameters
-k = 1.25    # (double) 1.25 for Weibel, 0.5 for Landau
+# wave vector
+k = 1.25    # (double) e.g.  for standard test cases 1.25 (Weibel), 0.5 (Landau damping)
 
 # Simulation parameters
 n_steps = 100000    # (integer) number of simulation steps
