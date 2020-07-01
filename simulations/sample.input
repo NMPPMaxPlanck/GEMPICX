@@ -12,6 +12,17 @@ is_periodic_vector = 1 1 1  # (integers) GEMPIC_DIM many, one for each direction
 n_part_per_cell = 100   # (integer) number of particles per cell
 charge = -1.0           # (doubles) GEMPIC_NUMSPEC many, one entry per species
 mass = 1.0              # (doubles) GEMPIC_NUMSPEC many, one entry per species
+num_gaussians = 2       # (integer) how many gaussians will be passed for velocity distribution. Must be same as number of paragraphs passed in next section: Gaussian parameters
+
+# Gaussian parameters # each 'paragraph' corresponds to the parameters for one gaussian. Include index of paragraph in variable name as in this example. Each component of the weight vector should sum up to 1 when added over all paragraphs.
+
+velocity_mean_0 = 0.0 0.0 0.0       # (doubles) means of gaussian vx, vy and vz
+velocity_deviation_0 = 0.1 0.4 0.4  # (doubles) deviations of gaussian vx, vy and vz
+velocity_weight_0 = 0.5 0.5 0.2     # (doubles) weighting of gaussian vx, vy and vz
+
+velocity_mean_1 = 0.0 0.0 0.0
+velocity_deviation_1 = 0.2 0.8 0.8
+velocity_weight_1 = 0.5 0.5 0.8
 
 # Case parameters
 k = 1.25    # (double) 1.25 for Weibel, 0.5 for Landau

@@ -12,6 +12,12 @@ is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 n_part_per_cell = 1000 # number of particles per cell
 charge = -1.0 # vector (one entry per species)
 mass = 1.0 # vector (one entry per species)
+num_gaussians = 1
+
+# Gaussian parameters
+velocity_mean_0 = 0.0 0.0 0.0
+velocity_deviation_0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
+velocity_weight_0 = 1.0 1.0 1.0
 
 # Case parameters
 k = 1.25 # 1.25 for Weibel, 0.5 for Landau

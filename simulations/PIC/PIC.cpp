@@ -62,6 +62,7 @@ void main_main ()
     std::string Bz;
     std::string phi;
     std::string rho;
+    int num_gaussians;
 
     // parse parameters
     amrex::ParmParse pp;
@@ -88,6 +89,31 @@ void main_main ()
     pp.get("Bz",Bz);
     pp.get("rho",rho);
     pp.get("phi",phi);
+    pp.get("num_gaussians",num_gaussians);
+
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
+    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<double, GEMPIC_VDIM> read_tmp_M;
+    std::array<double, GEMPIC_VDIM> read_tmp_D;
+    std::array<double, GEMPIC_VDIM> read_tmp_W;
+
+    for (int i=0; i<num_gaussians; i++) {
+        std::string name_str_M = "velocity_mean_" +  std::to_string(i);
+        std::string name_str_D = "velocity_deviation_" +  std::to_string(i);
+        std::string name_str_W = "velocity_weight_" +  std::to_string(i);
+        const char *name_char_M = name_str_M.c_str();
+        const char *name_char_D = name_str_D.c_str();
+        const char *name_char_W = name_str_W.c_str();
+        pp.get(name_char_M,read_tmp_M);
+        pp.get(name_char_D,read_tmp_D);
+        pp.get(name_char_W,read_tmp_W);
+        for (int j=0; j<GEMPIC_VDIM; j++) {
+            VM[j].push_back(read_tmp_M[j]);
+            VD[j].push_back(read_tmp_D[j]);
+            VW[j].push_back(read_tmp_W[j]);
+        }
+    }
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
@@ -109,40 +135,6 @@ void main_main ()
     varcount = 3;
     te_expr *rho_parse = te_compile(rho.c_str(), read_vars_poi, varcount, &err);
     te_expr *phi_parse = te_compile(phi.c_str(), read_vars_poi, varcount, &err);
-
-    // parameters not yet parsed in
-
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
-
-    VM[0].push_back(0.0);
-    switch (testcase) {
-    case 0:
-        VD[0].push_back(0.02/sqrt(2));
-        break;
-    case 1:
-        VD[0].push_back(1.0);
-        break;
-    }
-    VW[0].push_back(1.0);
-#if (GEMPIC_VDIM > 1)
-    VM[1].push_back(0.0);
-    switch (testcase) {
-    case 0:
-        VD[1].push_back(sqrt(12)*VD[0][0]);
-        break;
-    case 1:
-        VD[1].push_back(1.0);
-        break;
-    }
-    VW[1].push_back(1.0);
-#endif
-#if (GEMPIC_VDIM > 2)
-    VM[2].push_back(0.0);
-    VD[2].push_back(VD[1][0]);
-    VW[2].push_back(1.0);
-#endif
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
