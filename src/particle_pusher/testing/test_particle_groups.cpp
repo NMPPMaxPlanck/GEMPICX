@@ -85,7 +85,6 @@ void main_main ()
 #endif
                 for(int l=lo[0]; l<=hi[0]; l++){
                     position[0] = infra.geom.ProbLo()[0] + ((double)l+0.5)*infra.dx[0];
-                    amrex::Print(ofs) << position[0] << "|" << position[1] << "|" << position[2] << std::endl;
 
                     part_gr.add_particle(position, velocity, weight, particles);
                 }
