@@ -85,6 +85,7 @@ void main_main ()
 
     maxwell_yee mw_yee(init, infra, init.Nghost);
     std::ofstream ofs("test_gempic_norm.output", std::ofstream::out);
+    amrex::Print(ofs) << endl;
 
     // Constant case
     mw_yee.rho.setVal(C, 0);

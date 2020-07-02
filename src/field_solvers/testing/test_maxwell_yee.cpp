@@ -158,6 +158,7 @@ void main_main ()
     mw_yee.init_E_B(fields, infra);
 
     std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
+    amrex::Print(ofs) << endl;
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.computeError(fields, true, infra);
     Print(ofs) << endl;
