@@ -1,5 +1,4 @@
 # General setting
-testcase = 0 # 0 -> Weibel, 1 -> Landau
 sim_name = "Weibel"
 ctest = false
 
@@ -19,7 +18,7 @@ velocity_mean_0 = 0.0 0.0 0.0
 velocity_deviation_0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
 velocity_weight_0 = 1.0 1.0 1.0
 
-# Case parameters
+# wave vector
 k = 1.25 # 1.25 for Weibel, 0.5 for Landau
 
 # Simulation parameters
@@ -30,11 +29,9 @@ freq_v = 11
 freq_slice = 11 
 
 # Function parameters
-alpha = 0.0
-WF = "1.0 + alpha * cos(kvar * x)"
-beta = 1e-3
+WF = "1.0 + 0.0 * cos(kvar * x)"
 Bx = "0.0"
 By = "0.0"
-Bz = "beta * cos(kvar * x)"
+Bz = "1e-3 * cos(kvar * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
 rho = "0.0"

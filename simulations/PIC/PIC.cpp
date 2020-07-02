@@ -39,7 +39,6 @@ void main_main ()
     int Nghost = maxdeg;
 
     // initialize parameters
-    int testcase;
     std::string sim_name;
     bool ctest;
     std::array<int,3> n_cell_vector;
@@ -54,9 +53,7 @@ void main_main ()
     std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
     std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
     amrex::Real k;
-    amrex::Real alpha;
     std::string WF;
-    amrex::Real beta;
     std::string Bx;
     std::string By;
     std::string Bz;
@@ -66,7 +63,6 @@ void main_main ()
 
     // parse parameters
     amrex::ParmParse pp;
-    pp.get("testcase",testcase);
     pp.get("sim_name",sim_name);
     pp.get("ctest",ctest);
     pp.get("n_cell_vector",n_cell_vector);
@@ -81,9 +77,7 @@ void main_main ()
     pp.get("charge",charge);
     pp.get("mass",mass);
     pp.get("k",k);
-    pp.get("alpha", alpha);
     pp.get("WF",WF);
-    pp.get("beta", beta);
     pp.get("Bx",Bx);
     pp.get("By",By);
     pp.get("Bz",Bz);
@@ -122,14 +116,13 @@ void main_main ()
     // functions
     double x, y, z;
     int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}, {"alpha", &alpha}};
-    int varcount = 5;
+    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
+    int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
-    te_variable read_vars_B[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}, {"beta", &beta}};
-    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars_B, varcount, &err);
-    te_expr *By_parse = te_compile(By.c_str(), read_vars_B, varcount, &err);
-    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars_B, varcount, &err);
+    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars, varcount, &err);
+    te_expr *By_parse = te_compile(By.c_str(), read_vars, varcount, &err);
+    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars, varcount, &err);
 
     te_variable read_vars_poi[] = {{"x", &x}, {"y", &y}, {"z", &z}};
     varcount = 3;
@@ -161,7 +154,6 @@ void main_main ()
 
     save_particle_positions(&part_gr, sim_name + "_0");
     save_particle_velocities(&part_gr, sim_name + "_0");
-
 
     //------------------------------------------------------------------------------
     // solve:
