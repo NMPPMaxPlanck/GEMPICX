@@ -459,7 +459,7 @@ public:
                         amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
 
                         const double result_phi = te_eval(phi_parse);
-                        const double result_rho = te_eval(phi_parse);
+                        const double result_rho = te_eval(rho_parse);
                         phi[mfi].setVal(result_phi, cc, 0, 1);
                         rho[mfi].setVal(result_rho, cc, 0, 1);
                     }

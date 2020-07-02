@@ -215,13 +215,13 @@ void main_main ()
 
 #if (GEMPIC_SPACEDIM == 1)
     std::string phi = "cos(x) + 1.0/4.0*cos(2*x))";
-    std::string rho = "cos(x)+cos(2*x)";
+    std::string rho = "-cos(x)-cos(2*x)";
 #elif (GEMPIC_SPACEDIM == 2)
     std::string phi = "cos(x)*cos(y) + 1.0/4.0*cos(2*x)*cos(2*y)";
-    std::string rho = "2*(cos(x)*cos(y)+cos(2*x)*cos(2*y))";
+    std::string rho = "-2*(cos(x)*cos(y)+cos(2*x)*cos(2*y))";
 #else
     std::string phi = "cos(x)*cos(y)*cos(z) + 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
-    std::string rho = "3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
+    std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
 #endif
 
     double x, y, z;
