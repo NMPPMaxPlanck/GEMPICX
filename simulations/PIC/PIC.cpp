@@ -27,9 +27,8 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-void main_main ()
+void main_main (bool ctest)
 {
-
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
@@ -40,7 +39,6 @@ void main_main ()
 
     // initialize parameters
     std::string sim_name;
-    bool ctest;
     std::array<int,3> n_cell_vector;
     int n_part_per_cell;
     int n_steps;
@@ -63,49 +61,86 @@ void main_main ()
 
     // parse parameters
     amrex::ParmParse pp;
-    pp.get("sim_name",sim_name);
-    pp.get("ctest",ctest);
-    pp.get("n_cell_vector",n_cell_vector);
-    pp.get("n_part_per_cell",n_part_per_cell);
-    pp.get("n_steps",n_steps);
-    pp.get("freq_x",freq_x);
-    pp.get("freq_v",freq_v);
-    pp.get("freq_slice",freq_slice);
-    pp.get("is_periodic_vector",is_periodic_vector);
-    pp.get("max_grid_size",max_grid_size);
-    pp.get("dt",dt);
-    pp.get("charge",charge);
-    pp.get("mass",mass);
-    pp.get("k",k);
-    pp.get("WF",WF);
-    pp.get("Bx",Bx);
-    pp.get("By",By);
-    pp.get("Bz",Bz);
-    pp.get("rho",rho);
-    pp.get("phi",phi);
-    pp.get("num_gaussians",num_gaussians);
 
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
-    std::array<double, GEMPIC_VDIM> read_tmp_M;
-    std::array<double, GEMPIC_VDIM> read_tmp_D;
-    std::array<double, GEMPIC_VDIM> read_tmp_W;
 
-    for (int i=0; i<num_gaussians; i++) {
-        std::string name_str_M = "velocity_mean_" +  std::to_string(i);
-        std::string name_str_D = "velocity_deviation_" +  std::to_string(i);
-        std::string name_str_W = "velocity_weight_" +  std::to_string(i);
-        const char *name_char_M = name_str_M.c_str();
-        const char *name_char_D = name_str_D.c_str();
-        const char *name_char_W = name_str_W.c_str();
-        pp.get(name_char_M,read_tmp_M);
-        pp.get(name_char_D,read_tmp_D);
-        pp.get(name_char_W,read_tmp_W);
+    if (ctest) {
+        sim_name = "Weibel";
+        n_cell_vector[0] = 24;
+        n_cell_vector[1] = 8;
+        n_cell_vector[2] = 8;
+        n_part_per_cell = 100;
+        n_steps = 10;
+        freq_x = 11;
+        freq_v = 11;
+        freq_slice = 11;
+        is_periodic_vector[0] = 1;
+        is_periodic_vector[1] = 1;
+        is_periodic_vector[2] = 1;
+        max_grid_size = 4;
+        dt = 0.02;
+        charge[0] = -1.0;
+        mass[0] = 1.0;
+        k = 1.25;
+        WF = "1.0 + 0.0 * cos(kvar * x)";
+        Bx = "0.0";
+        By = "0.0";
+        Bz = "1e-3 * cos(kvar * x)";
+        rho = "0.0";
+        phi = "4 * 0.5 * cos(0.5 * x)";
+        num_gaussians = 1;
+
         for (int j=0; j<GEMPIC_VDIM; j++) {
-            VM[j].push_back(read_tmp_M[j]);
-            VD[j].push_back(read_tmp_D[j]);
-            VW[j].push_back(read_tmp_W[j]);
+            VM[j].push_back(0.0);
+            VW[j].push_back(1.0);
+        }
+        VD[0].push_back(0.02/sqrt(2));
+        VD[1].push_back(sqrt(12)*VD[0][0]);
+        VD[2].push_back(VD[1][0]);
+
+    } else {
+        pp.get("sim_name",sim_name);
+        pp.get("n_cell_vector",n_cell_vector);
+        pp.get("n_part_per_cell",n_part_per_cell);
+        pp.get("n_steps",n_steps);
+        pp.get("freq_x",freq_x);
+        pp.get("freq_v",freq_v);
+        pp.get("freq_slice",freq_slice);
+        pp.get("is_periodic_vector",is_periodic_vector);
+        pp.get("max_grid_size",max_grid_size);
+        pp.get("dt",dt);
+        pp.get("charge",charge);
+        pp.get("mass",mass);
+        pp.get("k",k);
+        pp.get("WF",WF);
+        pp.get("Bx",Bx);
+        pp.get("By",By);
+        pp.get("Bz",Bz);
+        pp.get("rho",rho);
+        pp.get("phi",phi);
+        pp.get("num_gaussians",num_gaussians);
+
+        std::array<double, GEMPIC_VDIM> read_tmp_M;
+        std::array<double, GEMPIC_VDIM> read_tmp_D;
+        std::array<double, GEMPIC_VDIM> read_tmp_W;
+
+        for (int i=0; i<num_gaussians; i++) {
+            std::string name_str_M = "velocity_mean_" +  std::to_string(i);
+            std::string name_str_D = "velocity_deviation_" +  std::to_string(i);
+            std::string name_str_W = "velocity_weight_" +  std::to_string(i);
+            const char *name_char_M = name_str_M.c_str();
+            const char *name_char_D = name_str_D.c_str();
+            const char *name_char_W = name_str_W.c_str();
+            pp.get(name_char_M,read_tmp_M);
+            pp.get(name_char_D,read_tmp_D);
+            pp.get(name_char_W,read_tmp_W);
+            for (int j=0; j<GEMPIC_VDIM; j++) {
+                VM[j].push_back(read_tmp_M[j]);
+                VD[j].push_back(read_tmp_D[j]);
+                VW[j].push_back(read_tmp_W[j]);
+            }
         }
     }
 
@@ -168,7 +203,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
+    main_main(argc==1);
 
     amrex::Finalize();
 }

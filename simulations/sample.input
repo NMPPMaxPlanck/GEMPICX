@@ -1,6 +1,5 @@
 # General setting
 sim_name = "Weibel" # (string) name to include in saved files
-ctest = false       # (bool) is the simulation a ctest?
 
 # Grid parameters
 n_cell_vector = 24 8 8      # (integers) GEMPIC_DIM many: each describes the number of cells in each direction

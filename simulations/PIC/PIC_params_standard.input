@@ -1,6 +1,5 @@
 # General setting
 sim_name = "Weibel"
-ctest = false
 
 # Grid parameters
 n_cell_vector = 24 8 8
