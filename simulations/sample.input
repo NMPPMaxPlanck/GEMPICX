@@ -38,4 +38,3 @@ Bx = "0.0"                          # (string) function: initial Bx-field
 By = "0.0"                          # (string) function: initial By-field
 Bz = "1e-3 * cos(kvar * x)"         # (string) function: initial Bz-field
 phi = "4 * 0.5 * cos(0.5 * x)"      # (string) function: initial phi
-rho = "0.0"                         # (string) function: initial rho

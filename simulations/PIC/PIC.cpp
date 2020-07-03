@@ -56,7 +56,7 @@ void main_main (bool ctest)
     std::string By;
     std::string Bz;
     std::string phi;
-    std::string rho;
+    std::string rho = "0.0";
     int num_gaussians;
 
     // parse parameters
@@ -88,7 +88,6 @@ void main_main (bool ctest)
         Bx = "0.0";
         By = "0.0";
         Bz = "1e-3 * cos(kvar * x)";
-        rho = "0.0";
         phi = "4 * 0.5 * cos(0.5 * x)";
         num_gaussians = 1;
 
@@ -118,7 +117,6 @@ void main_main (bool ctest)
         pp.get("Bx",Bx);
         pp.get("By",By);
         pp.get("Bz",Bz);
-        pp.get("rho",rho);
         pp.get("phi",phi);
         pp.get("num_gaussians",num_gaussians);
 
