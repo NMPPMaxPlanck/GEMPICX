@@ -63,7 +63,8 @@ plt.ylim(1e-15, 1e3)
 plt.xlim(0, 500) 
 
 plt.figure()
-plt.semilogy(t,B3,t,3e-6*np.exp(0.02784*t), linewidth=0.5)
+plt.semilogy(t,B3,t,7e-8*np.exp(0.02784*2*t), linewidth=0.5)
+plt.ylim((1e-13, 1e-2))
 ########### energy and mom (1D version) ####################
 
 n_lines = sum(1 for line in open(filename))
