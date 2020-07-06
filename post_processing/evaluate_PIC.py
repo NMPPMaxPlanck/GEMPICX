@@ -8,15 +8,8 @@ import numpy as np
 from tabulate import tabulate
 
 # path needs to be adapted to build directory!
-filename = "/home/irga/build/gempic/PIC_save.output"
+filename = "/home/irga/build/gempic/PIC_save_tmp.output"
 
-filename = "/home/irga/build/gempic/saved_results/PIC_save.output"
-filename = "/home/irga/build/gempic/saved_results/PIC_save.output_1D"
-filename = "/home/irga/build/gempic/saved_results/PIC_save.output_ref"
-filename = "/home/irga/build/gempic/saved_results/PIC_save.outputWeibel"
-filename = "/home/irga/build/gempic/saved_results/PIC_save.outputWeibelK"
-
-filename = "/home/irga/build/gempic/tmp2/PIC_save.output111"
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
 filename_3d = "/home/irga/build/gempic/PIC_particle.output"
 filename_weights = "/home/irga/build/gempic/weights.output"
@@ -28,42 +21,49 @@ filename_rho = "/home/irga/build/gempic/rho2.output"
 
 n_lines = sum(1 for line in open(filename))
 
-t = np.empty(n_lines)
-E1 = np.empty(n_lines)
-E2 = np.empty(n_lines)
-E3 = np.empty(n_lines)
-B1 = np.empty(n_lines)
-B2 = np.empty(n_lines)
-B3 = np.empty(n_lines)
-kin = np.empty(n_lines)
-mom1 = np.empty(n_lines)
-mom2 = np.empty(n_lines)
-mom3 = np.empty(n_lines)
+t = np.empty(n_lines-1)
+E1 = np.empty(n_lines-1)
+E2 = np.empty(n_lines-1)
+E3 = np.empty(n_lines-1)
+B1 = np.empty(n_lines-1)
+B2 = np.empty(n_lines-1)
+B3 = np.empty(n_lines-1)
+kin = np.empty(n_lines-1)
+mom1 = np.empty(n_lines-1)
+mom2 = np.empty(n_lines-1)
+mom3 = np.empty(n_lines-1)
 table = np.empty([n_lines, 11])
 
 file = open(filename, 'r')
 
 line_num = 0
 for line in file.readlines():
-    vals = line.rstrip().split(',') #using rstrip to remove the \n
-    table[line_num,] = vals
-    t[line_num] = vals[0]
-    E1[line_num] = vals[1]
-    E2[line_num] = vals[2]
-    E3[line_num] = vals[3]
-    B1[line_num] = vals[4]
-    B2[line_num] = vals[5]
-    B3[line_num] = vals[6]
-    kin[line_num] = vals[7]
-    mom1[line_num] = vals[8]
-    mom2[line_num] = vals[9]
-    mom3[line_num] = vals[10]
+    if line_num > 0 :
+        #print(line)
+        #sys.stdout.flush()
+        vals = line.rstrip().split(' ') #using rstrip to remove the \n
+        t[line_num-1] = vals[0]
+        E1[line_num-1] = vals[1]
+        E2[line_num-1] = vals[2]
+        E3[line_num-1] = vals[3]
+        B1[line_num-1] = vals[4]
+        B2[line_num-1] = vals[5]
+        B3[line_num-1] = vals[6]
+        kin[line_num-1] = vals[7]
+        mom1[line_num-1] = vals[8]
+        mom2[line_num-1] = vals[9]
+        mom3[line_num-1] = vals[10]
     line_num = line_num + 1
 
 #print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))
 #plt.plot(t,E1+E2+E3+B1+B2+B3+kin,'-o',t,mom1+mom2+mom3,'-*')
-plt.plot(t[0:30],B3[0:30],'-')
+#plt.semilogy(t,B3,'-')
+plt.semilogy(t,0.5*B3,'r-', t,0.5*E1,'b-', t,0.5*E2,'g-', linewidth=0.5)
+plt.ylim(1e-15, 1e3)
+plt.xlim(0, 500) 
 
+plt.figure()
+plt.semilogy(t,B3,t,3e-6*np.exp(0.02784*t), linewidth=0.5)
 ########### energy and mom (1D version) ####################
 
 n_lines = sum(1 for line in open(filename))
@@ -159,21 +159,25 @@ for i in range(0,n_lines-1):
     plt.hist(vx[range(i*n_part,(i+1)*n_part-1)], bins=50)
 
 ########### pos at beginning ####################
+filename_3d = "/home/irga/build/gempic/test_particle_groups.output"
+filename_3d = "/home/irga/build/gempic/test_particle_groups.output"
     
 n_lines_part = sum(1 for line in open(filename_3d))
+first_row = 1
 
-x = np.empty(n_lines_part)
-y = np.empty(n_lines_part)
-z = np.empty(n_lines_part)
+x = np.empty(n_lines_part-first_row)
+y = np.empty(n_lines_part-first_row)
+z = np.empty(n_lines_part-first_row)
 
 file = open(filename_3d, 'r')
 
 line_num = 0
 for line in file.readlines():
-    vals = line.rstrip().split(',') #using rstrip to remove the \n
-    x[line_num] = vals[0]
-    y[line_num] = vals[1]
-    z[line_num] = vals[2]
+    if line_num > 0:
+        vals = line.rstrip().split(',') #using rstrip to remove the \n
+        x[line_num-first_row] = vals[0]
+        y[line_num-first_row] = vals[1]
+        z[line_num-first_row] = vals[2]
     line_num = line_num + 1
     
 #plt.hist(x, bins = 8)
