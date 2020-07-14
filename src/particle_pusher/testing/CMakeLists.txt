@@ -1,4 +1,4 @@
-add_executable ( test_particle_groups test_particle_groups.cpp )
+add_executable ( test_particle_groups test_particle_groups.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c )
 add_executable ( test_initialize test_initialize.cpp )
 add_executable ( test_splines test_splines.cpp )
 
@@ -12,7 +12,9 @@ include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
 include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/initializer")
+include_directories("${CMAKE_SOURCE_DIR}/src/diagnostics")
 include_directories("${CMAKE_SOURCE_DIR}/src/utils")
+include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
 include_directories("${CMAKE_SOURCE_DIR}")
 
 ######## Ctest
