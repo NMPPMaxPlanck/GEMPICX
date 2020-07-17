@@ -200,6 +200,51 @@ public:
     }
 
     /**
+     * Initialize E field for time t=0 with a given array of functions.
+     */
+    void initE (infrastructure infra,
+                te_expr *Ex_parse,
+                te_expr *Ey_parse,
+                te_expr *Ez_parse,
+                double *x,
+                double *y,
+                double *z) {
+
+
+
+        for (int i = 0; i<GEMPIC_VDIM; i++) {
+            for ( amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+                    *z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*infra.dx[2];
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+                        *y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*infra.dx[1];
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+                            *x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*infra.dx[0];
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+                            const double result = (i==0 ? te_eval(Ex_parse) : (i==1 ? te_eval(Ey_parse) : te_eval(Ez_parse)));
+                            (*E_Array[i])[mfi].setVal(result, cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 2)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                }
+#endif
+                // next mfi
+            }
+            (*E_Array[i]).FillBoundary(infra.geom.periodicity());
+        }
+    }
+
+    /**
      * Initialize B field for time t=0 with a given array of functions.
      */
     void initB (infrastructure infra,

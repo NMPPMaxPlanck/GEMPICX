@@ -32,7 +32,7 @@ void main_main ()
     //initializer
     initializer init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(4,4,4));
+    amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
     int max_grid_size = 2;
 
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
@@ -69,6 +69,20 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee mw_yee(init, infra, init.Nghost);
+    std::string Bx = "0.0";
+    std::string By = "0.0";
+    std::string Bz = "1e-3 * cos(kvar * x)";
+    std::string Ex = "0.0";
+    std::string Ey = "0.0";
+    std::string Ez = "0.0";
+    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars, varcount, &err);
+    te_expr *By_parse = te_compile(By.c_str(), read_vars, varcount, &err);
+    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars, varcount, &err);
+    te_expr *Ex_parse = te_compile(Ex.c_str(), read_vars, varcount, &err);
+    te_expr *Ey_parse = te_compile(Ey.c_str(), read_vars, varcount, &err);
+    te_expr *Ez_parse = te_compile(Ez.c_str(), read_vars, varcount, &err);
+    mw_yee.initB(infra, Bx_parse, By_parse, Bz_parse, &x, &y, &z);
+    mw_yee.initE(infra, Ex_parse, Ey_parse, Ez_parse, &x, &y, &z);
 
     // particles
     particle_groups part_gr(init, infra);
@@ -79,11 +93,8 @@ void main_main ()
     init_particles_cellwise(infra, part_gr, init, species, WF_parse, &x, &y, &z);
     (*(part_gr).mypc[0]).Redistribute();
 
-    save_particle_positions(&part_gr, "ctest");
-    save_particle_velocities(&part_gr, "ctest");
-    std::cout << "A" << std::endl;
-   // WritePlotFile (&part_gr, &mw_yee, &infra, "test_wx_reader", 0);
-    std::cout << "B" << std::endl;
+    const int step = 0;
+    WritePlotFile (&part_gr, &mw_yee, &infra, "plot", step);
 
 }
 
