@@ -9,6 +9,7 @@ from tabulate import tabulate
 
 # path needs to be adapted to build directory!
 filename = "/home/irga/build/gempic/PIC_save_tmp.output"
+ref_filename = "/home/irga/Documents/Projects/gempic/simulations/PIC/reference_results/Weibel_01.txt"
 
 filename_6d = "/home/irga/build/gempic/PIC_6dim.output"
 filename_3d = "/home/irga/build/gempic/PIC_particle.output"
@@ -16,6 +17,45 @@ filename_weights = "/home/irga/build/gempic/weights.output"
 filename_phi_init = "/home/irga/build/gempic/phi2.output"
 filename_phi_end = "/home/irga/build/gempic/phi3.output"
 filename_rho = "/home/irga/build/gempic/rho2.output"
+
+########### ref energy and mom ####################
+n_lines = sum(1 for line in open(ref_filename))
+#sum(1 for line in open("/home/irga/Documents/Projects/gempic/simulations/PIC/reference_results/Weibel_01.txt"))
+
+t_ref = np.empty(n_lines-1)
+E1_ref = np.empty(n_lines-1)
+E2_ref = np.empty(n_lines-1)
+E3_ref = np.empty(n_lines-1)
+B1_ref = np.empty(n_lines-1)
+B2_ref = np.empty(n_lines-1)
+B3_ref = np.empty(n_lines-1)
+kin_ref = np.empty(n_lines-1)
+mom1_ref = np.empty(n_lines-1)
+mom2_ref = np.empty(n_lines-1)
+mom3_ref = np.empty(n_lines-1)
+table_ref = np.empty([n_lines, 11])
+
+file = open(ref_filename, 'r')
+
+line_num = 0
+for line in file.readlines():
+    if line_num > 0 :
+        #print(line)
+        #sys.stdout.flush()
+        vals = line.rstrip().split(' ') #using rstrip to remove the \n
+        t_ref[line_num-1] = vals[0]
+        E1_ref[line_num-1] = vals[1]
+        E2_ref[line_num-1] = vals[2]
+        E3_ref[line_num-1] = vals[3]
+        B1_ref[line_num-1] = vals[4]
+        B2_ref[line_num-1] = vals[5]
+        B3_ref[line_num-1] = vals[6]
+        kin_ref[line_num-1] = vals[7]
+        mom1_ref[line_num-1] = vals[8]
+        mom2_ref[line_num-1] = vals[9]
+        mom3_ref[line_num-1] = vals[10]
+    line_num = line_num + 1
+
 
 ########### energy and mom ####################
 
@@ -57,7 +97,12 @@ for line in file.readlines():
 
 #print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))
 #plt.plot(t,E1+E2+E3+B1+B2+B3+kin,'-o',t,mom1+mom2+mom3,'-*')
-#plt.semilogy(t,B3,'-')
+#plt.semilogy(t,B3,'r-', t_ref[0:(n_lines-1)],B3_ref[0:(n_lines-1)],'b-')
+#plt.semilogy(t,np.pi*2/0.5*E1*0.5)
+plt.semilogy(t,B3,'r-', t_ref[0:(n_lines-1)],B3_ref[0:(n_lines-1)],'b-')
+plt.figure()
+plt.semilogy(t,B3-B3_ref[0:(n_lines-1)])
+    
 plt.semilogy(t,0.5*B3,'r-', t,0.5*E1,'b-', t,0.5*E2,'g-', linewidth=0.5)
 plt.ylim(1e-15, 1e3)
 plt.xlim(0, 500) 
