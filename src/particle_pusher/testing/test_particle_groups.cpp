@@ -96,6 +96,8 @@ void main_main ()
     const int step = 0;
     Gempic_WritePlotFile (&part_gr, &mw_yee, &infra, "plot", step);
 
+    std::system("cp ParticlePlotfiles/plot00000/electrons/Header test_particle_groups.output");
+
 }
 
 int main(int argc, char* argv[])
