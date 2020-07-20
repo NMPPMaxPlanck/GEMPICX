@@ -102,7 +102,7 @@ void save_particle_velocities (particle_groups *ppg, std::string ID = "", int sp
 }
 
 void
-WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 

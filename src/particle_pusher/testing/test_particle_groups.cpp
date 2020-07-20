@@ -32,7 +32,7 @@ void main_main ()
     //initializer
     initializer init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
+    amrex::IntVect n_cell(AMREX_D_DECL(64,32,32));
     int max_grid_size = 2;
 
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
@@ -94,7 +94,7 @@ void main_main ()
     (*(part_gr).mypc[0]).Redistribute();
 
     const int step = 0;
-    WritePlotFile (&part_gr, &mw_yee, &infra, "plot", step);
+    Gempic_WritePlotFile (&part_gr, &mw_yee, &infra, "plot", step);
 
 }
 
