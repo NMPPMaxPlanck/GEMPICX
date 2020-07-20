@@ -114,6 +114,7 @@ public:
                 WriteSingleLevelPlotfile ("SliceData/rho_plotfile_0", (*mw_yee).rho, varnames,
                                           infra.geom, step*(*mw_yee).dt, 0); //level_step
             }
+            Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step);
 
             varnames[0] = "Ex";
             WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[0]), varnames, infra.geom, 0.0, 0); // last two args: time and level_step

@@ -128,7 +128,7 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
 
     // Particle Info -------------------------------------------------------------
     const std::string& name = "electrons";
-    const amrex::Vector<int>& write_real_comp = {1,1,1,1}; // should this and next line include "obligatory" vals? does this need names?
+    const amrex::Vector<int>& write_real_comp = {1,1,1,1};
     const amrex::Vector<int>& write_int_comp = {};
     const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
     const amrex::Vector<std::string>&  int_comp_names = {};
