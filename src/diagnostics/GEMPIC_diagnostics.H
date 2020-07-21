@@ -124,44 +124,6 @@ public:
                                           infra.geom, step*(*mw_yee).dt, 0); //level_step
             }
             Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step);
-
-            varnames[0] = "Ex";
-            WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[0]), varnames, infra.geom, 0.0, 0); // last two args: time and level_step
-            varnames[0] = "E_solx";
-            WriteSingleLevelPlotfile ("SliceData/E_solx_plotfile_" + std::to_string(step), (*(*mw_yee).E_sol_Array[0]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "Jx";
-            WriteSingleLevelPlotfile ("SliceData/Jx_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[0]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "Bx";
-            WriteSingleLevelPlotfile ("SliceData/Bx_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[0]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "B_solx";
-            WriteSingleLevelPlotfile ("SliceData/B_solx_plotfile_" + std::to_string(step), (*(*mw_yee).B_sol_Array[0]), varnames, infra.geom, 0.0, 0);
-#if (GEMPIC_VDIM > 1)
-            varnames[0] = "Ey";
-            WriteSingleLevelPlotfile ("SliceData/Ey_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[1]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "E_soly";
-            WriteSingleLevelPlotfile ("SliceData/E_soly_plotfile_" + std::to_string(step), (*(*mw_yee).E_sol_Array[1]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "Jy";
-            WriteSingleLevelPlotfile ("SliceData/Jy_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[1]), varnames, infra.geom, 0.0, 0);
-#endif
-#if (GEMPIC_BDIM > 1)
-            varnames[0] = "By";
-            WriteSingleLevelPlotfile ("SliceData/By_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[1]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "B_soly";
-            WriteSingleLevelPlotfile ("SliceData/B_soly_plotfile_" + std::to_string(step), (*(*mw_yee).B_sol_Array[1]), varnames, infra.geom, 0.0, 0);
-#endif
-#if (GEMPIC_VDIM > 2)
-            varnames[0] = "Ez";
-            WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_" + std::to_string(step), (*(*mw_yee).E_Array[2]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "E_solz";
-            WriteSingleLevelPlotfile ("SliceData/E_solz_plotfile_" + std::to_string(step), (*(*mw_yee).E_sol_Array[2]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "Jz";
-            WriteSingleLevelPlotfile ("SliceData/Jz_plotfile_" + std::to_string(step), (*(*mw_yee).J_Array[2]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "Bz";
-            WriteSingleLevelPlotfile ("SliceDataTMP/Bz_plotfile_" + std::to_string(step), (*(*mw_yee).B_Array[2]), varnames, infra.geom, 0.0, 0);
-            varnames[0] = "B_solz";
-            WriteSingleLevelPlotfile ("SliceData/B_solz_plotfile_" + std::to_string(step), (*(*mw_yee).B_sol_Array[2]), varnames, infra.geom, 0.0, 0);
-#endif
-
         }
     }
 
