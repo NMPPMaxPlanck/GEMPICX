@@ -14,6 +14,7 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_particle_positions.H>
 
 using namespace Field_solvers;
 using namespace Infra;
@@ -81,29 +82,37 @@ public:
         }
 
         // compute kinetic energy norm and momentum
-        kin[step] = 0;
-        mom[step][0] = 0.0;
-#if (GEMPIC_VDIM > 1)
-        mom[step][1] = 0.0;
-#endif
-#if (GEMPIC_VDIM > 2)
-        mom[step][2] = 0.0;
-#endif
+        for (int spec=0;spec<(*part_gr).n_species;spec++){ // TODO: multispecies
+            auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
+                                           [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+            {
+                auto m  = p.rdata(GEMPIC_VDIM);
+                auto vel = pow(std::abs(p.rdata(0)),2)+pow(std::abs(p.rdata(1)),2)+pow(std::abs(p.rdata(2)),2);
+                return (m*vel);
+            });
 
-        for (int spec=0;spec<(*part_gr).n_species;spec++){
-            for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                auto& particles = pti.GetArrayOfStructs();
-                const long np = pti.numParticles();
 
-                for (int pp=0;pp<np;pp++) {
-                    std::array<double,GEMPIC_VDIM> absvel = {AMREX_V_DECL(std::abs(particles[pp].rdata(0)),std::abs(particles[pp].rdata(1)),std::abs(particles[pp].rdata(2)))};
-                    vel = std::accumulate(absvel.begin(), absvel.end(), 0.);
-                    vel = std::abs(particles[pp].rdata(0))+std::abs(particles[pp].rdata(1))+std::abs(particles[pp].rdata(2));
-                    kin[step] += particles[pp].rdata(GEMPIC_VDIM)*pow(vel,2);
-                    for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
-                        mom[step][cmp] += particles[pp].rdata(GEMPIC_VDIM)*std::abs(particles[pp].rdata(cmp));
-                    }
-                }
+            // reduced sum over mpi ranks
+            amrex::ParallelDescriptor::ReduceRealSum
+                    (kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
+
+            kin[step] = 0.5*kin_tmp;
+            for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+                auto mom_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
+                                               [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+                {
+                    auto m  = p.rdata(GEMPIC_VDIM);
+                    auto vel = p.rdata(cmp);
+                    return (m*std::abs(vel));
+                });
+
+
+                // reduced sum over mpi ranks
+                amrex::ParallelDescriptor::ReduceRealSum
+                        (mom_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
+
+                // save results for this species i_s into m_data
+                mom[step][cmp] = mom_tmp;
             }
         }
 
