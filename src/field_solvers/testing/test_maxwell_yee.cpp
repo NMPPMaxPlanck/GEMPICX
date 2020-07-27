@@ -212,6 +212,66 @@ void main_main ()
     }
 
     //------------------------------------------------------------------------------
+    // Seconf maxwell test
+    maxwell_yee mw_yee_2(init, infra, init.Nghost);
+
+    for (int i=0; i<GEMPIC_VDIM; i++) {
+        (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component
+        (*(mw_yee_2).J_Array[i]).FillBoundary(infra.geom.periodicity());
+    }
+
+    mw_yee_2.init_E_B(fields, infra);
+
+    std::cout <<  "step: " << 0 << std::endl;
+    E_B_error = mw_yee_2.computeError(fields, true, infra);
+    Print(ofs) << endl;
+    Print(ofs) << "Maxwell" << endl;
+    Print(ofs) << "step " << 0 << endl;
+    Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                          #if (GEMPIC_VDIM > 1)
+                                  " |Ey error: " << E_B_error[1] <<
+                          #endif
+                          #if (GEMPIC_VDIM > 2)
+                                  " |Ez error: " << E_B_error[2] <<
+                          #endif
+                                  endl;
+    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+                          #if (GEMPIC_BDIM > 1)
+                                  " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                          #endif
+                          #if (GEMPIC_BDIM > 2)
+                                  " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                          #endif
+                                  endl;
+
+    for (int n=1;n<=mw_yee_2.nsteps;n++){
+        std::cout << "step: " << n << std::endl;
+        mw_yee_2.advance_time();
+        mw_yee_2.advance_E_from_B(infra, mw_yee_2.dt);
+        mw_yee_2.advance_E_from_J(infra, mw_yee_2.dt);
+        mw_yee_2.advance_B(infra, mw_yee_2.dt);
+        E_B_error = mw_yee_2.computeError(fields, true, infra);
+
+        Print(ofs) << "step " << n << endl;
+        Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+                              #if (GEMPIC_VDIM > 1)
+                                      " |Ey error: " << E_B_error[1] <<
+                              #endif
+                              #if (GEMPIC_VDIM > 2)
+                                      " |Ez error: " << E_B_error[2] <<
+                              #endif
+                                      endl;
+        Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+                              #if (GEMPIC_BDIM > 1)
+                                      " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                              #endif
+                              #if (GEMPIC_BDIM > 2)
+                                      " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                              #endif
+                                      endl;
+    }
+
+    //------------------------------------------------------------------------------
     // Poisson
 
 #if (GEMPIC_SPACEDIM == 1)
