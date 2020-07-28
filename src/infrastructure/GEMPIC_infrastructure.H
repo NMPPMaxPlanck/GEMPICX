@@ -42,6 +42,8 @@ public:
     std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
     std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
+    amrex::Real tolerance_particle; //
+
     // The default constructor.
     /**
      * Default Constructor.
@@ -83,6 +85,8 @@ public:
             dxi[cc] = 1.0/dx[cc];
             dxi[GEMPIC_SPACEDIM] *= dxi[cc];
         }
+
+        tolerance_particle = init.tolerance_particles;
     }
 };
 }

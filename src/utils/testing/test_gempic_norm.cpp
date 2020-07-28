@@ -80,7 +80,7 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
-    init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},1,1,VM,VD,VW);
+    init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},1,1,VM,VD,VW,0);
     infrastructure infra(init);
 
     maxwell_yee mw_yee(init, infra, init.Nghost);

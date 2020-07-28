@@ -47,6 +47,12 @@ public:
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vdev;
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vweight;
 
+    // propagator
+    int propagator; // 0 : Boris FD, 1 HS FEM
+
+    //parameter for iterative solvers
+    amrex::Real tolerance_particles = 1.e-10;
+
     // constructor
     /**
      * Constructor.
@@ -66,7 +72,9 @@ public:
                                     amrex::Real K,
                                     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM,
                                     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW){
+                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW,
+                                    int PG,
+                                    amrex::Real TP = 1.e-10){
         n_cell = NC;
         max_grid_size = MG;
         is_periodic = PER;
@@ -78,6 +86,8 @@ public:
         mass = MS;
         Np_cell = NPC;
         k = K;
+        propagator = PG;
+        tolerance_particles = TP;
 
         double twopi = 2.0*3.14159265359;
 

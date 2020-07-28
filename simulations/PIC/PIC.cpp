@@ -15,6 +15,7 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_avg.H>
+#include <GEMPIC_time_loop_hs_fem.H>
 
 using namespace std;
 using namespace amrex;
@@ -58,6 +59,9 @@ void main_main (bool ctest)
     std::string phi;
     std::string rho = "0.0";
     int num_gaussians;
+    int propagator;
+    bool time_staggered;
+    amrex::Real tolerance_particles;
 
     // parse parameters
     amrex::ParmParse pp;
@@ -90,6 +94,7 @@ void main_main (bool ctest)
         Bz = "1e-3 * cos(kvar * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
         num_gaussians = 1;
+        tolerance_particles = 1.e-10;
 
         for (int j=0; j<GEMPIC_VDIM; j++) {
             VM[j].push_back(0.0);
@@ -119,6 +124,8 @@ void main_main (bool ctest)
         pp.get("Bz",Bz);
         pp.get("phi",phi);
         pp.get("num_gaussians",num_gaussians);
+        pp.get("propagator",propagator);
+        pp.get("tolerance_particles", tolerance_particles);
 
         std::array<double, GEMPIC_VDIM> read_tmp_M;
         std::array<double, GEMPIC_VDIM> read_tmp_D;
@@ -140,6 +147,20 @@ void main_main (bool ctest)
                 VW[j].push_back(read_tmp_W[j]);
             }
         }
+
+        // Depending on which propagator is chosen, staggering in time is needed or not
+        switch (propagator) {
+          case 0:
+            time_staggered = true;
+            break;
+          case 1:
+            time_staggered = false;
+            Nghost += 2;
+            break;
+          default:
+            break;
+          }
+
     }
 
     // initialize amrex data structures from parameters
@@ -168,7 +189,7 @@ void main_main (bool ctest)
     //initializer
     initializer init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW);
+                                        VM,VD,VW,tolerance_particles);
     
     // infrastructure
     infrastructure infra(init);
@@ -191,10 +212,19 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // solve:
     diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z);
+    loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
-    time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+    switch (propagator) {
+      case 0:
+        time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        break;
+      case 1:
+        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        break;
+      default:
+        break;
+      }
 }
 
 int main(int argc, char* argv[])

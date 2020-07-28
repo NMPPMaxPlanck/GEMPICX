@@ -62,7 +62,7 @@ void main_main ()
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
 
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},1,0.5,VM,VD,VW);
+    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},1,0.5,VM,VD,VW,0);
 
     // infrastructure
     infrastructure infra(init);

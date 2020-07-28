@@ -46,7 +46,7 @@ void main_main ()
 #endif
 
     init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,1,
-    VM,VD,VW);
+    VM,VD,VW,0);
     infrastructure infra(init);
 
     //need a multifab to be able to iterate later:
