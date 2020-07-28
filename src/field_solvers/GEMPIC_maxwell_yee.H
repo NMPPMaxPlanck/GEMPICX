@@ -21,6 +21,8 @@
 
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_infrastructure.H>
+#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_particle_mesh_coupling.H>
 
 using namespace Infra;
 using namespace Utils;
@@ -52,6 +54,7 @@ public:
     std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_BDIM> B_Index;
     amrex::MultiFab phi_init; // for Poisson
     amrex::MultiFab rho; // for Poisson
+    amrex::MultiFab rho_gauss_law; // for Poisson
     int Nghost;
     amrex::MultiFab phi; // for Poisson
     //amrex::MLMG* mlmg_ptr;
@@ -116,6 +119,7 @@ public:
         const amrex::BoxArray& nba = amrex::convert(ifr.grid,amrex::IntVect::TheNodeVector());
         phi     .define(nba        , ifr.distriMap, 1, Nghost); //box, distriMap, nVar, nGrow
         rho     .define(nba        , ifr.distriMap, 1, Nghost);
+        rho_gauss_law.define(nba        , ifr.distriMap, 1, Nghost);
         phi_init.define(nba        , ifr.distriMap, 1, Nghost);
         // sigma is cell-centered (default, so no need to pass IndexVector)
         sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
@@ -608,7 +612,7 @@ public:
 
                         // the box for these values:
                         *x = l*ifr.dx[0];
-                        #if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_SPACEDIM > 1)
                         *y = j*ifr.dx[1];
 #endif
 #if (GEMPIC_SPACEDIM > 2)
@@ -741,6 +745,91 @@ public:
         WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_0", *E_Array[2], varnamesE, ifr.geom, 0*dt, 0);
 #endif
 
+    }
+
+    /**
+     * Compute rho for a given rho (for diagnostics: Gauss law)
+     */
+    void rho_from_E(infrastructure ifr){
+
+        amrex::Real c1[1], c2[1];
+
+        for (amrex::MFIter mfi(rho_gauss_law); mfi.isValid(); ++mfi ) {
+            const amrex::Box& bx = mfi.validbox();
+
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+            for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                    for(int l=lo[0]; l<=hi[0]; l++){
+
+                        // the box for these values:
+                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
+
+                        amrex::Real rho_val = 0.0;
+                        for (int i=0; i<GEMPIC_VDIM; i++) {
+
+                            // E-derivatives
+                            (*E_Array[i])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l-(i==0?1:0),j-(i==1?1:0),k-(i==2?1:0))},0,1);
+                            (*E_Array[i])[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+
+                            rho_val += (*c1-*c2)/ifr.dx[i];
+                        }
+
+                        (rho_gauss_law)[mfi].setVal(rho_val, cc, 0, 1);
+                    }
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+            }
+#endif
+            // next mfi
+        }
+        (rho_gauss_law).FillBoundary(ifr.geom.periodicity());
+
+    }
+
+    /**
+     * Compute rho for a given rho (for diagnostics: Gauss law)
+     */
+    amrex::Real compute_gauss_error(infrastructure ifr, Particles::particle_groups *part_gr){
+
+        rho_from_E(ifr); // fills rho_gauss_law
+
+        // Deposit charges in rho:
+        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+                amrex::Box tilebox;
+                amrex::FArrayBox local_rho;
+
+                tilebox = pti.tilebox();
+                tilebox.grow(Nghost);
+                const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
+
+                local_rho.resize(tb,1); // second arg: number of comps
+                local_rho.setVal(0.0);
+
+                auto& particles = pti.GetArrayOfStructs();
+                const long np  = pti.numParticles();
+
+                amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+                for (int pp=0;pp<np;pp++) {
+                    Particles::gempic_deposit_rho(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                  }
+                (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
+              }
+          }
+
+        std::cout << rho_gauss_law.norm0() << "|" << rho.norm0() << ", dx" << ifr.dx[0] << std::endl;
+        rho_gauss_law.minus(rho, 0, 1, 0);
+        return(gempic_norm(&(rho_gauss_law), ifr, 2));
     }
 
     /**
