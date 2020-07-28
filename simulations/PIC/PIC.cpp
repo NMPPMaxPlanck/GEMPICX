@@ -14,7 +14,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_time_loop_avg.H>
+#include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 
 using namespace std;
@@ -217,7 +217,7 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
       case 0:
-        time_loop_avg(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
       case 1:
         time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);

@@ -22,13 +22,13 @@ using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
 
-#ifndef TIME_LOOP_AVG_H_
-#define TIME_LOOP_AVG_H_
+#ifndef TIME_LOOP_BORIS_FD_H_
+#define TIME_LOOP_BORIS_FD_H_
 
 namespace Gempic {
 namespace Time_Loop {
 
-void time_loop_avg (infrastructure infra,
+void time_loop_boris_fd (infrastructure infra,
                     maxwell_yee *mw_yee,
                     particle_groups *part_gr,
                     diagnostics *diagn,
@@ -125,7 +125,7 @@ void time_loop_avg (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "PIC_save_tmp.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, "PIC_save_tmp_2t_4.output", t_step+1);
         }
         if ((t_step+1)%diagn->freq_x == 0) {
             save_particle_positions(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
