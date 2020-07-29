@@ -123,7 +123,7 @@ public:
         phi_init.define(nba        , ifr.distriMap, 1, Nghost);
         // sigma is cell-centered (default, so no need to pass IndexVector)
         sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
-        sigma.setVal(1.0); // sigma is the identity (lapl = nabla dot ID nabla)
+        sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
 
         nsteps = init.n_steps;
 
@@ -721,7 +721,7 @@ public:
                             phi[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
                             phi[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
-                            (*E_Array[i])[mfi].setVal((*c1-*c2)/ifr.dx[i], cc, 0, 1);
+                            (*E_Array[i])[mfi].setVal(-(*c1-*c2)/ifr.dx[i], cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 2)
                     }
