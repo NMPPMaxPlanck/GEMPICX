@@ -92,16 +92,21 @@ namespace Gempic {
 
                       // push x and v with the magnetic field
                       std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_x_v_bfield(particles[pp], (*mw_yee).dt, chargemass, bA, infra);
-                      std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
+                      std::array<amrex::Real, GEMPIC_SPACEDIM> xMean;
+                      for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                        xMean[d] = 0.5*(newPos[d] + particles[pp].pos(d));
 
-
-                      amrex::RealVect velocity = particles[pp].rvec(AMREX_D_DECL(0, 1, 2));
-                      accumulate_j_fem_integral(particles[pp].pos(), //TODO MEAN
+                      std::array<amrex::Real, GEMPIC_SPACEDIM> velocity;
+                      for (unsigned int d=0;d<GEMPIC_VDIM;++d)
+                        velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particles[pp].rdata(d));
+                      accumulate_j_fem_integral(xMean, //TODO MEAN
                                                 velocity,
                                                 charge*particles[pp].rdata(GEMPIC_VDIM),
                                                 infra.dxi,
                                                 infra.plo,
                                                 jA);
+
+                      std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
                     }
                 }
               (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in

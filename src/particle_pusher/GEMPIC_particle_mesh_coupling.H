@@ -191,8 +191,8 @@ namespace Gempic {
      *  Accumulation of the current for a FEM solver with integral over time (line integral)
      *  Currently this is implemented for Gauss-Quadrature with only one point
      */
-    void accumulate_j_fem_integral(amrex::RealVect position,
-                                   amrex::RealVect velocity,
+    void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+                                   std::array<amrex::Real, GEMPIC_VDIM> velocity,
                                    amrex::Real charge, // q*p.rdata(GEMPIC_VDIM)
                                    std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                    std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
