@@ -72,6 +72,7 @@ kin = np.empty(n_lines-1)
 mom1 = np.empty(n_lines-1)
 mom2 = np.empty(n_lines-1)
 mom3 = np.empty(n_lines-1)
+gauss_error = np.empty(n_lines-1)
 table = np.empty([n_lines, 11])
 
 file = open(filename, 'r')
@@ -93,6 +94,7 @@ for line in file.readlines():
         mom1[line_num-1] = vals[8]
         mom2[line_num-1] = vals[9]
         mom3[line_num-1] = vals[10]
+        gauss_error[line_num-1] = vals[11]
     line_num = line_num + 1
 
 #print(tabulate(table,headers=['t', 'EEx', 'EEy', 'EEz', 'EBx', 'EBy', 'EBz', 'Ekin', 'mx', 'my', 'mz']))

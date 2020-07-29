@@ -35,9 +35,10 @@ class diagnostics
 public:
     int n_time; // number of timesteps
     // 9 static so far!! need to fix this
-    std::array<std::array<amrex::Real,GEMPIC_BDIM>,100001> Bfield;
-    std::array<std::array<amrex::Real,GEMPIC_VDIM>,100001> Efield, mom;
-    std::array<amrex::Real,100001> kin;
+    std::array<std::array<amrex::Real,GEMPIC_BDIM>,50001> Bfield;
+    std::array<std::array<amrex::Real,GEMPIC_VDIM>,50001> Efield, mom;
+    std::array<amrex::Real,50001> kin;
+    std::array<amrex::Real,50001> gauss_error;
     int freq_x;
     int freq_v;
     int freq_slice;
@@ -114,6 +115,7 @@ public:
                 // save results for this species i_s into m_data
                 mom[step][cmp] = mom_tmp;
             }
+            gauss_error[step] = (*mw_yee).compute_gauss_error(infra, part_gr);
         }
 
         // save Plotfile
@@ -159,6 +161,7 @@ public:
                         #if (GEMPIC_VDIM > 2)
                                  << " " << mom[step][2]
                         #endif
+                                 << " " << gauss_error[step]
                                  << std::endl;
         }
         ofsfun.close();
