@@ -22,6 +22,7 @@
 
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_gempic_norm.H>
 
 using namespace std;
 using namespace amrex;
@@ -306,6 +307,13 @@ void main_main ()
                                   " |Ez error: " << E_B_error[2] <<
                               #endif
                                   endl;
+
+    Print(ofs) << endl;
+    Print(ofs) << "rho_from_E" << endl;
+    mw_yee.rho_from_E(infra); // fills rho_gauss_law
+    mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
+    Print(ofs).SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
+    Print(ofs).SetPrecision(5) << "rho Norm: " << Utils::gempic_norm(&(mw_yee.rho), infra, 2) << std::endl;
 
     ofs.close();
 }

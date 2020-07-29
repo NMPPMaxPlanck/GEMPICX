@@ -174,7 +174,7 @@ namespace Gempic {
           if ((t_step+1)%diagn->freq_v == 0) {
               save_particle_velocities(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
             }
-          amrex::Print() << "finished step " << t_step+1 << std::endl;
+          amrex::Print() << "finished step " << t_step+1 << " , gauss error: " << (*mw_yee).compute_gauss_error(infra, part_gr) << std::endl;
 
           if (ctest) {
               amrex::Print(*ofs) << t_step << " " << (*diagn).Efield[t_step][0]
