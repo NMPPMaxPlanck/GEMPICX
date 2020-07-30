@@ -827,7 +827,6 @@ public:
               }
           }
 
-        std::cout << rho_gauss_law.norm0() << "|" << rho.norm0() << ", dx" << ifr.dx[0] << std::endl;
         rho_gauss_law.minus(rho, 0, 1, 0);
         return(gempic_norm(&(rho_gauss_law), ifr, 2));
     }
