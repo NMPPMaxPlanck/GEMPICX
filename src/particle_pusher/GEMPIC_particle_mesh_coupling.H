@@ -19,6 +19,14 @@
 namespace Gempic {
   namespace Particles {
 
+  // we don't use fmod, because fmod(-0.2,1)=-0.2
+  amrex::Real mod_dom(amrex::Real val,
+                      amrex::Real upper,
+                      amrex::Real lower)
+  {
+      return(val-(upper-lower)*floor((val-lower)/(upper-lower)));
+  }
+
     template <typename P>
     void gempic_deposit_rho (P const& p, amrex::Real charge,
                              amrex::Array4<amrex::Real> const& rho,
@@ -609,7 +617,7 @@ namespace Gempic {
           for (unsigned int d=0; d<GEMPIC_SPACEDIM; ++d)
             {
               if (d<GEMPIC_VDIM)
-                xMean[d] = fmod(0.5*(newX[d]+oldX[d]), infra.geom.ProbHi()[d]);
+                xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
             }
           // evaluate B at xMean
           std::array<amrex::Real,GEMPIC_VDIM> Bp = evaluate_fem_bfield(xMean,
@@ -652,12 +660,12 @@ namespace Gempic {
 
       std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
       // new positions (modulo the upper bound of the box)
-      newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
+      newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
 #if (GEMPIC_SPACEDIM > 1)
-      newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
+      newPos[1] = mod_dom(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-      newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
+      newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
 #endif
 
 #if (GEMPIC_VDIM == 1)
@@ -680,13 +688,13 @@ namespace Gempic {
 
       std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
       // new positions (modulo the upper bound of the box)
-      newPos[0] = fmod(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0]);
+      newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
       newPos[GEMPIC_SPACEDIM] = p.rdata(0);
 #if (GEMPIC_SPACEDIM > 1)
-      newPos[1] = fmod(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1]);
+      newPos[1] = mod_dom(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-      newPos[2] = fmod(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2]);
+      newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
 #endif
 #if (GEMPIC_VDIM > 1)
       newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
@@ -752,26 +760,17 @@ namespace Gempic {
 #endif
 
       // new positions (modulo the upper bound of the box)
-      newPos[0] = fmod(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.geom.ProbHi()[0]);
+      newPos[0] = mod_dom(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
 #if (GEMPIC_SPACEDIM > 1)
-      newPos[1] = fmod(p.pos(1) + newPos[GEMPIC_SPACEDIM+1]*dt, infra.geom.ProbHi()[1]);
+      newPos[1] = mod_dom(p.pos(1) + newPos[GEMPIC_SPACEDIM+1]*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-      newPos[2] = fmod(p.pos(2) + newPos[GEMPIC_SPACEDIM+2]*dt, infra.geom.ProbHi()[2]);
+      newPos[2] = mod_dom(p.pos(2) + newPos[GEMPIC_SPACEDIM+2]*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
 #endif
 
 
 
       return(newPos);
-    }
-
-    std::array<amrex::Real,GEMPIC_SPACEDIM> vfmod(std::array<amrex::Real,GEMPIC_SPACEDIM> val,
-                                                  std::array<amrex::Real,GEMPIC_SPACEDIM> upper)
-    {
-      std::array<amrex::Real,GEMPIC_SPACEDIM>  resmod;
-      for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
-        resmod[d] = fmod(val[d],upper[d]);
-      return(resmod);
     }
 
   }
