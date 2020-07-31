@@ -33,3 +33,9 @@ Bx = "0.0"
 By = "0.0"
 Bz = "0.0"
 phi = "4 * 0.5 * cos(0.5 * x)"
+
+# Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
+propagator = 0
+
+# Tolerances for iterative solver (if needed by the chosen propagator)
+tolerance_particles = 1.e-10
