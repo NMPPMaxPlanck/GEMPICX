@@ -231,8 +231,8 @@ void init_one_particle_cellwise(infrastructure infra,
                                 initializer init,
                                 int species){
     amrex::Real x,y,z;
-    amrex::RealVect position;
-    amrex::RealVect shifted_position;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
     std::array<amrex::Real,GEMPIC_VDIM> velocity;
     amrex::Real weight;
 

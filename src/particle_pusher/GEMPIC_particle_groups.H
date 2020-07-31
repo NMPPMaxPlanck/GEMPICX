@@ -66,7 +66,7 @@ public:
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p velocity and the weight @p weight to the Particle Tile @p particles.
      */
-    void add_particle(amrex::RealVect position,
+    void add_particle(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                       std::array<amrex::Real,GEMPIC_VDIM> velocity,
                       amrex::Real weight,
                       amrex::ParticleTile<4, 0, 0, 0>& particles){
@@ -78,16 +78,13 @@ public:
         p.id() = ParticleType::NextID();
         p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-        p.pos() = position;
+        for (int cc=0; cc<GEMPIC_SPACEDIM; cc++) {
+            p.pos(cc) = position[cc];
+        }
 
-        // AoS real data
-        p.rdata(0) = velocity[0]; //vx
-#if (GEMPIC_VDIM > 1)
-        p.rdata(1)  = velocity[1]; //vy
-#endif
-#if (GEMPIC_VDIM > 2)
-        p.rdata(2) = velocity[2]; //vz
-#endif
+        for (int cc=0; cc<GEMPIC_VDIM; cc++) {
+            p.rdata(cc) = velocity[cc];
+        }
         p.rdata(GEMPIC_VDIM) = weight; //weight
 
         (particles).push_back(p);
