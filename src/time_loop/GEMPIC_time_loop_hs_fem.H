@@ -99,7 +99,7 @@ namespace Gempic {
                       std::array<amrex::Real, GEMPIC_SPACEDIM> velocity;
                       for (unsigned int d=0;d<GEMPIC_VDIM;++d)
                         velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particles[pp].rdata(d));
-                      accumulate_j_fem_integral(xMean, //TODO MEAN
+                      accumulate_j_fem_integral(xMean,
                                                 velocity,
                                                 charge*particles[pp].rdata(GEMPIC_VDIM),
                                                 infra.dxi,
