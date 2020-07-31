@@ -151,6 +151,7 @@ void main_main ()
     // Solve
     maxwell_yee mw_yee(init, infra, init.Nghost);
 
+
     for (int i=0; i<GEMPIC_VDIM; i++) {
         (*(mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
@@ -213,7 +214,7 @@ void main_main ()
     }
 
     //------------------------------------------------------------------------------
-    // Seconf maxwell test
+    // Second maxwell test
     maxwell_yee mw_yee_2(init, infra, init.Nghost);
 
     for (int i=0; i<GEMPIC_VDIM; i++) {
@@ -282,7 +283,7 @@ void main_main ()
     std::string phi = "cos(x)*cos(y) + 1.0/4.0*cos(2*x)*cos(2*y)";
     std::string rho = "-2*(cos(x)*cos(y)+cos(2*x)*cos(2*y))";
 #else
-    std::string phi = "cos(x)*cos(y)*cos(z) + 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
+    std::string phi = "-cos(x)*cos(y)*cos(z) - 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
     std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
 #endif
 
@@ -290,6 +291,7 @@ void main_main ()
     int err;
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
     int varcount = 3;
+
     te_expr *rho_parse = te_compile(rho.c_str(), read_vars, varcount, &err);
     te_expr *phi_parse = te_compile(phi.c_str(), read_vars, varcount, &err);
 
@@ -307,6 +309,10 @@ void main_main ()
                                   " |Ez error: " << E_B_error[2] <<
                               #endif
                                   endl;
+
+
+    //------------------------------------------------------------------------------
+    // Rho from E
 
     Print(ofs) << endl;
     Print(ofs) << "rho_from_E" << endl;
