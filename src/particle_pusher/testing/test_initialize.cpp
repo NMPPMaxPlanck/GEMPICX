@@ -63,7 +63,7 @@ void main_main ()
     int Np_cell = 100; //number of particles per cell
     int species = 0; // all particles are same species for now
     std::array<double,GEMPIC_SPACEDIM> position;
-    amrex::RealVect shifted_position;
+    std::array<double,GEMPIC_SPACEDIM> shifted_position;
     std::array<double,GEMPIC_VDIM> velocity;
     Real weight;
 
