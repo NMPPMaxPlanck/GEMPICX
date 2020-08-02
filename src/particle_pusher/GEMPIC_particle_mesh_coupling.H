@@ -383,7 +383,7 @@ namespace Gempic {
                       *sz_cell[kk]
     #endif
                       ;
-                  fields[0] += s_coeff*(bArray[0])(cell_index[0]
+                  fields[1] += s_coeff*(bArray[1])(cell_index[0]
     #if(GEMPIC_SPACEDIM > 1)
                       ,cell_index[1]
     #endif
@@ -419,7 +419,7 @@ namespace Gempic {
                       *sz_node[kk]
     #endif
                       ;
-                  fields[0] += s_coeff*(bArray[0])(cell_index[0]
+                  fields[2] += s_coeff*(bArray[2])(cell_index[0]
     #if(GEMPIC_SPACEDIM > 1)
                       ,cell_index[1]
     #endif
