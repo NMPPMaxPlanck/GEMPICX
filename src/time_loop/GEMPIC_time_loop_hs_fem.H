@@ -131,9 +131,7 @@ namespace Gempic {
                   auto& particles = pti.GetArrayOfStructs(); // get particles
                   const long np  = pti.numParticles();
 
-                  std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jA;
                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eA;
-                  std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
 
                   for (int cc=0;cc < GEMPIC_VDIM;cc++) {
                       eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
