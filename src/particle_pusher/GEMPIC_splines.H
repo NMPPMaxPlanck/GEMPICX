@@ -74,25 +74,26 @@ public:
     }
 
     int compute_cell_index (int cell_index, amrex::Real x, int degree, bool cent_eval) {
+
         if (!cent_eval) {
             if(degree%2 == 0) {
                 if (x < 0.5) {
-                    return(cell_index-int(degree/2.));
+                    return(cell_index-int(std::round(degree/2.)));
                 } else {
-                    return(cell_index-int(degree/2.)+1);
+                    return(cell_index-int(std::round(degree/2.))+1);
                 }
             } else { //odd
-                return(cell_index-int((degree-1.)/2.));
+                return(cell_index-int(std::round((degree-1.)/2.)));
             }
         } else {
             if(degree%2 == 1) {
                 if (x < 0.5) {
-                    return(cell_index-int((degree-1)/2.));
+                    return(cell_index-int(std::round((degree-1)/2.)));
                 } else {
-                    return(cell_index-int(degree/2.)+1);
+                    return(cell_index-int(std::round(degree/2.)+1));
                 }
             } else { //even
-                return(cell_index-int(degree/2.));
+                return(cell_index-int(std::round(degree/2.)));
             }
         }
 
