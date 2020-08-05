@@ -28,7 +28,6 @@ class splines
 public:
 
     // parameters for splines
-    amrex::IntVect degree;
     std::array<bool,GEMPIC_SPACEDIM> centered_evaluation;
     std::array<bool,GEMPIC_SPACEDIM> integral_evaluation;
 
@@ -39,14 +38,13 @@ public:
     splines (std::array<bool,GEMPIC_SPACEDIM> cent_eval,
              std::array<bool,GEMPIC_SPACEDIM> int_eval){
 
-        degree = amrex::IntVect{AMREX_D_DECL(GEMPIC_DEG_X,GEMPIC_DEG_Y,GEMPIC_DEG_Z)};
         centered_evaluation = cent_eval;
         integral_evaluation = int_eval;
     }
 
-    std::vector<amrex::Real> spline_eval_vec (amrex::Real x, int degr)  {
+    std::vector<amrex::Real> spline_eval_vec (amrex::Real x, int degree)  {
         std::vector<amrex::Real> s;
-        switch (degr) {
+        switch (degree) {
         case 0:
             s = {1.};
             break;
@@ -63,8 +61,8 @@ public:
         return(s);
     }
 
-    amrex::Real shifted_x (amrex::Real x, int dimension, bool cent_eval) {
-        if (degree[dimension]%2==0 ^ cent_eval) { //even XOR centered
+    amrex::Real shifted_x (amrex::Real x, int degree, bool cent_eval) {
+        if (degree%2==0 ^ cent_eval) { //even XOR centered
             if (x>1./2.) {
                 return(3./2.-x);
             } else {
@@ -75,26 +73,26 @@ public:
         }
     }
 
-    int compute_cell_index (int cell_index, int dimension, amrex::Real x, bool cent_eval) {
-        if (cent_eval) {
-            if(degree[dimension]%2 == 0) {
+    int compute_cell_index (int cell_index, amrex::Real x, int degree, bool cent_eval) {
+        if (!cent_eval) {
+            if(degree%2 == 0) {
                 if (x < 0.5) {
-                    return(cell_index-int(degree[dimension]/2.));
+                    return(cell_index-int(degree/2.));
                 } else {
-                    return(cell_index-int(degree[dimension]/2.)+1);
+                    return(cell_index-int(degree/2.)+1);
                 }
             } else { //odd
-                return(cell_index-int((degree[dimension]-1.)/2.));
+                return(cell_index-int((degree-1.)/2.));
             }
         } else {
-            if(degree[dimension]%2 == 1) {
+            if(degree%2 == 1) {
                 if (x < 0.5) {
-                    return(cell_index-int((degree[dimension]-1)/2.));
+                    return(cell_index-int((degree-1)/2.));
                 } else {
-                    return(cell_index-int(degree[dimension]/2.)+1);
+                    return(cell_index-int(degree/2.)+1);
                 }
             } else { //even
-                return(cell_index-int(degree[dimension]/2.));
+                return(cell_index-int(degree/2.));
             }
         }
 
