@@ -44,6 +44,7 @@ namespace Gempic {
       // initial rho by: deposition of particle charge
       //Set rho to 0
       (*mw_yee).rho.setVal(0.0, 0); // value and component
+      (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
       // Deposit charges:
       for (int spec=0;spec<(*part_gr).n_species;spec++) {
