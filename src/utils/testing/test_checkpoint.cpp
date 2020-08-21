@@ -115,7 +115,7 @@ void main_main ()
     (*(mw_yee).J_Array[0]).setVal(2.0, 0);
     std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
 
-    Gempic_ReadCheckpointFile (&mw_yee, "test_checkpoint", 0);
+    Gempic_ReadCheckpointFile (&mw_yee, "test_checkpoint", 0, 0); // last 2 args: field, step
     std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
 
 }

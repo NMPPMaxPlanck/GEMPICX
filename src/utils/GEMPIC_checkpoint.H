@@ -36,9 +36,10 @@ Gempic_GotoNextLine (std::istream& is)
 }
 
 void
-Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, infrastructure *infra,
-                            const std::string& dirname, const int step,
-                            int header_precision)
+Gempic_WriteCheckpointFile_Single (maxwell_yee *mw_yee, infrastructure *infra,
+                                   const std::string& dirname, int field, const int step,
+                                   amrex::IndexType IndexT,
+                                   int header_precision)
 {
     // dirnamestep            write a checkpoint file with this root directory
     // dirnamestep/Header     this contains information you need to save (e.g., finest_level, t_new, etc.) and also
@@ -47,9 +48,9 @@ Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, infrastructure *infra,
     // dirnamestep/Level_1/
     // etc.                   these subdirectories will hold the MultiFab data at each level of refinement
 
-    const std::string& checkpointname = amrex::Concatenate(dirname,step);
+    std::array<std::string, 9> fieldnames = {"Jx", "Jy", "Jz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
 
-    amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
+    const std::string& checkpointname = amrex::Concatenate(dirname + "_" + fieldnames[field] + "_", step);
 
     // ---- prebuild a hierarchy of directories
     // ---- dirName is built first.  if dirName exists, it is renamed.  then build
@@ -95,26 +96,59 @@ Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, infrastructure *infra,
         HeaderFile << "\n";
 
         // write the BoxArray at each level
-        amrex::BoxArray boxArray(infra->grid, *(mw_yee->E_Index[0]));
+        amrex::BoxArray boxArray(infra->grid, IndexT);
         boxArray.writeOn(HeaderFile);
         HeaderFile << '\n';
 
     }
 
     // write the MultiFab data to, e.g., dirnamestep/Level_0/
-    amrex::VisMF::Write(*(mw_yee->J_Array[0]),
-            amrex::MultiFabFileFullPrefix(nlevels-1, checkpointname, "Level_", "Jx"));
+    // using integer division to get floored result
+    if (field/3 == 0) {
+        amrex::VisMF::Write(*(mw_yee->J_Array[field%3]),
+                amrex::MultiFabFileFullPrefix(nlevels-1, checkpointname, "Level_", fieldnames[field]));
+    } else if (field/3 == 1) {
+        amrex::VisMF::Write(*(mw_yee->E_Array[field%3]),
+                amrex::MultiFabFileFullPrefix(nlevels-1, checkpointname, "Level_", fieldnames[field]));
+    } else {
+        amrex::VisMF::Write(*(mw_yee->B_Array[field%3]),
+                amrex::MultiFabFileFullPrefix(nlevels-1, checkpointname, "Level_", fieldnames[field]));
+    }
 
+}
+
+void
+Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, infrastructure *infra,
+                            const std::string& dirname, const int step,
+                            int header_precision)
+{
+    amrex::Print() << "Writing checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
+
+    // J
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 0, step, *(mw_yee->E_Index[0]), header_precision);
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 1, step, *(mw_yee->E_Index[1]), header_precision);
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 2, step, *(mw_yee->E_Index[2]), header_precision);
+
+    // E
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 3, step, *(mw_yee->E_Index[0]), header_precision);
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 4, step, *(mw_yee->E_Index[1]), header_precision);
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 5, step, *(mw_yee->E_Index[2]), header_precision);
+
+    // B
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 6, step, *(mw_yee->B_Index[0]), header_precision);
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 7, step, *(mw_yee->B_Index[1]), header_precision);
+    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]), header_precision);
 }
 
 
 void
 Gempic_ReadCheckpointFile (maxwell_yee *mw_yee,
-                           const std::string& dirname, const int step)
+                           const std::string& dirname, int field, const int step)
 {
 
-    const std::string& restart_chkfile = amrex::Concatenate(dirname,step);
-    amrex::Print() << "Restart from checkpoint " << restart_chkfile << "\n";
+    std::array<std::string, 9> fieldnames = {"Jx", "Jy", "Jz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
+    const std::string& restart_chkfile = amrex::Concatenate(dirname + "_" + fieldnames[field] + "_",step);
+    amrex::Print() << "Reading in checkpoint " << restart_chkfile << "\n";
 
     // Header
     std::string File(restart_chkfile + "/Header");
@@ -161,16 +195,18 @@ Gempic_ReadCheckpointFile (maxwell_yee *mw_yee,
     // set BoxArray grids and DistributionMapping dmap in AMReX_AmrMesh.H class
     // not using class so not needed?
 
-    // build MultiFab and FluxRegister data
-    int ncomp = 1;
-    int nghost = 0;
-    //phi_old[lev].define(grids[lev], dmap[lev], ncomp, nghost);
-    //phi_new[lev].define(grids[lev], dmap[lev], ncomp, nghost);
-
     // read in the MultiFab data
     const int nlevels = 1;
-    amrex::VisMF::Read(*(mw_yee->J_Array[0]),
-                    amrex::MultiFabFileFullPrefix(nlevels-1, restart_chkfile, "Level_", "Jx"));
+    if (field/3 == 0) {
+        amrex::VisMF::Read(*(mw_yee->J_Array[field%3]),
+                amrex::MultiFabFileFullPrefix(nlevels-1, restart_chkfile, "Level_", fieldnames[field]));
+    } else if (field/3 == 1) {
+        amrex::VisMF::Read(*(mw_yee->E_Array[field%3]),
+                amrex::MultiFabFileFullPrefix(nlevels-1, restart_chkfile, "Level_", fieldnames[field]));
+    } else {
+        amrex::VisMF::Read(*(mw_yee->B_Array[field%3]),
+                amrex::MultiFabFileFullPrefix(nlevels-1, restart_chkfile, "Level_", fieldnames[field]));
+    }
 
 }
 
