@@ -44,3 +44,7 @@ propagator = 0
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
 tolerance_particles = 1.e-10
+
+# Restart parameters
+restart = 0                                     # (integer) 1 to restart simulation from checkpoint, 0 else
+checkpoint_file = "Checkpoint/Weibel_2_00100"   # (string) folder containing checkpoint data

@@ -62,6 +62,9 @@ void main_main (bool ctest)
     int propagator;
     bool time_staggered;
     amrex::Real tolerance_particles;
+    int restart;
+    std::string checkpoint_file;
+    int curr_step;
 
     // parse parameters
     amrex::ParmParse pp;
@@ -103,6 +106,9 @@ void main_main (bool ctest)
         VD[0].push_back(0.02/sqrt(2));
         VD[1].push_back(sqrt(12)*VD[0][0]);
         VD[2].push_back(VD[1][0]);
+        restart = 0;
+        checkpoint_file = "";
+        curr_step = 0;
 
     } else {
         pp.get("sim_name",sim_name);
@@ -126,6 +132,9 @@ void main_main (bool ctest)
         pp.get("num_gaussians",num_gaussians);
         pp.get("propagator",propagator);
         pp.get("tolerance_particles", tolerance_particles);
+        pp.get("restart", restart);
+        pp.get("checkpoint_file", checkpoint_file);
+        pp.get("curr_step", curr_step);
 
         std::array<double, GEMPIC_VDIM> read_tmp_M;
         std::array<double, GEMPIC_VDIM> read_tmp_D;
@@ -201,18 +210,20 @@ void main_main (bool ctest)
     // particles
     particle_groups part_gr(init, infra);
 
+    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+
     //------------------------------------------------------------------------------
     // initialize particles:
-    int species = 0; // all particles are same species for now
-    init_particles_cellwise(infra, part_gr, init, species, WF_parse, &x, &y, &z);
-
-    save_particle_positions(&part_gr, sim_name + "_0");
-    save_particle_velocities(&part_gr, sim_name + "_0");
+    if (restart == 0) {
+        int species = 0; // all particles are same species for now
+        init_particles_full_domain(infra, part_gr, init, species, WF_parse, &x, &y, &z);
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+        loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+    } else {
+        Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, checkpoint_file, curr_step);
+    }
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {

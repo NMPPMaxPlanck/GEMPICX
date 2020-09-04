@@ -39,3 +39,8 @@ propagator = 0
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
 tolerance_particles = 1.e-10
+
+# Restart parameters
+restart = 0
+checkpoint_file = "Checkpoint/Weibel_2"
+curr_step = 100
