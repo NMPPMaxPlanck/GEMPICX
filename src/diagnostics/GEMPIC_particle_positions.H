@@ -113,15 +113,18 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
     amrex::VisMF::Header::Version current_version = amrex::VisMF::GetHeaderVersion();
     amrex::VisMF::SetHeaderVersion(amrex::VisMF::Header::Version_v1);
 
-    amrex::MultiFab tmp_b_mf((*infra).grid, (*infra).distriMap, 6, 0); // temporary MF to store all fields
+    amrex::MultiFab tmp_b_mf((*infra).grid, (*infra).distriMap, 9, 0); // temporary MF to store all fields
     tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[0], 0, 0, 1, 0); // srccomp, destcomp, numcomp, nghost
     tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[1], 0, 1, 1, 0);
     tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[2], 0, 2, 1, 0);
     tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[0], 0, 3, 1, 0); // srccomp, destcomp, numcomp, nghost
     tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[1], 0, 4, 1, 0);
     tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[2], 0, 5, 1, 0);
+    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[0], 0, 6, 1, 0); // srccomp, destcomp, numcomp, nghost
+    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[1], 0, 7, 1, 0);
+    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[2], 0, 8, 1, 0);
 
-    amrex::Vector<std::string> varnames = {"E_x", "E_y", "E_z", "B_x", "B_y", "B_z"};
+    amrex::Vector<std::string> varnames = {"E_x", "E_y", "E_z", "B_x", "B_y", "B_z", "J_x", "J_y", "J_z"};
     amrex::Real time = step*(*mw_yee).dt;
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames,
                               (*infra).geom, time, 0);
