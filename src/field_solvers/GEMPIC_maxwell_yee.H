@@ -52,6 +52,7 @@ public:
     std::array<std::unique_ptr<amrex::MultiFab>, GEMPIC_BDIM > B_sol_Array;
     std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_VDIM> E_Index;
     std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_BDIM> B_Index;
+    std::array<std::unique_ptr<amrex::iMultiFab>, GEMPIC_VDIM> J_Masks;
     amrex::MultiFab phi_init; // for Poisson
     amrex::MultiFab rho; // for Poisson
     amrex::MultiFab rho_gauss_law; // for Poisson
@@ -126,6 +127,38 @@ public:
         sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
 
         nsteps = init.n_steps;
+
+        //-----------------------------------------------------------------------------
+        // Fill Owner Mask
+
+        for (int comp=0; comp<GEMPIC_VDIM; comp++) {
+            (*(J_Masks[comp])).setVal(0.0);
+            (*(J_Masks[comp])).FillBoundary(ifr.geom.periodicity());
+
+            for ( amrex::MFIter mfi((*(J_Masks[comp]))); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=(comp==2?hi[2]:(hi[2]-1)); k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=(comp==1?hi[1]:(hi[1]-1)); j++){
+#endif
+                        for(int l=lo[0]; l<=(comp==0?hi[0]:(hi[0]-1)); l++){
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, (*E_Index[comp]));
+                            (*(J_Masks[comp]))[mfi].setVal(1, cc, 0, 1);
+                        }
+
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+            }
+        }
 
     }
 

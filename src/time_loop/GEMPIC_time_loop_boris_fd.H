@@ -17,6 +17,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_positions.H>
+#include <GEMPIC_SumBoundary.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -112,11 +113,14 @@ void time_loop_boris_fd (infrastructure infra,
                 }
             }
         }
-        //add values from ghost cells and periodic boundary
+
+
+        Gempic_SumBoundary(mw_yee, &infra); // Sums Boundary of J and Overwrites overlap
+
         for (int i=0; i<GEMPIC_VDIM; i++) {
-            (*(*mw_yee).J_Array[i]).SumBoundary(infra.geom.periodicity());
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
+
 
         // advance E
         (*mw_yee).advance_E(infra, (*mw_yee).dt);
