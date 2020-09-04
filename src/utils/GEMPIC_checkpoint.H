@@ -36,7 +36,7 @@ Gempic_GotoNextLine (std::istream& is)
 }
 
 void
-Gempic_WriteCheckpointFile_Single (maxwell_yee *mw_yee, infrastructure *infra,
+Gempic_WriteCheckpointFile_Field (maxwell_yee *mw_yee, infrastructure *infra,
                                    const std::string& dirname, int field, const int step,
                                    amrex::IndexType IndexT,
                                    int header_precision)
@@ -118,31 +118,38 @@ Gempic_WriteCheckpointFile_Single (maxwell_yee *mw_yee, infrastructure *infra,
 }
 
 void
-Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, infrastructure *infra,
+Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infrastructure *infra,
                             const std::string& dirname, const int step,
-                            int header_precision)
+                            int header_precision, bool particles = true)
 {
     amrex::Print() << "Writing checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
 
     // J
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 0, step, *(mw_yee->E_Index[0]), header_precision);
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 1, step, *(mw_yee->E_Index[1]), header_precision);
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 2, step, *(mw_yee->E_Index[2]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 0, step, *(mw_yee->E_Index[0]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 1, step, *(mw_yee->E_Index[1]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 2, step, *(mw_yee->E_Index[2]), header_precision);
 
     // E
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 3, step, *(mw_yee->E_Index[0]), header_precision);
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 4, step, *(mw_yee->E_Index[1]), header_precision);
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 5, step, *(mw_yee->E_Index[2]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 3, step, *(mw_yee->E_Index[0]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 4, step, *(mw_yee->E_Index[1]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 5, step, *(mw_yee->E_Index[2]), header_precision);
 
     // B
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 6, step, *(mw_yee->B_Index[0]), header_precision);
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 7, step, *(mw_yee->B_Index[1]), header_precision);
-    Gempic_WriteCheckpointFile_Single(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 6, step, *(mw_yee->B_Index[0]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 7, step, *(mw_yee->B_Index[1]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]), header_precision);
+
+    if (particles) {
+        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+            (*(*part_gr).mypc[spec]).Checkpoint("test_dir", "electrons", true, {"vx", "vy", "vz", "weight"}, {});
+        }
+    }
+
 }
 
 
 void
-Gempic_ReadCheckpointFile (maxwell_yee *mw_yee,
+Gempic_ReadCheckpointFile_Field (maxwell_yee *mw_yee,
                            const std::string& dirname, int field, const int step)
 {
 
@@ -206,6 +213,66 @@ Gempic_ReadCheckpointFile (maxwell_yee *mw_yee,
     } else {
         amrex::VisMF::Read(*(mw_yee->B_Array[field%3]),
                 amrex::MultiFabFileFullPrefix(nlevels-1, restart_chkfile, "Level_", fieldnames[field]));
+    }
+
+}
+
+void
+Gempic_ReadCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
+    amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
+
+    // J
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 0, step);
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 1, step);
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 2, step);
+
+    // E
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 3, step);
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 4, step);
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 5, step);
+
+    // B
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 6, step);
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 7, step);
+    Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 8, step);
+
+    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("Ex_before_2") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
+      }
+
+    (*mw_yee).FillBD(*infra);
+
+    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("Ex_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
+      }
+
+    for ( amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+        const amrex::Box& bx = mfi.validbox();
+        amrex::IntVect lo = {bx.smallEnd()};
+        amrex::IntVect hi = {bx.bigEnd()};
+        int k=lo[2];
+        int j=lo[1];
+        int l=lo[0]-1;
+        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, (*(*mw_yee).E_Index[0]));
+        (*(*mw_yee).E_Array[0])[mfi].setVal(2.0, cc, 0, 1);
+
+    }
+
+          for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+              amrex::AllPrintToFile("Ex_ghost_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
+            }
+
+    (*(*mw_yee).E_Array[0]).FillBoundary(infra->geom.periodicity());
+
+    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("Ex_ghost_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
+      }
+
+    // Particles
+    if (particles) {
+        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+            (*(*part_gr).mypc[spec]).Restart ("test_dir", "electrons", true);
+        }
     }
 
 }
