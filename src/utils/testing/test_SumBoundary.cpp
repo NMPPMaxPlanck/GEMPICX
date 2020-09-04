@@ -1,0 +1,127 @@
+#include <tinyexpr.h>
+
+#include <AMReX.H>
+#include <AMReX_MFIter.H>
+#include <AMReX_ParmParse.H>
+#include <AMReX_Particle.H>
+#include <AMReX_Particles.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+
+#include <GEMPIC_particle_mesh_coupling.H>
+#include <GEMPIC_sampler.H>
+
+using namespace std;
+using namespace amrex;
+
+
+void main_main ()
+{
+    // This test shows how one can get a result from SumBoundary that has two slightly
+    // different values for the same cell on different tiles
+
+    //-----------------------------------------------------------------------------
+    // Initialize structures
+
+    // Domain
+    int is_periodic[3] =  {1,1,1};
+    amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
+    amrex::IntVect dom_hi(AMREX_D_DECL(3, 1, 1));
+    int max_grid_size = 2;
+    amrex::Box domain;
+    domain.setSmall(dom_lo);
+    domain.setBig(dom_hi);
+    amrex::RealBox real_box;
+    real_box.setLo({0.0, 0.0, 0.0});
+    real_box.setHi({2.0, 1.0, 1.0});
+
+    // Grid
+    amrex::BoxArray grid;
+    grid.define(domain);
+    grid.maxSize(max_grid_size);
+
+    // DistributionMapping
+    amrex::DistributionMapping distriMap;
+    distriMap.define(grid);
+
+    // Geometry
+    amrex::Geometry geom;
+    geom.define(domain,&real_box,amrex::CoordSys::cartesian,is_periodic);
+
+    // MultiFab
+    amrex::IndexType Index_A(amrex::IntVect{AMREX_D_DECL(1,1,0)}); // nodal | nodal | cell
+    int Nghost = 1;
+    amrex::MultiFab TestMF(convert(grid, Index_A),distriMap,1,Nghost);
+    TestMF.setVal(0.0,0);
+    TestMF.FillBoundary(geom.periodicity());
+    std::array<amrex::Real,3> plo;
+    std::array<amrex::Real,3> dx;
+    std::array<amrex::Real,3+1> dxi;
+    dxi[3] = 1.;
+    for (int cc=0;cc<3;cc++){
+        plo[cc] = geom.ProbLo()[cc];
+        dxi[cc] = (domain.bigEnd(cc)+1)/real_box.hi(cc);
+        dx[cc] = real_box.hi(cc)/(domain.bigEnd(cc)+1);
+        dxi[3] *= dxi[cc];
+    }
+
+    // Particles
+    amrex::Real charge = -1.0;
+    amrex::ParticleContainer<3+1, 0, 0, 0> mypc(geom, distriMap, grid);
+    mypc.do_tiling = true;
+    mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
+
+    bool first = true;
+    using ParticleType = amrex::Particle<3+1, 0>; // Particle template
+
+    Gempic::Sampling::init_one_particle_cellwise(dx, plo, &mypc, {2*dx[0]/5.0, 2*dx[1]/5.0, 0});
+
+    mypc.Redistribute();
+
+    //-----------------------------------------------------------------------------
+    // Deposit charge
+    // Deposit charges:
+    for (amrex::ParIter<3+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
+        amrex::Box tilebox;
+        amrex::FArrayBox local_rho;
+
+        tilebox = pti.tilebox();
+        tilebox.grow(Nghost);
+        const amrex::Box tb = amrex::convert(tilebox, Index_A);
+
+        local_rho.resize(tb,1); // second arg: number of comps
+        local_rho.setVal(0.0);
+
+        auto& particles = pti.GetArrayOfStructs();
+        const long np  = pti.numParticles();
+
+        amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+        for (int pp=0;pp<np;pp++) {
+            Gempic::Particles::gempic_deposit_charge_indextype (particles[pp], charge, dxi, plo, rhoarr,Index_A);
+        }
+        TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
+    }
+
+
+    //-----------------------------------------------------------------------------
+    // SumBoundary
+
+    TestMF.SumBoundary(geom.periodicity());
+
+    for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("Tst_MF_full_2").SetPrecision(20) << TestMF[mfi] << std::endl;
+    }
+
+}
+
+int main(int argc, char* argv[])
+{
+    amrex::Initialize(argc,argv);
+
+    main_main();
+
+    amrex::Finalize();
+}
+
+
+

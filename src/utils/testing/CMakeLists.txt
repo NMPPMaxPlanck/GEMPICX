@@ -1,4 +1,7 @@
 add_executable ( test_gempic_norm test_gempic_norm.cpp )
+add_executable ( test_FillBoundary test_FillBoundary.cpp )
+add_executable ( test_OverrideSync test_OverrideSync.cpp )
+add_executable ( test_SumBoundary test_SumBoundary.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c)
 add_executable ( test_checkpoint test_checkpoint.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c )
 add_executable ( test_tinyexpr test_tinyexpr.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c )
 
@@ -6,6 +9,9 @@ add_executable ( test_tinyexpr test_tinyexpr.cpp ${CMAKE_SOURCE_DIR}/src/utils/t
 #message( ${AMReX_DIR} )
 #message( " ######")
 target_link_libraries( test_gempic_norm AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_FillBoundary AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_OverrideSync AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_SumBoundary AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_checkpoint AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 include_directories("${CMAKE_SOURCE_DIR}/src/utils")
