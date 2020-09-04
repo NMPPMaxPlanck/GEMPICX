@@ -10,6 +10,7 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
+#include <GEMPIC_checkpoint.H>
 #include <GEMPIC_diagnostics.H>
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -125,13 +126,7 @@ void time_loop_boris_fd (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "PIC_save_tmp.output", t_step+1);
-        }
-        if ((t_step+1)%diagn->freq_x == 0) {
-            save_particle_positions(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
-        }
-        if ((t_step+1)%diagn->freq_v == 0) {
-            save_particle_velocities(part_gr, diagn->sim_name + "_" + std::to_string(t_step+1));
+            (*diagn).save_all_to_textfile((*mw_yee).dt, "PIC_save_tmp_OW_part.output", t_step+1);
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 

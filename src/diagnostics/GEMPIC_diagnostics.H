@@ -10,6 +10,7 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
+#include <GEMPIC_checkpoint.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -118,15 +119,12 @@ public:
             gauss_error[step] = (*mw_yee).compute_gauss_error(infra, part_gr);
         }
 
-        // save Plotfile
-        if(step%freq_slice==0) {
-            amrex::Vector<std::string> varnames = {"rho"};
-            if (step == 0) {
-                WriteSingleLevelPlotfile ("SliceData/rho_plotfile_0", (*mw_yee).rho, varnames,
-                                          infra.geom, step*(*mw_yee).dt, 0); //level_step
-            }
-            Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step);
+        // save Plot and Checkpoint-files
+        if ((step+1)%freq_slice == 0) {
+            Gempic_WriteCheckpointFile(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
+            Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step+1);
         }
+
     }
 
     /**
