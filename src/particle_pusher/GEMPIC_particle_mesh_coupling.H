@@ -562,6 +562,59 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
     return(fields);
 }
 
+template <typename P>
+void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
+                                      std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                      std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                      amrex::Array4<amrex::Real> jArray,
+                                      amrex::IndexType IndT)
+
+{
+
+    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
+    amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
+    int i = std::floor(lx);
+    amrex::Real xint = lx - i;
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X, false), GEMPIC_DEG_X);
+    std::vector<amrex::Real> sx_cell_1 = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X, true), GEMPIC_DEG_X);
+    std::array<std::vector<amrex::Real>,2> sx_1 = {sx_cell_1, sx_node};
+    amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
+    int j = std::floor(ly);
+    amrex::Real yint = ly - j;
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_cell_1 = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y, true), GEMPIC_DEG_Y);
+    std::array<std::vector<amrex::Real>,2> sy_1 = {sy_cell_1, sy_node};
+    amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
+    int k = std::floor(lz);
+    amrex::Real zint = lz - k;
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, true), GEMPIC_DEG_Z);
+    std::array<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node};
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(GEMPIC_VDIM);
+
+    for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
+        for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
+            for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
+
+                // deposit in J and interpolate in E
+                int cc = 1;
+                double s_coeff = sx_1[IndT[0]==0?0:1][ii]*sy_1[IndT[1]==0?0:1][jj]*sz_1[IndT[2]==0?0:1][kk]
+                                                                                                   ;
+                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, xint, GEMPIC_DEG_X, IndT[0]==0?true:false),
+                                                              spl.compute_cell_index(j+jj, yint, GEMPIC_DEG_Y, IndT[1]==0?true:false),
+                                                              spl.compute_cell_index(k+kk, zint, GEMPIC_DEG_Z, IndT[2]==0?true:false))};
+
+                amrex::Gpu::Atomic::Add(&(jArray)(cell_index[0]
+                                        , cell_index[1]
+                        , cell_index[2]
+                        , 0), s_coeff*particle_coeff);
+
+
+            }
+        }
+    }
+}
+
 /*!
      * Push the velocity with a given electric field
      */
