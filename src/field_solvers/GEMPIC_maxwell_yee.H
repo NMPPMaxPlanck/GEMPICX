@@ -132,6 +132,7 @@ public:
         // Fill Owner Mask
 
         for (int comp=0; comp<GEMPIC_VDIM; comp++) {
+            J_Masks[comp].reset(new amrex::iMultiFab (convert(ifr.grid, *E_Index[comp]),ifr.distriMap,1,Nghost));
             (*(J_Masks[comp])).setVal(0.0);
             (*(J_Masks[comp])).FillBoundary(ifr.geom.periodicity());
 
