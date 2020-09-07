@@ -1,7 +1,5 @@
 ubuntu2004_openmpi:
   image: gitlab-registry.mpcdf.mpg.de/khr/docker/gempic/ubuntu2004
-  only:
-    - master
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
