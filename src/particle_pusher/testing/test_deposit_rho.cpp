@@ -122,7 +122,7 @@ void main_main ()
 
     std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
     amrex::Print(ofs) << std::endl;
-    amrex::Print(ofs) << "Norm of rho: " << gempic_norm(&(mw_yee.rho), &(*(mw_yee.nodal_Mask)), infra, 2) << std::endl;
+    amrex::Print(ofs) << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
     ofs.close();
 }
 
