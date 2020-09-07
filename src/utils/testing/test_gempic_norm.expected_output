@@ -5,5 +5,5 @@ Constant case:
 
 Linear case: 
 0-norm error: 0
-1-norm error: 5.4001e-13
-2-norm error: 7.5299e-05
+1-norm error: 5.3291e-15
+2-norm error: 0.0012048
