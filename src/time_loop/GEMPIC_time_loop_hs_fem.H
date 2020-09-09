@@ -93,20 +93,33 @@ namespace Gempic {
 
                       // push x and v with the magnetic field
                       std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_x_v_bfield(particles[pp], (*mw_yee).dt, chargemass, bA, infra);
-                      std::array<amrex::Real, GEMPIC_SPACEDIM> xMean;
+                      std::array<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
                       for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
-                        xMean[d] = 0.5*(newPos[d] + particles[pp].pos(d));
+                        {
+                          xOld[d] = particles[pp].pos(d);
+                          xNew[d] = newPos[d];
+                        }
 
                       std::array<amrex::Real, GEMPIC_SPACEDIM> velocity;
                       for (unsigned int d=0;d<GEMPIC_VDIM;++d)
                         velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particles[pp].rdata(d));
+                      /*  //Old version with only depositon at the mid point
+                      std::array<amrex::Real, GEMPIC_SPACEDIM> xMean;
+                      for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                        xMean[d] = 0.5*(newPos[d] + particles[pp].pos(d));
                       accumulate_j_fem_integral(xMean,
                                                 velocity,
                                                 charge*particles[pp].rdata(GEMPIC_VDIM),
                                                 infra.dxi,
                                                 infra.plo,
+                                                jA);*/
+                      accumulate_j_fem_integral(xOld,
+                                                xNew,
+                                                velocity,
+                                                charge*particles[pp].rdata(GEMPIC_VDIM),
+                                                infra.dxi,
+                                                infra.plo,
                                                 jA);
-
                       std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
                     }
                 }

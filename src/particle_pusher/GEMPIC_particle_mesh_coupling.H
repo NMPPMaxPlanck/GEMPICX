@@ -196,6 +196,226 @@ std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
 
 
 /*!
+     * Accumulation: contribution for one point
+     * TODO: This function should better combine all points from one interval to reduce the number of loops
+     */
+void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> position_box,
+                                     std::array<int,GEMPIC_SPACEDIM> box,
+                                     std::array<amrex::Real, GEMPIC_VDIM>  weight,
+                                     std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray)
+{
+    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
+
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (position_box[0], GEMPIC_DEG_X-1);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (position_box[0], GEMPIC_DEG_X);
+#if (GEMPIC_SPACEDIM > 1)
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (position_box[1], GEMPIC_DEG_Y-1);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (position_box[1], GEMPIC_DEG_Y);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (position_box[2], GEMPIC_DEG_Z-1);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (position_box[2], GEMPIC_DEG_Z);
+#endif
+
+
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
+#endif
+            for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
+                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box[0]+ii, box[1]+jj, box[2]+kk)};
+                if ( ii < GEMPIC_DEG_X ) {
+                    double s_coeff = sx_cell[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                            *sy_node[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                            *sz_node[kk]
+        #endif
+                            ;
+                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*weight[0]);
+                }
+#if(GEMPIC_VDIM > 1)
+                if ( jj < GEMPIC_DEG_Y ) {
+                    double s_coeff = sx_node[ii]
+                            *sy_cell[jj]
+        #if(GEMPIC_SPACEDIM > 2)
+                            *sz_node[kk]
+        #endif
+                            ;
+                    amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*weight[1]);
+                }
+#endif
+#if(GEMPIC_VDIM > 2)
+                if ( kk < GEMPIC_DEG_Z ) {
+                    double s_coeff = sx_node[ii]
+                            *sy_node[jj]
+                            *sz_cell[kk]
+                            ;
+                    amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*weight[2]);
+                }
+#endif
+            }
+#if (GEMPIC_SPACEDIM > 1)
+        }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    }
+#endif
+}
+
+
+
+/*!
+     *  Accumulation of the current for a FEM solver with integral over time (line integral)
+     *  Currently this is implemented for Gauss-Quadrature with only one point
+     */
+void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_old,
+                               std::array<amrex::Real,GEMPIC_SPACEDIM> position_new,
+                               std::array<amrex::Real, GEMPIC_VDIM> velocity,
+                               amrex::Real charge, // q*p.rdata(GEMPIC_VDIM)
+                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray)
+{
+  // The quadrature formula TODO: Make this part of the class and generic for variable degree
+  const int n_quad_points = 2;
+  std::array<amrex::Real, n_quad_points> q_points = {(1.-1./std::sqrt(3.))*0.5, (1.+1./std::sqrt(3.))*0.5};
+  std::array<amrex::Real, n_quad_points> q_weights = {0.5, 0.5};
+
+  // 1a. Identify the box and relative position of position old
+  std::array<amrex::Real, GEMPIC_SPACEDIM> position_box_old;
+  std::array<int, GEMPIC_SPACEDIM> box_old;
+  for (unsigned int d=0; d<GEMPIC_SPACEDIM;++d)
+    {
+      amrex::Real pos_norm = (position_old[d]-plo[d])*dxi[d];
+      box_old[d] = std::floor(pos_norm);
+      position_box_old[d] = pos_norm - box_old[d];
+    }
+  // 1b. Identify the box and relative position of position new
+  std::array<amrex::Real, GEMPIC_SPACEDIM> position_box_new;
+  std::array<int, GEMPIC_SPACEDIM> box_new;
+  for (unsigned int d=0; d<GEMPIC_SPACEDIM;++d)
+    {
+      amrex::Real pos_norm = (position_new[d]-plo[d])*dxi[d];
+      box_new[d] = std::floor(pos_norm);
+      position_box_new[d] = pos_norm - box_new[d];
+    }
+
+  std::array<int, GEMPIC_SPACEDIM> boxdiff;
+  std::array<amrex::Real, GEMPIC_SPACEDIM> xnewtilde;
+  int max_box = 0;
+  for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+    {
+      boxdiff[d] = box_new[d]-box_old[d];
+      xnewtilde[d] = position_box_new[d]+boxdiff[d];
+      if (std::abs(boxdiff[d])> max_box)
+        max_box = std::abs(boxdiff[d]);
+    }
+
+  max_box = max_box+1;
+
+  std::array<int,GEMPIC_SPACEDIM> box = box_old; // We start in the old box
+
+  std::array<int,GEMPIC_SPACEDIM>  sigma_counter = {AMREX_D_DECL(0, 0, 0)};
+
+  std::array<std::vector<amrex::Real>, GEMPIC_SPACEDIM> sigmas;
+  std::array<int, GEMPIC_SPACEDIM> increment;
+  std::array<amrex::Real, GEMPIC_SPACEDIM> sigma_next;
+
+  for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
+  {
+     if (boxdiff[d] > 0 )
+       {
+         sigmas[d].resize(boxdiff[d]+1);
+        for (unsigned int bl=0; bl<boxdiff[d];++bl)
+           sigmas[d][bl] = (bl+1  - position_box_old[d])/(xnewtilde[d]-position_box_old[d]) ;
+
+        sigmas[d][boxdiff[d]] = 1.0;
+        sigma_next[d] = sigmas[d][0];
+        increment[d] = 1;
+       }
+     else if (boxdiff[d] < 0 )
+          {
+         sigmas[d].resize(-boxdiff[d]+1);
+        for (unsigned int bl=boxdiff[d]+1; bl<=0; --bl )
+           sigmas[d][-bl] = (bl  - position_box_old[d])/(xnewtilde[d]-position_box_old[d]);
+
+        sigmas[d][-boxdiff[d]] = 1.0;
+        sigma_next[d] = sigmas[d][0];
+        increment[d] = -1;
+          }
+     else
+        {
+          sigma_next[d] = 1.0;
+          increment[d] = 0;
+       }
+     }
+
+
+  amrex::Real sigma_l = 0.0;
+  amrex::Real sigma_r = 0.0;
+  while ( sigma_r < 1.0 )
+        {
+     // Identify index of next intersection
+     auto next = std::min_element(sigma_next.begin(), sigma_next.end());
+     int index_is = next-sigma_next.begin();
+     sigma_r = *next; //sigma_next[index_is];
+     for ( unsigned int  q = 0; q<n_quad_points; ++q )
+       {
+        amrex::Real sigma = sigma_l + (sigma_r-sigma_l) * q_points[q];
+        std::array<amrex::Real, GEMPIC_SPACEDIM> position_box;
+        for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+          {
+            position_box[d]= position_box_old[d]* (1.0 - sigma) + xnewtilde[d] * sigma  - sigma_counter[d]*increment[d];
+          }
+        AMREX_ASSERT_WITH_MESSAGE( *(std::max_element(position_box.begin(), position_box.end())) < 1.0 &
+         *(std::min_element(position_box.begin(), position_box.end())) > 0.0, "Position is outside the interval [0,1].");
+
+        amrex::Real weight = q_weights[q]*(sigma_r-sigma_l)*charge*dxi[GEMPIC_SPACEDIM];
+        std::array<amrex::Real, GEMPIC_VDIM> weight_vec;
+        for (unsigned int d=0;d<GEMPIC_VDIM;++d)
+          weight_vec[d] = velocity[d]*weight;
+        accumulate_j_fem_integral_point(position_box, box, weight_vec, jArray);
+     }
+     if (sigma_r < 1.0 )
+     {
+        // Update the
+        sigma_counter[index_is] = sigma_counter[index_is]+1;
+        sigma_next[index_is] = sigmas[index_is][sigma_counter[index_is]];
+        box[index_is] = box[index_is] + increment[index_is];
+        sigma_l = sigma_r;
+     }
+  }
+}
+
+
+
+/*!
      *  Accumulation of the current for a FEM solver with integral over time (line integral)
      *  Currently this is implemented for Gauss-Quadrature with only one point
      */
