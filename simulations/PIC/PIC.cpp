@@ -225,7 +225,7 @@ void main_main (bool ctest)
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, checkpoint_file, curr_step);
     }
     std::ofstream ofs("PIC.output", std::ofstream::out);
-    amrex::Print(ofs) << endl;
+    if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
       case 0:
         time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
@@ -236,6 +236,7 @@ void main_main (bool ctest)
       default:
         break;
       }
+    if (ctest & (ParallelDescriptor::MyProc()==0)) std::rename("test_output_pre_rename.output.0", "PIC.output");
 }
 
 int main(int argc, char* argv[])

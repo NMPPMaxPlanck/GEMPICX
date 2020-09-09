@@ -135,7 +135,7 @@ void time_loop_boris_fd (infrastructure infra,
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
         if (ctest) {
-            amrex::Print(*ofs) << t_step << " " << (*diagn).Efield[t_step][0]
+            amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0]
                         #if (GEMPIC_VDIM > 1)
                                  << " " << (*diagn).Efield[t_step][1]
                         #endif

@@ -159,14 +159,13 @@ void main_main ()
 
     mw_yee.init_E_B(fields, infra);
 
-    std::ofstream ofs("test_maxwell_yee.output", std::ofstream::out);
-    amrex::Print(ofs) << endl;
+    //AllPrintToFile("test_output_pre_rename.output") << endl;
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.computeError(fields, true, infra);
-    Print(ofs) << endl;
-    Print(ofs) << "Maxwell" << endl;
-    Print(ofs) << "step " << 0 << endl;
-    Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+    AllPrintToFile("test_output_pre_rename.output") << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                           #if (GEMPIC_VDIM > 1)
                                   " |Ey error: " << E_B_error[1] <<
                           #endif
@@ -174,7 +173,7 @@ void main_main ()
                                   " |Ez error: " << E_B_error[2] <<
                           #endif
                                   endl;
-    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
                           #if (GEMPIC_BDIM > 1)
                                   " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
                           #endif
@@ -188,8 +187,8 @@ void main_main ()
         mw_yee.advance(infra, mw_yee.dt);
         E_B_error = mw_yee.computeError(fields, true, infra);
 
-        Print(ofs) << "step " << n << endl;
-        Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+        AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                               #if (GEMPIC_VDIM > 1)
                                       " |Ey error: " << E_B_error[1] <<
                               #endif
@@ -197,7 +196,7 @@ void main_main ()
                                       " |Ez error: " << E_B_error[2] <<
                               #endif
                                       endl;
-        Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
                               #if (GEMPIC_BDIM > 1)
                                       " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
                               #endif
@@ -226,10 +225,10 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee_2.computeError(fields, true, infra);
-    Print(ofs) << endl;
-    Print(ofs) << "Maxwell" << endl;
-    Print(ofs) << "step " << 0 << endl;
-    Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+    AllPrintToFile("test_output_pre_rename.output") << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                           #if (GEMPIC_VDIM > 1)
                                   " |Ey error: " << E_B_error[1] <<
                           #endif
@@ -237,7 +236,7 @@ void main_main ()
                                   " |Ez error: " << E_B_error[2] <<
                           #endif
                                   endl;
-    Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
                           #if (GEMPIC_BDIM > 1)
                                   " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
                           #endif
@@ -254,8 +253,8 @@ void main_main ()
         mw_yee_2.advance_B(infra, mw_yee_2.dt);
         E_B_error = mw_yee_2.computeError(fields, true, infra);
 
-        Print(ofs) << "step " << n << endl;
-        Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+        AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                               #if (GEMPIC_VDIM > 1)
                                       " |Ey error: " << E_B_error[1] <<
                               #endif
@@ -263,7 +262,7 @@ void main_main ()
                                       " |Ez error: " << E_B_error[2] <<
                               #endif
                                       endl;
-        Print(ofs).SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
                               #if (GEMPIC_BDIM > 1)
                                       " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
                               #endif
@@ -299,9 +298,9 @@ void main_main ()
     mw_yee.solve_poisson(infra);
     E_B_error = mw_yee.computeError(fields_poisson, false, infra);
 
-    Print(ofs) << endl;
-    Print(ofs) << "Poisson" << endl;
-    Print(ofs).SetPrecision(5) << "Ex error: " << E_B_error[0] <<
+    AllPrintToFile("test_output_pre_rename.output") << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "Poisson" << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
                               #if (GEMPIC_VDIM > 1)
                                   " |Ey error: " << E_B_error[1] <<
                               #endif
@@ -314,14 +313,15 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Rho from E
 
-    Print(ofs) << endl;
-    Print(ofs) << "rho_from_E" << endl;
+    AllPrintToFile("test_output_pre_rename.output") << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "rho_from_E" << endl;
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
-    Print(ofs).SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
-    Print(ofs).SetPrecision(5) << "rho Norm: " << Utils::gempic_norm(&(mw_yee.rho), infra, 2) << std::endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "rho Norm: " << Utils::gempic_norm(&(mw_yee.rho), infra, 2) << std::endl;
 
-    ofs.close();
+    //ofs.close();
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_maxwell_yee.output");
 }
 
 int main(int argc, char* argv[])
