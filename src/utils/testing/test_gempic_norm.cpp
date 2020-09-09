@@ -88,11 +88,11 @@ void main_main ()
 
     // Constant case
     mw_yee.rho.setVal(C, 0);
-    Print(ofs) << endl << "Constant case: " << endl;
-    Print(ofs).SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
-    Print(ofs).SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
-    Print(ofs).SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
-    Print(ofs) << endl;
+    AllPrintToFile("test_output_pre_rename.output") << endl << "Constant case: " << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
+    AllPrintToFile("test_output_pre_rename.output") << endl;
 
     // Linear case
     std::array<double,GEMPIC_SPACEDIM> x;
@@ -122,8 +122,8 @@ void main_main ()
         }
 #endif
     }
-    Print(ofs) << "Linear case: " << endl;
-    Print(ofs).SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
+    AllPrintToFile("test_output_pre_rename.output") << "Linear case: " << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
 #if(GEMPIC_SPACEDIM == 1)
     double Lx = infra.Length[0];
     double norm1 = 1/2*Lx*a;
@@ -145,11 +145,13 @@ void main_main ()
     double Lz = infra.Length[2];
     double norm1 = 1./2.*(a*Lx + b*Ly + c*Lz);
     double norm2 = 1./6.*(2.*pow(a,2.)*pow(Lx,2.) + 3.*a*c*Lx*Lz + 3.*b*c*Ly*Lz + 3.*a*b*Lx*Ly + 2.*pow(b,2.)*pow(Ly,2.) + 2.*pow(c,2.)*pow(Lz,2.));
-    Print(ofs).SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
-    Print(ofs).SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2) << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2) << endl;
 #endif
 
-    ofs.close();
+    //ofs.close();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_gempic_norm.output");
 }
 
 int main(int argc, char* argv[])

@@ -32,7 +32,7 @@ void main_main ()
     //initializer
     initializer init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(64,32,32));
+    amrex::IntVect n_cell(AMREX_D_DECL(32,32,32));
     int max_grid_size = 2;
 
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
@@ -53,7 +53,9 @@ void main_main ()
     VW[2].push_back(1.0);
 #endif
 
-    std::string WF = "1.0 + 0.0 * cos(kvar * x)";
+    // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
+    // multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
+    std::string WF = "(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*1.0";
     double x, y, z;
     double k = 1.25;
     int err;
@@ -62,7 +64,7 @@ void main_main ()
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
 
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},1,0.5,VM,VD,VW,0);
+    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},1,1.25,VM,VD,VW,0);
 
     // infrastructure
     infrastructure infra(init);
@@ -94,9 +96,72 @@ void main_main ()
     (*(part_gr).mypc[0]).Redistribute();
 
     const int step = 0;
-    Gempic_WritePlotFile (&part_gr, &mw_yee, &infra, "plot", step);
+    int spec = 0;
 
-    std::system("cp ParticlePlotfiles/plot00000/electrons/Header test_particle_groups.output");
+    // compute mass, momentum and kinetic energy
+    auto mass = amrex::ReduceSum( *(part_gr).mypc[spec],
+                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+    {
+        auto m  = p.rdata(GEMPIC_VDIM);
+        return (m);
+    });
+    amrex::ParallelDescriptor::ReduceRealSum
+            (mass, amrex::ParallelDescriptor::IOProcessorNumber());
+
+    // momentum
+    std::array<amrex::Real,GEMPIC_VDIM> momentum;
+    for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+        auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
+                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+        {
+            auto m  = p.rdata(GEMPIC_VDIM);
+            auto vel = p.rdata(cmp);
+            return (m*vel);
+        });
+
+        amrex::ParallelDescriptor::ReduceRealSum
+                (mom_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
+
+        momentum[cmp] = mom_tmp;
+    }
+
+    // kinetic energy
+    std::array<amrex::Real,GEMPIC_VDIM> kinetic_energy;
+    for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+        auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
+                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+        {
+            auto m  = p.rdata(GEMPIC_VDIM);
+            auto vel = p.rdata(cmp);
+            return (m*vel*vel);
+        });
+
+        amrex::ParallelDescriptor::ReduceRealSum
+                (mom_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
+
+        kinetic_energy[cmp] = mom_tmp;
+    }
+
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "mass: " << mass << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: " << momentum[0]
+                                                   #if (GEMPIC_VDIM > 1)
+                                                            << " " << momentum[1]
+                                                   #endif
+                                                   #if (GEMPIC_VDIM > 2)
+                                                            << " " << momentum[2]
+                                                   #endif
+                                                            << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: " << kinetic_energy[0]
+                                                   #if (GEMPIC_VDIM > 1)
+                                                            << " " << kinetic_energy[1]
+                                                   #endif
+                                                   #if (GEMPIC_VDIM > 2)
+                                                            << " " << kinetic_energy[2]
+                                                   #endif
+                                                            << std::endl;
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_particle_groups.output");
 
 }
 

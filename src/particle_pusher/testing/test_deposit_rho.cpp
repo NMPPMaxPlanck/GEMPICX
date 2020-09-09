@@ -120,10 +120,12 @@ void main_main ()
     // Compute difference and store in phi:
     (mw_yee.phi).minus(mw_yee.rho, 0, 1, 0);
 
-    std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
-    amrex::Print(ofs) << std::endl;
-    amrex::Print(ofs) << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
-    ofs.close();
+    //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+    //ofs.close();
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_deposit_rho.output");
+
 }
 
 int main(int argc, char* argv[])
