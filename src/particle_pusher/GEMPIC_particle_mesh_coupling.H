@@ -393,8 +393,8 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
           {
             position_box[d]= position_box_old[d]* (1.0 - sigma) + xnewtilde[d] * sigma  - sigma_counter[d]*increment[d];
           }
-        AMREX_ASSERT_WITH_MESSAGE( *(std::max_element(position_box.begin(), position_box.end())) < 1.0 &
-         *(std::min_element(position_box.begin(), position_box.end())) > 0.0, "Position is outside the interval [0,1].");
+        AMREX_ASSERT_WITH_MESSAGE( (*(std::max_element(position_box.begin(), position_box.end())) < 1.0) &
+         (*(std::min_element(position_box.begin(), position_box.end())) > 0.0), "Position is outside the interval [0,1].");
 
         amrex::Real weight = q_weights[q]*(sigma_r-sigma_l)*charge*dxi[GEMPIC_SPACEDIM];
         std::array<amrex::Real, GEMPIC_VDIM> weight_vec;
@@ -708,7 +708,7 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
 
                 // deposit in J and interpolate in E
                 for (int cc=0;cc<GEMPIC_VDIM;cc++) {
-                    if(!((kk==GEMPIC_DEG_Z & cc%3==2)|(jj==GEMPIC_DEG_Y & cc%3==1)|(ii==GEMPIC_DEG_X & cc%3==0))) {
+                    if(!(((kk==GEMPIC_DEG_Z) & (cc%3==2))|((jj==GEMPIC_DEG_Y) & (cc%3==1))|((ii==GEMPIC_DEG_X) & (cc%3==0)))) {
                         double s_coeff = sx_1[cc%3==0?0:1][ii]
                               #if(GEMPIC_SPACEDIM > 1)
                                                       *sy_1[cc%3==1?0:1][jj]
@@ -746,7 +746,7 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
                 if (field_int) {
                     // deposit in B
                     for (int cc=0;cc<GEMPIC_BDIM;cc++) {
-                        if(!((kk==GEMPIC_DEG_Z & cc%3!=2)|(jj==GEMPIC_DEG_Y & cc%3!=1)|(ii==GEMPIC_DEG_X & cc%3!=0))) {
+                        if(!(((kk==GEMPIC_DEG_Z) & (cc%3!=2))|((jj==GEMPIC_DEG_Y) & (cc%3!=1))|((ii==GEMPIC_DEG_X) & (cc%3!=0)))) {
                             double s_coeff = sx_1[cc%3==0?1:0][ii]
                               #if(GEMPIC_SPACEDIM > 1)
                                                           *sy_1[cc%3==1?1:0][jj]
@@ -881,7 +881,7 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+GEMPIC_VDIM> push_x_v_bfield(P const& p,
     amrex::Real diff = tolerance + 1.0;
     int iter_counter = 0;
     int max_iter = 20;
-    while (diff > tolerance && iter_counter < max_iter) {
+    while ((diff > tolerance) && (iter_counter < max_iter)) {
         iter_counter += 1;
         newXiter = newX;
         newViter = newV;

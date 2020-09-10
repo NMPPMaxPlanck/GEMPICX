@@ -71,7 +71,7 @@ void init_particles_cellwise(infrastructure infra,
         std::array<int,GEMPIC_VDIM> gauss_idx = {AMREX_V_DECL(0,0,0)};
         for(int i=0;i<GEMPIC_VDIM;i++){
             for (int gg=1;gg<num_gauss;gg++){
-                if (vel_cum[i][gg-1]-gauss_choice[i] < 0 & vel_cum[i][gg]-gauss_choice[i] >= 0){
+                if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){
                     gauss_idx[i] = gg;
                 }
             }
@@ -196,7 +196,7 @@ void init_particles_full_domain(infrastructure infra,
                         std::array<int,GEMPIC_VDIM> gauss_idx = {AMREX_V_DECL(0,0,0)};
                         for(int i=0;i<GEMPIC_VDIM;i++){
                             for (int gg=1;gg<num_gauss;gg++){
-                                if (vel_cum[i][gg-1]-gauss_choice[i] < 0 & vel_cum[i][gg]-gauss_choice[i] >= 0){
+                                if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){
                                     gauss_idx[i] = gg;
                                 }
                             }

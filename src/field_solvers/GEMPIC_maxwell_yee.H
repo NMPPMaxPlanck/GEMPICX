@@ -414,12 +414,12 @@ public:
                             (*J_Array[i])[mfi].getVal(cj, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             // B-derivatives
-#if (GEMPIC_VDIM < 3 & GEMPIC_SPACEDIM == 1)
+#if ((GEMPIC_VDIM < 3) & (GEMPIC_SPACEDIM == 1))
                             if (i == 0){
                                 (*E_Array[0])[mfi].setVal(*c1+dt_step*(-*cj), cc, 0, 1);
                             }
 #endif
-#if (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
+#if ((GEMPIC_VDIM == 2) & (GEMPIC_SPACEDIM == 2))
                             //Ex for 2D2V
                             if (i == 0) {
                                 (*B_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
@@ -486,12 +486,12 @@ public:
                             (*E_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             // B-derivatives
-#if (GEMPIC_VDIM < 3 & GEMPIC_SPACEDIM == 1)
+#if ((GEMPIC_VDIM < 3) & (GEMPIC_SPACEDIM == 1))
                             if (i == 0){
                                 (*E_Array[0])[mfi].setVal(*c1+dt_step, cc, 0, 1);
                             }
 #endif
-#if (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
+#if ((GEMPIC_VDIM == 2) & (GEMPIC_SPACEDIM == 2))
                             //Ex for 2D2V
                             if (i == 0) {
                                 (*B_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
@@ -605,12 +605,12 @@ public:
                             // E-derivatives
 #if (GEMPIC_VDIM == 1)
                             //no B
-#elif (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 1)
+#elif ((GEMPIC_VDIM == 2) & (GEMPIC_SPACEDIM == 1))
                             (*E_Array[1])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
                             (*E_Array[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
 
                             (*B_Array[0])[mfi].setVal(*c1-dt_step*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
-#elif (GEMPIC_VDIM == 2 & GEMPIC_SPACEDIM == 2)
+#elif ((GEMPIC_VDIM == 2) & (GEMPIC_SPACEDIM == 2))
                             (*E_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j+1,k)},0,1);
                             (*E_Array[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
                             (*E_Array[1])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);

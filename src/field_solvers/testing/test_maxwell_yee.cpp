@@ -43,24 +43,24 @@ double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std:
     return(res);
 }
 
-#if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 1)
+#if ((GEMPIC_SPACEDIM == 1) & (GEMPIC_VDIM == 1))
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)));}
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0.);}
 #endif
 
-#if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 2)
+#if ((GEMPIC_SPACEDIM == 1) & (GEMPIC_VDIM == 2))
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]));}
 double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0])*cos(t));}
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sin(x[0])*sin(t));}
 #endif
 
-#if (GEMPIC_SPACEDIM == 2 & GEMPIC_VDIM == 2)
+#if ((GEMPIC_SPACEDIM == 2) & (GEMPIC_VDIM == 2))
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0])*sin(x[1])*sin(sqrt(2)*t)/sqrt(2));}
 double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sin(x[0])*cos(x[1])*sin(sqrt(2)*t)/sqrt(2));}
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-cos(x[0])*cos(x[1])*cos(sqrt(2)*t));}
 #endif
 
-#if (GEMPIC_SPACEDIM == 3 & GEMPIC_VDIM == 3)
+#if ((GEMPIC_SPACEDIM == 3) & (GEMPIC_VDIM == 3))
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
@@ -71,7 +71,7 @@ double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(s
 #endif
 
 double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
-#if (GEMPIC_SPACEDIM == 1 & GEMPIC_VDIM == 2)
+#if ((GEMPIC_SPACEDIM == 1) & (GEMPIC_VDIM == 2))
 double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
 #else
 double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));}

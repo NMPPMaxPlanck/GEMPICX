@@ -62,7 +62,7 @@ public:
     }
 
     amrex::Real shifted_x (amrex::Real x, int degree, bool cent_eval) {
-        if (degree%2==0 ^ cent_eval) { //even XOR centered
+        if ((degree%2==0) ^ (cent_eval)) { //even XOR centered
             if (x>1./2.) {
                 return(3./2.-x);
             } else {
