@@ -1,24 +1,24 @@
 
-//------------------------------------------------------------------------------
-// Test Gempic Norm
-//
-//  Constant function
-//  g(x,y,z) = C
-//  norm(g,0) = norm(g,1) = norm(g,2) = C
-//
-//  linear function
-//  f(x,y,z) = ax + by + cz
-//  norm(f,0) = aLx + bLy + cLz
-//  1D
-//  norm(f,1) = 1/2*Lx*a
-//  norm(f,2) = 1/3*Lx^2a^2
-//  2D
-//  norm(f,1) = 1/2*(a*Lx + b*Ly)
-//  norm(f,2) = 1/6*(2*a^2*Lx^2 + 3*a*b*Lx*Ly + 2*b^2*Ly^2)
-//  3D
-//  norm(f,1) = 1/2*(a*Lx + b*Ly + c*Lz)
-//  norm(f,2) = 1/6*(2*a^2*Lx^2 + 3*a*c*Lx*Lz + 3*b*c*Ly*Lz + 3*a*b*Lx*Ly + 2*b^2*Ly^2 + 2*c^2*Lz^2)
-//------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
+ Test Gempic Norm
+
+  Constant function
+  g(x,y,z) = C
+  norm(g,0) = norm(g,1) = norm(g,2) = C
+
+  linear function
+  f(x,y,z) = ax + by + cz
+  norm(f,0) = aLx + bLy + cLz
+  1D
+  norm(f,1) = 1/2*Lx*a
+  norm(f,2) = 1/3*Lx^2a^2
+  2D
+  norm(f,1) = 1/2*(a*Lx + b*Ly)
+  norm(f,2) = 1/6*(2*a^2*Lx^2 + 3*a*b*Lx*Ly + 2*b^2*Ly^2)
+  3D
+  norm(f,1) = 1/2*(a*Lx + b*Ly + c*Lz)
+  norm(f,2) = 1/6*(2*a^2*Lx^2 + 3*a*c*Lx*Lz + 3*b*c*Ly*Lz + 3*a*b*Lx*Ly + 2*b^2*Ly^2 + 2*c^2*Lz^2)
+------------------------------------------------------------------------------*/
 
 #include <cmath>
 

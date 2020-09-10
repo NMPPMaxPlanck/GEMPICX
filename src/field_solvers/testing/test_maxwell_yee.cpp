@@ -1,17 +1,17 @@
-//------------------------------------------------------------------------------
-// Test 3D Maxwell Yee Solver (finite differences) on periodic grid
-//
-//  For the Maxwell-equations we use the solution
-//  E(x,t) =  \begin{pmatrix} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
-//                          -2\cos(x_1+x_2+x_3 - \sqrt(3) t) \\
-//                            \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
-//  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\ 0 \\ -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
-//
-// For the Poisson equation we use:
-// E(x,t) = \begin{pmatrix} -\sin(x)\cos(y)\cos(z)-0.5\sin(2x)cos(2y)cos(2z)\\
-//                          -\cos(x)\sin(y)\cos(z)-0.5\cos(2x)sin(2y)cos(2z)\\
-//                          -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
-//------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
+ Test 3D Maxwell Yee Solver (finite differences) on periodic grid
+
+  For the Maxwell-equations we use the solution
+  E(x,t) =  \begin{pmatrix} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
+                          -2\cos(x_1+x_2+x_3 - \sqrt(3) t) \\
+                            \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
+  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\ 0 \\ -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
+
+ For the Poisson equation we use:
+ E(x,t) = \begin{pmatrix} -\sin(x)\cos(y)\cos(z)-0.5\sin(2x)cos(2y)cos(2z)\\
+                          -\cos(x)\sin(y)\cos(z)-0.5\cos(2x)sin(2y)cos(2z)\\
+                          -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
+------------------------------------------------------------------------------*/
 
 #include <tinyexpr.h>
 

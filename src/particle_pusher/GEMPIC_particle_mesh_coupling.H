@@ -1,8 +1,8 @@
-//------------------------------------------------------------------------------
-// functions copied from the AMReX library to make small changes
-// AMReX file containing original functions: AMReX_Particle_mod_K.H
-// (amrex/Src/Particle/AMReX_Particle_mod_K.H) pulled on 07.10.2019
-//------------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
+ functions copied from the AMReX library to make small changes
+ AMReX file containing original functions: AMReX_Particle_mod_K.H
+ (amrex/Src/Particle/AMReX_Particle_mod_K.H) pulled on 07.10.2019
+------------------------------------------------------------------------------*/
 
 #ifndef PARTICLE_MESH_COUPLING_H_
 #define PARTICLE_MESH_COUPLING_H_
