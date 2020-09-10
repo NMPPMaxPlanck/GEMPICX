@@ -30,11 +30,7 @@ void save_particle_positions (particle_groups *ppg, std::string ID = "", int spe
     auto all_parts = (*(*ppg).mypc[species]).ParticleBoxArray(0);
     std::cout << all_parts[0] << " | " << all_parts[1] << std::endl;
     std::ofstream ofsss("particle_output/x/W_" + ID + ".output", std::ofstream::out);
-    long unsigned int tmp_int = 10;
     amrex::RealDescriptor ParticleRealDescriptor = amrex::FPC::Native64RealDescriptor();
-    //(*(*ppg).mypc[species]).WriteParticleRealData(tmp_int, ofsss, ParticleRealDescriptor);
-    //(*(*ppg).mypc[species]).WriteParticles ();
-    //(*(*ppg).mypc[species]).Checkpoint("tmpPar", "Particle0");
 
     //-------------------------------------------------------------
     const std::string& dir = "ParticlePlotfiles/plt00000";

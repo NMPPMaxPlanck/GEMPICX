@@ -699,9 +699,6 @@ public:
             // next mfi
         }
 
-        // box with all interior nodes:
-        const amrex::Box& interior = amrex::surroundingNodes(amrex::grow(ifr.geom.Domain(), -1));
-        //phi.setVal(0.0, interior, 0, 1, 0); // set sol to 0 on interior
         rho.FillBoundary(ifr.geom.periodicity());
         phi.FillBoundary(ifr.geom.periodicity());
     }

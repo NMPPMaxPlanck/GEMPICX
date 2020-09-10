@@ -72,7 +72,6 @@ public:
                         infrastructure infra,
                         maxwell_yee *mw_yee,
                         particle_groups *part_gr){
-        amrex::Real vel;
 
         // E and B field
         for(int cc=0;cc<GEMPIC_VDIM;cc++){

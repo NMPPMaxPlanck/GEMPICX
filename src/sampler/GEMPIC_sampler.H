@@ -84,7 +84,6 @@ void init_particles_cellwise(infrastructure infra,
         //Adding particle from the model cell to all cells
         for(amrex::MFIter mfi=(*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
 
-                using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
                 amrex::ParticleTile<4, 0, 0, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
                 const amrex::Box& bx = mfi.validbox();
                 amrex::IntVect lo = {bx.smallEnd()};
@@ -169,9 +168,6 @@ void init_particles_full_domain(infrastructure infra,
         std::mt19937 gen(rSeed);
         std::normal_distribution<> norm01(0,1);
 
-
-
-        using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
         auto& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)

@@ -95,7 +95,6 @@ void main_main ()
     init_particles_cellwise(infra, part_gr, init, species, WF_parse, &x, &y, &z);
     (*(part_gr).mypc[0]).Redistribute();
 
-    const int step = 0;
     int spec = 0;
 
     // compute mass, momentum and kinetic energy

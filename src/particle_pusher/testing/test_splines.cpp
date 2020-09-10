@@ -29,7 +29,6 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Init splines
 
-    amrex::IntVect deg = amrex::IntVect{AMREX_D_DECL(1,2,1)};
     std::array<bool,GEMPIC_SPACEDIM> cent_eval = {false, false, true};
     std::array<bool,GEMPIC_SPACEDIM> int_eval = {false, false, false};
     splines spl(cent_eval, int_eval);
@@ -38,9 +37,6 @@ void main_main ()
     int dimension = 0;
     std::array<amrex::Real, GEMPIC_SPACEDIM> x = {AMREX_D_DECL(0.25, 0.25, 0.25)};
     std::cout << spl.compute_cell_index (cell_index, dimension, x[0], cent_eval[0]) << std::endl;
-
-    std::array<int, GEMPIC_SPACEDIM> cell_vec = {AMREX_D_DECL(0,0,0)};
-    //std::cout << spl.deposition_coefficient (x, cell_vec) << std::endl;
 
 }
 

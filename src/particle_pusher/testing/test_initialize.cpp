@@ -54,9 +54,6 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
-    const int n_species = 1;
-    array<Real, n_species> charge = {1.0};
-    array<Real, n_species> mass = {1.0};
     particle_groups part_gr(init, infra);
 
     //set particles for first cell (and copies in remaining cells)
@@ -99,7 +96,6 @@ void main_main ()
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
-            using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
             auto& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)

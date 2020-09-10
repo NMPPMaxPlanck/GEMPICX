@@ -71,9 +71,6 @@ void main_main ()
     mypc.do_tiling = true;
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
 
-    bool first = true;
-    using ParticleType = amrex::Particle<3+1, 0>; // Particle template
-
     Gempic::Sampling::init_one_particle_cellwise(dx, plo, &mypc, {2*dx[0]/5.0, 2*dx[1]/5.0, 0});
 
     mypc.Redistribute();

@@ -817,7 +817,6 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
             for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
 
                 // deposit in J and interpolate in E
-                int cc = 1;
                 double s_coeff = sx_1[IndT[0]==0?0:1][ii]*sy_1[IndT[1]==0?0:1][jj]*sz_1[IndT[2]==0?0:1][kk]
                                                                                                    ;
                 std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, xint, GEMPIC_DEG_X, IndT[0]==0?true:false),

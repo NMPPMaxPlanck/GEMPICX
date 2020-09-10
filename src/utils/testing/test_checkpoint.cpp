@@ -40,14 +40,8 @@ void main_main ()
     std::array<amrex::Real, GEMPIC_NUMSPEC> mass = {1.0};
     amrex::Real k = 1.25;
     std::string WF = "0.0";
-    std::string Bx = "0.0";
-    std::string By = "0.0";
-    std::string Bz = "1e-3 * cos(kvar * x)";
     std::string phi = "0.0";
     std::string rho = "0.0";
-    int num_gaussians = 1;
-    int propagator = 0;
-    bool time_staggered = true;
     amrex::Real tolerance_particles = 1.e-10;
 
     std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
@@ -72,10 +66,6 @@ void main_main ()
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
-
-    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars, varcount, &err);
-    te_expr *By_parse = te_compile(By.c_str(), read_vars, varcount, &err);
-    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars, varcount, &err);
 
     te_variable read_vars_poi[] = {{"x", &x}, {"y", &y}, {"z", &z}};
     varcount = 3;
