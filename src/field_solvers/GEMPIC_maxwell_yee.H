@@ -54,6 +54,7 @@ public:
     std::array<std::unique_ptr<amrex::IndexType>, GEMPIC_BDIM> B_Index;
     std::array<std::unique_ptr<amrex::iMultiFab>, GEMPIC_VDIM> E_Masks;
     std::array<std::unique_ptr<amrex::iMultiFab>, GEMPIC_VDIM> B_Masks;
+    std::unique_ptr<amrex::iMultiFab> nodal_Mask;
     amrex::MultiFab phi_init; // for Poisson
     amrex::MultiFab rho; // for Poisson
     amrex::MultiFab rho_gauss_law; // for Poisson
@@ -181,6 +182,33 @@ public:
                             // the box for these values:
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, (*B_Index[comp]));
                             (*(B_Masks[comp]))[mfi].setVal(1, cc, 0, 1);
+                        }
+
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+            }
+            nodal_Mask.reset(new amrex::iMultiFab (convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,1,Nghost));
+            (*nodal_Mask).setVal(0.0);
+            (*nodal_Mask).FillBoundary(ifr.geom.periodicity());
+
+            for ( amrex::MFIter mfi(*nodal_Mask); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=(hi[2]-1); k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=(hi[1]-1); j++){
+#endif
+                        for(int l=lo[0]; l<=(hi[0]-1); l++){
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
+                            (*nodal_Mask)[mfi].setVal(1, cc, 0, 1);
                         }
 
 #if (GEMPIC_SPACEDIM > 1)
