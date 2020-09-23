@@ -78,6 +78,7 @@ namespace Gempic {
 
       //add values from ghost cells and periodic boundary
       (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
+      (*mw_yee).rho.OverrideSync(*((*mw_yee).nodal_Mask), infra.geom.periodicity());
       (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
       // output rho
