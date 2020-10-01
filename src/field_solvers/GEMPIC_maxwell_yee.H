@@ -838,10 +838,19 @@ public:
                         for (int i=0; i<GEMPIC_VDIM; i++) {
 
                             // E-derivatives
-                            (*E_Array[i])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l-(i==0?1:0),j-(i==1?1:0),k-(i==2?1:0))},0,1);
-                            (*E_Array[i])[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+                            bool backward = true; // false: central
+                            if(backward) {
+                                (*E_Array[i])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l-(i==0?1:0),j-(i==1?1:0),k-(i==2?1:0))},0,1);
+                                (*E_Array[i])[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
-                            rho_val += (*c1-*c2)/ifr.dx[i];
+                                rho_val += (*c1-*c2)/ifr.dx[i];
+                            } else {
+                                (*E_Array[i])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l-(i==0?1:0),j-(i==1?1:0),k-(i==2?1:0))},0,1);
+                                (*E_Array[i])[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
+
+                                rho_val += 0.5*(*c1-*c2)/ifr.dx[i];
+                            }
+
                         }
 
                         (rho_gauss_law)[mfi].setVal(rho_val, cc, 0, 1);
