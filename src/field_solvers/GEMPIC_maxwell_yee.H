@@ -754,32 +754,15 @@ public:
          amrex::LinOpBCType::Periodic,
          amrex::LinOpBCType::Periodic)});
         linop.setSigma(0, sigma); // first argument: level-nr
+
         amrex::MLMG mlmg(linop); // solver class
         mlmg.setMaxIter(max_iter);
         mlmg.setMaxFmgIter(max_fmg_iter);
         mlmg.setVerbose(verbose);
         mlmg.setBottomVerbose(bottom_verbose);
-        //mlmg_ptr = &mlmg;
 
-#if (GEMPIC_SPACEDIM > 1)
-        amrex::Vector<std::string> varnames = {"phi_init"};
-        WriteSingleLevelPlotfile ("SliceData2D/phi_init_plotfile_0", phi, varnames,
-                                  ifr.geom, 0*dt, 0);
-
-        varnames = {"rho"};
-        WriteSingleLevelPlotfile ("SliceData2D/rho_plotfile_0", rho, varnames,
-                                  ifr.geom, 0*dt, 0);
-#endif
-        amrex::Print() << "rho " << gempic_norm(&rho, ifr, 0) << std::endl;
-        //(*mlmg_ptr).solve({&phi}, {&rho}, reltol, 0.0);
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
         phi.FillBoundary(ifr.geom.periodicity());
-
-#if (GEMPIC_SPACEDIM > 1)
-        varnames = {"phi_end"};
-        WriteSingleLevelPlotfile ("SliceData2D/phi_end_plotfile_0", phi, varnames,
-                                  ifr.geom, 0*dt, 0);
-#endif
 
 #endif
 
@@ -824,17 +807,6 @@ public:
             }
             (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
-        amrex::Vector<std::string> varnamesE = {"Ex_0"};
-        WriteSingleLevelPlotfile ("SliceData/Ex_plotfile_0", *E_Array[0], varnamesE, ifr.geom, 0*dt, 0);
-
-#if (GEMPIC_VDIM > 1)
-        varnamesE = {"Ey_0"};
-        WriteSingleLevelPlotfile ("SliceData/Ey_plotfile_0", *E_Array[1], varnamesE, ifr.geom, 0*dt, 0);
-#endif
-#if (GEMPIC_VDIM > 2)
-        varnamesE = {"Ez_0"};
-        WriteSingleLevelPlotfile ("SliceData/Ez_plotfile_0", *E_Array[2], varnamesE, ifr.geom, 0*dt, 0);
-#endif
 
     }
 
@@ -934,11 +906,6 @@ public:
 
         for (int i=0; i<GEMPIC_VDIM; i++){
             amrex::Vector<std::string> varnames = {"E"+std::to_string(i)};
-            WriteSingleLevelPlotfile ("SliceDataTest/E"+std::to_string(i)+"_plotfile_0", *E_Array[i], varnames,
-                                      ifr.geom, dt, 0); //level_step
-            varnames = {"E"+std::to_string(i)+"sol"};
-            WriteSingleLevelPlotfile ("SliceDataTest/E"+std::to_string(i)+"sol"+"_plotfile_0", *E_sol_Array[i], varnames,
-                                      ifr.geom, dt, 0); //level_step
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
             E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
         }
