@@ -54,7 +54,6 @@ MLNodeLaplacian_FD::define (const Vector<Geometry>& a_geom,
                          const Vector<FabFactory<FArrayBox> const*>& a_factory)
 {
     BL_PROFILE("MLNodeLaplacian_FD::define()");
-    std::cout << "call to MLNodeLaplacian_FD::define" << std::endl;
 
     // This makes sure grids are cell-centered;
     Vector<BoxArray> cc_grids = a_grids;
@@ -64,7 +63,6 @@ MLNodeLaplacian_FD::define (const Vector<Geometry>& a_geom,
 
     MLNodeLinOp::define(a_geom, cc_grids, a_dmap, a_info, a_factory);
 
-    std::cout << "setting sigma" << std::endl;
     m_sigma.resize(m_num_amr_levels);
     for (int amrlev = 0; amrlev < m_num_amr_levels; ++amrlev)
     {
@@ -83,7 +81,6 @@ MLNodeLaplacian_FD::define (const Vector<Geometry>& a_geom,
 #else
     const int ncomp_i = algoim::numIntgs;
 #endif
-    std::cout << "setting m_integral" << std::endl;
     m_integral.resize(m_num_amr_levels);
     for (int amrlev = 0; amrlev < m_num_amr_levels; ++amrlev)
     {
@@ -799,7 +796,6 @@ MLNodeLaplacian_FD::FillBoundaryCoeff (MultiFab& sigma, const Geometry& geom)
 void
 MLNodeLaplacian_FD::buildStencil ()
 {
-    std::cout << "Call to MLNodeLaplacian_FD::buildStencil" << std::endl;
     m_stencil.resize(m_num_amr_levels);
     m_s0_norm0.resize(m_num_amr_levels);
     for (int amrlev = 0; amrlev < m_num_amr_levels; ++amrlev)
@@ -808,7 +804,6 @@ MLNodeLaplacian_FD::buildStencil ()
         m_s0_norm0[amrlev].resize(m_num_mg_levels[amrlev],0.0);
     }
     
-    std::cout << "Coarsening startegy: " << static_cast<int>(m_coarsening_strategy) << std::endl;
     if (m_coarsening_strategy != CoarseningStrategy::RAP) return;
 
     const int ncomp_s = (AMREX_SPACEDIM == 2) ? 5 : 9;
@@ -1041,7 +1036,6 @@ void
 MLNodeLaplacian_FD::prepareForSolve ()
 {
     BL_PROFILE("MLNodeLaplacian_FD::prepareForSolve()");
-    std::cout << "Call MLNodeLaplacian_FD::prepareForSolve" << std::endl;
 
     MLNodeLinOp::prepareForSolve();
 
@@ -1059,7 +1053,6 @@ MLNodeLaplacian_FD::prepareForSolve ()
 void
 MLNodeLaplacian_FD::restriction (int amrlev, int cmglev, MultiFab& crse, MultiFab& fine) const
 {
-    //std::cout << "call to MLNodeLaplacian_FD::restriction" << std::endl;
     BL_PROFILE("MLNodeLaplacian_FD::restriction()");
 
     applyBC(amrlev, cmglev-1, fine, BCMode::Homogeneous, StateMode::Solution);
@@ -1112,7 +1105,6 @@ MLNodeLaplacian_FD::interpolation (int amrlev, int fmglev, MultiFab& fine, const
 {
     BL_PROFILE("MLNodeLaplacian_FD::interpolation()");
 
-    //std::cout << "call to MLNodeLaplacian_FD::interpolation" << std::endl;
     const auto& sigma = m_sigma[amrlev][fmglev];
     const auto& stencil = m_stencil[amrlev][fmglev];
 
@@ -1184,7 +1176,6 @@ MLNodeLaplacian_FD::averageDownSolutionRHS (int camrlev, MultiFab& crse_sol, Mul
 void
 MLNodeLaplacian_FD::restrictInteriorNodes (int camrlev, MultiFab& crhs, MultiFab& a_frhs) const
 {
-    std::cout << "call to MLNodeLaplacian_FD::restrictInteriorNodes" << std::endl;
     const BoxArray& fba = a_frhs.boxArray();
     const DistributionMapping& fdm = a_frhs.DistributionMap();
 
@@ -1267,7 +1258,6 @@ void
 MLNodeLaplacian_FD::Fapply (int amrlev, int mglev, MultiFab& out, const MultiFab& in) const
 {
     BL_PROFILE("MLNodeLaplacian_FD::Fapply()");
-    //std::cout << "call to MLNodeLaplacian_FD::Fapply" << std::endl;
 
     const auto& sigma = m_sigma[amrlev][mglev];
     const auto& stencil = m_stencil[amrlev][mglev];
@@ -1329,7 +1319,6 @@ void
 MLNodeLaplacian_FD::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFab& rhs) const
 {
     BL_PROFILE("MLNodeLaplacian_FD::Fsmooth()");
-    //std::cout << "call to MLNodeLaplacian_FD::Fsmooth" << std::endl;
 
     const auto& sigma = m_sigma[amrlev][mglev];
     const auto& stencil = m_stencil[amrlev][mglev];
@@ -1573,7 +1562,6 @@ MLNodeLaplacian_FD::Fsmooth (int amrlev, int mglev, MultiFab& sol, const MultiFa
 void
 MLNodeLaplacian_FD::normalize (int amrlev, int mglev, MultiFab& mf) const
 {
-    //std::cout << "call to MLNodeLaplacian_FD::normalize" << std::endl;
     BL_PROFILE("MLNodeLaplacian_FD::normalize()");
 
     const auto& sigma = m_sigma[amrlev][mglev];
@@ -2171,7 +2159,6 @@ MLNodeLaplacian_FD::reflux (int crse_amrlev,
                          MultiFab& res, const MultiFab& crse_sol, const MultiFab& crse_rhs,
                          MultiFab& fine_res, MultiFab& fine_sol, const MultiFab& fine_rhs) const
 {
-    std::cout << "call to MLNodeLaplacian_FD::reflux" << std::endl;
     BL_PROFILE("MLNodeLaplacian_FD::reflux()");
 
     const Geometry& cgeom = m_geom[crse_amrlev  ][0];
@@ -2509,7 +2496,6 @@ MLNodeLaplacian_FD::fillIJMatrix (MFIter const& mfi, Array4<HypreNodeLap::Int co
     AMREX_ASSERT(m_coarsening_strategy == CoarseningStrategy::RAP);
 
     const auto& sten = m_stencil[0][0]->array(mfi);
-    std::cout << "call to fillIJMatrix 2DIM" << std::endl;
 
     constexpr int k = 0;
     for     (int j = lo.y; j <= hi.y; ++j) {
@@ -2601,8 +2587,6 @@ MLNodeLaplacian_FD::fillIJMatrix (MFIter const& mfi, Array4<HypreNodeLap::Int co
     constexpr int ist_p0p = 6-1;
     constexpr int ist_0pp = 7-1;
     constexpr int ist_ppp = 8-1;
-    
-    std::cout << "call to fillIJMatrix 3DIM" << std::endl;
 
     for         (int k = lo.z; k <= hi.z; ++k) {
         for     (int j = lo.y; j <= hi.y; ++j) {

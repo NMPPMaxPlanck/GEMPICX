@@ -4682,7 +4682,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_adotx_sten (int i, int j, int k, Array4<Real> const& y, Array4<Real const> const& x,
                          Array4<Real const> const& sten, Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_adotx_sten" << std::endl;
     if (msk(i,j,k)) {
         y(i,j,k) = 0.0;
     } else {
@@ -4729,7 +4728,6 @@ void mlndlap_gauss_seidel_sten (Box const& bx, Array4<Real> const& sol,
                                 Array4<Real const> const& sten,
                                 Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_gauss_seidel_sten" << std::endl;
     amrex::LoopConcurrent(bx, [=] (int i, int j, int k) noexcept
     {
         if (msk(i,j,k)) {
@@ -4780,7 +4778,6 @@ void mlndlap_interpadd_rap (int i, int j, int k, Array4<Real> const& fine,
                             Array4<Real const> const& crse, Array4<Real const> const& sten,
                             Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_interpadd_rap" << std::endl;
     if (!msk(i,j,k) and sten(i,j,k,ist_000) != 0.0) {
         int ic = amrex::coarsen(i,2);
         int jc = amrex::coarsen(j,2);
@@ -5029,7 +5026,6 @@ void mlndlap_restriction_rap (int i, int j, int k, Array4<Real> const& crse,
                               Array4<Real const> const& fine, Array4<Real const> const& sten,
                               Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_restriction_rap" << std::endl;
     int ii = i*2;
     int jj = j*2;
     int kk = k*2;
@@ -5677,7 +5673,6 @@ void mlndlap_set_connection (int i, int j, int k, Array4<Real> const& conn,
                              Array4<Real const> const& intg, Array4<Real const> const& vol,
                              Array4<EBCellFlag const> const& flag) noexcept
 {
-    std::cout << "##### mlndlap_set_connection" << std::endl;
     if (flag(i,j,k).isCovered()) {
         for (int n = 0; n < n_conn; ++n) conn(i,j,k,n) = 0._rt;
     } else if (flag(i,j,k).isRegular() or vol(i,j,k) >= almostone) {
@@ -5849,7 +5844,6 @@ void mlndlap_set_stencil_eb (int i, int j, int k, Array4<Real> const& sten,
                              Array4<Real const> const& sig, Array4<Real const> const& conn,
                              GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_set_stencil_eb" << std::endl;
     Real facx = (1._rt/36._rt)*dxinv[0]*dxinv[0];
     Real facy = (1._rt/36._rt)*dxinv[1]*dxinv[1];
     Real facz = (1._rt/36._rt)*dxinv[2]*dxinv[2];
@@ -5899,7 +5893,6 @@ void mlndlap_divu_eb (int i, int j, int k, Array4<Real> const& rhs, Array4<Real 
                       Array4<Real const> const& vfrac, Array4<Real const> const& intg,
                       Array4<int const> const& msk, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_divu_eb" << std::endl;
     Real facx = 0.25_rt*dxinv[0];
     Real facy = 0.25_rt*dxinv[1];
     Real facz = 0.25_rt*dxinv[2];
@@ -6014,7 +6007,6 @@ void mlndlap_mknewu_eb (int i, int j, int k, Array4<Real> const& u, Array4<Real 
                         Array4<Real const> const& sig, Array4<Real const> const& vfrac,
                         Array4<Real const> const& intg, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_mknewu_eb" << std::endl;
     if (vfrac(i,j,k) == 0._rt) {
         u(i,j,k,0) = u(i,j,k,1) = u(i,j,k,2) = 0._rt;
     } else {
@@ -6054,7 +6046,6 @@ Real mlndlap_rhcc_eb (int i, int j, int k, Array4<Real const> const& rhcc,
                       Array4<Real const> const& vfrac, Array4<Real const> const& intg,
                       Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_rhcc_eb" << std::endl;
     if (!msk(i,j,k)) {
         return
                           rhcc(i  ,j  ,k  ) *
