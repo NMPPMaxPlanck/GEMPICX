@@ -839,6 +839,7 @@ void mlndlap_adotx_ha (int i, int j, int k, Array4<Real> const& y, Array4<Real c
     }
 }
 
+// function mlndlap_adotx_aa was modified from the original AMReX Code to serve our GEMPIC purposes
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_adotx_aa (int i, int j, int k, Array4<Real> const& y, Array4<Real const> const& x,
                        Array4<Real const> const& sig, Array4<int const> const& msk,
@@ -847,47 +848,6 @@ void mlndlap_adotx_aa (int i, int j, int k, Array4<Real> const& y, Array4<Real c
     if (msk(i,j,k)) {
         y(i,j,k) = 0.0;
     } else {
-        /*
-        Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
-        Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
-        Real facz = (1.0/36.0)*dxinv[2]*dxinv[2];
-        Real fxyz = facx + facy + facz;
-        Real fmx2y2z = -facx + 2.0*facy + 2.0*facz;
-        Real f2xmy2z = 2.0*facx - facy + 2.0*facz;
-        Real f2x2ymz = 2.0*facx + 2.0*facy - facz;
-        Real f4xm2ym2z = 4.0*facx - 2.0*facy - 2.0*facz;
-        Real fm2x4ym2z = -2.0*facx + 4.0*facy - 2.0*facz;
-        Real fm2xm2y4z = -2.0*facx - 2.0*facy + 4.0*facz;
-        y(i,j,k) = x(i,j,k)*(-4.0)*fxyz*
-            (sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j,k-1)+sig(i,j,k-1)
-            +sig(i-1,j-1,k  )+sig(i,j-1,k  )+sig(i-1,j,k  )+sig(i,j,k  ))
-            + fxyz*(x(i-1,j-1,k-1)*sig(i-1,j-1,k-1)
-                  + x(i+1,j-1,k-1)*sig(i  ,j-1,k-1)
-                  + x(i-1,j+1,k-1)*sig(i-1,j  ,k-1)
-                  + x(i+1,j+1,k-1)*sig(i  ,j  ,k-1)
-                  + x(i-1,j-1,k+1)*sig(i-1,j-1,k  )
-                  + x(i+1,j-1,k+1)*sig(i  ,j-1,k  )
-                  + x(i-1,j+1,k+1)*sig(i-1,j  ,k  )
-                  + x(i+1,j+1,k+1)*sig(i  ,j  ,k  ))
-            + fmx2y2z*(x(i  ,j-1,k-1)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1))
-                     + x(i  ,j+1,k-1)*(sig(i-1,j  ,k-1)+sig(i,j  ,k-1))
-                     + x(i  ,j-1,k+1)*(sig(i-1,j-1,k  )+sig(i,j-1,k  ))
-                     + x(i  ,j+1,k+1)*(sig(i-1,j  ,k  )+sig(i,j  ,k  )))
-            + f2xmy2z*(x(i-1,j  ,k-1)*(sig(i-1,j-1,k-1)+sig(i-1,j,k-1))
-                     + x(i+1,j  ,k-1)*(sig(i  ,j-1,k-1)+sig(i  ,j,k-1))
-                     + x(i-1,j  ,k+1)*(sig(i-1,j-1,k  )+sig(i-1,j,k  ))
-                     + x(i+1,j  ,k+1)*(sig(i  ,j-1,k  )+sig(i  ,j,k  )))
-            + f2x2ymz*(x(i-1,j-1,k  )*(sig(i-1,j-1,k-1)+sig(i-1,j-1,k))
-                     + x(i+1,j-1,k  )*(sig(i  ,j-1,k-1)+sig(i  ,j-1,k))
-                     + x(i-1,j+1,k  )*(sig(i-1,j  ,k-1)+sig(i-1,j  ,k))
-                     + x(i+1,j+1,k  )*(sig(i  ,j  ,k-1)+sig(i  ,j  ,k)))
-            + f4xm2ym2z*(x(i-1,j,k)*(sig(i-1,j-1,k-1)+sig(i-1,j,k-1)+sig(i-1,j-1,k)+sig(i-1,j,k))
-                       + x(i+1,j,k)*(sig(i  ,j-1,k-1)+sig(i  ,j,k-1)+sig(i  ,j-1,k)+sig(i  ,j,k)))
-            + fm2x4ym2z*(x(i,j-1,k)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j-1,k)+sig(i,j-1,k))
-                       + x(i,j+1,k)*(sig(i-1,j  ,k-1)+sig(i,j  ,k-1)+sig(i-1,j  ,k)+sig(i,j  ,k)))
-            + fm2xm2y4z*(x(i,j,k-1)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j,k-1)+sig(i,j,k-1))
-                       + x(i,j,k+1)*(sig(i-1,j-1,k  )+sig(i,j-1,k  )+sig(i-1,j,k  )+sig(i,j,k  )));
-                       */
         int stencil = 7;
     
         // Center point
@@ -1138,24 +1098,13 @@ void mlndlap_gauss_seidel_ha (Box const& bx, Array4<Real> const& sol,
     });
 }
 
+// function mlndlap_gauss_seidel_aa was modified from the original AMReX Code to serve our GEMPIC purposes
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
                               Array4<Real const> const& rhs, Array4<Real const> const& sig,
                               Array4<int const> const& msk,
                               GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    /*
-    Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
-    Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
-    Real facz = (1.0/36.0)*dxinv[2]*dxinv[2];
-    Real fxyz = facx + facy + facz;
-    Real fmx2y2z = -facx + 2.0*facy + 2.0*facz;
-    Real f2xmy2z = 2.0*facx - facy + 2.0*facz;
-    Real f2x2ymz = 2.0*facx + 2.0*facy - facz;
-    Real f4xm2ym2z = 4.0*facx - 2.0*facy - 2.0*facz;
-    Real fm2x4ym2z = -2.0*facx + 4.0*facy - 2.0*facz;
-    Real fm2xm2y4z = -2.0*facx - 2.0*facy + 4.0*facz;
-    */
     int stencil = 7;
     
     // Center point
@@ -1196,37 +1145,6 @@ void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
         if (msk(i,j,k)) {
             sol(i,j,k) = 0.0;
         } else {
-            /*
-            Real s0 = (-4.0)*fxyz*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j,k-1)+sig(i,j,k-1)
-                                  +sig(i-1,j-1,k  )+sig(i,j-1,k  )+sig(i-1,j,k  )+sig(i,j,k  ));
-            Real Ax = sol(i,j,k)*s0
-                + fxyz*(sol(i-1,j-1,k-1)*sig(i-1,j-1,k-1)
-                      + sol(i+1,j-1,k-1)*sig(i  ,j-1,k-1)
-                      + sol(i-1,j+1,k-1)*sig(i-1,j  ,k-1)
-                      + sol(i+1,j+1,k-1)*sig(i  ,j  ,k-1)
-                      + sol(i-1,j-1,k+1)*sig(i-1,j-1,k  )
-                      + sol(i+1,j-1,k+1)*sig(i  ,j-1,k  )
-                      + sol(i-1,j+1,k+1)*sig(i-1,j  ,k  )
-                      + sol(i+1,j+1,k+1)*sig(i  ,j  ,k  ))
-                + fmx2y2z*(sol(i  ,j-1,k-1)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1))
-                         + sol(i  ,j+1,k-1)*(sig(i-1,j  ,k-1)+sig(i,j  ,k-1))
-                         + sol(i  ,j-1,k+1)*(sig(i-1,j-1,k  )+sig(i,j-1,k  ))
-                         + sol(i  ,j+1,k+1)*(sig(i-1,j  ,k  )+sig(i,j  ,k  )))
-                + f2xmy2z*(sol(i-1,j  ,k-1)*(sig(i-1,j-1,k-1)+sig(i-1,j,k-1))
-                         + sol(i+1,j  ,k-1)*(sig(i  ,j-1,k-1)+sig(i  ,j,k-1))
-                         + sol(i-1,j  ,k+1)*(sig(i-1,j-1,k  )+sig(i-1,j,k  ))
-                         + sol(i+1,j  ,k+1)*(sig(i  ,j-1,k  )+sig(i  ,j,k  )))
-                + f2x2ymz*(sol(i-1,j-1,k  )*(sig(i-1,j-1,k-1)+sig(i-1,j-1,k))
-                         + sol(i+1,j-1,k  )*(sig(i  ,j-1,k-1)+sig(i  ,j-1,k))
-                         + sol(i-1,j+1,k  )*(sig(i-1,j  ,k-1)+sig(i-1,j  ,k))
-                         + sol(i+1,j+1,k  )*(sig(i  ,j  ,k-1)+sig(i  ,j  ,k)))
-                + f4xm2ym2z*(sol(i-1,j,k)*(sig(i-1,j-1,k-1)+sig(i-1,j,k-1)+sig(i-1,j-1,k)+sig(i-1,j,k))
-                           + sol(i+1,j,k)*(sig(i  ,j-1,k-1)+sig(i  ,j,k-1)+sig(i  ,j-1,k)+sig(i  ,j,k)))
-                + fm2x4ym2z*(sol(i,j-1,k)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j-1,k)+sig(i,j-1,k))
-                           + sol(i,j+1,k)*(sig(i-1,j  ,k-1)+sig(i,j  ,k-1)+sig(i-1,j  ,k)+sig(i,j  ,k)))
-                + fm2xm2y4z*(sol(i,j,k-1)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j,k-1)+sig(i,j,k-1))
-                           + sol(i,j,k+1)*(sig(i-1,j-1,k  )+sig(i,j-1,k  )+sig(i-1,j,k  )+sig(i,j,k  )));
-                */
 
                 // -1 is from operator sigma (in our case constant -1)
                 Real Ax = -1.0*point*sol(i,j,k)
