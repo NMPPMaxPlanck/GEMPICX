@@ -136,17 +136,17 @@ void main_main (bool ctest)
       default:
         break;
       }
-    std::ofstream ofsTest("test_one_part.output", std::ofstream::out);
-    amrex::Print(ofsTest) << std::endl;
-        amrex::Print(ofsTest) << "Jx" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
           for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
-              amrex::Print(ofsTest) << (*(mw_yee).J_Array[0])[mfi] << std::endl;
+              AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
             }
-          amrex::Print(ofsTest) << "Jy" << std::endl;
+          AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
           for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
-              amrex::Print(ofsTest) << (*(mw_yee).J_Array[1])[mfi] << std::endl;
+              AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
             }
-          ofsTest.close();
+     if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
 }
 
 int main(int argc, char* argv[])
