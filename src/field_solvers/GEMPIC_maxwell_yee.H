@@ -875,6 +875,8 @@ public:
         rho_from_E(ifr); // fills rho_gauss_law
 
         // Deposit charges in rho:
+        rho.setVal(0.0);
+        rho.FillBoundary(ifr.geom.periodicity());
         for (int spec=0;spec<(*part_gr).n_species;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -898,6 +900,24 @@ public:
                 (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
               }
           }
+
+        rho.SumBoundary(ifr.geom.periodicity());
+        rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
+        rho.FillBoundary(ifr.geom.periodicity());
+
+        // we cannot use rho.sum(0) because this would count nodal data at edges twice, whereas norm1 doesn't
+
+        // 1) make all values positive
+        rho.plus(-rho.min(0),0,1);
+        // 2) compute new mean with L1 norm
+        amrex::Real rhomean = rho.norm1(0, ifr.geom.periodicity())/(ifr.n_cell[0]*ifr.n_cell[1]*ifr.n_cell[2]);
+        // 3) subtract new mean from rho
+        rho.plus(-rhomean,0,1);
+
+        // repeat for rho_gauss_law
+        rho_gauss_law.plus(-rho_gauss_law.min(0),0,1);
+        amrex::Real rho_gauss_mean = rho_gauss_law.norm1(0, ifr.geom.periodicity())/(ifr.n_cell[0]*ifr.n_cell[1]*ifr.n_cell[2]);
+        rho_gauss_law.plus(-rho_gauss_mean,0,1);
 
         rho_gauss_law.minus(rho, 0, 1, 0);
         return(gempic_norm(&(rho_gauss_law), ifr, 2));
