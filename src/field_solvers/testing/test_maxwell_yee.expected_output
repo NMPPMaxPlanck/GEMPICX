@@ -42,5 +42,5 @@ Poisson
 Ex error: 8.2664e-06 |Ey error: 8.2664e-06 |Ez error: 8.2664e-06
 
 rho_from_E
-rho Error: 0.00019985
+rho Error: 5.9464e-25
 rho Norm: 2.25
