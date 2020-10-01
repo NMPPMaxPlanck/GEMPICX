@@ -1,6 +1,6 @@
 add_subdirectory( reference_results )
 
-add_executable ( PIC PIC.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c )
+add_executable ( PIC PIC.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 add_executable ( AmrexSolver AmrexSolver.cpp )
 
 #message("#########")
@@ -11,6 +11,7 @@ target_link_libraries( AmrexSolver AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fo
 include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
 include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
+include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
 include_directories("${CMAKE_SOURCE_DIR}/src/initializer")
 include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")

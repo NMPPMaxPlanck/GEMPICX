@@ -21,6 +21,7 @@
 
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_infrastructure.H>
+#include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 
@@ -744,7 +745,7 @@ public:
         int max_iter = 100;
         int max_fmg_iter = 0; //TODO
 
-        amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}); // linear operator class
+        amrex::MLNodeLaplacian_FD linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}); // linear operator class
 
         linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for lower ends
                            amrex::LinOpBCType::Periodic,
