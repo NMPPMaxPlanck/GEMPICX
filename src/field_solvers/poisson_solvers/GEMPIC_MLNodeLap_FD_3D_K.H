@@ -890,23 +890,40 @@ void mlndlap_adotx_aa (int i, int j, int k, Array4<Real> const& y, Array4<Real c
                        */
         int stencil = 7;
     
+        // Center point
         Real point;
-        Real face;
-        Real edge;
+        // Faces
+        Real face_x;
+        Real face_y;
+        Real face_z;
+        // Edges
+        Real edge_xy;
+        Real edge_xz;
+        Real edge_yz;
+        // Corners
         Real corner;
         
         if (stencil == 27) {
             point = 1.0/13.0*dxinv[0]*dxinv[0]*(-44.0);
-            face = 1.0/13.0*dxinv[0]*dxinv[0]*(3.0);
-            edge = 1.0/13.0*dxinv[0]*dxinv[0]*(3.0/2.0);
-            corner = 1.0/13.0*dxinv[0]*dxinv[0]*(1.0);
+            face_x = 1.0/13.0*dxinv[0]*dxinv[0]*(3.0);
+            face_y = 1.0/13.0*dxinv[1]*dxinv[1]*(3.0);
+            face_z = 1.0/13.0*dxinv[2]*dxinv[2]*(3.0);
+            edge_xy = 1.0/13.0*0.5*(dxinv[0]*dxinv[0]+dxinv[1]*dxinv[1])*(3.0/2.0);
+            edge_xz = 1.0/13.0*0.5*(dxinv[0]*dxinv[0]+dxinv[2]*dxinv[2])*(3.0/2.0);
+            edge_yz = 1.0/13.0*0.5*(dxinv[1]*dxinv[1]+dxinv[2]*dxinv[2])*(3.0/2.0);
+            corner = 1.0/13.0*1.0/3.0*(dxinv[0]*dxinv[0]+dxinv[1]*dxinv[1]+dxinv[2]*dxinv[2])*(1.0);
         } else {
-            point = dxinv[0]*dxinv[0]*(-6.0);
-            face = dxinv[0]*dxinv[0]*(1.0);
-            edge = 0.0;
+            point = -2*dxinv[0]*dxinv[0]-2*dxinv[1]*dxinv[1]-2*dxinv[2]*dxinv[2];
+            face_x = dxinv[0]*dxinv[0]*(1.0);
+            face_y = dxinv[1]*dxinv[1]*(1.0);
+            face_z = dxinv[2]*dxinv[2]*(1.0);
+            edge_xy = 0.0;
+            edge_xz = 0.0;
+            edge_yz = 0.0;
             corner = 0.0;
         }
         
+        // -1 is from operator sigma (in our case constant -1)
         y(i,j,k) = -1.0*point*x(i,j,k)
             + -1.0*corner*(x(i-1,j-1,k-1)
                   + x(i+1,j-1,k-1)
@@ -916,24 +933,12 @@ void mlndlap_adotx_aa (int i, int j, int k, Array4<Real> const& y, Array4<Real c
                   + x(i+1,j-1,k+1)
                   + x(i-1,j+1,k+1)
                   + x(i+1,j+1,k+1))
-            + -1.0*edge*(x(i  ,j-1,k-1)
-                     + x(i  ,j+1,k-1)
-                     + x(i  ,j-1,k+1)
-                     + x(i  ,j+1,k+1)
-                     + x(i-1,j  ,k-1)
-                     + x(i+1,j  ,k-1)
-                     + x(i-1,j  ,k+1)
-                     + x(i+1,j  ,k+1)
-                     + x(i-1,j-1,k  )
-                     + x(i+1,j-1,k  )
-                     + x(i-1,j+1,k  )
-                     + x(i+1,j+1,k  ))
-            + -1.0*face*(x(i-1,j,k)
-                       + x(i+1,j,k)
-                       + x(i,j-1,k)
-                       + x(i,j+1,k)
-                       + x(i,j,k-1)
-                       + x(i,j,k+1));
+            + -1.0*edge_yz*(x(i  ,j-1,k-1) + x(i  ,j+1,k-1) + x(i  ,j-1,k+1) + x(i  ,j+1,k+1))
+            + -1.0*edge_xz*(x(i-1,j  ,k-1) + x(i+1,j  ,k-1) + x(i-1,j  ,k+1) + x(i+1,j  ,k+1))
+            + -1.0*edge_xy*(x(i-1,j-1,k  ) + x(i+1,j-1,k  ) + x(i-1,j+1,k  ) + x(i+1,j+1,k  ))
+            + -1.0*face_x*(x(i-1,j,k) + x(i+1,j,k))
+            + -1.0*face_y*(x(i,j-1,k) + x(i,j+1,k))
+            + -1.0*face_z*(x(i,j,k-1) + x(i,j,k+1));
         
     }
 }
@@ -1153,20 +1158,36 @@ void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
     */
     int stencil = 7;
     
+    // Center point
     Real point;
-    Real face;
-    Real edge;
+    // Faces
+    Real face_x;
+    Real face_y;
+    Real face_z;
+    // Edges
+    Real edge_xy;
+    Real edge_xz;
+    Real edge_yz;
+    // Corners
     Real corner;
-        
+
     if (stencil == 27) {
         point = 1.0/13.0*dxinv[0]*dxinv[0]*(-44.0);
-        face = 1.0/13.0*dxinv[0]*dxinv[0]*(3.0);
-        edge = 1.0/13.0*dxinv[0]*dxinv[0]*(3.0/2.0);
-        corner = 1.0/13.0*dxinv[0]*dxinv[0]*(1.0);
+        face_x = 1.0/13.0*dxinv[0]*dxinv[0]*(3.0);
+        face_y = 1.0/13.0*dxinv[1]*dxinv[1]*(3.0);
+        face_z = 1.0/13.0*dxinv[2]*dxinv[2]*(3.0);
+        edge_xy = 1.0/13.0*0.5*(dxinv[0]*dxinv[0]+dxinv[1]*dxinv[1])*(3.0/2.0);
+        edge_xz = 1.0/13.0*0.5*(dxinv[0]*dxinv[0]+dxinv[2]*dxinv[2])*(3.0/2.0);
+        edge_yz = 1.0/13.0*0.5*(dxinv[1]*dxinv[1]+dxinv[2]*dxinv[2])*(3.0/2.0);
+        corner = 1.0/13.0*1.0/3.0*(dxinv[0]*dxinv[0]+dxinv[1]*dxinv[1]+dxinv[2]*dxinv[2])*(1.0);
     } else {
-        point = dxinv[0]*dxinv[0]*(-6.0);
-        face = dxinv[0]*dxinv[0]*(1.0);
-        edge = 0.0;
+        point = -2*dxinv[0]*dxinv[0]-2*dxinv[1]*dxinv[1]-2*dxinv[2]*dxinv[2];
+        face_x = dxinv[0]*dxinv[0]*(1.0);
+        face_y = dxinv[1]*dxinv[1]*(1.0);
+        face_z = dxinv[2]*dxinv[2]*(1.0);
+        edge_xy = 0.0;
+        edge_xz = 0.0;
+        edge_yz = 0.0;
         corner = 0.0;
     }
 
@@ -1206,35 +1227,23 @@ void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
                 + fm2xm2y4z*(sol(i,j,k-1)*(sig(i-1,j-1,k-1)+sig(i,j-1,k-1)+sig(i-1,j,k-1)+sig(i,j,k-1))
                            + sol(i,j,k+1)*(sig(i-1,j-1,k  )+sig(i,j-1,k  )+sig(i-1,j,k  )+sig(i,j,k  )));
                 */
-                
-        
+
+                // -1 is from operator sigma (in our case constant -1)
                 Real Ax = -1.0*point*sol(i,j,k)
                         + -1.0*corner*(sol(i-1,j-1,k-1)
-                        + sol(i+1,j-1,k-1)
-                        + sol(i-1,j+1,k-1)
-                        + sol(i+1,j+1,k-1)
-                        + sol(i-1,j-1,k+1)
-                        + sol(i+1,j-1,k+1)
-                        + sol(i-1,j+1,k+1)
-                        + sol(i+1,j+1,k+1))
-                    + -1.0*edge*(sol(i  ,j-1,k-1)
-                        + sol(i  ,j+1,k-1)
-                        + sol(i  ,j-1,k+1)
-                        + sol(i  ,j+1,k+1)
-                        + sol(i-1,j  ,k-1)
-                        + sol(i+1,j  ,k-1)
-                        + sol(i-1,j  ,k+1)
-                        + sol(i+1,j  ,k+1)
-                        + sol(i-1,j-1,k  )
-                        + sol(i+1,j-1,k  )
-                        + sol(i-1,j+1,k  )
-                        + sol(i+1,j+1,k  ))
-                    + -1.0*face*(sol(i-1,j,k)
-                        + sol(i+1,j,k)
-                        + sol(i,j-1,k)
-                        + sol(i,j+1,k)
-                        + sol(i,j,k-1)
-                        + sol(i,j,k+1));
+                            + sol(i+1,j-1,k-1)
+                            + sol(i-1,j+1,k-1)
+                            + sol(i+1,j+1,k-1)
+                            + sol(i-1,j-1,k+1)
+                            + sol(i+1,j-1,k+1)
+                            + sol(i-1,j+1,k+1)
+                            + sol(i+1,j+1,k+1))
+                        + -1.0*edge_yz*(sol(i  ,j-1,k-1) + sol(i  ,j+1,k-1) + sol(i  ,j-1,k+1) + sol(i  ,j+1,k+1))
+                        + -1.0*edge_xz*(sol(i-1,j  ,k-1) + sol(i+1,j  ,k-1) + sol(i-1,j  ,k+1) + sol(i+1,j  ,k+1))
+                        + -1.0*edge_xy*(sol(i-1,j-1,k  ) + sol(i+1,j-1,k  ) + sol(i-1,j+1,k  ) + sol(i+1,j+1,k  ))
+                        + -1.0*face_x*(sol(i-1,j,k) + sol(i+1,j,k))
+                        + -1.0*face_y*(sol(i,j-1,k) + sol(i,j+1,k))
+                        + -1.0*face_z*(sol(i,j,k-1) + sol(i,j,k+1));
 
             sol(i,j,k) += (rhs(i,j,k) - Ax) / (-1.0*point);
         }
