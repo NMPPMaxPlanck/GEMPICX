@@ -135,7 +135,7 @@ public:
             partial = n_time;
         }
         std::ofstream ofsfun(filename, std::ofstream::out);
-        amrex::Print(ofsfun) << "# time   E components   B components   kinetic energy   momentum components " << std::endl;
+        amrex::Print(ofsfun) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
         for (int step=0;step<=partial;step++){
             amrex::Print(ofsfun) << dt*(step) << " " << Efield[step][0]
                         #if (GEMPIC_VDIM > 1)
