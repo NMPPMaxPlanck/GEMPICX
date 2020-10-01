@@ -17,7 +17,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_set_nodal_mask (int i, int j, int k, Array4<int> const& nmsk,
                              Array4<int const> const& cmsk) noexcept
 {
-    std::cout << "##### call to mlndlap_set_nodal_mask" << std::endl;
     int s = cmsk(i-1,j-1,k-1) + cmsk(i  ,j-1,k-1)
         +   cmsk(i-1,j  ,k-1) + cmsk(i  ,j  ,k-1)
         +   cmsk(i-1,j-1,k  ) + cmsk(i  ,j-1,k  )
@@ -38,7 +37,6 @@ void mlndlap_set_dirichlet_mask (Box const& bx, Array4<int> const& dmsk,
                                  GpuArray<LinOpBCType, AMREX_SPACEDIM> const& bclo,
                                  GpuArray<LinOpBCType, AMREX_SPACEDIM> const& bchi) noexcept
 {
-    //std::cout << "##### mlndlap_set_dirichlet_mask" << std::endl;
     const auto lo = amrex::lbound(bx);
     const auto hi = amrex::ubound(bx);
     for (int k = lo.z; k <= hi.z; ++k) {
@@ -109,7 +107,6 @@ void mlndlap_set_dot_mask (Box const& bx, Array4<Real> const& dmsk,
                            GpuArray<LinOpBCType, AMREX_SPACEDIM> const& bclo,
                            GpuArray<LinOpBCType, AMREX_SPACEDIM> const& bchi) noexcept
 {
-    //std::cout << "##### mlndlap_set_dot_mask" << std::endl;
     const auto lo = amrex::lbound(bx);
     const auto hi = amrex::ubound(bx);
     for (int k = lo.z; k <= hi.z; ++k) {
@@ -185,7 +182,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_zero_fine (int i, int j, int k, Array4<Real> const& phi,
                         Array4<int const> const& msk, int fine_flag) noexcept
 {
-    std::cout << "##### mlndlap_zero_fine" << std::endl;
     // Testing if the node is covered by a fine level in computing
     // coarse sync residual
     if (msk(i-1,j-1,k-1) == fine_flag and
@@ -209,7 +205,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_avgdown_coeff_x (int i, int j, int k, Array4<Real> const& crse,
                               Array4<Real const> const& fine) noexcept
 {
-    //std::cout << "##### mlndlap_avgdown_coeff_x" << std::endl;
     Real cl = fine(2*i  ,2*j,2*k  )+fine(2*i  ,2*j+1,2*k  )+
               fine(2*i  ,2*j,2*k+1)+fine(2*i  ,2*j+1,2*k+1);
     Real cr = fine(2*i+1,2*j,2*k  )+fine(2*i+1,2*j+1,2*k  )+
@@ -221,7 +216,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_avgdown_coeff_y (int i, int j, int k, Array4<Real> const& crse,
                               Array4<Real const> const& fine) noexcept
 {
-    std::cout << "##### mlndlap_avgdown_coeff_y" << std::endl;
     Real cl = fine(2*i,2*j  ,2*k  )+fine(2*i+1,2*j  ,2*k  )+
               fine(2*i,2*j  ,2*k+1)+fine(2*i+1,2*j  ,2*k+1);
     Real cr = fine(2*i,2*j+1,2*k  )+fine(2*i+1,2*j+1,2*k  )+
@@ -233,7 +227,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_avgdown_coeff_z (int i, int j, int k, Array4<Real> const& crse,
                               Array4<Real const> const& fine) noexcept
 {
-    std::cout << "##### mlndlap_avgdown_coeff_z" << std::endl;
     Real cl = fine(2*i,2*j  ,2*k  )+fine(2*i+1,2*j  ,2*k  )+
               fine(2*i,2*j+1,2*k  )+fine(2*i+1,2*j+1,2*k  );
     Real cr = fine(2*i,2*j  ,2*k+1)+fine(2*i+1,2*j  ,2*k+1)+
@@ -250,7 +243,6 @@ inline void mlndlap_bc_doit (Box const& vbx, Array4<T> const& a, Box const& doma
                              GpuArray<bool,AMREX_SPACEDIM> const& bflo,
                              GpuArray<bool,AMREX_SPACEDIM> const& bfhi) noexcept
 {
-    //std::cout << "##### mlndlap_bc_doit" << std::endl;
     Box gdomain = domain;
     for (int idim = 0; idim < AMREX_SPACEDIM; ++idim) {
         if (not bflo[idim]) gdomain.growLo(idim,1);
@@ -754,7 +746,6 @@ void mlndlap_adotx_ha (int i, int j, int k, Array4<Real> const& y, Array4<Real c
                        Array4<Real const> const& sz, Array4<int const> const& msk,
                        GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_adotx_ha" << std::endl;
     if (msk(i,j,k)) {
         y(i,j,k) = 0.0;
     } else {
@@ -853,7 +844,6 @@ void mlndlap_adotx_aa (int i, int j, int k, Array4<Real> const& y, Array4<Real c
                        Array4<Real const> const& sig, Array4<int const> const& msk,
                        GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    //std::cout << "##### mlndlap_adotx_aa" << std::endl;
     if (msk(i,j,k)) {
         y(i,j,k) = 0.0;
     } else {
@@ -953,7 +943,6 @@ void mlndlap_normalize_ha (Box const& bx, Array4<Real> const& x, Array4<Real con
                            Array4<Real const> const& sy, Array4<Real const> const& sz,
                            Array4<int const> const& msk, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_normalize_ha" << std::endl;
     Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
     Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
     Real facz = (1.0/36.0)*dxinv[2]*dxinv[2];
@@ -975,7 +964,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_normalize_aa (Box const& bx, Array4<Real> const& x, Array4<Real const> const& sig,
                            Array4<int const> const& msk, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    //std::cout << "##### mlndlap_normalize_aa" << std::endl;
     Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
     Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
     Real facz = (1.0/36.0)*dxinv[2]*dxinv[2];
@@ -997,7 +985,6 @@ void mlndlap_jacobi_ha (Box const& bx, Array4<Real> const& sol, Array4<Real cons
                         Array4<Real const> const& sy, Array4<Real const> const& sz,
                         Array4<int const> const& msk, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_jacobi_ha" << std::endl;
     Real facx = -4.0 * (1.0/36.0)*dxinv[0]*dxinv[0];
     Real facy = -4.0 * (1.0/36.0)*dxinv[1]*dxinv[1];
     Real facz = -4.0 * (1.0/36.0)*dxinv[2]*dxinv[2];
@@ -1023,7 +1010,6 @@ void mlndlap_jacobi_aa (Box const& bx, Array4<Real> const& sol, Array4<Real cons
                         Array4<Real const> const& rhs, Array4<Real const> const& sig,
                         Array4<int const> const& msk, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_jacobi_aa" << std::endl;
     Real fxyz = -4.0 * (1.0/36.0)*(dxinv[0]*dxinv[0] +
                                    dxinv[1]*dxinv[1] +
                                    dxinv[2]*dxinv[2]);
@@ -1047,7 +1033,6 @@ void mlndlap_gauss_seidel_ha (Box const& bx, Array4<Real> const& sol,
                               Array4<int const> const& msk,
                               GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_gauss_seidel_ha" << std::endl;
     Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
     Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
     Real facz = (1.0/36.0)*dxinv[2]*dxinv[2];
@@ -1154,7 +1139,6 @@ void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
                               Array4<int const> const& msk,
                               GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    //std::cout << "##### mlndlap_gauss_seidel_aa" << std::endl;
     /*
     Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
     Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
@@ -1265,7 +1249,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_restriction (int i, int j, int k, Array4<Real> const& crse,
                           Array4<Real const> const& fine, Array4<int const> const& msk) noexcept
 {
-    //std::cout << "##### mlndlap_restriction" << std::endl;
     int ii = i*2;
     int jj = j*2;
     int kk = k*2;
@@ -1299,7 +1282,6 @@ namespace {
     Real aa_interp_line_x (Array4<Real const> const& crse, Array4<Real const> const& sig,
                            int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        //std::cout << "##### aa_interp_line_x" << std::endl;
         Real w1 = sig(i-1,j-1,k-1) + sig(i-1,j,k-1) + sig(i-1,j-1,k) + sig(i-1,j,k);
         Real w2 = sig(i  ,j-1,k-1) + sig(i  ,j,k-1) + sig(i  ,j-1,k) + sig(i  ,j,k);
         return (w1*crse(ic,jc,kc)+w2*crse(ic+1,jc,kc))/(w1+w2);
@@ -1309,7 +1291,6 @@ namespace {
     Real aa_interp_line_y (Array4<Real const> const& crse, Array4<Real const> const& sig,
                            int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        //std::cout << "##### aa_interp_line_y" << std::endl;
         Real w1 = sig(i-1,j-1,k-1) + sig(i,j-1,k-1) + sig(i-1,j-1,k) + sig(i,j-1,k);
         Real w2 = sig(i-1,j  ,k-1) + sig(i,j  ,k-1) + sig(i-1,j  ,k) + sig(i,j  ,k);
         return (w1*crse(ic,jc,kc)+w2*crse(ic,jc+1,kc))/(w1+w2);
@@ -1319,7 +1300,6 @@ namespace {
     Real aa_interp_line_z (Array4<Real const> const& crse, Array4<Real const> const& sig,
                            int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        //std::cout << "##### aa_interp_line_z" << std::endl;
         Real w1 = sig(i-1,j-1,k-1) + sig(i,j-1,k-1) + sig(i-1,j,k-1) + sig(i,j,k-1);
         Real w2 = sig(i-1,j-1,k  ) + sig(i,j-1,k  ) + sig(i-1,j,k  ) + sig(i,j,k  );
         return (w1*crse(ic,jc,kc)+w2*crse(ic,jc,kc+1))/(w1+w2);
@@ -1329,7 +1309,6 @@ namespace {
     Real aa_interp_face_xy (Array4<Real const> const& crse, Array4<Real const> const& sig,
                             int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        //std::cout << "##### aa_interp_face_xy" << std::endl;
         Real w1 = sig(i-1,j-1,k-1) + sig(i-1,j,k-1) + sig(i-1,j-1,k) + sig(i-1,j,k);
         Real w2 = sig(i  ,j-1,k-1) + sig(i  ,j,k-1) + sig(i  ,j-1,k) + sig(i  ,j,k);
         Real w3 = sig(i-1,j-1,k-1) + sig(i,j-1,k-1) + sig(i-1,j-1,k) + sig(i,j-1,k);
@@ -1344,7 +1323,6 @@ namespace {
     Real aa_interp_face_xz (Array4<Real const> const& crse, Array4<Real const> const& sig,
                             int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        //std::cout << "##### aa_interp_face_xz" << std::endl;
         Real w1 = sig(i-1,j-1,k-1) + sig(i-1,j,k-1) + sig(i-1,j-1,k) + sig(i-1,j,k);
         Real w2 = sig(i  ,j-1,k-1) + sig(i  ,j,k-1) + sig(i  ,j-1,k) + sig(i  ,j,k);
         Real w3 = sig(i-1,j-1,k-1) + sig(i,j-1,k-1) + sig(i-1,j,k-1) + sig(i,j,k-1);
@@ -1359,7 +1337,6 @@ namespace {
     Real aa_interp_face_yz (Array4<Real const> const& crse, Array4<Real const> const& sig,
                             int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        //std::cout << "##### aa_interp_face_yz" << std::endl;
         Real w1 = sig(i-1,j-1,k-1) + sig(i,j-1,k-1) + sig(i-1,j-1,k) + sig(i,j-1,k);
         Real w2 = sig(i-1,j  ,k-1) + sig(i,j  ,k-1) + sig(i-1,j  ,k) + sig(i,j  ,k);
         Real w3 = sig(i-1,j-1,k-1) + sig(i,j-1,k-1) + sig(i-1,j,k-1) + sig(i,j,k-1);
@@ -1376,7 +1353,6 @@ void mlndlap_interpadd_aa (int i, int j, int k, Array4<Real> const& fine,
                            Array4<Real const> const& crse, Array4<Real const> const& sig,
                            Array4<int const> const& msk) noexcept
 {
-    //std::cout << "##### mlndlap_interpadd_aa" << std::endl;
     if (!msk(i,j,k)) {
         int ic = amrex::coarsen(i,2);
         int jc = amrex::coarsen(j,2);
@@ -1431,7 +1407,6 @@ namespace {
                             Array4<Real const> const& sigx, Array4<Real const> const& sigy,
                             int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        std::cout << "##### ha_interp_face_xy" << std::endl;
         Real w1 = sigx(i-1,j-1,k-1) + sigx(i-1,j,k-1) + sigx(i-1,j-1,k) + sigx(i-1,j,k);
         Real w2 = sigx(i  ,j-1,k-1) + sigx(i  ,j,k-1) + sigx(i  ,j-1,k) + sigx(i  ,j,k);
         Real w3 = sigy(i-1,j-1,k-1) + sigy(i,j-1,k-1) + sigy(i-1,j-1,k) + sigy(i,j-1,k);
@@ -1447,7 +1422,6 @@ namespace {
                             Array4<Real const> const& sigx, Array4<Real const> const& sigz,
                             int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        std::cout << "##### ha_interp_face_xz" << std::endl;
         Real w1 = sigx(i-1,j-1,k-1) + sigx(i-1,j,k-1) + sigx(i-1,j-1,k) + sigx(i-1,j,k);
         Real w2 = sigx(i  ,j-1,k-1) + sigx(i  ,j,k-1) + sigx(i  ,j-1,k) + sigx(i  ,j,k);
         Real w3 = sigz(i-1,j-1,k-1) + sigz(i,j-1,k-1) + sigz(i-1,j,k-1) + sigz(i,j,k-1);
@@ -1463,7 +1437,6 @@ namespace {
                             Array4<Real const> const& sigy, Array4<Real const> const& sigz,
                             int i, int j, int k, int ic, int jc, int kc) noexcept
     {
-        std::cout << "##### ha_interp_face_yz" << std::endl;
         Real w1 = sigy(i-1,j-1,k-1) + sigy(i,j-1,k-1) + sigy(i-1,j-1,k) + sigy(i,j-1,k);
         Real w2 = sigy(i-1,j  ,k-1) + sigy(i,j  ,k-1) + sigy(i-1,j  ,k) + sigy(i,j  ,k);
         Real w3 = sigz(i-1,j-1,k-1) + sigz(i,j-1,k-1) + sigz(i-1,j,k-1) + sigz(i,j,k-1);
@@ -1481,7 +1454,6 @@ void mlndlap_interpadd_ha (int i, int j, int k, Array4<Real> const& fine,
                            Array4<Real const> const& sigy, Array4<Real const> const& sigz,
                            Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_interpadd_ha" << std::endl;
     if (!msk(i,j,k)) {
         int ic = amrex::coarsen(i,2);
         int jc = amrex::coarsen(j,2);
@@ -1538,7 +1510,6 @@ void mlndlap_divu (int i, int j, int k, Array4<Real> const& rhs, Array4<Real con
                    Array4<int const> const& msk,
                    GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_divu" << std::endl;
     Real facx = 0.25*dxinv[0];
     Real facy = 0.25*dxinv[1];
     Real facz = 0.25*dxinv[2];
@@ -1565,7 +1536,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 Real mlndlap_rhcc (int i, int j, int k, Array4<Real const> const& rhcc,
                    Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_rhcc" << std::endl;
     Real r;
     if (msk(i,j,k)) {
         r = 0.0;
@@ -1580,7 +1550,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_mknewu (int i, int j, int k, Array4<Real> const& u, Array4<Real const> const& p,
                      Array4<Real const> const& sig, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_mknewu" << std::endl;
     Real facx = 0.25*dxinv[0];
     Real facy = 0.25*dxinv[1];
     Real facz = 0.25*dxinv[2];
@@ -1600,7 +1569,6 @@ void mlndlap_divu_compute_fine_contrib (int i, int j, int k, Box const& fvbx,
                                         Array4<Real> const& frh, Array4<Real const> const& vel,
                                         GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_divu_compute_fine_contrib" << std::endl;
     IntVect iv(i,j,k);
     if (fvbx.contains(iv) and !fvbx.strictly_contains(iv))
     {
@@ -1624,7 +1592,6 @@ void mlndlap_divu_add_fine_contrib (int i, int j, int k, Box const& fvbx,
                                     Array4<Real> const& rhs, Array4<Real const> const& frh,
                                     Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_divu_add_fine_contrib" << std::endl;
     constexpr Real rfd = 0.125_rt;
     constexpr Real chip = 0.5_rt;
     constexpr Real chip2 = 0.25_rt;
@@ -1656,7 +1623,6 @@ void mlndlap_rhcc_fine_contrib (int i, int j, int k, Box const& fvbx,
                                 Array4<Real> const& rhs, Array4<Real const> const& cc,
                                 Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_rhcc_fine_contrib" << std::endl;
     constexpr Real fac[] = {0.125_rt, 0.375_rt, 0.375_rt, 0.125_rt};
     int ii = 2*i;
     int jj = 2*j;
@@ -1684,7 +1650,6 @@ void mlndlap_divu_cf_contrib (int i, int j, int k, Array4<Real> const& rhs,
                               GpuArray<LinOpBCType,AMREX_SPACEDIM> const& bchi,
                               bool neumann_doubling) noexcept
 {
-    std::cout << "##### mlndlap_divu_cf_contrib" << std::endl;
     if (!dmsk(i,j,k) and ndmsk(i,j,k) == crse_fine_node) {
         Real facx = 0.25_rt * dxinv[0];
         Real facy = 0.25_rt * dxinv[1];
@@ -1784,7 +1749,6 @@ void mlndlap_crse_resid (int i, int j, int k, Array4<Real> const& resid,
                          GpuArray<LinOpBCType,AMREX_SPACEDIM> const& bchi,
                          bool neumann_doubling) noexcept
 {
-    std::cout << "##### mlndlap_crse_resid" << std::endl;
     if ((msk(i-1,j-1,k-1) == 0 or
          msk(i  ,j-1,k-1) == 0 or
          msk(i-1,j  ,k-1) == 0 or
@@ -1843,7 +1807,6 @@ void mlndlap_res_fine_Ax (int i, int j, int k, Box const& fvbx, Array4<Real> con
                           Array4<Real const> const& x, Array4<Real const> const& sig,
                           GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_res_fine_Ax" << std::endl;
     IntVect iv(i,j,k);
     if (fvbx.contains(iv) and !fvbx.strictly_contains(iv)) {
         Real facx = (1._rt/36._rt)*dxinv[0]*dxinv[0];
@@ -1893,7 +1856,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_res_fine_contrib (int i, int j, int k, Array4<Real> const& f,
                                Array4<Real const> const& Ax, Array4<int const> const& msk) noexcept
 {
-    std::cout << "##### mlndlap_res_fine_contrib" << std::endl;
     constexpr Real rfd = 0.125_rt;
     constexpr Real chip = 0.5_rt;
     constexpr Real chip2 = 0.25_rt;
@@ -1929,7 +1891,6 @@ void mlndlap_res_cf_contrib (int i, int j, int k, Array4<Real> const& res,
                              GpuArray<LinOpBCType, AMREX_SPACEDIM> const& bchi,
                              bool neumann_doubling) noexcept
 {
-    std::cout << "##### mlndlap_res_cf_contrib" << std::endl;
     if (!dmsk(i,j,k) and ndmsk(i,j,k) == crse_fine_node) {
 
         Real facx = (1._rt/36._rt)*dxinv[0]*dxinv[0];
@@ -2107,7 +2068,6 @@ void mlndlap_set_stencil (Box const& bx, Array4<Real> const& sten,
                           Array4<Real const> const& sig,
                           GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
-    std::cout << "##### mlndlap_set_stencil" << std::endl;
     Real facx = (1.0/36.0)*dxinv[0]*dxinv[0];
     Real facy = (1.0/36.0)*dxinv[1]*dxinv[1];
     Real facz = (1.0/36.0)*dxinv[2]*dxinv[2];
@@ -2166,7 +2126,6 @@ void mlndlap_set_stencil (Box const& bx, Array4<Real> const& sten,
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_set_stencil_s0 (int i, int j, int k, Array4<Real> const& sten) noexcept
 {
-    std::cout << "##### mlndlap_set_stencil_s0" << std::endl;
     sten(i,j,k,ist_000) = -(sten(i-1,j,k,ist_p00) + sten(i,j,k,ist_p00)
                           + sten(i,j-1,k,ist_0p0) + sten(i,j,k,ist_0p0)
                           + sten(i,j,k-1,ist_00p) + sten(i,j,k,ist_00p)
@@ -2200,7 +2159,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_stencil_rap (int i, int j, int k, Array4<Real> const& csten,
                           Array4<Real const> const& fsten) noexcept
 {
-    std::cout << "##### mlndlap_stencil_rap" << std::endl;
     auto interp_from_mmm_to = [&fsten] (int i_, int j_, int k_) -> Real {
         Real p = 1._rt;
         p += amrex::Math::abs(fsten(i_-1,j_  ,k_  ,ist_p00)) /
