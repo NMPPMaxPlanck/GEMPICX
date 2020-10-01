@@ -106,21 +106,21 @@ std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
     amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (xint, GEMPIC_DEG_X-1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (xint, GEMPIC_DEG_X);
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X-1, true), GEMPIC_DEG_X-1);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X, false), GEMPIC_DEG_X);
 #if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (yint, GEMPIC_DEG_Y-1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (yint, GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y-1, true), GEMPIC_DEG_Y-1);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (zint, GEMPIC_DEG_Z-1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (zint, GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -206,15 +206,15 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (position_box[0], GEMPIC_DEG_X-1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (position_box[0], GEMPIC_DEG_X);
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(position_box[0], GEMPIC_DEG_X-1, true), GEMPIC_DEG_X-1);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(position_box[0], GEMPIC_DEG_X, false), GEMPIC_DEG_X);
 #if (GEMPIC_SPACEDIM > 1)
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (position_box[1], GEMPIC_DEG_Y-1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (position_box[1], GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(position_box[1], GEMPIC_DEG_Y-1, true), GEMPIC_DEG_Y-1);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(position_box[1], GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (position_box[2], GEMPIC_DEG_Z-1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (position_box[2], GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(position_box[2], GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(position_box[2], GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
 #endif
 
 
@@ -431,21 +431,21 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
     amrex::Real lx = (position[0]-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (xint, GEMPIC_DEG_X-1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (xint, GEMPIC_DEG_X);
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X-1, true), GEMPIC_DEG_X-1);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X, false), GEMPIC_DEG_X);
 #if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (position[1]-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (yint, GEMPIC_DEG_Y-1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (yint, GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y-1, true), GEMPIC_DEG_Y-1);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (position[2]-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (zint, GEMPIC_DEG_Z-1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (zint, GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
 #endif
     amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge;
 
@@ -534,21 +534,21 @@ std::array<amrex::Real, GEMPIC_BDIM> evaluate_fem_bfield(std::array<amrex::Real,
     amrex::Real lx = (position[0]-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (xint, GEMPIC_DEG_X-1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (xint, GEMPIC_DEG_X);
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X-1, true), GEMPIC_DEG_X-1);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X, false), GEMPIC_DEG_X);
 #if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (position[1]-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (yint, GEMPIC_DEG_Y-1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (yint, GEMPIC_DEG_Y);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y-1, true), GEMPIC_DEG_Y-1);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (position[2]-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (zint, GEMPIC_DEG_Z-1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (zint, GEMPIC_DEG_Z);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
 #endif
 
     // First B_0
