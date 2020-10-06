@@ -7,12 +7,12 @@ echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
 
 module purge
-module load intel/18.0.5
-module load impi/2018.4
-module load mkl/2018.4
+module load intel/19.1.1
+module load impi/2019.7
+module load mkl/2019.5
 module load cmake/3.15
 
-BUILD_DIR=/ptmp/$USER/gempic_obj
+BUILD_DIR=/draco/u/$USER/gempic_obj
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
@@ -27,5 +27,5 @@ make install
 cd ..
 mkdir -p gempic
 cd gempic
-cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_CXX_FLAGS="-std=c++14" $SOURCE_DIRECTORY
+cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_CXX_FLAGS="-std=c++1y" $SOURCE_DIRECTORY
 make
