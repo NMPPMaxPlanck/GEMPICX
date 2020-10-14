@@ -24,9 +24,15 @@ message("####### ${CXX_COMPILER_NAME}")
 IF (CXX_COMPILER_NAME MATCHES "gcc.*")
   # gcc
   set (CMAKE_CXX_FLAGS "")
-  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3")
+  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3 -mavx2  -march=native")
   set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
   message ("Found gcc compiler " ${CMAKE_CXX_COMPILER})
+ELSEIF (CXX_COMPILE_NAME MATCHES "icpc")
+  set (CMAKE_CXX_FLAGS "")
+  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3 -xCORE-AVX512 -zmm-usage=high -Ofast -qopt-prefetch=2 -mcmodel=large") # or try 4 for prefetch
+  #set (CMAKE_CXX_FLAGS_RELEASE "-g -O3 -xHOST")
+  set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
+  message ("Found icpc compiler " ${CMAKE_CXX_COMPILER})
 ENDIF()
 
 # Enable ctests
