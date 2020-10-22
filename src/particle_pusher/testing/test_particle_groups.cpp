@@ -99,7 +99,7 @@ void main_main ()
 
     // compute mass, momentum and kinetic energy
     auto mass = amrex::ReduceSum( *(part_gr).mypc[spec],
-                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_SPACEDIM+1,0>& p) -> amrex::Real
     {
         auto m  = p.rdata(GEMPIC_VDIM);
         return (m);
@@ -111,7 +111,7 @@ void main_main ()
     std::array<amrex::Real,GEMPIC_VDIM> momentum;
     for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
-                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_SPACEDIM+1,0>& p) -> amrex::Real
         {
             auto m  = p.rdata(GEMPIC_VDIM);
             auto vel = p.rdata(cmp);
@@ -128,7 +128,7 @@ void main_main ()
     std::array<amrex::Real,GEMPIC_VDIM> kinetic_energy;
     for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
-                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_SPACEDIM+1,0>& p) -> amrex::Real
         {
             auto m  = p.rdata(GEMPIC_VDIM);
             auto vel = p.rdata(cmp);

@@ -85,7 +85,7 @@ public:
         // compute kinetic energy norm and momentum
         for (int spec=0;spec<(*part_gr).n_species;spec++){ // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
-                                           [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+                                           [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_SPACEDIM+1,0>& p) -> amrex::Real
             {
                 auto m  = p.rdata(GEMPIC_VDIM);
                 auto vel = pow(std::abs(p.rdata(0)),2)+pow(std::abs(p.rdata(1)),2)+pow(std::abs(p.rdata(2)),2);
@@ -100,7 +100,7 @@ public:
             kin[step] = 0.5*kin_tmp;
             for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
                 auto mom_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
-                                               [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<4,0>& p) -> amrex::Real
+                                               [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_SPACEDIM+1,0>& p) -> amrex::Real
                 {
                     auto m  = p.rdata(GEMPIC_VDIM);
                     auto vel = p.rdata(cmp);
