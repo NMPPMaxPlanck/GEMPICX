@@ -78,9 +78,9 @@ mlndlap_unimpose_neumann_bc (Box const& bx, Array4<Real> const& rhs, Box const& 
 }
 
 #if (AMREX_SPACEDIM == 1)
-#include <AMReX_MLNodeLap_FD_1D_K.H>
+#include <GEMPIC_MLNodeLap_FD_1D_K.H>
 #elif (AMREX_SPACEDIM == 2)
-#include <AMReX_MLNodeLap_FD_2D_K.H>
+#include <GEMPIC_MLNodeLap_FD_2D_K.H>
 #else
 #include <GEMPIC_MLNodeLap_FD_3D_K.H>
 #endif
