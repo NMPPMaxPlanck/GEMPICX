@@ -71,7 +71,7 @@ public:
                       amrex::Real weight,
                       amrex::ParticleTile<GEMPIC_SPACEDIM+1, 0, 0, 0>& particles){
 
-        using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
+        using ParticleType = amrex::Particle<GEMPIC_SPACEDIM+1, 0>; // Particle template
 
         // new particle:
         ParticleType p;

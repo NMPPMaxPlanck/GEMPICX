@@ -254,7 +254,7 @@ void init_one_particle_cellwise(std::array<amrex::Real,GEMPIC_SPACEDIM> const& d
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
+        using ParticleType = amrex::Particle<GEMPIC_SPACEDIM+1, 0>; // Particle template
         auto& particles = (*mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
