@@ -29,8 +29,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Init splines
 
-    std::array<bool,GEMPIC_SPACEDIM> cent_eval = {false, false, true};
-    std::array<bool,GEMPIC_SPACEDIM> int_eval = {false, false, false};
+    std::array<bool,GEMPIC_SPACEDIM> cent_eval = {AMREX_D_DECL(false, false, true)};
+    std::array<bool,GEMPIC_SPACEDIM> int_eval = {AMREX_D_DECL(false, false, false)};
     splines spl(cent_eval, int_eval);
 
     int cell_index = 0;

@@ -40,13 +40,13 @@ void main_main (bool ctest)
 
     // initialize parameters
     std::string sim_name;
-    std::array<int,3> n_cell_vector;
+    std::array<int,GEMPIC_SPACEDIM> n_cell_vector;
     int n_part_per_cell;
     int n_steps;
     int freq_x;
     int freq_v;
     int freq_slice;
-    std::array<int,3> is_periodic_vector;
+    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector;
     int max_grid_size;
     amrex::Real dt;
     std::array<amrex::Real, GEMPIC_NUMSPEC> charge;

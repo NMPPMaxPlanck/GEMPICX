@@ -69,9 +69,9 @@ public:
     void add_particle(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                       std::array<amrex::Real,GEMPIC_VDIM> velocity,
                       amrex::Real weight,
-                      amrex::ParticleTile<GEMPIC_SPACEDIM+1, 0, 0, 0>& particles){
+                      amrex::ParticleTile<GEMPIC_VDIM+1, 0, 0, 0>& particles){
 
-        using ParticleType = amrex::Particle<GEMPIC_SPACEDIM+1, 0>; // Particle template
+        using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
 
         // new particle:
         ParticleType p;

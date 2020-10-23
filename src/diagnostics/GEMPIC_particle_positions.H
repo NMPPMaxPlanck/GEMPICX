@@ -138,13 +138,14 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
     std::string FullPathJobInfoFile = plotfilename;
     FullPathJobInfoFile += "/warpx_job_info";
     std::ofstream jobInfoFile(FullPathJobInfoFile);
-    amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0] <<
+    amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0]
 #if GEMPIC_SPACEDIM > 1
-                                 " " << (*infra).is_periodic[1] <<
+                                 << " " << (*infra).is_periodic[1]
 #endif
 #if GEMPIC_SPACEDIM > 2
-                                 " " << (*infra).is_periodic[2] << std::endl;
+                                 << " " << (*infra).is_periodic[2]
 #endif
+                                 << std::endl;
     jobInfoFile.close();
 
     // WarpXHeader -------------------------------------------------------------
@@ -215,13 +216,14 @@ Gempic_WritePlotFile_rho_phi (particle_groups *ppg, maxwell_yee *mw_yee, infrast
     std::string FullPathJobInfoFile = plotfilename;
     FullPathJobInfoFile += "/warpx_job_info";
     std::ofstream jobInfoFile(FullPathJobInfoFile);
-    amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0] <<
+    amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0]
 #if GEMPIC_SPACEDIM > 1
-                                 " " << (*infra).is_periodic[1] <<
+                                 << " " << (*infra).is_periodic[1]
 #endif
 #if GEMPIC_SPACEDIM > 2
-                                 " " << (*infra).is_periodic[2] << std::endl;
+                                 << " " << (*infra).is_periodic[2]
 #endif
+                                 << std::endl;
     jobInfoFile.close();
 
     // WarpXHeader -------------------------------------------------------------

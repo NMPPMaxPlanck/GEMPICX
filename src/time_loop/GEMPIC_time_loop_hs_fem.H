@@ -43,13 +43,16 @@ namespace Gempic {
 
       for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
           (*mw_yee).advance_time();
+          std::cout << "advanced time" << std::endl;
 
           // Operator H_B for dt/2
           (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+          std::cout << "advanced E from B (0.5)" << std::endl;
 
           //--------------------------------------------------------------------------
           // Operator H_E for dt/2 (field part)
           (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+          std::cout << "advanced B from E (0.5)" << std::endl;
 
           //--------------------------------------------------------------------------
           //deposit charge in J and push particles
@@ -65,6 +68,7 @@ namespace Gempic {
               amrex::Real charge = (*part_gr).charge[spec];
 
               for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+                  std::cout << "enter a box" << std::endl;
 
                   auto& particles = pti.GetArrayOfStructs(); // get particles
                   const long np  = pti.numParticles();
@@ -83,7 +87,9 @@ namespace Gempic {
 
                   // loop over particles: add contribution of old particle position to J and push
 
+                  std::cout << "total number of particles: " << np << std::endl;
                   for (int pp=0;pp<np;pp++){
+                      std::cout << "Particle no " << pp << std::endl;
                       // evaluate the electric field
                       std::array<amrex::Real, GEMPIC_VDIM> efield = evaluate_fem_efield(particles[pp],infra.dxi, infra.plo,  eA);
 
@@ -100,7 +106,7 @@ namespace Gempic {
                           xNew[d] = newPos[d];
                         }
 
-                      std::array<amrex::Real, GEMPIC_SPACEDIM> velocity;
+                      std::array<amrex::Real, GEMPIC_VDIM> velocity;
                       for (unsigned int d=0;d<GEMPIC_VDIM;++d)
                         velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particles[pp].rdata(d));
                       /*  //Old version with only depositon at the mid point
@@ -125,6 +131,7 @@ namespace Gempic {
                 }
               (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             }
+          std::cout << "deposited charge in J" << std::endl;
 
 
           //add values from ghost cells and periodic boundary
@@ -135,6 +142,7 @@ namespace Gempic {
 
           // advance E from j (field part of H_p)
           (*mw_yee).advance_E_from_J(infra, (*mw_yee).dt);
+          std::cout << "advanced E from J" << std::endl;
 
           // Second particle loop for particle part from H_E
           for (int spec=0;spec<(*part_gr).n_species;spec++) {
@@ -164,13 +172,16 @@ namespace Gempic {
                 }
               (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             }
+          std::cout << "advanced particles" << std::endl;
 
           //--------------------------------------------------------------------------
           // Operator H_E for dt/2 (field part)
           (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+          std::cout << "advanced B from E (0.5)" << std::endl;
 
           // Operator H_B for dt/2
           (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+          std::cout << "advanced E from B (0.5)" << std::endl;
 
 
           // save norms for diagnostics

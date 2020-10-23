@@ -60,6 +60,14 @@ double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sin(x[0])*cos
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-cos(x[0])*cos(x[1])*cos(sqrt(2)*t));}
 #endif
 
+#if ((GEMPIC_SPACEDIM == 2) & (GEMPIC_VDIM == 3))
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+#endif
+
 #if ((GEMPIC_SPACEDIM == 3) & (GEMPIC_VDIM == 3))
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}

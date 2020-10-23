@@ -164,7 +164,7 @@ public:
             }
         }
 
-        for (int comp=0; comp<GEMPIC_VDIM; comp++) {
+        for (int comp=0; comp<GEMPIC_BDIM; comp++) {
             B_Masks[comp].reset(new amrex::iMultiFab (convert(ifr.grid, *B_Index[comp]),ifr.distriMap,1,Nghost));
             (*(B_Masks[comp])).setVal(0.0);
             (*(B_Masks[comp])).FillBoundary(ifr.geom.periodicity());

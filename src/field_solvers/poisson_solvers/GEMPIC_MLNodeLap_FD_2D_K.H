@@ -317,7 +317,7 @@ void mlndlap_adotx_ha (int i, int j, int k, Array4<Real> const& y, Array4<Real c
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_adotx_aa (int i, int j, int k, Array4<Real> const& y, Array4<Real const> const& x,
                        Array4<Real const> const& sig, Array4<int const> const& msk,
-                       GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
+                       bool is_rz, GpuArray<Real,AMREX_SPACEDIM> const& dxinv) noexcept
 {
     if (msk(i,j,k)) {
         y(i,j,k) = 0.0;

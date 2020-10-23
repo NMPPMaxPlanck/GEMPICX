@@ -24,7 +24,7 @@ void main_main ()
     // Initialize structures
 
     // Domain
-    int is_periodic[3] =  {1,1,1};
+    int is_periodic[3] =  {AMREX_D_DECL(1,1,1)};
     amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
     amrex::IntVect dom_hi(AMREX_D_DECL(3, 1, 1));
     int max_grid_size = 2;
@@ -32,8 +32,8 @@ void main_main ()
     domain.setSmall(dom_lo);
     domain.setBig(dom_hi);
     amrex::RealBox real_box;
-    real_box.setLo({0.0, 0.0, 0.0});
-    real_box.setHi({2.0, 1.0, 1.0});
+    real_box.setLo({AMREX_D_DECL(0.0, 0.0, 0.0)});
+    real_box.setHi({AMREX_D_DECL(2.0, 1.0, 1.0)});
 
     // Grid
     amrex::BoxArray grid;
@@ -54,31 +54,31 @@ void main_main ()
     amrex::MultiFab TestMF(convert(grid, Index_A),distriMap,1,Nghost);
     TestMF.setVal(0.0,0);
     TestMF.FillBoundary(geom.periodicity());
-    std::array<amrex::Real,3> plo;
-    std::array<amrex::Real,3> dx;
-    std::array<amrex::Real,3+1> dxi;
-    dxi[3] = 1.;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> dx;
+    std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
+    dxi[GEMPIC_SPACEDIM] = 1.;
     for (int cc=0;cc<3;cc++){
         plo[cc] = geom.ProbLo()[cc];
         dxi[cc] = (domain.bigEnd(cc)+1)/real_box.hi(cc);
         dx[cc] = real_box.hi(cc)/(domain.bigEnd(cc)+1);
-        dxi[3] *= dxi[cc];
+        dxi[GEMPIC_SPACEDIM] *= dxi[cc];
     }
 
     // Particles
     amrex::Real charge = -1.0;
-    amrex::ParticleContainer<3+1, 0, 0, 0> mypc(geom, distriMap, grid);
+    amrex::ParticleContainer<GEMPIC_VDIM+1, 0, 0, 0> mypc(geom, distriMap, grid);
     mypc.do_tiling = true;
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
 
-    Gempic::Sampling::init_one_particle_cellwise(dx, plo, &mypc, {2*dx[0]/5.0, 2*dx[1]/5.0, 0});
+    Gempic::Sampling::init_one_particle_cellwise(dx, plo, &mypc, {AMREX_D_DECL(2*dx[0]/5.0, 2*dx[1]/5.0, 0)});
 
     mypc.Redistribute();
 
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
-    for (amrex::ParIter<3+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
         amrex::Box tilebox;
         amrex::FArrayBox local_rho;
 

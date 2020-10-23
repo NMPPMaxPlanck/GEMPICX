@@ -168,7 +168,7 @@ std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
                             ,0);
                 }
 #endif
-#if(GEMPIC_VDIM > 2)
+#if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
@@ -263,7 +263,7 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                             , 0), s_coeff*weight[1]);
                 }
 #endif
-#if(GEMPIC_VDIM > 2)
+#if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
@@ -495,7 +495,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                             , 0), s_coeff*particle_coeff*velocity[1]);
                 }
 #endif
-#if(GEMPIC_VDIM > 2)
+#if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
@@ -708,7 +708,14 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
 
                 // deposit in J and interpolate in E
                 for (int cc=0;cc<GEMPIC_VDIM;cc++) {
-                    if(!(((kk==GEMPIC_DEG_Z) & (cc%3==2))|((jj==GEMPIC_DEG_Y) & (cc%3==1))|((ii==GEMPIC_DEG_X) & (cc%3==0)))) {
+                    if(!(
+#if (GEMPIC_SPACEDIM > 2)
+                            ((kk==GEMPIC_DEG_Z) & (cc%3==2))|
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                              ((jj==GEMPIC_DEG_Y) & (cc%3==1))|
+#endif
+                              ((ii==GEMPIC_DEG_X) & (cc%3==0)))) {
                         double s_coeff = sx_1[cc%3==0?0:1][ii]
                               #if(GEMPIC_SPACEDIM > 1)
                                                       *sy_1[cc%3==1?0:1][jj]
@@ -746,7 +753,14 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
                 if (field_int) {
                     // deposit in B
                     for (int cc=0;cc<GEMPIC_BDIM;cc++) {
-                        if(!(((kk==GEMPIC_DEG_Z) & (cc%3!=2))|((jj==GEMPIC_DEG_Y) & (cc%3!=1))|((ii==GEMPIC_DEG_X) & (cc%3!=0)))) {
+                        if(!(
+    #if (GEMPIC_SPACEDIM > 2)
+                                ((kk==GEMPIC_DEG_Z) & (cc%3!=2))|
+    #endif
+    #if (GEMPIC_SPACEDIM > 1)
+                                  ((jj==GEMPIC_DEG_Y) & (cc%3!=1))|
+    #endif
+                                  ((ii==GEMPIC_DEG_X) & (cc%3!=0)))) {
                             double s_coeff = sx_1[cc%3==0?1:0][ii]
                               #if(GEMPIC_SPACEDIM > 1)
                                                           *sy_1[cc%3==1?1:0][jj]
@@ -898,7 +912,7 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+GEMPIC_VDIM> push_x_v_bfield(P const& p,
                 xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
         }
         // evaluate B at xMean
-        std::array<amrex::Real,GEMPIC_VDIM> Bp = evaluate_fem_bfield(xMean,
+        std::array<amrex::Real,GEMPIC_BDIM> Bp = evaluate_fem_bfield(xMean,
                                                                      infra.dxi,
                                                                      infra.plo,
                                                                      bArray);

@@ -30,10 +30,10 @@ void main_main ()
     int Nghost = maxdeg;
 
     // initialize parameters
-    std::array<int,3> n_cell_vector = {4,4,4};
+    std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(4,4,4)};
     int n_part_per_cell = 1;
     int n_steps = 2;
-    std::array<int,3> is_periodic_vector = {1,1,1};
+    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {AMREX_D_DECL(1,1,1)};
     int max_grid_size = 2;
     amrex::Real dt = 0.1;
     std::array<amrex::Real, GEMPIC_NUMSPEC> charge = {-1.0};
