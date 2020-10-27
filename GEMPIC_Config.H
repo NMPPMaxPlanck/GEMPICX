@@ -3,14 +3,14 @@
 
 //#define GEMPIC_SPACEDIM 3
 #define GEMPIC_SPACEDIM AMREX_SPACEDIM
-#define GEMPIC_VDIM GEMPIC_SPACEDIM
+#define GEMPIC_VDIM 3
 #define GEMPIC_NUMSPEC 1
 
 #define GEMPIC_DEG_X 1
 #define GEMPIC_DEG_Y 1
 #define GEMPIC_DEG_Z 1
 
-#if (GEMPIC_SPACEDIM < 3)
+#if (GEMPIC_VDIM < 3)
 #  define GEMPIC_BDIM 1
 #else
 #  define GEMPIC_BDIM 3
