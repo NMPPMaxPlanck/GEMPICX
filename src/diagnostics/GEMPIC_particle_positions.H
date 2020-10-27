@@ -28,7 +28,6 @@ namespace Diagnostics_Output {
 void save_particle_positions (particle_groups *ppg, std::string ID = "", int species = 0){
 
     auto all_parts = (*(*ppg).mypc[species]).ParticleBoxArray(0);
-    std::cout << all_parts[0] << " | " << all_parts[1] << std::endl;
     std::ofstream ofsss("particle_output/x/W_" + ID + ".output", std::ofstream::out);
     amrex::RealDescriptor ParticleRealDescriptor = amrex::FPC::Native64RealDescriptor();
 
