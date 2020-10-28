@@ -463,14 +463,30 @@ public:
                                 (*E_Array[1])[mfi].setVal(*c1+dt_step*(-(*c2-*c3)/ifr.dx[0]-*cj), cc, 0, 1);
                             }
 #endif
-#if (GEMPIC_VDIM == 3)
-                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
-                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==1?1:0),j-(i%GEMPIC_SPACEDIM==2?1:0),k-(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
+#if ((GEMPIC_VDIM == 3) & (GEMPIC_SPACEDIM == 2))
+                            if (i==2) {
+                                (*B_Array[(i+2)%GEMPIC_VDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                                (*B_Array[(i+2)%GEMPIC_VDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==2?1:0),j-(i%GEMPIC_VDIM==0?1:0),k)},0,1);
+                                (*B_Array[(i+1)%GEMPIC_VDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                                (*B_Array[(i+1)%GEMPIC_VDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==1?1:0),j-(i%GEMPIC_VDIM==2?1:0),k)},0,1);
 
-                            (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
-                                                      (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]-*cj), cc, 0, 1);
+                                (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_VDIM]-
+                                                        (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_VDIM]-*cj), cc, 0, 1);
+                            } else {
+                                (*B_Array[2])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                                (*B_Array[2])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==1?1:0),j-(i%GEMPIC_VDIM==0?1:0),k)},0,1);
+
+                                (*E_Array[i])[mfi].setVal(*c1+dt_step*((i==0?1:-1)*(*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-*cj), cc, 0, 1);
+                            }
+#endif
+#if ((GEMPIC_VDIM == 3) & (GEMPIC_SPACEDIM == 3))
+                            (*B_Array[(i+2)%GEMPIC_BDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                            (*B_Array[(i+2)%GEMPIC_BDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_BDIM==2?1:0),j-(i%GEMPIC_BDIM==0?1:0),k-(i%GEMPIC_BDIM==1?1:0))},0,1);
+                            (*B_Array[(i+1)%GEMPIC_BDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                            (*B_Array[(i+1)%GEMPIC_BDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_BDIM==1?1:0),j-(i%GEMPIC_BDIM==2?1:0),k-(i%GEMPIC_BDIM==0?1:0))},0,1);
+
+                            (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_BDIM]-
+                                                      (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_BDIM]-*cj), cc, 0, 1);
 #endif
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -535,14 +551,30 @@ public:
                                 (*E_Array[1])[mfi].setVal(*c1+dt_step*(-(*c2-*c3)/ifr.dx[0]), cc, 0, 1);
                             }
 #endif
-#if (GEMPIC_VDIM == 3)
-                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                            (*B_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==2?1:0),j-(i%GEMPIC_SPACEDIM==0?1:0),k-(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
-                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-                            (*B_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_SPACEDIM==1?1:0),j-(i%GEMPIC_SPACEDIM==2?1:0),k-(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
+#if ((GEMPIC_VDIM == 3) & (GEMPIC_SPACEDIM == 2))
+                            if (i==2) {
+                                (*B_Array[(i+2)%GEMPIC_VDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                                (*B_Array[(i+2)%GEMPIC_VDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==2?1:0),j-(i%GEMPIC_VDIM==0?1:0),k)},0,1);
+                                (*B_Array[(i+1)%GEMPIC_VDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                                (*B_Array[(i+1)%GEMPIC_VDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==1?1:0),j-(i%GEMPIC_VDIM==2?1:0),k)},0,1);
 
-                            (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
-                                                      (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
+                                (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_VDIM]-
+                                                        (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_VDIM]), cc, 0, 1);
+                            } else {
+                                (*B_Array[2])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                                (*B_Array[2])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==1?1:0),j-(i%GEMPIC_VDIM==0?1:0),k)},0,1);
+
+                                (*E_Array[i])[mfi].setVal(*c1+dt_step*((i==0?1:-1)*(*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]), cc, 0, 1);
+                            }
+#endif
+#if ((GEMPIC_VDIM == 3) & (GEMPIC_SPACEDIM == 3))
+                            (*B_Array[(i+2)%GEMPIC_VDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                            (*B_Array[(i+2)%GEMPIC_VDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==2?1:0),j-(i%GEMPIC_VDIM==0?1:0),k-(i%GEMPIC_VDIM==1?1:0))},0,1);
+                            (*B_Array[(i+1)%GEMPIC_VDIM])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                            (*B_Array[(i+1)%GEMPIC_VDIM])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%GEMPIC_VDIM==1?1:0),j-(i%GEMPIC_VDIM==2?1:0),k-(i%GEMPIC_VDIM==0?1:0))},0,1);
+
+                            (*E_Array[i])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_VDIM]-
+                                                      (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_VDIM]), cc, 0, 1);
 #endif
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -647,11 +679,26 @@ public:
 
                             (*B_Array[0])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[1]-
                                                       (*c4-*c5)/ifr.dx[0]), cc, 0, 1);
+#elif ((GEMPIC_VDIM == 3) & (GEMPIC_SPACEDIM == 2))
+                            if (i==2) {
+                                (*E_Array[(i+2)%GEMPIC_BDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_BDIM==2?1:0),j+(i%GEMPIC_BDIM==0?1:0),k)},0,1);
+                                (*E_Array[(i+2)%GEMPIC_BDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                                (*E_Array[(i+1)%GEMPIC_BDIM])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_BDIM==1?1:0),j+(i%GEMPIC_BDIM==2?1:0),k)},0,1);
+                                (*E_Array[(i+1)%GEMPIC_BDIM])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+
+                                (*B_Array[i])[mfi].setVal(*c1-dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_BDIM]-
+                                                          (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_BDIM]), cc, 0, 1);
+                            } else {
+                                (*E_Array[2])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_BDIM==1?1:0),j+(i%GEMPIC_BDIM==0?1:0),k)},0,1);
+                                (*E_Array[2])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+
+                                (*B_Array[i])[mfi].setVal(*c1+dt_step*((i==0?-1:1)*(*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]), cc, 0, 1);
+                            }
 #elif (GEMPIC_BDIM == 3)
-                            (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==2?1:0),j+(i%GEMPIC_SPACEDIM==0?1:0),k+(i%GEMPIC_SPACEDIM==1?1:0))},0,1);
-                            (*E_Array[(i+2)%GEMPIC_SPACEDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                            (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_SPACEDIM==1?1:0),j+(i%GEMPIC_SPACEDIM==2?1:0),k+(i%GEMPIC_SPACEDIM==0?1:0))},0,1);
-                            (*E_Array[(i+1)%GEMPIC_SPACEDIM])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
+                            (*E_Array[(i+2)%GEMPIC_BDIM])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_BDIM==2?1:0),j+(i%GEMPIC_BDIM==0?1:0),k+(i%GEMPIC_BDIM==1?1:0))},0,1);
+                            (*E_Array[(i+2)%GEMPIC_BDIM])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
+                            (*E_Array[(i+1)%GEMPIC_BDIM])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+(i%GEMPIC_BDIM==1?1:0),j+(i%GEMPIC_BDIM==2?1:0),k+(i%GEMPIC_BDIM==0?1:0))},0,1);
+                            (*E_Array[(i+1)%GEMPIC_BDIM])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
 
                             (*B_Array[i])[mfi].setVal(*c1-dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                                                       (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
