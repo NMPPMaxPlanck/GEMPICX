@@ -1020,13 +1020,13 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
     vm[2] = p.rdata(2) + dt*chargemass/2*Ep[2];
 #endif
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (GEMPIC_VDIM == 1)
     vp[0] = vm[0];
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (GEMPIC_VDIM == 2)
     amrex::Real alpha = chargemass*dt/2*Bp[0];
     vp[0] = (1-pow(alpha,2))/(1+pow(alpha,2))*vm[0] + 2*alpha/(1+pow(alpha,2))*vm[1];
     vp[1] = -2*alpha/(1+pow(alpha,2))*vm[0] + (1-pow(alpha,2))/(1+pow(alpha,2))*vm[1];
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (GEMPIC_VDIM == 3)
     // v'
     amrex::Real coeff_t = dt*chargemass/2;
     vt[0] = vm[0] + coeff_t*(vm[1]*Bp[2]-vm[2]*Bp[1]);
@@ -1044,10 +1044,10 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
 
     // v
     newPos[GEMPIC_SPACEDIM] = vp[0] + dt*chargemass/2*Ep[0];
-#if (GEMPIC_SPACEDIM > 1)
+#if (GEMPIC_VDIM > 1)
     newPos[GEMPIC_SPACEDIM+1] = vp[1] + dt*chargemass/2*Ep[1];
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_VDIM > 2)
     newPos[GEMPIC_SPACEDIM+2] = vp[2] + dt*chargemass/2*Ep[2];
 #endif
 
