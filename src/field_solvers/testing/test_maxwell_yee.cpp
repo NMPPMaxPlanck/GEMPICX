@@ -86,7 +86,11 @@ double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
 #else
 double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));}
 #endif
+#if ((GEMPIC_SPACEDIM == 2) & (GEMPIC_VDIM == 3))
+double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
+#else
 double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
+#endif
 
 void main_main ()
 {std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << GEMPIC_VDIM << " | B: " << GEMPIC_BDIM << std::endl;
