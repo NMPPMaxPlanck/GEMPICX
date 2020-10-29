@@ -269,7 +269,7 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
-                            *sz_node[kk];
+                            *sz_cell[kk];
 #else
                       double s_coeff = sx_node[ii]
                             *sy_node[jj];
