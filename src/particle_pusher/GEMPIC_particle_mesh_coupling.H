@@ -263,12 +263,17 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                             , 0), s_coeff*weight[1]);
                 }
 #endif
+#if(GEMPIC_VDIM > 2)
+
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
-                            *sz_cell[kk]
-                            ;
+                            *sz_node[kk];
+#else
+                      double s_coeff = sx_node[ii]
+                            *sy_node[jj];
+#endif
                     amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0]
         #if (GEMPIC_SPACEDIM > 1)
                             , cell_index[1]
@@ -277,14 +282,14 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                             , cell_index[2]
         #endif
                             , 0), s_coeff*weight[2]);
-                }
+
 #endif
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    }
+} }
 #endif
 }
 
