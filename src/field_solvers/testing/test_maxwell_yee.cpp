@@ -43,106 +43,182 @@ double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std:
     return(res);
 }
 
-#if ((GEMPIC_SPACEDIM == 1) & (GEMPIC_VDIM == 1))
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)));}
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0.);}
-#endif
+template<int dim>
 
-#if ((GEMPIC_SPACEDIM == 1) & (GEMPIC_VDIM == 2))
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0]));}
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0])*cos(t));}
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sin(x[0])*sin(t));}
-#endif
+#if (GEMPIC_SPACEDIM == 1)
+template<int vdim>
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 1)
+    return(cos(std::accumulate(x.begin(), x.end(), 0.)));
+  else if (vdim == 2)
+    return(cos(x[0]));
+  else if (vdim == 3)
+    return(0.);
+}
+template<int vdim>
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 2)
+    return(cos(x[0])*cos(t));
+  else
+    return(0.);
+}
+template<int vdim>
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 2)
+    return(cos(x[0]);
+  else
+    return(0.);
+}
+#elif (GEMPIC_SPACEDIM == 2)
+template<int vdim>
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 1)
+    return(0.);
+  else if (vdim == 2)
+    return(cos(x[0])*sin(x[1])*sin(sqrt(2)*t)/sqrt(2));
+  else if (vdim == 3)
+    return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
+}
+template<int vdim>
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 1)
+    return(0.);
+  else if (vdim == 2)
+    return(-sin(x[0])*cos(x[1])*sin(sqrt(2)*t)/sqrt(2));
+  else if (vdim == 3)
+    return(-cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
+}
+template<int vdim>
+double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 3)
+    return(-sqrt(2.0)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
+  else
+    return(0.);
+}
 
-#if ((GEMPIC_SPACEDIM == 2) & (GEMPIC_VDIM == 2))
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(x[0])*sin(x[1])*sin(sqrt(2)*t)/sqrt(2));}
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sin(x[0])*cos(x[1])*sin(sqrt(2)*t)/sqrt(2));}
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-cos(x[0])*cos(x[1])*cos(sqrt(2)*t));}
-#endif
+template<int vdim>
+double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim == 2)
+    return(-cos(x[0])*cos(x[1])*cos(sqrt(2)*t));
+  else if (vdim == 3)
+    return(-cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
+}
 
-#if ((GEMPIC_SPACEDIM == 2) & (GEMPIC_VDIM == 3))
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));}
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));}
-double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(2.0)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));}
+template<int vdim>
+double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if ( vdim == 3 )
+    return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
+  else
+    return(0.);
+}
+template<int vdim>
+double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+  if (vdim ==  3)
+    return(-sqrt(2)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
+  else
+    return(0.);
+}
 
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));}
-double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));}
-double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(2)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));}
-#endif
-
-#if ((GEMPIC_SPACEDIM == 3) & (GEMPIC_VDIM == 3))
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+#elif (GEMPIC_SPACEDIM == 3)
+double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){
+    return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));
+}
+template<int vdim>
 double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+template<int vdim>
 double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
 
+template<int vdim>
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+template<int vdim>
 double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
+template<int vdim>
 double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
+
+
 #endif
 
 double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
-#if ((GEMPIC_SPACEDIM == 1) & (GEMPIC_VDIM == 2))
-double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
-#else
-double Ep_y(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));}
-#endif
-#if ((GEMPIC_SPACEDIM == 2) & (GEMPIC_VDIM == 3))
-double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(0.);}
-#else
-double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));}
-#endif
 
+template<int vdim>
+double Ep_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
+{
+   if ((GEMPIC_SPACEDIM == 1) & (vdim == 2))
+     return(0.);
+   else
+     return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));
+}
+
+template <int vdim>
+double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t)
+{
+  if (GEMPIC_SPACEDIM==2 && vdim == 3)
+    return(0.);
+  else
+     return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));
+}
+
+template<int vdim>
 void main_main ()
-{std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << GEMPIC_VDIM << " | B: " << GEMPIC_BDIM << std::endl;
+{std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << vdim << " | B: " << GEMPIC_BDIM << std::endl;
     // make pointer-array for functions
-    double (*fields[GEMPIC_VDIM+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
-    fields[0] = E_x;
-#if (GEMPIC_VDIM > 1)
-    fields[1] = E_y;
+    double (*fields[vdim+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
+    fields[0] = E_x<vdim>;
+#if (vdim > 1)
+    fields[1] = E_y<vdim>;
 #endif
-#if (GEMPIC_VDIM > 2)
-    fields[2] = E_z;
+#if (vdim > 2)
+    fields[2] = E_z<vdim>;
 #endif
 
-    fields[GEMPIC_VDIM] = B_x;
+    fields[vdim] = B_x<vdim>;
 #if (GEMPIC_BDIM > 1)
-    fields[GEMPIC_VDIM+1] = B_y;
+    fields[vdim+1] = B_y<vdim>;
 #endif
 #if (GEMPIC_BDIM > 2)
-    fields[GEMPIC_VDIM+2] = B_z;
+    fields[vdim+2] = B_z<vdim>;
 #endif
 
-    double (*fields_poisson[GEMPIC_VDIM]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
+    double (*fields_poisson[vdim]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
     fields_poisson[0] = Ep_x;
-#if (GEMPIC_VDIM > 1)
-    fields_poisson[1] = Ep_y;
+#if (vdim > 1)
+    fields_poisson[1] = Ep_y<vdim>;
 #endif
-#if (GEMPIC_VDIM > 2)
-    fields_poisson[2] = Ep_z;
+#if (vdim > 2)
+    fields_poisson[2] = Ep_z<vdim>;
 #endif
 
     //------------------------------------------------------------------------------
-    array<Real,GEMPIC_VDIM+GEMPIC_BDIM> E_B_error; //array for storing errors
+    array<Real,vdim+GEMPIC_BDIM> E_B_error; //array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    initializer init;
+    initializer<vdim> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-#if (GEMPIC_VDIM > 1)
+#if (vdim > 1)
     VM[1].push_back(0.0);
     VD[1].push_back(1.0);
     VW[1].push_back(1.0);
 #endif
-#if (GEMPIC_VDIM > 2)
+#if (vdim > 2)
     VM[2].push_back(0.0);
     VD[2].push_back(1.0);
     VW[2].push_back(1.0);
@@ -155,7 +231,7 @@ void main_main ()
     VM,VD,VW,0);
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
 
-    infrastructure infra(init);
+    infrastructure<vdim> infra(init);
     //std::cout << "[" << infra.real_box.lo()[0] << ", " << infra.real_box.hi()[0] << "]x[" << infra.real_box.lo()[1] << "," << infra.real_box.hi()[1] << "]x[" << infra.real_box.lo()[2] << ", " << infra.real_box.hi()[2] << "]" << std::endl;
     //std::array<double,GEMPIC_SPACEDIM> x = {0.0,0.0,0.75};
     //double t = 2.0-0.25/sqrt(3);
@@ -163,10 +239,10 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
 
 
-    for (int i=0; i<GEMPIC_VDIM; i++) {
+    for (int i=0; i<vdim; i++) {
         (*(mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
@@ -180,19 +256,19 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
     AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                          #if (GEMPIC_VDIM > 1)
+                          #if (vdim > 1)
                                   " |Ey error: " << E_B_error[1] <<
                           #endif
-                          #if (GEMPIC_VDIM > 2)
+                          #if (vdim > 2)
                                   " |Ez error: " << E_B_error[2] <<
                           #endif
                                   endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                           #if (GEMPIC_BDIM > 1)
-                                  " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                                  " |By error: " << E_B_error[vdim+1] <<
                           #endif
                           #if (GEMPIC_BDIM > 2)
-                                  " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                                  " |Bz error: " << E_B_error[vdim+2] <<
                           #endif
                                   endl;
 
@@ -203,19 +279,19 @@ void main_main ()
 
         AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (GEMPIC_VDIM > 1)
+                              #if (vdim > 1)
                                       " |Ey error: " << E_B_error[1] <<
                               #endif
-                              #if (GEMPIC_VDIM > 2)
+                              #if (vdim > 2)
                                       " |Ez error: " << E_B_error[2] <<
                               #endif
                                       endl;
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                               #if (GEMPIC_BDIM > 1)
-                                      " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                                      " |By error: " << E_B_error[vdim+1] <<
                               #endif
                               #if (GEMPIC_BDIM > 2)
-                                      " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                                      " |Bz error: " << E_B_error[vdim+2] <<
                               #endif
                                       endl;
 
@@ -228,9 +304,9 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Second maxwell test
-    maxwell_yee mw_yee_2(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee_2(init, infra, init.Nghost);
 
-    for (int i=0; i<GEMPIC_VDIM; i++) {
+    for (int i=0; i<vdim; i++) {
         (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component
         (*(mw_yee_2).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
@@ -243,19 +319,19 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
     AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                          #if (GEMPIC_VDIM > 1)
+                          #if (vdim > 1)
                                   " |Ey error: " << E_B_error[1] <<
                           #endif
-                          #if (GEMPIC_VDIM > 2)
+                          #if (vdim > 2)
                                   " |Ez error: " << E_B_error[2] <<
                           #endif
                                   endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                           #if (GEMPIC_BDIM > 1)
-                                  " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                                  " |By error: " << E_B_error[vdim+1] <<
                           #endif
                           #if (GEMPIC_BDIM > 2)
-                                  " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                                  " |Bz error: " << E_B_error[vdim+2] <<
                           #endif
                                   endl;
 
@@ -269,19 +345,19 @@ void main_main ()
 
         AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (GEMPIC_VDIM > 1)
+                              #if (vdim > 1)
                                       " |Ey error: " << E_B_error[1] <<
                               #endif
-                              #if (GEMPIC_VDIM > 2)
+                              #if (vdim > 2)
                                       " |Ez error: " << E_B_error[2] <<
                               #endif
                                       endl;
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[GEMPIC_VDIM] <<
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                               #if (GEMPIC_BDIM > 1)
-                                      " |By error: " << E_B_error[GEMPIC_VDIM+1] <<
+                                      " |By error: " << E_B_error[vdim+1] <<
                               #endif
                               #if (GEMPIC_BDIM > 2)
-                                      " |Bz error: " << E_B_error[GEMPIC_VDIM+2] <<
+                                      " |Bz error: " << E_B_error[vdim+2] <<
                               #endif
                                       endl;
     }
@@ -315,10 +391,10 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output") << endl;
     AllPrintToFile("test_output_pre_rename.output") << "Poisson" << endl;
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (GEMPIC_VDIM > 1)
+                              #if (vdim > 1)
                                   " |Ey error: " << E_B_error[1] <<
                               #endif
-                              #if (GEMPIC_VDIM > 2)
+                              #if (vdim > 2)
                                   " |Ez error: " << E_B_error[2] <<
                               #endif
                                   endl;
@@ -342,8 +418,15 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
-
+#if (GEMPIC_SPACEDIM == 1)
+    main_main<1>();
+    main_main<2>();
+#elif (GEMPIC_SPACEDIM == 2)
+    main_main<2>();
+    main_main<3>();
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3>();
+#endif
     amrex::Finalize();
 }
 

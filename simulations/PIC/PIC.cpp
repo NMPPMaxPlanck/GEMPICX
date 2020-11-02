@@ -28,6 +28,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
+template<int vdim>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
@@ -69,9 +70,9 @@ void main_main (bool ctest)
     // parse parameters
     amrex::ParmParse pp;
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
     if (ctest) {
         sim_name = "Weibel";
@@ -99,7 +100,7 @@ void main_main (bool ctest)
         num_gaussians = 1;
         tolerance_particles = 1.e-10;
 
-        for (int j=0; j<GEMPIC_VDIM; j++) {
+        for (int j=0; j<vdim; j++) {
             VM[j].push_back(0.0);
             VW[j].push_back(1.0);
         }
@@ -136,9 +137,9 @@ void main_main (bool ctest)
         pp.get("checkpoint_file", checkpoint_file);
         pp.get("curr_step", curr_step);
 
-        std::array<double, GEMPIC_VDIM> read_tmp_M;
-        std::array<double, GEMPIC_VDIM> read_tmp_D;
-        std::array<double, GEMPIC_VDIM> read_tmp_W;
+        std::array<double, vdim> read_tmp_M;
+        std::array<double, vdim> read_tmp_D;
+        std::array<double, vdim> read_tmp_W;
 
         for (int i=0; i<num_gaussians; i++) {
             std::string name_str_M = "velocity_mean_" +  std::to_string(i);
@@ -150,7 +151,7 @@ void main_main (bool ctest)
             pp.get(name_char_M,read_tmp_M);
             pp.get(name_char_D,read_tmp_D);
             pp.get(name_char_W,read_tmp_W);
-            for (int j=0; j<GEMPIC_VDIM; j++) {
+            for (int j=0; j<vdim; j++) {
                 VM[j].push_back(read_tmp_M[j]);
                 VD[j].push_back(read_tmp_D[j]);
                 VW[j].push_back(read_tmp_W[j]);
@@ -243,7 +244,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main(argc==1);
+    main_main<3>(argc==1);
 
     amrex::Finalize();
 }

@@ -20,6 +20,7 @@ namespace Init {
 /**
  * Class containing all initialization parameters. At the moment it is possible to initialize by passing the parameters. In the future it will also be possible to initialize by passing a file.
  */
+template<int vdim>
 class initializer
 {
 public:
@@ -43,9 +44,9 @@ public:
     amrex::RealBox real_box;
 
     //parameters for velocity distribution
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vmean;
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vdev;
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vweight;
+    std::array<std::vector<amrex::Real>, vdim> Vmean;
+    std::array<std::vector<amrex::Real>, vdim> Vdev;
+    std::array<std::vector<amrex::Real>, vdim> Vweight;
 
     // propagator
     int propagator; // 0 : Boris FD, 1 HS FEM
@@ -70,9 +71,9 @@ public:
                                     std::array<amrex::Real, GEMPIC_NUMSPEC> MS,
                                     int NPC,
                                     amrex::Real K,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW,
+                                    std::array<std::vector<amrex::Real>, vdim> VM,
+                                    std::array<std::vector<amrex::Real>, vdim> VD,
+                                    std::array<std::vector<amrex::Real>, vdim> VW,
                                     int PG,
                                     amrex::Real TP = 1.e-10){
         n_cell = NC;

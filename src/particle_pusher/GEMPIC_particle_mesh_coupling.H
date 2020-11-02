@@ -297,7 +297,8 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
 
 /*!
      *  Accumulation of the current for a FEM solver with integral over time (line integral)
-     *  Currently this is implemented for Gauss-Quadrature with only one point
+     *  Currently this is implemented for degree one with two quadrature points in the line
+     * integral for each box
      */
 void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_old,
                                std::array<amrex::Real,GEMPIC_SPACEDIM> position_new,
@@ -861,7 +862,7 @@ std::array<amrex::Real, GEMPIC_VDIM> push_v_efield(P const& p,
                                                    amrex::Real dt,
                                                    amrex::Real chargemass, //charge/mass
                                                    std::array<amrex::Real,GEMPIC_VDIM> Ep,
-                                                   infrastructure infra){
+                                                   infrastructure<GEMPIC_VDIM> infra){
     std::array<amrex::Real,GEMPIC_VDIM> newPos;
 
     newPos[0] = p.rdata(0) + dt*chargemass*(Ep[0]);
@@ -883,7 +884,7 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+GEMPIC_VDIM> push_x_v_bfield(P const& p,
                                                                      amrex::Real dt,
                                                                      amrex::Real chargemass, //charge/mass
                                                                      std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray,
-                                                                     infrastructure infra){
+                                                                     infrastructure<GEMPIC_VDIM> infra){
     std::array<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
         oldX[d]= p.pos(d);
@@ -953,7 +954,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle(P const& p,
                                                                   amrex::Real chargemass, //charge/mass
                                                                   std::array<amrex::Real,GEMPIC_VDIM> Ep,
                                                                   std::array<amrex::Real,GEMPIC_BDIM> Bp,
-                                                                  infrastructure infra){
+                                                                  infrastructure<GEMPIC_VDIM> infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
     // new positions (modulo the upper bound of the box)
@@ -981,7 +982,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle(P const& p,
 template <typename P>
 std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_pos(P const& p,
                                                                       amrex::Real dt,
-                                                                      infrastructure infra){
+                                                                      infrastructure<GEMPIC_VDIM> infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
     // new positions (modulo the upper bound of the box)
@@ -1008,7 +1009,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
                                                                         amrex::Real chargemass, //charge/mass
                                                                         std::array<amrex::Real,GEMPIC_VDIM> Ep,
                                                                         std::array<amrex::Real,GEMPIC_BDIM> Bp,
-                                                                        infrastructure infra){
+                                                                        infrastructure<GEMPIC_VDIM> infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
     std::array<amrex::Real,GEMPIC_VDIM> vm;
@@ -1069,7 +1070,269 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
     return(newPos);
 }
 
+
+void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+                                   amrex::Real mu,
+                                   std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                   std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray,
+                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> mArray)
+
+{
+  // 1. Identify the box and relative position of position old
+  std::array<amrex::Real, GEMPIC_SPACEDIM> position_box;
+  std::array<int, GEMPIC_SPACEDIM> box;
+  for (unsigned int d=0; d<GEMPIC_SPACEDIM;++d)
+    {
+      amrex::Real pos_norm = (position[d]-plo[d])*dxi[d];
+      box[d] = std::floor(pos_norm);
+      position_box[d] = pos_norm - box[d];
+    }
+
+  // 2. Evaluate the splines at the particle position
+  Gempic::Particles::splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
+
+  std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(position_box[0], GEMPIC_DEG_X-1, true), GEMPIC_DEG_X-1);
+  std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(position_box[0], GEMPIC_DEG_X, false), GEMPIC_DEG_X);
+#if (GEMPIC_SPACEDIM > 1)
+  std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(position_box[1], GEMPIC_DEG_Y-1, true), GEMPIC_DEG_Y-1);
+  std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(position_box[1], GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+  std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(position_box[2], GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
+  std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(position_box[2], GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
+#endif
+
+  // 3. Provide the magnetic field and other parts of the weighting factor
+  // Evaluate the magnetic field
+  std::array<amrex::Real, GEMPIC_BDIM> bfield = Gempic::Particles::evaluate_fem_bfield(position, dxi, plo, bArray);
+  // Compute modulus of magnetic field
+  amrex::Real bfield_mod = 0.0;
+  for (int d =0;d<GEMPIC_BDIM;++d )
+    bfield_mod += bfield[d]*bfield[d];
+  bfield_mod = std::sqrt( bfield_mod );
+
+  // weight is given by mu devided by the bfield modulus times the inverse volume
+  amrex::Real weight = mu*dxi[GEMPIC_SPACEDIM]/bfield_mod;
+
+  // 4. Loop of the contributions to the magnetization vector
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
+#endif
+            for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
+                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box[0]+ii, box[1]+jj, box[2]+kk)};
+                if ( ii < GEMPIC_DEG_X ) {
+                    double s_coeff = sx_node[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                            *sy_cell[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                            *sz_cell[kk]
+        #endif
+                            ;
+                    amrex::Gpu::Atomic::Add(&(mArray[0])(cell_index[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*bfield[0]*weight);
+                }
+#if(GEMPIC_VDIM > 1)
+                if ( jj < GEMPIC_DEG_Y ) {
+                    double s_coeff = sx_node[ii]
+                            *sy_node[jj]
+        #if(GEMPIC_SPACEDIM > 2)
+                            *sz_node[kk]
+        #endif
+                            ;
+                    amrex::Gpu::Atomic::Add(&(mArray[1])(cell_index[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*bfield[1]*weight);
+                }
+#endif
+#if(GEMPIC_VDIM > 2)
+
+#if(GEMPIC_SPACEDIM > 2)
+                if ( kk < GEMPIC_DEG_Z ) {
+                    double s_coeff = sx_cell[ii]
+                            *sy_cell[jj]
+                            *sz_node[kk];
+#else
+                      double s_coeff = sx_cell[ii]
+                            *sy_cell[jj];
+#endif
+                    amrex::Gpu::Atomic::Add(&(mArray[2])(cell_index[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                            , cell_index[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                            , cell_index[2]
+        #endif
+                            , 0), s_coeff*bfield[2]*weight);
+
+#endif
+            }
+#if (GEMPIC_SPACEDIM > 1)
+        }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+} }
+#endif
+
 }
+
+
+/*!
+     *  Field evluation of a two form described by finite elements
+     */
+std::array<amrex::Real, GEMPIC_BDIM> evaluate_grad_mod_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+                                                              std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                              std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                              std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray)
+{
+    std::array<amrex::Real, GEMPIC_BDIM> fields = {AMREX_B_DECL(0.,0.,0.)};
+    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
+
+    amrex::Real lx = (position[0]-plo[0])*dxi[0];
+    int i = std::floor(lx);
+    amrex::Real xint = lx - i;
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X-1, true), GEMPIC_DEG_X-1);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, GEMPIC_DEG_X, false), GEMPIC_DEG_X);
+#if (GEMPIC_SPACEDIM > 1)
+    amrex::Real ly = (position[1]-plo[1])*dxi[1];
+    int j = std::floor(ly);
+    amrex::Real yint = ly - j;
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y-1, true), GEMPIC_DEG_Y-1);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, GEMPIC_DEG_Y, false), GEMPIC_DEG_Y);
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    amrex::Real lz = (position[2]-plo[2])*dxi[2];
+    int k = std::floor(lz);
+    amrex::Real zint = lz - k;
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
+#endif
+
+    // First B_0
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= GEMPIC_DEG_Z-1; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= GEMPIC_DEG_Y-1; ++jj) {
+#endif
+            for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
+                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                double s_coeff = sx_node[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        *sy_cell[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        *sz_cell[kk]
+        #endif
+                        ;
+                fields[0] += s_coeff*(bArray[0])(cell_index[0]
+        #if(GEMPIC_SPACEDIM > 1)
+                        ,cell_index[1]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        ,cell_index[2]
+        #endif
+                        ,0);
+            }
+#if (GEMPIC_SPACEDIM > 1)
+        }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    }
+#endif
+    // B_1
+#if (GEMPIC_BDIM>1)
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= GEMPIC_DEG_Z-1; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
+#endif
+            for (int ii = 0; ii <= GEMPIC_DEG_X-1; ++ii) {
+                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                double s_coeff = sx_cell[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        *sy_node[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        *sz_cell[kk]
+        #endif
+                        ;
+                fields[1] += s_coeff*(bArray[1])(cell_index[0]
+        #if(GEMPIC_SPACEDIM > 1)
+                        ,cell_index[1]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        ,cell_index[2]
+        #endif
+                        ,0);
+            }
+#if (GEMPIC_SPACEDIM > 1)
+        }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    }
+#endif
+#endif
+
+    // B_2
+#if (GEMPIC_BDIM>2)
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= GEMPIC_DEG_Y-1; ++jj) {
+#endif
+            for (int ii = 0; ii <= GEMPIC_DEG_X-1; ++ii) {
+                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                double s_coeff = sx_cell[ii]
+        #if(GEMPIC_SPACEDIM > 1)
+                        *sy_cell[jj]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        *sz_node[kk]
+        #endif
+                        ;
+                fields[2] += s_coeff*(bArray[2])(cell_index[0]
+        #if(GEMPIC_SPACEDIM > 1)
+                        ,cell_index[1]
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
+                        ,cell_index[2]
+        #endif
+                        ,0);
+            }
+#if (GEMPIC_SPACEDIM > 1)
+        }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    }
+#endif
+#endif
+    return(fields);
 }
+
+
+} // end namespace particles
+} // end namespace GEMPIC
 
 #endif

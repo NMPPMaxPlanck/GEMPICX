@@ -20,7 +20,8 @@ using namespace Infra;
 namespace Gempic {
 namespace Utils {
 
-amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
+template<int vdim>
+amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure<vdim> ifr, int p){
     //TODOrefine
     amrex::Real result;
     if (p==0) {
