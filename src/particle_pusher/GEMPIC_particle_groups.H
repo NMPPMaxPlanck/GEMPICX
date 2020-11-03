@@ -31,7 +31,7 @@ namespace Particles {
  */
 template <int vdim>
 class particle_groups
-  {
+{
 public:
 
     // array of ParticleContainers (one container per species)

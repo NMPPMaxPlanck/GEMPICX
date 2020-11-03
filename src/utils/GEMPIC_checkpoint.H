@@ -38,9 +38,9 @@ Gempic_GotoNextLine (std::istream& is)
 template<int vdim>
 void
 Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, infrastructure *infra,
-                                   const std::string& dirname, int field, const int step,
-                                   amrex::IndexType IndexT,
-                                   int header_precision)
+                                  const std::string& dirname, int field, const int step,
+                                  amrex::IndexType IndexT,
+                                  int header_precision)
 {
     // dirnamestep            write a checkpoint file with this root directory
     // dirnamestep/Header     this contains information you need to save (e.g., finest_level, t_new, etc.) and also
@@ -152,7 +152,7 @@ Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *pa
 template<int vdim>
 void
 Gempic_ReadCheckpointFile_Field (maxwell_yee<vdim> *mw_yee,
-                           const std::string& dirname, int field, const int step)
+                                 const std::string& dirname, int field, const int step)
 {
 
     std::array<std::string, 9> fieldnames = {"Jx", "Jy", "Jz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
@@ -241,13 +241,13 @@ Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *par
 
     for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("Ex_before_2") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-      }
+    }
 
     (*mw_yee).FillBD(*infra);
 
     for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("Ex_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-      }
+    }
 
     for ( amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         const amrex::Box& bx = mfi.validbox();
@@ -261,15 +261,15 @@ Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *par
 
     }
 
-          for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-              amrex::AllPrintToFile("Ex_ghost_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-            }
+    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("Ex_ghost_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
+    }
 
     (*(*mw_yee).E_Array[0]).FillBoundary(infra->geom.periodicity());
 
     for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("Ex_ghost_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-      }
+    }
 
     // Particles
     if (particles) {

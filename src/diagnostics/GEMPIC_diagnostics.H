@@ -87,7 +87,7 @@ public:
         // compute kinetic energy norm and momentum
         for (int spec=0;spec<(*part_gr).n_species;spec++){ // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
-                                           [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
+                                             [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
             {
                 auto m  = p.rdata(vdim);
                 auto vel = pow(std::abs(p.rdata(0)),2)+pow(std::abs(p.rdata(1)),2)+pow(std::abs(p.rdata(2)),2);
@@ -102,7 +102,7 @@ public:
             kin[step] = 0.5*kin_tmp;
             for (int cmp=0;cmp<vdim;cmp++) {
                 auto mom_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
-                                               [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
+                                                 [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
                 {
                     auto m  = p.rdata(vdim);
                     auto vel = p.rdata(cmp);
@@ -144,7 +144,7 @@ public:
             case 1:
                 amrex::Print(ofsfun) << Efield[step][0];
                 break;
-           case 2:
+            case 2:
                 amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1];
                 break;
             case 3:
@@ -152,7 +152,7 @@ public:
 
             }
 
-                        amrex::Print(ofsfun) << " " << Bfield[step][0]
+            amrex::Print(ofsfun) << " " << Bfield[step][0]
                         #if (GEMPIC_BDIM > 1)
                                  << " " << Bfield[step][1]
                         #endif
@@ -160,19 +160,19 @@ public:
                                  << " " << Bfield[step][2]
                         #endif
                                     ;
-                        switch(vdim) {
-                        case 1:
-                            amrex::Print(ofsfun) << mom[step][0];
-                            break;
-                       case 2:
-                            amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1];
-                            break;
-                        case 3:
-                            amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
+            switch(vdim) {
+            case 1:
+                amrex::Print(ofsfun) << mom[step][0];
+                break;
+            case 2:
+                amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1];
+                break;
+            case 3:
+                amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
 
-                        }
-                        amrex::Print(ofsfun) << " " << gauss_error[step]
-                                 << std::endl;
+            }
+            amrex::Print(ofsfun) << " " << gauss_error[step]
+                                    << std::endl;
         }
         ofsfun.close();
     }

@@ -98,7 +98,7 @@ void main_main (bool ctest)
     //initializer
     initializer<vdim> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW,tolerance_particles);
+                                    VM,VD,VW,tolerance_particles);
     
     // infrastructure
     infrastructure infra;
@@ -129,26 +129,26 @@ void main_main (bool ctest)
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
-      case 0:
+    case 0:
         time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      case 1:
+    case 1:
         time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      default:
+    default:
         break;
-      }
+    }
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
-          for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
-              AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
-            }
-          AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
-          for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
-              AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
-            }
-     if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
+    for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
+        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
+    }
+    AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
+    for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
+        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
+    }
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
 }
 
 int main(int argc, char* argv[])

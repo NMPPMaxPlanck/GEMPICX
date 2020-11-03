@@ -47,22 +47,22 @@ void main_main ()
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-if (vdim > 1) {
-    VM[1].push_back(0.0);
-    VD[1].push_back(1.0);
-    VW[1].push_back(1.0);
-}
-if (vdim > 2) {
-    VM[2].push_back(0.0);
-    VD[2].push_back(1.0);
-    VW[2].push_back(1.0);
-}
+    if (vdim > 1) {
+        VM[1].push_back(0.0);
+        VD[1].push_back(1.0);
+        VW[1].push_back(1.0);
+    }
+    if (vdim > 2) {
+        VM[2].push_back(0.0);
+        VD[2].push_back(1.0);
+        VW[2].push_back(1.0);
+    }
 
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
     init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,0,{-1.0},{1.0},1000,k,
-    VM,VD,VW,0);
+                                    VM,VD,VW,0);
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, propagator
 
     infrastructure infra;
@@ -110,10 +110,10 @@ if (vdim > 2) {
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
                 gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
-              }
+            }
             ((mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
-          }
-      }
+        }
+    }
 
     (mw_yee).rho.SumBoundary(infra.geom.periodicity());
     (mw_yee).rho.FillBoundary(infra.geom.periodicity());

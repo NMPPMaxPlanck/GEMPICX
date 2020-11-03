@@ -35,19 +35,19 @@ void main_main ()
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-if (vdim > 1) {
-    VM[1].push_back(0.0);
-    VD[1].push_back(1.0);
-    VW[1].push_back(1.0);
-}
-if (vdim > 2) {
-    VM[2].push_back(0.0);
-    VD[2].push_back(1.0);
-    VW[2].push_back(1.0);
-}
+    if (vdim > 1) {
+        VM[1].push_back(0.0);
+        VD[1].push_back(1.0);
+        VW[1].push_back(1.0);
+    }
+    if (vdim > 2) {
+        VM[2].push_back(0.0);
+        VD[2].push_back(1.0);
+        VW[2].push_back(1.0);
+    }
 
     init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},1000,1,
-    VM,VD,VW,0);
+                                    VM,VD,VW,0);
     infrastructure infra;
     init.initialize_infrastructure(&infra);
 
@@ -84,12 +84,12 @@ if (vdim > 2) {
 #endif
 
         velocity[0] = normD(gen);
-if (vdim > 1) {
-        velocity[1] = normD(gen);
-}
-if (vdim > 2) {
-        velocity[2] = normD(gen);
-}
+        if (vdim > 1) {
+            velocity[1] = normD(gen);
+        }
+        if (vdim > 2) {
+            velocity[2] = normD(gen);
+        }
         weight = 1.0;
 
         //MFI that adds particle from the modell cell to all cells

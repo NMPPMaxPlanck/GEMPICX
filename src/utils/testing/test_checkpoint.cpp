@@ -49,12 +49,12 @@ void main_main ()
     std::array<std::vector<amrex::Real>, vdim> VW{};
 
     for (int j=0; j<vdim; j++) {
-            VM[j].push_back(0.0);
-            VW[j].push_back(1.0);
-     }
-     VD[0].push_back(0.02/sqrt(2));
-     VD[1].push_back(sqrt(12)*VD[0][0]);
-     VD[2].push_back(VD[1][0]);
+        VM[j].push_back(0.0);
+        VW[j].push_back(1.0);
+    }
+    VD[0].push_back(0.02/sqrt(2));
+    VD[1].push_back(sqrt(12)*VD[0][0]);
+    VD[2].push_back(VD[1][0]);
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
@@ -78,7 +78,7 @@ void main_main ()
     //initializer
     initializer<vdim> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW,tolerance_particles);
+                                    VM,VD,VW,tolerance_particles);
 
     // infrastructure
     infrastructure infra;

@@ -33,12 +33,12 @@ amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
     }
     if (p > 0) {
         result *= ifr.dx[0]/ifr.Length[0]
-#if(GEMPIC_SPACEDIM > 1)
+        #if(GEMPIC_SPACEDIM > 1)
                 *ifr.dx[1]/ifr.Length[1]
-#endif
-#if(GEMPIC_SPACEDIM > 2)
+        #endif
+        #if(GEMPIC_SPACEDIM > 2)
                 *ifr.dx[2]/ifr.Length[2]
-#endif
+        #endif
                 ;
     }
     return(result);

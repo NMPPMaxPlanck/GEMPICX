@@ -70,16 +70,16 @@ void main_main ()
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-if (vdim > 1) {
-    VM[1].push_back(0.0);
-    VD[1].push_back(1.0);
-    VW[1].push_back(1.0);
-}
-if (vdim > 2) {
-    VM[2].push_back(0.0);
-    VD[2].push_back(1.0);
-    VW[2].push_back(1.0);
-}
+    if (vdim > 1) {
+        VM[1].push_back(0.0);
+        VD[1].push_back(1.0);
+        VW[1].push_back(1.0);
+    }
+    if (vdim > 2) {
+        VM[2].push_back(0.0);
+        VD[2].push_back(1.0);
+        VW[2].push_back(1.0);
+    }
 
     init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},1,1,VM,VD,VW,0);
     infrastructure infra;

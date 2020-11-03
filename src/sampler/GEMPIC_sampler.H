@@ -36,12 +36,12 @@ void init_particles_cellwise(infrastructure infra,
                              int rSeed = 925){
 
     amrex::Real x_c
-#if GEMPIC_SPACEDIM > 1
+        #if GEMPIC_SPACEDIM > 1
             ,y_c
-#endif
-#if GEMPIC_SPACEDIM > 2
+        #endif
+        #if GEMPIC_SPACEDIM > 2
             ,z_c
-#endif
+        #endif
             ; // cell-corner coordinates
     std::array<amrex::Real,GEMPIC_SPACEDIM> position;
     std::array<amrex::Real,vdim> velocity;
@@ -92,48 +92,48 @@ void init_particles_cellwise(infrastructure infra,
         //Adding particle from the model cell to all cells
         for(amrex::MFIter mfi=(*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
 
-                amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
+            amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            const amrex::Box& bx = mfi.validbox();
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
 
-    #if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    z_c = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
-                    //shifted_position[2] = position[2] + z;
-                    *z = position[2] + z_c;
-    #endif
-    #if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        y_c = infra.geom.ProbLo()[1] + (double)j*infra.dx[1];
-                        //shifted_position[1] = position[1] + y;
-                        *y = position[1] + y_c;
-    #endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x_c = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
-                            //shifted_position[0] = position[0] + x;
-                            *x = position[0] + x_c;
+#if (GEMPIC_SPACEDIM > 2)
+            for(int k=lo[2]; k<=hi[2]; k++){
+                z_c = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
+                //shifted_position[2] = position[2] + z;
+                *z = position[2] + z_c;
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                for(int j=lo[1]; j<=hi[1]; j++){
+                    y_c = infra.geom.ProbLo()[1] + (double)j*infra.dx[1];
+                    //shifted_position[1] = position[1] + y;
+                    *y = position[1] + y_c;
+#endif
+                    for(int l=lo[0]; l<=hi[0]; l++){
+                        x_c = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
+                        //shifted_position[0] = position[0] + x;
+                        *x = position[0] + x_c;
 
-                            //TODOrefine
-                            const double result = te_eval(WF_parse);
-                            weight = result/init.Np_cell*infra.dx[0]
-            #if (GEMPIC_SPACEDIM > 1)
-                                    *infra.dx[1]
-            #endif
-            #if (GEMPIC_SPACEDIM > 2)
-                                    *infra.dx[2]
-            #endif
-                                    ;
+                        //TODOrefine
+                        const double result = te_eval(WF_parse);
+                        weight = result/init.Np_cell*infra.dx[0]
+        #if (GEMPIC_SPACEDIM > 1)
+                                *infra.dx[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+                                *infra.dx[2]
+        #endif
+                                ;
 
 
-                            (ppg).add_particle({AMREX_D_DECL(*x, *y, *z)}, velocity, weight, particles);
-                        }
-    #if (GEMPIC_SPACEDIM > 1)
+                        (ppg).add_particle({AMREX_D_DECL(*x, *y, *z)}, velocity, weight, particles);
                     }
-    #endif
-    #if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_SPACEDIM > 1)
                 }
-    #endif
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+            }
+#endif
         }
     }
 }
@@ -253,12 +253,12 @@ void init_one_particle_cellwise(std::array<amrex::Real,GEMPIC_SPACEDIM> const& d
     std::array<amrex::Real,vdim> velocity;
 
     velocity[0] = 1.;
-if (vdim > 1) {
-    velocity[1] = 1.;
-}
-if (vdim > 2) {
-    velocity[2] = 1.;
-}
+    if (vdim > 1) {
+        velocity[1] = 1.;
+    }
+    if (vdim > 2) {
+        velocity[2] = 1.;
+    }
 
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi = (*mypc).MakeMFIter(0); mfi.isValid(); ++mfi ){ // 0 is level
@@ -297,12 +297,12 @@ if (vdim > 2) {
 #endif
 
                     p.rdata(0) = velocity[0];
-if (vdim > 1) {
-                    p.rdata(1) = velocity[1];
-}
-if (vdim > 2) {
-                    p.rdata(2) = velocity[2];
-                }
+                    if (vdim > 1) {
+                        p.rdata(1) = velocity[1];
+                    }
+                    if (vdim > 2) {
+                        p.rdata(2) = velocity[2];
+                    }
 
                     p.rdata(vdim) = 1.0/64.0; //weight
 

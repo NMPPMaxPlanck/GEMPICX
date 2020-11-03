@@ -160,16 +160,16 @@ void main_main (bool ctest)
 
         // Depending on which propagator is chosen, staggering in time is needed or not
         switch (propagator) {
-          case 0:
+        case 0:
             time_staggered = true;
             break;
-          case 1:
+        case 1:
             time_staggered = false;
             Nghost += 2;
             break;
-          default:
+        default:
             break;
-          }
+        }
 
     }
 
@@ -199,7 +199,7 @@ void main_main (bool ctest)
     //initializer
     initializer<vdim> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW,tolerance_particles);
+                                    VM,VD,VW,tolerance_particles);
 
     // infrastructure
     infrastructure infra;
@@ -220,8 +220,8 @@ void main_main (bool ctest)
         int species = 0; // all particles are same species for now
         init_particles_full_domain(infra, part_gr, init, species, WF_parse, &x, &y, &z);
 
-    //------------------------------------------------------------------------------
-    // solve:
+        //------------------------------------------------------------------------------
+        // solve:
         loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     } else {
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, checkpoint_file, curr_step);
@@ -229,15 +229,15 @@ void main_main (bool ctest)
     std::ofstream ofs("PIC.output", std::ofstream::out);
     if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
-      case 0:
+    case 0:
         time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      case 1:
+    case 1:
         time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      default:
+    default:
         break;
-      }
+    }
     if (ctest & (ParallelDescriptor::MyProc()==0)) std::rename("test_output_pre_rename.output.0", "PIC.output");
 }
 

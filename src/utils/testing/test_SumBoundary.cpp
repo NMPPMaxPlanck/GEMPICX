@@ -72,7 +72,7 @@ void main_main ()
     Gempic::Sampling::init_one_particle_cellwise<vdim>(dx, plo, &mypc, {AMREX_D_DECL(2*dx[0]/5.0, 2*dx[1]/5.0, 0)});
 
     mypc.Redistribute();
-std::cout << "A" << std::endl;
+    std::cout << "A" << std::endl;
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
@@ -99,7 +99,7 @@ std::cout << "A" << std::endl;
         TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
     }
 
-std::cout << "D" << std::endl;
+    std::cout << "D" << std::endl;
     //-----------------------------------------------------------------------------
     // SumBoundary
 

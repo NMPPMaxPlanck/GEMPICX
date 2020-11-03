@@ -43,16 +43,16 @@ void main_main ()
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-if (vdim > 1) {
-    VM[1].push_back(0.0);
-    VD[1].push_back(1.0);
-    VW[1].push_back(1.0);
-}
-if (vdim > 2) {
-    VM[2].push_back(0.0);
-    VD[2].push_back(1.0);
-    VW[2].push_back(1.0);
-}
+    if (vdim > 1) {
+        VM[1].push_back(0.0);
+        VD[1].push_back(1.0);
+        VW[1].push_back(1.0);
+    }
+    if (vdim > 2) {
+        VM[2].push_back(0.0);
+        VD[2].push_back(1.0);
+        VW[2].push_back(1.0);
+    }
 
     // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
     // multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
@@ -148,8 +148,8 @@ if (vdim > 2) {
     AllPrintToFile("test_output_pre_rename.output") << "mass: " << mass << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "momentum: " ;
     switch (vdim) {
-        case 1:
-            AllPrintToFile("test_output_pre_rename.output") << momentum[0] << std::endl;
+    case 1:
+        AllPrintToFile("test_output_pre_rename.output") << momentum[0] << std::endl;
         break;
     case 2:
         AllPrintToFile("test_output_pre_rename.output") << momentum[0] << " " << momentum[1] << std::endl;
@@ -160,8 +160,8 @@ if (vdim > 2) {
     }
     AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: " ;
     switch (vdim) {
-        case 1:
-            AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << std::endl;
+    case 1:
+        AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << std::endl;
         break;
     case 2:
         AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;

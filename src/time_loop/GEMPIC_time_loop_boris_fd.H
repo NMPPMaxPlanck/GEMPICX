@@ -32,11 +32,11 @@ namespace Time_Loop {
 
 template<int vdim>
 void time_loop_boris_fd (infrastructure infra,
-                    maxwell_yee<vdim> *mw_yee,
-                    particle_groups<vdim> *part_gr,
-                    diagnostics<vdim> *diagn,
-                    bool ctest,
-                    std::ofstream *ofs) {
+                         maxwell_yee<vdim> *mw_yee,
+                         particle_groups<vdim> *part_gr,
+                         diagnostics<vdim> *diagn,
+                         bool ctest,
+                         std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
@@ -79,7 +79,7 @@ void time_loop_boris_fd (infrastructure infra,
                 for (int pp=0;pp<np;pp++){
 
                     std::array<amrex::Real, vdim+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                      infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
+                                                                                                                                             infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
                     std::array<amrex::Real,vdim> eres = {AMREX_V_DECL(field_interp[0],field_interp[1],field_interp[2])};
                     std::array<amrex::Real,GEMPIC_BDIM> bres = {AMREX_B_DECL(field_interp[vdim],field_interp[vdim+1],field_interp[vdim+2])};
@@ -110,7 +110,7 @@ void time_loop_boris_fd (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
                     std::array<amrex::Real, vdim+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                      infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
+                                                                                                                                             infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }
         }
@@ -137,7 +137,7 @@ void time_loop_boris_fd (infrastructure infra,
 
         if (ctest) {
             switch (vdim) {
-                case 1:
+            case 1:
                 amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0];
                 break;
             case 2:
@@ -148,15 +148,15 @@ void time_loop_boris_fd (infrastructure infra,
                 break;
             }
             amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0]
-                        #if (GEMPIC_BDIM > 1)
-                                 << " " << (*diagn).Bfield[t_step][1]
-                        #endif
-                        #if (GEMPIC_BDIM > 2)
-                                 << " " << (*diagn).Bfield[t_step][2]
-                        #endif
-                                 << " " << (*diagn).kin[t_step] << " ";
+                                                          #if (GEMPIC_BDIM > 1)
+                                                                   << " " << (*diagn).Bfield[t_step][1]
+                                                          #endif
+                                                          #if (GEMPIC_BDIM > 2)
+                                                                   << " " << (*diagn).Bfield[t_step][2]
+                                                          #endif
+                                                                   << " " << (*diagn).kin[t_step] << " ";
             switch (vdim) {
-                case 1:
+            case 1:
                 amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0];
                 break;
             case 2:
