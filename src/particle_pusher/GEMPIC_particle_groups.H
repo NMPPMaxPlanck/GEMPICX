@@ -13,9 +13,11 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_initializer.H>
 
+using namespace Gempic;
 using namespace Infra;
+using namespace Init;
 
 #ifndef PARTICLE_GROUPS_H_
 #define PARTICLE_GROUPS_H_
@@ -50,7 +52,7 @@ public:
      * can be done one by one (see method add_particle) or with the particle samples in the folder sampler.
      */
     particle_groups (initializer<vdim> init,
-                     infrastructure<vdim> ifr){
+                     infrastructure ifr){
 
         n_species = init.n_species;
         charge = init.charge;

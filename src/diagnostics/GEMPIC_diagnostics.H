@@ -31,13 +31,15 @@ namespace Diagnostics_Output {
 /**
  * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored and written into files. Slice Data of fields can be generated.
  */
+
+template<int vdim>
 class diagnostics
 {
 public:
     int n_time; // number of timesteps
     // 9 static so far!! need to fix this
     std::array<std::array<amrex::Real,GEMPIC_BDIM>,50001> Bfield;
-    std::array<std::array<amrex::Real,GEMPIC_VDIM>,50001> Efield, mom;
+    std::array<std::array<amrex::Real,vdim>,50001> Efield, mom;
     std::array<amrex::Real,50001> kin;
     std::array<amrex::Real,50001> gauss_error;
     int freq_x;
@@ -70,11 +72,11 @@ public:
      */
     void save_step_data(int step,
                         infrastructure infra,
-                        maxwell_yee *mw_yee,
-                        particle_groups *part_gr){
+                        maxwell_yee<vdim> *mw_yee,
+                        particle_groups<vdim> *part_gr){
 
         // E and B field
-        for(int cc=0;cc<GEMPIC_VDIM;cc++){
+        for(int cc=0;cc<vdim;cc++){
             Efield[step][cc] = gempic_norm(&(*(*mw_yee).E_Array[cc]), infra, 2);
         }
 
@@ -85,9 +87,9 @@ public:
         // compute kinetic energy norm and momentum
         for (int spec=0;spec<(*part_gr).n_species;spec++){ // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
-                                           [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_VDIM+1,0>& p) -> amrex::Real
+                                           [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
             {
-                auto m  = p.rdata(GEMPIC_VDIM);
+                auto m  = p.rdata(vdim);
                 auto vel = pow(std::abs(p.rdata(0)),2)+pow(std::abs(p.rdata(1)),2)+pow(std::abs(p.rdata(2)),2);
                 return (m*vel);
             });
@@ -98,11 +100,11 @@ public:
                     (kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
             kin[step] = 0.5*kin_tmp;
-            for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+            for (int cmp=0;cmp<vdim;cmp++) {
                 auto mom_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
-                                               [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_VDIM+1,0>& p) -> amrex::Real
+                                               [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
                 {
-                    auto m  = p.rdata(GEMPIC_VDIM);
+                    auto m  = p.rdata(vdim);
                     auto vel = p.rdata(cmp);
                     return (m*std::abs(vel));
                 });
@@ -137,28 +139,39 @@ public:
         std::ofstream ofsfun(filename, std::ofstream::out);
         amrex::Print(ofsfun) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
         for (int step=0;step<=partial;step++){
-            amrex::Print(ofsfun) << dt*(step) << " " << Efield[step][0]
-                        #if (GEMPIC_VDIM > 1)
-                                 << " " << Efield[step][1]
-                        #endif
-                        #if (GEMPIC_VDIM > 2)
-                                 << " " << Efield[step][2]
-                        #endif
-                                 << " " << Bfield[step][0]
+            amrex::Print(ofsfun) << dt*(step) << " ";
+            switch(vdim) {
+            case 1:
+                amrex::Print(ofsfun) << Efield[step][0];
+                break;
+           case 2:
+                amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1];
+                break;
+            case 3:
+                amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
+
+            }
+
+                        amrex::Print(ofsfun) << " " << Bfield[step][0]
                         #if (GEMPIC_BDIM > 1)
                                  << " " << Bfield[step][1]
                         #endif
                         #if (GEMPIC_BDIM > 2)
                                  << " " << Bfield[step][2]
                         #endif
-                                 << " " << kin[step] << " " << mom[step][0]
-                        #if (GEMPIC_VDIM > 1)
-                                 << " " << mom[step][1]
-                        #endif
-                        #if (GEMPIC_VDIM > 2)
-                                 << " " << mom[step][2]
-                        #endif
-                                 << " " << gauss_error[step]
+                                    ;
+                        switch(vdim) {
+                        case 1:
+                            amrex::Print(ofsfun) << mom[step][0];
+                            break;
+                       case 2:
+                            amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1];
+                            break;
+                        case 3:
+                            amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
+
+                        }
+                        amrex::Print(ofsfun) << " " << gauss_error[step]
                                  << std::endl;
         }
         ofsfun.close();

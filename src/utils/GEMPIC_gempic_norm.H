@@ -12,6 +12,7 @@
 
 #include <GEMPIC_infrastructure.H>
 
+using namespace Gempic;
 using namespace Infra;
 
 #ifndef GEMPIC_NORM_H_
@@ -20,8 +21,7 @@ using namespace Infra;
 namespace Gempic {
 namespace Utils {
 
-template<int vdim>
-amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure<vdim> ifr, int p){
+amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
     //TODOrefine
     amrex::Real result;
     if (p==0) {

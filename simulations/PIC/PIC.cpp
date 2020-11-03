@@ -197,21 +197,22 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer init;
+    initializer<vdim> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                         VM,VD,VW,tolerance_particles);
-    
+
     // infrastructure
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim> part_gr(init, infra);
 
-    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
 
     //------------------------------------------------------------------------------
     // initialize particles:

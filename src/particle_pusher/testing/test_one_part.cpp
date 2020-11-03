@@ -28,6 +28,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
+template< int vdim>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
@@ -62,11 +63,11 @@ void main_main (bool ctest)
     bool time_staggered = true;
     amrex::Real tolerance_particles = 1.e-10;
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD = {};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD = {};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    for (int j=0; j<GEMPIC_VDIM; j++) {
+    for (int j=0; j<vdim; j++) {
         VM[j].push_back(0.0);
         VW[j].push_back(1.0);
     }
@@ -95,34 +96,35 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer init;
+    initializer<vdim> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                         VM,VD,VW,tolerance_particles);
     
     // infrastructure
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0;
     for(amrex::MFIter mfi=(*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
         if(mfi.index() == 0) {
-            using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
-            amrex::ParticleTile<GEMPIC_VDIM+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+            amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             (part_gr).add_particle({AMREX_D_DECL(2.511, 2.2, 2.3)}, {0.1, 0.1, 0.1}, 1.0, particles);
         }
     }
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
     loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
@@ -153,7 +155,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main(argc==1);
+    main_main<3>(argc==1);
 
     amrex::Finalize();
 }

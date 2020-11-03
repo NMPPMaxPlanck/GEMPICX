@@ -29,10 +29,11 @@ using namespace Particles;
 namespace Gempic {
   namespace Time_Loop {
 
+    template<int vdim>
     void loop_preparation (infrastructure infra,
-                           maxwell_yee *mw_yee,
-                           particle_groups *part_gr,
-                           diagnostics *diagn,
+                           maxwell_yee<vdim> *mw_yee,
+                           particle_groups<vdim> *part_gr,
+                           diagnostics<vdim> *diagn,
                            te_expr *Bx_parse,
                            te_expr *By_parse,
                            te_expr *Bz_parse,
@@ -49,7 +50,7 @@ namespace Gempic {
       // Deposit charges:
       for (int spec=0;spec<(*part_gr).n_species;spec++) {
           (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-          for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+          for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
               amrex::Box tilebox;
               amrex::FArrayBox local_rho;
 
@@ -65,7 +66,7 @@ namespace Gempic {
 
               amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
               for (int pp=0;pp<np;pp++) {
-                  gempic_deposit_rho(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                  gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
                 }
               ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
@@ -102,12 +103,12 @@ namespace Gempic {
           //------------------------------------------------------------------------------
           //approximate x^1/2
           for (int spec=0;spec<(*part_gr).n_species;spec++) {
-              for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+              for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                   auto& particles = pti.GetArrayOfStructs(); // get particles
                   const long np  = pti.numParticles();
                   for (int pp=0;pp<np;pp++){
-                      std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_pos(particles[pp], 0.5*(*mw_yee).dt, infra);
-                      std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
+                      std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<amrex::Particle<vdim+1>,vdim>(particles[pp], 0.5*(*mw_yee).dt, infra);
+                      std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     }
                 }
               (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in

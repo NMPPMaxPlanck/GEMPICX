@@ -35,8 +35,9 @@ Gempic_GotoNextLine (std::istream& is)
     is.ignore(bl_ignore_max, '\n');
 }
 
+template<int vdim>
 void
-Gempic_WriteCheckpointFile_Field (maxwell_yee *mw_yee, infrastructure *infra,
+Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, infrastructure *infra,
                                    const std::string& dirname, int field, const int step,
                                    amrex::IndexType IndexT,
                                    int header_precision)
@@ -117,8 +118,9 @@ Gempic_WriteCheckpointFile_Field (maxwell_yee *mw_yee, infrastructure *infra,
 
 }
 
+template<int vdim>
 void
-Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infrastructure *infra,
+Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *part_gr, infrastructure *infra,
                             const std::string& dirname, const int step,
                             int header_precision, bool particles = true)
 {
@@ -147,9 +149,9 @@ Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infra
 
 }
 
-
+template<int vdim>
 void
-Gempic_ReadCheckpointFile_Field (maxwell_yee *mw_yee,
+Gempic_ReadCheckpointFile_Field (maxwell_yee<vdim> *mw_yee,
                            const std::string& dirname, int field, const int step)
 {
 
@@ -217,8 +219,9 @@ Gempic_ReadCheckpointFile_Field (maxwell_yee *mw_yee,
 
 }
 
+template<int vdim>
 void
-Gempic_ReadCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
+Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
     amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
 
     // J

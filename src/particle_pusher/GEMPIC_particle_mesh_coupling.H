@@ -27,7 +27,7 @@ amrex::Real mod_dom(amrex::Real val,
     return(val-(upper-lower)*floor((val-lower)/(upper-lower)));
 }
 
-template <typename P>
+template <typename P, int vdim>
 void gempic_deposit_rho (P const& p, amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
@@ -51,7 +51,7 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
     amrex::Real zint = lz - k;
     std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
 #endif
-    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(GEMPIC_VDIM);
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(vdim);
 
     //TODOrefine
 #if (GEMPIC_SPACEDIM > 2)
@@ -94,13 +94,13 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
 /*!
      *  Evaluation of a FEM one form
      */
-template<typename P>
-std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
+template<typename P, int vdim>
+std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                                                          std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                         std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eArray)
+                                                         std::array<amrex::Array4<amrex::Real>,vdim> eArray)
 {
-    std::array<amrex::Real, GEMPIC_VDIM> fields = {AMREX_V_DECL(0.,0.,0.)};
+    std::array<amrex::Real, vdim> fields = {AMREX_V_DECL(0.,0.,0.)};
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
     amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
@@ -150,7 +150,7 @@ std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
         #endif
                             ,0);
                 }
-#if(GEMPIC_VDIM > 1)
+if(vdim > 1) {
                 if ( jj < GEMPIC_DEG_Y ) {
                     double s_coeff = sx_node[ii]
                             *sy_cell[jj]
@@ -167,7 +167,7 @@ std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
         #endif
                             ,0);
                 }
-#endif
+}
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
@@ -199,10 +199,11 @@ std::array<amrex::Real, GEMPIC_VDIM> evaluate_fem_efield(P const& p,
      * Accumulation: contribution for one point
      * TODO: This function should better combine all points from one interval to reduce the number of loops
      */
+template <int vdim>
 void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> position_box,
                                      std::array<int,GEMPIC_SPACEDIM> box,
-                                     std::array<amrex::Real, GEMPIC_VDIM>  weight,
-                                     std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray)
+                                     std::array<amrex::Real, vdim>  weight,
+                                     std::array<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
@@ -245,7 +246,7 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
         #endif
                             , 0), s_coeff*weight[0]);
                 }
-#if(GEMPIC_VDIM > 1)
+if(vdim > 1) {
                 if ( jj < GEMPIC_DEG_Y ) {
                     double s_coeff = sx_node[ii]
                             *sy_cell[jj]
@@ -262,8 +263,8 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
         #endif
                             , 0), s_coeff*weight[1]);
                 }
-#endif
-#if(GEMPIC_VDIM > 2)
+}
+if(vdim > 2) {
 
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
@@ -283,7 +284,7 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
         #endif
                             , 0), s_coeff*weight[2]);
 
-#endif
+}
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -300,13 +301,14 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
      *  Currently this is implemented for degree one with two quadrature points in the line
      * integral for each box
      */
+template <int vdim>
 void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_old,
                                std::array<amrex::Real,GEMPIC_SPACEDIM> position_new,
-                               std::array<amrex::Real, GEMPIC_VDIM> velocity,
-                               amrex::Real charge, // q*p.rdata(GEMPIC_VDIM)
+                               std::array<amrex::Real, vdim> velocity,
+                               amrex::Real charge, // q*p.rdata(vdim)
                                std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                               std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray)
+                               std::array<amrex::Array4<amrex::Real>,vdim> jArray)
 {
   // The quadrature formula TODO: Make this part of the class and generic for variable degree
   const int n_quad_points = 2;
@@ -403,10 +405,10 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
          (*(std::min_element(position_box.begin(), position_box.end())) > 0.0), "Position is outside the interval [0,1].");
 
         amrex::Real weight = q_weights[q]*(sigma_r-sigma_l)*charge*dxi[GEMPIC_SPACEDIM];
-        std::array<amrex::Real, GEMPIC_VDIM> weight_vec;
-        for (unsigned int d=0;d<GEMPIC_VDIM;++d)
+        std::array<amrex::Real, vdim> weight_vec;
+        for (unsigned int d=0;d<vdim;++d)
           weight_vec[d] = velocity[d]*weight;
-        accumulate_j_fem_integral_point(position_box, box, weight_vec, jArray);
+        accumulate_j_fem_integral_point<vdim>(position_box, box, weight_vec, jArray);
      }
      if (sigma_r < 1.0 )
      {
@@ -425,12 +427,13 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
      *  Accumulation of the current for a FEM solver with integral over time (line integral)
      *  Currently this is implemented for Gauss-Quadrature with only one point
      */
+template<int vdim>
 void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                               std::array<amrex::Real, GEMPIC_VDIM> velocity,
-                               amrex::Real charge, // q*p.rdata(GEMPIC_VDIM)
+                               std::array<amrex::Real, vdim> velocity,
+                               amrex::Real charge, // q*p.rdata(vdim)
                                std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                               std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray)
+                               std::array<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
@@ -483,7 +486,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
         #endif
                             , 0), s_coeff*particle_coeff*velocity[0]);
                 }
-#if(GEMPIC_VDIM > 1)
+if(vdim > 1) {
                 if ( jj < GEMPIC_DEG_Y ) {
                     double s_coeff = sx_node[ii]
                             *sy_cell[jj]
@@ -500,7 +503,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
         #endif
                             , 0), s_coeff*particle_coeff*velocity[1]);
                 }
-#endif
+}
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
                     double s_coeff = sx_node[ii]
@@ -666,18 +669,18 @@ std::array<amrex::Real, GEMPIC_BDIM> evaluate_fem_bfield(std::array<amrex::Real,
 
 
 
-template <typename P>
-std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
+template <typename P, int vdim>
+std::array<amrex::Real, vdim+GEMPIC_BDIM> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
                                                                                    std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                                    std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jArray,
-                                                                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eArray,
+                                                                                   std::array<amrex::Array4<amrex::Real>,vdim> jArray,
+                                                                                   std::array<amrex::Array4<amrex::Real>,vdim> eArray,
                                                                                    std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray,
                                                                                    amrex::Real coefficient = 1.,
                                                                                    bool field_int = false)
 
 {
-    std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> fields = {AMREX_D_DECL(0.,0.,0.)};
+    std::array<amrex::Real, vdim+GEMPIC_BDIM> fields = {AMREX_D_DECL(0.,0.,0.)};
 
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
     amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
@@ -702,7 +705,7 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
     std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z-1, true), GEMPIC_DEG_Z-1);
     std::array<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node};
 #endif
-    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*p.rdata(GEMPIC_VDIM);
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*p.rdata(vdim);
 
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
@@ -713,7 +716,7 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
             for (int ii = 0; ii <= GEMPIC_DEG_X; ++ii) {
 
                 // deposit in J and interpolate in E
-                for (int cc=0;cc<GEMPIC_VDIM;cc++) {
+                for (int cc=0;cc<vdim;cc++) {
                     if(!(
 #if (GEMPIC_SPACEDIM > 2)
                             ((kk==GEMPIC_DEG_Z) & (cc%3==2))|
@@ -780,7 +783,7 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
                                                                           spl.compute_cell_index(k+kk, zint, GEMPIC_DEG_Z-(cc%3==2?0:1), cc%3==2?false:true))};
 
 
-                            fields[cc+GEMPIC_VDIM] += s_coeff*(bArray[cc])(cell_index[0]
+                            fields[cc+vdim] += s_coeff*(bArray[cc])(cell_index[0]
         #if(GEMPIC_SPACEDIM > 1)
                                     ,cell_index[1]
         #endif
@@ -802,7 +805,7 @@ std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> gempic_deposit_J_and_interpolat
     return(fields);
 }
 
-template <typename P>
+template <typename P, int vdim>
 void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
                                       std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                       std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
@@ -830,7 +833,7 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
     std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, false), GEMPIC_DEG_Z);
     std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, GEMPIC_DEG_Z, true), GEMPIC_DEG_Z);
     std::array<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node};
-    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(GEMPIC_VDIM);
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(vdim);
 
     for (int kk = 0; kk <= GEMPIC_DEG_Z; ++kk) {
         for (int jj = 0; jj <= GEMPIC_DEG_Y; ++jj) {
@@ -857,21 +860,21 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
 /*!
      * Push the velocity with a given electric field
      */
-template <typename P>
-std::array<amrex::Real, GEMPIC_VDIM> push_v_efield(P const& p,
+template <typename P, int vdim>
+std::array<amrex::Real, vdim> push_v_efield(P const& p,
                                                    amrex::Real dt,
                                                    amrex::Real chargemass, //charge/mass
-                                                   std::array<amrex::Real,GEMPIC_VDIM> Ep,
-                                                   infrastructure<GEMPIC_VDIM> infra){
-    std::array<amrex::Real,GEMPIC_VDIM> newPos;
+                                                   std::array<amrex::Real,vdim> Ep,
+                                                   Infra::infrastructure infra){
+    std::array<amrex::Real,vdim> newPos;
 
     newPos[0] = p.rdata(0) + dt*chargemass*(Ep[0]);
-#if (GEMPIC_VDIM > 1)
+if (vdim > 1) {
     newPos[1] = p.rdata(1) + dt*chargemass*(Ep[1]);
-#endif
-#if (GEMPIC_VDIM > 2)
+}
+if (vdim > 2) {
     newPos[2] = p.rdata(2) + dt*chargemass*(Ep[2]);
-#endif
+}
     return(newPos);
 }
 
@@ -879,22 +882,22 @@ std::array<amrex::Real, GEMPIC_VDIM> push_v_efield(P const& p,
 /*!
      * Push the position and the velocity (only the vxB part) in a nonlinear iteration
      */
-template <typename P>
-std::array<amrex::Real, GEMPIC_SPACEDIM+GEMPIC_VDIM> push_x_v_bfield(P const& p,
+template <typename P, int vdim>
+std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                                                                      amrex::Real dt,
                                                                      amrex::Real chargemass, //charge/mass
                                                                      std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray,
-                                                                     infrastructure<GEMPIC_VDIM> infra){
+                                                                     Infra::infrastructure infra){
     std::array<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
         oldX[d]= p.pos(d);
-    std::array<amrex::Real, GEMPIC_VDIM> oldV;
-    for (unsigned int d=0;d<GEMPIC_VDIM;++d)
+    std::array<amrex::Real, vdim> oldV;
+    for (unsigned int d=0;d<vdim;++d)
         oldV[d] = p.rdata(d);
     std::array<amrex::Real, GEMPIC_SPACEDIM> newX = oldX;
-    std::array<amrex::Real, GEMPIC_VDIM> newV = oldV;
+    std::array<amrex::Real, vdim> newV = oldV;
     std::array<amrex::Real, GEMPIC_SPACEDIM> newXiter;
-    std::array<amrex::Real, GEMPIC_VDIM> newViter;
+    std::array<amrex::Real, vdim> newViter;
     amrex::Real tolerance = infra.tolerance_particle;
 
     amrex::Real diff = tolerance + 1.0;
@@ -907,14 +910,14 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+GEMPIC_VDIM> push_x_v_bfield(P const& p,
         // Update the position
         for (unsigned int d=0; d<GEMPIC_SPACEDIM; ++d)
         {
-            if (d < GEMPIC_VDIM)
+            if (d < vdim)
                 newX[d] = oldX[d] + dt*0.5*( newV[d] + oldV[d] );
         }
         // Compute xMean
         std::array<amrex::Real,GEMPIC_SPACEDIM> xMean;
         for (unsigned int d=0; d<GEMPIC_SPACEDIM; ++d)
         {
-            if (d<GEMPIC_VDIM)
+            if (d<vdim)
                 xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
         }
         // evaluate B at xMean
@@ -922,41 +925,41 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+GEMPIC_VDIM> push_x_v_bfield(P const& p,
                                                                      infra.dxi,
                                                                      infra.plo,
                                                                      bArray);
-#if  (GEMPIC_VDIM == 2)
+if  (vdim == 2) {
         newV[0] = oldV[0] + dt*chargemass*( 0.5*(oldV[1]+newViter[1])*Bp[0]);
         newV[1] = oldV[1] + dt*chargemass*( 0.5*(oldV[0]+newViter[0])*Bp[0]);
-#elif (GEMPIC_VDIM == 3)
+} else if (vdim == 3) {
         newV[0] = p.rdata(0) + dt*chargemass*(0.5*(oldV[1]+newViter[1])*Bp[2]-0.5*(oldV[2]+newViter[2])*Bp[1]);
         newV[1] = p.rdata(1) + dt*chargemass*(0.5*(oldV[2]+newViter[2])*Bp[0]-0.5*(oldV[0]+newViter[0])*Bp[2]);
         newV[2] = p.rdata(2) + dt*chargemass*(0.5*(oldV[0]+newViter[0])*Bp[1]-0.5*(oldV[1]+newViter[1])*Bp[0]);
-#endif
+}
         diff = 0.0;
         for (unsigned d=0;d<GEMPIC_SPACEDIM;++d)
             diff = std::max(diff, std::abs(newXiter[d] - newX[d]));
-        for (unsigned d=0;d<GEMPIC_VDIM;++d)
+        for (unsigned d=0;d<vdim;++d)
             diff = std::max(diff, std::abs(newViter[d] - newV[d]));
     }
     if (iter_counter == max_iter)
         amrex::Print() << " Number of itertions: " << iter_counter << " " << diff << std::endl;
-    std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
+    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
         newPos[d] = newX[d];
-    for (unsigned int d=0;d<GEMPIC_VDIM;++d)
+    for (unsigned int d=0;d<vdim;++d)
         newPos[GEMPIC_SPACEDIM+d]= newV[d];
     return(newPos);
 }
 
 
 
-template <typename P>
-std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle(P const& p,
+template <typename P, int vdim>
+std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
                                                                   amrex::Real dt,
                                                                   amrex::Real chargemass, //charge/mass
-                                                                  std::array<amrex::Real,GEMPIC_VDIM> Ep,
+                                                                  std::array<amrex::Real,vdim> Ep,
                                                                   std::array<amrex::Real,GEMPIC_BDIM> Bp,
-                                                                  infrastructure<GEMPIC_VDIM> infra){
+                                                                  Infra::infrastructure infra){
 
-    std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
+    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
     newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
 #if (GEMPIC_SPACEDIM > 1)
@@ -966,25 +969,25 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle(P const& p,
     newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
 #endif
 
-#if (GEMPIC_VDIM == 1)
+if (vdim == 1) {
     newPos[1] = p.rdata(0) + dt*chargemass*(Ep[0]);
-#elif (GEMPIC_VDIM == 2)
+} else if (vdim == 2) {
     newPos[2] = p.rdata(0) + dt*chargemass*(Ep[0]+p.rdata(1)*Bp[0]);
     newPos[3] = p.rdata(1) + dt*chargemass*(Ep[1]+p.rdata(0)*Bp[0]);
-#elif (GEMPIC_VDIM == 3)
+} else if (vdim == 3) {
     newPos[3] = p.rdata(0) + dt*chargemass*(Ep[0]+(p.rdata(1)*Bp[2]-p.rdata(2)*Bp[1]));
     newPos[4] = p.rdata(1) + dt*chargemass*(Ep[1]+(p.rdata(2)*Bp[0]-p.rdata(0)*Bp[2]));
     newPos[5] = p.rdata(2) + dt*chargemass*(Ep[2]+(p.rdata(0)*Bp[1]-p.rdata(1)*Bp[0]));
-#endif
+}
     return(newPos);
 }
 
-template <typename P>
-std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_pos(P const& p,
+template <typename P, int vdim>
+std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
                                                                       amrex::Real dt,
-                                                                      infrastructure<GEMPIC_VDIM> infra){
+                                                                      Infra::infrastructure infra){
 
-    std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
+    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
     newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
     newPos[GEMPIC_SPACEDIM] = p.rdata(0);
@@ -994,27 +997,27 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_pos(P const& p
 #if (GEMPIC_SPACEDIM > 2)
     newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
 #endif
-#if (GEMPIC_VDIM > 1)
+if (vdim > 1) {
     newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
-#endif
-#if (GEMPIC_VDIM > 2)
+}
+if (vdim > 2) {
     newPos[GEMPIC_SPACEDIM+2] = p.rdata(2);
-#endif
+}
     return(newPos);
 }
 
-template <typename P>
-std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const& p,
+template <typename P, int vdim>
+std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
                                                                         amrex::Real dt,
                                                                         amrex::Real chargemass, //charge/mass
-                                                                        std::array<amrex::Real,GEMPIC_VDIM> Ep,
+                                                                        std::array<amrex::Real,vdim> Ep,
                                                                         std::array<amrex::Real,GEMPIC_BDIM> Bp,
-                                                                        infrastructure<GEMPIC_VDIM> infra){
+                                                                        Infra::infrastructure infra){
 
-    std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos;
-    std::array<amrex::Real,GEMPIC_VDIM> vm;
-    std::array<amrex::Real,GEMPIC_VDIM> vt;
-    std::array<amrex::Real,GEMPIC_VDIM> vp;
+    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+    std::array<amrex::Real,vdim> vm;
+    std::array<amrex::Real,vdim> vt;
+    std::array<amrex::Real,vdim> vp;
     amrex::Real S;
 
     // v-
@@ -1026,13 +1029,13 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
     vm[2] = p.rdata(2) + dt*chargemass/2*Ep[2];
 #endif
 
-#if (GEMPIC_VDIM == 1)
+if (vdim == 1) {
     vp[0] = vm[0];
-#elif (GEMPIC_VDIM == 2)
+} else if (vdim == 2) {
     amrex::Real alpha = chargemass*dt/2*Bp[0];
     vp[0] = (1-pow(alpha,2))/(1+pow(alpha,2))*vm[0] + 2*alpha/(1+pow(alpha,2))*vm[1];
     vp[1] = -2*alpha/(1+pow(alpha,2))*vm[0] + (1-pow(alpha,2))/(1+pow(alpha,2))*vm[1];
-#elif (GEMPIC_VDIM == 3)
+} else if (vdim == 3) {
     // v'
     amrex::Real coeff_t = dt*chargemass/2;
     vt[0] = vm[0] + coeff_t*(vm[1]*Bp[2]-vm[2]*Bp[1]);
@@ -1046,16 +1049,16 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
     vp[0] = vm[0] + coeff*(vt[1]*Bp[2]-vt[2]*Bp[1]);
     vp[1] = vm[1] + coeff*(vt[2]*Bp[0]-vt[0]*Bp[2]);
     vp[2] = vm[2] + coeff*(vt[0]*Bp[1]-vt[1]*Bp[0]);
-#endif
+}
 
     // v
     newPos[GEMPIC_SPACEDIM] = vp[0] + dt*chargemass/2*Ep[0];
-#if (GEMPIC_VDIM > 1)
+if (vdim > 1) {
     newPos[GEMPIC_SPACEDIM+1] = vp[1] + dt*chargemass/2*Ep[1];
-#endif
-#if (GEMPIC_VDIM > 2)
+}
+if (vdim > 2) {
     newPos[GEMPIC_SPACEDIM+2] = vp[2] + dt*chargemass/2*Ep[2];
-#endif
+}
 
     // new positions (modulo the upper bound of the box)
     newPos[0] = mod_dom(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
@@ -1070,13 +1073,13 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> push_particle_boris(P const&
     return(newPos);
 }
 
-
+template<int vdim>
 void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                    amrex::Real mu,
                                    std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                    std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                    std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bArray,
-                                   std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> mArray)
+                                   std::array<amrex::Array4<amrex::Real>,vdim> mArray)
 
 {
   // 1. Identify the box and relative position of position old
@@ -1143,7 +1146,7 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
         #endif
                             , 0), s_coeff*bfield[0]*weight);
                 }
-#if(GEMPIC_VDIM > 1)
+if(vdim > 1) {
                 if ( jj < GEMPIC_DEG_Y ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
@@ -1160,8 +1163,8 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
         #endif
                             , 0), s_coeff*bfield[1]*weight);
                 }
-#endif
-#if(GEMPIC_VDIM > 2)
+}
+if(vdim > 2) {
 
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < GEMPIC_DEG_Z ) {
@@ -1181,7 +1184,7 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
         #endif
                             , 0), s_coeff*bfield[2]*weight);
 
-#endif
+}
             }
 #if (GEMPIC_SPACEDIM > 1)
         }

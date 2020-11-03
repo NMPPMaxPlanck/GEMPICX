@@ -19,10 +19,6 @@ using namespace Field_solvers;
 using namespace Init;
 using namespace Particles;
 
-double WF (std::array<double,GEMPIC_SPACEDIM> x, std::array<double,GEMPIC_VDIM> v,double k) {
-    return(0.0);
-}
-
 void main_main ()
 {
 

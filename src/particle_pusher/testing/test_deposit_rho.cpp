@@ -21,6 +21,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Utils;
 
+template<int vdim>
 void main_main ()
 {
     //------------------------------------------------------------------------------
@@ -35,27 +36,27 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    initializer init;
+    initializer<vdim> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(8,8,8));
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-#if (GEMPIC_VDIM > 1)
+if (vdim > 1) {
     VM[1].push_back(0.0);
     VD[1].push_back(1.0);
     VW[1].push_back(1.0);
-#endif
-#if (GEMPIC_VDIM > 2)
+}
+if (vdim > 2) {
     VM[2].push_back(0.0);
     VD[2].push_back(1.0);
     VW[2].push_back(1.0);
-#endif
+}
 
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
@@ -64,14 +65,15 @@ void main_main ()
     VM,VD,VW,0);
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, propagator
 
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Initialize fields and particles
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -91,7 +93,7 @@ void main_main ()
 
     for (int spec=0;spec<(part_gr).n_species;spec++) {
         (*(part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
             amrex::Box tilebox;
             amrex::FArrayBox local_rho;
 
@@ -107,7 +109,7 @@ void main_main ()
 
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_rho(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
               }
             ((mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
           }
@@ -132,7 +134,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
+    main_main<3>();
 
     amrex::Finalize();
 }

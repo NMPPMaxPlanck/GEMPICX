@@ -18,7 +18,7 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
-
+template<int vdim>
 void main_main ()
 {
     // ------------------------------------------------------------------------------
@@ -44,11 +44,11 @@ void main_main ()
     std::string rho = "0.0";
     amrex::Real tolerance_particles = 1.e-10;
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    for (int j=0; j<GEMPIC_VDIM; j++) {
+    for (int j=0; j<vdim; j++) {
             VM[j].push_back(0.0);
             VW[j].push_back(1.0);
      }
@@ -76,19 +76,20 @@ void main_main ()
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer init;
+    initializer<vdim> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                         VM,VD,VW,tolerance_particles);
 
     // infrastructure
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -114,7 +115,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
+    main_main<3>();
 
     amrex::Finalize();
 }

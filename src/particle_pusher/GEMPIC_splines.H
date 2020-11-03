@@ -18,8 +18,6 @@
 #ifndef SPLINES_H_
 #define SPLINES_H_
 
-using namespace Infra;
-
 namespace Gempic {
 namespace Particles {
 

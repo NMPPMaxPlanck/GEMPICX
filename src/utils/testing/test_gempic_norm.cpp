@@ -49,6 +49,7 @@ double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){ret
         #endif
             );}
 
+template<int vdim>
 void main_main ()
 {
     double C = 2.;
@@ -58,32 +59,33 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    initializer init;
+    initializer<vdim> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-#if (GEMPIC_VDIM > 1)
+if (vdim > 1) {
     VM[1].push_back(0.0);
     VD[1].push_back(1.0);
     VW[1].push_back(1.0);
-#endif
-#if (GEMPIC_VDIM > 2)
+}
+if (vdim > 2) {
     VM[2].push_back(0.0);
     VD[2].push_back(1.0);
     VW[2].push_back(1.0);
-#endif
+}
 
     init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},1,1,VM,VD,VW,0);
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     std::ofstream ofs("test_gempic_norm.output", std::ofstream::out);
 
     // Constant case
@@ -158,7 +160,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
+    main_main<3>();
 
     amrex::Finalize();
 }

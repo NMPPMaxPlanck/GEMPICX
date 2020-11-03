@@ -43,7 +43,6 @@ double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std:
     return(res);
 }
 
-template<int dim>
 
 #if (GEMPIC_SPACEDIM == 1)
 template<int vdim>
@@ -84,7 +83,7 @@ double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
     return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
 }
 template<int vdim>
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)(std::array<double,GEMPIC_SPACEDIM> x, double t)
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
 {
   if (vdim == 1)
     return(0.);
@@ -173,12 +172,12 @@ void main_main ()
     // make pointer-array for functions
     double (*fields[vdim+GEMPIC_BDIM]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
     fields[0] = E_x<vdim>;
-#if (vdim > 1)
+if (vdim > 1){
     fields[1] = E_y<vdim>;
-#endif
-#if (vdim > 2)
+}
+if (vdim > 2) {
     fields[2] = E_z<vdim>;
-#endif
+}
 
     fields[vdim] = B_x<vdim>;
 #if (GEMPIC_BDIM > 1)
@@ -190,12 +189,12 @@ void main_main ()
 
     double (*fields_poisson[vdim]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
     fields_poisson[0] = Ep_x;
-#if (vdim > 1)
+if (vdim > 1){
     fields_poisson[1] = Ep_y<vdim>;
-#endif
-#if (vdim > 2)
+}
+if (vdim > 2) {
     fields_poisson[2] = Ep_z<vdim>;
-#endif
+}
 
     //------------------------------------------------------------------------------
     array<Real,vdim+GEMPIC_BDIM> E_B_error; //array for storing errors
@@ -213,16 +212,16 @@ void main_main ()
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-#if (vdim > 1)
+if (vdim > 1) {
     VM[1].push_back(0.0);
     VD[1].push_back(1.0);
     VW[1].push_back(1.0);
-#endif
-#if (vdim > 2)
+}
+if (vdim > 2) {
     VM[2].push_back(0.0);
     VD[2].push_back(1.0);
     VW[2].push_back(1.0);
-#endif
+}
 
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
@@ -231,7 +230,8 @@ void main_main ()
     VM,VD,VW,0);
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
 
-    infrastructure<vdim> infra(init);
+    Infra::infrastructure infra;
+    init.initialize_infrastructure(&infra);
     //std::cout << "[" << infra.real_box.lo()[0] << ", " << infra.real_box.hi()[0] << "]x[" << infra.real_box.lo()[1] << "," << infra.real_box.hi()[1] << "]x[" << infra.real_box.lo()[2] << ", " << infra.real_box.hi()[2] << "]" << std::endl;
     //std::array<double,GEMPIC_SPACEDIM> x = {0.0,0.0,0.75};
     //double t = 2.0-0.25/sqrt(3);
@@ -255,14 +255,15 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output") << endl;
     AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
     AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                          #if (vdim > 1)
-                                  " |Ey error: " << E_B_error[1] <<
-                          #endif
-                          #if (vdim > 2)
-                                  " |Ez error: " << E_B_error[2] <<
-                          #endif
-                                  endl;
+    switch (vdim) {
+        case 1:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+    case 2:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+    case 3:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+    }
+
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                           #if (GEMPIC_BDIM > 1)
                                   " |By error: " << E_B_error[vdim+1] <<
@@ -278,14 +279,14 @@ void main_main ()
         E_B_error = mw_yee.computeError(fields, true, infra);
 
         AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (vdim > 1)
-                                      " |Ey error: " << E_B_error[1] <<
-                              #endif
-                              #if (vdim > 2)
-                                      " |Ez error: " << E_B_error[2] <<
-                              #endif
-                                      endl;
+        switch (vdim) {
+            case 1:
+            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        case 2:
+            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        case 3:
+            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        }
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                               #if (GEMPIC_BDIM > 1)
                                       " |By error: " << E_B_error[vdim+1] <<
@@ -318,14 +319,14 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output") << endl;
     AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
     AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                          #if (vdim > 1)
-                                  " |Ey error: " << E_B_error[1] <<
-                          #endif
-                          #if (vdim > 2)
-                                  " |Ez error: " << E_B_error[2] <<
-                          #endif
-                                  endl;
+    switch (vdim) {
+        case 1:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+    case 2:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+    case 3:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+    }
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                           #if (GEMPIC_BDIM > 1)
                                   " |By error: " << E_B_error[vdim+1] <<
@@ -344,14 +345,14 @@ void main_main ()
         E_B_error = mw_yee_2.computeError(fields, true, infra);
 
         AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (vdim > 1)
-                                      " |Ey error: " << E_B_error[1] <<
-                              #endif
-                              #if (vdim > 2)
-                                      " |Ez error: " << E_B_error[2] <<
-                              #endif
-                                      endl;
+        switch (vdim) {
+            case 1:
+            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        case 2:
+            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        case 3:
+            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        }
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                               #if (GEMPIC_BDIM > 1)
                                       " |By error: " << E_B_error[vdim+1] <<
@@ -390,14 +391,14 @@ void main_main ()
 
     AllPrintToFile("test_output_pre_rename.output") << endl;
     AllPrintToFile("test_output_pre_rename.output") << "Poisson" << endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] <<
-                              #if (vdim > 1)
-                                  " |Ey error: " << E_B_error[1] <<
-                              #endif
-                              #if (vdim > 2)
-                                  " |Ez error: " << E_B_error[2] <<
-                              #endif
-                                  endl;
+    switch (vdim) {
+        case 1:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+    case 2:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+    case 3:
+        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+    }
 
 
     //------------------------------------------------------------------------------

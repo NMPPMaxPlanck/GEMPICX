@@ -25,7 +25,9 @@ using namespace Particles;
 
 namespace Gempic {
 namespace Diagnostics_Output {
-void save_particle_positions (particle_groups *ppg, std::string ID = "", int species = 0){
+
+template<int vdim>
+void save_particle_positions (particle_groups<vdim> *ppg, std::string ID = "", int species = 0){
 
     auto all_parts = (*(*ppg).mypc[species]).ParticleBoxArray(0);
     std::ofstream ofsss("particle_output/x/W_" + ID + ".output", std::ofstream::out);
@@ -47,7 +49,7 @@ void save_particle_positions (particle_groups *ppg, std::string ID = "", int spe
     const std::string& pltfile = "test_particle_output";
     (*(*ppg).mypc[species]).WriteAsciiFile(pltfile);
     std::ofstream ofss("particle_output/x/P_" + ID + ".output", std::ofstream::out);
-    for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<vdim+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
         const auto& particles = pti.GetArrayOfStructs();
         const long np = pti.numParticles();
@@ -74,9 +76,10 @@ void save_particle_positions (particle_groups *ppg, std::string ID = "", int spe
     ofss.close();
 }
 
-void save_particle_velocities (particle_groups *ppg, std::string ID = "", int species = 0){
+template<int vdim>
+void save_particle_velocities (particle_groups<vdim> *ppg, std::string ID = "", int species = 0){
     std::ofstream ofss("particle_output/v/P_" + ID + ".output", std::ofstream::out);
-    for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<vdim+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
         const auto& particles = pti.GetArrayOfStructs();
         const long np = pti.numParticles();
@@ -96,8 +99,9 @@ void save_particle_velocities (particle_groups *ppg, std::string ID = "", int sp
 }
 }
 
+template<int vdim>
 void
-Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile (particle_groups<vdim> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 
@@ -181,8 +185,9 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
 
 }
 
+template<int vdim>
 void
-Gempic_WritePlotFile_rho_phi (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile_rho_phi (particle_groups<vdim> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 
