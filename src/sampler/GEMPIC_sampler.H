@@ -24,10 +24,10 @@ using namespace Particles;
 namespace Gempic {
 namespace Sampling {
 
-template<int vdim>
+template<int vdim, int numspec>
 void init_particles_cellwise(infrastructure infra,
-                             particle_groups<vdim> &ppg,
-                             initializer<vdim> init,
+                             particle_groups<vdim, numspec> &ppg,
+                             initializer<vdim, numspec> init,
                              int species,
                              te_expr *WF_parse,
                              double *x,
@@ -149,10 +149,10 @@ void init_particles_cellwise(infrastructure infra,
     }
 }
 
-template<int vdim>
+template<int vdim, int numspec>
 void init_particles_full_domain(infrastructure infra,
-                                particle_groups<vdim> &ppg,
-                                initializer<vdim> init,
+                                particle_groups<vdim, numspec> &ppg,
+                                initializer<vdim, numspec> init,
                                 int species,
                                 te_expr *WF_parse,
                                 double *x,

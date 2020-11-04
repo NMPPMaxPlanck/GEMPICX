@@ -21,7 +21,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Utils;
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main ()
 {
     //------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(8,8,8));
 
@@ -73,7 +73,7 @@ void main_main ()
     maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
 
     // particles
-    particle_groups<vdim> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -91,7 +91,7 @@ void main_main ()
     (mw_yee).rho.setVal(0.0, 0); // value and component
     (mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
-    for (int spec=0;spec<(part_gr).n_species;spec++) {
+    for (int spec=0;spec<numspec;spec++) {
         (*(part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
             amrex::Box tilebox;
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>();
+    main_main<3, 1>();
 
     amrex::Finalize();
 }

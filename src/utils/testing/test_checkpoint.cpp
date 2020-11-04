@@ -18,7 +18,7 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main ()
 {
     // ------------------------------------------------------------------------------
@@ -36,8 +36,8 @@ void main_main ()
     std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {AMREX_D_DECL(1,1,1)};
     int max_grid_size = 2;
     amrex::Real dt = 0.1;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge = {-1.0};
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass = {1.0};
+    std::array<amrex::Real, numspec> charge = {-1.0};
+    std::array<amrex::Real, numspec> mass = {1.0};
     amrex::Real k = 1.25;
     std::string WF = "0.0";
     std::string phi = "0.0";
@@ -76,7 +76,7 @@ void main_main ()
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                     VM,VD,VW,tolerance_particles);
 
@@ -89,7 +89,7 @@ void main_main ()
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups<vdim> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>();
+    main_main<3, 1>();
 
     amrex::Finalize();
 }

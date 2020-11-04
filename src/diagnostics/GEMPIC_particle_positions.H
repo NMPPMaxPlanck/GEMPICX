@@ -26,8 +26,8 @@ using namespace Particles;
 namespace Gempic {
 namespace Diagnostics_Output {
 
-template<int vdim>
-void save_particle_positions (particle_groups<vdim> *ppg, std::string ID = "", int species = 0){
+template<int vdim, int numspec>
+void save_particle_positions (particle_groups<vdim, numspec> *ppg, std::string ID = "", int species = 0){
 
     auto all_parts = (*(*ppg).mypc[species]).ParticleBoxArray(0);
     std::ofstream ofsss("particle_output/x/W_" + ID + ".output", std::ofstream::out);
@@ -76,8 +76,8 @@ void save_particle_positions (particle_groups<vdim> *ppg, std::string ID = "", i
     ofss.close();
 }
 
-template<int vdim>
-void save_particle_velocities (particle_groups<vdim> *ppg, std::string ID = "", int species = 0){
+template<int vdim, int numspec>
+void save_particle_velocities (particle_groups<vdim, numspec> *ppg, std::string ID = "", int species = 0){
     std::ofstream ofss("particle_output/v/P_" + ID + ".output", std::ofstream::out);
     for (amrex::ParIter<vdim+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
@@ -99,9 +99,9 @@ void save_particle_velocities (particle_groups<vdim> *ppg, std::string ID = "", 
 }
 }
 
-template<int vdim>
+template<int vdim, int numspec>
 void
-Gempic_WritePlotFile (particle_groups<vdim> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 
@@ -185,9 +185,9 @@ Gempic_WritePlotFile (particle_groups<vdim> *ppg, maxwell_yee<vdim> *mw_yee, inf
 
 }
 
-template<int vdim>
+template<int vdim, int numspec>
 void
-Gempic_WritePlotFile_rho_phi (particle_groups<vdim> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 

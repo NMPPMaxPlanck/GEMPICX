@@ -32,7 +32,7 @@ namespace Diagnostics_Output {
  * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored and written into files. Slice Data of fields can be generated.
  */
 
-template<int vdim>
+template<int vdim, int numspec>
 class diagnostics
 {
 public:
@@ -73,7 +73,7 @@ public:
     void save_step_data(int step,
                         infrastructure infra,
                         maxwell_yee<vdim> *mw_yee,
-                        particle_groups<vdim> *part_gr){
+                        particle_groups<vdim, numspec> *part_gr){
 
         // E and B field
         for(int cc=0;cc<vdim;cc++){
@@ -85,7 +85,7 @@ public:
         }
 
         // compute kinetic energy norm and momentum
-        for (int spec=0;spec<(*part_gr).n_species;spec++){ // TODO: multispecies
+        for (int spec=0;spec<numspec;spec++){ // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
                                              [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
             {

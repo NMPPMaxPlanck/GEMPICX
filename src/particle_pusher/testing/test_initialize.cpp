@@ -18,13 +18,13 @@ using namespace Field_solvers;
 using namespace Init;
 using namespace Particles;
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main ()
 {
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(64,64,64));
 
@@ -56,7 +56,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
-    particle_groups<vdim> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //set particles for first cell (and copies in remaining cells)
     int Np_cell = 100; //number of particles per cell
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>();
+    main_main<3, 1>();
 
     amrex::Finalize();
 }

@@ -29,11 +29,11 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim>
+template<int vdim, int numspec>
 void loop_preparation (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
-                       particle_groups<vdim> *part_gr,
-                       diagnostics<vdim> *diagn,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec> *diagn,
                        te_expr *Bx_parse,
                        te_expr *By_parse,
                        te_expr *Bz_parse,
@@ -48,7 +48,7 @@ void loop_preparation (infrastructure infra,
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     // Deposit charges:
-    for (int spec=0;spec<(*part_gr).n_species;spec++) {
+    for (int spec=0;spec<numspec;spec++) {
         (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
             amrex::Box tilebox;
@@ -73,7 +73,7 @@ void loop_preparation (infrastructure infra,
     }
 
     //assign particles to tiles they are in TODO: do I need this?
-    for(int spec=0;spec<(*part_gr).n_species;spec++){
+    for(int spec=0;spec<numspec;spec++){
         (*(*part_gr).mypc[spec]).Redistribute();
     }
 
@@ -102,7 +102,7 @@ void loop_preparation (infrastructure infra,
         (*mw_yee).advance_E(infra, 0.5*(*mw_yee).dt);
         //------------------------------------------------------------------------------
         //approximate x^1/2
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();

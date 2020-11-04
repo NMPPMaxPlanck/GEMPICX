@@ -34,26 +34,23 @@ namespace Time_Loop {
    */
 
 
-template<int vdim>
+template<int vdim, int numspec>
 void time_loop_hs_fem (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
-                       particle_groups<vdim> *part_gr,
-                       diagnostics<vdim> *diagn,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec> *diagn,
                        bool ctest,
                        std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
-        std::cout << "advanced time" << std::endl;
 
         // Operator H_B for dt/2
         (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
-        std::cout << "advanced E/2 from B" << std::endl;
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
         (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
-        std::cout << "advanced B/2" << std::endl;
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
@@ -64,7 +61,7 @@ void time_loop_hs_fem (infrastructure infra,
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
             amrex::Real charge = (*part_gr).charge[spec];
 
@@ -129,7 +126,6 @@ void time_loop_hs_fem (infrastructure infra,
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         }
-        std::cout << "advanced time and depos J/2" << std::endl;
 
 
         //add values from ghost cells and periodic boundary
@@ -140,10 +136,9 @@ void time_loop_hs_fem (infrastructure infra,
 
         // advance E from j (field part of H_p)
         (*mw_yee).advance_E_from_J(infra, (*mw_yee).dt);
-        std::cout << "advanced E from J" << std::endl;
 
         // Second particle loop for particle part from H_E
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -170,16 +165,13 @@ void time_loop_hs_fem (infrastructure infra,
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         }
-        std::cout << "advanced particles and J/2" << std::endl;
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
         (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
-        std::cout << "advanced B/2" << std::endl;
 
         // Operator H_B for dt/2
         (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
-        std::cout << "advanced E/2 from B" << std::endl;
 
 
         // save norms for diagnostics

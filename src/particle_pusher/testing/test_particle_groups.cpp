@@ -24,14 +24,14 @@ using namespace Init;
 using namespace Particles;
 using namespace Sampling;
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main ()
 {
     //------------------------------------------------------------------------------
     //build objects:
 
     //initializer
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(32,32,32));
     int max_grid_size = 2;
@@ -89,7 +89,7 @@ void main_main ()
     mw_yee.initE(infra, Ex_parse, Ey_parse, Ez_parse, &x, &y, &z);
 
     // particles
-    particle_groups<vdim> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>();
+    main_main<3, 1>();
 
     amrex::Finalize();
 }

@@ -30,11 +30,11 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim>
+template<int vdim, int numspec>
 void time_loop_boris_fd (infrastructure infra,
                          maxwell_yee<vdim> *mw_yee,
-                         particle_groups<vdim> *part_gr,
-                         diagnostics<vdim> *diagn,
+                         particle_groups<vdim,numspec> *part_gr,
+                         diagnostics<vdim, numspec> *diagn,
                          bool ctest,
                          std::ofstream *ofs) {
 
@@ -54,7 +54,7 @@ void time_loop_boris_fd (infrastructure infra,
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -115,7 +115,7 @@ void time_loop_boris_fd (infrastructure infra,
         //update fields
         // deposit remaining charge in J one particle at a time
 
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();

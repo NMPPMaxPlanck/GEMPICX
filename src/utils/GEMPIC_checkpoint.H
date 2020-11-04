@@ -118,9 +118,9 @@ Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, infrastructure *inf
 
 }
 
-template<int vdim>
+template<int vdim, int numspec>
 void
-Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *part_gr, infrastructure *infra,
+Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra,
                             const std::string& dirname, const int step,
                             int header_precision, bool particles = true)
 {
@@ -142,7 +142,7 @@ Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *pa
     Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]), header_precision);
 
     if (particles) {
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Checkpoint("test_dir", "electrons", true, {"vx", "vy", "vz", "weight"}, {});
         }
     }
@@ -219,9 +219,9 @@ Gempic_ReadCheckpointFile_Field (maxwell_yee<vdim> *mw_yee,
 
 }
 
-template<int vdim>
+template<int vdim, int numspec>
 void
-Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
+Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
     amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
 
     // J
@@ -273,7 +273,7 @@ Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim> *par
 
     // Particles
     if (particles) {
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Restart ("test_dir", "electrons", true);
         }
     }

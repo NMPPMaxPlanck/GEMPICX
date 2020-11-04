@@ -167,7 +167,7 @@ double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t)
         return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));
 }
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main ()
 {
     int bdim = int(floor(vdim/2.5)*2+1);
@@ -204,7 +204,7 @@ if (bdim > 2) {
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
 
@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
     main_main<2>();
     main_main<3>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3>();
+    main_main<3, 1>();
 #endif
     amrex::Finalize();
 }

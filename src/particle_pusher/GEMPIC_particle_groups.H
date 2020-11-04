@@ -29,16 +29,15 @@ namespace Particles {
  * Class containing all particle information. The array of particle containers has @p n_species number of particles containers, that is each responsible for one species of particles.
  * For each particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The charge and mass of the particle species are stored in a separate array.
  */
-template <int vdim>
+template <int vdim, int numspec>
 class particle_groups
 {
 public:
 
     // array of ParticleContainers (one container per species)
-    int n_species;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
-    std::array<std::unique_ptr<amrex::ParticleContainer<vdim+1, 0, 0, 0>>, GEMPIC_NUMSPEC> mypc;
+    std::array<amrex::Real, numspec> charge;
+    std::array<amrex::Real, numspec> mass;
+    std::array<std::unique_ptr<amrex::ParticleContainer<vdim+1, 0, 0, 0>>, numspec> mypc;
 
     // The default constructor.
     /**
@@ -51,10 +50,9 @@ public:
      * Explicit Constructor: By passing an object of class initializer and infrastructure one can set up the empty particle object. The particles themselves need to be added separately. This
      * can be done one by one (see method add_particle) or with the particle samples in the folder sampler.
      */
-    particle_groups (initializer<vdim> init,
+    particle_groups (initializer<vdim, numspec> init,
                      infrastructure ifr){
 
-        n_species = init.n_species;
         charge = init.charge;
         mass = init.mass;
 

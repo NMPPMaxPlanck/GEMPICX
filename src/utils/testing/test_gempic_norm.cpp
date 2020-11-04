@@ -49,7 +49,7 @@ double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){ret
         #endif
             );}
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main ()
 {
     double C = 2.;
@@ -59,7 +59,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
 
@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>();
+    main_main<3, 1>();
 
     amrex::Finalize();
 }

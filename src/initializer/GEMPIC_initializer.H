@@ -21,7 +21,7 @@ namespace Init {
 /**
  * Class containing all initialization parameters. At the moment it is possible to initialize by passing the parameters. In the future it will also be possible to initialize by passing a file.
  */
-template<int vdim>
+template<int vdim, int numspec>
 class initializer
 {
 public:
@@ -36,9 +36,8 @@ public:
     int n_steps;
 
     // parameters for particles:
-    int n_species;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
+    std::array<amrex::Real, numspec> charge;
+    std::array<amrex::Real, numspec> mass;
     int Np_cell; //number of particles per cell
 
     amrex::Real k; // for domain and weight function
@@ -69,8 +68,8 @@ public:
      */
 
     void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
-                                    std::array<amrex::Real, GEMPIC_NUMSPEC> CH,
-                                    std::array<amrex::Real, GEMPIC_NUMSPEC> MS,
+                                    std::array<amrex::Real, numspec> CH,
+                                    std::array<amrex::Real, numspec> MS,
                                     int NPC,
                                     amrex::Real K,
                                     std::array<std::vector<amrex::Real>, vdim> VM,
@@ -84,7 +83,6 @@ public:
         Nghost = NG;
         dt = DT;
         n_steps = NST;
-        n_species = GEMPIC_NUMSPEC;
         charge = CH;
         mass = MS;
         Np_cell = NPC;

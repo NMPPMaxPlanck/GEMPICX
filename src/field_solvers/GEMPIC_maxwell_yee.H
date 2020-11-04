@@ -82,7 +82,8 @@ public:
     /**
      * Explicit constructor: all class attributes can be initialized by passing an object of class initializer, infrastructure and the number of ghost cells.
      */
-    maxwell_yee (initializer<vdim> init, infrastructure ifr, int NG){
+    template <int numspec>
+    maxwell_yee (initializer<vdim, numspec> init, infrastructure ifr, int NG){
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
 
@@ -925,14 +926,15 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
     /**
      * Compute rho for a given rho (for diagnostics: Gauss law)
      */
-    amrex::Real compute_gauss_error(infrastructure ifr, Particles::particle_groups<vdim> *part_gr){
+    template<int numspec>
+    amrex::Real compute_gauss_error(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         rho_from_E(ifr); // fills rho_gauss_law
 
         // Deposit charges in rho:
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;
@@ -981,7 +983,8 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
     /**
      * Compute E for rho from particles (for diagnostics: Gauss law)
      */
-    amrex::Real compute_gauss_error_E(infrastructure ifr, Particles::particle_groups<vdim> *part_gr){
+    template<int numspec>
+    amrex::Real compute_gauss_error_E(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         (*E_sol_Array[0]).Copy(*E_sol_Array[0], *E_Array[0],0,0,1,Nghost);
         (*E_sol_Array[1]).Copy(*E_sol_Array[1], *E_Array[1],0,0,1,Nghost);
@@ -1003,7 +1006,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
 
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;

@@ -2,7 +2,6 @@
 #define GEMPIC_CONFIG_H_
 
 #define GEMPIC_SPACEDIM AMREX_SPACEDIM
-#define GEMPIC_NUMSPEC 1
 
 #define GEMPIC_DEG_X 1
 #define GEMPIC_DEG_Y 1

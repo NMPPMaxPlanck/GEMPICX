@@ -28,7 +28,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-template< int vdim>
+template< int vdim, int numspec>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
@@ -50,8 +50,8 @@ void main_main (bool ctest)
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     int max_grid_size = 4;
     amrex::Real dt = 0.02;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge = {-1.0};
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass = {1.0};
+    std::array<amrex::Real, numspec> charge = {-1.0};
+    std::array<amrex::Real, numspec> mass = {1.0};
     amrex::Real k = 1.25;
     std::string WF = "1.0";
     std::string Bx = "0.0";
@@ -96,7 +96,7 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                     VM,VD,VW,tolerance_particles);
     
@@ -109,7 +109,7 @@ void main_main (bool ctest)
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups<vdim> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -124,21 +124,24 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics<vdim> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim, numspec> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
     loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
+    std::cout << "AAA" << std::endl;
     switch (propagator) {
     case 0:
         time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
     case 1:
+        std::cout << "BBB" << std::endl;
         time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
     default:
         break;
     }
 
+    std::cout << "CCC" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
     for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
@@ -155,7 +158,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>(argc==1);
+    main_main<3, 1>(argc==1);
 
     amrex::Finalize();
 }

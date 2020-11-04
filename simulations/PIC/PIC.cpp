@@ -28,7 +28,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-template<int vdim>
+template<int vdim, int numspec>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
@@ -50,8 +50,8 @@ void main_main (bool ctest)
     std::array<int,GEMPIC_SPACEDIM> is_periodic_vector;
     int max_grid_size;
     amrex::Real dt;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
+    std::array<amrex::Real, numspec> charge;
+    std::array<amrex::Real, numspec> mass;
     amrex::Real k;
     std::string WF;
     std::string Bx;
@@ -197,7 +197,7 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer<vdim> init;
+    initializer<vdim, numspec> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                     VM,VD,VW,tolerance_particles);
 
@@ -210,9 +210,9 @@ void main_main (bool ctest)
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups<vdim> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
-    diagnostics<vdim> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim, numspec> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -222,7 +222,7 @@ void main_main (bool ctest)
 
         //------------------------------------------------------------------------------
         // solve:
-        loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+        loop_preparation<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     } else {
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, checkpoint_file, curr_step);
     }
@@ -230,10 +230,10 @@ void main_main (bool ctest)
     if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 1:
-        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     default:
         break;
@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>(argc==1);
+    main_main<3, 1>(argc==1);
 
     amrex::Finalize();
 }
