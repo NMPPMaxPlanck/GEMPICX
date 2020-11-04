@@ -64,13 +64,13 @@ void time_loop_boris_fd (infrastructure infra,
 
                 std::array<amrex::Array4<amrex::Real>,vdim> jA;
                 std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
+                std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                     eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
                 }
-                for (int cc=0;cc < GEMPIC_BDIM;cc++) {
+                for (int cc=0;cc < int(floor(vdim/2.5)*2+1);cc++) {
                     bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
                 }
 
@@ -78,8 +78,8 @@ void time_loop_boris_fd (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
 
-                    std::array<amrex::Real, vdim+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                                             infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
+                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
+                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
                     std::array<amrex::Real,vdim> eres;
                     switch (vdim) {
@@ -93,7 +93,16 @@ void time_loop_boris_fd (infrastructure infra,
                         eres = {field_interp[0],field_interp[1],field_interp[2]};
                         break;
                     }
-                    std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> bres = {AMREX_B_DECL(field_interp[vdim],field_interp[vdim+1],field_interp[vdim+2])};
+                    std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> bres;
+                    switch (int(floor(vdim/2.5)*2+1)) {
+                    case 1:
+                        bres = {field_interp[vdim]};
+                        break;
+                    case 3:
+                        bres = {field_interp[vdim],field_interp[vdim+1],field_interp[vdim+2]};
+                        break;
+                    }
+
 
                     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
@@ -113,15 +122,15 @@ void time_loop_boris_fd (infrastructure infra,
 
                 std::array<amrex::Array4<amrex::Real>,vdim> jA;
                 std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
+                std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
                 for (int pp=0;pp<np;pp++){
-                    std::array<amrex::Real, vdim+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                                             infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
+                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
+                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }
         }
@@ -158,14 +167,16 @@ void time_loop_boris_fd (infrastructure infra,
                 amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
                 break;
             }
-            amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0]
-                                                          #if (GEMPIC_BDIM > 1)
-                                                                   << " " << (*diagn).Bfield[t_step][1]
-                                                          #endif
-                                                          #if (GEMPIC_BDIM > 2)
-                                                                   << " " << (*diagn).Bfield[t_step][2]
-                                                          #endif
-                                                                   << " " << (*diagn).kin[t_step] << " ";
+            switch (vdim) {
+            case 1: // no break, so that case 1 and 2 are handled the same way
+            case 2:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0];
+                break;
+            case 3:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
+                break;
+            }
+            amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).kin[t_step] << " ";
             switch (vdim) {
             case 1:
                 amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0];
