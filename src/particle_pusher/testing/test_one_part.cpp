@@ -130,10 +130,10 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
     case 1:
-        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
     default:
         break;
