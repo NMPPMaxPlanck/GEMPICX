@@ -166,6 +166,7 @@ void time_loop_boris_fd (infrastructure infra,
                 amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
                 break;
             }
+            amrex::AllPrintToFile("test_output_pre_rename.output") << std::endl;
         }
     } // end time loop
 
