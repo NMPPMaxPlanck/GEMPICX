@@ -29,7 +29,7 @@ namespace Particles {
  * Class containing all particle information. The array of particle containers has @p n_species number of particles containers, that is each responsible for one species of particles.
  * For each particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The charge and mass of the particle species are stored in a separate array.
  */
-template <int vdim, int numspec>
+template <int vdim, int numspec, int n_data=1>
 class particle_groups
 {
 public:
@@ -37,7 +37,7 @@ public:
     // array of ParticleContainers (one container per species)
     std::array<amrex::Real, numspec> charge;
     std::array<amrex::Real, numspec> mass;
-    std::array<std::unique_ptr<amrex::ParticleContainer<vdim+1, 0, 0, 0>>, numspec> mypc;
+    std::array<std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>>, numspec> mypc;
 
     // The default constructor.
     /**
@@ -58,7 +58,7 @@ public:
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
-            mypc[i].reset(new amrex::ParticleContainer<vdim+1, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
             (*mypc[i]).do_tiling = true;
             (*mypc[i]).tile_size = {AMREX_D_DECL(ifr.max_grid_size,ifr.max_grid_size,ifr.max_grid_size)};
         }
@@ -70,9 +70,9 @@ public:
     void add_particle(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                       std::array<amrex::Real,vdim> velocity,
                       amrex::Real weight,
-                      amrex::ParticleTile<vdim+1, 0, 0, 0>& particles){
+                      amrex::ParticleTile<vdim+n_data, 0, 0, 0>& particles){
 
-        using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+        using ParticleType = amrex::Particle<vdim+n_data, 0>; // Particle template
 
         // new particle:
         ParticleType p;
