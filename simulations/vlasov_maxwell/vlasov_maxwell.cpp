@@ -226,7 +226,7 @@ void main_main (bool ctest)
     } else {
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, checkpoint_file, curr_step);
     }
-    std::ofstream ofs("PIC.output", std::ofstream::out);
+    std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
     if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
     case 0:
@@ -238,7 +238,7 @@ void main_main (bool ctest)
     default:
         break;
     }
-    if (ctest & (ParallelDescriptor::MyProc()==0)) std::rename("test_output_pre_rename.output.0", "PIC.output");
+    if (ctest & (ParallelDescriptor::MyProc()==0)) std::rename("test_output_pre_rename.output.0", "vlasov_maxwell.output");
 }
 
 int main(int argc, char* argv[])

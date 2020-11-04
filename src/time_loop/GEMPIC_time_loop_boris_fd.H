@@ -151,7 +151,7 @@ void time_loop_boris_fd (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "PIC_save_tmp_OW_part.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_tmp.output", t_step+1);
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 

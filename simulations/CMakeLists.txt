@@ -1,1 +1,1 @@
-add_subdirectory( PIC )
+add_subdirectory( vlasov_maxwell )

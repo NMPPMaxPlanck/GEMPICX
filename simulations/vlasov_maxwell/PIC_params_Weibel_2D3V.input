@@ -2,9 +2,9 @@
 sim_name = "Weibel"
 
 # Grid parameters
-n_cell_vector = 24 8 8
+n_cell_vector = 24 8
 max_grid_size = 4
-is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
+is_periodic_vector = 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
 n_part_per_cell = 100 # number of particles per cell
@@ -21,7 +21,7 @@ velocity_weight_0 = 1.0 1.0 1.0
 k = 1.25 # 1.25 for Weibel, 0.5 for Landau
 
 # Simulation parameters
-n_steps = 50000
+n_steps = 10
 dt = 0.02
 freq_x = 100001 
 freq_v = 100001 
@@ -35,7 +35,7 @@ Bz = "1e-3 * cos(kvar * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
-propagator = 0
+propagator = 1
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
 tolerance_particles = 1.e-10
