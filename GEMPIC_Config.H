@@ -3,8 +3,4 @@
 
 #define GEMPIC_SPACEDIM AMREX_SPACEDIM
 
-#define GEMPIC_DEG_X 1
-#define GEMPIC_DEG_Y 1
-#define GEMPIC_DEG_Z 1
-
 #endif

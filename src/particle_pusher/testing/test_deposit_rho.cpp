@@ -21,7 +21,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Utils;
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     //------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
     init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,0,{-1.0},{1.0},1000,k,
@@ -109,7 +109,7 @@ void main_main ()
 
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim, degx, degy, degz>(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
             }
             ((mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
         }
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3, 1>();
+    main_main<3, 1, 1, 1, 1>();
 
     amrex::Finalize();
 }

@@ -34,11 +34,11 @@ namespace Time_Loop {
    */
 
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void time_loop_hs_fem (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec> *diagn,
+                       diagnostics<vdim, numspec, degx, degy, degz> *diagn,
                        bool ctest,
                        std::ofstream *ofs) {
 
@@ -86,14 +86,14 @@ void time_loop_hs_fem (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim>(particles[pp],infra.dxi, infra.plo,  eA);
+                    std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degz,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
                     // push x and v with the magnetic field
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, bA, infra);
+                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*mw_yee).dt, chargemass, bA, infra);
                     std::array<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                     {
@@ -114,7 +114,7 @@ void time_loop_hs_fem (infrastructure infra,
                                                 infra.dxi,
                                                 infra.plo,
                                                 jA);*/
-                    accumulate_j_fem_integral<vdim>(xOld,
+                    accumulate_j_fem_integral<vdim,degx,degy,degz>(xOld,
                                                     xNew,
                                                     velocity,
                                                     charge*particles[pp].rdata(vdim),
@@ -156,7 +156,7 @@ void time_loop_hs_fem (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim>(particles[pp],infra.dxi, infra.plo,  eA);
+                    std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);

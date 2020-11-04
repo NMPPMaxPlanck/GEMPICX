@@ -167,7 +167,7 @@ double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t)
         return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));
 }
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     int bdim = int(floor(vdim/2.5)*2+1);
@@ -226,7 +226,7 @@ if (bdim > 2) {
         VW[2].push_back(1.0);
     }
 
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
     init.initialize_from_parameters(n_cell,32,is_periodic,maxdeg,0.01,5,{1.0},{1.0},1000,0.5,
@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
     main_main<2>();
     main_main<3>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1>();
+    main_main<3, 1, 1, 1, 1>();
 #endif
     amrex::Finalize();
 }

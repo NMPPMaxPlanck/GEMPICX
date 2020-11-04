@@ -926,7 +926,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
     /**
      * Compute rho for a given rho (for diagnostics: Gauss law)
      */
-    template<int numspec>
+    template<int numspec, int degx, int degy, int degz>
     amrex::Real compute_gauss_error(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         rho_from_E(ifr); // fills rho_gauss_law
@@ -952,7 +952,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
                 for (int pp=0;pp<np;pp++) {
-                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
                 }
                 (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }

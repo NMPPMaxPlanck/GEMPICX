@@ -30,11 +30,11 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void time_loop_boris_fd (infrastructure infra,
                          maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim,numspec> *part_gr,
-                         diagnostics<vdim, numspec> *diagn,
+                         diagnostics<vdim, numspec, degx, degy, degz> *diagn,
                          bool ctest,
                          std::ofstream *ofs) {
 
@@ -78,7 +78,7 @@ void time_loop_boris_fd (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
 
-                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
+                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
                     std::array<amrex::Real,vdim> eres;
@@ -129,7 +129,7 @@ void time_loop_boris_fd (infrastructure infra,
                 }
 
                 for (int pp=0;pp<np;pp++){
-                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
+                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }

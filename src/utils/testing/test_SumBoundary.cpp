@@ -14,7 +14,7 @@
 using namespace std;
 using namespace amrex;
 
-template <int vdim>
+template <int vdim, int degx, int degy, int degz>
 void main_main ()
 {
     // This test shows how one can get a result from SumBoundary that has two slightly
@@ -94,7 +94,7 @@ void main_main ()
         amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
         std::cout << "C" << std::endl;
         for (int pp=0;pp<np;pp++) {
-            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
+            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
         TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
     }
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3>();
+    main_main<3,1,1,1>();
 
     amrex::Finalize();
 }

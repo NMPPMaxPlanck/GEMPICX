@@ -18,14 +18,14 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
     // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     int Nghost = maxdeg;
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3, 1>();
+    main_main<3, 1, 1, 1, 1>();
 
     amrex::Finalize();
 }

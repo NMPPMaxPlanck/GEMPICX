@@ -28,14 +28,14 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-template< int vdim, int numspec>
+template< int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
     // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     int Nghost = maxdeg;
 
@@ -124,24 +124,21 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics<vdim, numspec> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+    diagnostics<vdim, numspec, degx, degy, degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    loop_preparation<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
-    std::cout << "AAA" << std::endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
     case 1:
-        std::cout << "BBB" << std::endl;
-        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
+        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
     default:
         break;
     }
 
-    std::cout << "CCC" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
     for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
@@ -158,7 +155,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3, 1>(argc==1);
+    main_main<3, 1, 1, 1, 1>(argc==1);
 
     amrex::Finalize();
 }

@@ -28,14 +28,14 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
     // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     int Nghost = maxdeg;
 
@@ -212,7 +212,7 @@ void main_main (bool ctest)
     // particles
     particle_groups<vdim, numspec> part_gr(init, infra);
 
-    diagnostics<vdim, numspec> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim, numspec,degx,degy,degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main<3, 1>(argc==1);
+    main_main<3, 1, 1, 1, 1>(argc==1);
 
     amrex::Finalize();
 }

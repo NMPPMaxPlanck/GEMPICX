@@ -29,11 +29,11 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int degx, int degy, int degz>
 void loop_preparation (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec> *diagn,
+                       diagnostics<vdim, numspec, degx, degy, degz> *diagn,
                        te_expr *Bx_parse,
                        te_expr *By_parse,
                        te_expr *Bz_parse,
@@ -66,7 +66,7 @@ void loop_preparation (infrastructure infra,
 
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
             }
             ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
         }
