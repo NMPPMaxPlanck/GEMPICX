@@ -76,7 +76,18 @@ void init_particles_cellwise(infrastructure infra,
         for(int i=0;i<vdim;i++){
             gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX)); // uniform in [0, 1]
         }
-        std::array<int,vdim> gauss_idx = {AMREX_V_DECL(0,0,0)};
+        std::array<amrex::Real,vdim> gauss_idx;
+        switch (vdim) {
+        case 1:
+            gauss_idx = {0};
+            break;
+        case 2:
+            gauss_idx = {0,0};
+            break;
+        case 3:
+            gauss_idx = {0,0,0};
+            break;
+        }
         for(int i=0;i<vdim;i++){
             for (int gg=1;gg<num_gauss;gg++){
                 if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){
@@ -198,7 +209,18 @@ void init_particles_full_domain(infrastructure infra,
                         for(int i=0;i<vdim;i++){
                             gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
                         }
-                        std::array<int,vdim> gauss_idx = {AMREX_V_DECL(0,0,0)};
+                        std::array<amrex::Real,vdim> gauss_idx;
+                        switch (vdim) {
+                        case 1:
+                            gauss_idx = {0};
+                            break;
+                        case 2:
+                            gauss_idx = {0,0};
+                            break;
+                        case 3:
+                            gauss_idx = {0,0,0};
+                            break;
+                        }
                         for(int i=0;i<vdim;i++){
                             for (int gg=1;gg<num_gauss;gg++){
                                 if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){

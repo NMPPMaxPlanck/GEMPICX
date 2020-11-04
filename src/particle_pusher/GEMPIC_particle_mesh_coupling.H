@@ -100,7 +100,18 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                                                   std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                   std::array<amrex::Array4<amrex::Real>,vdim> eArray)
 {
-    std::array<amrex::Real, vdim> fields = {AMREX_V_DECL(0.,0.,0.)};
+    std::array<amrex::Real,vdim> fields;
+    switch (vdim) {
+    case 1:
+        fields = {0.};
+        break;
+    case 2:
+        fields = {0.,0.};
+        break;
+    case 3:
+        fields = {0.,0.,0.};
+        break;
+    }
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
     amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];

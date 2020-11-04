@@ -16,14 +16,6 @@
 #  define GEMPIC_BDIM 3
 #endif
 
-#if (GEMPIC_VDIM == 1)
-#  define AMREX_V_DECL(a,b,c) a
-#elif (GEMPIC_VDIM == 2)
-#  define AMREX_V_DECL(a,b,c) a,b
-#elif (GEMPIC_VDIM == 3)
-#  define AMREX_V_DECL(a,b,c) a,b,c
-#endif
-
 #if (GEMPIC_BDIM == 1)
 #  define AMREX_B_DECL(a,b,c) a
 #elif (GEMPIC_BDIM == 3)

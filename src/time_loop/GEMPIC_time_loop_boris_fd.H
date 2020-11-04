@@ -81,8 +81,19 @@ void time_loop_boris_fd (infrastructure infra,
                     std::array<amrex::Real, vdim+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                              infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
-                    std::array<amrex::Real,vdim> eres = {AMREX_V_DECL(field_interp[0],field_interp[1],field_interp[2])};
-                    std::array<amrex::Real,GEMPIC_BDIM> bres = {AMREX_B_DECL(field_interp[vdim],field_interp[vdim+1],field_interp[vdim+2])};
+                    std::array<amrex::Real,vdim> eres;
+                    switch (vdim) {
+                    case 1:
+                        eres = {field_interp[0]};
+                        break;
+                    case 2:
+                        eres = {field_interp[0],field_interp[1]};
+                        break;
+                    case 3:
+                        eres = {field_interp[0],field_interp[1],field_interp[2]};
+                        break;
+                    }
+                    std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> bres = {AMREX_B_DECL(field_interp[vdim],field_interp[vdim+1],field_interp[vdim+2])};
 
                     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
