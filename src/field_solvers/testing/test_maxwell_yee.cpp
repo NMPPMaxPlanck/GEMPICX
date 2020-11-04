@@ -128,6 +128,7 @@ double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t)
 }
 
 #elif (GEMPIC_SPACEDIM == 3)
+template<int vdim>
 double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){
     return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));
 }
