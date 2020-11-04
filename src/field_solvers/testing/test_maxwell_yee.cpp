@@ -259,10 +259,13 @@ void main_main ()
     switch (vdim) {
     case 1:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        break;
     case 2:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        break;
     case 3:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        break;
     }
 
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
@@ -283,10 +286,13 @@ void main_main ()
         switch (vdim) {
         case 1:
             AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+            break;
         case 2:
             AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            break;
         case 3:
             AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+            break;
         }
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                                                                    #if (GEMPIC_BDIM > 1)
@@ -323,10 +329,13 @@ void main_main ()
     switch (vdim) {
     case 1:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        break;
     case 2:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        break;
     case 3:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        break;
     }
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                                                                    #if (GEMPIC_BDIM > 1)
@@ -349,10 +358,13 @@ void main_main ()
         switch (vdim) {
         case 1:
             AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+            break;
         case 2:
             AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            break;
         case 3:
             AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+            break;
         }
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] <<
                                                                    #if (GEMPIC_BDIM > 1)
@@ -395,10 +407,13 @@ void main_main ()
     switch (vdim) {
     case 1:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        break;
     case 2:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        break;
     case 3:
         AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        break;
     }
 
 

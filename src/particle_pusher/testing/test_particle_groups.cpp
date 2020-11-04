@@ -156,6 +156,7 @@ void main_main ()
         break;
     case 3:
         AllPrintToFile("test_output_pre_rename.output") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
+        break;
 
     }
     AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: " ;
@@ -168,6 +169,7 @@ void main_main ()
         break;
     case 3:
         AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
+        break;
 
     }
 

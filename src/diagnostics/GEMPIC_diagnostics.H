@@ -149,6 +149,7 @@ public:
                 break;
             case 3:
                 amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
+                break;
 
             }
 
@@ -169,6 +170,7 @@ public:
                 break;
             case 3:
                 amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
+                break;
 
             }
             amrex::Print(ofsfun) << " " << gauss_error[step]
