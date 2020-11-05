@@ -19,7 +19,7 @@ git clone https://github.com/AMReX-Codes/amrex.git
 # install amrex
 mkdir build_amrex
 cd build_amrex
-cmake -DDIM=3 -D ENABLE_PARTICLES=ON $BUILD_DIR/amrex
+cmake -DDIM=3 -D AMReX_PARTICLES=ON $BUILD_DIR/amrex
 make install
 cd ..
 
