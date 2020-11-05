@@ -72,12 +72,10 @@ void main_main ()
     Gempic::Sampling::init_one_particle_cellwise<vdim>(dx, plo, &mypc, {AMREX_D_DECL(2*dx[0]/5.0, 2*dx[1]/5.0, 0)});
 
     mypc.Redistribute();
-    std::cout << "A" << std::endl;
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
     for (amrex::ParIter<vdim+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
-        std::cout << "B" << std::endl;
         amrex::Box tilebox;
         amrex::FArrayBox local_rho;
 
@@ -92,14 +90,12 @@ void main_main ()
         const long np  = pti.numParticles();
 
         amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
-        std::cout << "C" << std::endl;
         for (int pp=0;pp<np;pp++) {
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
         TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
     }
 
-    std::cout << "D" << std::endl;
     //-----------------------------------------------------------------------------
     // SumBoundary
 

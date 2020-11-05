@@ -82,13 +82,6 @@ void loop_preparation (infrastructure infra,
     (*mw_yee).rho.OverrideSync(*((*mw_yee).nodal_Mask), infra.geom.periodicity());
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
-    // output rho
-    std::ofstream ofs("rho.output", std::ofstream::out);
-    for (amrex::MFIter mfi((*mw_yee).rho); mfi.isValid(); ++mfi ) {
-        amrex::Print(ofs) << (*mw_yee).rho[mfi] << std::endl;
-    }
-    ofs.close();
-
     //initial E by rho
     (*mw_yee).phi_init.setVal(0.0, 0); // TODO
     (*mw_yee).solve_poisson(infra);

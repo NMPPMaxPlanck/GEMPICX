@@ -132,7 +132,7 @@ public:
      * This function writes the data from all steps so far (at time @p dt) into an output file PIC_save.output or a file of alternative name if @p filename is passed. If only a
      * subset of the data should be saved, the argument @p partial, setting the last index to be saved, should be passed.
      */
-    void save_all_to_textfile(amrex::Real dt, std::string filename = "PIC_save.output", int partial = 0){
+    void save_all_to_textfile(amrex::Real dt, std::string filename = "vlasov_maxwell_save.output", int partial = 0){
         if (partial == 0){
             partial = n_time;
         }

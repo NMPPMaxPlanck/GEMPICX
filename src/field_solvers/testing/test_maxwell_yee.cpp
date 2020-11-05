@@ -171,7 +171,7 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     int bdim = int(floor(vdim/2.5)*2+1);
-    std::cout << "x: " << GEMPIC_SPACEDIM << " | v,E: " << vdim << " | B: " << bdim << std::endl;
+
     // make pointer-array for functions
     double (*fields[vdim+bdim]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
     fields[0] = E_x<vdim>;
@@ -235,10 +235,6 @@ if (bdim > 2) {
 
     Infra::infrastructure infra;
     init.initialize_infrastructure(&infra);
-    //std::cout << "[" << infra.real_box.lo()[0] << ", " << infra.real_box.hi()[0] << "]x[" << infra.real_box.lo()[1] << "," << infra.real_box.hi()[1] << "]x[" << infra.real_box.lo()[2] << ", " << infra.real_box.hi()[2] << "]" << std::endl;
-    //std::array<double,GEMPIC_SPACEDIM> x = {0.0,0.0,0.75};
-    //double t = 2.0-0.25/sqrt(3);
-    //std::cout << fields[0](x,t) << "|" << fields[1](x,t) << "|" << fields[2](x,t) << "|" << fields[3](x,t) << "|" << fields[4](x,t) << "|" << fields[5](x,t) << "|" << std::endl;
 
     //------------------------------------------------------------------------------
     // Solve
@@ -305,11 +301,6 @@ if (bdim > 2) {
             break;
         }
 
-        std::ofstream ofsPHI("mw_yee_E" + std::to_string(n) + ".output", std::ofstream::out);
-        for (amrex::MFIter mfi(*(mw_yee.E_Array[0])); mfi.isValid(); ++mfi ) {
-            amrex::Print(ofsPHI) << (*(mw_yee.E_Array[0]))[mfi] << std::endl;
-        }
-        ofsPHI.close();
     }
 
     //------------------------------------------------------------------------------
