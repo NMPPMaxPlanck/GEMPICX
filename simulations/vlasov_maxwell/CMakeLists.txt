@@ -1,5 +1,3 @@
-add_subdirectory( reference_results )
-
 add_executable ( vlasov_maxwell vlasov_maxwell.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 
 #message("#########")
