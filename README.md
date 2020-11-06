@@ -5,7 +5,7 @@ New gempic code based on AMReX
 Install AMReX first enabeling particles (for each dimension):  
 Irene's PC  
 cd build/amrex3D  
-cmake -DDIM=3 -D AMReX_PARTICLES=ON ~/Documents/Projects/warpx_directory/amrex/
+cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON ~/Documents/Projects/warpx_directory/amrex/
 
 
 How to build the code
