@@ -67,7 +67,7 @@ template<int vdim>
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
 {
     if (vdim == 2)
-        return(cos(x[0]));
+        return(sin(x[0])*sin(t));
     else
         return(0.);
 }
@@ -169,8 +169,9 @@ double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t)
 
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
-{
+{  
     int bdim = int(floor(vdim/2.5)*2+1);
+    std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
 
     // make pointer-array for functions
     double (*fields[vdim+bdim]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
@@ -377,8 +378,8 @@ if (bdim > 2) {
     // Poisson
 
 #if (GEMPIC_SPACEDIM == 1)
-    std::string phi = "cos(x) + 1.0/4.0*cos(2*x))";
-    std::string rho = "-cos(x)-cos(2*x)";
+    std::string phi = "-cos(x) - 1.0/4.0*cos(2*x)";
+    std::string rho = "-cos(x) - cos(2*x)";
 #elif (GEMPIC_SPACEDIM == 2)
     std::string phi = "cos(x)*cos(y) + 1.0/4.0*cos(2*x)*cos(2*y)";
     std::string rho = "-2*(cos(x)*cos(y)+cos(2*x)*cos(2*y))";
@@ -422,10 +423,8 @@ if (bdim > 2) {
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "rho Norm: " << Utils::gempic_norm(&(mw_yee.rho), infra, 2) << std::endl;
 
     //ofs.close();
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_maxwell_yee.output");
 }
 
 int main(int argc, char* argv[])
@@ -441,6 +440,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_maxwell_yee.output");
     amrex::Finalize();
 }
 
