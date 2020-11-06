@@ -72,8 +72,11 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
                 std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, xint, degx, false),
                                                               spl.compute_cell_index(j+jj, yint, degy, false),
                                                               spl.compute_cell_index(k+kk, zint,  degz, false))};
-
-                amrex::Gpu::Atomic::Add(&rho(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&rho(cell_index[0], 0, 0, 0), s_coeff*particle_coeff);
+#else
+                amrex::Gpu::Atomic::Add(&rho(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff);
+#endif
             }
 #if (GEMPIC_SPACEDIM > 1)
         }

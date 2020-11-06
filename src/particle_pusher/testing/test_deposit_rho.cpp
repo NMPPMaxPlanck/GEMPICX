@@ -126,7 +126,6 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
     //ofs.close();
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_deposit_rho.output");
 
 }
 
@@ -134,7 +133,17 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+#if (GEMPIC_SPACEDIM == 1)
+    main_main<1, 1, 1, 1, 1>();
+    main_main<2, 1, 1, 1, 1>();
+#elif (GEMPIC_SPACEDIM == 2)
+    main_main<2, 1, 1, 1, 1>();
     main_main<3, 1, 1, 1, 1>();
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1>();
+#endif
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_deposit_rho.output");
 
     amrex::Finalize();
 }
