@@ -18,6 +18,8 @@ cd $BUILD_DIR
 git clone https://github.com/AMReX-Codes/amrex.git
 
 # ---- 1D ----
+pwd
+ls
 cp src/field_solvers/testing/test_maxwell_yee_1D.output src/field_solvers/testing/test_maxwell_yee.expected_output
 
 # install amrex
