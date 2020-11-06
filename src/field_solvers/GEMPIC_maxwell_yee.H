@@ -537,7 +537,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
                             // B-derivatives
                             if ((vdim < 3) & (GEMPIC_SPACEDIM == 1)) {
                                 if (i == 0){
-                                    (*E_Array[0])[mfi].setVal(*c1+dt_step, cc, 0, 1);
+                                    (*E_Array[0])[mfi].setVal(*c1, cc, 0, 1);
                                 }
                             }
                             if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)) {
@@ -843,9 +843,6 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
 
                             // the box for these values:
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
-
-                            // old field_out value
-                            (*E_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1); //TODO remove
 
                             // phi-derivative
                             phi[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);

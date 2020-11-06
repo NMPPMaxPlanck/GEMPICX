@@ -73,14 +73,7 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
                                                               spl.compute_cell_index(j+jj, yint, degy, false),
                                                               spl.compute_cell_index(k+kk, zint,  degz, false))};
 
-                amrex::Gpu::Atomic::Add(&rho(cell_index[0]
-                        #if (GEMPIC_SPACEDIM > 1)
-                                        , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                        , cell_index[2]
-        #endif
-                        , 0), s_coeff*particle_coeff);
+                amrex::Gpu::Atomic::Add(&rho(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff);
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -152,15 +145,9 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                             *sz_node[kk]
         #endif
                             ;
-                    fields[0] += s_coeff*(eArray[0])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                            ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                            ,cell_index[2]
-        #endif
-                            ,0);
+                    fields[0] += s_coeff*(eArray[0])(cell_index[0], cell_index[1], cell_index[2] ,0);
                 }
+#if (GEMPIC_SPACEDIM > 1)
                 if(vdim > 1) {
                     if ( jj < degy ) {
                         double s_coeff = sx_node[ii]
@@ -169,30 +156,17 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                                 *sz_node[kk]
         #endif
                                 ;
-                        fields[1] += s_coeff*(eArray[1])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                                ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                                ,cell_index[2]
-        #endif
-                                ,0);
+                        fields[1] += s_coeff*(eArray[1])(cell_index[0], cell_index[1], cell_index[2] ,0);
                     }
                 }
+#endif
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < degz ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
                             *sz_cell[kk]
                             ;
-                    fields[2] += s_coeff*(eArray[2])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                            ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                            ,cell_index[2]
-        #endif
-                            ,0);
+                    fields[2] += s_coeff*(eArray[2])(cell_index[0], cell_index[1], cell_index[2] ,0);
                 }
 #endif
             }
@@ -248,16 +222,10 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                             *sz_node[kk]
         #endif
                             ;
-                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                            , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                            , cell_index[2]
-        #endif
-                            , 0), s_coeff*weight[0]);
+                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], cell_index[1], cell_index[2] , 0), s_coeff*weight[0]);
                 }
                 if(vdim > 1) {
+#if (GEMPIC_SPACEDIM > 1)
                     if ( jj < degy ) {
                         double s_coeff = sx_node[ii]
                                 *sy_cell[jj]
@@ -265,43 +233,37 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                                 *sz_node[kk]
         #endif
                                 ;
-                        amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                                , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                                , cell_index[2]
-        #endif
-                                , 0), s_coeff*weight[1]);
-                    }
+#else
+                    double s_coeff = sx_node[ii];
+#endif
+                    amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*weight[1]);
+#if (GEMPIC_SPACEDIM > 1)
                 }
-                if(vdim > 2) {
+#endif
+            }
+            if(vdim > 2) {
 
 #if(GEMPIC_SPACEDIM > 2)
-                    if ( kk < degz ) {
-                        double s_coeff = sx_node[ii]
-                                *sy_node[jj]
-                                *sz_cell[kk];
-#else
+                if ( kk < degz ) {
                     double s_coeff = sx_node[ii]
-                            *sy_node[jj];
-#endif
-                    amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0]
+                            *sy_node[jj]
+                            *sz_cell[kk];
+#else
+                double s_coeff = sx_node[ii]
         #if (GEMPIC_SPACEDIM > 1)
-                            , cell_index[1]
+                        *sy_node[jj]
         #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                            , cell_index[2]
-        #endif
-                            , 0), s_coeff*weight[2]);
+                        ;
+#endif
+                amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*weight[2]);
 
-                }
             }
-#if (GEMPIC_SPACEDIM > 1)
         }
+#if (GEMPIC_SPACEDIM > 1)
+    }
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    } }
+} }
 #endif
 }
 
@@ -488,15 +450,9 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                             *sz_node[kk]
         #endif
                             ;
-                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                            , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                            , cell_index[2]
-        #endif
-                            , 0), s_coeff*particle_coeff*velocity[0]);
+                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*velocity[0]);
                 }
+#if (GEMPIC_SPACEDIM > 1)
                 if(vdim > 1) {
                     if ( jj < degy ) {
                         double s_coeff = sx_node[ii]
@@ -505,30 +461,17 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                 *sz_node[kk]
         #endif
                                 ;
-                        amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                                , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                                , cell_index[2]
-        #endif
-                                , 0), s_coeff*particle_coeff*velocity[1]);
+                        amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*velocity[1]);
                     }
                 }
+#endif
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < degz ) {
                     double s_coeff = sx_node[ii]
                             *sy_node[jj]
                             *sz_cell[kk]
                             ;
-                    amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                            , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                            , cell_index[2]
-        #endif
-                            , 0), s_coeff*particle_coeff*velocity[2]);
+                    amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*velocity[2]);
                 }
 #endif
             }
@@ -545,9 +488,9 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
      */
 template <int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                                                         std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                         std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                         std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray)
+                                                                      std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                                      std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                                      std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray)
 {
     std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> fields;
     switch (int(floor(vdim/2.5)*2+1)) {
@@ -598,14 +541,7 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
                         *sz_cell[kk]
         #endif
                         ;
-                fields[0] += s_coeff*(bArray[0])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        ,cell_index[2]
-        #endif
-                        ,0);
+                fields[0] += s_coeff*(bArray[0])(cell_index[0], cell_index[1], cell_index[2], 0);
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -614,76 +550,62 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
     }
 #endif
     // B_1
-if (int(floor(vdim/2.5)*2+1)>1) {
+    if (int(floor(vdim/2.5)*2+1)>1) {
 #if (GEMPIC_SPACEDIM > 2)
-    for (int kk = 0; kk <= degz-1; ++kk) {
+        for (int kk = 0; kk <= degz-1; ++kk) {
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0; jj <= degy; ++jj) {
+            for (int jj = 0; jj <= degy; ++jj) {
 #endif
-            for (int ii = 0; ii <= degx; ++ii) {
-                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                double s_coeff = sx_cell[ii]
+                for (int ii = 0; ii <= degx; ++ii) {
+                    // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                    std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                    double s_coeff = sx_cell[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        *sy_node[jj]
+                            *sy_node[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        *sz_cell[kk]
+                            *sz_cell[kk]
         #endif
-                        ;
-                fields[1] += s_coeff*(bArray[1])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        ,cell_index[2]
-        #endif
-                        ,0);
+                            ;
+                    fields[1] += s_coeff*(bArray[1])(cell_index[0], cell_index[1], cell_index[2], 0);
+                }
+#if (GEMPIC_SPACEDIM > 1)
             }
-#if (GEMPIC_SPACEDIM > 1)
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         }
 #endif
-#if (GEMPIC_SPACEDIM > 2)
     }
-#endif
-}
 
     // B_2
-if (int(floor(vdim/2.5)*2+1)>2){
+    if (int(floor(vdim/2.5)*2+1)>2){
 #if (GEMPIC_SPACEDIM > 2)
-    for (int kk = 0; kk <= degz; ++kk) {
+        for (int kk = 0; kk <= degz; ++kk) {
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0; jj <= degy-1; ++jj) {
+            for (int jj = 0; jj <= degy-1; ++jj) {
 #endif
-            for (int ii = 0; ii <= degx-1; ++ii) {
-                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                double s_coeff = sx_cell[ii]
+                for (int ii = 0; ii <= degx-1; ++ii) {
+                    // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                    std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                    double s_coeff = sx_cell[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        *sy_cell[jj]
+                            *sy_cell[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        *sz_node[kk]
+                            *sz_node[kk]
         #endif
-                        ;
-                fields[2] += s_coeff*(bArray[2])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        ,cell_index[2]
-        #endif
-                        ,0);
+                            ;
+                    fields[2] += s_coeff*(bArray[2])(cell_index[0], cell_index[1], cell_index[2], 0);
+                }
+#if (GEMPIC_SPACEDIM > 1)
             }
-#if (GEMPIC_SPACEDIM > 1)
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         }
 #endif
-#if (GEMPIC_SPACEDIM > 2)
     }
-#endif
-}
     return(fields);
 }
 
@@ -691,13 +613,13 @@ if (int(floor(vdim/2.5)*2+1)>2){
 
 template <typename P, int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
-                                                                            std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                                            std::array<amrex::Array4<amrex::Real>,vdim> jArray,
-                                                                            std::array<amrex::Array4<amrex::Real>,vdim> eArray,
-                                                                            std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray,
-                                                                            amrex::Real coefficient = 1.,
-                                                                            bool field_int = false)
+                                                                                         std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                                                         std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                                                         std::array<amrex::Array4<amrex::Real>,vdim> jArray,
+                                                                                         std::array<amrex::Array4<amrex::Real>,vdim> eArray,
+                                                                                         std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray,
+                                                                                         amrex::Real coefficient = 1.,
+                                                                                         bool field_int = false)
 
 {
     std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> fields = {AMREX_D_DECL(0.,0.,0.)};
@@ -757,25 +679,11 @@ std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_inte
                                                                       spl.compute_cell_index(j+jj, yint, degy-(cc%3==1?1:0), cc%3==1?true:false),
                                                                       spl.compute_cell_index(k+kk, zint, degz-(cc%3==2?1:0), cc%3==2?true:false))};
 
-                        amrex::Gpu::Atomic::Add(&(jArray[cc])(cell_index[0]
-                        #if (GEMPIC_SPACEDIM > 1)
-                                                , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                                , cell_index[2]
-        #endif
-                                , 0), s_coeff*particle_coeff*p.rdata(cc));
+                        amrex::Gpu::Atomic::Add(&(jArray[cc])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*p.rdata(cc));
 
                         if (field_int) {
 
-                            fields[cc] += s_coeff*(eArray[cc])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                                    ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                                    ,cell_index[2]
-        #endif
-                                    ,0);
+                            fields[cc] += s_coeff*(eArray[cc])(cell_index[0], cell_index[1], cell_index[2], 0);
                         }
                     }
                 }
@@ -803,14 +711,7 @@ std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_inte
                                                                           spl.compute_cell_index(k+kk, zint, degz-(cc%3==2?0:1), cc%3==2?false:true))};
 
 
-                            fields[cc+vdim] += s_coeff*(bArray[cc])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                                    ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                                    ,cell_index[2]
-        #endif
-                                    ,0);
+                            fields[cc+vdim] += s_coeff*(bArray[cc])(cell_index[0], cell_index[1], cell_index[2], 0);
                         }
                     }
                 }
@@ -866,10 +767,7 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
                                                               spl.compute_cell_index(j+jj, yint, degy, IndT[1]==0?true:false),
                                                               spl.compute_cell_index(k+kk, zint, degz, IndT[2]==0?true:false))};
 
-                amrex::Gpu::Atomic::Add(&(jArray)(cell_index[0]
-                                        , cell_index[1]
-                        , cell_index[2]
-                        , 0), s_coeff*particle_coeff);
+                amrex::Gpu::Atomic::Add(&(jArray)(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff);
 
 
             }
@@ -942,9 +840,9 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
         }
         // evaluate B at xMean
         std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(xMean,
-                                                                     infra.dxi,
-                                                                     infra.plo,
-                                                                     bArray);
+                                                                                                       infra.dxi,
+                                                                                                       infra.plo,
+                                                                                                       bArray);
         if  (vdim == 2) {
             newV[0] = oldV[0] + dt*chargemass*( 0.5*(oldV[1]+newViter[1])*Bp[0]);
             newV[1] = oldV[1] + dt*chargemass*( 0.5*(oldV[0]+newViter[0])*Bp[0]);
@@ -1157,16 +1055,10 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
                             *sz_cell[kk]
         #endif
                             ;
-                    amrex::Gpu::Atomic::Add(&(mArray[0])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                            , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                            , cell_index[2]
-        #endif
-                            , 0), s_coeff*bfield[0]*weight);
+                    amrex::Gpu::Atomic::Add(&(mArray[0])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*bfield[0]*weight);
                 }
                 if(vdim > 1) {
+#if (GEMPIC_SPACEDIM > 1)
                     if ( jj < degy ) {
                         double s_coeff = sx_node[ii]
                                 *sy_node[jj]
@@ -1174,43 +1066,37 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
                                 *sz_node[kk]
         #endif
                                 ;
-                        amrex::Gpu::Atomic::Add(&(mArray[1])(cell_index[0]
-        #if (GEMPIC_SPACEDIM > 1)
-                                , cell_index[1]
-        #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                                , cell_index[2]
-        #endif
-                                , 0), s_coeff*bfield[1]*weight);
-                    }
+#else
+                    double s_coeff = sx_cell[ii];
+#endif
+                    amrex::Gpu::Atomic::Add(&(mArray[1])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*bfield[1]*weight);
+#if (GEMPIC_SPACEDIM > 1)
                 }
-                if(vdim > 2) {
+#endif
+            }
+            if(vdim > 2) {
 
 #if(GEMPIC_SPACEDIM > 2)
-                    if ( kk < degz ) {
-                        double s_coeff = sx_cell[ii]
-                                *sy_cell[jj]
-                                *sz_node[kk];
-#else
+                if ( kk < degz ) {
                     double s_coeff = sx_cell[ii]
-                            *sy_cell[jj];
-#endif
-                    amrex::Gpu::Atomic::Add(&(mArray[2])(cell_index[0]
+                            *sy_cell[jj]
+                            *sz_node[kk];
+#else
+                double s_coeff = sx_cell[ii]
         #if (GEMPIC_SPACEDIM > 1)
-                            , cell_index[1]
+                        *sy_cell[jj]
         #endif
-        #if (GEMPIC_SPACEDIM > 2)
-                            , cell_index[2]
-        #endif
-                            , 0), s_coeff*bfield[2]*weight);
+                        ;
+#endif
+                amrex::Gpu::Atomic::Add(&(mArray[2])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*bfield[2]*weight);
 
-                }
             }
-#if (GEMPIC_SPACEDIM > 1)
         }
+#if (GEMPIC_SPACEDIM > 1)
+    }
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    } }
+} }
 #endif
 
 }
@@ -1221,9 +1107,9 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
      */
 template <int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                                                              std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                              std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                              std::array<amrex::Array4<amrex::Real>, int(floor(vdim/2.5)*2+1)> bArray)
+                                                                           std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                                           std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                                           std::array<amrex::Array4<amrex::Real>, int(floor(vdim/2.5)*2+1)> bArray)
 {
     std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> fields;
     switch (int(floor(vdim/2.5)*2+1)) {
@@ -1274,14 +1160,7 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
                         *sz_cell[kk]
         #endif
                         ;
-                fields[0] += s_coeff*(bArray[0])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        ,cell_index[2]
-        #endif
-                        ,0);
+                fields[0] += s_coeff*(bArray[0])(cell_index[0], cell_index[1], cell_index[2], 0);
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -1290,76 +1169,62 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
     }
 #endif
     // B_1
-if (int(floor(vdim/2.5)*2+1)>1) {
+    if (int(floor(vdim/2.5)*2+1)>1) {
 #if (GEMPIC_SPACEDIM > 2)
-    for (int kk = 0; kk <= degz-1; ++kk) {
+        for (int kk = 0; kk <= degz-1; ++kk) {
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0; jj <= degy; ++jj) {
+            for (int jj = 0; jj <= degy; ++jj) {
 #endif
-            for (int ii = 0; ii <= degx-1; ++ii) {
-                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                double s_coeff = sx_cell[ii]
+                for (int ii = 0; ii <= degx-1; ++ii) {
+                    // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                    std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                    double s_coeff = sx_cell[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        *sy_node[jj]
+                            *sy_node[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        *sz_cell[kk]
+                            *sz_cell[kk]
         #endif
-                        ;
-                fields[1] += s_coeff*(bArray[1])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        ,cell_index[2]
-        #endif
-                        ,0);
+                            ;
+                    fields[1] += s_coeff*(bArray[1])(cell_index[0], cell_index[1], cell_index[2], 0);
+                }
+#if (GEMPIC_SPACEDIM > 1)
             }
-#if (GEMPIC_SPACEDIM > 1)
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         }
 #endif
-#if (GEMPIC_SPACEDIM > 2)
     }
-#endif
-}
 
     // B_2
-if (int(floor(vdim/2.5)*2+1)>2) {
+    if (int(floor(vdim/2.5)*2+1)>2) {
 #if (GEMPIC_SPACEDIM > 2)
-    for (int kk = 0; kk <= degz; ++kk) {
+        for (int kk = 0; kk <= degz; ++kk) {
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0; jj <= degy-1; ++jj) {
+            for (int jj = 0; jj <= degy-1; ++jj) {
 #endif
-            for (int ii = 0; ii <= degx-1; ++ii) {
-                // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                double s_coeff = sx_cell[ii]
+                for (int ii = 0; ii <= degx-1; ++ii) {
+                    // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
+                    std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                    double s_coeff = sx_cell[ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        *sy_cell[jj]
+                            *sy_cell[jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        *sz_node[kk]
+                            *sz_node[kk]
         #endif
-                        ;
-                fields[2] += s_coeff*(bArray[2])(cell_index[0]
-        #if(GEMPIC_SPACEDIM > 1)
-                        ,cell_index[1]
-        #endif
-        #if(GEMPIC_SPACEDIM > 2)
-                        ,cell_index[2]
-        #endif
-                        ,0);
+                            ;
+                    fields[2] += s_coeff*(bArray[2])(cell_index[0], cell_index[1], cell_index[2], 0);
+                }
+#if (GEMPIC_SPACEDIM > 1)
             }
-#if (GEMPIC_SPACEDIM > 1)
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         }
 #endif
-#if (GEMPIC_SPACEDIM > 2)
     }
-#endif
-}
     return(fields);
 }
 

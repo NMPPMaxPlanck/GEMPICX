@@ -68,7 +68,11 @@ void main_main ()
     amrex::Real charge = -1.0;
     amrex::ParticleContainer<vdim+1, 0, 0, 0> mypc(geom, distriMap, grid);
     mypc.do_tiling = true;
+#if (GEMPIC_SPACEDIM >1)
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
+#else
+    mypc.tile_size[0] = max_grid_size;
+#endif
     Gempic::Sampling::init_one_particle_cellwise<vdim>(dx, plo, &mypc, {AMREX_D_DECL(2*dx[0]/5.0, 2*dx[1]/5.0, 0)});
 
     mypc.Redistribute();

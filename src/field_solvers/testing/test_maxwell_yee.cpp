@@ -56,7 +56,7 @@ double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
         return(0.);
 }
 template<int vdim>
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)(std::array<double,GEMPIC_SPACEDIM> x, double t)
+double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
 {
     if (vdim == 2)
         return(cos(x[0])*cos(t));
@@ -67,7 +67,7 @@ template<int vdim>
 double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
 {
     if (vdim == 2)
-        return(cos(x[0]);
+        return(cos(x[0]));
     else
         return(0.);
 }
@@ -178,17 +178,21 @@ void main_main ()
     if (vdim > 1){
         fields[1] = E_y<vdim>;
     }
+#if (GEMPIC_SPACEDIM > 1)
     if (vdim > 2) {
         fields[2] = E_z<vdim>;
     }
+#endif
 
     fields[vdim] = B_x<vdim>;
+#if (GEMPIC_SPACEDIM > 1)
 if (bdim > 1) {
     fields[vdim+1] = B_y<vdim>;
 }
 if (bdim > 2) {
     fields[vdim+2] = B_z<vdim>;
 }
+#endif
 
     double (*fields_poisson[vdim]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
     fields_poisson[0] = Ep_x;
@@ -429,11 +433,11 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1>();
-    main_main<2>();
+    main_main<1, 1, 1, 1, 1>();
+    main_main<2, 1, 1, 1, 1>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<2>();
-    main_main<3>();
+    main_main<2, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1>();
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
