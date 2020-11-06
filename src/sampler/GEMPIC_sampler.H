@@ -76,6 +76,7 @@ void init_particles_cellwise(infrastructure infra,
         std::array<amrex::Real,vdim> gauss_idx;
         for(int i=0;i<vdim;i++){
             gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX)); // uniform in [0, 1]
+            gauss_idx[i] = 0;
         }
 
         for(int i=0;i<vdim;i++){
