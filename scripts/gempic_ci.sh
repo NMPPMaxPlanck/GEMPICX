@@ -18,9 +18,7 @@ cd $BUILD_DIR
 git clone https://github.com/AMReX-Codes/amrex.git
 
 # ---- 1D ----
-pwd
-ls
-cp src/field_solvers/testing/test_maxwell_yee_1D.output src/field_solvers/testing/test_maxwell_yee.expected_output
+cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_1D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
 
 # install amrex
 mkdir build_amrex
@@ -44,7 +42,7 @@ make -j 4
 ctest --verbose
 
 # ---- 2D ----
-cp src/field_solvers/testing/test_maxwell_yee_2D.output src/field_solvers/testing/test_maxwell_yee.expected_output
+cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_2D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
 
 # install amrex
 rm -rf build_amrex
@@ -69,7 +67,7 @@ make -j 4
 ctest --verbose
 
 # ---- 3D ----
-cp src/field_solvers/testing/test_maxwell_yee_3D.output src/field_solvers/testing/test_maxwell_yee.expected_output
+cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_3D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
 
 # install amrex
 rm -rf build_amrex
