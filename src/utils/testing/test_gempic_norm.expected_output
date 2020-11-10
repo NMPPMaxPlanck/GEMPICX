@@ -1,9 +1,19 @@
-Constant case: 
+Constant case:
 0-norm error: 0
 1-norm error: 0
 2-norm error: 0
 
-Linear case: 
+Linear case:
 0-norm error: 0
-1-norm error: 5.3291e-15
-2-norm error: 0.0012048
+1-norm error: 3.55271e-15
+2-norm error: 0
+
+Constant case:
+0-norm error: 0
+1-norm error: 0
+2-norm error: 0
+
+Linear case:
+0-norm error: 0
+1-norm error: 3.55271e-15
+2-norm error: 0
