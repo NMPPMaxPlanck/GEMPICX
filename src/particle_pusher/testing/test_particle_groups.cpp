@@ -193,8 +193,8 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
 
     AllPrintToFile("test_output_pre_rename.output") << "mass: 6518.99" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 321.41 5050.99" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 31.6933 3913.57" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 642.819 5050.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 63.3867 3913.57" << std::endl;
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
 
@@ -248,8 +248,8 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
 
     AllPrintToFile("test_output_pre_rename.output") << "mass: 6518.99" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 321.41 5050.99" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 31.6933 3913.57" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 642.819 5050.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 63.3867 3913.57" << std::endl;
 
 
     main_main<3, 1>();
