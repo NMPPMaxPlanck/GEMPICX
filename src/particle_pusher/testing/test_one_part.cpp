@@ -60,7 +60,7 @@ void main_main (bool ctest)
     std::string phi = "4 * 0.5 * cos(0.5 * x)";
     std::string rho = "0.0";
     int propagator = 1;
-    bool time_staggered = true;
+    bool time_staggered = false;
     amrex::Real tolerance_particles = 1.e-10;
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
@@ -118,7 +118,11 @@ void main_main (bool ctest)
         if(mfi.index() == 0) {
             using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
             amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-            (part_gr).add_particle({AMREX_D_DECL(2.511, 2.2, 2.3)}, {0.1, 0.1, 0.1}, 1.0, particles);
+            std::array<amrex::Real,vdim> velocity;
+            for (int comp = 0; comp < vdim; comp++) {
+                velocity[comp] = 0.1;
+            }
+            (part_gr).add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
         }
     }
 
@@ -148,15 +152,23 @@ void main_main (bool ctest)
     for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
         AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
     }
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+#if (GEMPIC_SPACEDIM == 1)
+    main_main<1, 1, 1, 1, 1>(argc==1);
+    main_main<2, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 2)
+    main_main<2, 1, 1, 1, 1>(argc==1);
     main_main<3, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>(argc==1);
+#endif
 
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
     amrex::Finalize();
 }
 

@@ -97,16 +97,8 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                                                   std::array<amrex::Array4<amrex::Real>,vdim> eArray)
 {
     std::array<amrex::Real,vdim> fields;
-    switch (vdim) {
-    case 1:
-        fields = {0.};
-        break;
-    case 2:
-        fields = {0.,0.};
-        break;
-    case 3:
-        fields = {0.,0.,0.};
-        break;
+    for (int comp = 0; comp < vdim; comp++) {
+        fields[comp] = 0.;
     }
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
@@ -148,7 +140,11 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                             *sz_node[kk]
         #endif
                             ;
-                    fields[0] += s_coeff*(eArray[0])(cell_index[0], cell_index[1], cell_index[2] ,0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[0] += s_coeff*(eArray[0])(cell_index[0], 0, 0 ,0);
+#else
+                fields[0] += s_coeff*(eArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) ,0);
+#endif
                 }
 #if (GEMPIC_SPACEDIM > 1)
                 if(vdim > 1) {
@@ -159,7 +155,7 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                                 *sz_node[kk]
         #endif
                                 ;
-                        fields[1] += s_coeff*(eArray[1])(cell_index[0], cell_index[1], cell_index[2] ,0);
+                        fields[1] += s_coeff*(eArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) ,0);
                     }
                 }
 #endif
@@ -169,7 +165,7 @@ std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                             *sy_node[jj]
                             *sz_cell[kk]
                             ;
-                    fields[2] += s_coeff*(eArray[2])(cell_index[0], cell_index[1], cell_index[2] ,0);
+                    fields[2] += s_coeff*(eArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) ,0);
                 }
 #endif
             }
@@ -225,7 +221,11 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
                             *sz_node[kk]
         #endif
                             ;
-                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], cell_index[1], cell_index[2] , 0), s_coeff*weight[0]);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], 0, 0 , 0), s_coeff*weight[0]);
+#else
+                amrex::Gpu::Atomic::Add(&(jArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight[0]);
+#endif
                 }
                 if(vdim > 1) {
 #if (GEMPIC_SPACEDIM > 1)
@@ -239,7 +239,11 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
 #else
                     double s_coeff = sx_node[ii];
 #endif
-                    amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*weight[1]);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0], 0, 0, 0), s_coeff*weight[1]);
+#else
+                amrex::Gpu::Atomic::Add(&(jArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight[1]);
+#endif
 #if (GEMPIC_SPACEDIM > 1)
                 }
 #endif
@@ -258,8 +262,11 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
         #endif
                         ;
 #endif
-                amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*weight[2]);
-
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0], 0, 0, 0), s_coeff*weight[2]);
+#else
+                amrex::Gpu::Atomic::Add(&(jArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight[2]);
+#endif
             }
         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -453,7 +460,11 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                             *sz_node[kk]
         #endif
                             ;
-                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*velocity[0]);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], 0, 0, 0), s_coeff*particle_coeff*velocity[0]);
+#else
+                amrex::Gpu::Atomic::Add(&(jArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*velocity[0]);
+#endif
                 }
 #if (GEMPIC_SPACEDIM > 1)
                 if(vdim > 1) {
@@ -464,7 +475,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                 *sz_node[kk]
         #endif
                                 ;
-                        amrex::Gpu::Atomic::Add(&(jArray[1])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*velocity[1]);
+                        amrex::Gpu::Atomic::Add(&(jArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*velocity[1]);
                     }
                 }
 #endif
@@ -474,7 +485,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                             *sy_node[jj]
                             *sz_cell[kk]
                             ;
-                    amrex::Gpu::Atomic::Add(&(jArray[2])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*velocity[2]);
+                    amrex::Gpu::Atomic::Add(&(jArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*velocity[2]);
                 }
 #endif
             }
@@ -496,13 +507,8 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
                                                                       std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray)
 {
     std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> fields;
-    switch (int(floor(vdim/2.5)*2+1)) {
-    case 1:
-        fields = {0.};
-        break;
-    case 3:
-        fields = {0.,0.,0.};
-        break;
+    for (int comp = 0; comp < int(floor(vdim/2.5)*2+1); comp++) {
+        fields[comp] = 0.;
     }
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
@@ -544,7 +550,11 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
                         *sz_cell[kk]
         #endif
                         ;
-                fields[0] += s_coeff*(bArray[0])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[0] += s_coeff*(bArray[0])(cell_index[0], 0, 0, 0);
+#else
+                fields[0] += s_coeff*(bArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -571,7 +581,11 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
                             *sz_cell[kk]
         #endif
                             ;
-                    fields[1] += s_coeff*(bArray[1])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[1] += s_coeff*(bArray[1])(cell_index[0], 0, 0, 0);
+#else
+                fields[1] += s_coeff*(bArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                 }
 #if (GEMPIC_SPACEDIM > 1)
             }
@@ -600,7 +614,11 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
                             *sz_node[kk]
         #endif
                             ;
-                    fields[2] += s_coeff*(bArray[2])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[2] += s_coeff*(bArray[2])(cell_index[0], 0, 0, 0);
+#else
+                fields[2] += s_coeff*(bArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                 }
 #if (GEMPIC_SPACEDIM > 1)
             }
@@ -682,11 +700,18 @@ std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_inte
                                                                       spl.compute_cell_index(j+jj, yint, degy-(cc%3==1?1:0), cc%3==1?true:false),
                                                                       spl.compute_cell_index(k+kk, zint, degz-(cc%3==2?1:0), cc%3==2?true:false))};
 
-                        amrex::Gpu::Atomic::Add(&(jArray[cc])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff*p.rdata(cc));
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray[cc])(cell_index[0], 0, 0, 0), s_coeff*particle_coeff*p.rdata(cc));
+#else
+                amrex::Gpu::Atomic::Add(&(jArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*p.rdata(cc));
+#endif
 
                         if (field_int) {
-
-                            fields[cc] += s_coeff*(eArray[cc])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[cc] += s_coeff*(eArray[cc])(cell_index[0], 0, 0, 0);
+#else
+                fields[cc] += s_coeff*(eArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                         }
                     }
                 }
@@ -714,7 +739,11 @@ std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_inte
                                                                           spl.compute_cell_index(k+kk, zint, degz-(cc%3==2?0:1), cc%3==2?false:true))};
 
 
-                            fields[cc+vdim] += s_coeff*(bArray[cc])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[cc+vdim] += s_coeff*(bArray[cc])(cell_index[0], 0, 0, 0);
+#else
+                fields[cc+vdim] += s_coeff*(bArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                         }
                     }
                 }
@@ -770,7 +799,11 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
                                                               spl.compute_cell_index(j+jj, yint, degy, IndT[1]==0?true:false),
                                                               spl.compute_cell_index(k+kk, zint, degz, IndT[2]==0?true:false))};
 
-                amrex::Gpu::Atomic::Add(&(jArray)(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*particle_coeff);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray)(cell_index[0], 0, 0, 0), s_coeff*particle_coeff);
+#else
+                amrex::Gpu::Atomic::Add(&(jArray)(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff);
+#endif
 
 
             }
@@ -1058,7 +1091,11 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
                             *sz_cell[kk]
         #endif
                             ;
-                    amrex::Gpu::Atomic::Add(&(mArray[0])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*bfield[0]*weight);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(mArray[0])(cell_index[0], 0, 0, 0), s_coeff*bfield[0]*weight);
+#else
+                amrex::Gpu::Atomic::Add(&(mArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*bfield[0]*weight);
+#endif
                 }
                 if(vdim > 1) {
 #if (GEMPIC_SPACEDIM > 1)
@@ -1072,7 +1109,8 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
 #else
                     double s_coeff = sx_cell[ii];
 #endif
-                    amrex::Gpu::Atomic::Add(&(mArray[1])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*bfield[1]*weight);
+
+                    amrex::Gpu::Atomic::Add(&(mArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*bfield[1]*weight);
 #if (GEMPIC_SPACEDIM > 1)
                 }
 #endif
@@ -1091,7 +1129,11 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
         #endif
                         ;
 #endif
-                amrex::Gpu::Atomic::Add(&(mArray[2])(cell_index[0], cell_index[1], cell_index[2], 0), s_coeff*bfield[2]*weight);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(mArray[2])(cell_index[0], 0, 0, 0), s_coeff*bfield[2]*weight);
+#else
+                amrex::Gpu::Atomic::Add(&(mArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*bfield[2]*weight);
+#endif
 
             }
         }
@@ -1163,7 +1205,11 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
                         *sz_cell[kk]
         #endif
                         ;
-                fields[0] += s_coeff*(bArray[0])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[0] += s_coeff*(bArray[0])(cell_index[0], 0, 0, 0);
+#else
+                fields[0] += s_coeff*(bArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
             }
 #if (GEMPIC_SPACEDIM > 1)
         }
@@ -1190,7 +1236,11 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
                             *sz_cell[kk]
         #endif
                             ;
-                    fields[1] += s_coeff*(bArray[1])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[1] += s_coeff*(bArray[1])(cell_index[0], 0, 0, 0);
+#else
+                fields[1] += s_coeff*(bArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                 }
 #if (GEMPIC_SPACEDIM > 1)
             }
@@ -1219,7 +1269,11 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
                             *sz_node[kk]
         #endif
                             ;
-                    fields[2] += s_coeff*(bArray[2])(cell_index[0], cell_index[1], cell_index[2], 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[2] += s_coeff*(bArray[2])(cell_index[0], 0, 0, 0);
+#else
+                fields[2] += s_coeff*(bArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                 }
 #if (GEMPIC_SPACEDIM > 1)
             }

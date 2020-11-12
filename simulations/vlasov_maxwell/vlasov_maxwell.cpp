@@ -245,7 +245,19 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+#if (GEMPIC_SPACEDIM == 1)
+    if (argc==0) {
+        main_main<1, 1, 1, 1, 1>(argc==1); // run for ctest
+    }
+    main_main<2, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 2)
+    if (argc==0) {
+        main_main<2, 1, 1, 1, 1>(argc==1); // run for ctest
+    }
     main_main<3, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>(argc==1);
+#endif
 
     amrex::Finalize();
 }

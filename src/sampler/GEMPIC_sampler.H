@@ -200,17 +200,9 @@ void init_particles_full_domain(infrastructure infra,
                         for(int i=0;i<vdim;i++){
                             gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
                         }
-                        std::array<amrex::Real,vdim> gauss_idx;
-                        switch (vdim) {
-                        case 1:
-                            gauss_idx = {0};
-                            break;
-                        case 2:
-                            gauss_idx = {0,0};
-                            break;
-                        case 3:
-                            gauss_idx = {0,0,0};
-                            break;
+                        std::array<int,vdim> gauss_idx;
+                        for (int comp = 0; comp < vdim; comp++) {
+                            gauss_idx[comp] = 0;
                         }
                         for(int i=0;i<vdim;i++){
                             for (int gg=1;gg<num_gauss;gg++){

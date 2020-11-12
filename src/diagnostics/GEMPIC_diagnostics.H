@@ -161,15 +161,16 @@ public:
                 amrex::Print(ofsfun) << " " << Bfield[step][0] << " " << Bfield[step][1] << " " << Bfield[step][2];
                 break;
             }
+            amrex::Print(ofsfun) << " " << kin[step];
             switch(vdim) {
             case 1:
-                amrex::Print(ofsfun) << mom[step][0];
+                amrex::Print(ofsfun) << " "  << mom[step][0];
                 break;
             case 2:
-                amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1];
+                amrex::Print(ofsfun) << " "  << mom[step][0] << " " << mom[step][1];
                 break;
             case 3:
-                amrex::Print(ofsfun) << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
+                amrex::Print(ofsfun) << " "  << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
                 break;
 
             }
