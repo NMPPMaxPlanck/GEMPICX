@@ -62,7 +62,7 @@ void init_particles_cellwise(infrastructure infra,
     std::normal_distribution<> norm01(0,1);
     std::uniform_real_distribution<> unif(0.0, 1.0);
 
-    for (int pp=0;pp<init.Np_cell;pp++) {
+    for (int pp=0;pp<init.Np_cell[species];pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
         position[0] = unif(gen)*infra.dx[0]; // uniform in [0, dx]
 #if (GEMPIC_SPACEDIM > 1)
@@ -118,7 +118,7 @@ void init_particles_cellwise(infrastructure infra,
 
                         //TODOrefine
                         const double result = te_eval(WF_parse);
-                        weight = result/init.Np_cell*infra.dx[0]
+                        weight = result/init.NP_cell_tot*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
@@ -191,7 +191,7 @@ void init_particles_full_domain(infrastructure infra,
 #endif
                 for(int l=lo[0]; l<=hi[0]; l++){
 
-                    for (int pp=0;pp<init.Np_cell;pp++) {
+                    for (int pp=0;pp<init.Np_cell[species];pp++) {
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
                             position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
                         }
@@ -228,7 +228,7 @@ void init_particles_full_domain(infrastructure infra,
                         *x = position[0] + x_c;
 
                         const double result = te_eval(WF_parse);
-                        weight = result/init.Np_cell*infra.dx[0]
+                        weight = result/init.NP_cell_tot*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif

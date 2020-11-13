@@ -83,7 +83,6 @@ void loop_preparation (infrastructure infra,
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     //initial E by rho
-    (*mw_yee).phi_init.setVal(0.0, 0); // TODO
     (*mw_yee).solve_poisson(infra);
 
     // initial B_field

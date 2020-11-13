@@ -42,7 +42,7 @@ void main_main (bool ctest)
     // initialize parameters
     std::string sim_name;
     std::array<int,GEMPIC_SPACEDIM> n_cell_vector;
-    int n_part_per_cell;
+    std::array<int, numspec> n_part_per_cell;
     int n_steps;
     int freq_x;
     int freq_v;
@@ -79,7 +79,7 @@ void main_main (bool ctest)
         n_cell_vector[0] = 24;
         n_cell_vector[1] = 8;
         n_cell_vector[2] = 8;
-        n_part_per_cell = 100;
+        n_part_per_cell = {100};
         n_steps = 10;
         freq_x = 11;
         freq_v = 11;
@@ -165,7 +165,7 @@ void main_main (bool ctest)
             break;
         case 1:
             time_staggered = false;
-            Nghost += 2;
+            Nghost += 3;
             break;
         default:
             break;
@@ -217,8 +217,9 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // initialize particles:
     if (restart == 0) {
-        int species = 0; // all particles are same species for now
-        init_particles_full_domain(infra, part_gr, init, species, WF_parse, &x, &y, &z);
+        for (int spec=0; spec<numspec; spec++) {
+            init_particles_full_domain(infra, part_gr, init, spec, WF_parse, &x, &y, &z);
+        }
 
         //------------------------------------------------------------------------------
         // solve:

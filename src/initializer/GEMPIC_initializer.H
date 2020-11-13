@@ -38,7 +38,8 @@ public:
     // parameters for particles:
     std::array<amrex::Real, numspec> charge;
     std::array<amrex::Real, numspec> mass;
-    int Np_cell; //number of particles per cell
+    std::array<int, numspec> Np_cell; //number of particles per cell
+    int NP_cell_tot;
 
     amrex::Real k; // for domain and weight function
     amrex::RealBox real_box;
@@ -70,7 +71,7 @@ public:
     void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
                                     std::array<amrex::Real, numspec> CH,
                                     std::array<amrex::Real, numspec> MS,
-                                    int NPC,
+                                    std::array<int, numspec> NPC,
                                     amrex::Real K,
                                     std::array<std::vector<amrex::Real>, vdim> VM,
                                     std::array<std::vector<amrex::Real>, vdim> VD,
@@ -85,7 +86,11 @@ public:
         n_steps = NST;
         charge = CH;
         mass = MS;
-        Np_cell = NPC;
+        NP_cell_tot = 0;
+        for (int spec = 0; spec < numspec; spec++) {
+            Np_cell[spec] = NPC[spec];
+            NP_cell_tot += NPC[spec];
+        }
         k = K;
         propagator = PG;
         tolerance_particles = TP;
