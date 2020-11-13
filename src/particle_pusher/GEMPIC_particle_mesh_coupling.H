@@ -975,13 +975,9 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
     amrex::Real S;
 
     // v-
-    vm[0] = p.rdata(0) + dt*chargemass/2*Ep[0];
-#if (GEMPIC_SPACEDIM > 1)
-    vm[1] = p.rdata(1) + dt*chargemass/2*Ep[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    vm[2] = p.rdata(2) + dt*chargemass/2*Ep[2];
-#endif
+    for (int vd=0;vd<vdim;vd++) {
+        vm[vd] = p.rdata(vd) + dt*chargemass/2*Ep[vd];
+    }
 
     if (vdim == 1) {
         vp[0] = vm[0];
