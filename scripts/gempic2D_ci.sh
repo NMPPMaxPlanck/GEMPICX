@@ -19,8 +19,6 @@ git clone https://github.com/AMReX-Codes/amrex.git
 
 # ---- 2D ----
 cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_2D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
-cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_3V_0.txt .
-cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_2V_0.txt .
 
 # install amrex
 rm -rf build_amrex
@@ -41,5 +39,8 @@ cmake $GEMPIC_BASE \
       -D CMAKE_FC_COMPILER=mpif95
 
 make -j 4
+
+cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_3V_0.txt simulations/vlasov_maxwell/
+cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_2V_0.txt simulations/vlasov_maxwell/
 
 ctest --verbose
