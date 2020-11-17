@@ -81,9 +81,9 @@ void main_main (bool ctest)
         n_cell_vector[2] = 8;
         n_part_per_cell = {100};
         n_steps = 10;
-        freq_x = 11;
-        freq_v = 11;
-        freq_slice = 11;
+        freq_x = 12;
+        freq_v = 12;
+        freq_slice = 12;
         is_periodic_vector[0] = 1;
         is_periodic_vector[1] = 1;
         is_periodic_vector[2] = 1;
@@ -156,7 +156,7 @@ void main_main (bool ctest)
                 VD[j].push_back(read_tmp_D[j]);
                 VW[j].push_back(read_tmp_W[j]);
             }
-        }
+        } 
 
         // Depending on which propagator is chosen, staggering in time is needed or not
         switch (propagator) {
@@ -229,6 +229,7 @@ void main_main (bool ctest)
             int comp = -1;
             int prop = -1; // 0 -> mean, 1 -> deviation, 2 -> weight
             int line_num = -1;
+
             if (myfile.is_open())
             {
                 while ( getline (myfile,line) )
@@ -240,7 +241,7 @@ void main_main (bool ctest)
                         if (line.at(0) == '#') {
                             prop = (prop+1)%3;
                         } else {
-                           comp = (comp+1)%3;
+                           comp = (comp+1)%vdim;
                            switch (prop) {
                            case 0:
                                VM_tmp[comp].push_back(stod(line));
