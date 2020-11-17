@@ -218,7 +218,47 @@ void main_main (bool ctest)
     // initialize particles:
     if (restart == 0) {
         for (int spec=0; spec<numspec; spec++) {
-            init_particles_full_domain(infra, part_gr, init, spec, WF_parse, &x, &y, &z);
+            // Reading in species information
+            std::array<std::vector<amrex::Real>, vdim> VM_tmp;
+            std::array<std::vector<amrex::Real>, vdim> VD_tmp;
+            std::array<std::vector<amrex::Real>, vdim> VW_tmp;
+
+            string line;
+            ifstream myfile ("species_data_" + to_string(vdim) + "V_" + to_string(spec) + ".txt");
+            int gaussian_num = -1;
+            int comp = -1;
+            int prop = -1; // 0 -> mean, 1 -> deviation, 2 -> weight
+            int line_num = -1;
+            if (myfile.is_open())
+            {
+                while ( getline (myfile,line) )
+                {
+                    line_num++;
+                    if (line == "# Gaussian") {
+                        gaussian_num++;
+                    } else {
+                        if (line.at(0) == '#') {
+                            prop = (prop+1)%3;
+                        } else {
+                           comp = (comp+1)%3;
+                           switch (prop) {
+                           case 0:
+                               VM_tmp[comp].push_back(stod(line));
+                               break;
+                           case 1:
+                               VD_tmp[comp].push_back(stod(line));
+                               break;
+                           case 2:
+                               VW_tmp[comp].push_back(stod(line));
+                               break;
+                           }
+                        }
+                    }
+                }
+                myfile.close();
+            }
+            else cout << "Unable to open file for species " << spec << std::endl;
+            init_particles_full_domain<vdim,numspec>(infra, part_gr, init, VM_tmp, VD_tmp, VW_tmp, spec, WF_parse, &x, &y, &z);
         }
 
         //------------------------------------------------------------------------------

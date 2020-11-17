@@ -1,0 +1,7 @@
+# Gaussian
+# velocity mean
+0.0
+# velocity deviation
+0.01414213562
+# velocity weight
+1.0

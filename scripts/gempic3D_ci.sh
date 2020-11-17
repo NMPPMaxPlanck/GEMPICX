@@ -19,6 +19,7 @@ git clone https://github.com/AMReX-Codes/amrex.git
 
 # ---- 3D ----
 cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_3D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
+cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_3V_0.txt .
 
 # install amrex
 rm -rf build_amrex

@@ -94,7 +94,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_full_domain(infra, part_gr, init, species, WF_parse, &x, &y, &z);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, init, init.Vmean, init.Vdev, init.Vweight, species, WF_parse, &x, &y, &z);
 
     //------------------------------------------------------------------------------
     // test:

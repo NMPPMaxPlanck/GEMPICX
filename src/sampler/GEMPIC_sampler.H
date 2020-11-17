@@ -144,6 +144,9 @@ template<int vdim, int numspec>
 void init_particles_full_domain(infrastructure infra,
                                 particle_groups<vdim, numspec> &ppg,
                                 initializer<vdim, numspec> init,
+                                std::array<std::vector<amrex::Real>, vdim> Vmean,
+                                std::array<std::vector<amrex::Real>, vdim> Vdev,
+                                std::array<std::vector<amrex::Real>, vdim> Vweight,
                                 int species,
                                 te_expr *WF_parse,
                                 double *x,
@@ -155,13 +158,13 @@ void init_particles_full_domain(infrastructure infra,
     std::array<amrex::Real,vdim> velocity;
     amrex::Real weight;
 
-    int num_gauss = init.Vmean[0].size();
+    int num_gauss = Vmean[0].size();
 
     // cumulative sum of vel_weights
     std::array<std::vector<amrex::Real>,vdim> vel_cum;
     for(int i=0;i<vdim;i++) {
         vel_cum[i].resize(num_gauss);
-        std::partial_sum(init.Vweight[i].begin(), init.Vweight[i].end(), vel_cum[i].begin());
+        std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
     }
 
     // (0,1)-normally distributed random number generator:
@@ -213,7 +216,7 @@ void init_particles_full_domain(infrastructure infra,
                         }
 
                         for (int cc = 0; cc < vdim; cc++) {
-                            velocity[cc] = init.Vdev[cc][gauss_idx[cc]]*norm01(gen)+init.Vmean[cc][gauss_idx[cc]];
+                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
                         }
 
 #if (GEMPIC_SPACEDIM > 2)
