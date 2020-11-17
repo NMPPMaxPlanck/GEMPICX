@@ -61,7 +61,7 @@ void main_main ()
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
-    init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,0,{-1.0},{1.0},1000,k,
+    init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,0,{-1.0},{1.0},{1000},k,
                                     VM,VD,VW,0);
     //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, propagator
 

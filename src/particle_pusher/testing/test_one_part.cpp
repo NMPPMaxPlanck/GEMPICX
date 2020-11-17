@@ -97,7 +97,7 @@ void main_main (bool ctest)
 
     //initializer
     initializer<vdim, numspec> init;
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
+    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,{n_part_per_cell},k,
                                     VM,VD,VW,tolerance_particles);
     
     // infrastructure
