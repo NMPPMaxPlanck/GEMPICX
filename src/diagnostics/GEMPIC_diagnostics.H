@@ -38,7 +38,7 @@ class diagnostics
 public:
     int n_time; // number of timesteps
     // 9 static so far!! need to fix this
-    std::array<std::array<amrex::Real,int(floor(vdim/2.5)*2+1)>,50001> Bfield;
+    std::array<std::array<amrex::Real,int(vdim/2.5)*2+1>,50001> Bfield;
     std::array<std::array<amrex::Real,vdim>,50001> Efield, mom;
     std::array<amrex::Real,50001> kin;
     std::array<amrex::Real,50001> gauss_error;
@@ -80,7 +80,7 @@ public:
             Efield[step][cc] = gempic_norm(&(*(*mw_yee).E_Array[cc]), infra, 2);
         }
 
-        for(int cc=0;cc<int(floor(vdim/2.5)*2+1);cc++){
+        for(int cc=0;cc<int(vdim/2.5)*2+1;cc++){
             Bfield[step][cc] = gempic_norm(&(*(*mw_yee).B_Array[cc]), infra, 2);
         }
 
@@ -153,7 +153,7 @@ public:
 
             }
 
-            switch (int(floor(vdim/2.5)*2+1)) {
+            switch (int(vdim/2.5)*2+1) {
             case 1:
                 amrex::Print(ofsfun) << " " << Bfield[step][0];
                 break;

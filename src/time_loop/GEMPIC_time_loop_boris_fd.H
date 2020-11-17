@@ -64,13 +64,13 @@ void time_loop_boris_fd (infrastructure infra,
 
                 std::array<amrex::Array4<amrex::Real>,vdim> jA;
                 std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bA;
+                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                     eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
                 }
-                for (int cc=0;cc < int(floor(vdim/2.5)*2+1);cc++) {
+                for (int cc=0;cc < int(vdim/2.5)*2+1;cc++) {
                     bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
                 }
 
@@ -78,15 +78,15 @@ void time_loop_boris_fd (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
 
-                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
+                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
                     std::array<amrex::Real,vdim> eres;
                     for (int comp = 0; comp < vdim; comp++) {
                         eres[comp] = field_interp[comp];
                     }
-                    std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> bres;
-                    for (int comp = 0; comp < int(floor(vdim/2.5)*2+1); comp++) {
+                    std::array<amrex::Real,int(vdim/2.5)*2+1> bres;
+                    for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
                         bres[comp] = field_interp[vdim+comp];
                     }
 
@@ -108,14 +108,14 @@ void time_loop_boris_fd (infrastructure infra,
 
                 std::array<amrex::Array4<amrex::Real>,vdim> jA;
                 std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bA;
+                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
                 for (int pp=0;pp<np;pp++){
-                    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
+                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }

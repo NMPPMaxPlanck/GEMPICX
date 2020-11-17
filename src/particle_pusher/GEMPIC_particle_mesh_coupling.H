@@ -501,13 +501,13 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                                                       std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                       std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                                      std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray)
+                                                                      std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
 {
-    std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> fields;
-    for (int comp = 0; comp < int(floor(vdim/2.5)*2+1); comp++) {
+    std::array<amrex::Real, int(vdim/2.5)*2+1> fields;
+    for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
         fields[comp] = 0.;
     }
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
@@ -563,7 +563,7 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
     }
 #endif
     // B_1
-    if (int(floor(vdim/2.5)*2+1)>1) {
+    if (int(vdim/2.5)*2+1>1) {
 #if (GEMPIC_SPACEDIM > 2)
         for (int kk = 0; kk <= degz-1; ++kk) {
 #endif
@@ -596,7 +596,7 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
     }
 
     // B_2
-    if (int(floor(vdim/2.5)*2+1)>2){
+    if (int(vdim/2.5)*2+1>2){
 #if (GEMPIC_SPACEDIM > 2)
         for (int kk = 0; kk <= degz; ++kk) {
 #endif
@@ -633,17 +633,17 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_fem_bfield(std::array
 
 
 template <typename P, int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
+std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
                                                                                          std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                                          std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                                          std::array<amrex::Array4<amrex::Real>,vdim> jArray,
                                                                                          std::array<amrex::Array4<amrex::Real>,vdim> eArray,
-                                                                                         std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray,
+                                                                                         std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                                                                          amrex::Real coefficient = 1.,
                                                                                          bool field_int = false)
 
 {
-    std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> fields = {AMREX_D_DECL(0.,0.,0.)};
+    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> fields = {AMREX_D_DECL(0.,0.,0.)};
 
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
     amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
@@ -717,7 +717,7 @@ std::array<amrex::Real, vdim+int(floor(vdim/2.5)*2+1)> gempic_deposit_J_and_inte
                 }
                 if (field_int) {
                     // deposit in B
-                    for (int cc=0;cc<int(floor(vdim/2.5)*2+1);cc++) {
+                    for (int cc=0;cc<int(vdim/2.5)*2+1;cc++) {
                         if(!(
             #if (GEMPIC_SPACEDIM > 2)
                                     ((kk==degz) & (cc%3!=2))|
@@ -840,7 +840,7 @@ template <typename P, int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
-                                                              std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray,
+                                                              std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                                               Infra::infrastructure infra){
     std::array<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
@@ -875,7 +875,7 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                 xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
         }
         // evaluate B at xMean
-        std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(xMean,
+        std::array<amrex::Real,int(vdim/2.5)*2+1> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(xMean,
                                                                                                        infra.dxi,
                                                                                                        infra.plo,
                                                                                                        bArray);
@@ -910,7 +910,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
                                                            amrex::Real dt,
                                                            amrex::Real chargemass, //charge/mass
                                                            std::array<amrex::Real,vdim> Ep,
-                                                           std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> Bp,
+                                                           std::array<amrex::Real,int(vdim/2.5)*2+1> Bp,
                                                            Infra::infrastructure infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
@@ -965,7 +965,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
                                                                  amrex::Real dt,
                                                                  amrex::Real chargemass, //charge/mass
                                                                  std::array<amrex::Real,vdim> Ep,
-                                                                 std::array<amrex::Real,int(floor(vdim/2.5)*2+1)> Bp,
+                                                                 std::array<amrex::Real,int(vdim/2.5)*2+1> Bp,
                                                                  Infra::infrastructure infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
@@ -1028,7 +1028,7 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
                                    amrex::Real mu,
                                    std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                    std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                   std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bArray,
+                                   std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                    std::array<amrex::Array4<amrex::Real>,vdim> mArray)
 
 {
@@ -1058,10 +1058,10 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
 
     // 3. Provide the magnetic field and other parts of the weighting factor
     // Evaluate the magnetic field
-    std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> bfield = Gempic::Particles::evaluate_fem_bfield(position, dxi, plo, bArray);
+    std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = Gempic::Particles::evaluate_fem_bfield(position, dxi, plo, bArray);
     // Compute modulus of magnetic field
     amrex::Real bfield_mod = 0.0;
-    for (int d =0;d<int(floor(vdim/2.5)*2+1);++d )
+    for (int d =0;d<int(vdim/2.5)*2+1;++d )
         bfield_mod += bfield[d]*bfield[d];
     bfield_mod = std::sqrt( bfield_mod );
 
@@ -1147,13 +1147,13 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_grad_mod_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                                                            std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                                           std::array<amrex::Array4<amrex::Real>, int(floor(vdim/2.5)*2+1)> bArray)
+                                                                           std::array<amrex::Array4<amrex::Real>, int(vdim/2.5)*2+1> bArray)
 {
-    std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> fields;
-    switch (int(floor(vdim/2.5)*2+1)) {
+    std::array<amrex::Real, int(vdim/2.5)*2+1> fields;
+    switch (int(vdim/2.5)*2+1) {
     case 1:
         fields = {0.};
         break;
@@ -1214,7 +1214,7 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
     }
 #endif
     // B_1
-    if (int(floor(vdim/2.5)*2+1)>1) {
+    if (int(vdim/2.5)*2+1>1) {
 #if (GEMPIC_SPACEDIM > 2)
         for (int kk = 0; kk <= degz-1; ++kk) {
 #endif
@@ -1247,7 +1247,7 @@ std::array<amrex::Real, int(floor(vdim/2.5)*2+1)> evaluate_grad_mod_bfield(std::
     }
 
     // B_2
-    if (int(floor(vdim/2.5)*2+1)>2) {
+    if (int(vdim/2.5)*2+1>2) {
 #if (GEMPIC_SPACEDIM > 2)
         for (int kk = 0; kk <= degz; ++kk) {
 #endif

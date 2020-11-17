@@ -49,11 +49,11 @@ public:
     amrex::Real dt;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > J_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, int(floor(vdim/2.5)*2+1) > B_Array;
+    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_sol_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, int(floor(vdim/2.5)*2+1) > B_sol_Array;
+    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_sol_Array;
     std::array<std::unique_ptr<amrex::IndexType>, vdim> E_Index;
-    std::array<std::unique_ptr<amrex::IndexType>, int(floor(vdim/2.5)*2+1) > B_Index;
+    std::array<std::unique_ptr<amrex::IndexType>, int(vdim/2.5)*2+1 > B_Index;
     std::array<std::unique_ptr<amrex::iMultiFab>, vdim> E_Masks;
     std::array<std::unique_ptr<amrex::iMultiFab>, vdim> B_Masks;
     std::unique_ptr<amrex::iMultiFab> nodal_Mask;
@@ -96,10 +96,10 @@ public:
         }
 
         B_Index[0].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(1,0,0)}));
-if (int(floor(vdim/2.5)*2+1) > 1) {
+if (int(vdim/2.5)*2+1 > 1) {
         B_Index[1].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,1,0)}));
 }
-if (int(floor(vdim/2.5)*2+1) > 2) {
+if (int(vdim/2.5)*2+1 > 2) {
         B_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 }
 
@@ -115,7 +115,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
             E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
             J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
         }
-        for (int i = 0; i<int(floor(vdim/2.5)*2+1); i++) {
+        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
             B_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
             B_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
         }
@@ -166,7 +166,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
             }
         }
 
-        for (int comp=0; comp<int(floor(vdim/2.5)*2+1); comp++) {
+        for (int comp=0; comp<int(vdim/2.5)*2+1; comp++) {
             B_Masks[comp].reset(new amrex::iMultiFab (convert(ifr.grid, *B_Index[comp]),ifr.distriMap,1,Nghost));
             (*(B_Masks[comp])).setVal(0.0);
             (*(B_Masks[comp])).FillBoundary(ifr.geom.periodicity());
@@ -228,7 +228,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
     /**
      * Initialize E and B field for time t=0 with a given array of functions.
      */
-    void init_E_B (double (*fields[vdim+int(floor(vdim/2.5)*2+1)]) (std::array<double,GEMPIC_SPACEDIM> x, double t),infrastructure ifr){
+    void init_E_B (double (*fields[vdim+int(vdim/2.5)*2+1]) (std::array<double,GEMPIC_SPACEDIM> x, double t),infrastructure ifr){
 
         std::array<double,GEMPIC_SPACEDIM> x;
         double half_dt = dt/2.0; // for leap frog initialization
@@ -266,7 +266,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
         }
 
         // B_field
-        for (int i = 0; i<int(floor(vdim/2.5)*2+1); i++) {
+        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
             for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ){
 
                 const amrex::Box& bx = mfi.validbox();
@@ -357,7 +357,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
 
 
 
-        for (int i = 0; i<int(floor(vdim/2.5)*2+1); i++) {
+        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
             for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
                 amrex::IntVect lo = {bx.smallEnd()};
@@ -400,7 +400,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
         for(int cc=0;cc<vdim;cc++){
             (*J_Array[cc]).FillBoundary(ifr.geom.periodicity());
         }
-        for(int cc=0;cc<int(floor(vdim/2.5)*2+1);cc++){
+        for(int cc=0;cc<int(vdim/2.5)*2+1;cc++){
             (*B_Array[cc]).FillBoundary(ifr.geom.periodicity());
         }
         rho.FillBoundary(ifr.geom.periodicity());
@@ -418,7 +418,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
      */
     void advance_E (infrastructure ifr, amrex::Real dt_step){
 
-        int bdim = int(floor(vdim/2.5)*2+1);
+        int bdim = int(vdim/2.5)*2+1;
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
 
@@ -643,7 +643,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
      */
     void advance_B (infrastructure ifr, amrex::Real dt_step){
 
-        int bdim = int(floor(vdim/2.5)*2+1);
+        int bdim = int(vdim/2.5)*2+1;
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
 
@@ -1049,10 +1049,10 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
     /**
      * Compute norm of errors of E and B field from function with exact solution
      */
-    std::array<amrex::Real,vdim+int(floor(vdim/2.5)*2+1)> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
+    std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
                                                           bool bool_B,
                                                           infrastructure ifr){
-        std::array<amrex::Real,vdim+int(floor(vdim/2.5)*2+1)> E_B_error;
+        std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
         exactSolution(fields, bool_B, ifr);
 
@@ -1062,7 +1062,7 @@ if (int(floor(vdim/2.5)*2+1) > 2) {
             E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
         }
         if (bool_B) {
-            for (int i=0; i<int(floor(vdim/2.5)*2+1); i++){
+            for (int i=0; i<int(vdim/2.5)*2+1; i++){
                 (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
                 E_B_error[i+vdim] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
             }
@@ -1117,7 +1117,7 @@ private:
 
         if (bool_B){
             // B-field
-            for (int i=0; i<int(floor(vdim/2.5)*2+1); i++) {
+            for (int i=0; i<int(vdim/2.5)*2+1; i++) {
                 for (amrex::MFIter mfi(*B_sol_Array[i]); mfi.isValid(); ++mfi ) {
                     const amrex::Box& bx = mfi.validbox();
 
