@@ -72,13 +72,13 @@ void time_loop_hs_fem (infrastructure infra,
 
                 std::array<amrex::Array4<amrex::Real>,vdim> jA;
                 std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(floor(vdim/2.5)*2+1)> bA;
+                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                     eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
                 }
-                for (int cc=0;cc < int(floor(vdim/2.5)*2+1);cc++) {
+                for (int cc=0;cc < int(vdim/2.5)*2+1;cc++) {
                     bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
                 }
 

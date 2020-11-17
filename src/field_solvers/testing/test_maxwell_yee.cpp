@@ -170,7 +170,7 @@ double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t)
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  
-    int bdim = int(floor(vdim/2.5)*2+1);
+    int bdim = int(vdim/2.5)*2+1;
     std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
 
     // make pointer-array for functions
@@ -205,7 +205,7 @@ if (bdim > 2) {
     }
 
     //------------------------------------------------------------------------------
-    array<Real,vdim+int(floor(vdim/2.5)*2+1)> E_B_error; //array for storing errors
+    array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
