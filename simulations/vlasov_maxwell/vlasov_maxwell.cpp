@@ -16,6 +16,7 @@
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
+#include <GEMPIC_time_loop_hsall_fem.H>
 
 using namespace std;
 using namespace amrex;
@@ -167,6 +168,10 @@ void main_main (bool ctest)
             time_staggered = false;
             Nghost += 3;
             break;
+        case 2:
+            time_staggered = false;
+            Nghost += 3;
+            break;
         default:
             break;
         }
@@ -276,6 +281,9 @@ void main_main (bool ctest)
         break;
     case 1:
         time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        break;
+    case 2:
+        time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     default:
         break;
