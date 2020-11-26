@@ -217,6 +217,7 @@ void init_particles_full_domain(infrastructure infra,
 
                         for (int cc = 0; cc < vdim; cc++) {
                             velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
+                            //velocity[cc] = 2.0;
                         }
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -231,7 +232,7 @@ void init_particles_full_domain(infrastructure infra,
                         *x = position[0] + x_c;
 
                         const double result = te_eval(WF_parse);
-                        weight = result/init.NP_cell_tot*infra.dx[0]
+                        weight = result/init.Np_cell[species]*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
