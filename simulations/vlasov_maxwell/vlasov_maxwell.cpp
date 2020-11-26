@@ -221,7 +221,7 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // initialize particles:
-    if (restart == 0) {
+    if ((restart == 0) & !ctest) {
         for (int spec=0; spec<numspec; spec++) {
             // Reading in species information
             std::array<std::vector<amrex::Real>, vdim> VM_tmp;
