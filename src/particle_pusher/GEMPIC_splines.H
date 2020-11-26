@@ -59,6 +59,35 @@ public:
         return(s);
     }
 
+    template<int degree>
+    std::vector<amrex::Real> spline_eval_prim_vec (amrex::Real x)  {
+        std::vector<amrex::Real> s;
+        if ( degree == 0 )
+            s = {x};
+
+        return(s);
+    }
+
+    template<int degree>
+    std::vector<amrex::Real> spline_eval_vec_back (amrex::Real x)  {
+        std::vector<amrex::Real> s;
+        switch (degree) {
+        case 0:
+            s = {1.};
+            break;
+        case 1:
+            s = {1.-x, x};
+            break;
+        case 2:
+            s = { 1./2.-x+pow(x,2)/2, 1./2.+x-pow(x,2), pow(x,2)/2.};
+            break;
+        case 3:
+            s = {1./6.*pow((1.-x),3), 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3)), 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3)), 1./6.*pow(x,3)};
+            break;
+        }
+        return(s);
+    }
+
     amrex::Real shifted_x (amrex::Real x, int degree, bool cent_eval) {
         if ((degree%2==0) ^ (cent_eval)) { //even XOR centered
             if (x>1./2.) {
