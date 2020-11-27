@@ -103,7 +103,7 @@ void time_loop_hsall_fem (infrastructure infra,
                     std::array<amrex::Real, 2> bfields;
                     // push x1
                     amrex::Real x1_new = pos[0] +  (*mw_yee).dt*vel[0];
-                    accumulate_j_update_v_x1_fem_integral<vdim, degx, degy, degz>( pos,
+                    /*accumulate_j_update_v_x1_fem_integral<vdim, degx, degy, degz>( pos,
                                                         x1_new,
                                                         weight,
                                                         infra.geom.CellSize(),
@@ -111,7 +111,16 @@ void time_loop_hsall_fem (infrastructure infra,
                                                         infra.plo,
                                                         bA,
                                                         jA,
-                                                        bfields);
+                                                        bfields);*/
+                    accumulate_j_update_v_fem_integral<vdim, degx, degy, degz, 0>( pos,
+                                                      x1_new,
+                                                      weight,
+                                                      infra.geom.CellSize(),
+                                                      infra.dxi,
+                                                      infra.plo,
+                                                      bA,
+                                                      jA,
+                                                      bfields);
 
                     // Push v2 and v3
                     vel[1] = vel[1] - chargemass*bfields[0];
@@ -122,7 +131,16 @@ void time_loop_hsall_fem (infrastructure infra,
                       {
                       // push x2
                       amrex::Real x2_new = pos[1] +  (*mw_yee).dt*vel[1];
-                      accumulate_j_update_v_x2_fem_integral<vdim, degx, degy, degz>( pos,
+                      /*accumulate_j_update_v_x2_fem_integral<vdim, degx, degy, degz>( pos,
+                                                        x2_new,
+                                                        weight,
+                                                        infra.geom.CellSize(),
+                                                        infra.dxi,
+                                                        infra.plo,
+                                                        bA,
+                                                        jA,
+                                                        bfields);*/
+                      accumulate_j_update_v_fem_integral<vdim, degy, degz, degx, 1>( pos,
                                                         x2_new,
                                                         weight,
                                                         infra.geom.CellSize(),
@@ -133,14 +151,14 @@ void time_loop_hsall_fem (infrastructure infra,
                                                         bfields);
 
                       // Push v2 and v3
-                      vel[0] = vel[0] + chargemass*bfields[0];
-                      vel[2] = vel[2] - chargemass*bfields[1];
+                      vel[0] = vel[0] + chargemass*bfields[1];
+                      vel[2] = vel[2] - chargemass*bfields[0];
                       pos[1] = x2_new;
 }
                     if(vdim > 2 ) {
                     // push x3
                     amrex::Real x3_new = pos[2] +  (*mw_yee).dt*vel[2];
-                    accumulate_j_update_v_x3_fem_integral<vdim, degx, degy, degz>( pos,
+                    /*accumulate_j_update_v_x3_fem_integral<vdim, degx, degy, degz>( pos,
                                                         x3_new,
                                                         weight,
                                                         infra.geom.CellSize(),
@@ -148,7 +166,16 @@ void time_loop_hsall_fem (infrastructure infra,
                                                         infra.plo,
                                                         bA,
                                                         jA,
-                                                        bfields);
+                                                        bfields);*/
+                    accumulate_j_update_v_fem_integral<vdim, degz, degx, degy, 2>( pos,
+                                                      x3_new,
+                                                      weight,
+                                                      infra.geom.CellSize(),
+                                                      infra.dxi,
+                                                      infra.plo,
+                                                      bA,
+                                                      jA,
+                                                      bfields);
 
                     // Push v2 and v3
                     vel[0] = vel[0] - chargemass*bfields[0];

@@ -405,11 +405,13 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
 }
 
 /*!
-     *  Accumulation of the current for a FEM solver with integral over time (line integral)
-     *  Currently this is implemented for degree one with two quadrature points in the line
-     * integral for each box
+     *  Accumulation of the integrated current and integrated b field for v update along dimension pdim.
+     *  This routine is for the zigzagging Hamiltonian splitting scheme.
+     *  Note this is currently only implemented for 3d3v.
+     *
      */
-/*template <int vdim, int degp, int degp1, int degp2, int pdim>
+
+template <int vdim, int degp, int degp1, int degp2, int pdim>
 void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_old,
                                amrex::Real position_new,
                                //std::array<amrex::Real, vdim> velocity,
@@ -487,77 +489,42 @@ void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> 
       }
 
 
-#if (GEMPIC_SPACEDIM > 2 )
-    for (int kk = 0; kk <=degp1; ++kk) {
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-        for (int jj = 0; jj <= degp2; ++jj) {
-#endif
-            for (int ii = 0; ii <= local_size; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box_start+ii, box[1]+jj, box[2]+kk)};
+    for (int kk = 0; kk <=degp2; ++kk)
+      {
+        for (int jj = 0; jj <= degp1; ++jj)
+          {
+            for (int ii = 0; ii <= local_size; ++ii)
+              {
+                std::array<int,GEMPIC_SPACEDIM> cell_index;
+                if ( pdim == 0 )
+                  cell_index = {AMREX_D_DECL(box_start+ii, box[1]+jj, box[2]+kk)};
+                else if (pdim == 1 )
+                  cell_index = {AMREX_D_DECL( box[0]+kk, box_start+ii, box[2]+jj)};
+                else if (pdim == 2)
+                  cell_index = {AMREX_D_DECL( box[0]+jj, box[1]+kk, box_start+ii)};
                 double s_coeff = primitive[ii]
-    #if(GEMPIC_SPACEDIM > 1)
                         *sy_node[jj]
-    #endif
-    #if(GEMPIC_SPACEDIM > 2)
-                        *sz_node[kk]
-    #endif
-                    ;
-    #if (GEMPIC_SPACEDIM == 1)
-                    amrex::Gpu::Atomic::Add(&(jArray[0])(cell_index[0], 0, 0 , 0), s_coeff*charge);
-    #else
-                    amrex::Gpu::Atomic::Add(&(jArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*charge);
-    #endif
+                        *sz_node[kk];
+                    amrex::Gpu::Atomic::Add(&(jArray[pdim])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*charge);
 
-#if(GEMPIC_SPACEDIM > 1)
-    if ( jj < degy ){
-#endif
-        double s_coeff = primitive[ii]
-#if(GEMPIC_SPACEDIM > 1)
-                *sy_cell[jj]
-#endif
-#if(GEMPIC_SPACEDIM > 2)
-                *sz_node[kk]
-#endif
-            ;
-#if (GEMPIC_SPACEDIM == 1)
-            fields[0] += s_coeff*(bArray[2])(cell_index[0], 0, 0, 0);
-#else
-            fields[0] += s_coeff*(bArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-            }
-#endif
-#if(GEMPIC_SPACEDIM > 2)
-    if ( kk < degz ){
-#endif
-        double s_coeff = primitive[ii]
-#if(GEMPIC_SPACEDIM > 1)
-                *sy_node[jj]
-#endif
-#if(GEMPIC_SPACEDIM > 2)
-                *sz_cell[kk]
-#endif
-            ;
-#if (GEMPIC_SPACEDIM == 1)
-            fields[1] += s_coeff*(bArray[1])(cell_index[0], 0, 0, 0);
-#else
-            fields[1] += s_coeff*(bArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
-#endif
+                    if ( jj < degp1 )
+                      {
+                        double s_coeff = primitive[ii]
+                              *sy_cell[jj]
+                              *sz_node[kk];
 
-#if(GEMPIC_SPACEDIM > 2)
-            }
-#endif
-      }
-#if (GEMPIC_SPACEDIM > 1 )
-      }
-#endif
-#if (GEMPIC_SPACEDIM > 2 )
-      }
-#endif
-
-
-}*/
+                          fields[0] += s_coeff*(bArray[pdim2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+                          }
+                  if ( kk < degp2 ){
+                      double s_coeff = primitive[ii]
+                              *sy_node[jj]
+                              *sz_cell[kk];
+                          fields[1] += s_coeff*(bArray[pdim1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+                          }
+                    }
+                    }
+                    }
+}
 
 
 /*!
@@ -845,9 +812,9 @@ void accumulate_j_update_v_x2_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
 #endif
             ;
 #if (GEMPIC_SPACEDIM == 1)
-            fields[0] += s_coeff*(bArray[2])(cell_index[0], 0, 0, 0);
+            fields[1] += s_coeff*(bArray[2])(cell_index[0], 0, 0, 0);
 #else
-            fields[0] += s_coeff*(bArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+            fields[1] += s_coeff*(bArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
 #endif
 #if (GEMPIC_SPACEDIM > 1)
             }
@@ -864,9 +831,9 @@ void accumulate_j_update_v_x2_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
 #endif
             ;
 #if (GEMPIC_SPACEDIM == 1)
-            fields[1] += s_coeff*(bArray[0])(cell_index[0], 0, 0, 0);
+            fields[0] += s_coeff*(bArray[0])(cell_index[0], 0, 0, 0);
 #else
-            fields[1] += s_coeff*(bArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+            fields[0] += s_coeff*(bArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
 #endif
 
 #if(GEMPIC_SPACEDIM > 2)
