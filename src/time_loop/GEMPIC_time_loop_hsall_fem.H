@@ -46,11 +46,11 @@ void time_loop_hsall_fem (infrastructure infra,
         (*mw_yee).advance_time();
 
         // Operator H_B for dt/2
-    //    (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+        (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
-     //   (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+        (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
@@ -92,17 +92,18 @@ void time_loop_hsall_fem (infrastructure infra,
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
-                    amrex::Real weight = -charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
-                    // push x1
+                    amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
+
                     std::array<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                       pos[d]= particles[pp].pos(d);
                     std::array<amrex::Real,vdim> vel;
                     for (unsigned int d=0;d<vdim;++d)
                       vel[d] = particles[pp].rdata(d);
-                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*vel[0];
                     std::array<amrex::Real, 2> bfields;
-                    accumulate_j_update_v_fem_integral<vdim, degx, degy, degz, 1>( pos,
+                    // push x1
+                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*vel[0];
+                    accumulate_j_update_v_x1_fem_integral<vdim, degx, degy, degz>( pos,
                                                         x1_new,
                                                         weight,
                                                         infra.geom.CellSize(),
@@ -113,10 +114,47 @@ void time_loop_hsall_fem (infrastructure infra,
                                                         bfields);
 
                     // Push v2 and v3
-                    //vel[1] = vel[1] - chargemass*bfields[0];
-                    //vel[2] = vel[2] + chargemass*bfields[1];
+                    vel[1] = vel[1] - chargemass*bfields[0];
+                    vel[2] = vel[2] + chargemass*bfields[1];
                     pos[0] = x1_new;
 
+                    if ( vdim > 1 )
+                      {
+                      // push x2
+                      amrex::Real x2_new = pos[1] +  (*mw_yee).dt*vel[1];
+                      accumulate_j_update_v_x2_fem_integral<vdim, degx, degy, degz>( pos,
+                                                        x2_new,
+                                                        weight,
+                                                        infra.geom.CellSize(),
+                                                        infra.dxi,
+                                                        infra.plo,
+                                                        bA,
+                                                        jA,
+                                                        bfields);
+
+                      // Push v2 and v3
+                      vel[0] = vel[0] + chargemass*bfields[0];
+                      vel[2] = vel[2] - chargemass*bfields[1];
+                      pos[1] = x2_new;
+}
+                    if(vdim > 2 ) {
+                    // push x3
+                    amrex::Real x3_new = pos[2] +  (*mw_yee).dt*vel[2];
+                    accumulate_j_update_v_x3_fem_integral<vdim, degx, degy, degz>( pos,
+                                                        x3_new,
+                                                        weight,
+                                                        infra.geom.CellSize(),
+                                                        infra.dxi,
+                                                        infra.plo,
+                                                        bA,
+                                                        jA,
+                                                        bfields);
+
+                    // Push v2 and v3
+                    vel[0] = vel[0] - chargemass*bfields[0];
+                    vel[1] = vel[1] + chargemass*bfields[1];
+                    pos[2] = x3_new;
+}
                     std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
@@ -131,9 +169,14 @@ void time_loop_hsall_fem (infrastructure infra,
         for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
+        /*amrex::Vector<std::string> varnames = { "J_x"};
+        amrex::Real timeo = t_step*(*mw_yee).dt;
+        WriteSingleLevelPlotfile("current", *(*mw_yee).J_Array[0], varnames,
+        infra.geom, timeo, 0);
+        abort();*/
 
         // advance E from j (field part of H_p)
-        (*mw_yee).advance_E_from_J(infra, (*mw_yee).dt);
+        (*mw_yee).advance_E_from_J(infra, 1.0);
 
         // Second particle loop for particle part from H_E
         for (int spec=0;spec<numspec;spec++) {
@@ -166,10 +209,10 @@ void time_loop_hsall_fem (infrastructure infra,
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
-      //  (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+        (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
 
         // Operator H_B for dt/2
-      //  (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+        (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
 
 
         // save norms for diagnostics

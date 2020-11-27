@@ -134,6 +134,12 @@ void time_loop_hs_fem (infrastructure infra,
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
+        /*amrex::Vector<std::string> varnames = { "J_x"};
+        amrex::Real timeo = t_step*(*mw_yee).dt;
+        WriteSingleLevelPlotfile("currenths", *(*mw_yee).J_Array[0], varnames,
+        infra.geom, timeo, 0);
+        abort();*/
+
         // advance E from j (field part of H_p)
         (*mw_yee).advance_E_from_J(infra, (*mw_yee).dt);
 
