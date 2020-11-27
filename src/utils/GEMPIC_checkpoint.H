@@ -35,11 +35,12 @@ Gempic_GotoNextLine (std::istream& is)
     is.ignore(bl_ignore_max, '\n');
 }
 
+template<int vdim>
 void
-Gempic_WriteCheckpointFile_Field (maxwell_yee *mw_yee, infrastructure *infra,
-                                   const std::string& dirname, int field, const int step,
-                                   amrex::IndexType IndexT,
-                                   int header_precision)
+Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, infrastructure *infra,
+                                  const std::string& dirname, int field, const int step,
+                                  amrex::IndexType IndexT,
+                                  int header_precision)
 {
     // dirnamestep            write a checkpoint file with this root directory
     // dirnamestep/Header     this contains information you need to save (e.g., finest_level, t_new, etc.) and also
@@ -117,8 +118,9 @@ Gempic_WriteCheckpointFile_Field (maxwell_yee *mw_yee, infrastructure *infra,
 
 }
 
+template<int vdim, int numspec>
 void
-Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infrastructure *infra,
+Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra,
                             const std::string& dirname, const int step,
                             int header_precision, bool particles = true)
 {
@@ -140,17 +142,17 @@ Gempic_WriteCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infra
     Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]), header_precision);
 
     if (particles) {
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Checkpoint("test_dir", "electrons", true, {"vx", "vy", "vz", "weight"}, {});
         }
     }
 
 }
 
-
+template<int vdim>
 void
-Gempic_ReadCheckpointFile_Field (maxwell_yee *mw_yee,
-                           const std::string& dirname, int field, const int step)
+Gempic_ReadCheckpointFile_Field (maxwell_yee<vdim> *mw_yee,
+                                 const std::string& dirname, int field, const int step)
 {
 
     std::array<std::string, 9> fieldnames = {"Jx", "Jy", "Jz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
@@ -217,8 +219,9 @@ Gempic_ReadCheckpointFile_Field (maxwell_yee *mw_yee,
 
 }
 
+template<int vdim, int numspec>
 void
-Gempic_ReadCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
+Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
     amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
 
     // J
@@ -238,13 +241,13 @@ Gempic_ReadCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infras
 
     for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("Ex_before_2") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-      }
+    }
 
     (*mw_yee).FillBD(*infra);
 
     for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("Ex_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-      }
+    }
 
     for ( amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         const amrex::Box& bx = mfi.validbox();
@@ -258,19 +261,19 @@ Gempic_ReadCheckpointFile (maxwell_yee *mw_yee, particle_groups *part_gr, infras
 
     }
 
-          for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-              amrex::AllPrintToFile("Ex_ghost_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-            }
+    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("Ex_ghost_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
+    }
 
     (*(*mw_yee).E_Array[0]).FillBoundary(infra->geom.periodicity());
 
     for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("Ex_ghost_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-      }
+    }
 
     // Particles
     if (particles) {
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Restart ("test_dir", "electrons", true);
         }
     }

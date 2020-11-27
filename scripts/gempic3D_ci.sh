@@ -16,10 +16,15 @@ cd $BUILD_DIR
 
 # now download amrex
 git clone https://github.com/AMReX-Codes/amrex.git
+
+# ---- 3D ----
+cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_3D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
+
 # install amrex
+rm -rf build_amrex
 mkdir build_amrex
 cd build_amrex
-cmake -DDIM=3 -D ENABLE_PARTICLES=ON $BUILD_DIR/amrex
+cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $BUILD_DIR/amrex
 make install
 cd ..
 
@@ -34,5 +39,7 @@ cmake $GEMPIC_BASE \
       -D CMAKE_FC_COMPILER=mpif95
 
 make -j 4
+
+cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_3V_0.txt simulations/vlasov_maxwell/
 
 ctest --verbose

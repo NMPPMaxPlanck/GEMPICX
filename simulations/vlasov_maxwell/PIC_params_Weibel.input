@@ -1,5 +1,5 @@
 # General setting
-sim_name = "Landau"
+sim_name = "Weibel"
 
 # Grid parameters
 n_cell_vector = 24 8 8
@@ -14,33 +14,33 @@ num_gaussians = 1
 
 # Gaussian parameters
 velocity_mean_0 = 0.0 0.0 0.0
-velocity_deviation_0 = 1.0 1.0 1.0 
+velocity_deviation_0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
 velocity_weight_0 = 1.0 1.0 1.0
 
 # wave vector
-k = 0.5 # 1.25 for Weibel, 0.5 for Landau
+k = 1.25 # 1.25 for Weibel, 0.5 for Landau
 
 # Simulation parameters
-n_steps = 2500
+n_steps = 50000
 dt = 0.02
 freq_x = 100001 
 freq_v = 100001 
 freq_slice = 100001 
 
 # Function parameters
-WF = "1.0 + 0.5 * cos(kvar * x)"
+WF = "1.0 + 0.0 * cos(kvar * x)"
 Bx = "0.0"
 By = "0.0"
-Bz = "0.0"
+Bz = "1e-3 * cos(kvar * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
-propagator = 0
+propagator = 1
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
 tolerance_particles = 1.e-10
 
 # Restart parameters
 restart = 0
-checkpoint_file = "Checkpoint/Weibel_2"
-curr_step = 100
+checkpoint_file = "Checkpoint/Test_Weibel_2_"
+curr_step = 4

@@ -24,34 +24,35 @@ using namespace Init;
 using namespace Particles;
 using namespace Sampling;
 
+template<int vdim, int numspec>
 void main_main ()
 {
     //------------------------------------------------------------------------------
     //build objects:
 
     //initializer
-    initializer init;
+    initializer<vdim, numspec> init;
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     amrex::IntVect n_cell(AMREX_D_DECL(32,32,32));
     int max_grid_size = 2;
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
     VM[0].push_back(0.0);
     VD[0].push_back(1.0);
     VW[0].push_back(1.0);
-#if (GEMPIC_VDIM > 1)
-    VM[1].push_back(0.0);
-    VD[1].push_back(1.0);
-    VW[1].push_back(1.0);
-#endif
-#if (GEMPIC_VDIM > 2)
-    VM[2].push_back(0.0);
-    VD[2].push_back(1.0);
-    VW[2].push_back(1.0);
-#endif
+    if (vdim > 1) {
+        VM[1].push_back(0.0);
+        VD[1].push_back(1.0);
+        VW[1].push_back(1.0);
+    }
+    if (vdim > 2) {
+        VM[2].push_back(0.0);
+        VD[2].push_back(1.0);
+        VW[2].push_back(1.0);
+    }
 
     // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
     // multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
@@ -64,13 +65,14 @@ void main_main ()
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
 
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},1,1.25,VM,VD,VW,0);
+    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},{1},1.25,VM,VD,VW,0);
 
     // infrastructure
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvar * x)";
@@ -87,7 +89,7 @@ void main_main ()
     mw_yee.initE(infra, Ex_parse, Ey_parse, Ez_parse, &x, &y, &z);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -99,21 +101,21 @@ void main_main ()
 
     // compute mass, momentum and kinetic energy
     auto mass = amrex::ReduceSum( *(part_gr).mypc[spec],
-                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_VDIM+1,0>& p) -> amrex::Real
+                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
     {
-        auto m  = p.rdata(GEMPIC_VDIM);
+        auto m  = p.rdata(vdim);
         return (m);
     });
     amrex::ParallelDescriptor::ReduceRealSum
             (mass, amrex::ParallelDescriptor::IOProcessorNumber());
 
     // momentum
-    std::array<amrex::Real,GEMPIC_VDIM> momentum;
-    for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+    std::array<amrex::Real,vdim> momentum;
+    for (int cmp=0;cmp<vdim;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
-                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_VDIM+1,0>& p) -> amrex::Real
+                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
         {
-            auto m  = p.rdata(GEMPIC_VDIM);
+            auto m  = p.rdata(vdim);
             auto vel = p.rdata(cmp);
             return (m*vel);
         });
@@ -125,12 +127,12 @@ void main_main ()
     }
 
     // kinetic energy
-    std::array<amrex::Real,GEMPIC_VDIM> kinetic_energy;
-    for (int cmp=0;cmp<GEMPIC_VDIM;cmp++) {
+    std::array<amrex::Real,vdim> kinetic_energy;
+    for (int cmp=0;cmp<vdim;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
-                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<GEMPIC_VDIM+1,0>& p) -> amrex::Real
+                                         [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
         {
-            auto m  = p.rdata(GEMPIC_VDIM);
+            auto m  = p.rdata(vdim);
             auto vel = p.rdata(cmp);
             return (m*vel*vel);
         });
@@ -144,23 +146,33 @@ void main_main ()
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "mass: " << mass << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "momentum: " << momentum[0]
-                                                   #if (GEMPIC_VDIM > 1)
-                                                            << " " << momentum[1]
-                                                   #endif
-                                                   #if (GEMPIC_VDIM > 2)
-                                                            << " " << momentum[2]
-                                                   #endif
-                                                            << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: " << kinetic_energy[0]
-                                                   #if (GEMPIC_VDIM > 1)
-                                                            << " " << kinetic_energy[1]
-                                                   #endif
-                                                   #if (GEMPIC_VDIM > 2)
-                                                            << " " << kinetic_energy[2]
-                                                   #endif
-                                                            << std::endl;
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_particle_groups.output");
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: " ;
+    switch (vdim) {
+    case 1:
+        AllPrintToFile("test_output_pre_rename.output") << momentum[0] << std::endl;
+        break;
+    case 2:
+        AllPrintToFile("test_output_pre_rename.output") << momentum[0] << " " << momentum[1] << std::endl;
+        break;
+    case 3:
+        AllPrintToFile("test_output_pre_rename.output") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
+        break;
+
+    }
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: " ;
+    switch (vdim) {
+    case 1:
+        AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << std::endl;
+        break;
+    case 2:
+        AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
+        break;
+    case 3:
+        AllPrintToFile("test_output_pre_rename.output") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
+        break;
+
+    }
+
 
 }
 
@@ -168,8 +180,82 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
+#if (GEMPIC_SPACEDIM == 1)
+    main_main<1, 1>();
+    main_main<2, 1>();
 
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 6518.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 642.819" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 63.3867" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 6518.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 642.819 5050.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 63.3867 3913.57" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 32768" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: 584.2 -12972.8 -1805.41" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 10.4153 5135.91 99.4717" << std::endl;
+
+#elif (GEMPIC_SPACEDIM == 2)
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 1296.91" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -392.235" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 118.627" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 1296.91" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -392.235 -494.437" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 118.627 188.5" << std::endl;
+
+    main_main<2, 1>();
+    main_main<3, 1>();
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 32768" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: 584.2 -12972.8 -1805.41" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 10.4153 5135.91 99.4717" << std::endl;
+
+#elif (GEMPIC_SPACEDIM == 3)
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 1296.91" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -392.235" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 118.627" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 1296.91" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -392.235 -494.437" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 118.627 188.5" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 6518.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 642.819" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 63.3867" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "mass: 6518.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "momentum: -9092.65 642.819 5050.99" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "kinetic energy: 12682.4 63.3867 3913.57" << std::endl;
+
+
+    main_main<3, 1>();
+#endif
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_particle_groups.output");
     amrex::Finalize();
 }
 

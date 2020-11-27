@@ -10,6 +10,7 @@
 #include <AMReX_RealBox.H>
 
 #include <GEMPIC_Config.H>
+#include <GEMPIC_infrastructure.H>
 
 #ifndef INITIALIZER_H_
 #define INITIALIZER_H_
@@ -20,6 +21,7 @@ namespace Init {
 /**
  * Class containing all initialization parameters. At the moment it is possible to initialize by passing the parameters. In the future it will also be possible to initialize by passing a file.
  */
+template<int vdim, int numspec>
 class initializer
 {
 public:
@@ -34,18 +36,18 @@ public:
     int n_steps;
 
     // parameters for particles:
-    int n_species;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
-    int Np_cell; //number of particles per cell
+    std::array<amrex::Real, numspec> charge;
+    std::array<amrex::Real, numspec> mass;
+    std::array<int, numspec> Np_cell; //number of particles per cell
+    int NP_cell_tot;
 
     amrex::Real k; // for domain and weight function
     amrex::RealBox real_box;
 
     //parameters for velocity distribution
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vmean;
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vdev;
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> Vweight;
+    std::array<std::vector<amrex::Real>, vdim> Vmean;
+    std::array<std::vector<amrex::Real>, vdim> Vdev;
+    std::array<std::vector<amrex::Real>, vdim> Vweight;
 
     // propagator
     int propagator; // 0 : Boris FD, 1 HS FEM
@@ -65,14 +67,15 @@ public:
      * the particle masses @p MS, the number of particles per cell @p NPC, the mean of the velocity distributions @p VM, the deviation of the velicity distributions @p VD, the weight of the velocity
      * distributions @p VW and the particle distribution function @p WF.
      */
+
     void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
-                                    std::array<amrex::Real, GEMPIC_NUMSPEC> CH,
-                                    std::array<amrex::Real, GEMPIC_NUMSPEC> MS,
-                                    int NPC,
+                                    std::array<amrex::Real, numspec> CH,
+                                    std::array<amrex::Real, numspec> MS,
+                                    std::array<int, numspec> NPC,
                                     amrex::Real K,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD,
-                                    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW,
+                                    std::array<std::vector<amrex::Real>, vdim> VM,
+                                    std::array<std::vector<amrex::Real>, vdim> VD,
+                                    std::array<std::vector<amrex::Real>, vdim> VW,
                                     int PG,
                                     amrex::Real TP = 1.e-10){
         n_cell = NC;
@@ -81,10 +84,13 @@ public:
         Nghost = NG;
         dt = DT;
         n_steps = NST;
-        n_species = GEMPIC_NUMSPEC;
         charge = CH;
         mass = MS;
-        Np_cell = NPC;
+        NP_cell_tot = 0;
+        for (int spec = 0; spec < numspec; spec++) {
+            Np_cell[spec] = NPC[spec];
+            NP_cell_tot += NPC[spec];
+        }
         k = K;
         propagator = PG;
         tolerance_particles = TP;
@@ -100,6 +106,46 @@ public:
         Vmean = VM;
         Vdev = VD;
         Vweight = VW;
+
+
+    }
+
+    void initialize_infrastructure(Infra::infrastructure *ifr){
+
+        // Initialize infrastructure:
+
+        ifr->n_cell = n_cell;
+        ifr->max_grid_size = max_grid_size;
+
+        for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            ifr->is_periodic[cc] = is_periodic[cc];
+        }
+        ifr->real_box = real_box;
+
+        for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            ifr->Length[cc] = (real_box.hi(cc)-real_box.lo(cc));
+        }
+
+        amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
+        amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[0]-1, n_cell[1]-1, n_cell[2]-1));
+
+        ifr->domain.setSmall(dom_lo);
+        ifr->domain.setBig(dom_hi);
+        ifr->grid.define(ifr->domain);
+        ifr->grid.maxSize(max_grid_size);
+        ifr->geom.define(ifr->domain,&ifr->real_box,amrex::CoordSys::cartesian,ifr->is_periodic);
+        ifr->dx = ifr->geom.CellSize();
+
+        ifr->distriMap.define(ifr->grid);
+
+        ifr->dxi[GEMPIC_SPACEDIM] = 1.;
+        for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            ifr->plo[cc] = ifr->geom.ProbLo()[cc];
+            ifr->dxi[cc] = 1.0/ifr->dx[cc];
+            ifr->dxi[GEMPIC_SPACEDIM] *= ifr->dxi[cc];
+        }
+
+        ifr->tolerance_particle = tolerance_particles;
 
     }
 

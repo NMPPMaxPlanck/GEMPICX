@@ -9,15 +9,37 @@ import matplotlib.pylab as plt
 
 ################################# Parameters #################################
 
-# Positions of particle at beginning of push
-x_old = 0.99898608513
-y_old = 0.75150014863
-z_old = 0.83107762017
+# Problem parameters
+k = 1.25
+L = 2*np.pi/k
+dx = L/4
+dxi = 1/dx
+charge = -1
+
+# Real positions of particle at beginning of push
+x_old_R = 2.512
+y_old_R = 2.2
+z_old_R = 2.3
+
+# Real positions of particle at end of push
+x_new_R = 2.51398888
+y_new_R = 2.201991985
+z_new_R = 2.301990498
+
+# Velocities to multiply with integration weights
+vx = 0.09944398036
+vy = 0.09959926604
+vz = 0.09952487823
+
+# Relative positions of particle at beginning of push
+x_old = (x_old_R-dx)/dx
+y_old = (y_old_R-dx)/dx
+z_old = (z_old_R-dx)/dx
 
 # Poitions of particle at end of push
-x_new = 0.00057409256
-y_new = 0.75309085693
-z_new = 0.83266796321 
+x_new = (x_new_R-dx)/dx
+y_new = (y_new_R-dx)/dx
+z_new = (z_new_R-dx)/dx
 
 # Distance travelled
 delta_x = x_new-x_old
@@ -25,57 +47,48 @@ delta_y = y_new-y_old
 delta_z = z_new-z_old
 
 # Time at which particle crosses boundary of cell in x-direction
-t_cross = (1-x_old)/(1-x_old+x_new)
+t_cross = (1-x_old)/(x_new-x_old)
+
+# functions
+def sigma_1(t, delta_y, delty_z, y_old, z_old):
+    return t**3/3*delta_y*delta_z + t**2/2*(delta_y*(z_old-1)+delta_z*(y_old-1)) + t*(1-z_old-y_old+z_old*y_old)
+
+def sigma_2(t, delta_y, delty_z, y_old, z_old):
+    return t**3/3*(-delta_y*delta_z) + t**2/2*(delta_y*(1-z_old)+delta_y*(-z_old)) + t*(y_old*(1-z_old))
+
+def sigma_3(t, delta_y, delty_z, y_old, z_old):
+    return t**3/3*(-delta_z*delta_y) + t**2/2*(delta_z*(1-y_old)+delta_z*(-y_old)) + t*(z_old*(1-y_old))
+
+def sigma_4(t, delta_y, delty_z, y_old, z_old):
+    return t**3/3*delta_y*delta_z + t**2/2*(delta_y*z_old+delta_z*y_old) + y_old*z_old
 
 ###############################################################################
 ######################## VALUES COMPUTED ANALYTICALLY #########################
 ###############################################################################
 
-########################## Integrals evaluated at 1 ###########################
-
-iS1at1 = 0.041646076417753565
-iS2at1 = 0.12641770237353847
-iS3at1 = 0.20612185032095437
-iS4at1 = 0.6258143708877536
-
-####################### Integrals evaluated at t_cross ########################
-
-t = t_cross
-
-iS1 = t**3/3*delta_y*delta_z + t**2/2*(delta_y*(z_old-1)+delta_z*(y_old-1)) + t*(1-z_old-y_old+z_old*y_old)
-iS2 = t**3/3*(-delta_y*delta_z) + t**2/2*(delta_y*(1-z_old)+delta_y*(-z_old)) + t*(y_old*(1-z_old))
-iS3 = t**3/3*(-delta_z*delta_y) + t**2/2*(delta_z*(1-y_old)+delta_z*(-y_old)) + t*(z_old*(1-y_old))
-iS4 = t**3/3*delta_y*delta_z + t**2/2*(delta_y*z_old+delta_z*y_old) + y_old*z_old
-
-###################### Weigts at the corresponding cells ######################
 # Wijk is weight at cell i,j,k
 
-W111 = iS1
-W211 = iS1at1 - iS1
-W121 = iS2
-W221 = iS2at1 - iS2
-W112 = iS3
-W212 = iS3at1 - iS3
-W122 = iS4
-W222 = iS4at1 - iS4
+W111 = dxi*sigma_1(t_cross, delta_y, delta_z, y_old, z_old)
+W211 = dxi*(sigma_1(1, delta_y, delta_z, y_old, z_old) - sigma_1(t_cross, delta_y, delta_z, y_old, z_old))
+W121 = dxi*sigma_2(t_cross, delta_y, delta_z, y_old, z_old)
+W221 = dxi*(sigma_2(1, delta_y, delta_z, y_old, z_old) - sigma_2(t_cross, delta_y, delta_z, y_old, z_old))
+W112 = dxi*sigma_3(t_cross, delta_y, delta_z, y_old, z_old)
+W212 = dxi*(sigma_3(1, delta_y, delta_z, y_old, z_old) - sigma_3(t_cross, delta_y, delta_z, y_old, z_old))
+W122 = dxi*sigma_4(t_cross, delta_y, delta_z, y_old, z_old)
+W222 = dxi*(sigma_4(1, delta_y, delta_z, y_old, z_old) - sigma_4(t_cross, delta_y, delta_z, y_old, z_old))
 
-W = np.array([W111, W211, W121, W221, W112, W212, W122, W222])
-
-###################### Scaling with inverse cell volume #######################
-dxi = 0.5039302255
-
-W_h = dxi*W
+W = vx*charge*np.array([W111, W211, W121, W221, W112, W212, W122, W222])
 
 ###############################################################################
 ########################## VALUES RETURNED BY CODE ############################
 ###############################################################################
 
-V111 = 0.006738688266 + 0.006699412339
+V111 = -0.00134082
 V121 = 0.02040222744 + 0.02034719105
 V112 = 0.03320426812 + 0.03314921008
 V122 = 0.1005301037 + 0.100679474
 
-V211 = 0.003780579885 + 0.00376803619
+V211 = -0.00074625
 V221 = 0.01150296974 + 0.01148527708
 V212 = 0.01875164394 + 0.01873394433
 V222 = 0.05705463168 + 0.05710256765

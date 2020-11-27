@@ -20,7 +20,7 @@ cd $BUILD_DIR
 mkdir -p amrex
 cd amrex
 
-cmake -DDIM=3 -D ENABLE_PARTICLES=ON $AMREX_DIRECTORY
+cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $AMREX_DIRECTORY
 
 make install
 

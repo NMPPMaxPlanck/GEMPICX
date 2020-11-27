@@ -9,11 +9,11 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
-#include <GEMPIC_initializer.H>
+#include <GEMPIC_Config.H>
 
-using namespace Gempic;
+//using namespace Gempic;
 
-using namespace Init;
+//using namespace Init;
 
 #ifndef INFRASTRUCTURE_H_
 #define INFRASTRUCTURE_H_
@@ -48,12 +48,13 @@ public:
     /**
      * Default Constructor.
      */
-    infrastructure ();
+    infrastructure (){};
 
     // Explicit const
     /**
      * Explicit constructor: all class attributes can be initialized by passing an object of class initializer.
      */
+    /*
     infrastructure (initializer init){
         n_cell = init.n_cell;
         max_grid_size = init.max_grid_size;
@@ -88,6 +89,7 @@ public:
 
         tolerance_particle = init.tolerance_particles;
     }
+    */
 };
 }
 }

@@ -23,8 +23,8 @@ using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
 
-#ifndef TIME_LOOP_HS_FEM_
-#define TIME_LOOP_HS_FEM_
+#ifndef TIME_LOOP_HSALL_FEM_
+#define TIME_LOOP_HSALL_FEM_
 
 namespace Gempic {
 namespace Time_Loop {
@@ -35,7 +35,7 @@ namespace Time_Loop {
 
 
 template<int vdim, int numspec, int degx, int degy, int degz>
-void time_loop_hs_fem (infrastructure infra,
+void time_loop_hsall_fem (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz> *diagn,
@@ -46,11 +46,11 @@ void time_loop_hs_fem (infrastructure infra,
         (*mw_yee).advance_time();
 
         // Operator H_B for dt/2
-        (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+    //    (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
-        (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+     //   (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
@@ -92,36 +92,34 @@ void time_loop_hs_fem (infrastructure infra,
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
-                    // push x and v with the magnetic field
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*mw_yee).dt, chargemass, bA, infra);
-                    std::array<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
+                    amrex::Real weight = -charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
+                    // push x1
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
-                    {
-                        xOld[d] = particles[pp].pos(d);
-                        xNew[d] = newPos[d];
-                    }
-
-                    std::array<amrex::Real, vdim> velocity;
+                      pos[d]= particles[pp].pos(d);
+                    std::array<amrex::Real,vdim> vel;
                     for (unsigned int d=0;d<vdim;++d)
-                        velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particles[pp].rdata(d));
-                    /*  //Old version with only depositon at the mid point
-                      std::array<amrex::Real, GEMPIC_SPACEDIM> xMean;
-                      for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
-                        xMean[d] = 0.5*(newPos[d] + particles[pp].pos(d));
-                      accumulate_j_fem_integral(xMean,
-                                                velocity,
-                                                charge*particles[pp].rdata(vdim),
-                                                infra.dxi,
-                                                infra.plo,
-                                                jA);*/
-                    accumulate_j_fem_integral<vdim,degx,degy,degz>(xOld,
-                                                    xNew,
-                                                    velocity,
-                                                    charge*particles[pp].rdata(vdim),
-                                                    infra.dxi,
-                                                    infra.plo,
-                                                    jA);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                      vel[d] = particles[pp].rdata(d);
+                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*vel[0];
+                    std::array<amrex::Real, 2> bfields;
+                    accumulate_j_update_v_fem_integral<vdim, degx, degy, degz, 1>( pos,
+                                                        x1_new,
+                                                        weight,
+                                                        infra.geom.CellSize(),
+                                                        infra.dxi,
+                                                        infra.plo,
+                                                        bA,
+                                                        jA,
+                                                        bfields);
+
+                    // Push v2 and v3
+                    //vel[1] = vel[1] - chargemass*bfields[0];
+                    //vel[2] = vel[2] + chargemass*bfields[1];
+                    pos[0] = x1_new;
+
+                    std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -168,10 +166,10 @@ void time_loop_hs_fem (infrastructure infra,
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
-        (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+      //  (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
 
         // Operator H_B for dt/2
-        (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+      //  (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
 
 
         // save norms for diagnostics

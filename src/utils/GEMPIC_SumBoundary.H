@@ -27,10 +27,11 @@ using namespace Particles;
 namespace Gempic {
 namespace Utils {
 
+template<int vdim>
 void
-Gempic_SumBoundary (maxwell_yee *mw_yee, infrastructure *infra)
+Gempic_SumBoundary (maxwell_yee<vdim> *mw_yee, infrastructure *infra)
 {
-    for (int i=0; i<GEMPIC_VDIM; i++) {
+    for (int i=0; i<vdim; i++) {
         (*(*mw_yee).J_Array[i]).SumBoundary(infra->geom.periodicity());
         (*(*mw_yee).J_Array[i]).OverrideSync((*(*mw_yee).E_Masks[i]), infra->geom.periodicity());
     }

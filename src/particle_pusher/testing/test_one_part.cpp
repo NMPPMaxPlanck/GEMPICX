@@ -28,13 +28,14 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
+template< int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
     // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     int Nghost = maxdeg;
 
@@ -49,8 +50,8 @@ void main_main (bool ctest)
     amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
     int max_grid_size = 4;
     amrex::Real dt = 0.02;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge = {-1.0};
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass = {1.0};
+    std::array<amrex::Real, numspec> charge = {-1.0};
+    std::array<amrex::Real, numspec> mass = {1.0};
     amrex::Real k = 1.25;
     std::string WF = "1.0";
     std::string Bx = "0.0";
@@ -59,14 +60,14 @@ void main_main (bool ctest)
     std::string phi = "4 * 0.5 * cos(0.5 * x)";
     std::string rho = "0.0";
     int propagator = 1;
-    bool time_staggered = true;
+    bool time_staggered = false;
     amrex::Real tolerance_particles = 1.e-10;
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD = {};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD = {};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    for (int j=0; j<GEMPIC_VDIM; j++) {
+    for (int j=0; j<vdim; j++) {
         VM[j].push_back(0.0);
         VW[j].push_back(1.0);
     }
@@ -95,66 +96,79 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer init;
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW,tolerance_particles);
+    initializer<vdim, numspec> init;
+    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,{n_part_per_cell},k,
+                                    VM,VD,VW,tolerance_particles);
     
     // infrastructure
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0;
     for(amrex::MFIter mfi=(*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
         if(mfi.index() == 0) {
-            using ParticleType = amrex::Particle<GEMPIC_VDIM+1, 0>; // Particle template
-            amrex::ParticleTile<GEMPIC_VDIM+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-            (part_gr).add_particle({AMREX_D_DECL(2.511, 2.2, 2.3)}, {0.1, 0.1, 0.1}, 1.0, particles);
+            using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+            amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            std::array<amrex::Real,vdim> velocity;
+            for (int comp = 0; comp < vdim; comp++) {
+                velocity[comp] = 0.1;
+            }
+            (part_gr).add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
         }
     }
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+    diagnostics<vdim, numspec, degx, degy, degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    loop_preparation<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
-      case 0:
-        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+    case 0:
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
-      case 1:
-        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+    case 1:
+        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
         break;
-      default:
+    default:
         break;
-      }
+    }
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
-          for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
-              AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
-            }
-          AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
-          for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
-              AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
-            }
-     if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
+    for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
+        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
+    }
+    AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
+    for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
+        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
+    }
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main(argc==1);
+#if (GEMPIC_SPACEDIM == 1)
+    main_main<1, 1, 1, 1, 1>(argc==1);
+    main_main<2, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 2)
+    main_main<2, 1, 1, 1, 1>(argc==1);
+    main_main<3, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>(argc==1);
+#endif
 
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
     amrex::Finalize();
 }
 

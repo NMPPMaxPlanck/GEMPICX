@@ -30,12 +30,13 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
+template<int vdim, int numspec, int degx, int degy, int degz>
 void time_loop_boris_fd (infrastructure infra,
-                    maxwell_yee *mw_yee,
-                    particle_groups *part_gr,
-                    diagnostics *diagn,
-                    bool ctest,
-                    std::ofstream *ofs) {
+                         maxwell_yee<vdim> *mw_yee,
+                         particle_groups<vdim,numspec> *part_gr,
+                         diagnostics<vdim, numspec, degx, degy, degz> *diagn,
+                         bool ctest,
+                         std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
@@ -48,28 +49,28 @@ void time_loop_boris_fd (infrastructure infra,
         //deposit charge in J and push particles
 
         // set J to 0 before we start depositing values from current particles
-        for (int i=0; i<GEMPIC_VDIM; i++) {
+        for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
-            for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jA;
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eA;
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
+                std::array<amrex::Array4<amrex::Real>,vdim> jA;
+                std::array<amrex::Array4<amrex::Real>,vdim> eA;
+                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
-                for (int cc=0;cc < GEMPIC_VDIM;cc++) {
+                for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                     eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
                 }
-                for (int cc=0;cc < GEMPIC_VDIM;cc++) {
+                for (int cc=0;cc < int(vdim/2.5)*2+1;cc++) {
                     bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
                 }
 
@@ -77,14 +78,20 @@ void time_loop_boris_fd (infrastructure infra,
 
                 for (int pp=0;pp<np;pp++){
 
-                    std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate (particles[pp], (*part_gr).charge[spec],
-                                                                                                                      infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
+                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
+                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
 
-                    std::array<amrex::Real,GEMPIC_VDIM> eres = {AMREX_D_DECL(field_interp[0],field_interp[1],field_interp[2])};
-                    std::array<amrex::Real,GEMPIC_BDIM> bres = {AMREX_B_DECL(field_interp[GEMPIC_VDIM],field_interp[GEMPIC_VDIM+1],field_interp[GEMPIC_VDIM+2])};
+                    std::array<amrex::Real,vdim> eres;
+                    for (int comp = 0; comp < vdim; comp++) {
+                        eres[comp] = field_interp[comp];
+                    }
+                    std::array<amrex::Real,int(vdim/2.5)*2+1> bres;
+                    for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
+                        bres[comp] = field_interp[vdim+comp];
+                    }
 
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+GEMPIC_VDIM> newPos = push_particle_boris(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+GEMPIC_VDIM+2)]);
+                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
+                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -94,22 +101,22 @@ void time_loop_boris_fd (infrastructure infra,
         //update fields
         // deposit remaining charge in J one particle at a time
 
-        for (int spec=0;spec<(*part_gr).n_species;spec++) {
-            for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        for (int spec=0;spec<numspec;spec++) {
+            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> jA;
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_VDIM> eA;
-                std::array<amrex::Array4<amrex::Real>,GEMPIC_BDIM> bA;
+                std::array<amrex::Array4<amrex::Real>,vdim> jA;
+                std::array<amrex::Array4<amrex::Real>,vdim> eA;
+                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
-                for (int cc=0;cc < GEMPIC_VDIM;cc++) {
+                for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
                 for (int pp=0;pp<np;pp++){
-                    std::array<amrex::Real, GEMPIC_VDIM+GEMPIC_BDIM> field_interp = gempic_deposit_J_and_interpolate (particles[pp], (*part_gr).charge[spec],
-                                                                                                                      infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
+                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
+                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }
         }
@@ -117,7 +124,7 @@ void time_loop_boris_fd (infrastructure infra,
 
         Gempic_SumBoundary(mw_yee, &infra); // Sums Boundary of J and Overwrites overlap
 
-        for (int i=0; i<GEMPIC_VDIM; i++) {
+        for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
@@ -130,33 +137,44 @@ void time_loop_boris_fd (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "PIC_save_tmp_OW_part.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_tmp.output", t_step+1);
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
         if (ctest) {
-            amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0]
-                        #if (GEMPIC_VDIM > 1)
-                                 << " " << (*diagn).Efield[t_step][1]
-                        #endif
-                        #if (GEMPIC_VDIM > 2)
-                                 << " " << (*diagn).Efield[t_step][2]
-                        #endif
-                                 << " " << (*diagn).Bfield[t_step][0]
-                        #if (GEMPIC_BDIM > 1)
-                                 << " " << (*diagn).Bfield[t_step][1]
-                        #endif
-                        #if (GEMPIC_BDIM > 2)
-                                 << " " << (*diagn).Bfield[t_step][2]
-                        #endif
-                                 << " " << (*diagn).kin[t_step] << " " << (*diagn).mom[t_step][0]
-                        #if (GEMPIC_VDIM > 1)
-                                 << " " << (*diagn).mom[t_step][1]
-                        #endif
-                        #if (GEMPIC_VDIM > 2)
-                                 << " " << (*diagn).mom[t_step][2]
-                        #endif
-                                 << std::endl;
+            switch (vdim) {
+            case 1:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0];
+                break;
+            case 2:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
+                break;
+            case 3:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
+                break;
+            }
+            switch (vdim) {
+            case 1: // no break, so that case 1 and 2 are handled the same way
+            case 2:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0];
+                break;
+            case 3:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
+                break;
+            }
+            amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).kin[t_step] << " ";
+            switch (vdim) {
+            case 1:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0];
+                break;
+            case 2:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
+                break;
+            case 3:
+                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
+                break;
+            }
+            amrex::AllPrintToFile("test_output_pre_rename.output") << std::endl;
         }
     } // end time loop
 

@@ -25,7 +25,9 @@ using namespace Particles;
 
 namespace Gempic {
 namespace Diagnostics_Output {
-void save_particle_positions (particle_groups *ppg, std::string ID = "", int species = 0){
+
+template<int vdim, int numspec>
+void save_particle_positions (particle_groups<vdim, numspec> *ppg, std::string ID = "", int species = 0){
 
     auto all_parts = (*(*ppg).mypc[species]).ParticleBoxArray(0);
     std::ofstream ofsss("particle_output/x/W_" + ID + ".output", std::ofstream::out);
@@ -47,7 +49,7 @@ void save_particle_positions (particle_groups *ppg, std::string ID = "", int spe
     const std::string& pltfile = "test_particle_output";
     (*(*ppg).mypc[species]).WriteAsciiFile(pltfile);
     std::ofstream ofss("particle_output/x/P_" + ID + ".output", std::ofstream::out);
-    for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<vdim+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
         const auto& particles = pti.GetArrayOfStructs();
         const long np = pti.numParticles();
@@ -74,9 +76,10 @@ void save_particle_positions (particle_groups *ppg, std::string ID = "", int spe
     ofss.close();
 }
 
-void save_particle_velocities (particle_groups *ppg, std::string ID = "", int species = 0){
+template<int vdim, int numspec>
+void save_particle_velocities (particle_groups<vdim, numspec> *ppg, std::string ID = "", int species = 0){
     std::ofstream ofss("particle_output/v/P_" + ID + ".output", std::ofstream::out);
-    for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<vdim+1,0,0,0> pti(*(*ppg).mypc[species], 0); pti.isValid(); ++pti) {
 
         const auto& particles = pti.GetArrayOfStructs();
         const long np = pti.numParticles();
@@ -96,8 +99,9 @@ void save_particle_velocities (particle_groups *ppg, std::string ID = "", int sp
 }
 }
 
+template<int vdim, int numspec>
 void
-Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 
@@ -122,7 +126,7 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
     amrex::Vector<std::string> varnames = {"E_x", "E_y", "E_z", "B_x", "B_y", "B_z", "J_x", "J_y", "J_z"};
     amrex::Real time = step*(*mw_yee).dt;
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames,
-                              (*infra).geom, time, 0);
+                             (*infra).geom, time, 0);
 
     // Particle Info -------------------------------------------------------------
     const std::string& name = "electrons";
@@ -138,13 +142,13 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
     FullPathJobInfoFile += "/warpx_job_info";
     std::ofstream jobInfoFile(FullPathJobInfoFile);
     amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0]
-#if GEMPIC_SPACEDIM > 1
-                                 << " " << (*infra).is_periodic[1]
-#endif
-#if GEMPIC_SPACEDIM > 2
-                                 << " " << (*infra).is_periodic[2]
-#endif
-                                 << std::endl;
+                             #if GEMPIC_SPACEDIM > 1
+                              << " " << (*infra).is_periodic[1]
+                             #endif
+                             #if GEMPIC_SPACEDIM > 2
+                              << " " << (*infra).is_periodic[2]
+                             #endif
+                              << std::endl;
     jobInfoFile.close();
 
     // WarpXHeader -------------------------------------------------------------
@@ -174,15 +178,16 @@ Gempic_WritePlotFile (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure 
     (*infra).grid.writeOn(headerFile);
     headerFile << '\n';
 
-     amrex::Print(headerFile) << (*ppg).charge[species] << std::endl; //charge
-     headerFile.close();
+    amrex::Print(headerFile) << (*ppg).charge[species] << std::endl; //charge
+    headerFile.close();
 
     amrex::VisMF::SetHeaderVersion(current_version);
 
 }
 
+template<int vdim, int numspec>
 void
-Gempic_WritePlotFile_rho_phi (particle_groups *ppg, maxwell_yee *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 
@@ -200,7 +205,7 @@ Gempic_WritePlotFile_rho_phi (particle_groups *ppg, maxwell_yee *mw_yee, infrast
     amrex::Vector<std::string> varnames = {"rho", "phi"};
     amrex::Real time = step*(*mw_yee).dt;
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames,
-                              (*infra).geom, time, 0);
+                             (*infra).geom, time, 0);
 
     // Particle Info -------------------------------------------------------------
     const std::string& name = "electrons";
@@ -216,13 +221,13 @@ Gempic_WritePlotFile_rho_phi (particle_groups *ppg, maxwell_yee *mw_yee, infrast
     FullPathJobInfoFile += "/warpx_job_info";
     std::ofstream jobInfoFile(FullPathJobInfoFile);
     amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0]
-#if GEMPIC_SPACEDIM > 1
-                                 << " " << (*infra).is_periodic[1]
-#endif
-#if GEMPIC_SPACEDIM > 2
-                                 << " " << (*infra).is_periodic[2]
-#endif
-                                 << std::endl;
+                             #if GEMPIC_SPACEDIM > 1
+                              << " " << (*infra).is_periodic[1]
+                             #endif
+                             #if GEMPIC_SPACEDIM > 2
+                              << " " << (*infra).is_periodic[2]
+                             #endif
+                              << std::endl;
     jobInfoFile.close();
 
     // WarpXHeader -------------------------------------------------------------
@@ -252,8 +257,8 @@ Gempic_WritePlotFile_rho_phi (particle_groups *ppg, maxwell_yee *mw_yee, infrast
     (*infra).grid.writeOn(headerFile);
     headerFile << '\n';
 
-     amrex::Print(headerFile) << (*ppg).charge[species] << std::endl; //charge
-     headerFile.close();
+    amrex::Print(headerFile) << (*ppg).charge[species] << std::endl; //charge
+    headerFile.close();
 
     amrex::VisMF::SetHeaderVersion(current_version);
 

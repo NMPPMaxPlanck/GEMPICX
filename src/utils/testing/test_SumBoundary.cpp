@@ -14,7 +14,7 @@
 using namespace std;
 using namespace amrex;
 
-
+template <int vdim, int degx, int degy, int degz>
 void main_main ()
 {
     // This test shows how one can get a result from SumBoundary that has two slightly
@@ -64,21 +64,22 @@ void main_main ()
         dx[cc] = real_box.hi(cc)/(domain.bigEnd(cc)+1);
         dxi[GEMPIC_SPACEDIM] *= dxi[cc];
     }
-
     // Particles
     amrex::Real charge = -1.0;
-    amrex::ParticleContainer<GEMPIC_VDIM+1, 0, 0, 0> mypc(geom, distriMap, grid);
+    amrex::ParticleContainer<vdim+1, 0, 0, 0> mypc(geom, distriMap, grid);
     mypc.do_tiling = true;
+#if (GEMPIC_SPACEDIM >1)
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
-
-    Gempic::Sampling::init_one_particle_cellwise(dx, plo, &mypc, {AMREX_D_DECL(2*dx[0]/5.0, 2*dx[1]/5.0, 0)});
+#else
+    mypc.tile_size[0] = max_grid_size;
+#endif
+    Gempic::Sampling::init_one_particle_cellwise<vdim>(dx, plo, &mypc, {AMREX_D_DECL(2*dx[0]/5.0, 2*dx[1]/5.0, 0)});
 
     mypc.Redistribute();
-
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
-    for (amrex::ParIter<GEMPIC_VDIM+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<vdim+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
         amrex::Box tilebox;
         amrex::FArrayBox local_rho;
 
@@ -94,11 +95,10 @@ void main_main ()
 
         amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
         for (int pp=0;pp<np;pp++) {
-            Gempic::Particles::gempic_deposit_charge_indextype (particles[pp], charge, dxi, plo, rhoarr,Index_A);
+            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
         TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
     }
-
 
     //-----------------------------------------------------------------------------
     // SumBoundary
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main();
+    main_main<3,1,1,1>();
 
     amrex::Finalize();
 }

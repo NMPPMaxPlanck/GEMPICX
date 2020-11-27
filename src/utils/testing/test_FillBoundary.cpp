@@ -84,7 +84,7 @@ void main_main ()
     // Output
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("test_FillBoundary_2.output") << TestMF[mfi] << std::endl;
-      }
+    }
 
 }
 

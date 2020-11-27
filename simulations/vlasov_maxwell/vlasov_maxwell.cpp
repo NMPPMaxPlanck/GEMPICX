@@ -16,6 +16,7 @@
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
+#include <GEMPIC_time_loop_hsall_fem.H>
 
 using namespace std;
 using namespace amrex;
@@ -28,20 +29,21 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
+template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
 {
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
     // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(GEMPIC_DEG_X, GEMPIC_DEG_Y, GEMPIC_DEG_Z)};
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     int Nghost = maxdeg;
 
     // initialize parameters
     std::string sim_name;
     std::array<int,GEMPIC_SPACEDIM> n_cell_vector;
-    int n_part_per_cell;
+    std::array<int, numspec> n_part_per_cell;
     int n_steps;
     int freq_x;
     int freq_v;
@@ -49,8 +51,8 @@ void main_main (bool ctest)
     std::array<int,GEMPIC_SPACEDIM> is_periodic_vector;
     int max_grid_size;
     amrex::Real dt;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> charge;
-    std::array<amrex::Real, GEMPIC_NUMSPEC> mass;
+    std::array<amrex::Real, numspec> charge;
+    std::array<amrex::Real, numspec> mass;
     amrex::Real k;
     std::string WF;
     std::string Bx;
@@ -69,20 +71,20 @@ void main_main (bool ctest)
     // parse parameters
     amrex::ParmParse pp;
 
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VM{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VD{};
-    std::array<std::vector<amrex::Real>, GEMPIC_VDIM> VW{};
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
 
     if (ctest) {
         sim_name = "Weibel";
         n_cell_vector[0] = 24;
         n_cell_vector[1] = 8;
         n_cell_vector[2] = 8;
-        n_part_per_cell = 100;
+        n_part_per_cell = {100};
         n_steps = 10;
-        freq_x = 11;
-        freq_v = 11;
-        freq_slice = 11;
+        freq_x = 12;
+        freq_v = 12;
+        freq_slice = 12;
         is_periodic_vector[0] = 1;
         is_periodic_vector[1] = 1;
         is_periodic_vector[2] = 1;
@@ -99,7 +101,7 @@ void main_main (bool ctest)
         num_gaussians = 1;
         tolerance_particles = 1.e-10;
 
-        for (int j=0; j<GEMPIC_VDIM; j++) {
+        for (int j=0; j<vdim; j++) {
             VM[j].push_back(0.0);
             VW[j].push_back(1.0);
         }
@@ -136,9 +138,9 @@ void main_main (bool ctest)
         pp.get("checkpoint_file", checkpoint_file);
         pp.get("curr_step", curr_step);
 
-        std::array<double, GEMPIC_VDIM> read_tmp_M;
-        std::array<double, GEMPIC_VDIM> read_tmp_D;
-        std::array<double, GEMPIC_VDIM> read_tmp_W;
+        std::array<double, vdim> read_tmp_M;
+        std::array<double, vdim> read_tmp_D;
+        std::array<double, vdim> read_tmp_W;
 
         for (int i=0; i<num_gaussians; i++) {
             std::string name_str_M = "velocity_mean_" +  std::to_string(i);
@@ -150,25 +152,29 @@ void main_main (bool ctest)
             pp.get(name_char_M,read_tmp_M);
             pp.get(name_char_D,read_tmp_D);
             pp.get(name_char_W,read_tmp_W);
-            for (int j=0; j<GEMPIC_VDIM; j++) {
+            for (int j=0; j<vdim; j++) {
                 VM[j].push_back(read_tmp_M[j]);
                 VD[j].push_back(read_tmp_D[j]);
                 VW[j].push_back(read_tmp_W[j]);
             }
-        }
+        } 
 
         // Depending on which propagator is chosen, staggering in time is needed or not
         switch (propagator) {
-          case 0:
+        case 0:
             time_staggered = true;
             break;
-          case 1:
+        case 1:
             time_staggered = false;
-            Nghost += 2;
+            Nghost += 3;
             break;
-          default:
+        case 2:
+            time_staggered = false;
+            Nghost += 3;
             break;
-          }
+        default:
+            break;
+        }
 
     }
 
@@ -196,54 +202,112 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     //initializer
-    initializer init;
+    initializer<vdim, numspec> init;
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
-                                        VM,VD,VW,tolerance_particles);
-    
+                                    VM,VD,VW,tolerance_particles);
+
     // infrastructure
-    infrastructure infra(init);
+    infrastructure infra;
+    init.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(init, infra);
 
-    diagnostics diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim, numspec,degx,degy,degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
 
     //------------------------------------------------------------------------------
     // initialize particles:
-    if (restart == 0) {
-        int species = 0; // all particles are same species for now
-        init_particles_full_domain(infra, part_gr, init, species, WF_parse, &x, &y, &z);
+    if ((restart == 0) & !ctest) {
+        for (int spec=0; spec<numspec; spec++) {
+            // Reading in species information
+            std::array<std::vector<amrex::Real>, vdim> VM_tmp;
+            std::array<std::vector<amrex::Real>, vdim> VD_tmp;
+            std::array<std::vector<amrex::Real>, vdim> VW_tmp;
 
-    //------------------------------------------------------------------------------
-    // solve:
-        loop_preparation(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+            string line;
+            ifstream myfile ("species_data_" + to_string(vdim) + "V_" + to_string(spec) + ".txt");
+            int gaussian_num = -1;
+            int comp = -1;
+            int prop = -1; // 0 -> mean, 1 -> deviation, 2 -> weight
+            int line_num = -1;
+
+            if (myfile.is_open())
+            {
+                while ( getline (myfile,line) )
+                {
+                    line_num++;
+                    if (line == "# Gaussian") {
+                        gaussian_num++;
+                    } else {
+                        if (line.at(0) == '#') {
+                            prop = (prop+1)%3;
+                        } else {
+                           comp = (comp+1)%vdim;
+                           switch (prop) {
+                           case 0:
+                               VM_tmp[comp].push_back(stod(line));
+                               break;
+                           case 1:
+                               VD_tmp[comp].push_back(stod(line));
+                               break;
+                           case 2:
+                               VW_tmp[comp].push_back(stod(line));
+                               break;
+                           }
+                        }
+                    }
+                }
+                myfile.close();
+            }
+            else cout << "Unable to open file for species " << spec << std::endl;
+            init_particles_full_domain<vdim,numspec>(infra, part_gr, init, VM_tmp, VD_tmp, VW_tmp, spec, WF_parse, &x, &y, &z);
+        }
+
+        //------------------------------------------------------------------------------
+        // solve:
+        loop_preparation<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
     } else {
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, checkpoint_file, curr_step);
     }
-    std::ofstream ofs("PIC.output", std::ofstream::out);
+    std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
     if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
-      case 0:
-        time_loop_boris_fd(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+    case 0:
+        time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      case 1:
-        time_loop_hs_fem(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+    case 1:
+        time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      default:
+    case 2:
+        time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
-      }
-    if (ctest & (ParallelDescriptor::MyProc()==0)) std::rename("test_output_pre_rename.output.0", "PIC.output");
+    default:
+        break;
+    }
+    if (ctest & (ParallelDescriptor::MyProc()==0)) std::rename("test_output_pre_rename.output.0", "vlasov_maxwell.output");
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-    main_main(argc==1);
+#if (GEMPIC_SPACEDIM == 1)
+    if (argc==0) {
+        main_main<1, 1, 1, 1, 1>(argc==1); // run for ctest
+    }
+    main_main<2, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 2)
+    if (argc==0) {
+        main_main<2, 1, 1, 1, 1>(argc==1); // run for ctest
+    }
+    main_main<3, 1, 1, 1, 1>(argc==1);
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>(argc==1);
+#endif
 
     amrex::Finalize();
 }
