@@ -33,6 +33,11 @@ ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")
   #set (CMAKE_CXX_FLAGS_RELEASE "-g -O3 -xHOST")
   set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
   message ("Found Intel compiler " ${CMAKE_CXX_COMPILER})
+ELSE()
+  set (CMAKE_CXX_FLAGS "")
+  set (CMAKE_CXX_FLAGS_RELEASE "")
+  set (CMAKE_CXX_FLAGS_DEBUG   "")
+
 ENDIF()
 
 # Enable ctests
