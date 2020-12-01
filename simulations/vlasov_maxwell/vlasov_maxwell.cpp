@@ -31,6 +31,7 @@ using namespace Time_Loop;
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
 {
+    bool readinfile = false;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
@@ -156,7 +157,7 @@ void main_main (bool ctest)
                 VD[j].push_back(read_tmp_D[j]);
                 VW[j].push_back(read_tmp_W[j]);
             }
-        } 
+        }
 
         // Depending on which propagator is chosen, staggering in time is needed or not
         switch (propagator) {
@@ -216,51 +217,107 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // initialize particles:
-    if ((restart == 0) & !ctest) {
+    if (restart == 0) {
         for (int spec=0; spec<numspec; spec++) {
-            // Reading in species information
-            std::array<std::vector<amrex::Real>, vdim> VM_tmp;
-            std::array<std::vector<amrex::Real>, vdim> VD_tmp;
-            std::array<std::vector<amrex::Real>, vdim> VW_tmp;
+                // Reading in species information
+                std::array<std::vector<amrex::Real>, vdim> VM_tmp;
+                std::array<std::vector<amrex::Real>, vdim> VD_tmp;
+                std::array<std::vector<amrex::Real>, vdim> VW_tmp;
+            if (!ctest) {
+                string line;
+                ifstream myfile ("species_data_" + to_string(vdim) + "V_" + to_string(spec) + ".txt");
+                int gaussian_num = -1;
+                int comp = -1;
+                int prop = -1; // 0 -> mean, 1 -> deviation, 2 -> weight
+                int line_num = -1;
 
-            string line;
-            ifstream myfile ("species_data_" + to_string(vdim) + "V_" + to_string(spec) + ".txt");
-            int gaussian_num = -1;
-            int comp = -1;
-            int prop = -1; // 0 -> mean, 1 -> deviation, 2 -> weight
-            int line_num = -1;
-
-            if (myfile.is_open())
-            {
-                while ( getline (myfile,line) )
+                if (myfile.is_open())
                 {
-                    line_num++;
-                    if (line == "# Gaussian") {
-                        gaussian_num++;
-                    } else {
-                        if (line.at(0) == '#') {
-                            prop = (prop+1)%3;
+                    while ( getline (myfile,line) )
+                    {
+                        line_num++;
+                        if (line == "# Gaussian") {
+                            gaussian_num++;
                         } else {
-                           comp = (comp+1)%vdim;
-                           switch (prop) {
-                           case 0:
-                               VM_tmp[comp].push_back(stod(line));
-                               break;
-                           case 1:
-                               VD_tmp[comp].push_back(stod(line));
-                               break;
-                           case 2:
-                               VW_tmp[comp].push_back(stod(line));
-                               break;
-                           }
+                            if (line.at(0) == '#') {
+                                prop = (prop+1)%3;
+                            } else {
+                                comp = (comp+1)%vdim;
+                                switch (prop) {
+                                case 0:
+                                    VM_tmp[comp].push_back(stod(line));
+                                    break;
+                                case 1:
+                                    VD_tmp[comp].push_back(stod(line));
+                                    break;
+                                case 2:
+                                    VW_tmp[comp].push_back(stod(line));
+                                    break;
+                                }
+                            }
                         }
                     }
+                    myfile.close();
                 }
-                myfile.close();
+                else cout << "Unable to open file for species " << spec << std::endl;
+            } else {
+                VM_tmp = VM;
+                VD_tmp = VD;
+                VW_tmp = VW;
             }
-            else cout << "Unable to open file for species " << spec << std::endl;
-            init_particles_full_domain<vdim,numspec>(infra, part_gr, init, VM_tmp, VD_tmp, VW_tmp, spec, WF_parse, &x, &y, &z);
+
+            if (readinfile) {
+
+                int species = 0;
+                for(amrex::MFIter mfi=(*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
+                    if(mfi.index() == 0) {
+                        using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+                        amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+
+                        string line;
+                        string filename = "particle_input.txt";
+                        ifstream myfile (filename);
+                        if (myfile.is_open())
+                        {
+                            while ( getline (myfile,line) )
+                            {
+                                std::vector<std::string> readVal;
+                                std::istringstream iss(line);
+                                for(std::string line; iss >> line; ){
+                                    readVal.push_back(line);
+                                }
+
+                                std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                                std::array<amrex::Real,vdim> velocity;
+                                amrex::Real weight = stod(readVal[GEMPIC_SPACEDIM+vdim]);
+                                for (int comp = 0; comp < vdim; comp++) {
+                                    position[comp] = stod(readVal[comp]);
+                                    velocity[comp] = stod(readVal[GEMPIC_SPACEDIM+comp]);
+                                }
+                                (part_gr).add_particle(position, velocity, weight, particles);
+                            }
+                        }
+                        else cout << "Unable to open particle input " << spec << std::endl;
+
+                    }
+                }
+                (*(part_gr).mypc[0]).Redistribute();
+            } else {
+                init_particles_full_domain<vdim,numspec>(infra, part_gr, init, VM_tmp, VD_tmp, VW_tmp, spec, WF_parse, &x, &y, &z);
+            }
         }
+
+        for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
+
+            const auto& particles = pti.GetArrayOfStructs();
+            const long np = pti.numParticles();
+            for (int pp=0;pp<np;pp++) {
+                std::cout << "(" << particles[pp].pos(0) << "," << particles[pp].pos(1) << "," << particles[pp].pos(2) << ") (" <<
+                             particles[pp].rdata(0) << "," << particles[pp].rdata(1) << "," << particles[pp].rdata(2) << ") " <<
+                             particles[pp].rdata(3) << std::endl;
+            }
+        }
+
 
         //------------------------------------------------------------------------------
         // solve:
