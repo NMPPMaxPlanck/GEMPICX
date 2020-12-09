@@ -27,5 +27,5 @@ make install
 cd ..
 mkdir -p gempic
 cd gempic
-cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_CXX_FLAGS="-std=c++1y" $SOURCE_DIRECTORY
+cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc $SOURCE_DIRECTORY
 make
