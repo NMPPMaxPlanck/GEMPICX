@@ -643,7 +643,7 @@ void accumulate_j_update_v_x1_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
 #if(GEMPIC_SPACEDIM > 1)
     if ( jj < degy ){
 #endif
-        double s_coeff = primitive[ii]
+        s_coeff = primitive[ii]
 #if(GEMPIC_SPACEDIM > 1)
                 *sy_cell[jj]
 #endif
@@ -662,7 +662,7 @@ void accumulate_j_update_v_x1_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
 #if(GEMPIC_SPACEDIM > 2)
     if ( kk < degz ){
 #endif
-        double s_coeff = primitive[ii]
+        s_coeff = primitive[ii]
 #if(GEMPIC_SPACEDIM > 1)
                 *sy_node[jj]
 #endif
@@ -822,7 +822,7 @@ void accumulate_j_update_v_x2_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
 #if(GEMPIC_SPACEDIM > 2)
     if ( kk < degz ){
 #endif
-        double s_coeff = sx_node[ii]
+        s_coeff = sx_node[ii]
 #if(GEMPIC_SPACEDIM > 1)
                 *primitive[jj]
 #endif
