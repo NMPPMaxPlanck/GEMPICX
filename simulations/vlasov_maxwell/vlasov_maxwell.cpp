@@ -334,13 +334,13 @@ void main_main (bool ctest)
     if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_boris_fd<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 1:
-        time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hs_fem<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 2:
-        time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hsall_fem<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     default:
         break;

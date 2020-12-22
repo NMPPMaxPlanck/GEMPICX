@@ -30,7 +30,7 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, bool electromagnetic=true>
 void time_loop_boris_fd (infrastructure infra,
                          maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim,numspec> *part_gr,
@@ -41,9 +41,11 @@ void time_loop_boris_fd (infrastructure infra,
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
 
-        //--------------------------------------------------------------------------
-        // update B
-        (*mw_yee).advance_B(infra, (*mw_yee).dt);
+        if ( electromagnetic ){
+          //--------------------------------------------------------------------------
+          // update B
+          (*mw_yee).advance_B(infra, (*mw_yee).dt);
+        }
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
@@ -128,9 +130,16 @@ void time_loop_boris_fd (infrastructure infra,
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
 
+        if (electromagnetic){
+          // advance E
+          (*mw_yee).advance_E(infra, (*mw_yee).dt);
+          }
+        else
+          {
+            // advance E from j
+            (*mw_yee).advance_E_from_J(infra, (*mw_yee).dt);
+          }
 
-        // advance E
-        (*mw_yee).advance_E(infra, (*mw_yee).dt);
 
         // save norms for diagnostics
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved

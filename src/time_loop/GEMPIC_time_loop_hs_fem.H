@@ -34,7 +34,7 @@ namespace Time_Loop {
    */
 
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, bool electromagnetic=true>
 void time_loop_hs_fem (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -45,12 +45,14 @@ void time_loop_hs_fem (infrastructure infra,
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
 
-        // Operator H_B for dt/2
-        (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+        if (electromagnetic){
+          // Operator H_B for dt/2
+          (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
 
-        //--------------------------------------------------------------------------
-        // Operator H_E for dt/2 (field part)
-        (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+          //--------------------------------------------------------------------------
+          // Operator H_E for dt/2 (field part)
+          (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+        }
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
@@ -172,13 +174,14 @@ void time_loop_hs_fem (infrastructure infra,
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         }
 
-        //--------------------------------------------------------------------------
-        // Operator H_E for dt/2 (field part)
-        (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
+        if (electromagnetic){
+          //--------------------------------------------------------------------------
+          // Operator H_E for dt/2 (field part)
+          (*mw_yee).advance_B(infra, (*mw_yee).dt*0.5);
 
-        // Operator H_B for dt/2
-        (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
-
+          // Operator H_B for dt/2
+          (*mw_yee).advance_E_from_B(infra, (*mw_yee).dt*0.5);
+        }
 
         // save norms for diagnostics
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
