@@ -12,6 +12,11 @@ charge = -1.0 1.0 # vector (one entry per species)
 mass = 1.0 1836.0 # vector (one entry per species)
 num_gaussians = 1
 
+# Gaussian parameters
+velocity_mean_0 = -2.4 0 0
+velocity_deviation_0 = 1.0 1.0 1.0
+velocity_weight_0 = 0.5 0.5 0.5
+
 
 # wave vector
 kx = 2.094 # 1.25 for Weibel, 0.5 for Landau
