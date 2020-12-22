@@ -29,7 +29,7 @@ freq_slice = 1
 WF = "1.0 + 0.10 * cos(kvarx * x+kvarz*z)"
 Bx = "0.0"
 By = "0.0"
-Bz = "1"
+Bz = "1.1893"
 phi = "0.10 * cos(kvarx * x+kvarz*z)"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
