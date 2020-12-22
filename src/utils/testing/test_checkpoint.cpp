@@ -38,7 +38,7 @@ void main_main ()
     amrex::Real dt = 0.1;
     std::array<amrex::Real, numspec> charge = {-1.0};
     std::array<amrex::Real, numspec> mass = {1.0};
-    amrex::Real k = 1.25;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     std::string WF = "0.0";
     std::string phi = "0.0";
     std::string rho = "0.0";

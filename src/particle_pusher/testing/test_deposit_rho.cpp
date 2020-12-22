@@ -27,7 +27,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Function
     double x, y, z;
-    double k = 0.5;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
     int err;
     std::string WF = "1.0 + 0.0 * cos(kvar * x)";
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};

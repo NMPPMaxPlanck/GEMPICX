@@ -22,7 +22,9 @@ velocity_deviation_1 = 1.0 1.0 1.0
 velocity_weight_1 = 0.5 0.5 0.5
 
 # wave vector
-k = 0.2 # 1.25 for Weibel, 0.5 for Landau
+kx = 0.2 # 1.25 for Weibel, 0.5 for Landau
+ky = 0.2
+kz = 0.2
 
 # Simulation parameters
 n_steps = 50000
@@ -32,7 +34,7 @@ freq_v = 100001
 freq_slice = 100001
 
 # Function parameters
-WF = "1.0 + 0.001 * cos(kvar * x)"
+WF = "1.0 + 0.001 * cos(kvarx * x)"
 Bx = "0.0"
 By = "0.0"
 Bz = "0.0"

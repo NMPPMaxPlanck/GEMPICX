@@ -54,7 +54,10 @@ void main_main (bool ctest)
     amrex::Real dt;
     std::array<amrex::Real, numspec> charge;
     std::array<amrex::Real, numspec> mass;
-    amrex::Real k;
+    amrex::Real kx;
+    amrex::Real ky;
+    amrex::Real kz;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> k;
     std::string WF;
     std::string Bx;
     std::string By;
@@ -93,11 +96,13 @@ void main_main (bool ctest)
         dt = 0.02;
         charge[0] = -1.0;
         mass[0] = 1.0;
-        k = 1.25;
-        WF = "1.0 + 0.0 * cos(kvar * x)";
+        kx = 1.25;
+        ky = 1.25;
+        kz = 1.25;
+        WF = "1.0 + 0.0 * cos(kvarx * x)";
         Bx = "0.0";
         By = "0.0";
-        Bz = "1e-3 * cos(kvar * x)";
+        Bz = "1e-3 * cos(kvarx * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
         num_gaussians = 1;
         tolerance_particles = 1.e-10;
@@ -126,7 +131,9 @@ void main_main (bool ctest)
         pp.get("dt",dt);
         pp.get("charge",charge);
         pp.get("mass",mass);
-        pp.get("k",k);
+        pp.get("kx",kx);
+        pp.get("ky",ky);
+        pp.get("kz",kz);
         pp.get("WF",WF);
         pp.get("Bx",Bx);
         pp.get("By",By);
@@ -186,7 +193,7 @@ void main_main (bool ctest)
     // functions
     double x, y, z;
     int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
+    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
@@ -204,6 +211,7 @@ void main_main (bool ctest)
 
     //initializer
     initializer<vdim, numspec> init;
+    k = {AMREX_D_DECL(kx,ky,kz)};
     init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,n_part_per_cell,k,
                                     VM,VD,VW,tolerance_particles);
 

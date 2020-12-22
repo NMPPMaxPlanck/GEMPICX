@@ -41,7 +41,7 @@ public:
     std::array<int, numspec> Np_cell; //number of particles per cell
     int NP_cell_tot;
 
-    amrex::Real k; // for domain and weight function
+    std::array<amrex::Real,GEMPIC_SPACEDIM> k; // for domain and weight function
     amrex::RealBox real_box;
 
     //parameters for velocity distribution
@@ -72,7 +72,7 @@ public:
                                     std::array<amrex::Real, numspec> CH,
                                     std::array<amrex::Real, numspec> MS,
                                     std::array<int, numspec> NPC,
-                                    amrex::Real K,
+                                    std::array<amrex::Real,GEMPIC_SPACEDIM> K,
                                     std::array<std::vector<amrex::Real>, vdim> VM,
                                     std::array<std::vector<amrex::Real>, vdim> VD,
                                     std::array<std::vector<amrex::Real>, vdim> VW,
@@ -91,14 +91,15 @@ public:
             Np_cell[spec] = NPC[spec];
             NP_cell_tot += NPC[spec];
         }
-        k = K;
+        for (int d=0;d<GEMPIC_SPACEDIM;++d)
+          k[d] = K[d];
         propagator = PG;
         tolerance_particles = TP;
 
         double twopi = 2.0*3.14159265359;
 
         amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
-        amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k,twopi/k,twopi/k)};
+        amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k[0],twopi/k[1],twopi/k[2])};
 
         real_box.setLo(boxLo);
         real_box.setHi(boxHi);

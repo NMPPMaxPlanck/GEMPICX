@@ -18,7 +18,7 @@ velocity_deviation_0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) 
 velocity_weight_0 = 1.0 1.0 1.0
 
 # wave vector
-k = 1.25 # 1.25 for Weibel, 0.5 for Landau
+kx = 1.25 # 1.25 for Weibel, 0.5 for Landau
 
 # Simulation parameters
 n_steps = 10
@@ -28,10 +28,10 @@ freq_v = 100001
 freq_slice = 100001 
 
 # Function parameters
-WF = "1.0 + 0.0 * cos(kvar * x)"
+WF = "1.0 + 0.0 * cos(kvarx * x)"
 Bx = "0.0"
 By = "0.0"
-Bz = "1e-3 * cos(kvar * x)"
+Bz = "1e-3 * cos(kvarx * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM

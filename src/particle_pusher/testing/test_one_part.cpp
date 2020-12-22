@@ -52,7 +52,7 @@ void main_main (bool ctest)
     amrex::Real dt = 0.02;
     std::array<amrex::Real, numspec> charge = {-1.0};
     std::array<amrex::Real, numspec> mass = {1.0};
-    amrex::Real k = 1.25;
+    std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     std::string WF = "1.0";
     std::string Bx = "0.0";
     std::string By = "0.0";
