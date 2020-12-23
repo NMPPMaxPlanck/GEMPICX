@@ -7,7 +7,7 @@ max_grid_size = 4
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
-n_part_per_cell = 1000 # number of particles per cell
+n_part_per_cell = 1000 1000 # number of particles per cell
 charge = -1.0 1.0 # vector (one entry per species)
 mass = 1.0 1836.0 # vector (one entry per species)
 num_gaussians = 1
