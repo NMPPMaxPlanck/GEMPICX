@@ -29,7 +29,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int electromagnetic=true>
 void main_main (bool ctest)
 {
     bool readinfile = false;
@@ -342,13 +342,13 @@ void main_main (bool ctest)
     if (ctest) AllPrintToFile("test_output_pre_rename.output") << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_boris_fd<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 1:
-        time_loop_hs_fem<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hs_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 2:
-        time_loop_hsall_fem<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hsall_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     default:
         break;
@@ -364,14 +364,14 @@ int main(int argc, char* argv[])
     if (argc==0) {
         main_main<1, 1, 1, 1, 1>(argc==1); // run for ctest
     }
-    main_main<2, 1, 1, 1, 1>(argc==1);
+    main_main<2, GEMPIC_NUMSPEC, 1, 1, 1, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #elif (GEMPIC_SPACEDIM == 2)
     if (argc==0) {
-        main_main<2, 1, 1, 1, 1>(argc==1); // run for ctest
+        main_main<2, GEMPIC_NUMSPEC, 1, 1, 1>(argc==1); // run for ctest
     }
-    main_main<3, 1, 1, 1, 1>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #endif
 
     amrex::Finalize();

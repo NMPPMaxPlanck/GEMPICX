@@ -3,4 +3,7 @@
 
 #define GEMPIC_SPACEDIM AMREX_SPACEDIM
 
+#define GEMPIC_NUMSPEC 1
+#define GEMPIC_ELECTROMAGNETIC true
+
 #endif
