@@ -194,7 +194,7 @@ void main_main (bool ctest)
     double x, y, z;
     int err;
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
-    int varcount = 4;
+    int varcount = 6;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
     te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars, varcount, &err);
@@ -320,7 +320,7 @@ void main_main (bool ctest)
             }
         }
 
-        for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
+       for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
 
             const auto& particles = pti.GetArrayOfStructs();
             const long np = pti.numParticles();

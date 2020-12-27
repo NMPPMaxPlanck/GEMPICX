@@ -31,11 +31,11 @@ freq_v = 1
 freq_slice = 1 
 
 # Function parameters
-WF = "1.0 + 0.10 * cos(kvarx * x+kvarz*z)"
+WF = "1.0 + 0.10 * cos( kvarx * x + kvarz * z)"
 Bx = "0.0"
 By = "0.0"
 Bz = "1.1893"
-phi = "0.10 * cos(kvarx * x+kvarz*z)"
+phi = "0.10 * cos( kvarx * x + kvarz * z )"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
 propagator = 2
