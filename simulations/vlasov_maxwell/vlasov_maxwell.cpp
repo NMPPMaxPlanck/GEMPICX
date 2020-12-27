@@ -320,7 +320,7 @@ void main_main (bool ctest)
             }
         }
 
-       for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
+     /*   for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
 
             const auto& particles = pti.GetArrayOfStructs();
             const long np = pti.numParticles();
@@ -329,7 +329,7 @@ void main_main (bool ctest)
                              particles[pp].rdata(0) << "," << particles[pp].rdata(1) << "," << particles[pp].rdata(2) << ") " <<
                              particles[pp].rdata(3) << std::endl;
             }
-        }
+        }*/
 
 
         //------------------------------------------------------------------------------
