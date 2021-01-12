@@ -19,9 +19,7 @@ velocity_weight_0 = 0.5 0.5 0.5
 
 
 # wave vector
-kx = 2.094 # 1.25 for Weibel, 0.5 for Landau
-ky = 2.094
-kz = 0.02094
+kx = 2.094 2.094 0.02094
 
 # Simulation parameters
 n_steps = 10
