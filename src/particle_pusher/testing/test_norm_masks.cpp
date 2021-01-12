@@ -7,7 +7,6 @@
 #include <AMReX_Print.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_initializer.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
@@ -20,7 +19,6 @@ using namespace Gempic;
 
 using namespace Field_solvers;
 using namespace Diagnostics_Output;
-using namespace Init;
 using namespace Particles;
 using namespace Sampling;
 

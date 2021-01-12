@@ -30,16 +30,11 @@ namespace Gempic {
 namespace Time_Loop {
 
 template<int vdim, int numspec, int degx, int degy, int degz>
-void loop_preparation (infrastructure infra,
+void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+                       infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz> *diagn,
-                       te_expr *Bx_parse,
-                       te_expr *By_parse,
-                       te_expr *Bz_parse,
-                       double *x,
-                       double *y,
-                       double *z,
                        bool time_staggered) {
 
     // initial rho by: deposition of particle charge
@@ -86,7 +81,7 @@ void loop_preparation (infrastructure infra,
     (*mw_yee).solve_poisson(infra);
 
     // initial B_field
-    (*mw_yee).initB(infra, Bx_parse, By_parse, Bz_parse, x, y, z);
+    (*mw_yee).initB(infra, VM);
 
     if (time_staggered) {
         //------------------------------------------------------------------------------

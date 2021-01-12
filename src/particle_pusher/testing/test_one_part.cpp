@@ -8,7 +8,6 @@
 #include <AMReX_Particles.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_initializer.H>
 #include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
@@ -16,6 +15,7 @@
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
+#include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
 using namespace amrex;
@@ -23,10 +23,10 @@ using namespace Gempic;
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
-using namespace Init;
 using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
+using namespace Vlasov_Maxwell;
 
 template< int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
@@ -41,22 +41,23 @@ void main_main (bool ctest)
 
     // initialize parameters
     std::string sim_name = "One_Particle";
-    amrex::IntVect n_cell(AMREX_D_DECL(4,4,4));
-    int n_part_per_cell = 1;
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(4,4,4)};
+    std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 1;
     int freq_x = 2;
     int freq_v = 2;
     int freq_slice = 1;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
     int max_grid_size = 4;
     amrex::Real dt = 0.02;
     std::array<amrex::Real, numspec> charge = {-1.0};
     std::array<amrex::Real, numspec> mass = {1.0};
-    std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
+    //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
+    amrex::Real k = 1.25;
     std::string WF = "1.0";
     std::string Bx = "0.0";
     std::string By = "0.0";
-    std::string Bz = "1e-3 * cos(kvar * x)";
+    std::string Bz = "1e-3 * cos(kvarx * x)";
     std::string phi = "4 * 0.5 * cos(0.5 * x)";
     std::string rho = "0.0";
     int propagator = 1;
@@ -95,21 +96,28 @@ void main_main (bool ctest)
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
-    //initializer
-    initializer<vdim, numspec> init;
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,Nghost,dt,n_steps,charge,mass,{n_part_per_cell},k,
-                                    VM,VD,VW,tolerance_particles);
-    
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(degx, degy, degz);
+    VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v,
+                    freq_slice, is_periodic, max_grid_size, dt, charge, mass, k,
+                    WF, Bx, By, Bz, phi, 1, propagator, tolerance_particles);
+    VlMa.set_computed_params();
+    VlMa.VM = VM;
+    VlMa.VD = VD;
+    VlMa.VW = VW;
+
+    VlMa.Nghost = 1;
+
     // infrastructure
     infrastructure infra;
-    init.initialize_infrastructure(&infra);
+    VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -129,7 +137,7 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // solve:
     diagnostics<vdim, numspec, degx, degy, degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, Bx_parse, By_parse, Bz_parse, &x, &y, &z,time_staggered);
+    loop_preparation<vdim,numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
@@ -152,6 +160,7 @@ void main_main (bool ctest)
     for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
         AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
     }
+
 }
 
 int main(int argc, char* argv[])

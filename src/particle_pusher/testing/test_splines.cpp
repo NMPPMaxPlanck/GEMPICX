@@ -6,7 +6,6 @@
 #include <AMReX_Print.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_initializer.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_splines.H>
@@ -16,7 +15,6 @@ using namespace amrex;
 using namespace Gempic;
 
 using namespace Field_solvers;
-using namespace Init;
 using namespace Particles;
 
 void main_main ()

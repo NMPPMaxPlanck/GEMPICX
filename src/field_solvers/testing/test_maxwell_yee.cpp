@@ -23,11 +23,11 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
+#include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
 using namespace amrex;
 using namespace Gempic;
-
 using namespace Field_solvers;
 
 //------------------------------------------------------------------------------
@@ -209,9 +209,8 @@ if (bdim > 2) {
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    initializer<vdim, numspec> init;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(128,128,128));
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(128,128,128)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -234,16 +233,18 @@ if (bdim > 2) {
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
-    init.initialize_from_parameters(n_cell,32,is_periodic,maxdeg,0.01,5,{1.0},{1.0},{1000},{AMREX_D_DECL(0.5,0.5,0.5)},
-                                    VM,VD,VW,0);
-    //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, weight_fun
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(degx, degy, degz);
+    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
+                    32, 0.01, {1.0}, {1.0}, 0.5);
+    VlMa.set_computed_params();
 
     Infra::infrastructure infra;
-    init.initialize_infrastructure(&infra);
+    VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
 
 
     for (int i=0; i<vdim; i++) {
@@ -310,7 +311,7 @@ if (bdim > 2) {
 
     //------------------------------------------------------------------------------
     // Second maxwell test
-    maxwell_yee<vdim> mw_yee_2(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee_2(VlMa, infra);
 
     for (int i=0; i<vdim; i++) {
         (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component

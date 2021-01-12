@@ -25,8 +25,16 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 
+namespace Gempic {
+namespace Vlasov_Maxwell {
+template<int vdim, int numspec>
+class vlasov_maxwell;
+}
+}
+
 using namespace Infra;
 using namespace Utils;
+using namespace Vlasov_Maxwell;
 
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
@@ -80,10 +88,10 @@ public:
 
     // Explicit const
     /**
-     * Explicit constructor: all class attributes can be initialized by passing an object of class initializer, infrastructure and the number of ghost cells.
+     * Explicit constructor: all class attributes can be initialized by passing an object of class vlasov maxwell, infrastructure and the number of ghost cells.
      */
     template <int numspec>
-    maxwell_yee (initializer<vdim, numspec> init, infrastructure ifr, int NG){
+    maxwell_yee (vlasov_maxwell<vdim, numspec> VM, infrastructure ifr){
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
 
@@ -103,10 +111,10 @@ if (int(vdim/2.5)*2+1 > 2) {
         B_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 }
 
-        Nghost = NG;
+        Nghost = VM.Nghost;
         Ncomp = 1;
 
-        dt = init.dt;
+        dt = VM.dt;
         time = 0.0;
 
         // make the multifabs nodal-/cell-centered according to indices
@@ -131,7 +139,7 @@ if (int(vdim/2.5)*2+1 > 2) {
         sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
         sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
 
-        nsteps = init.n_steps;
+        nsteps = VM.n_steps;
 
         //-----------------------------------------------------------------------------
         // Fill Owner Mask
@@ -224,6 +232,7 @@ if (int(vdim/2.5)*2+1 > 2) {
         }
 
     }
+
 
     /**
      * Initialize E and B field for time t=0 with a given array of functions.
@@ -372,6 +381,56 @@ if (int(vdim/2.5)*2+1 > 2) {
 #endif
                         for(int l=lo[0]; l<=hi[0]; l++){
                             *x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                            const double result = (i==0 ? te_eval(Bx_parse) : (i==1 ? te_eval(By_parse) : te_eval(Bz_parse)));
+                            (*B_Array[i])[mfi].setVal(result, cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 2)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                }
+#endif
+                // next mfi
+            }
+            (*B_Array[i]).FillBoundary(infra.geom.periodicity());
+        }
+    }
+
+    /**
+     * Initialize B field for time t=0 with a given array of functions.
+     */
+    template <int numspec>
+    void initB (infrastructure infra,
+                vlasov_maxwell<vdim, numspec> VM) {
+
+        double x, y, z;
+        double kx = VM.k;
+        double ky = VM.k;
+        double kz = VM.k;
+        int err;
+        te_variable read_vars[6] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
+        int varcount = 6;
+        te_expr *Bx_parse = te_compile(VM.Bx.c_str(), read_vars, varcount, &err);
+        te_expr *By_parse = te_compile(VM.By.c_str(), read_vars, varcount, &err);
+        te_expr *Bz_parse = te_compile(VM.Bz.c_str(), read_vars, varcount, &err);
+
+        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
+            for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+                    z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+                        y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+                            x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
                             // the box for these values:
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
                             const double result = (i==0 ? te_eval(Bx_parse) : (i==1 ? te_eval(By_parse) : te_eval(Bz_parse)));
@@ -734,6 +793,62 @@ if (int(vdim/2.5)*2+1 > 2) {
 
         advance_E(ifr, dt_step);
         advance_B(ifr, dt_step);
+    }
+
+    /**
+     * Initialize rho and phi with given funtions
+     */
+    template <int numspec>
+    void init_rho_phi(infrastructure ifr,
+                      vlasov_maxwell<vdim, numspec> VM){
+
+        double x, y, z;
+        int err;
+        te_variable read_vars[3] = {{"x", &x}, {"y", &y}, {"z", &z}};
+        int varcount = 3;
+        te_expr *rho_parse = te_compile(VM.rho.c_str(), read_vars, varcount, &err);
+        te_expr *phi_parse = te_compile(VM.phi.c_str(), read_vars, varcount, &err);
+
+        for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
+            const amrex::Box& bx = mfi.validbox();
+
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+            for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                    for(int l=lo[0]; l<=hi[0]; l++){
+
+                        // the box for these values:
+                        x = l*ifr.dx[0];
+#if (GEMPIC_SPACEDIM > 1)
+                        y = j*ifr.dx[1];
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                        z = k*ifr.dx[2];
+#endif
+                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
+
+                        const double result_phi = te_eval(phi_parse);
+                        const double result_rho = te_eval(rho_parse);
+                        phi[mfi].setVal(result_phi, cc, 0, 1);
+                        rho[mfi].setVal(result_rho, cc, 0, 1);
+                    }
+#if (GEMPIC_SPACEDIM > 1)
+                }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+            }
+#endif
+            // next mfi
+        }
+
+        rho.FillBoundary(ifr.geom.periodicity());
+        phi.FillBoundary(ifr.geom.periodicity());
     }
 
     /**

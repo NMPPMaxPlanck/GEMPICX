@@ -1,3 +1,6 @@
+#ifndef PARTICLE_GROUPS_H_
+#define PARTICLE_GROUPS_H_
+
 #include <AMReX.H>
 #include <AMReX_ArrayOfStructs.H>
 #include <AMReX_Box.H>
@@ -13,14 +16,18 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 
-#include <GEMPIC_initializer.H>
+#include <GEMPIC_infrastructure.H>
+
+namespace Gempic {
+namespace Vlasov_Maxwell {
+template<int vdim, int numspec>
+class vlasov_maxwell; // forward declaration
+}
+}
 
 using namespace Gempic;
 using namespace Infra;
-using namespace Init;
-
-#ifndef PARTICLE_GROUPS_H_
-#define PARTICLE_GROUPS_H_
+using namespace Vlasov_Maxwell;
 
 namespace Gempic {
 namespace Particles {
@@ -47,14 +54,14 @@ public:
 
     // Explicit const
     /**
-     * Explicit Constructor: By passing an object of class initializer and infrastructure one can set up the empty particle object. The particles themselves need to be added separately. This
+     * Explicit Constructor: By passing an object of class vlasov maxwell and infrastructure one can set up the empty particle object. The particles themselves need to be added separately. This
      * can be done one by one (see method add_particle) or with the particle samples in the folder sampler.
      */
-    particle_groups (initializer<vdim, numspec> init,
+    particle_groups (vlasov_maxwell<vdim, numspec> VM,
                      infrastructure ifr){
 
-        charge = init.charge;
-        mass = init.mass;
+        charge = VM.charge;
+        mass = VM.mass;
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
@@ -67,6 +74,7 @@ public:
 #endif
         }
     }
+
 
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p velocity and the weight @p weight to the Particle Tile @p particles.

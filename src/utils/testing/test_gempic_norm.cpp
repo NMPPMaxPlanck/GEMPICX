@@ -21,6 +21,7 @@
 ------------------------------------------------------------------------------*/
 
 #include <cmath>
+#include <tinyexpr.h>
 
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
@@ -30,6 +31,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
 using namespace amrex;
@@ -59,9 +61,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    initializer<vdim, numspec> init;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(256,256,256));
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1, 1, 1)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(256,256,256)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -81,11 +82,15 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    init.initialize_from_parameters(n_cell,64,is_periodic,1,0.01,5,{1.0},{1.0},{1},{AMREX_D_DECL(1.,1.,1.)},VM,VD,VW,0);
-    infrastructure infra;
-    init.initialize_infrastructure(&infra);
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(1, 1, 1);
+    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, 64);
+    VlMa.set_computed_params();
 
-    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
+    infrastructure infra;
+    VlMa.initialize_infrastructure(&infra);
+
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
     std::ofstream ofs("test_gempic_norm.output", std::ofstream::out);
 
     // Constant case

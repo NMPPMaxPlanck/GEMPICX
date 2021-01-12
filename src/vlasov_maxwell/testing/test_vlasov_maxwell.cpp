@@ -30,16 +30,25 @@ using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
 template<int vdim, int numspec, int degx, int degy, int degz>
-void main_main (bool ctest)
+void main_main ()
 {
-    bool readinfile = false;
-    // ------------------------------------------------------------------------------
-    // ------------PARAMETERS--------------------------------------------------------
-
+    bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.read_pp_params();
+    VlMa.set_params();
     VlMa.set_computed_params();
+
+    std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
+    for (int j=0; j<vdim; j++) {
+        VM[j].push_back(0.0);
+        VW[j].push_back(1.0);
+    }
+    VD[0].push_back(0.02/sqrt(2));
+    VD[1].push_back(sqrt(12)*VD[0][0]);
+    VD[2].push_back(VD[1][0]);
+    VlMa.VM = VM;
+    VlMa.VD = VD;
+    VlMa.VW = VW;
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
@@ -59,60 +68,37 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
-    if (VlMa.restart == 0) {
-        if (readinfile) {
-            for (int spec=0; spec<numspec; spec++) {
-                VlMa.init_particles_from_file(&part_gr, spec, "particle_input.txt");
-            }
-        } else {
-            for (int spec=0; spec<numspec; spec++) {
-                VlMa.read_particle_spec(spec);
-                init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, spec);
-            }
-        }
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
+    loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
 
-        loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
-    } else {
-        Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, VlMa.checkpoint_file, VlMa.curr_step);
-    }
 
     //------------------------------------------------------------------------------
     // timeloop
 
-
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
+AllPrintToFile("test_output_pre_rename.output") << std::endl;
 switch (VlMa.propagator) {
     case 0:
-      time_loop_boris_fd<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 1:
-      time_loop_hs_fem<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     case 2:
-      time_loop_hsall_fem<vdim, numspec, degx, degy, degz>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+        time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
         break;
     default:
         break;
 }
+
+if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell.output");
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
-#if (GEMPIC_SPACEDIM == 1)
-    if (argc==0) {
-        main_main<1, GEMPIC_NUMSPEC, 1, 1, 1>(argc==1); // run for ctest
-    }
-    main_main<2, GEMPIC_NUMSPEC, 1, 1, 1>(argc==1);
-#elif (GEMPIC_SPACEDIM == 2)
-    if (argc==0) {
-        main_main<2, GEMPIC_NUMSPEC, 1, 1, 1>(argc==1); // run for ctest
-    }
-    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1>(argc==1);
-#elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>(argc==1);
-#endif
+    main_main<3, 1, 1, 1, 1>();
 
     amrex::Finalize();
 }

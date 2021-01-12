@@ -23,7 +23,7 @@ ky = 1.25
 kz = 1.25
 
 # Simulation parameters
-n_steps = 50000
+n_steps = 10
 dt = 0.02
 freq_x = 100001 
 freq_v = 100001 

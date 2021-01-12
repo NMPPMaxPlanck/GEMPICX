@@ -249,8 +249,8 @@ void time_loop_hsall_fem (infrastructure infra,
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
 
         // save temporary results every n steps
-        if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_tmp.output", t_step+1);
+        if ((t_step+1)%1 == 0) {
+            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_step1.output", t_step+1);
         }
 
         amrex::Print() << "finished step " << t_step+1 << std::endl;

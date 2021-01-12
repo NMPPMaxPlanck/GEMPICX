@@ -11,9 +11,6 @@
 
 #include <GEMPIC_Config.H>
 
-//using namespace Gempic;
-
-//using namespace Init;
 
 #ifndef INFRASTRUCTURE_H_
 #define INFRASTRUCTURE_H_
@@ -50,46 +47,6 @@ public:
      */
     infrastructure (){};
 
-    // Explicit const
-    /**
-     * Explicit constructor: all class attributes can be initialized by passing an object of class initializer.
-     */
-    /*
-    infrastructure (initializer init){
-        n_cell = init.n_cell;
-        max_grid_size = init.max_grid_size;
-
-        for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
-            is_periodic[cc] = init.is_periodic[cc];
-        }
-        real_box = init.real_box;
-
-        for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
-            Length[cc] = (real_box.hi(cc)-real_box.lo(cc));
-        }
-
-        amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
-        amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[0]-1, n_cell[1]-1, n_cell[2]-1));
-
-        domain.setSmall(dom_lo);
-        domain.setBig(dom_hi);
-        grid.define(domain);
-        grid.maxSize(max_grid_size);
-        geom.define(domain,&real_box,amrex::CoordSys::cartesian,is_periodic);
-        dx = geom.CellSize();
-
-        distriMap.define(grid);
-
-        dxi[GEMPIC_SPACEDIM] = 1.;
-        for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
-            plo[cc] = geom.ProbLo()[cc];
-            dxi[cc] = 1.0/dx[cc];
-            dxi[GEMPIC_SPACEDIM] *= dxi[cc];
-        }
-
-        tolerance_particle = init.tolerance_particles;
-    }
-    */
 };
 }
 }

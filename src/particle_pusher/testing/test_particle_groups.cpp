@@ -7,12 +7,12 @@
 #include <AMReX_Print.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_initializer.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_sampler.H>
+#include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
 using namespace amrex;
@@ -20,7 +20,6 @@ using namespace Gempic;
 
 using namespace Field_solvers;
 using namespace Diagnostics_Output;
-using namespace Init;
 using namespace Particles;
 using namespace Sampling;
 
@@ -30,10 +29,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     //build objects:
 
-    //initializer
-    initializer<vdim, numspec> init;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(32,32,32));
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
     int max_grid_size = 2;
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
@@ -64,15 +61,21 @@ void main_main ()
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
-
-    init.initialize_from_parameters(n_cell,max_grid_size,is_periodic,1,0.01,0,{1.0},{1.0},{1},{AMREX_D_DECL(1.25,1.25,1.25)},VM,VD,VW,0);
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(1, 1, 1);
+    VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2,
+                    is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, WF);
+    VlMa.set_computed_params();
+    VlMa.VM = VM;
+    VlMa.VD = VD;
+    VlMa.VW = VW;
 
     // infrastructure
     infrastructure infra;
-    init.initialize_infrastructure(&infra);
+    VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvar * x)";
@@ -89,12 +92,12 @@ void main_main ()
     mw_yee.initE(infra, Ex_parse, Ey_parse, Ez_parse, &x, &y, &z);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise(infra, part_gr, init, species, WF_parse, &x, &y, &z);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, species, WF_parse, &x, &y, &z);
     (*(part_gr).mypc[0]).Redistribute();
 
     int spec = 0;

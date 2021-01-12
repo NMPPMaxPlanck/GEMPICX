@@ -11,6 +11,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
+#include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
 using namespace amrex;
@@ -27,7 +28,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Function
     double x, y, z;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
+    //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
+    amrex::Real k = 0.5;
     int err;
     std::string WF = "1.0 + 0.0 * cos(kvar * x)";
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
@@ -36,9 +38,8 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    initializer<vdim, numspec> init;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(8,8,8));
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(8,8,8)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -61,24 +62,30 @@ void main_main ()
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
-    init.initialize_from_parameters(n_cell,4,is_periodic,maxdeg,0.02,0,{-1.0},{1.0},{1000},k,
-                                    VM,VD,VW,0);
-    //n_cell, max_grid_size, periodic, Nghost, dt, n_steps, charge, mass, n_part_per_cell, k, vel_mean, vel_dev, vel_weight, propagator
+
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(degx, degy, degz);
+    VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
+                    is_periodic, 4, 0.02, {-1.0}, {1.0}, k, WF);
+    VlMa.set_computed_params();
+    VlMa.VM = VM;
+    VlMa.VD = VD;
+    VlMa.VW = VW;
 
     infrastructure infra;
-    init.initialize_infrastructure(&infra);
+    VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Initialize fields and particles
-    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise(infra, part_gr, init, species, WF_parse, &x, &y, &z);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, species, WF_parse, &x, &y, &z);
 
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho

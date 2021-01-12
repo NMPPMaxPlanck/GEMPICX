@@ -1,3 +1,4 @@
+#include <tinyexpr.h>
 
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
@@ -6,16 +7,15 @@
 #include <AMReX_Print.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_initializer.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
 using namespace Field_solvers;
-using namespace Init;
 using namespace Particles;
 
 template<int vdim, int numspec>
@@ -24,9 +24,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    initializer<vdim, numspec> init;
-    amrex::IntVect is_periodic(AMREX_D_DECL(1,1,1));
-    amrex::IntVect n_cell(AMREX_D_DECL(64,64,64));
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(64,64,64)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -46,17 +45,24 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    init.initialize_from_parameters(n_cell,32,is_periodic,1,0.01,5,{1.0},{1.0},{1000},{AMREX_D_DECL(1.,1.,1.)},
-                                    VM,VD,VW,0);
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(1, 1, 1);
+    VlMa.set_params("initialize_ctest", n_cell, {1000}, 5, 10, 10, 10,
+                    is_periodic, 32, 0.01, {1.0}, {1.0}, 1);
+    VlMa.set_computed_params();
+    VlMa.VM = VM;
+    VlMa.VD = VD;
+    VlMa.VW = VW;
+
     infrastructure infra;
-    init.initialize_infrastructure(&infra);
+    VlMa.initialize_infrastructure(&infra);
 
     //need a multifab to be able to iterate later:
-    maxwell_yee<vdim> mw_yee(init, infra, init.Nghost);
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
-    particle_groups<vdim, numspec> part_gr(init, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
     //set particles for first cell (and copies in remaining cells)
     int Np_cell = 100; //number of particles per cell
