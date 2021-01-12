@@ -58,7 +58,8 @@ public:
     amrex::Real dt;
     std::array<amrex::Real, numspec> charge;
     std::array<amrex::Real, numspec> mass;
-    amrex::Real k, kx, ky, kz;
+    std::array<amrex::Real, 3> k;
+    amrex::Real kx, ky, kz;
     std::string WF;
     std::string Bx;
     std::string By;
@@ -209,7 +210,7 @@ public:
         dt = DT;
         charge = C;
         mass = M;
-        k = K;
+        k = {K,K,K};
         WF = wf;
         Bx = BX;
         By = BY;
@@ -252,14 +253,14 @@ public:
             double twopi = 2.0*3.14159265359;
 
             amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
-            amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k,twopi/k,twopi/k)};
+            amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k[0],twopi/k[1],twopi/k[2])};
 
             real_box.setLo(boxLo);
             real_box.setHi(boxHi);
 
-            kx = k;
-            ky = k;
-            kz = k;
+            kx = k[0];
+            ky = k[1];
+            kz = k[2];
         }
 
         void initialize_infrastructure(Infra::infrastructure *ifr){

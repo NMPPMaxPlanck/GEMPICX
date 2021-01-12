@@ -18,7 +18,7 @@ velocity_deviation_0 = 0.01414213562 0.04898979486
 velocity_weight_0 = 1.0 1.0
 
 # wave vector
-kx = 1.25 # 1.25 for Weibel, 0.5 for Landau
+k = 1.25 1.25 1.25 # 1.25 for Weibel, 0.5 for Landau
 
 # Simulation parameters
 n_steps = 25000

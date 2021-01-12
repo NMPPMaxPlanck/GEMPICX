@@ -406,9 +406,9 @@ if (int(vdim/2.5)*2+1 > 2) {
                 vlasov_maxwell<vdim, numspec> VM) {
 
         double x, y, z;
-        double kx = VM.k;
-        double ky = VM.k;
-        double kz = VM.k;
+        double kx = VM.k[0];
+        double ky = VM.k[1];
+        double kz = VM.k[2];
         int err;
         te_variable read_vars[6] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
         int varcount = 6;
