@@ -40,38 +40,38 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
     amrex::VisMF::SetHeaderVersion(amrex::VisMF::Header::Version_v1);
 
     int bdim = int(vdim/2.5)*2+1;
-    amrex::MultiFab tmp_b_mf((*infra).grid, (*infra).distriMap, 2*vdim+bdim, 0); // temporary MF to store all fields
-    amrex::Vector<std::string> varnames;
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[0], 0, 0, 1, 0); // srccomp, destcomp, numcomp, nghost
-    varnames.push_back("E_x");
-#if (vdim>1)
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[1], 0, 1, 1, 0);
-    varnames.push_back("E_y");
-#endif
-#if (vdim>2)
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[2], 0, 2, 1, 0);
-    varnames.push_back("E_z");
-#endif
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[0], 0, vdim, 1, 0); // srccomp, destcomp, numcomp, nghost
-    varnames.push_back("B_x");
-#if (bdim>1)
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[1], 0, vdim+1, 1, 0);
-    varnames.push_back("B_y");
-#endif
-#if (bdim>2)
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[2], 0, vdim+2, 1, 0);
-    varnames.push_back("B_z");
-#endif
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[0], 0, vdim+bdim, 1, 0); // srccomp, destcomp, numcomp, nghost
-    varnames.push_back("J_x");
-#if (vdim>1)
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[1], 0, vdim+bdim+1, 1, 0);
-    varnames.push_back("J_y");
-#endif
-#if (vdim>2)
-    tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[2], 0, vdim+bdim+2, 1, 0);
-    varnames.push_back("J_z ");
-#endif
+        amrex::MultiFab tmp_b_mf((*infra).grid, (*infra).distriMap, 2*vdim+bdim, 0); // temporary MF to store all fields
+        amrex::Vector<std::string> varnames;
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[0], 0, 0, 1, 0); // srccomp, destcomp, numcomp, nghost
+        varnames.push_back("E_x");
+    if (vdim>1) {
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[1], 0, 1, 1, 0);
+        varnames.push_back("E_y");
+    }
+    if (vdim>2) {
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).E_Array[2], 0, 2, 1, 0);
+        varnames.push_back("E_z");
+    }
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[0], 0, vdim, 1, 0); // srccomp, destcomp, numcomp, nghost
+        varnames.push_back("B_x");
+    if (bdim>1) {
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[1], 0, vdim+1, 1, 0);
+        varnames.push_back("B_y");
+    }
+    if (bdim>2) {
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).B_Array[2], 0, vdim+2, 1, 0);
+        varnames.push_back("B_z");
+    }
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[0], 0, vdim+bdim, 1, 0); // srccomp, destcomp, numcomp, nghost
+        varnames.push_back("J_x");
+    if (vdim>1) {
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[1], 0, vdim+bdim+1, 1, 0);
+        varnames.push_back("J_y");
+    }
+    if (vdim>2) {
+        tmp_b_mf.Copy(tmp_b_mf, *(*mw_yee).J_Array[2], 0, vdim+bdim+2, 1, 0);
+        varnames.push_back("J_z ");
+    }
 
     amrex::Real time = step*(*mw_yee).dt;
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames,
@@ -79,29 +79,22 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
 
     // Particle Info -------------------------------------------------------------
     const std::string& name = "electrons";
-    const amrex::Vector<int>& write_real_comp = {1,1
-#if (vdim > 1)
-                                                 ,1
-#endif
-#if (vdim>2)
-                                                 ,1
-#endif
-                                                };
     const amrex::Vector<int>& write_int_comp = {};
-    const amrex::Vector<std::string>& real_comp_names = {"vx"
-#if (vdim > 1)
-                                                         , "vy"
-#endif
-#if (vdim>2)
-                                                         , "vz"
-#endif
-                                                         , "weight"};
-    std::cout << "components of parts: " << (*(*ppg).mypc[0]).NumRealComps()
-              << ", Num varnames passed: " << real_comp_names.size() << ", num bool passed: "
-              << write_real_comp.size() << std::endl;
     const amrex::Vector<std::string>&  int_comp_names = {};
     int species = 0; //TODO: multispecies
-    (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    if(vdim ==1) {
+        const amrex::Vector<int>& write_real_comp = {1,1};
+        const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
+        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    } else if (vdim ==2) {
+        const amrex::Vector<int>& write_real_comp = {1,1,1};
+        const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
+        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    } else if (vdim ==3) {
+        const amrex::Vector<int>& write_real_comp = {1,1,1,1};
+        const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
+        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    }
 
     // warpx_job_info -------------------------------------------------------------
     std::string FullPathJobInfoFile = plotfilename;
@@ -175,26 +168,22 @@ Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<v
 
     // Particle Info -------------------------------------------------------------
     const std::string& name = "electrons";
-    const amrex::Vector<int>& write_real_comp = {1,1
-#if (vdim > 1)
-                                                 ,1
-#endif
-#if (vdim>2)
-                                                 ,1
-#endif
-                                                };
     const amrex::Vector<int>& write_int_comp = {};
-    const amrex::Vector<std::string>& real_comp_names = {"vx"
-#if (vdim > 1)
-                                                         , "vy"
-#endif
-#if (vdim>2)
-                                                         , "vz"
-#endif
-                                                         , "weight"};
     const amrex::Vector<std::string>&  int_comp_names = {};
     int species = 0; //TODO: multispecies
-    (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    if(vdim ==1) {
+        const amrex::Vector<int>& write_real_comp = {1,1};
+        const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
+        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    } else if (vdim ==2) {
+        const amrex::Vector<int>& write_real_comp = {1,1,1};
+        const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
+        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    } else if (vdim ==3) {
+        const amrex::Vector<int>& write_real_comp = {1,1,1,1};
+        const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
+        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+    }
 
     // warpx_job_info -------------------------------------------------------------
     std::string FullPathJobInfoFile = plotfilename;
@@ -244,4 +233,9 @@ Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<v
 
 }
 
+}
+
+}
+
 #endif
+
