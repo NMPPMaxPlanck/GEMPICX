@@ -36,6 +36,7 @@ void time_loop_boris_fd (infrastructure infra,
                          particle_groups<vdim,numspec> *part_gr,
                          diagnostics<vdim, numspec, degx, degy, degz> *diagn,
                          bool ctest,
+                         std::string simulation_name,
                          std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
@@ -146,7 +147,7 @@ void time_loop_boris_fd (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_tmp.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
@@ -187,7 +188,7 @@ void time_loop_boris_fd (infrastructure infra,
         }
     } // end time loop
 
-    (*diagn).save_all_to_textfile((*mw_yee).dt);
+    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
 }
