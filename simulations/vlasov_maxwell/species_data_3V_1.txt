@@ -1,11 +1,11 @@
-1.0
+1.0 + 0.2 * cos(kvarx * x)
 # Gaussian
 # velocity mean
 0.0
 0.0
 0.0
 # velocity deviation
-1.0
+0.00070710678
 1.0
 1.0
 # velocity weight
