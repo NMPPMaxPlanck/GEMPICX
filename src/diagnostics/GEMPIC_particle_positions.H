@@ -28,7 +28,8 @@ namespace Diagnostics_Output {
 
 template<int vdim, int numspec>
 void
-Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step, const std::string& name = "electrons",
+                      int species = 0)
 {
     //TODO: other dims
 
@@ -78,10 +79,8 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
                              (*infra).geom, time, 0);
 
     // Particle Info -------------------------------------------------------------
-    const std::string& name = "electrons";
     const amrex::Vector<int>& write_int_comp = {};
     const amrex::Vector<std::string>&  int_comp_names = {};
-    int species = 0; //TODO: multispecies
     if(vdim ==1) {
         const amrex::Vector<int>& write_real_comp = {1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
