@@ -85,6 +85,10 @@ public:
         }
 
         // compute kinetic energy norm and momentum
+        kin[step] = 0.0;
+        for (int cmp=0;cmp<vdim;cmp++) {
+            mom[step][cmp] = 0.0;
+        }
         for (int spec=0;spec<numspec;spec++){ // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
                                              [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
@@ -99,7 +103,7 @@ public:
             amrex::ParallelDescriptor::ReduceRealSum
                     (kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
-            kin[step] = 0.5*kin_tmp;
+            kin[step] += 0.5*kin_tmp;
             for (int cmp=0;cmp<vdim;cmp++) {
                 auto mom_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
                                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
@@ -115,10 +119,10 @@ public:
                         (mom_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
                 // save results for this species i_s into m_data
-                mom[step][cmp] = mom_tmp;
+                mom[step][cmp] += mom_tmp;
             }
-            gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
         }
+        gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
 
         // save Plot and Checkpoint-files
         if ((step+1)%freq_slice == 0) {
