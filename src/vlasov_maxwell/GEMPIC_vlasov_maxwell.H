@@ -149,7 +149,7 @@ public:
                     WF_line = false;
                 } else {
                 line_num++;
-                if (line == "# Gaussian") {
+                if ((line.at(0) == '#') & (line.at(2) == 'G')) {
                     gaussian_num++;
                 } else {
                     if (line.at(0) == '#') {
