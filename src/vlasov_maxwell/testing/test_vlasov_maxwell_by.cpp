@@ -76,19 +76,7 @@ void main_main ()
     // timeloop
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_output_pre_rename.output") << std::endl;
-switch (VlMa.propagator) {
-    case 0:
-        time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
-        break;
-    case 1:
-        time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
-        break;
-    case 2:
-        time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
-        break;
-    default:
-        break;
-}
+time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "ctest", &ofs);
 
 if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell_by.output");
 }

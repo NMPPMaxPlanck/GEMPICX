@@ -36,6 +36,7 @@ void main_main ()
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params();
+    VlMa.propagator = 1;
     VlMa.set_computed_params();
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
@@ -77,19 +78,7 @@ void main_main ()
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_output_pre_rename.output") << std::endl;
-switch (VlMa.propagator) {
-    case 0:
-        time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
-        break;
-    case 1:
-        time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
-        break;
-    case 2:
-        time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
-        break;
-    default:
-        break;
-}
+time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "ctest", &ofs);
 
 if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell.output");
 }
@@ -98,7 +87,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+#if (GEMPIC_SPACEDIM == 1)
     main_main<3, 1, 1, 1, 1>();
+#elif (GEMPIC_SPACEDIM == 2)
+    main_main<2, 1, 1, 1, 1>();
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>();
+#endif
 
     amrex::Finalize();
 }
