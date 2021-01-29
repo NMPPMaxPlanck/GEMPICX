@@ -36,16 +36,35 @@ void main_main ()
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params();
+    if (int(vdim/2.5)*2+1 < 3) {
+        VlMa.Bx = VlMa.Bz;
+        VlMa.Bz = "0.0";
+    }
+    if (GEMPIC_SPACEDIM==1 & vdim==1) {
+        // For 1D1V change parameters to make a Landau damping
+        VlMa.sim_name = "Landau";
+        VlMa.n_part_per_cell = {10000};
+        VlMa.k = {0.5,0.5,0.5};
+        VlMa.WF = "1.0 + 0.5 * cos(kvarx * x)";
+        VlMa.Bz = "0.0";
+    }
+    VlMa.n_steps = 10;
     VlMa.set_computed_params();
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
-    for (int j=0; j<vdim; j++) {
-        VM[j].push_back(0.0);
-        VW[j].push_back(1.0);
+    if (GEMPIC_SPACEDIM==1 & vdim==1) {
+        VM[0].push_back(0.0);
+        VD[0].push_back(1.0);
+        VW[0].push_back(1.0);
+    } else {
+        for (int j=0; j<vdim; j++) {
+            VM[j].push_back(0.0);
+            VW[j].push_back(1.0);
+        }
+        VD[0].push_back(0.02/sqrt(2));
+        VD[1].push_back(sqrt(12)*VD[0][0]);
+        VD[2].push_back(VD[1][0]);
     }
-    VD[0].push_back(0.02/sqrt(2));
-    VD[1].push_back(sqrt(12)*VD[0][0]);
-    VD[2].push_back(VD[1][0]);
     VlMa.VM = VM;
     VlMa.VD = VD;
     VlMa.VW = VW;
@@ -65,12 +84,10 @@ void main_main ()
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
     diagnostics<vdim, numspec,degx,degy,degz> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name);
-
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
     loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
-
 
     //------------------------------------------------------------------------------
     // timeloop
@@ -78,24 +95,102 @@ std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_output_pre_rename.output") << std::endl;
 time_loop_boris_fd<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "ctest", &ofs);
 
-if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell_by.output");
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 #if (GEMPIC_SPACEDIM == 1)
+    main_main<1, 1, 1, 1, 1>();
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "0 2.82775e-05 1.74142e-05 1.72514e-05 0 0 5e-07 0.315393 1.43412 4.90194 4.95606" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "1 2.82739e-05 1.74401e-05 1.72768e-05 3.03609e-40 1.20022e-39 5e-07 0.31539 1.43414 4.90193 4.95602" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "2 2.82582e-05 1.74626e-05 1.7296e-05 1.07538e-11 5.42619e-11 4.99432e-07 0.315389 1.4342 4.90191 4.956" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "3 2.82305e-05 1.74813e-05 1.73091e-05 9.53964e-11 4.79157e-10 4.98639e-07 0.315389 1.43431 4.9019 4.95597" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "4 2.8191e-05 1.74958e-05 1.73154e-05 3.73233e-10 1.86231e-09 4.98256e-07 0.31539 1.43446 4.90189 4.95596" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "5 2.81396e-05 1.75037e-05 1.73136e-05 1.00717e-09 4.97797e-09 4.99121e-07 0.315393 1.43465 4.90189 4.95594" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "6 2.80766e-05 1.75027e-05 1.73019e-05 2.18734e-09 1.06708e-08 5.02156e-07 0.315397 1.43488 4.90188 4.95593" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "7 2.80017e-05 1.74911e-05 1.7279e-05 4.11194e-09 1.97274e-08 5.08226e-07 0.315403 1.43515 4.90189 4.95593" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "8 2.79147e-05 1.74662e-05 1.72456e-05 6.96811e-09 3.27518e-08 5.18012e-07 0.315411 1.43547 4.9019 4.95594" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "9 2.78164e-05 1.74287e-05 1.72001e-05 1.09132e-08 5.00539e-08 5.31905e-07 0.31542 1.43582 4.90192 4.95595" << std::endl;
+
 #elif (GEMPIC_SPACEDIM == 2)
-     std::cout << "A" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "2 0.496664 5e-07 6.26629 9.99712" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "3 0.49598 5e-07 6.27091 10.0009" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "4 0.495008 5e-07 6.27737 10.0062" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "5 0.493745 5e-07 6.28562 10.013" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "6 0.492189 5e-07 6.29572 10.0213" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
+
     main_main<2, 1, 1, 1, 1>();
-    std::cout << "B" << std::endl;
-    main_main<2, 1, 1, 1, 1>();
-     std::cout << "C" << std::endl;
-    main_main<3, 1, 1, 1, 1>();
-     std::cout << "D" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "0 2.82775e-05 1.74142e-05 1.72514e-05 0 0 5e-07 0.315393 1.43412 4.90194 4.95606" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "1 2.82739e-05 1.74401e-05 1.72768e-05 3.03609e-40 1.20022e-39 5e-07 0.31539 1.43414 4.90193 4.95602" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "2 2.82582e-05 1.74626e-05 1.7296e-05 1.07538e-11 5.42619e-11 4.99432e-07 0.315389 1.4342 4.90191 4.956" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "3 2.82305e-05 1.74813e-05 1.73091e-05 9.53964e-11 4.79157e-10 4.98639e-07 0.315389 1.43431 4.9019 4.95597" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "4 2.8191e-05 1.74958e-05 1.73154e-05 3.73233e-10 1.86231e-09 4.98256e-07 0.31539 1.43446 4.90189 4.95596" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "5 2.81396e-05 1.75037e-05 1.73136e-05 1.00717e-09 4.97797e-09 4.99121e-07 0.315393 1.43465 4.90189 4.95594" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "6 2.80766e-05 1.75027e-05 1.73019e-05 2.18734e-09 1.06708e-08 5.02156e-07 0.315397 1.43488 4.90188 4.95593" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "7 2.80017e-05 1.74911e-05 1.7279e-05 4.11194e-09 1.97274e-08 5.08226e-07 0.315403 1.43515 4.90189 4.95593" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "8 2.79147e-05 1.74662e-05 1.72456e-05 6.96811e-09 3.27518e-08 5.18012e-07 0.315411 1.43547 4.9019 4.95594" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "9 2.78164e-05 1.74287e-05 1.72001e-05 1.09132e-08 5.00539e-08 5.31905e-07 0.31542 1.43582 4.90192 4.95595" << std::endl;
+
 #elif (GEMPIC_SPACEDIM == 3)
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "2 0.496664 5e-07 6.26629 9.99712" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "3 0.49598 5e-07 6.27091 10.0009" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "4 0.495008 5e-07 6.27737 10.0062" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "5 0.493745 5e-07 6.28562 10.013" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "6 0.492189 5e-07 6.29572 10.0213" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+
+    AllPrintToFile("test_output_pre_rename.output") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
+    AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
+
     main_main<3, 1, 1, 1, 1>();
 #endif
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell_by.output");
 
     amrex::Finalize();
 }
