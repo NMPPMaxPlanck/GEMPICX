@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1>();
+    main_main<2, 1, 1, 1, 1>();
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
 
@@ -116,18 +116,6 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-
-    AllPrintToFile("test_output_pre_rename.output") << "0 2.82775e-05 1.74142e-05 1.72514e-05 0 0 5e-07 0.315393 1.43412 4.90194 4.95606" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 2.8274e-05 1.74408e-05 1.72766e-05 2.69379e-12 1.35661e-11 4.99702e-07 0.31539 1.43414 4.90192 4.95602" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 2.82582e-05 1.74631e-05 1.7295e-05 4.2604e-11 2.139e-10 4.98979e-07 0.315388 1.4342 4.90191 4.95599" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 2.82305e-05 1.74822e-05 1.73069e-05 2.11588e-10 1.05717e-09 4.98324e-07 0.315388 1.43431 4.90189 4.95597" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 2.81909e-05 1.74959e-05 1.73127e-05 6.51505e-10 3.2308e-09 4.98481e-07 0.315389 1.43446 4.90188 4.95595" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 2.81396e-05 1.75035e-05 1.73101e-05 1.53975e-09 7.55231e-09 5.00336e-07 0.315391 1.43465 4.90187 4.95593" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 2.80766e-05 1.75027e-05 1.72982e-05 3.07151e-09 1.48449e-08 5.04789e-07 0.315395 1.43488 4.90186 4.95592" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 2.80016e-05 1.74913e-05 1.72747e-05 5.44034e-09 2.58122e-08 5.12622e-07 0.315401 1.43515 4.90186 4.95592" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 2.79146e-05 1.74662e-05 1.72412e-05 8.81944e-09 4.09194e-08 5.24376e-07 0.315408 1.43546 4.90187 4.95592" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 2.78161e-05 1.74281e-05 1.71962e-05 1.33441e-08 6.02953e-08 5.40262e-07 0.315417 1.43581 4.90189 4.95593" << std::endl;
 
 #elif (GEMPIC_SPACEDIM == 2)
 
@@ -144,20 +132,8 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
 
-    main_main<2, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1>();
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-
-    AllPrintToFile("test_output_pre_rename.output") << "0 2.82775e-05 1.74142e-05 1.72514e-05 0 0 5e-07 0.315393 1.43412 4.90194 4.95606" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 2.8274e-05 1.74408e-05 1.72766e-05 2.69379e-12 1.35661e-11 4.99702e-07 0.31539 1.43414 4.90192 4.95602" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 2.82582e-05 1.74631e-05 1.7295e-05 4.2604e-11 2.139e-10 4.98979e-07 0.315388 1.4342 4.90191 4.95599" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 2.82305e-05 1.74822e-05 1.73069e-05 2.11588e-10 1.05717e-09 4.98324e-07 0.315388 1.43431 4.90189 4.95597" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 2.81909e-05 1.74959e-05 1.73127e-05 6.51505e-10 3.2308e-09 4.98481e-07 0.315389 1.43446 4.90188 4.95595" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 2.81396e-05 1.75035e-05 1.73101e-05 1.53975e-09 7.55231e-09 5.00336e-07 0.315391 1.43465 4.90187 4.95593" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 2.80766e-05 1.75027e-05 1.72982e-05 3.07151e-09 1.48449e-08 5.04789e-07 0.315395 1.43488 4.90186 4.95592" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 2.80016e-05 1.74913e-05 1.72747e-05 5.44034e-09 2.58122e-08 5.12622e-07 0.315401 1.43515 4.90186 4.95592" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 2.79146e-05 1.74662e-05 1.72412e-05 8.81944e-09 4.09194e-08 5.24376e-07 0.315408 1.43546 4.90187 4.95592" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 2.78161e-05 1.74281e-05 1.71962e-05 1.33441e-08 6.02953e-08 5.40262e-07 0.315417 1.43581 4.90189 4.95593" << std::endl;
 
 #elif (GEMPIC_SPACEDIM == 3)
 
@@ -187,10 +163,10 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
-    main_main<3, 1, 1, 1, 1>();
 #endif
 
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell_hs_all.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell_hs_all_lower.output");
+
     amrex::Finalize();
 }
 
