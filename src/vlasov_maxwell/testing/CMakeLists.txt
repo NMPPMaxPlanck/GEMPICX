@@ -1,6 +1,7 @@
 add_executable ( test_vlasov_maxwell_by test_vlasov_maxwell_by ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 add_executable ( test_vlasov_maxwell_by_lower test_vlasov_maxwell_by_lower ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 add_executable ( test_vlasov_maxwell_hs test_vlasov_maxwell_hs ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
+add_executable ( test_vlasov_maxwell_hs_lower test_vlasov_maxwell_hs_lower ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 add_executable ( test_vlasov_maxwell_hs_all test_vlasov_maxwell_hs_all ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 
 #message("#########")
@@ -9,6 +10,7 @@ add_executable ( test_vlasov_maxwell_hs_all test_vlasov_maxwell_hs_all ${CMAKE_S
 target_link_libraries( test_vlasov_maxwell_by AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_vlasov_maxwell_by_lower AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_vlasov_maxwell_hs AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_vlasov_maxwell_hs_lower AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_vlasov_maxwell_hs_all AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
