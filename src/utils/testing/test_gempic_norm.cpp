@@ -130,8 +130,8 @@ void main_main ()
 #endif
     }
     AllPrintToFile("test_output_pre_rename.output") << "Linear case: " << endl;
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
 #if(GEMPIC_SPACEDIM == 1)
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0])) << endl;
     double Lx = infra.Length[0];
     double norm1 = 1./2.*Lx*a;
     double norm2 = 1./3.*pow(Lx,2.)*pow(a,2.);
@@ -139,6 +139,7 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(3) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 #endif
 #if (GEMPIC_SPACEDIM == 2)
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1])) << endl;
     double Lx = infra.Length[0];
     double Ly = infra.Length[1];
     double norm1 = 1./2.*(a*Lx + b*Ly);
@@ -147,6 +148,7 @@ void main_main ()
     AllPrintToFile("test_output_pre_rename.output").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 #endif
 #if (GEMPIC_SPACEDIM == 3)
+    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
     double Lx = infra.Length[0];
     double Ly = infra.Length[1];
     double Lz = infra.Length[2];
