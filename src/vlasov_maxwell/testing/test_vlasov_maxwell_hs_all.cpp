@@ -50,7 +50,7 @@ void main_main ()
         VlMa.WF = "1.0 + 0.5 * cos(kvarx * x)";
         VlMa.Bz = "0.0";
     }
-    VlMa.n_steps = 15000;
+    VlMa.n_steps = 10;
     VlMa.set_computed_params();
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
