@@ -118,23 +118,13 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, "test_one_part.tmp", &ofs);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
         break;
     case 1:
-        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, "test_one_part.tmp", &ofs);
+        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
         break;
     default:
         break;
-    }
-
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "Jx" << std::endl;
-    for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
-        AllPrintToFile("test_one_part.tmp") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
-    }
-    AllPrintToFile("test_one_part.tmp") << "Jy" << std::endl;
-    for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
-        AllPrintToFile("test_one_part.tmp") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
     }
 
 }
@@ -143,13 +133,59 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the expected_output file contains all outputs.
+    For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
+    outputted, so that the comparison to the expected_output (which contains all dimensions) works The order of the outputs is:
+    GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=2, GEMPIC_SPACEDIM=2 vdim=3, GEMPIC_SPACEDIM=3 vdim=3 */
+
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1>(argc==1);
+
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<2, 1, 1, 1, 1>(argc==1);
+
+    // Output for GEMPIC_SPACEDIM=2 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=3 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+
 #elif (GEMPIC_SPACEDIM == 2)
+
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=2 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<2, 1, 1, 1, 1>(argc==1);
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1>(argc==1);
+
+    // Output for GEMPIC_SPACEDIM=3 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 #elif (GEMPIC_SPACEDIM == 3)
+
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=2 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=3 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1>(argc==1);
 #endif
 
