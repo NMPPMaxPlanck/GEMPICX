@@ -159,6 +159,7 @@ void time_loop_hsall_fem (infrastructure infra,
                       pos[1] = x2_new;
 }
                     if(vdim > 2 ) {
+#if GEMPIC_SPACEDIM == 3
                     // push x3
                     amrex::Real x3_new = pos[2] +  (*mw_yee).dt*vel[2];
                     /*accumulate_j_update_v_x3_fem_integral<vdim, degx, degy, degz>( pos,
@@ -179,11 +180,21 @@ void time_loop_hsall_fem (infrastructure infra,
                                                       bA,
                                                       jA,
                                                       bfields);
-
                     // Push v2 and v3
                     vel[0] = vel[0] - chargemass*bfields[0];
                     vel[1] = vel[1] + chargemass*bfields[1];
                     pos[2] = x3_new;
+#else
+                    std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                    gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], weight*vel[2],
+                                             jA[2],
+                                             infra.plo,
+                                             infra.dxi);
+                    // Push v2 and v3
+                    vel[0] = vel[0] - chargemass*bfields[1];
+                    vel[1] = vel[1] + chargemass*bfields[0];
+#endif
+
 }
                     std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
