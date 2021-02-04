@@ -31,6 +31,11 @@ namespace Time_Loop {
 
 /*
     This is the time propagator with a Hamiltonian splitting in a FEM formulation with mass lumping for Lagrange elements of order one and zero
+
+    This propagator is currently not implemented for the 2d2v case. In this case, the operator H_p3 is dismissed and the operators H_p1 and H_p2
+    must be reimplemented only producing the b3 updates. In principle the operators are exactly the same but they should just return one bfield
+    value - the one that concerns b_z - and it should read out the first component of the bfield vector (which saves the b_z in this case).
+
    */
 
 
@@ -126,8 +131,10 @@ void time_loop_hsall_fem (infrastructure infra,
                                                       bfields);
 
                     // Push v2 and v3
-                    vel[1] = vel[1] - chargemass*bfields[0];
-                    vel[2] = vel[2] + chargemass*bfields[1];
+                    if (vdim > 1)
+                      vel[1] = vel[1] - chargemass*bfields[0];
+                    if (vdim > 2)
+                      vel[2] = vel[2] + chargemass*bfields[1];
                     pos[0] = x1_new;
 
                     if ( vdim > 1 )
@@ -156,7 +163,8 @@ void time_loop_hsall_fem (infrastructure infra,
 
                       // Push v2 and v3
                       vel[0] = vel[0] + chargemass*bfields[1];
-                      vel[2] = vel[2] - chargemass*bfields[0];
+                      if (vdim > 2 )
+                        vel[2] = vel[2] - chargemass*bfields[0];
                       pos[1] = x2_new;
 #else
                       std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
