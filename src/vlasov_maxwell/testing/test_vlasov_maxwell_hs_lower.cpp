@@ -100,9 +100,16 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
+    For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
+    outputted, so that the comparison to the expected_output (which contains all dimensions) works The order of the outputs is:
+    GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=3 */
+
 #if (GEMPIC_SPACEDIM == 1)
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
     main_main<2, 1, 1, 1, 1>();
 
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << std::endl;
 
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "0 3.11474e-05 2.66688e-05 0 0 0 5e-07 0.0629525 0.285611 0.990676 0.981747" << std::endl;
@@ -118,6 +125,7 @@ int main(int argc, char* argv[])
 
 #elif (GEMPIC_SPACEDIM == 2)
 
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << std::endl;
 
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "0 0.594233 0 5e-07 0.00623372 0.0609654 0.185672" << std::endl;
@@ -131,10 +139,12 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "8 0.579242 1.35791e-07 5.21641e-07 0.0439074 0.575492 0.185673" << std::endl;
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "9 0.575293 1.57649e-07 5.36063e-07 0.0538319 0.646583 0.185673" << std::endl;
 
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
     main_main<3, 1, 1, 1, 1>();
 
 #elif (GEMPIC_SPACEDIM == 3)
 
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << std::endl;
 
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "0 0.594233 0 5e-07 0.00623372 0.0609654 0.185672" << std::endl;
@@ -148,6 +158,7 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "8 0.579242 1.35791e-07 5.21641e-07 0.0439074 0.575492 0.185673" << std::endl;
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "9 0.575293 1.57649e-07 5.36063e-07 0.0538319 0.646583 0.185673" << std::endl;
 
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << std::endl;
 
     AllPrintToFile("test_vlasov_maxwell_hs_lower.tmp") << "0 3.11474e-05 2.66688e-05 0 0 0 5e-07 0.0629525 0.285611 0.990676 0.981747" << std::endl;
