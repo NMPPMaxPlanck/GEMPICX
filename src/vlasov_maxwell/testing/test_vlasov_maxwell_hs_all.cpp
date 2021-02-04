@@ -105,19 +105,6 @@ int main(int argc, char* argv[])
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
-
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-
     AllPrintToFile("test_output_pre_rename.output") << "0 2.82775e-05 1.74142e-05 1.72514e-05 0 0 5e-07 0.315393 1.43412 4.90194 4.95606" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "1 2.8274e-05 1.74408e-05 1.72766e-05 2.69379e-12 1.35661e-11 4.99702e-07 0.31539 1.43414 4.90192 4.95602" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "2 2.82582e-05 1.74631e-05 1.7295e-05 4.2604e-11 2.139e-10 4.98979e-07 0.315388 1.4342 4.90191 4.95599" << std::endl;
@@ -143,8 +130,6 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
-
-    main_main<2, 1, 1, 1, 1>();
 
     AllPrintToFile("test_output_pre_rename.output") << std::endl;
 
@@ -173,19 +158,6 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_output_pre_rename.output") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
     AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
-
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-
-    AllPrintToFile("test_output_pre_rename.output") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
     main_main<3, 1, 1, 1, 1>();
 #endif
