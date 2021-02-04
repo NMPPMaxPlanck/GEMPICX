@@ -132,7 +132,8 @@ void time_loop_hsall_fem (infrastructure infra,
 
                     if ( vdim > 1 )
                       {
-                      // push x2
+#if GEMPIC_SPACEDIM > 1
+                        // push x2
                       amrex::Real x2_new = pos[1] +  (*mw_yee).dt*vel[1];
                       /*accumulate_j_update_v_x2_fem_integral<vdim, degx, degy, degz>( pos,
                                                         x2_new,
@@ -157,6 +158,15 @@ void time_loop_hsall_fem (infrastructure infra,
                       vel[0] = vel[0] + chargemass*bfields[1];
                       vel[2] = vel[2] - chargemass*bfields[0];
                       pos[1] = x2_new;
+#else
+                      std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                      gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], weight*vel[1]*(*mw_yee).dt,
+                                               jA[1],
+                                               infra.plo,
+                                               infra.dxi);
+                      // Push v2 and v3
+                      vel[0] = vel[0] + chargemass*bfields[0]*vel[1]*(*mw_yee).dt;
+  #endif
 }
                     if(vdim > 2 ) {
 #if GEMPIC_SPACEDIM == 3
@@ -186,13 +196,13 @@ void time_loop_hsall_fem (infrastructure infra,
                     pos[2] = x3_new;
 #else
                     std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
-                    gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], weight*vel[2],
+                    gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], weight*vel[2]*(*mw_yee).dt,
                                              jA[2],
                                              infra.plo,
                                              infra.dxi);
                     // Push v2 and v3
-                    vel[0] = vel[0] - chargemass*bfields[1];
-                    vel[1] = vel[1] + chargemass*bfields[0];
+                    vel[0] = vel[0] - chargemass*bfields[1]*vel[2]*(*mw_yee).dt;
+                    vel[1] = vel[1] + chargemass*bfields[0]*vel[2]*(*mw_yee).dt;
 #endif
 
 }
