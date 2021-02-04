@@ -91,8 +91,8 @@ void main_main ()
     // timeloop
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_output_pre_rename.output") << std::endl;
-time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "ctest", &ofs);
+AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << std::endl;
+time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all_lower.tmp", &ofs);
 
 }
 
@@ -103,69 +103,69 @@ int main(int argc, char* argv[])
 #if (GEMPIC_SPACEDIM == 1)
     main_main<2, 1, 1, 1, 1>();
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
 
 #elif (GEMPIC_SPACEDIM == 2)
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 0.496664 5e-07 6.26629 9.99712" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 0.49598 5e-07 6.27091 10.0009" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 0.495008 5e-07 6.27737 10.0062" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 0.493745 5e-07 6.28562 10.013" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 0.492189 5e-07 6.29572 10.0213" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "2 0.496664 5e-07 6.26629 9.99712" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "3 0.49598 5e-07 6.27091 10.0009" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "4 0.495008 5e-07 6.27737 10.0062" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "5 0.493745 5e-07 6.28562 10.013" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "6 0.492189 5e-07 6.29572 10.0213" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
 
     main_main<3, 1, 1, 1, 1>();
 
 
 #elif (GEMPIC_SPACEDIM == 3)
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 0.496664 5e-07 6.26629 9.99712" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 0.49598 5e-07 6.27091 10.0009" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 0.495008 5e-07 6.27737 10.0062" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 0.493745 5e-07 6.28562 10.013" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 0.492189 5e-07 6.29572 10.0213" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "2 0.496664 5e-07 6.26629 9.99712" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "3 0.49598 5e-07 6.27091 10.0009" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "4 0.495008 5e-07 6.27737 10.0062" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "5 0.493745 5e-07 6.28562 10.013" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "6 0.492189 5e-07 6.29572 10.0213" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "7 0.490343 5e-07 6.30764 10.0312" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "8 0.488214 5e-07 6.32138 10.0424" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "9 0.485808 5e-07 6.33685 10.0551" << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << std::endl;
 
-    AllPrintToFile("test_output_pre_rename.output") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "0 3.69818e-05 2.9765e-05 0 0.0321487 0.293507 0.967771" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "1 3.69571e-05 2.97344e-05 2.19122e-39 0.0321494 0.293512 0.967785" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "2 3.69133e-05 2.96868e-05 4.9016e-11 0.0321506 0.293524 0.967802" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "3 3.685e-05 2.96234e-05 4.31676e-10 0.0321522 0.293547 0.967821" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "4 3.67666e-05 2.95444e-05 1.67345e-09 0.0321543 0.29358 0.967844" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "5 3.66624e-05 2.94457e-05 4.45131e-09 0.0321568 0.293622 0.967872" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "6 3.65376e-05 2.93262e-05 9.48196e-09 0.0321599 0.293674 0.967908" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "7 3.63924e-05 2.91889e-05 1.74089e-08 0.0321634 0.293739 0.967948" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "8 3.62273e-05 2.9031e-05 2.87007e-08 0.0321673 0.29382 0.967992" << std::endl;
+    AllPrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
 #endif
 
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_vlasov_maxwell_hs_all_lower.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_all_lower.tmp.0", "test_vlasov_maxwell_hs_all_lower.output");
 
     amrex::Finalize();
 }

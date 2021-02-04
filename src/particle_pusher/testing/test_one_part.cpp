@@ -118,23 +118,23 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, "ctest", &ofs);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, "test_one_part.tmp", &ofs);
         break;
     case 1:
-        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, "ctest", &ofs);
+        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, "test_one_part.tmp", &ofs);
         break;
     default:
         break;
     }
 
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "Jx" << std::endl;
     for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
-        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
+        AllPrintToFile("test_one_part.tmp") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
     }
-    AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "Jy" << std::endl;
     for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
-        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
+        AllPrintToFile("test_one_part.tmp") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
     }
 
 }
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     main_main<3, 1, 1, 1, 1>(argc==1);
 #endif
 
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.tmp.0", "test_one_part.output");
     amrex::Finalize();
 }
 
