@@ -62,9 +62,21 @@ public:
     template<int degree>
     std::vector<amrex::Real> spline_eval_prim_vec (amrex::Real x)  {
         std::vector<amrex::Real> s;
-        if ( degree == 0 )
+        switch (degree) {
+        case 0:
             s = {x};
+            break;
+        case 1:
+            s = {1./2.+x+pow(x,2)/2., pow(x,2)/2.};
+            break;
+        case 2:
+            s = {pow(x,3)/6.-pow(x,2)/2.+x/2.+5./6., -pow(x,3)/3+pow(x,2)/2.+x/2.+1./6., pow(x,3)/6.};
+            break;
+        case 3:
+            s = { pow((1.-x),4)/24.+1., pow(x,4)/8.-pow(x,3)/3.+x*2./3.+0.5, -pow(x,4)/8.+pow(x,3)/6.+pow(x,2)/4.+x/6.+1./24., pow(x,4)/24.};
+            break;
 
+        }
         return(s);
     }
 
