@@ -110,6 +110,9 @@ if (int(vdim/2.5)*2+1 > 1) {
 if (int(vdim/2.5)*2+1 > 2) {
         B_Index[2].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 }
+if (int(vdim/2.5)*2+1 < 3) {
+    B_Index[0].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
+}
 
         Nghost = VM.Nghost;
         Ncomp = 1;
