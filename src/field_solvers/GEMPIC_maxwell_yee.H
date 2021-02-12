@@ -56,8 +56,10 @@ public:
     int nsteps; // number of simulation steps
     amrex::Real dt;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_Array;
+    std::array<std::unique_ptr<amrex::MultiFab>, vdim > HE_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > J_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_Array;
+    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > HB_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_sol_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_sol_Array;
     std::array<std::unique_ptr<amrex::IndexType>, vdim> E_Index;
@@ -123,11 +125,13 @@ if (int(vdim/2.5)*2+1 < 3) {
         // make the multifabs nodal-/cell-centered according to indices
         for (int i = 0; i<vdim; i++) {
             E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+            HE_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
             E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
             J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
         }
         for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
             B_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
+            HB_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
             B_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *B_Index[i]),ifr.distriMap,Ncomp,Nghost));
         }
 
@@ -236,6 +240,80 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     }
 
+
+    /**
+     * Initialize E and B field for time t=0 with a given array of functions.
+     */
+    void init_HE_HB (double (*fields[vdim+int(vdim/2.5)*2+1]) (std::array<double,GEMPIC_SPACEDIM> x, double t),infrastructure ifr){
+
+        std::array<double,GEMPIC_SPACEDIM> x;
+        double half_dt = dt/2.0; // for leap frog initialization
+
+        // E_field
+        for (int i = 0; i<vdim; i++) {
+            for ( amrex::MFIter mfi(*HE_Array[i]); mfi.isValid(); ++mfi ){
+
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+                            (*HE_Array[i])[mfi].setVal((*fields[i])(x,0), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*HE_Array[i]).FillBoundary(ifr.geom.periodicity());
+        }
+
+        // B_field
+        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
+            for ( amrex::MFIter mfi(*HB_Array[i]); mfi.isValid(); ++mfi ){
+
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+                            (*HB_Array[i])[mfi].setVal((*fields[i+vdim])(x,half_dt), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*HB_Array[i]).FillBoundary(ifr.geom.periodicity());
+        }
+    }
 
     /**
      * Initialize E and B field for time t=0 with a given array of functions.
@@ -656,6 +734,57 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
     /**
+     * Advance E by a time step of length @p dt_step with a Yee scheme by the B-Field contribution (varying order)
+     */
+    void advance_E_from_B_hodge (infrastructure ifr, amrex::Real dt_step){
+
+        amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
+
+        // E-field
+        for (int i=0; i<vdim; i++) {
+            for (amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+
+                            // old field_out value
+                            (*E_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+
+                            // B-derivatives
+                            if (i == 0){
+                                    (*E_Array[0])[mfi].setVal(*c1, cc, 0, 1);
+                            }
+                            if (i == 1) {
+                                    (*HB_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
+                                    (*HB_Array[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                                    (*E_Array[1])[mfi].setVal(*c1+dt_step*(-(*c2-*c3)/ifr.dx[0]), cc, 0, 1);
+                            }
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
+        }
+    }
+
+    /**
      * Advance E by a time step of length @p dt_step with a Yee scheme by the J-Field contribution
      */
     void advance_E_from_J (infrastructure ifr, amrex::Real dt_step){
@@ -774,6 +903,289 @@ if (int(vdim/2.5)*2+1 < 3) {
                                 (*B_Array[i])[mfi].setVal(*c1-dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
                                                           (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
                             }
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
+        }
+    }
+
+    void hodge10_E (infrastructure ifr, int component, int order){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*E_Array[component]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[component]);
+
+                            // old field_out value
+                            (*E_Array[component])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*E_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*E_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            (*HE_Array[component])[mfi].setVal(-1/24*(*c1)+13/12*(*c2)-1/24*(*c3), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*HE_Array[component]).FillBoundary(ifr.geom.periodicity());
+    }
+
+    void hodge01_E (infrastructure ifr, int component, int order){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*E_Array[component]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[component]);
+
+                            // old field_out value
+                            (*HE_Array[component])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*HE_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*HE_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            (*E_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*E_Array[component]).FillBoundary(ifr.geom.periodicity());
+    }
+
+    void hodge10_B (infrastructure ifr, int component, int order){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*B_Array[component]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[component]);
+
+                            // old field_out value
+                            (*B_Array[component])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*B_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*B_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            (*HB_Array[component])[mfi].setVal(-1/24*(*c1)+13/12*(*c2)-1/24*(*c3), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*HB_Array[component]).FillBoundary(ifr.geom.periodicity());
+    }
+
+    void hodge01_B (infrastructure ifr, int component, int order){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*B_Array[component]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[component]);
+
+                            // old field_out value
+                            (*HB_Array[component])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*HB_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*HB_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            (*B_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*B_Array[component]).FillBoundary(ifr.geom.periodicity());
+    }
+
+    void hodge01_E_sol (infrastructure ifr, int component, int order){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*HE_Array[component]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[component]);
+
+                            // old field_out value
+                            (*E_sol_Array[component])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*E_sol_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*E_sol_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            (*HE_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*HE_Array[component]).FillBoundary(ifr.geom.periodicity());
+    }
+
+    void hodge01_B_sol (infrastructure ifr, int component, int order){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*HB_Array[component]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[component]);
+
+                            // old field_out value
+                            (*B_sol_Array[component])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*B_sol_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*B_sol_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            (*HB_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*HB_Array[component]).FillBoundary(ifr.geom.periodicity());
+    }
+
+    /**
+     * Advance B by a time step of length @p dt_step with a Yee scheme
+     */
+    void advance_B_hodge (infrastructure ifr, amrex::Real dt_step){
+
+        int bdim = int(vdim/2.5)*2+1;
+
+        amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
+
+        // B-field
+        for (int i=0; i<bdim; i++) {
+            for (amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
+
+                            // old field_out value
+                            (*B_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+
+                            // E-derivatives
+                            (*HE_Array[1])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+                            (*HE_Array[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+
+                            (*B_Array[0])[mfi].setVal(*c1-dt_step*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -1176,13 +1588,26 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         for (int i=0; i<vdim; i++){
             amrex::Vector<std::string> varnames = {"E"+std::to_string(i)};
-            (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
-            E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+            hodge01_E_sol(ifr, i, 2);
+            if (i==1) {
+                (*HE_Array[i]).minus(*E_Array[i], 0, 1, 0);
+                E_B_error[i] = gempic_norm(&(*HE_Array[i]), ifr, 2);
+                std::cout << gempic_norm(&(*HE_Array[i]), ifr, 2) << std::endl;
+            } else {
+                (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
+                E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+            }
         }
         if (bool_B) {
             for (int i=0; i<int(vdim/2.5)*2+1; i++){
-                (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
-                E_B_error[i+vdim] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                hodge01_B_sol(ifr, i, 2);
+                if (i==0) {
+                    (*HB_Array[i]).minus(*B_Array[i], 0, 1, 0);
+                    E_B_error[i+vdim] = gempic_norm(&(*HB_Array[i]), ifr, 2);
+                } else {
+                    (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
+                    E_B_error[i+vdim] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                }
             }
         }
         return(E_B_error);
