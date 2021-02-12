@@ -942,7 +942,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             (*E_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
                             (*E_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
 
-                            (*HE_Array[component])[mfi].setVal(-1/24*(*c1)+13/12*(*c2)-1/24*(*c3), cc, 0, 1);
+                            (*HE_Array[component])[mfi].setVal(-1./24.*(*c1)+13./12.*(*c2)-1./24.*(*c3), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -981,7 +981,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             (*HE_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
                             (*HE_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
 
-                            (*E_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                            (*E_Array[component])[mfi].setVal(1./24.*(*c1)+11./12.*(*c2)+1./24.*(*c3), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -1020,7 +1020,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             (*B_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
                             (*B_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
 
-                            (*HB_Array[component])[mfi].setVal(-1/24*(*c1)+13/12*(*c2)-1/24*(*c3), cc, 0, 1);
+                            (*HB_Array[component])[mfi].setVal(-1./24.*(*c1)+13./12.*(*c2)-1./24.*(*c3), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -1059,7 +1059,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             (*HB_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
                             (*HB_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
 
-                            (*B_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                            (*B_Array[component])[mfi].setVal((1./24.*(*c1))+(11./12.*(*c2))+(1./24.*(*c3)), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -1098,7 +1098,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             (*E_sol_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
                             (*E_sol_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
 
-                            (*HE_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                            (*HE_Array[component])[mfi].setVal(1./24.*(*c1)+11./12.*(*c2)+1./24.*(*c3), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -1137,7 +1137,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             (*B_sol_Array[component])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
                             (*B_sol_Array[component])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
 
-                            (*HB_Array[component])[mfi].setVal(1/24*(*c1)+11/12*(*c2)+1/24*(*c3), cc, 0, 1);
+                            (*HB_Array[component])[mfi].setVal(1./24.*(*c1)+11./12.*(*c2)+1./24.*(*c3), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
