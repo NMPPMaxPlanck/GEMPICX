@@ -15,6 +15,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
+#include <GEMPIC_time_loop_particles.H>
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
@@ -59,6 +60,18 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
+    if (VlMa.propagator==3) {
+        for (int spec=0; spec<numspec; spec++) {
+            for(amrex::MFIter mfi=(*(part_gr).mypc[spec]).MakeMFIter(0); mfi.isValid(); ++mfi) {
+                if(mfi.index() == 0) {
+                    using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+                    amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[spec]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+                    (part_gr).add_particle({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.0, 0.0)}, 1.0, particles);
+                }
+            }
+        }
+        loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
+    } else {
     if (VlMa.restart == 0) {
         if (readinfile) {
             for (int spec=0; spec<numspec; spec++) {
@@ -74,6 +87,7 @@ void main_main (bool ctest)
         loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
     } else {
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, VlMa.checkpoint_file, VlMa.curr_step);
+    }
     }
 
     //------------------------------------------------------------------------------
@@ -91,9 +105,13 @@ switch (VlMa.propagator) {
     case 2:
       time_loop_hsall_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;
+    case 3:
+      time_loop_particles<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+        break;
     default:
         break;
 }
+Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Edipole", 10);
 }
 
 int main(int argc, char* argv[])
