@@ -254,30 +254,30 @@ if (bdim > 2) {
 
     mw_yee.init_E_B(fields, infra);
 
-    //AllPrintToFile("test_output_pre_rename.output") << endl;
+    //AllPrintToFile("test_maxwell_yee.tmp") << endl;
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.computeError(fields, true, infra);
-    AllPrintToFile("test_output_pre_rename.output") << endl;
-    AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
-    AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << "Maxwell" << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << "step " << 0 << endl;
     switch (vdim) {
     case 1:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
         break;
     case 2:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
         break;
     case 3:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         break;
     }
 
     switch (bdim) {
     case 1:
-        amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
+        amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
         break;
     case 3:
-        amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+        amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
         break;
     }
 
@@ -286,24 +286,24 @@ if (bdim > 2) {
         mw_yee.advance(infra, mw_yee.dt);
         E_B_error = mw_yee.computeError(fields, true, infra);
 
-        AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
+        AllPrintToFile("test_maxwell_yee.tmp") << "step " << n << endl;
         switch (vdim) {
         case 1:
-            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+            AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
             break;
         case 2:
-            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
             break;
         case 3:
-            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+            AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
             break;
         }
         switch (bdim) {
         case 1:
-            amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
+            amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
             break;
         case 3:
-            amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+            amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
             break;
         }
 
@@ -322,26 +322,26 @@ if (bdim > 2) {
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee_2.computeError(fields, true, infra);
-    AllPrintToFile("test_output_pre_rename.output") << endl;
-    AllPrintToFile("test_output_pre_rename.output") << "Maxwell" << endl;
-    AllPrintToFile("test_output_pre_rename.output") << "step " << 0 << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << "Maxwell" << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << "step " << 0 << endl;
     switch (vdim) {
     case 1:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
         break;
     case 2:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
         break;
     case 3:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         break;
     }
     switch (bdim) {
     case 1:
-        amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
+        amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
         break;
     case 3:
-        amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+        amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
         break;
     }
 
@@ -353,24 +353,24 @@ if (bdim > 2) {
         mw_yee_2.advance_B(infra, mw_yee_2.dt);
         E_B_error = mw_yee_2.computeError(fields, true, infra);
 
-        AllPrintToFile("test_output_pre_rename.output") << "step " << n << endl;
+        AllPrintToFile("test_maxwell_yee.tmp") << "step " << n << endl;
         switch (vdim) {
         case 1:
-            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+            AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
             break;
         case 2:
-            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
             break;
         case 3:
-            AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+            AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
             break;
         }
         switch (bdim) {
         case 1:
-            amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
+            amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << std::endl;
             break;
         case 3:
-            amrex::AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+            amrex::AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
             break;
         }
     }
@@ -401,17 +401,17 @@ if (bdim > 2) {
     mw_yee.solve_poisson(infra);
     E_B_error = mw_yee.computeError(fields_poisson, false, infra);
 
-    AllPrintToFile("test_output_pre_rename.output") << endl;
-    AllPrintToFile("test_output_pre_rename.output") << "Poisson" << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << "Poisson" << endl;
     switch (vdim) {
     case 1:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << std::endl;
         break;
     case 2:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
         break;
     case 3:
-        AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         break;
     }
 
@@ -419,11 +419,11 @@ if (bdim > 2) {
     //------------------------------------------------------------------------------
     // Rho from E
 
-    AllPrintToFile("test_output_pre_rename.output") << endl;
-    AllPrintToFile("test_output_pre_rename.output") << "rho_from_E" << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << endl;
+    AllPrintToFile("test_maxwell_yee.tmp") << "rho_from_E" << endl;
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
-    AllPrintToFile("test_output_pre_rename.output").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
+    AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
 
     //ofs.close();
 }
@@ -441,7 +441,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_maxwell_yee.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee.tmp.0", "test_maxwell_yee.output");
     amrex::Finalize();
 }
 

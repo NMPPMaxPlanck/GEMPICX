@@ -83,13 +83,13 @@ void main_main (bool ctest)
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 switch (VlMa.propagator) {
     case 0:
-      time_loop_boris_fd<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+      time_loop_boris_fd<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;
     case 1:
-      time_loop_hs_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+      time_loop_hs_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;
     case 2:
-      time_loop_hsall_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, &ofs);
+      time_loop_hsall_fem<vdim, numspec, degx, degy, degz, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;
     default:
         break;

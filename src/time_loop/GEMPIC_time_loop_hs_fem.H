@@ -40,6 +40,7 @@ void time_loop_hs_fem (infrastructure infra,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz> *diagn,
                        bool ctest,
+                       std::string simulation_name,
                        std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
@@ -188,7 +189,7 @@ void time_loop_hs_fem (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_tmp.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
         }
 
         amrex::Print() << "finished step " << t_step+1 << std::endl;
@@ -196,41 +197,41 @@ void time_loop_hs_fem (infrastructure infra,
         if (ctest) {
             switch (vdim) {
             case 1:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0];
+                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0];
                 break;
             case 2:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
+                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
                 break;
             case 3:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
+                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
                 break;
             }
             switch (vdim) {
             case 1: // no break, so that case 1 and 2 are handled the same way
             case 2:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0];
+                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0];
                 break;
             case 3:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
+                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
                 break;
             }
-            amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).kin[t_step] << " ";
+            amrex::AllPrintToFile(simulation_name) << " " << (*diagn).kin[t_step] << " ";
             switch (vdim) {
             case 1:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0];
+                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0];
                 break;
             case 2:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
+                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
                 break;
             case 3:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
+                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
                 break;
             }
-            amrex::AllPrintToFile("test_output_pre_rename.output") << std::endl;
+            amrex::AllPrintToFile(simulation_name) << std::endl;
         }
     } // end time loop
 
-    (*diagn).save_all_to_textfile((*mw_yee).dt);
+    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
 }

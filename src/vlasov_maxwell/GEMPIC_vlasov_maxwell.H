@@ -114,7 +114,6 @@ public:
         pp.get("charge",charge);
         pp.get("mass",mass);
         pp.get("k",k);
-        pp.get("WF",WF);
         pp.get("Bx",Bx);
         pp.get("By",By);
         pp.get("Bz",Bz);
@@ -139,13 +138,18 @@ public:
         int comp = -1;
         int prop = -1; // 0 -> mean, 1 -> deviation, 2 -> weight
         int line_num = -1;
+        bool WF_line = true;
 
         if (myfile.is_open())
         {
             while ( getline (myfile,line) )
             {
+                if (WF_line) {
+                    WF = line;
+                    WF_line = false;
+                } else {
                 line_num++;
-                if (line == "# Gaussian") {
+                if ((line.at(0) == '#') & (line.at(2) == 'G')) {
                     gaussian_num++;
                 } else {
                     if (line.at(0) == '#') {
@@ -164,6 +168,7 @@ public:
                             break;
                         }
                     }
+                }
                 }
             }
             myfile.close();

@@ -190,7 +190,7 @@ void init_particles_full_domain(infrastructure infra,
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        srand(rSeed+lo[0]+lo[1]*10+lo[2]*100);
+        srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         std::mt19937 gen(rSeed);
         std::normal_distribution<> norm01(0,1);
 

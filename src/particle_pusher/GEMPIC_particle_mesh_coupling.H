@@ -505,7 +505,11 @@ void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> 
                 double s_coeff = primitive[ii]
                         *sy_node[jj]
                         *sz_node[kk];
-                    amrex::Gpu::Atomic::Add(&(jArray[pdim])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*charge);
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::Gpu::Atomic::Add(&(jArray[pdim])(cell_index[0], 0, 0 , 0), s_coeff*charge);
+#else
+                amrex::Gpu::Atomic::Add(&(jArray[pdim])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*charge);
+#endif
 
                     if ( jj < degp1 )
                       {
@@ -513,13 +517,21 @@ void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> 
                               *sy_cell[jj]
                               *sz_node[kk];
 
-                          fields[0] += s_coeff*(bArray[pdim2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[0] += s_coeff*(bArray[pdim2])(cell_index[0], 0, 0, 0);
+#else
+                fields[0] += s_coeff*(bArray[pdim2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                           }
                   if ( kk < degp2 ){
                       double s_coeff = primitive[ii]
                               *sy_node[jj]
                               *sz_cell[kk];
-                          fields[1] += s_coeff*(bArray[pdim1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#if (GEMPIC_SPACEDIM == 1)
+                fields[1] += s_coeff*(bArray[pdim1])(cell_index[0], 0, 0, 0);
+#else
+                fields[1] += s_coeff*(bArray[pdim1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
                           }
                     }
                     }
@@ -840,9 +852,7 @@ void accumulate_j_update_v_x2_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
             }
 #endif
       }
-#if (GEMPIC_SPACEDIM > 1 )
       }
-#endif
 #if (GEMPIC_SPACEDIM > 2 )
       }
 #endif
@@ -963,8 +973,8 @@ void accumulate_j_update_v_x3_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
 
 #if(GEMPIC_SPACEDIM > 1)
     if ( jj < degy ){
-#endif
         double s_coeff = sx_node[ii]
+#endif
 #if(GEMPIC_SPACEDIM > 1)
                 *sy_cell[jj]
 #endif

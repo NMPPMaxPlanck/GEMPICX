@@ -34,11 +34,6 @@ void main_main (bool ctest)
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
-    // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
-    int Nghost = maxdeg;
-
     // initialize parameters
     std::string sim_name = "One_Particle";
     std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(4,4,4)};
@@ -65,7 +60,7 @@ void main_main (bool ctest)
     amrex::Real tolerance_particles = 1.e-10;
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD = {};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
     std::array<std::vector<amrex::Real>, vdim> VW{};
 
     for (int j=0; j<vdim; j++) {
@@ -75,23 +70,6 @@ void main_main (bool ctest)
     VD[0].push_back(0.02/sqrt(2));
     VD[1].push_back(sqrt(12)*VD[0][0]);
     VD[2].push_back(VD[1][0]);
-
-
-    // functions
-    double x, y, z;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
-    int varcount = 4;
-    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
-
-    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars, varcount, &err);
-    te_expr *By_parse = te_compile(By.c_str(), read_vars, varcount, &err);
-    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars, varcount, &err);
-
-    te_variable read_vars_poi[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-    varcount = 3;
-    te_expr *rho_parse = te_compile(rho.c_str(), read_vars_poi, varcount, &err);
-    te_expr *phi_parse = te_compile(phi.c_str(), read_vars_poi, varcount, &err);
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
@@ -106,15 +84,13 @@ void main_main (bool ctest)
     VlMa.VD = VD;
     VlMa.VW = VW;
 
-    VlMa.Nghost = 1;
-
     // infrastructure
     infrastructure infra;
     VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
+    mw_yee.init_rho_phi(infra, VlMa);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -142,23 +118,13 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
         break;
     case 1:
-        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, false, &ofs);
+        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
         break;
     default:
         break;
-    }
-
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "Jx" << std::endl;
-    for (amrex::MFIter mfi(*(mw_yee).J_Array[0]); mfi.isValid(); ++mfi ) {
-        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[0])[mfi] << std::endl;
-    }
-    AllPrintToFile("test_output_pre_rename.output") << "Jy" << std::endl;
-    for (amrex::MFIter mfi(*(mw_yee).J_Array[1]); mfi.isValid(); ++mfi ) {
-        AllPrintToFile("test_output_pre_rename.output") << (*(mw_yee).J_Array[1])[mfi] << std::endl;
     }
 
 }
@@ -167,17 +133,63 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the expected_output file contains all outputs.
+    For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
+    outputted, so that the comparison to the expected_output (which contains all dimensions) works The order of the outputs is:
+    GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=2, GEMPIC_SPACEDIM=2 vdim=3, GEMPIC_SPACEDIM=3 vdim=3 */
+
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1>(argc==1);
+
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<2, 1, 1, 1, 1>(argc==1);
+
+    // Output for GEMPIC_SPACEDIM=2 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=3 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+
 #elif (GEMPIC_SPACEDIM == 2)
+
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=2 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<2, 1, 1, 1, 1>(argc==1);
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1>(argc==1);
+
+    // Output for GEMPIC_SPACEDIM=3 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 #elif (GEMPIC_SPACEDIM == 3)
+
+    // Output for GEMPIC_SPACEDIM=1 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=2 vdim=2
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
+    // Output for GEMPIC_SPACEDIM=2 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
+    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+
+    // Output for GEMPIC_SPACEDIM=3 vdim=3
+    AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1>(argc==1);
 #endif
 
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_one_part.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.tmp.0", "test_one_part.output");
     amrex::Finalize();
 }
 

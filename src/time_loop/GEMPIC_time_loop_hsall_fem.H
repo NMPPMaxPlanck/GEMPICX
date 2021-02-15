@@ -31,6 +31,11 @@ namespace Time_Loop {
 
 /*
     This is the time propagator with a Hamiltonian splitting in a FEM formulation with mass lumping for Lagrange elements of order one and zero
+
+    This propagator is currently not implemented for the 2d2v case. In this case, the operator H_p3 is dismissed and the operators H_p1 and H_p2
+    must be reimplemented only producing the b3 updates. In principle the operators are exactly the same but they should just return one bfield
+    value - the one that concerns b_z - and it should read out the first component of the bfield vector (which saves the b_z in this case).
+
    */
 
 
@@ -40,6 +45,7 @@ void time_loop_hsall_fem (infrastructure infra,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz> *diagn,
                        bool ctest,
+                       std::string simulation_name,
                        std::ofstream *ofs) {
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
@@ -125,13 +131,16 @@ void time_loop_hsall_fem (infrastructure infra,
                                                       bfields);
 
                     // Push v2 and v3
-                    vel[1] = vel[1] - chargemass*bfields[0];
-                    vel[2] = vel[2] + chargemass*bfields[1];
+                    if (vdim > 1)
+                      vel[1] = vel[1] - chargemass*bfields[0];
+                    if (vdim > 2)
+                      vel[2] = vel[2] + chargemass*bfields[1];
                     pos[0] = x1_new;
 
                     if ( vdim > 1 )
                       {
-                      // push x2
+#if GEMPIC_SPACEDIM > 1
+                        // push x2
                       amrex::Real x2_new = pos[1] +  (*mw_yee).dt*vel[1];
                       /*accumulate_j_update_v_x2_fem_integral<vdim, degx, degy, degz>( pos,
                                                         x2_new,
@@ -154,10 +163,21 @@ void time_loop_hsall_fem (infrastructure infra,
 
                       // Push v2 and v3
                       vel[0] = vel[0] + chargemass*bfields[1];
-                      vel[2] = vel[2] - chargemass*bfields[0];
+                      if (vdim > 2 )
+                        vel[2] = vel[2] - chargemass*bfields[0];
                       pos[1] = x2_new;
+#else
+                      std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                      gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], weight*vel[1]*(*mw_yee).dt,
+                                               jA[1],
+                                               infra.plo,
+                                               infra.dxi);
+                      // Push v2 and v3
+                      vel[0] = vel[0] + chargemass*bfields[0]*vel[1]*(*mw_yee).dt;
+  #endif
 }
                     if(vdim > 2 ) {
+#if GEMPIC_SPACEDIM == 3
                     // push x3
                     amrex::Real x3_new = pos[2] +  (*mw_yee).dt*vel[2];
                     /*accumulate_j_update_v_x3_fem_integral<vdim, degx, degy, degz>( pos,
@@ -178,11 +198,21 @@ void time_loop_hsall_fem (infrastructure infra,
                                                       bA,
                                                       jA,
                                                       bfields);
-
                     // Push v2 and v3
                     vel[0] = vel[0] - chargemass*bfields[0];
                     vel[1] = vel[1] + chargemass*bfields[1];
                     pos[2] = x3_new;
+#else
+                    std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                    gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], weight*vel[2]*(*mw_yee).dt,
+                                             jA[2],
+                                             infra.plo,
+                                             infra.dxi);
+                    // Push v2 and v3
+                    vel[0] = vel[0] - chargemass*bfields[1]*vel[2]*(*mw_yee).dt;
+                    vel[1] = vel[1] + chargemass*bfields[0]*vel[2]*(*mw_yee).dt;
+#endif
+
 }
                     std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
@@ -250,7 +280,7 @@ void time_loop_hsall_fem (infrastructure infra,
 
         // save temporary results every n steps
         if ((t_step+1)%1 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, "vlasov_maxwell_save_step1.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
         }
 
         amrex::Print() << "finished step " << t_step+1 << std::endl;
@@ -258,41 +288,41 @@ void time_loop_hsall_fem (infrastructure infra,
         if (ctest) {
             switch (vdim) {
             case 1:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0];
+                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0];
                 break;
             case 2:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
+                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
                 break;
             case 3:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
+                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
                 break;
             }
             switch (vdim) {
             case 1: // no break, so that case 1 and 2 are handled the same way
             case 2:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0];
+                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0];
                 break;
             case 3:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
+                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
                 break;
             }
-            amrex::AllPrintToFile("test_output_pre_rename.output") << " " << (*diagn).kin[t_step] << " ";
+            amrex::AllPrintToFile(simulation_name) << " " << (*diagn).kin[t_step] << " ";
             switch (vdim) {
             case 1:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0];
+                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0];
                 break;
             case 2:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
+                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
                 break;
             case 3:
-                amrex::AllPrintToFile("test_output_pre_rename.output") << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
+                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
                 break;
             }
-            amrex::AllPrintToFile("test_output_pre_rename.output") << std::endl;
+            amrex::AllPrintToFile(simulation_name) << std::endl;
         }
     } // end time loop
 
-    (*diagn).save_all_to_textfile((*mw_yee).dt);
+    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
 }

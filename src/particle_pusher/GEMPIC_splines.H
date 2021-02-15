@@ -50,10 +50,13 @@ public:
             s = {x, 1.-x};
             break;
         case 2:
-            s = {pow(x,2)/2., 1./2.+x-pow(x,2), 1./2.-x+pow(x,2)/2};
+            s = {pow(x,2)/2., 1./2.+x-pow(x,2), 1./2.-x+pow(x,2)/2.};
             break;
         case 3:
             s = {1./6.*pow(x,3), 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3)), 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3)), 1./6.*pow((1.-x),3)};
+            break;
+          case 4:
+            s = {pow(x,4)/24., (((((-x+1.)*4.*x+6.)*x+4.)*x+4.)*x+1.)/24., ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.,((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24. , pow(1.-x,4)/24. };
             break;
         }
         return(s);
@@ -62,9 +65,23 @@ public:
     template<int degree>
     std::vector<amrex::Real> spline_eval_prim_vec (amrex::Real x)  {
         std::vector<amrex::Real> s;
-        if ( degree == 0 )
+        switch (degree) {
+        case 0:
             s = {x};
-
+            break;
+        case 1:
+            s = {1./2.+x+pow(x,2)/2., pow(x,2)/2.};
+            break;
+        case 2:
+            s = {pow(x,3)/6.-pow(x,2)/2.+x*0.5+5./6., -pow(x,3)/3.+pow(x,2)/2.+x/2.+1./6., pow(x,3)/6.};
+            break;
+        case 3:
+            s = { -pow((1.-x),4)/24.+1., pow(x,4)/8.-pow(x,3)/3.+x*2./3.+0.5, -pow(x,4)/8.+pow(x,3)/6.+pow(x,2)/4.+x/6.+1./24., pow(x,4)/24.};
+            break;
+        case 4:
+            s = { -pow(1.-x,5)/120.+1. , (((((-4.*x+15.)*x-10.)*x-30.)*x-55.)*x+93.)/120.   , (((((6.*x-15.)*x-10.)*x+30.)*x+55.)*x+27.)/120.,  (((((-4.*x+5.)*x+10.)*x+10.)*x+5.)*x+1.)/120.  , pow(x,5)/120. };
+            break;
+        }
         return(s);
     }
 
@@ -79,10 +96,13 @@ public:
             s = {1.-x, x};
             break;
         case 2:
-            s = { 1./2.-x+pow(x,2)/2, 1./2.+x-pow(x,2), pow(x,2)/2.};
+            s = { 1./2.-x+pow(x,2)/2., 1./2.+x-pow(x,2), pow(x,2)/2.};
             break;
         case 3:
             s = {1./6.*pow((1.-x),3), 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3)), 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3)), 1./6.*pow(x,3)};
+            break;
+          case 4:
+            s = {pow(1.-x,4.)/24.,((((-4.*x+12.)*x-6.)*x-12.)*x+11)/24. ,  ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.,(((((-x+1.)*4.*x+6.)*x+4.)*x+4.)*x+1.)/24., pow(x,4)/24. };
             break;
         }
         return(s);

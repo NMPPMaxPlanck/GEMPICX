@@ -1,10 +1,12 @@
 add_executable ( test_maxwell_yee test_maxwell_yee.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
+add_executable ( test_maxwell_yee_order test_maxwell_yee_order.cpp ${CMAKE_SOURCE_DIR}/src/utils/tinyexpr.c ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
 #add_executable ( test_FillBD test_FillBD.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
 target_link_libraries( test_maxwell_yee AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_maxwell_yee_order AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")

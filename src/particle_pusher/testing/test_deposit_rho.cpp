@@ -130,8 +130,8 @@ void main_main ()
     (mw_yee.phi).minus(mw_yee.rho, 0, 1, 0);
 
     //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
-    AllPrintToFile("test_output_pre_rename.output") << std::endl;
-    AllPrintToFile("test_output_pre_rename.output") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+    AllPrintToFile("test_deposit_rho.tmp") << std::endl;
+    AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
     //ofs.close();
 
 }
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     main_main<3, 1, 1, 1, 1>();
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_output_pre_rename.output.0", "test_deposit_rho.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_deposit_rho.tmp.0", "test_deposit_rho.output");
 
     amrex::Finalize();
 }
