@@ -84,7 +84,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
     std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(64,64,64)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(128,128,128)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -112,7 +112,7 @@ void main_main ()
     VlMa.Nghost++;
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
                     32, 0.01, {1.0}, {1.0}, 0.5);
-    VlMa.dt = 10;
+    VlMa.dt = 0.01;
     VlMa.set_computed_params();
 
     Infra::infrastructure infra;
