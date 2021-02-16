@@ -42,7 +42,7 @@ void main_main ()
         VlMa.Bx = VlMa.Bz;
         VlMa.Bz = "0.0";
     }
-    if (GEMPIC_SPACEDIM==1 & vdim==1) {
+    if (GEMPIC_SPACEDIM==1 && vdim==1) {
         // For 1D1V change parameters to make a Landau damping
         VlMa.sim_name = "Landau";
         VlMa.n_part_per_cell = {10000};
