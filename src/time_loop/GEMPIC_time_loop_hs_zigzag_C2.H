@@ -134,6 +134,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                                                                                                                jA,
                                                                                                                bfields);
 
+
                     // Push v2 and v3
                     if (vdim > 1)
                       vel[1] = vel[1] - chargemass*bfields[0];
@@ -203,6 +204,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     vel[1] = vel[1] + chargemass*bfields[0]*vel[2]*(*mw_yee).dt;
 #endif
 
+
 }
                     std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
@@ -223,6 +225,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         WriteSingleLevelPlotfile("current", *(*mw_yee).J_Array[0], varnames,
         infra.geom, timeo, 0);
         abort();*/
+
 
         // advance E from j (field part of H_p)
         (*mw_yee).advance_E_from_J(infra, 1.0);
@@ -245,13 +248,19 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                 // loop over particles: add contribution of old particle position to J and push
 
                 for (int pp=0;pp<np;pp++){
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      pos[d]= particles[pp].pos(d);
+
+                    // evaluate the spline
+                    spline.init_particles(pos , infra.plo, infra.dxi);
                     // evaluate the electric field
                     std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
-                }
+                  }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         }
