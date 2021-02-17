@@ -826,6 +826,55 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
     }
 
+    template <int degree>
+    void hodge (infrastructure ifr, int start_form, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+                amrex::IndexType IndexVect){
+
+        amrex::Real c1[1], c2[1], c3[1];
+
+        for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
+
+                            // old field_out value
+                            (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                            (*MultiInput)[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*MultiInput)[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+
+                            switch (start_form) {
+                            case 0:
+                                (*MultiOutput)[mfi].setVal(1./24.*(*c1)+11./12.*(*c2)+1./24.*(*c3), cc, 0, 1);
+                                break;
+                            case 1:
+                                (*MultiOutput)[mfi].setVal(-1./24.*(*c1)+13./12.*(*c2)-1./24.*(*c3), cc, 0, 1);
+                                break;
+                            }
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*MultiOutput).FillBoundary(ifr.geom.periodicity());
+    }
+
+
     void hodge10_E (infrastructure ifr, int component, int order){
 
         amrex::Real c1[1], c2[1], c3[1];
