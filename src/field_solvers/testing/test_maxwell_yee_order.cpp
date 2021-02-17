@@ -145,8 +145,11 @@ void main_main ()
     for (int n=1;n<=mw_yee.nsteps;n++){
         std::cout << "step: " << n << std::endl;
         mw_yee.hodge10_B(infra, 0, 2);
+        mw_yee.template hodge<degree>(infra, 1, &(*mw_yee.B_Array[0]), &(*mw_yee.HB_Array[0]),
+                                            *mw_yee.B_Index[0]);
         mw_yee.advance_E_from_B_hodge(infra, VlMa.dt, &(mw_yee.HB_Array), &(mw_yee.E_Array));
-        mw_yee.hodge10_E(infra, 1, 2);
+        mw_yee.template hodge<degree>(infra, 1, &(*mw_yee.E_Array[1]), &(*mw_yee.HE_Array[1]),
+                                            *mw_yee.E_Index[1]);
         mw_yee.advance_B_hodge(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
