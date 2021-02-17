@@ -367,9 +367,10 @@ void accumulate_j_update_v_C2(S const& spline,
                   cell_index = {AMREX_D_DECL( spline.box[0]+kk, box_start+ii, spline.box[2]+jj)};
                 else if (pdim == 2)
                   cell_index = {AMREX_D_DECL( spline.box[0]+jj, spline.box[1]+kk, box_start+ii)};
-                double s_coeff = primitive[ii]
+                double s_coeff = -primitive[ii]
                         *spline.spline_node[pdim1][jj]
                         *spline.spline_node[pdim2][kk];
+                //std::cout << s_coeff <<std::endl;
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::Gpu::Atomic::Add(&(jArray[pdim])(cell_index[0], 0, 0 , 0), s_coeff*weight);
 #else
@@ -378,7 +379,7 @@ void accumulate_j_update_v_C2(S const& spline,
 
                     if ( jj < degp1 )
                       {
-                        double s_coeff = primitive[ii]
+                        double s_coeff = -primitive[ii]
                               *spline.spline_cell[pdim1][jj]
                               *spline.spline_node[pdim2][kk];
 
@@ -389,7 +390,7 @@ void accumulate_j_update_v_C2(S const& spline,
 #endif
                           }
                   if ( kk < degp2 ){
-                      double s_coeff = primitive[ii]
+                      double s_coeff = -primitive[ii]
                               *spline.spline_node[pdim1][jj]
                               *spline.spline_cell[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
@@ -401,7 +402,6 @@ void accumulate_j_update_v_C2(S const& spline,
                     }
                     }
                     }
-
 
 }
 
