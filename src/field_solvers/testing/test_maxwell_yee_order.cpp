@@ -64,7 +64,8 @@ double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
 
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
-{  
+{
+    const int degree = 4;
 #if (GEMPIC_SPACEDIM == 1)
     int bdim = int(vdim/2.5)*2+1;
     std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
@@ -84,7 +85,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
     std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(128,128,128)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -128,13 +129,12 @@ void main_main ()
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.init_E_B(fields, infra);
-    mw_yee.init_HE_HB(fields, infra);
-    mw_yee.hodge01_B(infra, 0, 2);
-    mw_yee.hodge01_E(infra, 1, 2);
+    std::array<std::string, vdim> fields_E = {"cos(x)", "cos(x)*cos(t)"};
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B = {"sin(x)*sin(t)"};
+    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.computeError(fields, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
     AllPrintToFile("test_maxwell_yee_order.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_order.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee_order.tmp") << "step " << 0 << endl;
@@ -148,7 +148,8 @@ void main_main ()
         mw_yee.advance_E_from_B_hodge(infra, VlMa.dt);
         mw_yee.hodge10_E(infra, 1, 2);
         mw_yee.advance_B_hodge(infra, VlMa.dt);
-        E_B_error = mw_yee.computeError(fields, true, infra);
+        mw_yee.advance_time();
+        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
 
         AllPrintToFile("test_maxwell_yee_order.tmp") << "step " << n << endl;
         AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;

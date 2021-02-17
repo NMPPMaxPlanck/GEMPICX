@@ -241,291 +241,199 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
 
-    /**
-     * Initialize E and B field for time t=0 with a given array of functions.
-     */
-    void init_HE_HB (double (*fields[vdim+int(vdim/2.5)*2+1]) (std::array<double,GEMPIC_SPACEDIM> x, double t),infrastructure ifr){
+    template<int degree>
+    void projection (double (field) (std::array<double,GEMPIC_SPACEDIM> x, double t),
+                     amrex::Real t,
+                     infrastructure ifr,
+                     std::array<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::IndexType IndexVect,
+                     amrex::MultiFab *MultiF
+                     ) {
+        std::vector<amrex::Real> stencil;
+        switch (degree) {
+        case 2:
+            stencil = {0};
+            break;
+        case 4:
+            stencil = {1.0/6.0, 4.0/6.0, 1.0/6.0};
+            break;
+        case 6:
+            stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
+            break;
+        default: std::cout << "degree not implemented" << std::endl;
 
-        std::array<double,GEMPIC_SPACEDIM> x;
+        }
+        std::array<amrex::Real, degree-1> x;
+        amrex::Real x_midpoint;
+#if (GEMPIC_SPACEDIM > 1)
+        std::array<amrex::Real, degree-1> y;
+        amrex::Real y_midpoint;
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+        std::array<amrex::Real, degree-1> z;
+        amrex::Real z_midpoint;
+#endif
         double half_dt = dt/2.0; // for leap frog initialization
 
-        // E_field
-        for (int i = 0; i<vdim; i++) {
-            for ( amrex::MFIter mfi(*HE_Array[i]); mfi.isValid(); ++mfi ){
+        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
 
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
+            const amrex::Box& bx = mfi.validbox();
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
 #if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
+            for(int k=lo[2]; k<=hi[2]; k++){
+                z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
+                for (int d = 0; d<(degree-1); d++) z[d] = z_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
+                for(int j=lo[1]; j<=hi[1]; j++){
+                    y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
+                    for (int d = 0; d<(degree-1); d++) y[d] = y_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
 #endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
-                            (*HE_Array[i])[mfi].setVal((*fields[i])(x,0), cc, 0, 1);
+                    for(int l=lo[0]; l<=hi[0]; l++){
+                        x_midpoint = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
+                        for (int d = 0; d<(degree-1); d++) x[d] = x_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+                        // the box for these values:
+                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
+                        amrex::Real val = 0.0;
+                        if (integrate[0]) {
+                            for (int d = 0; d<(degree-1); d++) val+= stencil[d]*(field({AMREX_D_DECL(x[d],y[d],z[d])},t));
+                        } else {
+                            val += field({AMREX_D_DECL(x_midpoint,y_midpoint,z_midpoint)},t);
                         }
-#if (GEMPIC_SPACEDIM > 1)
+                        (*MultiF)[mfi].setVal(val, cc, 0, 1);
                     }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (GEMPIC_SPACEDIM > 1)
                 }
 #endif
-                // next mfi
-            }
-            (*HE_Array[i]).FillBoundary(ifr.geom.periodicity());
-        }
-
-        // B_field
-        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
-            for ( amrex::MFIter mfi(*HB_Array[i]); mfi.isValid(); ++mfi ){
-
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
 #if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-                            (*HB_Array[i])[mfi].setVal((*fields[i+vdim])(x,half_dt), cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
-                // next mfi
             }
-            (*HB_Array[i]).FillBoundary(ifr.geom.periodicity());
+#endif
+            // next mfi
         }
+        (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
+    template<int degree>
+    void projection (std::string function_string,
+                     std::array<amrex::Real, 3> k,
+                     amrex::Real t,
+                     infrastructure ifr,
+                     std::array<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::IndexType IndexVect,
+                     amrex::MultiFab *MultiF
+                     ) {
+        double x_eval, y_eval, z_eval;
+        double t_eval = t;
+        double kx = k[0];
+        double ky = k[1];
+        double kz = k[2];
+        int err;
+        te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
+        int varcount = 7;
+        te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
+
+        std::vector<amrex::Real> stencil;
+        switch (degree) {
+        case 2:
+            stencil = {1.0};
+            break;
+        case 4:
+            stencil = {1.0/6.0, 4.0/6.0, 1.0/6.0};
+            break;
+        case 6:
+            stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
+            break;
+        default: std::cout << "degree not implemented" << std::endl;
+
+        }
+        std::array<amrex::Real, degree-1> x;
+        amrex::Real x_midpoint;
+        std::array<amrex::Real, degree-1> y;
+        amrex::Real y_midpoint;
+        std::array<amrex::Real, degree-1> z;
+        amrex::Real z_midpoint;
+
+        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
+
+            const amrex::Box& bx = mfi.validbox();
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+            for(int k=lo[2]; k<=hi[2]; k++){
+                z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
+                for (int d = 0; d<(degree-1); d++) z[d] = z_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                for(int j=lo[1]; j<=hi[1]; j++){
+                    y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
+                    for (int d = 0; d<(degree-1); d++) y[d] = y_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+#endif
+                    for(int l=lo[0]; l<=hi[0]; l++){
+                        x_midpoint = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
+                        for (int d = 0; d<(degree-1); d++) x[d] = x_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+                        // the box for these values:
+                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
+                        amrex::Real val = 0.0;
+                        if (integrate[0]) {
+                            for (int d = 0; d<(degree-1); d++) {
+                                x_eval = x[d];
+                                y_eval = y[d];
+                                z_eval = z[d];
+                                val+= stencil[d]*(te_eval(function_parse));
+                            }
+                        } else {
+                            x_eval = x_midpoint;
+                            y_eval = y_midpoint;
+                            z_eval = z_midpoint;
+                            val += te_eval(function_parse);
+                        }
+                        (*MultiF)[mfi].setVal(val, cc, 0, 1);
+                    }
+#if (GEMPIC_SPACEDIM > 1)
+                }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+            }
+#endif
+            // next mfi
+        }
+        (*MultiF).FillBoundary(ifr.geom.periodicity());
+    }
+
+
     /**
      * Initialize E and B field for time t=0 with a given array of functions.
      */
-    void init_E_B (double (*fields[vdim+int(vdim/2.5)*2+1]) (std::array<double,GEMPIC_SPACEDIM> x, double t),infrastructure ifr){
-
-        std::array<double,GEMPIC_SPACEDIM> x;
-        double half_dt = dt/2.0; // for leap frog initialization
-
-        // E_field
-        for (int i = 0; i<vdim; i++) {
-            for ( amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ){
-
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
-                            (*E_Array[i])[mfi].setVal((*fields[i])(x,0), cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
-                // next mfi
-            }
-            (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
-        }
-
-        // B_field
-        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
-            for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ){
-
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-                            (*B_Array[i])[mfi].setVal((*fields[i+vdim])(x,half_dt), cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
-                // next mfi
-            }
-            (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
-        }
+    template <int degree>
+    void init_E_B (std::array<std::string, vdim> fieldsE, std::array<std::string, int(vdim/2.5)*2+1> fieldsB,
+                   std::array<amrex::Real, 3> k,infrastructure ifr){
+        initE<degree> (fieldsE, k, ifr);
+        initB<degree> (fieldsB, k, ifr);
     }
 
     /**
      * Initialize E field for time t=0 with a given array of functions.
      */
-    void initE (infrastructure infra,
-                te_expr *Ex_parse,
-                te_expr *Ey_parse,
-                te_expr *Ez_parse,
-                double *x,
-                double *y,
-                double *z) {
-
-
-
+    template <int degree>
+    void initE (std::array<std::string, vdim> fields, std::array<amrex::Real, 3> k,infrastructure ifr) {
+        // E_field
         for (int i = 0; i<vdim; i++) {
-            for ( amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    *z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*infra.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        *y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*infra.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            *x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*infra.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
-                            const double result = (i==0 ? te_eval(Ex_parse) : (i==1 ? te_eval(Ey_parse) : te_eval(Ez_parse)));
-                            (*E_Array[i])[mfi].setVal(result, cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 2)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-                // next mfi
-            }
-            (*E_Array[i]).FillBoundary(infra.geom.periodicity());
+            projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i==1, true, true)}, *E_Index[i], &(*E_Array[i]));
         }
     }
 
     /**
      * Initialize B field for time t=0 with a given array of functions.
      */
-    void initB (infrastructure infra,
-                te_expr *Bx_parse,
-                te_expr *By_parse,
-                te_expr *Bz_parse,
-                double *x,
-                double *y,
-                double *z) {
+    template <int degree>
+    void initB (std::array<std::string, int(vdim/2.5)*2+1> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
 
+        double half_dt = dt/2.0; // for leap frog initialization
 
-
+        // B_field
         for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
-            for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    *z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        *y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            *x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-                            const double result = (i==0 ? te_eval(Bx_parse) : (i==1 ? te_eval(By_parse) : te_eval(Bz_parse)));
-                            (*B_Array[i])[mfi].setVal(result, cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 2)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-                // next mfi
-            }
-            (*B_Array[i]).FillBoundary(infra.geom.periodicity());
-        }
-    }
-
-    /**
-     * Initialize B field for time t=0 with a given array of functions.
-     */
-    template <int numspec>
-    void initB (infrastructure infra,
-                vlasov_maxwell<vdim, numspec> VM) {
-
-        double x, y, z;
-        double kx = VM.k[0];
-        double ky = VM.k[1];
-        double kz = VM.k[2];
-        int err;
-        te_variable read_vars[6] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
-        int varcount = 6;
-        te_expr *Bx_parse = te_compile(VM.Bx.c_str(), read_vars, varcount, &err);
-        te_expr *By_parse = te_compile(VM.By.c_str(), read_vars, varcount, &err);
-        te_expr *Bz_parse = te_compile(VM.Bz.c_str(), read_vars, varcount, &err);
-
-        for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
-            for ( amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    z = infra.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*infra.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        y = infra.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*infra.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x = infra.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*infra.dx[0];
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-                            const double result = (i==0 ? te_eval(Bx_parse) : (i==1 ? te_eval(By_parse) : te_eval(Bz_parse)));
-                            (*B_Array[i])[mfi].setVal(result, cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 2)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-                // next mfi
-            }
-            (*B_Array[i]).FillBoundary(infra.geom.periodicity());
+            projection<degree>(fields[i], k, half_dt, ifr, {AMREX_D_DECL(true, true, true)}, *B_Index[i], &(*B_Array[i]));
         }
     }
 
@@ -1266,6 +1174,15 @@ if (int(vdim/2.5)*2+1 < 3) {
         phi.FillBoundary(ifr.geom.periodicity());
     }
 
+    template <int degree>
+    void init_rho_phi (std::array<std::string, 2> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
+
+        // rho
+        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IntVect::TheNodeVector(), &(rho));
+        // phi
+        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IntVect::TheNodeVector(), &(phi));
+    }
+
     /**
      * Initialize rho and phi with given funtions
      */
@@ -1579,121 +1496,49 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Compute norm of errors of E and B field from function with exact solution
      */
-    std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
-                                                          bool bool_B,
-                                                          infrastructure ifr){
-        std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
+    template<int degree>
+        std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(std::array<std::string, vdim> fields_E,
+                                                                    std::array<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
+                                                              bool bool_B,
+                                                              infrastructure ifr){
+            std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
-        exactSolution(fields, bool_B, ifr);
+            exactSolution<degree>(fields_E, fields_B, k, bool_B, ifr);
 
-        for (int i=0; i<vdim; i++){
-            amrex::Vector<std::string> varnames = {"E"+std::to_string(i)};
-            hodge01_E_sol(ifr, i, 2);
-            if (i==1) {
-                (*HE_Array[i]).minus(*E_Array[i], 0, 1, 0);
-                E_B_error[i] = gempic_norm(&(*HE_Array[i]), ifr, 2);
-                std::cout << gempic_norm(&(*HE_Array[i]), ifr, 2) << std::endl;
-            } else {
+            for (int i=0; i<vdim; i++){
                 (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
                 E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
             }
-        }
-        if (bool_B) {
-            for (int i=0; i<int(vdim/2.5)*2+1; i++){
-                hodge01_B_sol(ifr, i, 2);
-                if (i==0) {
-                    (*HB_Array[i]).minus(*B_Array[i], 0, 1, 0);
-                    E_B_error[i+vdim] = gempic_norm(&(*HB_Array[i]), ifr, 2);
-                } else {
+            if (bool_B) {
+                for (int i=0; i<int(vdim/2.5)*2+1; i++){
                     (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
                     E_B_error[i+vdim] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
                 }
             }
+            return(E_B_error);
         }
-        return(E_B_error);
-    }
 
-private:
+    private:
 
-    /**
-     * Fill the MultiFabs containing the analytical solution with the solution by evaluating the given function.
-     */
-    void exactSolution(double (*fields[]) (std::array<double,GEMPIC_SPACEDIM> x, double t),
-                       bool bool_B,
-                       infrastructure ifr){
-        std::array<double,GEMPIC_SPACEDIM> x;
-        amrex::Real btime = time + dt/2.0;
 
-        // E-field
-        for (int i=0; i<vdim; i++) {
-            for (amrex::MFIter mfi(*E_sol_Array[i]); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
+        template<int degree>
+        void exactSolution(std::array<std::string, vdim> fields_E,
+                           std::array<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
+                           bool bool_B, infrastructure ifr){
+            amrex::Real btime = time + dt/2.0;
 
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-                    x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*E_Index[i])[2])*ifr.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-                        x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*E_Index[i])[1])*ifr.dx[1];
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-                            x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*E_Index[i])[0])*ifr.dx[0];
-
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
-                            (*E_sol_Array[i])[mfi].setVal((*fields[i])(x,time), cc, 0, 1);
-                        }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
-                // next mfi
+            // E-field
+            for (int i=0; i<vdim; i++) {
+                projection<degree>(fields_E[i], k, time, ifr, {AMREX_D_DECL(i==1, true, true)}, *E_Index[i], &(*E_sol_Array[i]));
             }
-            (*E_sol_Array[i]).FillBoundary(ifr.geom.periodicity());
-        }
 
-        if (bool_B){
-            // B-field
-            for (int i=0; i<int(vdim/2.5)*2+1; i++) {
-                for (amrex::MFIter mfi(*B_sol_Array[i]); mfi.isValid(); ++mfi ) {
-                    const amrex::Box& bx = mfi.validbox();
-
-                    amrex::IntVect lo = {bx.smallEnd()};
-                    amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-                    for(int k=lo[2]; k<=hi[2]; k++){
-                        x[2] = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(*B_Index[i])[2])*ifr.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                        for(int j=lo[1]; j<=hi[1]; j++){
-                            x[1] = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(*B_Index[i])[1])*ifr.dx[1];
-#endif
-                            for(int l=lo[0]; l<=hi[0]; l++){
-                                x[0] = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(*B_Index[i])[0])*ifr.dx[0];
-
-                                // the box for these values:
-                                amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-                                (*B_sol_Array[i])[mfi].setVal((*fields[i+vdim])(x,btime), cc, 0, 1);
-                            }
-#if (GEMPIC_SPACEDIM > 1)
-                        }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                    }
-#endif
-                    // next mfi
+            if (bool_B){
+                // B-field
+                for (int i=0; i<int(vdim/2.5)*2+1; i++) {
+                    projection<degree>(fields_B[i], k, btime, ifr, {AMREX_D_DECL(true, true, true)}, *B_Index[i], &(*B_sol_Array[i]));
                 }
-                (*B_sol_Array[i]).FillBoundary(ifr.geom.periodicity());
             }
         }
-    }
 
 };
 }
