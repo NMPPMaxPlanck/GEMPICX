@@ -644,13 +644,15 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance E by a time step of length @p dt_step with a Yee scheme by the B-Field contribution (varying order)
      */
-    void advance_E_from_B_hodge (infrastructure ifr, amrex::Real dt_step){
+    void advance_E_from_B_hodge (infrastructure ifr, amrex::Real dt_step,
+                                 std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
+                                 std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
 
         amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
 
         // E-field
         for (int i=0; i<vdim; i++) {
-            for (amrex::MFIter mfi(*E_Array[i]); mfi.isValid(); ++mfi ) {
+            for (amrex::MFIter mfi(*(*MultiOutput)[i]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
 
                 amrex::IntVect lo = {bx.smallEnd()};
@@ -668,16 +670,16 @@ if (int(vdim/2.5)*2+1 < 3) {
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
 
                             // old field_out value
-                            (*E_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+                            (*(*MultiOutput)[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             // B-derivatives
                             if (i == 0){
-                                    (*E_Array[0])[mfi].setVal(*c1, cc, 0, 1);
+                                    (*(*MultiOutput)[0])[mfi].setVal(*c1, cc, 0, 1);
                             }
                             if (i == 1) {
-                                    (*HB_Array[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
-                                    (*HB_Array[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
-                                    (*E_Array[1])[mfi].setVal(*c1+dt_step*(-(*c2-*c3)/ifr.dx[0]), cc, 0, 1);
+                                    (*(*MultiInput)[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
+                                    (*(*MultiInput)[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
+                                    (*(*MultiOutput)[1])[mfi].setVal(*c1+dt_step*(-(*c2-*c3)/ifr.dx[0]), cc, 0, 1);
                             }
                         }
 #if (GEMPIC_SPACEDIM > 1)
@@ -688,7 +690,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 #endif
                 // next mfi
             }
-            (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
+            (*(*MultiOutput)[i]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
@@ -1061,7 +1063,9 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance B by a time step of length @p dt_step with a Yee scheme
      */
-    void advance_B_hodge (infrastructure ifr, amrex::Real dt_step){
+    void advance_B_hodge (infrastructure ifr, amrex::Real dt_step,
+                          std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
+                          std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
 
@@ -1069,7 +1073,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         // B-field
         for (int i=0; i<bdim; i++) {
-            for (amrex::MFIter mfi(*B_Array[i]); mfi.isValid(); ++mfi ) {
+            for (amrex::MFIter mfi(*(*MultiInput)[i]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
 
                 amrex::IntVect lo = {bx.smallEnd()};
@@ -1087,13 +1091,13 @@ if (int(vdim/2.5)*2+1 < 3) {
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
 
                             // old field_out value
-                            (*B_Array[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+                            (*(*MultiOutput)[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
 
                             // E-derivatives
-                            (*HE_Array[1])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
-                            (*HE_Array[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
+                            (*(*MultiInput)[1])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
+                            (*(*MultiInput)[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
 
-                            (*B_Array[0])[mfi].setVal(*c1-dt_step*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
+                            (*(*MultiOutput)[0])[mfi].setVal(*c1-dt_step*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
@@ -1103,7 +1107,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 #endif
                 // next mfi
             }
-            (*B_Array[i]).FillBoundary(ifr.geom.periodicity());
+            (*(*MultiOutput)[i]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
