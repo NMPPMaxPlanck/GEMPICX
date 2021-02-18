@@ -354,6 +354,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         std::array<amrex::Real, degree-1> z;
         amrex::Real z_midpoint;
 
+        int x_len[GEMPIC_SPACEDIM];
+        for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
+
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
 
             const amrex::Box& bx = mfi.validbox();
@@ -362,31 +365,41 @@ if (int(vdim/2.5)*2+1 < 3) {
 #if (GEMPIC_SPACEDIM > 2)
             for(int k=lo[2]; k<=hi[2]; k++){
                 z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
-                for (int d = 0; d<(degree-1); d++) z[d] = z_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+                for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
 #endif
 #if (GEMPIC_SPACEDIM > 1)
                 for(int j=lo[1]; j<=hi[1]; j++){
                     y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
-                    for (int d = 0; d<(degree-1); d++) y[d] = y_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+                    for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
 #endif
                     for(int l=lo[0]; l<=hi[0]; l++){
                         x_midpoint = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
-                        for (int d = 0; d<(degree-1); d++) x[d] = x_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
+                        for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
                         // the box for these values:
                         amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
                         amrex::Real val = 0.0;
-                        if (integrate[0]) {
-                            for (int d = 0; d<(degree-1); d++) {
-                                x_eval = x[d];
-                                y_eval = y[d];
-                                z_eval = z[d];
-                                val+= stencil[d]*(te_eval(function_parse));
+#if (GEMPIC_SPACEDIM > 2)
+                        for (int zd = 0; zd<x_len[2];zd++)
+#endif
+                            {
+#if (GEMPIC_SPACEDIM > 1)
+                            for (int yd =0; yd<x_len[1]; yd++)
+#endif
+                                {
+                                for (int xd =0; xd<x_len[0]; xd++) {
+                                    x_eval = x[xd];
+                                    y_eval = y[yd];
+                                    z_eval = z[zd];
+                                    val+= (integrate[0]?stencil[xd]:1)
+#if (GEMPIC_SPACEDIM > 1)
+                                            *(integrate[1]?stencil[yd]:1)
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                                            *(integrate[2]?stencil[zd]:1)
+#endif
+                                            *(te_eval(function_parse));
+                                }
                             }
-                        } else {
-                            x_eval = x_midpoint;
-                            y_eval = y_midpoint;
-                            z_eval = z_midpoint;
-                            val += te_eval(function_parse);
                         }
                         (*MultiF)[mfi].setVal(val, cc, 0, 1);
                     }
@@ -419,7 +432,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     void initE (std::array<std::string, vdim> fields, std::array<amrex::Real, 3> k,infrastructure ifr) {
         // E_field
         for (int i = 0; i<vdim; i++) {
-            projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i==1, true, true)}, *E_Index[i], &(*E_Array[i]));
+            projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]));
         }
     }
 
@@ -433,7 +446,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         // B_field
         for (int i = 0; i<int(vdim/2.5)*2+1; i++) {
-            projection<degree>(fields[i], k, half_dt, ifr, {AMREX_D_DECL(true, true, true)}, *B_Index[i], &(*B_Array[i]));
+            projection<degree>(fields[i], k, half_dt, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_Array[i]));
         }
     }
 
@@ -1157,13 +1170,13 @@ if (int(vdim/2.5)*2+1 < 3) {
 
             // E-field
             for (int i=0; i<vdim; i++) {
-                projection<degree>(fields_E[i], k, time, ifr, {AMREX_D_DECL(i==1, true, true)}, *E_Index[i], &(*E_sol_Array[i]));
+                projection<degree>(fields_E[i], k, time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_sol_Array[i]));
             }
 
             if (bool_B){
                 // B-field
                 for (int i=0; i<int(vdim/2.5)*2+1; i++) {
-                    projection<degree>(fields_B[i], k, btime, ifr, {AMREX_D_DECL(true, true, true)}, *B_Index[i], &(*B_sol_Array[i]));
+                    projection<degree>(fields_B[i], k, btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_sol_Array[i]));
                 }
             }
         }
