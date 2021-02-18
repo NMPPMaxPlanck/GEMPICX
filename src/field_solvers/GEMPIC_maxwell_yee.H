@@ -827,16 +827,50 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
     template <int degree>
-    void hodge (infrastructure ifr, int start_form, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+    void hodge (infrastructure ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                 amrex::IndexType IndexVect){
 
-        amrex::Real c1[1], c2[1], c3[1];
+        amrex::Real c1[1];
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
 
                 amrex::IntVect lo = {bx.smallEnd()};
                 amrex::IntVect hi = {bx.bigEnd()};
+
+                std::vector<amrex::Real> stencil;
+                switch (start_from) {
+                case 0:
+                    switch (degree) {
+                    case 2:
+                        stencil = {1.0};
+                        break;
+                    case 4:
+                        stencil = {1.0/24.0, 11.0/12.0, 1.0/24.0};
+                        break;
+                    case 6:
+                        stencil = {-17.0/5760.0, 77.0/1440.0, 863.0/960.0, 77.0/1440.0, -17.0/5760.0};
+                        break;
+                    default: std::cout << "degree not implemented" << std::endl;
+                    }
+                    break;
+                case 1:
+                    switch (degree) {
+                    case 2:
+                        stencil = {1.0};
+                        break;
+                    case 4:
+                        stencil = {-1.0/24.0, 13/12.0, -1.0/24.0};
+                        break;
+                    case 6:
+                        stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
+                        break;
+                    default: std::cout << "degree not implemented" << std::endl;
+                    }
+                    break;
+                }
+
+
 
 #if (GEMPIC_SPACEDIM > 2)
                 for(int k=lo[2]; k<=hi[2]; k++){
@@ -849,19 +883,15 @@ if (int(vdim/2.5)*2+1 < 3) {
                             // the box for these values:
                             amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
 
-                            // old field_out value
-                            (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
-                            (*MultiInput)[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
-                            (*MultiInput)[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
-
-                            switch (start_form) {
-                            case 0:
-                                (*MultiOutput)[mfi].setVal(1./24.*(*c1)+11./12.*(*c2)+1./24.*(*c3), cc, 0, 1);
-                                break;
-                            case 1:
-                                (*MultiOutput)[mfi].setVal(-1./24.*(*c1)+13./12.*(*c2)-1./24.*(*c3), cc, 0, 1);
-                                break;
+                            amrex::Real val = 0.0;
+                            for (int d = 0; d<(degree-1); d++) {
+                                int shift = d - degree/2 + 1;
+                                (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+shift,j,k)},0,1);
+                                val += stencil[d]*(*c1);
                             }
+
+                            (*MultiOutput)[mfi].setVal(val, cc, 0, 1);
+
                         }
 #if (GEMPIC_SPACEDIM > 1)
                     }
