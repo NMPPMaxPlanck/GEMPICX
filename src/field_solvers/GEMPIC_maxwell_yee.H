@@ -644,7 +644,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
     }
 
-    template <int degree>
+
+
+    template <int degree, int dimension>
     void hodge (infrastructure ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                 amrex::IndexType IndexVect){
 
@@ -704,7 +706,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                             amrex::Real val = 0.0;
                             for (int d = 0; d<(degree-1); d++) {
                                 int shift = d - degree/2 + 1;
-                                (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+shift,j,k)},0,1);
+                                (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
                                 val += stencil[d]*(*c1);
                             }
 
