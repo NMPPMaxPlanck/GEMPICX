@@ -644,7 +644,17 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
     }
 
-
+#if (GEMPIC_SPACEDIM ==3)
+    template<int degree>
+    void hodge_full (infrastructure ifr, std::array<std::unique_ptr<amrex::MultiFab>, 3 > *MultiInput,
+                     std::array<std::unique_ptr<amrex::MultiFab>, 3 > *MultiOutput, std::array<std::unique_ptr<amrex::IndexType>,3> Indexvector) {
+        for (int field=0; field<GEMPIC_SPACEDIM; field++) {
+            hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), Indexvector[field]);
+            hodge<degree,1>(ifr, (field==0?0:1), &(*(*MultiOutput)[field]), &(*(*MultiInput)[field]), Indexvector[field]);
+            hodge<degree,2>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), Indexvector[field]);
+        }
+    }
+#endif
 
     template <int degree, int dimension>
     void hodge (infrastructure ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
