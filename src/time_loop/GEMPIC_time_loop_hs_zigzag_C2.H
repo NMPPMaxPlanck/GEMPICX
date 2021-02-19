@@ -108,7 +108,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     // evaluate the spline
                     spline.init_particles(pos , infra.plo, infra.dxi);
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degz,degy,degz>(spline,  eA);
+                    std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
