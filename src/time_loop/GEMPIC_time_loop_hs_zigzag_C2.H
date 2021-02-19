@@ -49,6 +49,12 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                        std::ofstream *ofs) {
 
     splines_at_particles<degx,degy,degz> spline;
+    spline1d_at_particles<degx> spline_new_x;
+    spline1d_at_particles<degx> spline_old_x;
+    spline1d_at_particles<degy> spline_new_y;
+    spline1d_at_particles<degy> spline_old_y;
+    spline1d_at_particles<degz> spline_new_z;
+    spline1d_at_particles<degz> spline_old_z;
 
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
         (*mw_yee).advance_time();
@@ -99,7 +105,6 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     std::array<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                       pos[d]= particles[pp].pos(d);
-
                     // evaluate the spline
                     spline.init_particles(pos , infra.plo, infra.dxi);
                     // evaluate the electric field
@@ -118,16 +123,13 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     std::array<amrex::Real, 2> bfields;
                     // push x1
                     amrex::Real x1_new = pos[0] +  (*mw_yee).dt*vel[0];
-
-                    spline1d_at_particles<degx> spline_new;
-                    spline_new.init_position( x1_new, infra.plo[0], infra.dxi[0] );
-                    spline1d_at_particles<degx> spline_old;
-                    spline_old.init_position( pos[0], infra.plo[0], infra.dxi[0] );
+                    spline_new_x.init_position( x1_new, infra.plo[0], infra.dxi[0] );
+                    spline_old_x.init_position( pos[0], infra.plo[0], infra.dxi[0] );
                     spline.template init_position<0,degx>( x1_new, infra.plo[0], infra.dxi[0] );
 
                     accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degx, degy, degz, 0>( spline,
-                                                                                                               spline_new,
-                                                                                                               spline_old,
+                                                                                                               spline_new_x,
+                                                                                                               spline_old_x,
                                                                                                                weight,
                                                                                                                infra.geom.CellSize(),
                                                                                                                bA,
@@ -148,13 +150,13 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                         // push x2
                       amrex::Real x2_new = pos[1] +  (*mw_yee).dt*vel[1];
 
-                      spline_new.init_position( x2_new, infra.plo[1], infra.dxi[1] );
-                      spline_old.init_position( pos[1], infra.plo[1], infra.dxi[1] );
+                      spline_new_y.init_position( x2_new, infra.plo[1], infra.dxi[1] );
+                      spline_old_y.init_position( pos[1], infra.plo[1], infra.dxi[1] );
                       spline.template init_position<1,degy>( x2_new, infra.plo[1], infra.dxi[1] );
 
                       accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degy, degz, degx, 1>( spline,
-                                                        spline_new,
-                                                        spline_old,
+                                                        spline_new_y,
+                                                        spline_old_y,
                                                         weight,
                                                         infra.geom.CellSize(),
                                                         bA,
@@ -179,13 +181,13 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     // push x3
                     amrex::Real x3_new = pos[2] +  (*mw_yee).dt*vel[2];
 
-                    spline_new.init_position( x3_new, infra.plo[2], infra.dxi[2] );
-                    spline_old.init_position( pos[2], infra.plo[2], infra.dxi[2] );
+                    spline_new_z.init_position( x3_new, infra.plo[2], infra.dxi[2] );
+                    spline_old_z.init_position( pos[2], infra.plo[2], infra.dxi[2] );
                     spline.template init_position<2,degz>( x3_new, infra.plo[2], infra.dxi[2] );
 
                     accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degz, degx, degy, 2>( spline,
-                                                      spline_new,
-                                                      spline_old,
+                                                      spline_new_z,
+                                                      spline_old_z,
                                                       weight,
                                                       infra.geom.CellSize(),
                                                       bA,
@@ -208,7 +210,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
 }
                     std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
-
+//exit(0);
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -220,11 +222,11 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
-        /*amrex::Vector<std::string> varnames = { "J_x"};
+        amrex::Vector<std::string> varnames = { "J_x"};
         amrex::Real timeo = t_step*(*mw_yee).dt;
-        WriteSingleLevelPlotfile("current", *(*mw_yee).J_Array[0], varnames,
+        WriteSingleLevelPlotfile("current_C2", *(*mw_yee).J_Array[0], varnames,
         infra.geom, timeo, 0);
-        abort();*/
+        //abort();
 
 
         // advance E from j (field part of H_p)

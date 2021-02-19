@@ -68,7 +68,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
                 for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                   position[d] = particles[pp].pos(d);
                 spline.init_particles( position, infra.plo, infra.dxi);
-                gempic_deposit_rho_C3<degy, degy, degz> ( spline,
+                gempic_deposit_rho_C3<degx, degy, degz> ( spline,
                                               (*part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
                                               rhoarr);
               }
