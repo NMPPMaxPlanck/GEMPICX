@@ -222,11 +222,11 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
-        amrex::Vector<std::string> varnames = { "J_x"};
+        /*amrex::Vector<std::string> varnames = { "J_x"};
         amrex::Real timeo = t_step*(*mw_yee).dt;
         WriteSingleLevelPlotfile("current_C2", *(*mw_yee).J_Array[0], varnames,
         infra.geom, timeo, 0);
-        //abort();
+        //abort();*/
 
 
         // advance E from j (field part of H_p)
