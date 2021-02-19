@@ -70,7 +70,7 @@ public:
             s = {x};
             break;
         case 1:
-            s = {1./2.+x+pow(x,2)/2., pow(x,2)/2.};
+            s = {1./2.+x-pow(x,2)/2., pow(x,2)/2.};
             break;
         case 2:
             s = {pow(x,3)/6.-pow(x,2)/2.+x*0.5+5./6., -pow(x,3)/3.+pow(x,2)/2.+x/2.+1./6., pow(x,3)/6.};
