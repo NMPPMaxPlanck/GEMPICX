@@ -30,179 +30,63 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
-//------------------------------------------------------------------------------
-// Solutions and RHS
-double cosMult(std::array<double,GEMPIC_SPACEDIM> x, double coefficient=1., std::array<int,GEMPIC_SPACEDIM> sinInd = {AMREX_D_DECL(0,0,0)}) {
-    double res = sinInd[0]?sin(coefficient*x[0]):cos(coefficient*x[0]);
-#if (GEMPIC_SPACEDIM > 1)
-    res *= sinInd[1]?sin(coefficient*x[1]):cos(coefficient*x[1]);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    res *= sinInd[2]?sin(coefficient*x[2]):cos(coefficient*x[2]);
-#endif
-    return(res);
-}
-
-
-#if (GEMPIC_SPACEDIM == 1)
-template<int vdim>
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 1)
-        return(cos(std::accumulate(x.begin(), x.end(), 0.)));
-    else if (vdim == 2)
-        return(cos(x[0]));
-    else if (vdim == 3)
-        return(0.);
-}
-template<int vdim>
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 2)
-        return(cos(x[0])*cos(t));
-    else
-        return(0.);
-}
-template<int vdim>
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 2)
-        return(sin(x[0])*sin(t));
-    else
-        return(0.);
-}
-#elif (GEMPIC_SPACEDIM == 2)
-template<int vdim>
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 1)
-        return(0.);
-    else if (vdim == 2)
-        return(cos(x[0])*sin(x[1])*sin(sqrt(2)*t)/sqrt(2));
-    else if (vdim == 3)
-        return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
-}
-template<int vdim>
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 1)
-        return(0.);
-    else if (vdim == 2)
-        return(-sin(x[0])*cos(x[1])*sin(sqrt(2)*t)/sqrt(2));
-    else if (vdim == 3)
-        return(-cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
-}
-template<int vdim>
-double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 3)
-        return(-sqrt(2.0)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
-    else
-        return(0.);
-}
-
-template<int vdim>
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 2)
-        return(-cos(x[0])*cos(x[1])*cos(sqrt(2)*t));
-    else if (vdim == 3)
-        return(-cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
-}
-
-template<int vdim>
-double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if ( vdim == 3 )
-        return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
-    else
-        return(0.);
-}
-template<int vdim>
-double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim ==  3)
-        return(-sqrt(2)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(2.0)*t));
-    else
-        return(0.);
-}
-
-#elif (GEMPIC_SPACEDIM == 3)
-template<int vdim>
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t){
-    return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));
-}
-template<int vdim>
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-2*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
-template<int vdim>
-double E_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
-
-template<int vdim>
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t){return(sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
-template<int vdim>
-double B_y(std::array<double,GEMPIC_SPACEDIM> x, double t){return(0);}
-template<int vdim>
-double B_z(std::array<double,GEMPIC_SPACEDIM> x, double t){return(-sqrt(3)*cos(std::accumulate(x.begin(), x.end(), 0.)-sqrt(3.0)*t));}
-
-
-#endif
-
-double Ep_x(std::array<double,GEMPIC_SPACEDIM> x,double t){return(-cosMult(x, 1., {AMREX_D_DECL(1,0,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(1,0,0)}));}
-
-template<int vdim>
-double Ep_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if ((GEMPIC_SPACEDIM == 1) & (vdim == 2))
-        return(0.);
-    else
-        return(-cosMult(x, 1., {AMREX_D_DECL(0,1,0)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,1,0)}));
-}
-
-template <int vdim>
-double Ep_z(std::array<double,GEMPIC_SPACEDIM> x,double t)
-{
-    if (GEMPIC_SPACEDIM==2 && vdim == 3)
-        return(0.);
-    else
-        return(-cosMult(x, 1., {AMREX_D_DECL(0,0,1)})-0.5*cosMult(x, 2., {AMREX_D_DECL(0,0,1)}));
-}
-
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
-{  
+{  //------------------------------------------------------------------------------
+    // Analytical solutions -- Maxwell
+    std::array<std::string, vdim> fields_E;
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
+        fields_E[0] = "cos(x+y+z)";
+        fields_B[0] = "0.0";
+    } else if (GEMPIC_SPACEDIM == 1 && vdim == 2) {
+        fields_E[0] = "cos(x)";
+        fields_E[1] = "cos(x)*cos(t)";
+        fields_B[0] = "sin(x)*sin(t)";
+    } else if (GEMPIC_SPACEDIM == 2 && vdim == 2) {
+        fields_E[0] = "cos(x)*sin(y)*sin(sqrt(2.0)*t)/sqrt(2.0)";
+        fields_E[1] = "-sin(x)*cos(y)*sin(sqrt(2)*t)/sqrt(2)";
+        fields_B[0] = "-cos(x[0])*cos(x[1])*cos(sqrt(2)*t)";
+    } else if (GEMPIC_SPACEDIM == 2 && vdim == 3) {
+        fields_E[0] = "cos(x+y-sqrt(2.0)*t";
+        fields_E[1] = "-cos(x+y-sqrt(2.0)*t)";
+        fields_E[2] = "-sqrt(2.0)*cos(x+y-sqrt(2.0)*t)";
+        fields_B[0] = "-cos(x+y-sqrt(2.0)*t)";
+        fields_B[1] = "cos(x+y-sqrt(2.0)*t)";
+        fields_B[2] = "-sqrt(2)*cos(x+y-sqrt(2.0)*t)";
+    } else if (GEMPIC_SPACEDIM == 3 && vdim == 3) {
+        fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
+        fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
+        fields_E[2] = "cos(x+y+z-sqrt(3.0)*t)";
+        fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+        fields_B[1] = "0.0";
+        fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+    }
+    //------------------------------------------------------------------------------
+    // Analytical solutions -- Poisson
+    std::array<std::string, vdim> fields_EP;
+    if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
+        fields_EP[0] = "-sin(x)-0.5*sin(2*x)";
+    } else if (GEMPIC_SPACEDIM == 1 && vdim == 2) {
+        fields_EP[0] = "-sin(x)-0.5*sin(2*x)";
+        fields_EP[1] = "0.0";
+    } else if (GEMPIC_SPACEDIM == 2 && vdim == 2) {
+        fields_EP[0] = "-sin(x)*cos(y)-0.5*sin(2*x)*cos(2*y)";
+        fields_EP[1] = "-cos(x)*sin(y)-0.5*cos(2*x)*sin(2*y)";
+    } else if (GEMPIC_SPACEDIM == 2 && vdim == 3) {
+        fields_EP[0] = "-sin(x)*cos(y)-0.5*sin(2*x)*cos(2*y)";
+        fields_EP[1] = "-cos(x)*sin(y)-0.5*cos(2*x)*sin(2*y)";
+        fields_EP[2] = "0.0";
+    } else if (GEMPIC_SPACEDIM == 3 && vdim == 3) {
+        fields_EP[0] = "-sin(x)*cos(y)*cos(z)-0.5*sin(2*x)*cos(2*y)*cos(2*z)";
+        fields_EP[1] = "-cos(x)*sin(y)*cos(z)-0.5*cos(2*x)*sin(2*y)*cos(2*z)";
+        fields_EP[2] = "-cos(x)*cos(y)*sin(z)-0.5*cos(2*x)*cos(2*y)*sin(2*z)";
+    }
+    //------------------------------------------------------------------------------
+
+    const int degree = 2;
     int bdim = int(vdim/2.5)*2+1;
     std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
-
-    // make pointer-array for functions
-    double (*fields[vdim+bdim]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
-    fields[0] = E_x<vdim>;
-    if (vdim > 1){
-        fields[1] = E_y<vdim>;
-    }
-#if (GEMPIC_SPACEDIM > 1)
-    if (vdim > 2) {
-        fields[2] = E_z<vdim>;
-    }
-#endif
-
-    fields[vdim] = B_x<vdim>;
-#if (GEMPIC_SPACEDIM > 1)
-if (bdim > 1) {
-    fields[vdim+1] = B_y<vdim>;
-}
-if (bdim > 2) {
-    fields[vdim+2] = B_z<vdim>;
-}
-#endif
-
-    double (*fields_poisson[vdim]) (std::array<double,GEMPIC_SPACEDIM> x,double t);
-    fields_poisson[0] = Ep_x;
-    if (vdim > 1){
-        fields_poisson[1] = Ep_y<vdim>;
-    }
-    if (vdim > 2) {
-        fields_poisson[2] = Ep_z<vdim>;
-    }
 
     //------------------------------------------------------------------------------
     array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
@@ -252,11 +136,10 @@ if (bdim > 2) {
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.init_E_B(fields, infra);
+    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
 
-    //AllPrintToFile("test_maxwell_yee.tmp") << endl;
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.computeError(fields, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
     AllPrintToFile("test_maxwell_yee.tmp") << endl;
     AllPrintToFile("test_maxwell_yee.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee.tmp") << "step " << 0 << endl;
@@ -283,8 +166,12 @@ if (bdim > 2) {
 
     for (int n=1;n<=mw_yee.nsteps;n++){
         std::cout << "step: " << n << std::endl;
-        mw_yee.advance(infra, mw_yee.dt);
-        E_B_error = mw_yee.computeError(fields, true, infra);
+        mw_yee.template hodge_full<degree>(infra, &(mw_yee.B_Array), &(mw_yee.HB_Array), false);
+        mw_yee.advance_E(infra, VlMa.dt, true, true, &(mw_yee.HB_Array), &(mw_yee.E_Array));
+        mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
+        mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
+        mw_yee.advance_time();
+        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
 
         AllPrintToFile("test_maxwell_yee.tmp") << "step " << n << endl;
         switch (vdim) {
@@ -318,10 +205,10 @@ if (bdim > 2) {
         (*(mw_yee_2).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee_2.init_E_B(fields, infra);
+    mw_yee_2.template init_E_B<2>(fields_E, fields_B, VlMa.k, infra);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee_2.computeError(fields, true, infra);
+    E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
     AllPrintToFile("test_maxwell_yee.tmp") << endl;
     AllPrintToFile("test_maxwell_yee.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee.tmp") << "step " << 0 << endl;
@@ -348,10 +235,12 @@ if (bdim > 2) {
     for (int n=1;n<=mw_yee_2.nsteps;n++){
         std::cout << "step: " << n << std::endl;
         mw_yee_2.advance_time();
-        mw_yee_2.advance_E_from_B(infra, mw_yee_2.dt);
-        mw_yee_2.advance_E_from_J(infra, mw_yee_2.dt);
-        mw_yee_2.advance_B(infra, mw_yee_2.dt);
-        E_B_error = mw_yee_2.computeError(fields, true, infra);
+        mw_yee_2.template hodge_full<degree>(infra, &(mw_yee_2.B_Array), &(mw_yee_2.HB_Array), false);
+        mw_yee_2.advance_E(infra, mw_yee_2.dt, true, false, &(mw_yee_2.HB_Array), &(mw_yee_2.E_Array));
+        mw_yee_2.advance_E(infra, mw_yee_2.dt, false, true, &(mw_yee_2.HB_Array), &(mw_yee_2.E_Array));
+        mw_yee_2.template hodge_full<degree>(infra, &(mw_yee_2.E_Array), &(mw_yee_2.HE_Array), true);
+        mw_yee_2.advance_B(infra, mw_yee_2.dt, &(mw_yee_2.HE_Array), &(mw_yee_2.B_Array));
+        E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
 
         AllPrintToFile("test_maxwell_yee.tmp") << "step " << n << endl;
         switch (vdim) {
@@ -399,7 +288,7 @@ if (bdim > 2) {
 
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
     mw_yee.solve_poisson(infra);
-    E_B_error = mw_yee.computeError(fields_poisson, false, infra);
+    E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k, false, infra);
 
     AllPrintToFile("test_maxwell_yee.tmp") << endl;
     AllPrintToFile("test_maxwell_yee.tmp") << "Poisson" << endl;
