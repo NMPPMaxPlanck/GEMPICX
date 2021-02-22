@@ -33,50 +33,47 @@ using namespace Field_solvers;
 //------------------------------------------------------------------------------
 // Solutions
 
-#if (GEMPIC_SPACEDIM == 1)
-template<int vdim>
-double E_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 1)
-        return(cos(std::accumulate(x.begin(), x.end(), 0.)));
-    else if (vdim == 2)
-        return(cos(x[0]));
-    else if (vdim == 3)
-        return(0.);
-}
-template<int vdim>
-double E_y(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 2)
-        return(cos(x[0])*cos(t));
-    else
-        return(0.);
-}
-template<int vdim>
-double B_x(std::array<double,GEMPIC_SPACEDIM> x, double t)
-{
-    if (vdim == 2)
-        return(sin(x[0])*sin(t));
-    else
-        return(0.);
-}
-#endif
-
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
-{  
-#if (GEMPIC_SPACEDIM == 1)
+{
+    //------------------------------------------------------------------------------
+    // Analytical solutions
+    std::array<std::string, vdim> fields_E;
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
+        fields_E[0] = "cos(x+y+z)";
+        fields_B[0] = "0.0";
+    } else if (GEMPIC_SPACEDIM == 1 && vdim == 2) {
+        fields_E[0] = "cos(x)";
+        fields_E[1] = "cos(x)*cos(t)";
+        fields_B[0] = "sin(x)*sin(t)";
+    } else if (GEMPIC_SPACEDIM == 2 && vdim == 2) {
+        fields_E[0] = "cos(x)*sin(y)*sin(sqrt(2.0)*t)/sqrt(2.0)";
+        fields_E[1] = "-sin(x)*cos(y)*sin(sqrt(2)*t)/sqrt(2)";
+        fields_B[0] = "-cos(x[0])*cos(x[1])*cos(sqrt(2)*t)";
+    } else if (GEMPIC_SPACEDIM == 2 && vdim == 3) {
+        fields_E[0] = "cos(x+y-sqrt(2.0)*t";
+        fields_E[1] = "-cos(x+y-sqrt(2.0)*t)";
+        fields_E[2] = "-sqrt(2.0)*cos(x+y-sqrt(2.0)*t)";
+        fields_B[0] = "-cos(x+y-sqrt(2.0)*t)";
+        fields_B[1] = "cos(x+y-sqrt(2.0)*t)";
+        fields_B[2] = "-sqrt(2)*cos(x+y-sqrt(2.0)*t)";
+    } else if (GEMPIC_SPACEDIM == 3 && vdim == 3) {
+        fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
+        fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
+        fields_E[2] = "cos(x+y+z-sqrt(3.0)*t)";
+        fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+        fields_B[1] = "0.0";
+        fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+
+    }
+    //------------------------------------------------------------------------------
+
+    const int degree = 4;
+
     int bdim = int(vdim/2.5)*2+1;
     std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
 
-    // make pointer-array for functions
-    double (*fields[vdim+bdim]) (std::array<double,GEMPIC_SPACEDIM> x, double t);
-    fields[0] = E_x<vdim>;
-    if (vdim > 1){
-        fields[1] = E_y<vdim>;
-    }
-
-    fields[vdim] = B_x<vdim>;
 
     //------------------------------------------------------------------------------
     array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
@@ -112,7 +109,7 @@ void main_main ()
     VlMa.Nghost++;
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
                     32, 0.01, {1.0}, {1.0}, 0.5);
-    VlMa.dt = 10;
+    VlMa.dt = 0.01;
     VlMa.set_computed_params();
 
     Infra::infrastructure infra;
@@ -128,33 +125,67 @@ void main_main ()
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.init_E_B(fields, infra);
-    mw_yee.init_HE_HB(fields, infra);
-    mw_yee.hodge01_B(infra, 0, 2);
-    mw_yee.hodge01_E(infra, 1, 2);
+    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.computeError(fields, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
     AllPrintToFile("test_maxwell_yee_order.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_order.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee_order.tmp") << "step " << 0 << endl;
-    AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
-    AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
+    switch (vdim) {
+    case 1:
+        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
+        break;
+    case 2:
+        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        break;
+    case 3:
+        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        break;
+    }
+
+    switch (bdim) {
+    case 1:
+        amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
+        break;
+    case 3:
+        amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+        break;
+    }
 
 
     for (int n=1;n<=mw_yee.nsteps;n++){
         std::cout << "step: " << n << std::endl;
-        mw_yee.hodge10_B(infra, 0, 2);
-        mw_yee.advance_E_from_B_hodge(infra, VlMa.dt);
-        mw_yee.hodge10_E(infra, 1, 2);
-        mw_yee.advance_B_hodge(infra, VlMa.dt);
-        E_B_error = mw_yee.computeError(fields, true, infra);
+        mw_yee.template hodge_full<degree>(infra, &(mw_yee.B_Array), &(mw_yee.HB_Array), false);
+        mw_yee.advance_E(infra, VlMa.dt, true, false, &(mw_yee.HB_Array), &(mw_yee.E_Array));
+        mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
+        mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
+        mw_yee.advance_time();
+        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
 
         AllPrintToFile("test_maxwell_yee_order.tmp") << "step " << n << endl;
-        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
-        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
+        switch (vdim) {
+        case 1:
+            AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
+            break;
+        case 2:
+            AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            break;
+        case 3:
+            AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+            break;
+        }
+
+        switch (bdim) {
+        case 1:
+            amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
+            break;
+        case 3:
+            amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+            break;
+        }
     }
-#endif
+
 
 }
 
@@ -166,6 +197,7 @@ int main(int argc, char* argv[])
     main_main<2, 1, 1, 1, 1>();
 #elif (GEMPIC_SPACEDIM == 2)
 #elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1, 1, 1, 1>();
 #endif
     if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee_order.tmp.0", "test_maxwell_yee_order.output");
     amrex::Finalize();

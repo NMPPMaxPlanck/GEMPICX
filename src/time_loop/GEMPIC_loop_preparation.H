@@ -30,13 +30,14 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
 void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
                        infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz> *diagn,
-                       bool time_staggered) {
+                       bool time_staggered,
+                       std::array<std::string, int(vdim/2.5)*2+1> fields_B) {
 
     // initial rho by: deposition of particle charge
     //Set rho to 0
@@ -90,12 +91,13 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     (*mw_yee).solve_poisson(infra);
 
     // initial B_field
-    (*mw_yee).initB(infra, VM);
+    (*mw_yee).template initB<degmw>(fields_B, VM.k, infra);
 
     if (time_staggered) {
         //------------------------------------------------------------------------------
         //approximate e^1/2
-        (*mw_yee).advance_E(infra, 0.5*(*mw_yee).dt);
+        mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
+        (*mw_yee).advance_E(infra, 0.5*(*mw_yee).dt, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
         //------------------------------------------------------------------------------
         //approximate x^1/2
         for (int spec=0;spec<numspec;spec++) {

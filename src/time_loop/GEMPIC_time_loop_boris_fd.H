@@ -30,7 +30,7 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim, int numspec, int degx, int degy, int degz, bool electromagnetic=true>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
 void time_loop_boris_fd (infrastructure infra,
                          maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim,numspec> *part_gr,
@@ -45,7 +45,8 @@ void time_loop_boris_fd (infrastructure infra,
         if ( electromagnetic ){
           //--------------------------------------------------------------------------
           // update B
-          (*mw_yee).advance_B(infra, (*mw_yee).dt);
+          mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
+          mw_yee->advance_B(infra, mw_yee->dt, &(mw_yee->HE_Array), &(mw_yee->B_Array));
         }
 
         //--------------------------------------------------------------------------
@@ -133,12 +134,13 @@ void time_loop_boris_fd (infrastructure infra,
 
         if (electromagnetic){
           // advance E
-          (*mw_yee).advance_E(infra, (*mw_yee).dt);
+            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
+            mw_yee->advance_E(infra, mw_yee->dt, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
           }
         else
           {
             // advance E from j
-            (*mw_yee).advance_E_from_J(infra, (*mw_yee).dt);
+            mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
           }
 
 

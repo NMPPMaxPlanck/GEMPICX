@@ -31,6 +31,7 @@ using namespace Vlasov_Maxwell;
 template< int vdim, int numspec, int degx, int degy, int degz>
 void main_main (bool ctest)
 {
+    int const degmw = 2;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
@@ -53,6 +54,14 @@ void main_main (bool ctest)
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvarx * x)";
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    fields_B[0] = Bx;
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[1] = By;
+    }
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[2] = Bz;
+    }
     std::string phi = "4 * 0.5 * cos(0.5 * x)";
     std::string rho = "0.0";
     int propagator = 1;
@@ -113,15 +122,15 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // solve:
     diagnostics<vdim, numspec, degx, degy, degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation<vdim,numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered);
+    loop_preparation<vdim,numspec,degx,degy,degy,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
         break;
     case 1:
-        time_loop_hs_fem<vdim,numspec,degx,degy, degz>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
+        time_loop_hs_fem<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
         break;
     default:
         break;
