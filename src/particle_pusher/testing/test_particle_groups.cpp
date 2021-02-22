@@ -26,6 +26,7 @@ using namespace Sampling;
 template<int vdim, int numspec>
 void main_main ()
 {
+    const int degmw = 2;
     //------------------------------------------------------------------------------
     //build objects:
 
@@ -79,17 +80,27 @@ void main_main ()
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvar * x)";
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    fields_B[0] = Bx;
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[1] = By;
+    }
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[2] = Bz;
+    }
     std::string Ex = "0.0";
     std::string Ey = "0.0";
     std::string Ez = "0.0";
-    te_expr *Bx_parse = te_compile(Bx.c_str(), read_vars, varcount, &err);
-    te_expr *By_parse = te_compile(By.c_str(), read_vars, varcount, &err);
-    te_expr *Bz_parse = te_compile(Bz.c_str(), read_vars, varcount, &err);
-    te_expr *Ex_parse = te_compile(Ex.c_str(), read_vars, varcount, &err);
-    te_expr *Ey_parse = te_compile(Ey.c_str(), read_vars, varcount, &err);
-    te_expr *Ez_parse = te_compile(Ez.c_str(), read_vars, varcount, &err);
-    mw_yee.initB(infra, Bx_parse, By_parse, Bz_parse, &x, &y, &z);
-    mw_yee.initE(infra, Ex_parse, Ey_parse, Ez_parse, &x, &y, &z);
+    std::array<std::string, int(vdim/2.5)*2+1> fields_E;
+    fields_E[0] = Ex;
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_E[1] = Ey;
+    }
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_E[2] = Ez;
+    }
+    mw_yee.template initB<degmw>(fields_B, VlMa.k, infra);
+    mw_yee.template initE<degmw>(fields_E, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);

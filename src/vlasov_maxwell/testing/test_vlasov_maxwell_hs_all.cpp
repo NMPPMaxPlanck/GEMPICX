@@ -32,6 +32,7 @@ using namespace Vlasov_Maxwell;
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
+    const int degmw = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -41,6 +42,14 @@ void main_main ()
     if (int(vdim/2.5)*2+1 < 3) {
         VlMa.Bx = VlMa.Bz;
         VlMa.Bz = "0.0";
+    }
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    fields_B[0] = VlMa.Bx;
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[1] = VlMa.By;
+    }
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[2] = VlMa.Bz;
     }
     if (GEMPIC_SPACEDIM==1 & vdim==1) {
         // For 1D1V change parameters to make a Landau damping
@@ -84,7 +93,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
-    loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
 
     //------------------------------------------------------------------------------
@@ -92,7 +101,7 @@ void main_main ()
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_vlasov_maxwell_hs_all.tmp") << std::endl;
-time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs);
+time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs);
 
 }
 

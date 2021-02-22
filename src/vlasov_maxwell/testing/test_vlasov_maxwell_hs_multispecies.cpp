@@ -32,6 +32,7 @@ using namespace Vlasov_Maxwell;
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
+    const int degmw = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -57,6 +58,15 @@ void main_main ()
                     1); // propagator
     VlMa.n_steps = 10;
     VlMa.set_computed_params();
+
+    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    fields_B[0] = VlMa.Bx;
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[1] = VlMa.By;
+    }
+    if (int(vdim/2.5)*2+1 > 1) {
+        fields_B[2] = VlMa.Bz;
+    }
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
@@ -101,7 +111,7 @@ void main_main ()
     VlMa.WF = "1.0 + 0.2 * cos(kvarx * x)";
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 1);
 
-    loop_preparation<vdim, numspec>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
 
     //------------------------------------------------------------------------------
@@ -109,7 +119,7 @@ void main_main ()
 
     std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
     AllPrintToFile("test_vlasov_maxwell_hs_multispecies.tmp") << std::endl;
-    time_loop_hs_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies.tmp", &ofs);
+    time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies.tmp", &ofs);
 
 }
 
