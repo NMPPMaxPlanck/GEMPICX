@@ -17,6 +17,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
+#include <GEMPIC_particle_mesh_coupling_C2.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -62,8 +63,16 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
 
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
-            }
+                //gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                splines_at_particles<degx, degy, degz> spline;
+                std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                  position[d] = particles[pp].pos(d);
+                spline.init_particles( position, infra.plo, infra.dxi);
+                gempic_deposit_rho_C3<degx, degy, degz> ( spline,
+                                              (*part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
+                                              rhoarr);
+              }
             ((*mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
         }
     }
