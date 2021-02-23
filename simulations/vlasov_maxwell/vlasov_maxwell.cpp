@@ -20,6 +20,7 @@
 #include <GEMPIC_particle_groups.H>
 
 using namespace std;
+using namespace std::chrono;
 using namespace amrex;
 using namespace Gempic;
 
@@ -104,6 +105,7 @@ void main_main (bool ctest)
 
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
+auto start = high_resolution_clock::now();
 switch (VlMa.propagator) {
     case 0:
       time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
@@ -120,6 +122,10 @@ switch (VlMa.propagator) {
     default:
         break;
 }
+auto stop = high_resolution_clock::now();
+auto duration = duration_cast<seconds>(stop - start);
+cout << "execution lasted: " <<  duration.count() << " s" << endl;
+
 Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Edipole", 10);
 }
 
