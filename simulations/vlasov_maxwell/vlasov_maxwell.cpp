@@ -15,6 +15,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
+#include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_time_loop_particles.H>
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
@@ -70,7 +71,7 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
-    if (VlMa.propagator==3) {
+    if (VlMa.propagator==100) {
         for (int spec=0; spec<numspec; spec++) {
             for(amrex::MFIter mfi=(*(part_gr).mypc[spec]).MakeMFIter(0); mfi.isValid(); ++mfi) {
                 if(mfi.index() == 0) {
@@ -115,8 +116,11 @@ switch (VlMa.propagator) {
         break;
     case 2:
       time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
-        break;
+        break;      
     case 3:
+      time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm>(infra,&mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+        break;
+    case 100:
       time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;
     default:
