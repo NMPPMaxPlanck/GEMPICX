@@ -12,7 +12,7 @@ module load impi/2019.7
 module load mkl/2019.5
 module load cmake/3.15
 
-BUILD_DIR=/draco/u/$USER/gempic_obj
+BUILD_DIR=$HOME/gempic_obj
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
@@ -20,12 +20,12 @@ cd $BUILD_DIR
 mkdir -p amrex
 cd amrex
 
-cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $AMREX_DIRECTORY
+cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D CMAKE_BUILD_TYPE=Release $AMREX_DIRECTORY
 
 make install
 
 cd ..
 mkdir -p gempic
 cd gempic
-cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc $SOURCE_DIRECTORY
-make
+cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+make -j 10
