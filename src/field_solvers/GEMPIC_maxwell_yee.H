@@ -880,6 +880,78 @@ if (int(vdim/2.5)*2+1 < 3) {
         phi.FillBoundary(ifr.geom.periodicity());
     }
 
+    template<int degree>
+    void solve_hodge_CG(amrex::MultiFab *b, amrex::MultiFab *x, infrastructure ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
+                        int maxsteps = 100){
+        if(verbose > 0) {
+            std::cout << "----------------------------------------------------------------" << std::endl;
+            std::cout << "Started solve_hodge_CG" << std::endl;
+        }
+
+        amrex::MultiFab r(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab d(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab z(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab tmp(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+
+        amrex::Real alpha, beta, rr;
+
+        // z = A*x
+        hodge<degree,0>(ifr, (dimension==0?0:1), x, &z, *E_Index[0]);
+        hodge<degree,1>(ifr, (dimension==0?0:1), &z, &tmp, *E_Index[1]);
+        hodge<degree,2>(ifr, (dimension==0?0:1), &tmp, &z, *E_Index[2]);
+        // r = b-A*x
+        amrex::MultiFab::Copy(r, z, 0, 0, 1, Nghost);
+        r.minus(*b, 0, 1, Nghost);
+        // d = r
+        amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
+
+        bool contin = true;
+        int step = 0;
+        amrex::Real norm_r = 2*reltol;
+        while(contin) {
+
+            // z = A*d
+            hodge<degree,0>(ifr, (dimension==0?0:1), &d, &z, *E_Index[0]);
+            hodge<degree,1>(ifr, (dimension==0?0:1), &z, &tmp, *E_Index[1]);
+            hodge<degree,2>(ifr, (dimension==0?0:1), &tmp, &z, *E_Index[2]);
+
+            // alpha = <r,r>/<d,z>
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, Nghost);
+            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, Nghost);
+
+            // x = x + alpha*d
+            d.mult(alpha, 0, 1, Nghost);
+            x->plus(d, 0, 1, Nghost);
+            d.mult(1.0/alpha, 0, 1, Nghost);
+
+            // r = r - alpha*z
+            z.mult(alpha, 0, 1, Nghost);
+            r.minus(z, 0, 1, Nghost);
+
+            // beta = <r,r>/rr (rr is old residuum scalar-prod)
+            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, Nghost)/rr;
+
+            // d = r + beta*d
+            d.mult(beta, 0, 1, Nghost);
+            d.plus(r, 0, 1, Nghost);
+
+            step++;
+            norm_r = r.norm2(0, ifr.geom.periodicity());
+            if(verbose > 1) {
+                std::cout << "step: " << step << ", residuum: " << norm_r << std::endl;
+            }
+            if (step >= maxsteps || norm_r < reltol) {
+                contin = false;
+            }
+        }
+
+        if(verbose > 0) {
+            std::cout << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
+            std::cout << "Finished solve_hodge_CG" << std::endl;
+            std::cout << "----------------------------------------------------------------" << std::endl;
+        }
+    }
+
     /**
      * Initialize E by solving Poisson problem in two steps: 1) use the MLMG solver of amrex to solve rho -> phi 2) use differences for phi -> E
      */
