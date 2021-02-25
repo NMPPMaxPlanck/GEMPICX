@@ -130,8 +130,13 @@ MPI_Barrier(MPI_COMM_WORLD);
 auto stop = high_resolution_clock::now();
 auto duration = duration_cast<seconds>(stop - start);
 amrex::Print()  << "execution lasted: " <<  duration.count() << " s" << endl;
-
-Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Edipole", 10);
+switch (VlMa.propagator) {
+  case 100:
+    Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Edipole", 10);
+    break;
+  default:
+    break;
+  }
 }
 
 int main(int argc, char* argv[])
