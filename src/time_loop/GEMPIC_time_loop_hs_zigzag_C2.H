@@ -338,11 +338,6 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         }
         if (profiling)
           counter_diagnostics += MPI_Wtime();
-        if (profiling){
-          counter_all += MPI_Wtime();
-          amrex::Print() << "Deposition time: " << counter_deposition << ", redistribute time: " << counter_redistribute << ", field solver time: " << counter_fields
-                       << ", sum boundary j time: " << counter_jboundary << ", diagnostics time: " << counter_diagnostics << ", total time: " << counter_all << std::endl;
-          }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
         if (ctest) {
@@ -382,6 +377,11 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         }
     } // end time loop
 
+    if (profiling){
+      counter_all += MPI_Wtime();
+      amrex::Print() << "Deposition time: " << counter_deposition << ", redistribute time: " << counter_redistribute << ", field solver time: " << counter_fields
+                   << ", sum boundary j time: " << counter_jboundary << ", diagnostics time: " << counter_diagnostics << ", total time: " << counter_all << std::endl;
+      }
     (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
