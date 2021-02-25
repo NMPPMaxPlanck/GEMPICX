@@ -44,7 +44,11 @@ void time_loop_boris_fd (infrastructure infra,
     amrex::Real counter_redistribute = 0.;
     amrex::Real counter_jboundary = 0.;
     amrex::Real counter_fields = 0.;
+    amrex::Real counter_diagnostics = 0.;
+    amrex::Real counter_all = 0.;
 
+    if (profiling)
+      counter_all -= MPI_Wtime();
     for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
 
 
@@ -64,13 +68,18 @@ void time_loop_boris_fd (infrastructure infra,
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
 
+        if (profiling)
+          counter_jboundary -= MPI_Wtime();
         // set J to 0 before we start depositing values from current particles
         for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
-
-        for (int spec=0;spec<numspec;spec++) {
+        if (profiling)
+          counter_jboundary += MPI_Wtime();
+        for (int spec=0;spec<numspec;spec++) {            
+            if (profiling)
+              counter_deposition -= MPI_Wtime();
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -91,8 +100,6 @@ void time_loop_boris_fd (infrastructure infra,
                 }
 
                 // loop over particles: add contribution of old particle position to J and push
-                if (profiling)
-                  counter_deposition -= MPI_Wtime();
                 for (int pp=0;pp<np;pp++){
 
                     std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
@@ -110,9 +117,9 @@ void time_loop_boris_fd (infrastructure infra,
                     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
-                if (profiling)
-                 counter_deposition += MPI_Wtime();
             }
+            if (profiling)
+             counter_deposition += MPI_Wtime();
             if (profiling)
               counter_redistribute -= MPI_Wtime();
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -191,6 +198,8 @@ void time_loop_boris_fd (infrastructure infra,
         if (profiling)
           counter_fields += MPI_Wtime();
 
+        if (profiling)
+          counter_diagnostics -= MPI_Wtime();
         // save norms for diagnostics
         (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
 
@@ -198,6 +207,8 @@ void time_loop_boris_fd (infrastructure infra,
         if ((t_step+1)%5 == 0) {
             (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
         }
+        if (profiling)
+          counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
         if (ctest) {
@@ -239,8 +250,9 @@ void time_loop_boris_fd (infrastructure infra,
 
     } // end time loop
     if (profiling){
+      counter_all += MPI_Wtime();
       amrex::Print() << "Deposition time: " << counter_deposition << ", redistribute time: " << counter_redistribute << ", field solver time: " << counter_fields
-                   << ", sum boundary j time: " << counter_jboundary << std::endl;
+                   << ", sum boundary j time: " << counter_jboundary << ", diagnostics time: " << counter_diagnostics << ", total time: " << counter_all << std::endl;
       }
     (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
