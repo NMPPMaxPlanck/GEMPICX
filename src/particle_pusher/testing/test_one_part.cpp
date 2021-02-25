@@ -44,7 +44,7 @@ void main_main (bool ctest)
     int freq_v = 2;
     int freq_slice = 1;
     std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    int max_grid_size = 4;
+    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {4,4,4};
     amrex::Real dt = 0.02;
     std::array<amrex::Real, numspec> charge = {-1.0};
     std::array<amrex::Real, numspec> mass = {1.0};

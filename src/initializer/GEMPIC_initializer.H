@@ -27,7 +27,7 @@ class initializer
 public:
     // parameters for infrastructure:
     amrex::IntVect n_cell;
-    int max_grid_size;
+    amrex::IntVect max_grid_size;
     amrex::IntVect is_periodic;
     int Nghost;
 
@@ -68,7 +68,7 @@ public:
      * distributions @p VW and the particle distribution function @p WF.
      */
 
-    void initialize_from_parameters(amrex::IntVect NC, int MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
+    void initialize_from_parameters(amrex::IntVect NC, amrex::IntVect MG, amrex::IntVect PER, int NG, amrex::Real DT, int NST,
                                     std::array<amrex::Real, numspec> CH,
                                     std::array<amrex::Real, numspec> MS,
                                     std::array<int, numspec> NPC,

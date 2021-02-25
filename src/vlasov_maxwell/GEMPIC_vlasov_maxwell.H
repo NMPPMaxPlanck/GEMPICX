@@ -54,7 +54,8 @@ public:
     int freq_slice;
     std::array<int,GEMPIC_SPACEDIM> is_periodic_vector;
     amrex::IntVect is_periodic;
-    int max_grid_size;
+    std::array<int,GEMPIC_SPACEDIM> max_grid_size_vector;
+    amrex::IntVect max_grid_size;
     amrex::Real dt;
     std::array<amrex::Real, numspec> charge;
     std::array<amrex::Real, numspec> mass;
@@ -109,7 +110,8 @@ public:
         pp.get("freq_slice",freq_slice);
         pp.get("is_periodic_vector",is_periodic_vector);
         is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-        pp.get("max_grid_size",max_grid_size);
+        pp.get("max_grid_size_vector",max_grid_size_vector);
+        max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         pp.get("dt",dt);
         pp.get("charge",charge);
         pp.get("mass",mass);
@@ -184,7 +186,7 @@ public:
                      int FV = 12,
                      int FS = 12,
                      std::array<int,GEMPIC_SPACEDIM> PER = {AMREX_D_DECL(1, 1, 1)},
-                     int MG = 4,
+                     std::array<int,GEMPIC_SPACEDIM> MG = {AMREX_D_DECL(4, 4, 4)},
                      amrex::Real DT = 0.02,
                      std::array<amrex::Real, numspec> C = {-1.0},
                      std::array<amrex::Real, numspec> M = {1.0},
@@ -211,7 +213,8 @@ public:
         freq_slice = FS;
         is_periodic_vector = PER;
         is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-        max_grid_size = MG;
+        max_grid_size_vector = MG;
+        max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         dt = DT;
         charge = C;
         mass = M;

@@ -66,7 +66,7 @@ void main_main ()
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
-                    is_periodic, 4, 0.02, {-1.0}, {1.0}, k, WF);
+                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, WF);
     VlMa.set_computed_params();
     VlMa.VM = VM;
     VlMa.VD = VD;
