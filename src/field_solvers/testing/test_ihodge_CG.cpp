@@ -70,74 +70,54 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
+    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    amrex::Real err;
+    amrex::Real change;
+    amrex::Vector<std::string> varnames = {"Ex"};
+    WriteSingleLevelPlotfile("initEx", *mw_yee.E_Array[0], varnames, infra.geom, 0, 0);
+    varnames = {"Ey"};
+    WriteSingleLevelPlotfile("initEy", *mw_yee.E_Array[1], varnames, infra.geom, 0, 0);
+    varnames = {"Ez"};
+    WriteSingleLevelPlotfile("initEz", *mw_yee.E_Array[2], varnames, infra.geom, 0, 0);
 
-    std::string phi = "-cos(x)*cos(y)*cos(z) - 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
-    std::string rho = "sin(x)"; //"-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
-    double x, y, z;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-    int varcount = 3;
-    te_expr *rho_parse = te_compile(rho.c_str(), read_vars, varcount, &err);
-    te_expr *phi_parse = te_compile(phi.c_str(), read_vars, varcount, &err);
+    mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 
-    amrex::MultiFab kx(convert(infra.grid, *mw_yee.E_Index[0]),infra.distriMap,1,mw_yee.Nghost);
-    kx.setVal(1.0, 0);
-    kx.FillBoundary(infra.geom.periodicity());
-    amrex::MultiFab ky(convert(infra.grid, *mw_yee.E_Index[1]),infra.distriMap,1,mw_yee.Nghost);
-    ky.setVal(1.0, 0);
-    ky.FillBoundary(infra.geom.periodicity());
-    amrex::MultiFab kz(convert(infra.grid, *mw_yee.E_Index[2]),infra.distriMap,1,mw_yee.Nghost);
-    kz.setVal(1.0, 0);
-    kz.FillBoundary(infra.geom.periodicity());
+    varnames = {"Ex"};
+    WriteSingleLevelPlotfile("hodgeEx", *mw_yee.HE_Array[0], varnames, infra.geom, 0, 0);
+    varnames = {"Ey"};
+    WriteSingleLevelPlotfile("hodgeEy", *mw_yee.HE_Array[1], varnames, infra.geom, 0, 0);
+    varnames = {"Ez"};
+    WriteSingleLevelPlotfile("hodgeEz", *mw_yee.HE_Array[2], varnames, infra.geom, 0, 0);
+
+    for (int dim = 0; dim < vdim; dim++) {
+        amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]),infra.distriMap,1,mw_yee.Nghost);
+        k.setVal(1.0, 0);
+        k.FillBoundary(infra.geom.periodicity());
+
+        //(mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
+        amrex::MultiFab::Copy(*mw_yee.E_sol_Array[dim], *mw_yee.E_Array[dim], 0, 0, 1, mw_yee.Nghost);
+        mw_yee.template solve_hodge_CG<degree>(&(*mw_yee.HE_Array[dim]), &(*mw_yee.E_sol_Array[dim]), &k, infra, dim, 2, 1.e-16);
+
+        //error
+        (*mw_yee.E_sol_Array[dim]).minus(*mw_yee.E_Array[dim], 0, 1, VlMa.Nghost);
+        err = gempic_norm(&(*mw_yee.E_sol_Array[dim]), infra, 0);
+
+        //change
+        amrex::MultiFab::Copy(*mw_yee.E_sol_Array[dim], *mw_yee.B_sol_Array[dim], 0, 0, 1, mw_yee.Nghost);
+        (*mw_yee.B_sol_Array[dim]).minus(*mw_yee.HE_Array[dim], 0, 1, VlMa.Nghost);
+        change = gempic_norm(&(*mw_yee.B_sol_Array[dim]), infra, 2);
 
 
-    amrex::MLNodeLaplacian_FD linop({infra.geom}, {infra.grid}, {infra.distriMap}); // linear operator class
-    amrex::MultiFab sigma;
-    sigma.define(infra.grid, infra.distriMap, 1, 0);
-    sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
-    linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for lower ends
-                       amrex::LinOpBCType::Periodic,
-                       amrex::LinOpBCType::Periodic)},
-    {AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for higher ends
-     amrex::LinOpBCType::Periodic,
-     amrex::LinOpBCType::Periodic)});
-    linop.setSigma(0, sigma); // first argument: level-nr
+        std::cout << "component " << dim << " had an error of: " << err <<std::endl;
+        std::cout << "change " << change << std::endl;
+    }
 
-    amrex::MLMG mlmg(linop); // solver class
-    mlmg.setMaxIter(100);
-    mlmg.setMaxFmgIter(0);
-    mlmg.setVerbose(0);
-    mlmg.setBottomVerbose(0);
-
-    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
-    const int stencil_length = 3;
-    std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
-    stencil_x[0] = {-1.0/infra.dx[0], 1.0/infra.dx[0], 0.0};
-    stencil_x[1] = {0.0, 0.0, 0.0};
-    stencil_x[2] = {0.0, 0.0, 0.0};
-
-    // 1) Apply D
-    mw_yee.template matrix_mult<stencil_length>(infra, stencil_x, &mw_yee.rho, &mw_yee.phi, amrex::IndexType(IntVect::TheNodeVector()));
-    amrex::Vector<std::string> varnames = {"rho"};
-    WriteSingleLevelPlotfile("rho", mw_yee.rho, varnames, infra.geom, 0, 0);
-    varnames = {"drho"};
-    WriteSingleLevelPlotfile("drho", mw_yee.phi, varnames, infra.geom, 0, 0);
-
-    /*
-    amrex::Vector<std::string> varnames = {"rho"};
-    WriteSingleLevelPlotfile("rho_init", mw_yee.rho, varnames, infra.geom, 0, 0);
-
-    // Poisson solver
-    mlmg.solve({&mw_yee.phi}, {&mw_yee.rho}, 1e-11, 0.0);
-    mw_yee.phi.FillBoundary(infra.geom.periodicity());
-
-    // Poisson operator
-    mw_yee.template poisson_operator<degree>(&mw_yee.phi, &mw_yee.rho, &kx, &ky, &kz, infra, 0, 1e-11, 100);
-
-    //mw_yee.template solve_poisson_CG<degree>(&mw_yee.rho, &mw_yee.phi, &kx, &ky, &kz, infra, 2);
-
-    WriteSingleLevelPlotfile("rho_end", mw_yee.rho, varnames, infra.geom, 0, 0);
-    */
+    varnames = {"Ex"};
+    WriteSingleLevelPlotfile("solEx", *mw_yee.E_sol_Array[0], varnames, infra.geom, 0, 0);
+    varnames = {"Ey"};
+    WriteSingleLevelPlotfile("solEy", *mw_yee.E_sol_Array[1], varnames, infra.geom, 0, 0);
+    varnames = {"Ez"};
+    WriteSingleLevelPlotfile("solEz", *mw_yee.E_sol_Array[2], varnames, infra.geom, 0, 0);
 
 }
 
