@@ -62,7 +62,7 @@ void main_main ()
     int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, 4, dt);
+    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt);
     VlMa.set_computed_params();
 
     Infra::infrastructure infra;
