@@ -37,6 +37,7 @@ void main_main ()
     std::array<std::string, vdim> fields_E;
     std::array<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
+    fields_E[0] = "cos(x)";
     fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
     fields_E[2] = "cos(x+y+z-sqrt(3.0)*t)";
     fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
@@ -91,13 +92,15 @@ void main_main ()
 
     for (int dim = 0; dim < vdim; dim++) {
         amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]),infra.distriMap,1,mw_yee.Nghost);
-        k.setVal(1.0, 0);
+        k.setVal(-2.0, 0);
         k.FillBoundary(infra.geom.periodicity());
 
-        //(mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
-        amrex::MultiFab::Copy(*mw_yee.E_sol_Array[dim], *mw_yee.E_Array[dim], 0, 0, 1, mw_yee.Nghost);
+        (mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
+        (mw_yee.E_sol_Array[dim])->FillBoundary(infra.geom.periodicity());
+        //amrex::MultiFab::Copy(*mw_yee.E_sol_Array[dim], *mw_yee.E_Array[dim], 0, 0, 1, mw_yee.Nghost);
         mw_yee.template solve_hodge_CG<degree>(&(*mw_yee.HE_Array[dim]), &(*mw_yee.E_sol_Array[dim]), &k, infra, dim, 2, 1.e-16);
 
+        /*
         //error
         (*mw_yee.E_sol_Array[dim]).minus(*mw_yee.E_Array[dim], 0, 1, VlMa.Nghost);
         err = gempic_norm(&(*mw_yee.E_sol_Array[dim]), infra, 0);
@@ -110,6 +113,7 @@ void main_main ()
 
         std::cout << "component " << dim << " had an error of: " << err <<std::endl;
         std::cout << "change " << change << std::endl;
+        */
     }
 
     varnames = {"Ex"};

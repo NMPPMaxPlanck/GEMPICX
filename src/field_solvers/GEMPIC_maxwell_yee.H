@@ -905,7 +905,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
                             amrex::Real val = 0.0;
                             for (int dimension=0; dimension < GEMPIC_SPACEDIM; dimension++) {
-                                for (int d = 0; d<(stencil_length-1); d++) {
+                                for (int d = 0; d<(stencil_length); d++) {
                                     int shift = d - (stencil_length+1)/2 + 1;
                                     (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
                                     val += stencil[dimension][d]*(*c1);
@@ -959,8 +959,8 @@ if (int(vdim/2.5)*2+1 < 3) {
             matrix_mult<stencil_length>(ifr, stencil, &d, &z, IndexVect);
 
             // alpha = <r,r>/<d,z>
-            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, Nghost);
-            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, Nghost);
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
+            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
 
             // x = x + alpha*d
             d.mult(alpha, 0, 1, Nghost);
@@ -972,7 +972,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             r.minus(z, 0, 1, Nghost);
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
-            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, Nghost)/rr;
+            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0)/rr;
 
             // d = r + beta*d
             d.mult(beta, 0, 1, Nghost);
@@ -1014,7 +1014,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         hodge<degree,0>(ifr, (dimension==0?0:1), x, &r, *E_Index[dimension]);
         hodge<degree,1>(ifr, (dimension==1?0:1), &r, &tmp, *E_Index[dimension]);
         hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &r, *E_Index[dimension]);
-        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, r, 0, 1, Nghost)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, Nghost);
+        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
         k->mult(kern_factor, 0, 1, Nghost);
         r.plus(*k, 0, 1, Nghost);
         k->mult(1.0/kern_factor, 0, 1, Nghost);
@@ -1035,14 +1035,14 @@ if (int(vdim/2.5)*2+1 < 3) {
             hodge<degree,1>(ifr, (dimension==1?0:1), &z, &tmp, *E_Index[1]);
             hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &z, *E_Index[2]);
 
-            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, z, 0, 1, Nghost)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, Nghost);
+            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, z, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
             k->mult(kern_factor, 0, 1, Nghost);
             z.plus(*k, 0, 1, Nghost);
             k->mult(1.0/kern_factor, 0, 1, Nghost);
 
             // alpha = <r,r>/<d,z>
-            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, Nghost);
-            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, Nghost);
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
+            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
 
             // x = x + alpha*d
             d.mult(alpha, 0, 1, Nghost);
@@ -1054,7 +1054,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             r.minus(z, 0, 1, Nghost);
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
-            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, Nghost)/rr;
+            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0)/rr;
 
             // d = r + beta*d
             d.mult(beta, 0, 1, Nghost);
@@ -1118,20 +1118,29 @@ if (int(vdim/2.5)*2+1 < 3) {
         matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, &Drho_y, *E_Index[1]);
         matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, &Drho_z, *E_Index[2]);
 
+        amrex::Vector<std::string> varnames = {"Drho_x"};
+        WriteSingleLevelPlotfile("Drho_x", Drho_x, varnames, ifr.geom, 0, 0);
+
         // 2) Apply hodge
             // to x comp
-            //solve_hodge_CG<degree>(&Drho_x, &HDrho_x, kx, ifr, dimension, verbose, reltol, maxsteps);
             amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
+            solve_hodge_CG<degree>(&Drho_x, &HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
+            //amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
 
             // to y comp
             dimension = 1;
-            //solve_hodge_CG<degree>(&Drho_y, &HDrho_y, ky, ifr, dimension, verbose, reltol, maxsteps);
             amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
+            solve_hodge_CG<degree>(&Drho_y, &HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
+            //amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
 
             // to z comp
             dimension = 2;
-            //solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, verbose, reltol, maxsteps);
             amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
+            solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
+            //amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
+
+            varnames = {"HDrho_x"};
+            WriteSingleLevelPlotfile("HDrho_x", HDrho_x, varnames, ifr.geom, 0, 0);
 
         // 3) Apply D^T
 
@@ -1150,6 +1159,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         matrix_mult<3>(ifr, stencil_x, &HDrho_x, &Drho_x, *E_Index[0]);
         matrix_mult<3>(ifr, stencil_y, &HDrho_y, &Drho_y, *E_Index[1]);
         matrix_mult<3>(ifr, stencil_z, &HDrho_z, &Drho_z, *E_Index[2]);
+
+        varnames = {"DtHDrho_x"};
+        WriteSingleLevelPlotfile("DtHDrho_x", Drho_x, varnames, ifr.geom, 0, 0);
 
         amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, Nghost);
         MultiOut->plus(Drho_y, 0, 1, Nghost);

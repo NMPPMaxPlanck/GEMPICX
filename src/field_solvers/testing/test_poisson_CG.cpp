@@ -63,6 +63,7 @@ void main_main ()
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
                     32, 0.01, {1.0}, {1.0}, 0.5);
     VlMa.set_computed_params();
+    VlMa.Nghost = 3;
 
     Infra::infrastructure infra;
     VlMa.initialize_infrastructure(&infra);
@@ -112,32 +113,44 @@ void main_main ()
     mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
     const int stencil_length = 3;
     std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
-    stencil_x[0] = {-1.0/infra.dx[0], 1.0/infra.dx[0], 0.0};
+    //stencil_x[0] = {-1.0/infra.dx[0], 1.0/infra.dx[0], 0.0};
+    stencil_x[0] = {0.0, 1.0/infra.dx[0], -1.0/infra.dx[0]};
     stencil_x[1] = {0.0, 0.0, 0.0};
     stencil_x[2] = {0.0, 0.0, 0.0};
 
+    /*
     // 1) Apply D
     mw_yee.template matrix_mult<stencil_length>(infra, stencil_x, &mw_yee.rho, &mw_yee.phi, amrex::IndexType(IntVect::TheNodeVector()));
     amrex::Vector<std::string> varnames = {"rho"};
     WriteSingleLevelPlotfile("rho", mw_yee.rho, varnames, infra.geom, 0, 0);
     varnames = {"drho"};
     WriteSingleLevelPlotfile("drho", mw_yee.phi, varnames, infra.geom, 0, 0);
+*/
+    // ----------------------------------------------------------------------------------
 
-    /*
+
     amrex::Vector<std::string> varnames = {"rho"};
     WriteSingleLevelPlotfile("rho_init", mw_yee.rho, varnames, infra.geom, 0, 0);
 
     // Poisson solver
-    mlmg.solve({&mw_yee.phi}, {&mw_yee.rho}, 1e-11, 0.0);
-    mw_yee.phi.FillBoundary(infra.geom.periodicity());
+    //mlmg.solve({&mw_yee.phi}, {&mw_yee.rho}, 1e-12, 0.0);
+    //mw_yee.phi.FillBoundary(infra.geom.periodicity());
+
+    varnames = {"phi"};
+    WriteSingleLevelPlotfile("phi", mw_yee.phi, varnames, infra.geom, 0, 0);
+
+
+    mw_yee.template solve_poisson_CG<degree>(&mw_yee.rho, &mw_yee.phi, &kx, &ky, &kz, infra, 2, 5.e-11,300);
 
     // Poisson operator
-    mw_yee.template poisson_operator<degree>(&mw_yee.phi, &mw_yee.rho, &kx, &ky, &kz, infra, 0, 1e-11, 100);
+    mw_yee.template poisson_operator<degree>(&mw_yee.phi, &mw_yee.rho, &kx, &ky, &kz, infra, 0, 1e-16, 100);
 
-    //mw_yee.template solve_poisson_CG<degree>(&mw_yee.rho, &mw_yee.phi, &kx, &ky, &kz, infra, 2);
+    //WriteSingleLevelPlotfile("phi_CG", mw_yee.phi, varnames, infra.geom, 0, 0);
 
+    varnames = {"rho"};
     WriteSingleLevelPlotfile("rho_end", mw_yee.rho, varnames, infra.geom, 0, 0);
-    */
+
+
 
 }
 
