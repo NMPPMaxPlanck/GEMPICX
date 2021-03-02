@@ -990,7 +990,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         if(verbose > 0) {
             std::cout << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
-            std::cout << "Finished solve_hodge_CG" << std::endl;
+            std::cout << "Finished solve_CG" << std::endl;
             std::cout << "----------------------------------------------------------------" << std::endl;
         }
     }
@@ -1007,6 +1007,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         amrex::MultiFab d(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
         amrex::MultiFab z(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
         amrex::MultiFab tmp(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab k_scaled(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
 
         amrex::Real alpha, beta, rr, kern_factor;
 
@@ -1015,9 +1016,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         hodge<degree,1>(ifr, (dimension==1?0:1), &r, &tmp, *E_Index[dimension]);
         hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &r, *E_Index[dimension]);
         kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
-        k->mult(kern_factor, 0, 1, Nghost);
-        r.plus(*k, 0, 1, Nghost);
-        k->mult(1.0/kern_factor, 0, 1, Nghost);
+        amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
+        k_scaled.mult(kern_factor, 0, 1, Nghost);
+        r.plus(k_scaled, 0, 1, Nghost);
 
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
@@ -1025,10 +1026,15 @@ if (int(vdim/2.5)*2+1 < 3) {
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
 
-        bool contin = true;
         int step = 0;
-        amrex::Real norm_r = 2*reltol;
-        while(contin) {
+        for(step = 0; step<maxsteps; step++) {
+            // rr
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
+            if(verbose > 1) {
+                std::cout << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
+            }
+            if (sqrt(rr) < reltol) break;
+
 
             // z = A*d
             hodge<degree,0>(ifr, (dimension==0?0:1), &d, &z, *E_Index[0]);
@@ -1036,18 +1042,17 @@ if (int(vdim/2.5)*2+1 < 3) {
             hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &z, *E_Index[2]);
 
             kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, z, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
-            k->mult(kern_factor, 0, 1, Nghost);
-            z.plus(*k, 0, 1, Nghost);
-            k->mult(1.0/kern_factor, 0, 1, Nghost);
+            amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
+            k_scaled.mult(kern_factor, 0, 1, Nghost);
+            z.plus(k_scaled, 0, 1, Nghost);
 
             // alpha = <r,r>/<d,z>
-            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
             alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
 
             // x = x + alpha*d
-            d.mult(alpha, 0, 1, Nghost);
-            x->plus(d, 0, 1, Nghost);
-            d.mult(1.0/alpha, 0, 1, Nghost);
+            amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
+            k_scaled.mult(alpha, 0, 1, Nghost);
+            x->plus(k_scaled, 0, 1, Nghost);
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
@@ -1060,18 +1065,10 @@ if (int(vdim/2.5)*2+1 < 3) {
             d.mult(beta, 0, 1, Nghost);
             d.plus(r, 0, 1, Nghost);
 
-            step++;
-            norm_r = r.norm2(0, ifr.geom.periodicity());
-            if(verbose > 1) {
-                std::cout << "step: " << step << ", residuum: " << norm_r << std::endl;
-            }
-            if (step >= maxsteps || norm_r < reltol) {
-                contin = false;
-            }
         }
 
         if(verbose > 0) {
-            std::cout << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
+            std::cout << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
             std::cout << "Finished solve_hodge_CG" << std::endl;
             std::cout << "----------------------------------------------------------------" << std::endl;
         }
@@ -1185,69 +1182,75 @@ if (int(vdim/2.5)*2+1 < 3) {
         amrex::MultiFab tmp(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
 
         amrex::MultiFab k(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab k_scaled(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
         k.setVal(1.0,0);
         k.FillBoundary(ifr.geom.periodicity());
         amrex::Real kern_factor;
 
         amrex::Real alpha, beta, rr;
 
+        // subtract kernel from x0:
+        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, *b, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+        amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
+        k_scaled.mult(kern_factor, 0, 1, Nghost);
+        b->minus(k_scaled, 0, 1, Nghost);
+
         // r = A*x
         poisson_operator<degree> (x, &r, kx, ky, kz, ifr, verbose, reltol, maxsteps);
-        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, r, 0, 1, Nghost)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, Nghost);
-        k.mult(kern_factor, 0, 1, Nghost);
-        r.plus(k, 0, 1, Nghost);
-        k.mult(1.0/kern_factor, 0, 1, Nghost);
+        amrex::Vector<std::string> varnames = {"rho"};
+        WriteSingleLevelPlotfile("rho_end", *x, varnames, ifr.geom, 0, 0);
+        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+        amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
+        k_scaled.mult(kern_factor, 0, 1, Nghost);
+        r.plus(k_scaled, 0, 1, Nghost);
+
 
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
         r.plus(*b, 0, 1, Nghost);
+
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
 
-        bool contin = true;
         int step = 0;
-        amrex::Real norm_r = 2*reltol;
-        while(contin) {
+        for(step = 0; step<maxsteps; step++) {
+            // rr
+            rr = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0);
+            if (sqrt(rr) < reltol) break;
+            if(verbose > 1) {
+                std::cout << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
+            }
 
             // z = A*d
             poisson_operator<degree> (&d, &z, kx, ky, kz, ifr, verbose, reltol, maxsteps);
-            kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, d, 0, 1, Nghost)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, Nghost);
-            k.mult(kern_factor, 0, 1, Nghost);
-            d.plus(k, 0, 1, Nghost);
-            k.mult(1.0/kern_factor, 0, 1, Nghost);
+            kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, d, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+            amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
+            k_scaled.mult(kern_factor, 0, 1, Nghost);
+            d.plus(k_scaled, 0, 1, Nghost);
 
             // alpha = <r,r>/<d,z>
-            rr = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, Nghost);
-            alpha = rr/amrex::MultiFab::Dot(*nodal_Mask, d, 0, z, 0, 1, Nghost);
+            alpha = rr/amrex::MultiFab::Dot(*nodal_Mask, d, 0, z, 0, 1, 0);
 
             // x = x + alpha*d
-            d.mult(alpha, 0, 1, Nghost);
-            x->plus(d, 0, 1, Nghost);
-            d.mult(1.0/alpha, 0, 1, Nghost);
+            amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
+            k_scaled.mult(alpha, 0, 1, Nghost);
+            x->plus(k_scaled, 0, 1, Nghost);
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
             r.minus(z, 0, 1, Nghost);
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
-            beta = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, Nghost)/rr;
+            beta = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0)/rr;
 
             // d = r + beta*d
             d.mult(beta, 0, 1, Nghost);
             d.plus(r, 0, 1, Nghost);
 
-            step++;
-            norm_r = r.norm2(0, ifr.geom.periodicity());
-            if(verbose > 1) {
-                std::cout << "step: " << step << ", residuum: " << norm_r << std::endl;
-            }
-            if (step >= maxsteps || norm_r < reltol) {
-                contin = false;
-            }
         }
 
         if(verbose > 0) {
-            std::cout << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
+            std::cout << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
             std::cout << "Finished solve_poisson_CG" << std::endl;
             std::cout << "----------------------------------------------------------------" << std::endl;
         }
