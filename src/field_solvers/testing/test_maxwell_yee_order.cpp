@@ -108,7 +108,7 @@ void main_main ()
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.Nghost++;
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
-                    32, 0.01, {1.0}, {1.0}, 0.5);
+                    {32,32,32}, 0.01, {1.0}, {1.0}, 0.5);
     VlMa.dt = 0.01;
     VlMa.set_computed_params();
 

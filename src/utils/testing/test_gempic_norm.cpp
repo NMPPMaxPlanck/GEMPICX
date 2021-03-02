@@ -84,7 +84,7 @@ void main_main ()
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
-    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, 64);
+    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {64,64,64});
     VlMa.set_computed_params();
 
     infrastructure infra;

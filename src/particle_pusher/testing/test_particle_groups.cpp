@@ -32,7 +32,7 @@ void main_main ()
 
     std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
     std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    int max_grid_size = 2;
+    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {2,2,2};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};

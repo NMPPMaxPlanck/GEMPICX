@@ -44,7 +44,7 @@ void main_main ()
                     10000, // output freq
                     10000, // output freq
     {AMREX_D_DECL(1, 1, 1)}, // periodicity
-                    2, // max_grid_size
+                    {2,2,2}, // max_grid_size
                     0.05, // dt
     {-1.0, 1.0}, // charge
     {1.0, 200.0}, // mass

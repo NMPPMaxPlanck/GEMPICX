@@ -26,7 +26,7 @@ class infrastructure
 public:
 
     amrex::IntVect n_cell; // number of cells
-    int max_grid_size; // maximum number of cells in each direction
+    amrex::IntVect max_grid_size; // maximum number of cells in tile in each direction
     int is_periodic[GEMPIC_SPACEDIM];
     amrex::RealBox real_box; // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
 

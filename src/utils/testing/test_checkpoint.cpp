@@ -35,7 +35,7 @@ void main_main ()
     std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 2;
     std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {AMREX_D_DECL(1,1,1)};
-    int max_grid_size = 2;
+    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {2,2,2};
     amrex::Real dt = 0.1;
     std::array<amrex::Real, numspec> charge = {-1.0};
     std::array<amrex::Real, numspec> mass = {1.0};

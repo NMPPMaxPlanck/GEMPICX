@@ -68,9 +68,9 @@ public:
             mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
             (*mypc[i]).do_tiling = true;
 # if (GEMPIC_SPACEDIM > 1)
-            (*mypc[i]).tile_size = {AMREX_D_DECL(ifr.max_grid_size,ifr.max_grid_size,ifr.max_grid_size)};
+            (*mypc[i]).tile_size = ifr.max_grid_size;
 #else
-            (*mypc[i]).tile_size[0] = ifr.max_grid_size;
+            (*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
 #endif
         }
     }
