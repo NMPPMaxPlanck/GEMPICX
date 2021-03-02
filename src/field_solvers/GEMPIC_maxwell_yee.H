@@ -1540,7 +1540,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;numspec;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;
@@ -1612,7 +1612,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;numspec;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;
