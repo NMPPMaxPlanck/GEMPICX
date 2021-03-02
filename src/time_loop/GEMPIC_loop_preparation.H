@@ -35,7 +35,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
                        infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec, degx, degy, degz> *diagn,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                        bool time_staggered,
                        std::array<std::string, int(vdim/2.5)*2+1> fields_B) {
 
@@ -88,7 +88,19 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     //initial E by rho
-    (*mw_yee).solve_poisson(infra);
+    amrex::MultiFab kx(convert(infra.grid, *mw_yee->E_Index[0]),infra.distriMap,1,mw_yee->Nghost);
+    kx.setVal(1.0, 0);
+    kx.FillBoundary(infra.geom.periodicity());
+    amrex::MultiFab ky(convert(infra.grid, *mw_yee->E_Index[1]),infra.distriMap,1,mw_yee->Nghost);
+    ky.setVal(1.0, 0);
+    ky.FillBoundary(infra.geom.periodicity());
+    amrex::MultiFab kz(convert(infra.grid, *mw_yee->E_Index[2]),infra.distriMap,1,mw_yee->Nghost);
+    kz.setVal(1.0, 0);
+    kz.FillBoundary(infra.geom.periodicity());
+
+    (*mw_yee).solve_poisson(infra, 1e-11);
+    (*mw_yee).template solve_poisson_CG<degmw>(&(mw_yee->rho), &(mw_yee->phi), &kx, &ky, &kz, infra, 2, 1e-11, 100);
+    (*mw_yee).template D_from_phi<degmw>(&(mw_yee->phi), &(mw_yee->E_Array), &kx, &ky, &kz, infra);
 
     // initial B_field
     (*mw_yee).template initB<degmw>(fields_B, VM.k, infra);
