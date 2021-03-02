@@ -32,7 +32,7 @@ namespace Diagnostics_Output {
  * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored and written into files. Slice Data of fields can be generated.
  */
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degree>
 class diagnostics
 {
 public:
@@ -122,7 +122,7 @@ public:
                 mom[step][cmp] += mom_tmp;
             }
         }
-        gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
+        gauss_error[step] = (*mw_yee).template compute_gauss_error_hodge<numspec,degx,degy,degz,degree>(infra, part_gr);
 
         // save Plot and Checkpoint-files
         if ((step+1)%freq_slice == 0) {

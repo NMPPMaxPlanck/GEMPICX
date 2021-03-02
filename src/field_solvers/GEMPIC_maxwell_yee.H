@@ -1488,7 +1488,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
                 for (int pp=0;pp<np;pp++) {
-                    Particles::gempic_deposit_rho(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
                 }
                 (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
@@ -1509,6 +1509,76 @@ if (int(vdim/2.5)*2+1 < 3) {
         (*E_Array[0]).Copy(*E_Array[0], *E_sol_Array[0],0,0,1,Nghost);
         (*E_Array[1]).Copy(*E_Array[1], *E_sol_Array[1],0,0,1,Nghost);
         (*E_Array[2]).Copy(*E_Array[2], *E_sol_Array[2],0,0,1,Nghost);
+
+        return(res);
+    }
+
+    template<int numspec, int degx, int degy, int degz, int degree>
+    amrex::Real compute_gauss_error_hodge(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
+
+        amrex::MultiFab kx(convert(ifr.grid, *E_Index[0]),ifr.distriMap,1,Nghost);
+        kx.setVal(1.0, 0);
+        kx.FillBoundary(ifr.geom.periodicity());
+        amrex::MultiFab ky(convert(ifr.grid, *E_Index[1]),ifr.distriMap,1,Nghost);
+        ky.setVal(1.0, 0);
+        ky.FillBoundary(ifr.geom.periodicity());
+        amrex::MultiFab kz(convert(ifr.grid, *E_Index[2]),ifr.distriMap,1,Nghost);
+        kz.setVal(1.0, 0);
+        kz.FillBoundary(ifr.geom.periodicity());
+
+        // init phi for poisson solver
+        double x, y, z;
+        int err;
+        std::string phi_str = "4 * 0.5 * cos(0.5 * x)";
+        std::string rho_str = "0.0";
+
+        te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
+        int varcount = 3;
+        te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars, varcount, &err);
+        te_expr *phi_parse = te_compile(phi_str.c_str(), read_vars, varcount, &err);
+        init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
+
+        // Deposit charges in rho:
+
+        rho.setVal(0.0);
+        rho.FillBoundary(ifr.geom.periodicity());
+        for (int spec=0;numspec;spec++) {
+            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+                amrex::Box tilebox;
+                amrex::FArrayBox local_rho;
+
+                tilebox = pti.tilebox();
+                tilebox.grow(Nghost);
+                const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
+
+                local_rho.resize(tb,1); // second arg: number of comps
+                local_rho.setVal(0.0);
+
+                auto& particles = pti.GetArrayOfStructs();
+                const long np  = pti.numParticles();
+
+                amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+                for (int pp=0;pp<np;pp++) {
+                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                }
+                (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
+            }
+        }
+
+        rho.SumBoundary(ifr.geom.periodicity());
+        rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
+        rho.FillBoundary(ifr.geom.periodicity());
+
+        solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
+
+         D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
+
+        (*E_sol_Array[0]).minus(*E_Array[0], 0, 1, 0);
+        (*E_sol_Array[1]).minus(*E_Array[1], 0, 1, 0);
+        (*E_sol_Array[2]).minus(*E_Array[2], 0, 1, 0);
+
+        amrex::Real res = gempic_norm(&(*E_Array[0]), ifr, 2)+gempic_norm(&(*E_Array[1]), ifr, 2)+gempic_norm(&(*E_Array[2]), ifr, 2);
 
         return(res);
     }
