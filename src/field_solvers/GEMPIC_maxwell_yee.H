@@ -24,6 +24,7 @@
 #include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
+#include <GEMPIC_particle_mesh_coupling_C2.H>
 
 namespace Gempic {
 namespace Vlasov_Maxwell {
@@ -35,6 +36,7 @@ class vlasov_maxwell;
 using namespace Infra;
 using namespace Utils;
 using namespace Vlasov_Maxwell;
+using namespace Particles;
 
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
@@ -1628,7 +1630,14 @@ if (int(vdim/2.5)*2+1 < 3) {
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
                 for (int pp=0;pp<np;pp++) {
-                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                    splines_at_particles<degx, degy, degz> spline;
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      position[d] = particles[pp].pos(d);
+                    spline.init_particles( position, ifr.plo, ifr.dxi);
+                    gempic_deposit_rho_C3<degx, degy, degz> ( spline,
+                                                  (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
+                                                  rhoarr);
                 }
                 (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
@@ -1638,6 +1647,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
+        solve_poisson(ifr, 1e-11);
         solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
 
          D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
