@@ -99,8 +99,11 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     kz.FillBoundary(infra.geom.periodicity());
 
     (*mw_yee).solve_poisson(infra, 1e-11);
-    (*mw_yee).template solve_poisson_CG<degmw>(&(mw_yee->rho), &(mw_yee->phi), &kx, &ky, &kz, infra, 2, 1e-11, 100);
-    (*mw_yee).template D_from_phi<degmw>(&(mw_yee->phi), &(mw_yee->E_Array), &kx, &ky, &kz, infra);
+    if (degmw > 2)
+      {
+        (*mw_yee).template solve_poisson_CG<degmw>(&(mw_yee->rho), &(mw_yee->phi), &kx, &ky, &kz, infra, 2, 1e-11, 100);
+        (*mw_yee).template D_from_phi<degmw>(&(mw_yee->phi), &(mw_yee->E_Array), &kx, &ky, &kz, infra);
+      }
 
     // initial B_field
     (*mw_yee).template initB<degmw>(fields_B, VM.k, infra);
