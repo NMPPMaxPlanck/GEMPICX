@@ -73,7 +73,7 @@ void main_main ()
     maxwell_yee<vdim> mw_yee(VlMa, infra);
 
     std::string phi = "-cos(x)*cos(y)*cos(z) - 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
-    std::string rho = "sin(x)"; //"-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
+    std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
     double x, y, z;
     int err;
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
@@ -118,14 +118,6 @@ void main_main ()
     stencil_x[1] = {0.0, 0.0, 0.0};
     stencil_x[2] = {0.0, 0.0, 0.0};
 
-    /*
-    // 1) Apply D
-    mw_yee.template matrix_mult<stencil_length>(infra, stencil_x, &mw_yee.rho, &mw_yee.phi, amrex::IndexType(IntVect::TheNodeVector()));
-    amrex::Vector<std::string> varnames = {"rho"};
-    WriteSingleLevelPlotfile("rho", mw_yee.rho, varnames, infra.geom, 0, 0);
-    varnames = {"drho"};
-    WriteSingleLevelPlotfile("drho", mw_yee.phi, varnames, infra.geom, 0, 0);
-*/
     // ----------------------------------------------------------------------------------
 
 
@@ -133,24 +125,26 @@ void main_main ()
     WriteSingleLevelPlotfile("rho_init", mw_yee.rho, varnames, infra.geom, 0, 0);
 
     // Poisson solver
-    //mlmg.solve({&mw_yee.phi}, {&mw_yee.rho}, 1e-12, 0.0);
-    //mw_yee.phi.FillBoundary(infra.geom.periodicity());
-
-    varnames = {"phi"};
-    WriteSingleLevelPlotfile("phi", mw_yee.phi, varnames, infra.geom, 0, 0);
-
 
     mw_yee.template solve_poisson_CG<degree>(&mw_yee.rho, &mw_yee.phi, &kx, &ky, &kz, infra, 2, 5.e-11,300);
 
     // Poisson operator
     mw_yee.template poisson_operator<degree>(&mw_yee.phi, &mw_yee.rho, &kx, &ky, &kz, infra, 0, 1e-16, 100);
 
-    //WriteSingleLevelPlotfile("phi_CG", mw_yee.phi, varnames, infra.geom, 0, 0);
-
     varnames = {"rho"};
     WriteSingleLevelPlotfile("rho_end", mw_yee.rho, varnames, infra.geom, 0, 0);
 
 
+    std::cout << "Begin D from phi" << std::endl;
+    mw_yee.template D_from_phi<degree>(&mw_yee.phi, &mw_yee.E_Array, &kx, &ky, &kz, infra, 2, 1.e-11, 100);
+    std::cout << "End D from phi" << std::endl;
+
+    varnames = {"Ex"};
+    WriteSingleLevelPlotfile("Ex", *mw_yee.E_Array[0], varnames, infra.geom, 0, 0);
+    varnames = {"Ey"};
+    WriteSingleLevelPlotfile("Ey", *mw_yee.E_Array[1], varnames, infra.geom, 0, 0);
+    varnames = {"Ez"};
+    WriteSingleLevelPlotfile("Ez", *mw_yee.E_Array[2], varnames, infra.geom, 0, 0);
 
 }
 
