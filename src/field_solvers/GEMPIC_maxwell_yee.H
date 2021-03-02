@@ -1648,9 +1648,11 @@ if (int(vdim/2.5)*2+1 < 3) {
         rho.FillBoundary(ifr.geom.periodicity());
 
         solve_poisson(ifr, 1e-11);
-        solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
-
-         D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
+        if (degree> 2)
+          {
+            solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
+            D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
+          }
 
         (*E_sol_Array[0]).minus(*E_Array[0], 0, 1, 0);
         (*E_sol_Array[1]).minus(*E_Array[1], 0, 1, 0);
