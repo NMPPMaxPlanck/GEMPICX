@@ -1258,6 +1258,71 @@ if (int(vdim/2.5)*2+1 < 3) {
         (*x).FillBoundary(ifr.geom.periodicity());
     }
 
+    template<int degree>
+    void D_from_phi(amrex::MultiFab *phi_mf, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *D,
+                    amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,infrastructure ifr, int verbose = 0,
+                    amrex::Real reltol = 1.e-11, int maxsteps = 100) {
+
+        std::array<std::unique_ptr<amrex::MultiFab>, vdim > tmp;
+        for (int i=0; i<vdim;i++) {
+            tmp[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+        }
+        // ---------------------------------------------------------------------
+        // D-operator
+
+        amrex::Real c1[1], c2[1];
+
+        for (int i=0; i<vdim; i++) {
+            for (amrex::MFIter mfi(*tmp[i]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+
+                            // phi-derivative
+                            (*phi_mf)[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
+                            (*phi_mf)[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+
+                            (*tmp[i])[mfi].setVal(-(*c1-*c2)/ifr.dx[i], cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 2)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                }
+#endif
+                // next mfi
+            }
+            (*tmp[i]).FillBoundary(ifr.geom.periodicity());
+        }
+
+        // ---------------------------------------------------------------------
+        // H⁻¹-operator
+        // to x comp
+        int dimension = 0;
+        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), kx, ifr, dimension, verbose, reltol, maxsteps);
+        // to x comp
+        dimension = 1;
+        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), ky, ifr, dimension, verbose, reltol, maxsteps);
+        // to x comp
+        dimension = 2;
+        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), kz, ifr, dimension, verbose, reltol, maxsteps);
+
+    }
+
     /**
      * Initialize E by solving Poisson problem in two steps: 1) use the MLMG solver of amrex to solve rho -> phi 2) use differences for phi -> E
      */
