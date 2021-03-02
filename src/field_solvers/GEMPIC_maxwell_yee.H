@@ -662,12 +662,12 @@ if (int(vdim/2.5)*2+1 < 3) {
     void hodge_full (infrastructure ifr, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
                      std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput, bool is_E) {
         for (int field=0; field<vdim; field++) {
-            hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[vdim]:*B_Index[vdim]));
+            hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #if (GEMPIC_SPACEDIM > 1)
-            hodge<degree,1>(ifr, (field==1?0:1), &(*(*MultiOutput)[field]), &(*(*MultiInput)[field]), (is_E?*E_Index[vdim]:*B_Index[vdim]));
+            hodge<degree,1>(ifr, (field==1?0:1), &(*(*MultiOutput)[field]), &(*(*MultiInput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-            hodge<degree,2>(ifr, (field==2?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[vdim]:*B_Index[vdim]));
+            hodge<degree,2>(ifr, (field==2?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #endif
         }
     }
@@ -1037,9 +1037,9 @@ if (int(vdim/2.5)*2+1 < 3) {
 
 
             // z = A*d
-            hodge<degree,0>(ifr, (dimension==0?0:1), &d, &z, *E_Index[0]);
-            hodge<degree,1>(ifr, (dimension==1?0:1), &z, &tmp, *E_Index[1]);
-            hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &z, *E_Index[2]);
+            hodge<degree,0>(ifr, (dimension==0?0:1), &d, &z, *E_Index[dimension]);
+            hodge<degree,1>(ifr, (dimension==1?0:1), &z, &tmp, *E_Index[dimension]);
+            hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &z, *E_Index[dimension]);
 
             kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, z, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
             amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
