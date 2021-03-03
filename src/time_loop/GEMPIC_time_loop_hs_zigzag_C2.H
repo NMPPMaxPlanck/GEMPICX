@@ -265,7 +265,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         if (profiling && profiling_count)
           counter_fields -= MPI_Wtime();
         // advance E from j (field part of H_p)
-        mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));        
+        mw_yee->advance_E(infra, 1.0, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
         if (profiling && profiling_count)
           counter_fields += MPI_Wtime();
 
