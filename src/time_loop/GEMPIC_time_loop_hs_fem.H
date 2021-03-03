@@ -38,7 +38,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool el
 void time_loop_hs_fem (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec, degx, degy, degz> *diagn,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                        bool ctest,
                        std::string simulation_name,
                        std::ofstream *ofs) {

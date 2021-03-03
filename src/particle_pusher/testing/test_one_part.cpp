@@ -121,7 +121,7 @@ void main_main (bool ctest)
 
     //------------------------------------------------------------------------------
     // solve:
-    diagnostics<vdim, numspec, degx, degy, degz> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
+    diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
     loop_preparation<vdim,numspec,degx,degy,degy,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;

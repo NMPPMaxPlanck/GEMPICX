@@ -32,7 +32,7 @@ namespace Diagnostics_Output {
  * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored and written into files. Slice Data of fields can be generated.
  */
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degree>
 class diagnostics
 {
 public:

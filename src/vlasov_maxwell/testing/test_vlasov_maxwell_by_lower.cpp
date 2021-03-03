@@ -92,7 +92,7 @@ void main_main ()
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
-    diagnostics<vdim, numspec,degx,degy,degz> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name);
+    diagnostics<vdim, numspec,degx,degy,degz,degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name);
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);

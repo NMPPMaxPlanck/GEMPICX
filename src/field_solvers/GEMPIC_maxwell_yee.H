@@ -24,6 +24,7 @@
 #include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
+#include <GEMPIC_particle_mesh_coupling_C2.H>
 
 namespace Gempic {
 namespace Vlasov_Maxwell {
@@ -35,6 +36,7 @@ class vlasov_maxwell;
 using namespace Infra;
 using namespace Utils;
 using namespace Vlasov_Maxwell;
+using namespace Particles;
 
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
@@ -260,7 +262,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         case 6:
             stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
             break;
-        default: std::cout << "degree not implemented" << std::endl;
+        default: amrex::Print() << "degree not implemented" << std::endl;
 
         }
         std::array<amrex::Real, degree-1> x;
@@ -344,7 +346,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         case 6:
             stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
             break;
-        default: std::cout << "degree not implemented" << std::endl;
+        default: amrex::Print() << "degree not implemented" << std::endl;
 
         }
         std::array<amrex::Real, degree-1> x;
@@ -662,12 +664,15 @@ if (int(vdim/2.5)*2+1 < 3) {
     void hodge_full (infrastructure ifr, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
                      std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput, bool is_E) {
         for (int field=0; field<vdim; field++) {
-            hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[0]:*B_Index[0]));
+
+            amrex::MultiFab tmp(convert(ifr.grid, (is_E?*E_Index[field]:*B_Index[field])),ifr.distriMap,Ncomp,Nghost);
+
+            hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #if (GEMPIC_SPACEDIM > 1)
-            hodge<degree,1>(ifr, (field==0?0:1), &(*(*MultiOutput)[field]), &(*(*MultiInput)[field]), (is_E?*E_Index[1]:*B_Index[1]));
+            hodge<degree,1>(ifr, (field==1?0:1), &(*(*MultiOutput)[field]), &tmp, (is_E?*E_Index[field]:*B_Index[field]));
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-            hodge<degree,2>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[2]:*B_Index[2]));
+            hodge<degree,2>(ifr, (field==2?0:1), &tmp, &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #endif
         }
     }
@@ -698,7 +703,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                     case 6:
                         stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
                         break;
-                    default: std::cout << "degree not implemented" << std::endl;
+                    default: amrex::Print() << "degree not implemented" << std::endl;
                     }
                     break;
                 case 1:
@@ -712,7 +717,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                     case 6:
                         stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
                         break;
-                    default: std::cout << "degree not implemented" << std::endl;
+                    default: amrex::Print() << "degree not implemented" << std::endl;
                     }
                     break;
                 }
@@ -878,6 +883,439 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.FillBoundary(ifr.geom.periodicity());
         phi.FillBoundary(ifr.geom.periodicity());
+    }
+
+    template <int stencil_length>
+    void matrix_mult (infrastructure ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+                amrex::IndexType IndexVect){
+
+        amrex::Real c1[1];
+
+        for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
+
+                            amrex::Real val = 0.0;
+                            for (int dimension=0; dimension < GEMPIC_SPACEDIM; dimension++) {
+                                for (int d = 0; d<(stencil_length); d++) {
+                                    int shift = d - (stencil_length+1)/2 + 1;
+                                    (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
+                                    val += stencil[dimension][d]*(*c1);
+                                }
+                            }
+
+                            (*MultiOutput)[mfi].setVal(val, cc, 0, 1);
+
+                        }
+#if (GEMPIC_SPACEDIM > 1)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                }
+#endif
+                // next mfi
+            }
+            (*MultiOutput).FillBoundary(ifr.geom.periodicity());
+    }
+
+    template <int stencil_length, int dimension>
+    void solve_stencil_CG(std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil,
+                          amrex::MultiFab *b, amrex::MultiFab *x, infrastructure ifr, amrex::IndexType IndexVect,
+                          int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100){
+        if(verbose > 0) {
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Started solve_CG" << std::endl;
+        }
+
+        amrex::MultiFab r(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab d(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab z(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab tmp(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+
+        amrex::Real alpha, beta, rr;
+
+        // r = A*x
+        matrix_mult<stencil_length>(ifr, stencil, x, &r, IndexVect);
+        // r = b-A*x
+        r.mult(-1.0, 0, 1, Nghost);
+        r.plus(*b, 0, 1, Nghost);
+        // d = r
+        amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
+
+        bool contin = true;
+        int step = 0;
+        amrex::Real norm_r = 2*reltol;
+        while(contin) {
+
+            // z = A*d
+            matrix_mult<stencil_length>(ifr, stencil, &d, &z, IndexVect);
+
+            // alpha = <r,r>/<d,z>
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
+            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
+
+            // x = x + alpha*d
+            d.mult(alpha, 0, 1, Nghost);
+            x->plus(d, 0, 1, Nghost);
+            d.mult(1.0/alpha, 0, 1, Nghost);
+
+            // r = r - alpha*z
+            z.mult(alpha, 0, 1, Nghost);
+            r.minus(z, 0, 1, Nghost);
+
+            // beta = <r,r>/rr (rr is old residuum scalar-prod)
+            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0)/rr;
+
+            // d = r + beta*d
+            d.mult(beta, 0, 1, Nghost);
+            d.plus(r, 0, 1, Nghost);
+
+            step++;
+            norm_r = r.norm2(0, ifr.geom.periodicity());
+            if(verbose > 1) {
+                amrex::Print() << "step: " << step << ", residuum: " << norm_r << std::endl;
+            }
+            if (step >= maxsteps || norm_r < reltol) {
+                contin = false;
+            }
+        }
+
+        if(verbose > 0) {
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
+            amrex::Print() << "Finished solve_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+        }
+    }
+
+    template<int degree>
+    void solve_hodge_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *k, infrastructure ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
+                        int maxsteps = 100){
+        if(verbose > 0) {
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Started solve_hodge_CG" << std::endl;
+        }
+
+        amrex::MultiFab r(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab d(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab z(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab tmp(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab k_scaled(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
+
+        amrex::Real alpha, beta, rr, kern_factor;
+
+        // r = A*x
+        hodge<degree,0>(ifr, (dimension==0?0:1), x, &r, *E_Index[dimension]);
+        hodge<degree,1>(ifr, (dimension==1?0:1), &r, &tmp, *E_Index[dimension]);
+        hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &r, *E_Index[dimension]);
+        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
+        amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
+        k_scaled.mult(kern_factor, 0, 1, Nghost);
+        r.plus(k_scaled, 0, 1, Nghost);
+
+        // r = b-A*x
+        r.mult(-1.0, 0, 1, Nghost);
+        r.plus(*b, 0, 1, Nghost);
+        // d = r
+        amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
+
+        int step = 0;
+        for(step = 0; step<maxsteps; step++) {
+            // rr
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
+            if(verbose > 1) {
+                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << " , rr: " << rr << std::endl;
+            }
+            if (sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] < reltol) break;
+
+
+            // z = A*d
+            hodge<degree,0>(ifr, (dimension==0?0:1), &d, &z, *E_Index[dimension]);
+            hodge<degree,1>(ifr, (dimension==1?0:1), &z, &tmp, *E_Index[dimension]);
+            hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &z, *E_Index[dimension]);
+
+            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, z, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
+            amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
+            k_scaled.mult(kern_factor, 0, 1, Nghost);
+            z.plus(k_scaled, 0, 1, Nghost);
+
+            // alpha = <r,r>/<d,z>
+            alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
+
+            // x = x + alpha*d
+            amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
+            k_scaled.mult(alpha, 0, 1, Nghost);
+            x->plus(k_scaled, 0, 1, Nghost);
+
+            // r = r - alpha*z
+            z.mult(alpha, 0, 1, Nghost);
+            r.minus(z, 0, 1, Nghost);
+
+            // beta = <r,r>/rr (rr is old residuum scalar-prod)
+            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0)/rr;
+
+            // d = r + beta*d
+            d.mult(beta, 0, 1, Nghost);
+            d.plus(r, 0, 1, Nghost);
+
+        }
+
+        if(verbose > 0) {
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << std::endl;
+            amrex::Print() << "Finished solve_hodge_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+        }
+
+        (*x).FillBoundary(ifr.geom.periodicity());
+    }
+
+    template <int degree>
+    void poisson_operator (amrex::MultiFab *MultiIn, amrex::MultiFab *MultiOut, amrex::MultiFab *kx,
+                           amrex::MultiFab *ky, amrex::MultiFab *kz, infrastructure ifr, int verbose = 0,
+                           amrex::Real reltol = 1.e-11, int maxsteps = 100) {
+
+        int dimension = 0;
+        amrex::Real kern_factor;
+
+        const int stencil_length = 3;
+        std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
+        stencil_x[0] = {-1.0/ifr.dx[0], 1.0/ifr.dx[0], 0.0};
+        stencil_x[1] = {0.0, 0.0, 0.0};
+        stencil_x[2] = {0.0, 0.0, 0.0};
+        std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_y;
+        stencil_y[0] = {0.0, 0.0, 0.0};
+        stencil_y[1] = {-1.0/ifr.dx[1], 1.0/ifr.dx[1], 0.0};
+        stencil_y[2] = {0.0, 0.0, 0.0};
+        std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_z;
+        stencil_z[0] = {0.0, 0.0, 0.0};
+        stencil_z[1] = {0.0, 0.0, 0.0};
+        stencil_z[2] = {-1.0/ifr.dx[2], 1.0/ifr.dx[2], 0.0};
+
+
+        amrex::MultiFab Drho_x(convert(ifr.grid, *E_Index[0]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab Drho_y(convert(ifr.grid, *E_Index[1]),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab Drho_z(convert(ifr.grid, *E_Index[2]),ifr.distriMap,Ncomp,Nghost);
+
+        amrex::MultiFab HDrho_x(convert(ifr.grid, *E_Index[0]),ifr.distriMap,Ncomp,Nghost);
+        HDrho_x.setVal(1.0,0);
+        amrex::MultiFab HDrho_y(convert(ifr.grid, *E_Index[1]),ifr.distriMap,Ncomp,Nghost);
+        HDrho_y.setVal(1.0,0);
+        amrex::MultiFab HDrho_z(convert(ifr.grid, *E_Index[2]),ifr.distriMap,Ncomp,Nghost);
+        HDrho_z.setVal(1.0,0);
+
+        // 1) Apply D
+        matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, &Drho_x, *E_Index[0]);
+        matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, &Drho_y, *E_Index[1]);
+        matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, &Drho_z, *E_Index[2]);
+
+        // 2) Apply hodge
+            // to x comp
+            amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
+            solve_hodge_CG<degree>(&Drho_x, &HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
+            //amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
+
+            // to y comp
+            dimension = 1;
+            amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
+            solve_hodge_CG<degree>(&Drho_y, &HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
+            //amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
+
+            // to z comp
+            dimension = 2;
+            amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
+            solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
+            //amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);;
+
+        // 3) Apply D^T
+
+        stencil_x[0] = {0.0, 1.0/ifr.dx[0], -1.0/ifr.dx[0]};
+        stencil_x[1] = {0.0, 0.0, 0.0};
+        stencil_x[2] = {0.0, 0.0, 0.0};
+
+        stencil_y[0] = {0.0, 0.0, 0.0};
+        stencil_y[1] = {0.0, 1.0/ifr.dx[1], -1.0/ifr.dx[1]};
+        stencil_y[2] = {0.0, 0.0, 0.0};
+
+        stencil_z[0] = {0.0, 0.0, 0.0};
+        stencil_z[1] = {0.0, 0.0, 0.0};
+        stencil_z[2] = {0.0, 1.0/ifr.dx[2], -1.0/ifr.dx[2]};
+
+        matrix_mult<3>(ifr, stencil_x, &HDrho_x, &Drho_x, *E_Index[0]);
+        matrix_mult<3>(ifr, stencil_y, &HDrho_y, &Drho_y, *E_Index[1]);
+        matrix_mult<3>(ifr, stencil_z, &HDrho_z, &Drho_z, *E_Index[2]);
+
+
+        amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, Nghost);
+        MultiOut->plus(Drho_y, 0, 1, Nghost);
+        MultiOut->plus(Drho_z, 0, 1, Nghost);
+
+        MultiOut->FillBoundary(ifr.geom.periodicity());
+    }
+
+    template<int degree>
+    void solve_poisson_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,
+                          infrastructure ifr, int verbose = 0, amrex::Real reltol = 1.e-11,
+                        int maxsteps = 100){
+        if(verbose > 0) {
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Started solve_poisson_CG" << std::endl;
+        }
+
+        amrex::MultiFab r(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab d(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab z(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab tmp(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+
+        amrex::MultiFab k(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+        amrex::MultiFab k_scaled(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
+        k.setVal(1.0,0);
+        k.FillBoundary(ifr.geom.periodicity());
+        amrex::Real kern_factor;
+
+        amrex::Real alpha, beta, rr;
+
+        // subtract kernel from x0:
+        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, *b, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+        amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
+        k_scaled.mult(kern_factor, 0, 1, Nghost);
+        b->minus(k_scaled, 0, 1, Nghost);
+
+        // r = A*x
+        poisson_operator<degree> (x, &r, kx, ky, kz, ifr, verbose, reltol, maxsteps);
+        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+        amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
+        k_scaled.mult(kern_factor, 0, 1, Nghost);
+        r.plus(k_scaled, 0, 1, Nghost);
+
+
+        // r = b-A*x
+        r.mult(-1.0, 0, 1, Nghost);
+        r.plus(*b, 0, 1, Nghost);
+
+        // d = r
+        amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
+
+        int step = 0;
+        for(step = 0; step<maxsteps; step++) {
+            // rr
+            rr = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0);
+            if(verbose > 1) {
+                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << std::endl;
+            }
+            if (sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] < reltol) break;
+
+            // z = A*d
+            poisson_operator<degree> (&d, &z, kx, ky, kz, ifr, verbose, reltol, maxsteps);
+            kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, d, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+            amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
+            k_scaled.mult(kern_factor, 0, 1, Nghost);
+            d.plus(k_scaled, 0, 1, Nghost);
+
+            // alpha = <r,r>/<d,z>
+            alpha = rr/amrex::MultiFab::Dot(*nodal_Mask, d, 0, z, 0, 1, 0);
+
+            // x = x + alpha*d
+            amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
+            k_scaled.mult(alpha, 0, 1, Nghost);
+            x->plus(k_scaled, 0, 1, Nghost);
+
+            // r = r - alpha*z
+            z.mult(alpha, 0, 1, Nghost);
+            r.minus(z, 0, 1, Nghost);
+
+            // beta = <r,r>/rr (rr is old residuum scalar-prod)
+            beta = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0)/rr;
+
+            // d = r + beta*d
+            d.mult(beta, 0, 1, Nghost);
+            d.plus(r, 0, 1, Nghost);
+
+        }
+
+        if(verbose > 0) {
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << std::endl;
+            amrex::Print() << "Finished solve_poisson_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+        }
+
+        (*x).FillBoundary(ifr.geom.periodicity());
+    }
+
+    template<int degree>
+    void D_from_phi(amrex::MultiFab *phi_mf, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *D,
+                    amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,infrastructure ifr, int verbose = 0,
+                    amrex::Real reltol = 1.e-11, int maxsteps = 100) {
+
+        std::array<std::unique_ptr<amrex::MultiFab>, vdim > tmp;
+        for (int i=0; i<vdim;i++) {
+            tmp[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+        }
+        // ---------------------------------------------------------------------
+        // D-operator
+
+        amrex::Real c1[1], c2[1];
+
+        for (int i=0; i<vdim; i++) {
+            for (amrex::MFIter mfi(*tmp[i]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.validbox();
+
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+                for(int k=lo[2]; k<=hi[2]; k++){
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                    for(int j=lo[1]; j<=hi[1]; j++){
+#endif
+                        for(int l=lo[0]; l<=hi[0]; l++){
+
+                            // the box for these values:
+                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
+
+                            // phi-derivative
+                            (*phi_mf)[mfi].getVal(c1,amrex::IntVect{AMREX_D_DECL(l+(i==0?1:0),j+(i==1?1:0),k+(i==2?1:0))},0,1);
+                            (*phi_mf)[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
+
+                            (*tmp[i])[mfi].setVal(-(*c1-*c2)/ifr.dx[i], cc, 0, 1);
+                        }
+#if (GEMPIC_SPACEDIM > 2)
+                    }
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                }
+#endif
+                // next mfi
+            }
+            (*tmp[i]).FillBoundary(ifr.geom.periodicity());
+        }
+
+        // ---------------------------------------------------------------------
+        // H⁻¹-operator
+        // to x comp
+        int dimension = 0;
+        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), kx, ifr, dimension, verbose, reltol, maxsteps);
+        // to x comp
+        dimension = 1;
+        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), ky, ifr, dimension, verbose, reltol, maxsteps);
+        // to x comp
+        dimension = 2;
+        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), kz, ifr, dimension, verbose, reltol, maxsteps);
+
     }
 
     /**
@@ -1095,7 +1533,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;numspec;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;
@@ -1113,7 +1551,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
                 for (int pp=0;pp<np;pp++) {
-                    Particles::gempic_deposit_rho(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
                 }
                 (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
@@ -1134,6 +1572,86 @@ if (int(vdim/2.5)*2+1 < 3) {
         (*E_Array[0]).Copy(*E_Array[0], *E_sol_Array[0],0,0,1,Nghost);
         (*E_Array[1]).Copy(*E_Array[1], *E_sol_Array[1],0,0,1,Nghost);
         (*E_Array[2]).Copy(*E_Array[2], *E_sol_Array[2],0,0,1,Nghost);
+
+        return(res);
+    }
+
+    template<int numspec, int degx, int degy, int degz, int degree>
+    amrex::Real compute_gauss_error_hodge(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
+
+        amrex::MultiFab kx(convert(ifr.grid, *E_Index[0]),ifr.distriMap,1,Nghost);
+        kx.setVal(1.0, 0);
+        kx.FillBoundary(ifr.geom.periodicity());
+        amrex::MultiFab ky(convert(ifr.grid, *E_Index[1]),ifr.distriMap,1,Nghost);
+        ky.setVal(1.0, 0);
+        ky.FillBoundary(ifr.geom.periodicity());
+        amrex::MultiFab kz(convert(ifr.grid, *E_Index[2]),ifr.distriMap,1,Nghost);
+        kz.setVal(1.0, 0);
+        kz.FillBoundary(ifr.geom.periodicity());
+
+        // init phi for poisson solver
+        double x, y, z;
+        int err;
+        std::string phi_str = "4 * 0.5 * cos(0.5 * x)";
+        std::string rho_str = "0.0";
+
+        te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
+        int varcount = 3;
+        te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars, varcount, &err);
+        te_expr *phi_parse = te_compile(phi_str.c_str(), read_vars, varcount, &err);
+        init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
+
+        // Deposit charges in rho:
+
+        rho.setVal(0.0);
+        rho.FillBoundary(ifr.geom.periodicity());
+        for (int spec=0;spec<numspec;spec++) {
+            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+                amrex::Box tilebox;
+                amrex::FArrayBox local_rho;
+
+                tilebox = pti.tilebox();
+                tilebox.grow(Nghost);
+                const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
+
+                local_rho.resize(tb,1); // second arg: number of comps
+                local_rho.setVal(0.0);
+
+                auto& particles = pti.GetArrayOfStructs();
+                const long np  = pti.numParticles();
+
+                amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+                for (int pp=0;pp<np;pp++) {
+                    splines_at_particles<degx, degy, degz> spline;
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      position[d] = particles[pp].pos(d);
+                    spline.init_particles( position, ifr.plo, ifr.dxi);
+                    gempic_deposit_rho_C3<degx, degy, degz> ( spline,
+                                                  (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
+                                                  rhoarr);
+                }
+                (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
+            }
+        }
+
+        rho.SumBoundary(ifr.geom.periodicity());
+        rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
+        rho.FillBoundary(ifr.geom.periodicity());
+
+        solve_poisson(ifr, 1e-11);
+        if (degree> 2)
+          {
+            solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
+            D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
+          }
+
+        (*E_sol_Array[0]).minus(*E_Array[0], 0, 1, 0);
+        (*E_sol_Array[1]).minus(*E_Array[1], 0, 1, 0);
+        (*E_sol_Array[2]).minus(*E_Array[2], 0, 1, 0);
+
+        amrex::Real res = gempic_norm(&(*E_Array[0]), ifr, 2)+gempic_norm(&(*E_Array[1]), ifr, 2)+gempic_norm(&(*E_Array[2]), ifr, 2);
 
         return(res);
     }
