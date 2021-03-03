@@ -29,7 +29,7 @@ IF (CMAKE_CXX_COMPILER_ID MATCHES "GNU.*")
   message ("Found GNU compiler " ${CMAKE_CXX_COMPILER})
 ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")
   set (CMAKE_CXX_FLAGS "")
-  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3 -xCORE-AVX512 -zmm-usage=high -Ofast -qopt-prefetch=2 -mcmodel=large") # or try 4 for prefetch
+  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3 -xHost -zmm-usage=high -Ofast -qopt-prefetch=2 -mcmodel=large") # or try 4 for prefetch
   #set (CMAKE_CXX_FLAGS_RELEASE "-g -O3 -xHOST")
   set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
   message ("Found Intel compiler " ${CMAKE_CXX_COMPILER})
