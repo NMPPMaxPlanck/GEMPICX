@@ -122,7 +122,7 @@ public:
                 mom[step][cmp] += mom_tmp;
             }
         }
-        gauss_error[step] = (*mw_yee).template compute_gauss_error_hodge<numspec,degx,degy,degz,degree>(infra, part_gr);
+        gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
 
         // save Plot and Checkpoint-files
         if ((step+1)%freq_slice == 0) {

@@ -1530,7 +1530,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;numspec;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;
@@ -1602,7 +1602,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec=0;numspec;spec++) {
+        for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 amrex::Box tilebox;
@@ -1638,9 +1638,11 @@ if (int(vdim/2.5)*2+1 < 3) {
         rho.FillBoundary(ifr.geom.periodicity());
 
         solve_poisson(ifr, 1e-11);
-        solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
-
-         D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
+        if (degree> 2)
+          {
+            solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
+            D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
+          }
 
         (*E_sol_Array[0]).minus(*E_Array[0], 0, 1, 0);
         (*E_sol_Array[1]).minus(*E_Array[1], 0, 1, 0);
