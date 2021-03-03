@@ -262,7 +262,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         case 6:
             stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
             break;
-        default: std::cout << "degree not implemented" << std::endl;
+        default: amrex::Print() << "degree not implemented" << std::endl;
 
         }
         std::array<amrex::Real, degree-1> x;
@@ -346,7 +346,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         case 6:
             stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
             break;
-        default: std::cout << "degree not implemented" << std::endl;
+        default: amrex::Print() << "degree not implemented" << std::endl;
 
         }
         std::array<amrex::Real, degree-1> x;
@@ -700,7 +700,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                     case 6:
                         stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
                         break;
-                    default: std::cout << "degree not implemented" << std::endl;
+                    default: amrex::Print() << "degree not implemented" << std::endl;
                     }
                     break;
                 case 1:
@@ -714,7 +714,7 @@ if (int(vdim/2.5)*2+1 < 3) {
                     case 6:
                         stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
                         break;
-                    default: std::cout << "degree not implemented" << std::endl;
+                    default: amrex::Print() << "degree not implemented" << std::endl;
                     }
                     break;
                 }
@@ -933,8 +933,8 @@ if (int(vdim/2.5)*2+1 < 3) {
                           amrex::MultiFab *b, amrex::MultiFab *x, infrastructure ifr, amrex::IndexType IndexVect,
                           int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100){
         if(verbose > 0) {
-            std::cout << "----------------------------------------------------------------" << std::endl;
-            std::cout << "Started solve_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Started solve_CG" << std::endl;
         }
 
         amrex::MultiFab r(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
@@ -983,7 +983,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             step++;
             norm_r = r.norm2(0, ifr.geom.periodicity());
             if(verbose > 1) {
-                std::cout << "step: " << step << ", residuum: " << norm_r << std::endl;
+                amrex::Print() << "step: " << step << ", residuum: " << norm_r << std::endl;
             }
             if (step >= maxsteps || norm_r < reltol) {
                 contin = false;
@@ -991,9 +991,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
 
         if(verbose > 0) {
-            std::cout << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
-            std::cout << "Finished solve_CG" << std::endl;
-            std::cout << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << norm_r << std::endl;
+            amrex::Print() << "Finished solve_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
     }
 
@@ -1001,8 +1001,8 @@ if (int(vdim/2.5)*2+1 < 3) {
     void solve_hodge_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *k, infrastructure ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
                         int maxsteps = 100){
         if(verbose > 0) {
-            std::cout << "----------------------------------------------------------------" << std::endl;
-            std::cout << "Started solve_hodge_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Started solve_hodge_CG" << std::endl;
         }
 
         amrex::MultiFab r(convert(ifr.grid, *E_Index[dimension]),ifr.distriMap,Ncomp,Nghost);
@@ -1033,7 +1033,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             // rr
             rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
             if(verbose > 1) {
-                std::cout << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
+                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
             }
             if (sqrt(rr) < reltol) break;
 
@@ -1070,9 +1070,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
 
         if(verbose > 0) {
-            std::cout << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
-            std::cout << "Finished solve_hodge_CG" << std::endl;
-            std::cout << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
+            amrex::Print() << "Finished solve_hodge_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
 
         (*x).FillBoundary(ifr.geom.periodicity());
@@ -1117,9 +1117,6 @@ if (int(vdim/2.5)*2+1 < 3) {
         matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, &Drho_y, *E_Index[1]);
         matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, &Drho_z, *E_Index[2]);
 
-        amrex::Vector<std::string> varnames = {"Drho_x"};
-        WriteSingleLevelPlotfile("Drho_x", Drho_x, varnames, ifr.geom, 0, 0);
-
         // 2) Apply hodge
             // to x comp
             amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
@@ -1136,10 +1133,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             dimension = 2;
             amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
             solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
-            //amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
-
-            varnames = {"HDrho_x"};
-            WriteSingleLevelPlotfile("HDrho_x", HDrho_x, varnames, ifr.geom, 0, 0);
+            //amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);;
 
         // 3) Apply D^T
 
@@ -1159,8 +1153,6 @@ if (int(vdim/2.5)*2+1 < 3) {
         matrix_mult<3>(ifr, stencil_y, &HDrho_y, &Drho_y, *E_Index[1]);
         matrix_mult<3>(ifr, stencil_z, &HDrho_z, &Drho_z, *E_Index[2]);
 
-        varnames = {"DtHDrho_x"};
-        WriteSingleLevelPlotfile("DtHDrho_x", Drho_x, varnames, ifr.geom, 0, 0);
 
         amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, Nghost);
         MultiOut->plus(Drho_y, 0, 1, Nghost);
@@ -1174,8 +1166,8 @@ if (int(vdim/2.5)*2+1 < 3) {
                           infrastructure ifr, int verbose = 0, amrex::Real reltol = 1.e-11,
                         int maxsteps = 100){
         if(verbose > 0) {
-            std::cout << "----------------------------------------------------------------" << std::endl;
-            std::cout << "Started solve_poisson_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Started solve_poisson_CG" << std::endl;
         }
 
         amrex::MultiFab r(convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,Ncomp,Nghost);
@@ -1199,8 +1191,6 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         // r = A*x
         poisson_operator<degree> (x, &r, kx, ky, kz, ifr, verbose, reltol, maxsteps);
-        amrex::Vector<std::string> varnames = {"rho"};
-        WriteSingleLevelPlotfile("rho_end", *x, varnames, ifr.geom, 0, 0);
         kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
         amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
         k_scaled.mult(kern_factor, 0, 1, Nghost);
@@ -1220,7 +1210,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             rr = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0);
             if (sqrt(rr) < reltol) break;
             if(verbose > 1) {
-                std::cout << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
+                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
             }
 
             // z = A*d
@@ -1252,9 +1242,9 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
 
         if(verbose > 0) {
-            std::cout << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
-            std::cout << "Finished solve_poisson_CG" << std::endl;
-            std::cout << "----------------------------------------------------------------" << std::endl;
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
+            amrex::Print() << "Finished solve_poisson_CG" << std::endl;
+            amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
 
         (*x).FillBoundary(ifr.geom.periodicity());
