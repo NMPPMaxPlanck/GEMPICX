@@ -664,12 +664,15 @@ if (int(vdim/2.5)*2+1 < 3) {
     void hodge_full (infrastructure ifr, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
                      std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput, bool is_E) {
         for (int field=0; field<vdim; field++) {
+
+            amrex::MultiFab tmp(convert(ifr.grid, (is_E?*E_Index[field]:*B_Index[field])),ifr.distriMap,Ncomp,Nghost);
+
             hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #if (GEMPIC_SPACEDIM > 1)
-            hodge<degree,1>(ifr, (field==1?0:1), &(*(*MultiOutput)[field]), &(*(*MultiInput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
+            hodge<degree,1>(ifr, (field==1?0:1), &(*(*MultiOutput)[field]), &tmp, (is_E?*E_Index[field]:*B_Index[field]));
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-            hodge<degree,2>(ifr, (field==2?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
+            hodge<degree,2>(ifr, (field==2?0:1), &tmp, &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #endif
         }
     }
