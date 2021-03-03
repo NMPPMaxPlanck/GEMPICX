@@ -237,7 +237,7 @@ void time_loop_hsall_fem (infrastructure infra,
         abort();*/
 
         // advance E from j (field part of H_p)
-        mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+        mw_yee->advance_E(infra, 1.0, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
 
         // Second particle loop for particle part from H_E
         for (int spec=0;spec<numspec;spec++) {
