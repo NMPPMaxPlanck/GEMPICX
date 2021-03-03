@@ -1033,9 +1033,9 @@ if (int(vdim/2.5)*2+1 < 3) {
             // rr
             rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
             if(verbose > 1) {
-                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
+                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << " , rr: " << rr << std::endl;
             }
-            if (sqrt(rr) < reltol) break;
+            if (sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] < reltol) break;
 
 
             // z = A*d
@@ -1070,7 +1070,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
 
         if(verbose > 0) {
-            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << std::endl;
             amrex::Print() << "Finished solve_hodge_CG" << std::endl;
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
@@ -1208,10 +1208,10 @@ if (int(vdim/2.5)*2+1 < 3) {
         for(step = 0; step<maxsteps; step++) {
             // rr
             rr = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0);
-            if (sqrt(rr) < reltol) break;
             if(verbose > 1) {
-                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr << std::endl;
+                amrex::Print() << "step: " << step << ", residuum: " << sqrt(rr) << " , rr: " << rr*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << std::endl;
             }
+            if (sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] < reltol) break;
 
             // z = A*d
             poisson_operator<degree> (&d, &z, kx, ky, kz, ifr, verbose, reltol, maxsteps);
@@ -1242,7 +1242,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         }
 
         if(verbose > 0) {
-            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr) << std::endl;
+            amrex::Print() << "Number of iterations: " << step << ", final residuum: " << sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] << std::endl;
             amrex::Print() << "Finished solve_poisson_CG" << std::endl;
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
