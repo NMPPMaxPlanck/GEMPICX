@@ -105,10 +105,37 @@ void main_main ()
 
     timers profiling_timers(true);
 
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_vlasov_maxwell_by.tmp") << std::endl;
-time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+    std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
+    AllPrintToFile("test_vlasov_maxwell_by.tmp") << std::endl;
 
+    if (profiling_timers.profiling)
+        profiling_timers.counter_all -= MPI_Wtime();
+    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
+        time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+
+        // after all substeps:
+        if (profiling_timers.profiling)
+          profiling_timers.counter_diagnostics -= MPI_Wtime();
+        // save norms for diagnostics
+        diagn.save_step_data(t_step+1, infra, &mw_yee, &part_gr); // false: slices are not saved
+
+        // save temporary results every n steps
+        if ((t_step+1)%5 == 0) {
+            diagn.save_all_to_textfile(mw_yee.dt, "test_vlasov_maxwell_by.tmp", t_step+1);
+        }
+        if (profiling_timers.profiling)
+          profiling_timers.counter_diagnostics += MPI_Wtime();
+        amrex::Print() << "finished step " << t_step+1 << std::endl;
+
+        if (ctest) diagn.ctest_output("test_vlasov_maxwell_by.tmp", t_step);
+    }
+    if (profiling_timers.profiling){
+      profiling_timers.counter_all += MPI_Wtime();
+      amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition << ", redistribute time: " << profiling_timers.counter_redistribute
+                     << ", field solver time: " << profiling_timers.counter_fields << ", sum boundary j time: " << profiling_timers.counter_jboundary
+                     << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
+      }
+    diagn.save_all_to_textfile(mw_yee.dt, "test_vlasov_maxwell_by.tmp");
 }
 
 int main(int argc, char* argv[])

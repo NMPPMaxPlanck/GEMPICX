@@ -42,11 +42,6 @@ void time_loop_boris_fd (infrastructure infra,
                          std::ofstream *ofs,
                          timers *profiling_timers) {
 
-    if (profiling_timers->profiling)
-      profiling_timers->counter_all -= MPI_Wtime();
-    for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
-
-
         (*mw_yee).advance_time();
 
         if (profiling_timers->profiling)
@@ -193,30 +188,8 @@ void time_loop_boris_fd (infrastructure infra,
         if (profiling_timers->profiling)
           profiling_timers->counter_fields += MPI_Wtime();
 
-        if (profiling_timers->profiling)
-          profiling_timers->counter_diagnostics -= MPI_Wtime();
-        // save norms for diagnostics
-        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
-
-        // save temporary results every n steps
-        if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
-        }
-        if (profiling_timers->profiling)
-          profiling_timers->counter_diagnostics += MPI_Wtime();
-        amrex::Print() << "finished step " << t_step+1 << std::endl;
-
-        if (ctest) diagn->ctest_output(simulation_name, t_step);
 
 
-    } // end time loop
-    if (profiling_timers->profiling){
-      profiling_timers->counter_all += MPI_Wtime();
-      amrex::Print() << "Deposition time: " << profiling_timers->counter_deposition << ", redistribute time: " << profiling_timers->counter_redistribute
-                     << ", field solver time: " << profiling_timers->counter_fields << ", sum boundary j time: " << profiling_timers->counter_jboundary
-                     << ", diagnostics time: " << profiling_timers->counter_diagnostics << ", total time: " << profiling_timers->counter_all << std::endl;
-      }
-    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
 }
