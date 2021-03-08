@@ -11,6 +11,7 @@
 #include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_positions.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
@@ -25,6 +26,7 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
@@ -100,6 +102,9 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
+
+    timers profiling_timers(true);
+
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_vlasov_maxwell_by.tmp") << std::endl;
 time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs);
