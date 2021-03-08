@@ -107,7 +107,7 @@ void main_main ()
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_vlasov_maxwell_by.tmp") << std::endl;
-time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs);
+time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
 
 }
 

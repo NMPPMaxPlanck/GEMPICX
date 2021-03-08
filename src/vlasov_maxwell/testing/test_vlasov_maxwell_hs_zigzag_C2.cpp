@@ -11,6 +11,7 @@
 #include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_positions.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_vlasov_maxwell.H>
@@ -23,6 +24,7 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
@@ -96,11 +98,12 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
+    timers profiling_timers(true);
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 AllPrintToFile("test_vlasov_maxwell_hs_zigzag_C2.tmp") << std::endl;
 // time_loop_hsall_fem<vdim, numspec>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2.tmp", &ofs);
-time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw>(infra,&mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2.tmp", &ofs);
+time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw>(infra,&mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2.tmp", &ofs, &profiling_timers);
 
 }
 
