@@ -199,41 +199,7 @@ void time_loop_hs_fem (infrastructure infra,
 
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
-        if (ctest) {
-            switch (vdim) {
-            case 1:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0];
-                break;
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
-                break;
-            }
-            switch (vdim) {
-            case 1: // no break, so that case 1 and 2 are handled the same way
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
-                break;
-            }
-            amrex::AllPrintToFile(simulation_name) << " " << (*diagn).kin[t_step] << " ";
-            switch (vdim) {
-            case 1:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0];
-                break;
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
-                break;
-            }
-            amrex::AllPrintToFile(simulation_name) << std::endl;
-        }
+        if (ctest) diagn->ctest_output(simulation_name, t_step);
     } // end time loop
 
     (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");

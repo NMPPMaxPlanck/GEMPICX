@@ -183,6 +183,42 @@ public:
         }
         ofsfun.close();
     }
+
+    void ctest_output(std::string simulation_name, int t_step){
+        switch (vdim) {
+        case 1:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0];
+            break;
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1] << " " << Efield[t_step][2];
+            break;
+        }
+        switch (vdim) {
+        case 1: // no break, so that case 1 and 2 are handled the same way
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0] << " " << Bfield[t_step][1] << " " << Bfield[t_step][2];
+            break;
+        }
+        amrex::AllPrintToFile(simulation_name) << " " << kin[t_step] << " ";
+        switch (vdim) {
+        case 1:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0];
+            break;
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
+            break;
+        }
+        amrex::AllPrintToFile(simulation_name) << std::endl;
+    }
 };
 }
 }
