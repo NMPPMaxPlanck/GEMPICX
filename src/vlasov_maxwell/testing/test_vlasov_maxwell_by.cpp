@@ -35,6 +35,7 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     const int degmw = 2;
+    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -111,7 +112,20 @@ void main_main ()
     if (profiling_timers.profiling)
         profiling_timers.counter_all -= MPI_Wtime();
     for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
-        time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+
+        switch (strang_order) {
+        case 2:
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+        }
+
 
         // after all substeps:
         if (profiling_timers.profiling)

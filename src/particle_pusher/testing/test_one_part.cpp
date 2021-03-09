@@ -130,7 +130,7 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs, &profiling_timers);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, true, "test_one_part.tmp", &ofs, &profiling_timers);
         break;
     case 1:
         time_loop_hs_fem<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);

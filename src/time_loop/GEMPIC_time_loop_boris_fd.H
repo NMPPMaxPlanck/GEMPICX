@@ -35,6 +35,7 @@ namespace Time_Loop {
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
 void time_loop_boris_fd (infrastructure infra,
                          maxwell_yee<vdim> *mw_yee,
+                         amrex::Real coeff,
                          particle_groups<vdim,numspec> *part_gr,
                          diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                          bool ctest,
@@ -50,7 +51,7 @@ void time_loop_boris_fd (infrastructure infra,
           //--------------------------------------------------------------------------
           // update B
           mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-          mw_yee->advance_B(infra, mw_yee->dt, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+          mw_yee->advance_B(infra, mw_yee->dt*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
         }
         if (profiling_timers->profiling)
           profiling_timers->counter_fields += MPI_Wtime();
@@ -104,7 +105,7 @@ void time_loop_boris_fd (infrastructure infra,
                         bres[comp] = field_interp[vdim+comp];
                     }
 
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
+                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*coeff, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
@@ -178,12 +179,12 @@ void time_loop_boris_fd (infrastructure infra,
         if (electromagnetic){
           // advance E
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*coeff, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
           }
         else
           {
             // advance E from j
-            mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*coeff, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
           }
         if (profiling_timers->profiling)
           profiling_timers->counter_fields += MPI_Wtime();
