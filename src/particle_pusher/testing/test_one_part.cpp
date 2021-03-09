@@ -25,6 +25,7 @@ using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
 using namespace Sampling;
+using namespace Profiling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
@@ -119,6 +120,8 @@ void main_main (bool ctest)
         }
     }
 
+    timers profiling_timers(true);
+
     //------------------------------------------------------------------------------
     // solve:
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
@@ -127,7 +130,7 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
+        time_loop_boris_fd<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs, &profiling_timers);
         break;
     case 1:
         time_loop_hs_fem<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);

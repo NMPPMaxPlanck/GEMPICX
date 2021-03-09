@@ -28,6 +28,7 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
@@ -104,12 +105,14 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // timeloop
 
+    timers profiling_timers(true);
+
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 auto start = high_resolution_clock::now();
 switch (VlMa.propagator) {
     case 0:
-      time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+      time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
         break;
     case 1:
       time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
@@ -118,7 +121,7 @@ switch (VlMa.propagator) {
       time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;      
     case 3:
-      time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm>(infra,&mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+      time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm>(infra,&mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
         break;
     case 100:
       time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
