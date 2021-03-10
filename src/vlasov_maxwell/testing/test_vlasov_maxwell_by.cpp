@@ -115,7 +115,7 @@ void main_main ()
 
         switch (strang_order) {
         case 2:
-            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
             break;
         case 4:
             amrex::Real alpha = 1./(2.-pow(2.,1./3.));
