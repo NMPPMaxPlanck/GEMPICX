@@ -124,25 +124,13 @@ void main_main ()
             time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
             time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
             time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs, &profiling_timers);
+            break;
         }
 
+        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_vlasov_maxwell_by.tmp", ctest);
 
-        // after all substeps:
-        if (profiling_timers.profiling)
-          profiling_timers.counter_diagnostics -= MPI_Wtime();
-        // save norms for diagnostics
-        diagn.save_step_data(t_step+1, infra, &mw_yee, &part_gr); // false: slices are not saved
-
-        // save temporary results every n steps
-        if ((t_step+1)%5 == 0) {
-            diagn.save_all_to_textfile(mw_yee.dt, "test_vlasov_maxwell_by.tmp", t_step+1);
-        }
-        if (profiling_timers.profiling)
-          profiling_timers.counter_diagnostics += MPI_Wtime();
-        amrex::Print() << "finished step " << t_step+1 << std::endl;
-
-        if (ctest) diagn.ctest_output("test_vlasov_maxwell_by.tmp", t_step);
     }
+
     if (profiling_timers.profiling){
       profiling_timers.counter_all += MPI_Wtime();
       amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition << ", redistribute time: " << profiling_timers.counter_redistribute

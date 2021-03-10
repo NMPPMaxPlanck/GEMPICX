@@ -15,12 +15,14 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_particle_positions.H>
 
 using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
 using namespace Utils;
+using namespace Profiling;
 
 #ifndef DIAGNOSTICS_H_
 #define DIAGNOSTICS_H_
@@ -64,6 +66,24 @@ public:
         freq_v = fv;
         freq_slice = fs;
         sim_name = sim_n;
+    }
+
+    void end_of_timestep(timers *profiling_timers, int t_step, infrastructure infra, maxwell_yee<vdim> *mw_yee,
+                         particle_groups<vdim, numspec> *part_gr, std::string filename, bool ctest){
+        if (profiling_timers->profiling)
+          profiling_timers->counter_diagnostics -= MPI_Wtime();
+        // save norms for diagnostics
+        save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
+
+        // save temporary results every n steps
+        if ((t_step+1)%5 == 0) {
+            save_all_to_textfile(mw_yee->dt, filename, t_step+1);
+        }
+        if (profiling_timers->profiling)
+          profiling_timers->counter_diagnostics += MPI_Wtime();
+        amrex::Print() << "finished step " << t_step+1 << std::endl;
+
+        if (ctest) ctest_output(filename, t_step);
     }
 
     // save position and velocities
