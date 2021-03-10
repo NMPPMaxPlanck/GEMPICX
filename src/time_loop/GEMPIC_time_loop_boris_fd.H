@@ -43,7 +43,7 @@ void time_loop_boris_fd (infrastructure infra,
                          std::ofstream *ofs,
                          timers *profiling_timers) {
 
-        (*mw_yee).advance_time();
+        (*mw_yee).advance_time(coeff);
 
         if (profiling_timers->profiling)
           profiling_timers->counter_fields -= MPI_Wtime();

@@ -25,6 +25,7 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
@@ -33,6 +34,7 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     const int degmw = 2;
+    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -100,10 +102,40 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_vlasov_maxwell_by_lower.tmp") << std::endl;
-time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower.tmp", &ofs);
+    timers profiling_timers(true);
 
+    std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
+    AllPrintToFile("test_vlasov_maxwell_by_lower.tmp") << std::endl;
+
+    if (profiling_timers.profiling)
+        profiling_timers.counter_all -= MPI_Wtime();
+    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower.tmp", &ofs, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower.tmp", &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower.tmp", &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower.tmp", &ofs, &profiling_timers);
+            break;
+        }
+
+        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_vlasov_maxwell_by.tmp", ctest);
+
+    }
+
+    if (profiling_timers.profiling){
+      profiling_timers.counter_all += MPI_Wtime();
+      amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition << ", redistribute time: " << profiling_timers.counter_redistribute
+                     << ", field solver time: " << profiling_timers.counter_fields << ", sum boundary j time: " << profiling_timers.counter_jboundary
+                     << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
+      }
+    diagn.save_all_to_textfile(mw_yee.dt, "test_vlasov_maxwell_by_lower.tmp");
 }
 
 int main(int argc, char* argv[])

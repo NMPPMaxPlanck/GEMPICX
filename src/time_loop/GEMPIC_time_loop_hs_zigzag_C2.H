@@ -44,6 +44,7 @@ namespace Time_Loop {
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
 void time_loop_hs_zigzag_C2 (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
+                       amrex::Real coeff,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
                        bool ctest,
@@ -64,20 +65,19 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
     spline1d_at_particles<degz> spline_old_z;
 
 
-    for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
-        (*mw_yee).advance_time();
+        (*mw_yee).advance_time(coeff);
 
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields -= MPI_Wtime();
         // Operator H_B for dt/2
         if ( electromagnetic ) {
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
           }
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields += MPI_Wtime();
@@ -131,7 +131,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
-                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
+                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
                     amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
@@ -142,7 +142,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                       vel[d] = particles[pp].rdata(d);
                     std::array<amrex::Real, 2> bfields;
                     // push x1
-                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*vel[0];
+                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*coeff*vel[0];
                     spline_new_x.init_position( x1_new, infra.plo[0], infra.dxi[0] );
                     spline_old_x.init_position( pos[0], infra.plo[0], infra.dxi[0] );
                     spline.template init_position<0,degx>( x1_new, infra.plo[0], infra.dxi[0] );
@@ -168,7 +168,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                       {
 #if GEMPIC_SPACEDIM > 1
                         // push x2
-                      amrex::Real x2_new = pos[1] +  (*mw_yee).dt*vel[1];
+                      amrex::Real x2_new = pos[1] +  (*mw_yee).dt*coeff*vel[1];
 
                       spline_new_y.init_position( x2_new, infra.plo[1], infra.dxi[1] );
                       spline_old_y.init_position( pos[1], infra.plo[1], infra.dxi[1] );
@@ -190,16 +190,16 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                       pos[1] = x2_new;
 #else
                       std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
-                      gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[1]*(*mw_yee).dt,
+                      gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[1]*(*mw_yee).dt*coeff,
                                                jA[1]);
                       // Push v2 and v3
-                      vel[0] = vel[0] + chargemass*bfields[0]*vel[1]*(*mw_yee).dt;
+                      vel[0] = vel[0] + chargemass*bfields[0]*vel[1]*(*mw_yee).dt*coeff;
   #endif
 }
                     if(vdim > 2 ) {
 #if GEMPIC_SPACEDIM == 3
                     // push x3
-                    amrex::Real x3_new = pos[2] +  (*mw_yee).dt*vel[2];
+                    amrex::Real x3_new = pos[2] +  (*mw_yee).dt*coeff*vel[2];
 
                     spline_new_z.init_position( x3_new, infra.plo[2], infra.dxi[2] );
                     spline_old_z.init_position( pos[2], infra.plo[2], infra.dxi[2] );
@@ -219,11 +219,11 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     pos[2] = x3_new;
 #else
                     std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_bfield<vdim,degx,degy,degz>(spline,  bA);
-                    gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[2]*(*mw_yee).dt,
+                    gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[2]*(*mw_yee).dt*coeff,
                                              jA[2]);
                     // Push v2 and v3
-                    vel[0] = vel[0] - chargemass*bfields[1]*vel[2]*(*mw_yee).dt;
-                    vel[1] = vel[1] + chargemass*bfields[0]*vel[2]*(*mw_yee).dt;
+                    vel[0] = vel[0] - chargemass*bfields[1]*vel[2]*(*mw_yee).dt*coeff;
+                    vel[1] = vel[1] + chargemass*bfields[0]*vel[2]*(*mw_yee).dt*coeff;
 #endif
 
 
@@ -253,7 +253,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_jboundary += MPI_Wtime();
         /*amrex::Vector<std::string> varnames = { "J_x"};
-        amrex::Real timeo = t_step*(*mw_yee).dt;
+        amrex::Real timeo = t_step*(*mw_yee).dt*coeff;
         WriteSingleLevelPlotfile("current_C2", *(*mw_yee).J_Array[0], varnames,
         infra.geom, timeo, 0);
         //abort();*/
@@ -296,7 +296,7 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                     std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
-                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
+                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
                   }
             }
@@ -315,46 +315,15 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
           profiling_timers->counter_fields -= MPI_Wtime();
         if ( electromagnetic ) {
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
 
           // Operator H_B for dt/2
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
         }
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields += MPI_Wtime();
 
-        if (profiling_timers->profiling && profiling_count)
-          profiling_timers->counter_diagnostics -= MPI_Wtime();
-        // save norms for diagnostics
-        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
-
-        // save temporary results every n steps
-        if ((t_step+1)%1 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
-        }
-        if (profiling_timers->profiling && profiling_count)
-          profiling_timers->counter_diagnostics += MPI_Wtime();
-        if (profiling_timers->profiling)
-          {
-            if (profiling_count == false)
-              {
-                profiling_count = true;
-                profiling_timers->counter_all -= MPI_Wtime();
-              }
-          }
-        amrex::Print() << "finished step " << t_step+1 << std::endl;
-
-        if (ctest) diagn->ctest_output(simulation_name, t_step);
-    } // end time loop
-
-    if (profiling_timers->profiling){
-      profiling_timers->counter_all += MPI_Wtime();
-      amrex::Print() << "Deposition time: " << profiling_timers->counter_deposition << ", redistribute time: " << profiling_timers->counter_redistribute
-                     << ", field solver time: " << profiling_timers->counter_fields << ", sum boundary j time: " << profiling_timers->counter_jboundary
-                     << ", diagnostics time: " << profiling_timers->counter_diagnostics << ", total time: " << profiling_timers->counter_all << std::endl;
-      }
-    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
 }
