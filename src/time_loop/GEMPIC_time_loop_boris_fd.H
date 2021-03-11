@@ -15,6 +15,7 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_SumBoundary.H>
@@ -23,6 +24,7 @@ using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
+using namespace Profiling;
 
 #ifndef TIME_LOOP_BORIS_FD_H_
 #define TIME_LOOP_BORIS_FD_H_
@@ -33,53 +35,42 @@ namespace Time_Loop {
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
 void time_loop_boris_fd (infrastructure infra,
                          maxwell_yee<vdim> *mw_yee,
+                         amrex::Real coeff,
                          particle_groups<vdim,numspec> *part_gr,
                          diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                          bool ctest,
                          std::string simulation_name,
-                         std::ofstream *ofs) {
+                         std::ofstream *ofs,
+                         timers *profiling_timers) {
 
-    // Initialize the counters for timing the various parts of the algorithm
-    amrex::Real counter_deposition = 0.;
-    amrex::Real counter_redistribute = 0.;
-    amrex::Real counter_jboundary = 0.;
-    amrex::Real counter_fields = 0.;
-    amrex::Real counter_diagnostics = 0.;
-    amrex::Real counter_all = 0.;
+        (*mw_yee).advance_time(coeff);
 
-    if (profiling)
-      counter_all -= MPI_Wtime();
-    for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
-
-
-        (*mw_yee).advance_time();
-
-        if (profiling)
-          counter_fields -= MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_fields -= MPI_Wtime();
         if ( electromagnetic ){
           //--------------------------------------------------------------------------
           // update B
           mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-          mw_yee->advance_B(infra, mw_yee->dt, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+          mw_yee->advance_B(infra, mw_yee->dt*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
         }
-        if (profiling)
-          counter_fields += MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_fields += MPI_Wtime();
 
         //--------------------------------------------------------------------------
         //deposit charge in J and push particles
 
-        if (profiling)
-          counter_jboundary -= MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_jboundary -= MPI_Wtime();
         // set J to 0 before we start depositing values from current particles
         for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
-        if (profiling)
-          counter_jboundary += MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_jboundary += MPI_Wtime();
         for (int spec=0;spec<numspec;spec++) {            
-            if (profiling)
-              counter_deposition -= MPI_Wtime();
+            if (profiling_timers->profiling)
+              profiling_timers->counter_deposition -= MPI_Wtime();
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -114,17 +105,17 @@ void time_loop_boris_fd (infrastructure infra,
                         bres[comp] = field_interp[vdim+comp];
                     }
 
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt, chargemass, eres, bres, infra);
+                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*coeff, chargemass, eres, bres, infra);
                     std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
-            if (profiling)
-             counter_deposition += MPI_Wtime();
-            if (profiling)
-              counter_redistribute -= MPI_Wtime();
+            if (profiling_timers->profiling)
+             profiling_timers->counter_deposition += MPI_Wtime();
+            if (profiling_timers->profiling)
+              profiling_timers->counter_redistribute -= MPI_Wtime();
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-            if (profiling)
-              counter_redistribute += MPI_Wtime();
+            if (profiling_timers->profiling)
+              profiling_timers->counter_redistribute += MPI_Wtime();
         }
 
         /*// Here we check the load imbalance
@@ -148,8 +139,8 @@ void time_loop_boris_fd (infrastructure infra,
         //update fields
         // deposit remaining charge in J one particle at a time
 
-        if (profiling)
-          counter_deposition -= MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_deposition -= MPI_Wtime();
         for (int spec=0;spec<numspec;spec++) {
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
@@ -169,92 +160,37 @@ void time_loop_boris_fd (infrastructure infra,
                 }
             }
         }
-        if (profiling){
-          counter_deposition += MPI_Wtime();
+        if (profiling_timers->profiling){
+          profiling_timers->counter_deposition += MPI_Wtime();
 
-          counter_jboundary -= MPI_Wtime();
+          profiling_timers->counter_jboundary -= MPI_Wtime();
           }
         Gempic_SumBoundary(mw_yee, &infra); // Sums Boundary of J and Overwrites overlap
 
         for (int i=0; i<vdim; i++) {
             (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
         }
-        if (profiling)
-          counter_jboundary += MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_jboundary += MPI_Wtime();
 
 
-        if (profiling)
-          counter_fields -= MPI_Wtime();
+        if (profiling_timers->profiling)
+          profiling_timers->counter_fields -= MPI_Wtime();
         if (electromagnetic){
           // advance E
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*coeff, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
           }
         else
           {
             // advance E from j
-            mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*coeff, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
           }
-        if (profiling)
-          counter_fields += MPI_Wtime();
-
-        if (profiling)
-          counter_diagnostics -= MPI_Wtime();
-        // save norms for diagnostics
-        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
-
-        // save temporary results every n steps
-        if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
-        }
-        if (profiling)
-          counter_diagnostics += MPI_Wtime();
-        amrex::Print() << "finished step " << t_step+1 << std::endl;
-
-        if (ctest) {
-            switch (vdim) {
-            case 1:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0];
-                break;
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
-                break;
-            }
-            switch (vdim) {
-            case 1: // no break, so that case 1 and 2 are handled the same way
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
-                break;
-            }
-            amrex::AllPrintToFile(simulation_name) << " " << (*diagn).kin[t_step] << " ";
-            switch (vdim) {
-            case 1:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0];
-                break;
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
-                break;
-            }
-            amrex::AllPrintToFile(simulation_name) << std::endl;
-        }
+        if (profiling_timers->profiling)
+          profiling_timers->counter_fields += MPI_Wtime();
 
 
-    } // end time loop
-    if (profiling){
-      counter_all += MPI_Wtime();
-      amrex::Print() << "Deposition time: " << counter_deposition << ", redistribute time: " << counter_redistribute << ", field solver time: " << counter_fields
-                   << ", sum boundary j time: " << counter_jboundary << ", diagnostics time: " << counter_diagnostics << ", total time: " << counter_all << std::endl;
-      }
-    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
+
 }
 }
 }

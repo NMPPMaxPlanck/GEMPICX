@@ -28,11 +28,12 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degvm, bool electromagnetic=true>
+template<int vdim, int numspec, int degx, int degy, int degz, int degvm, int strang_order, bool electromagnetic=true>
 void main_main (bool ctest)
 {
     bool readinfile = false;
@@ -104,21 +105,103 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // timeloop
 
+    timers profiling_timers(true);
+
 
 std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 auto start = high_resolution_clock::now();
 switch (VlMa.propagator) {
     case 0:
-      time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        }
+
+        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, VlMa.sim_name, ctest);
+
+    }
+
+    diagn.save_all_to_textfile(mw_yee.dt, VlMa.sim_name);
         break;
     case 1:
-      time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        }
+
+        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, VlMa.sim_name, ctest);
+
+    }
+
+    diagn.save_all_to_textfile(mw_yee.dt, VlMa.sim_name);
         break;
     case 2:
-      time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        }
+
+        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, VlMa.sim_name, ctest);
+
+    }
+
+    diagn.save_all_to_textfile(mw_yee.dt, VlMa.sim_name);
         break;      
     case 3:
-      time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm>(infra,&mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs, &profiling_timers);
+            break;
+        }
+
+        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, VlMa.sim_name, ctest);
+
+    }
+
+    diagn.save_all_to_textfile(mw_yee.dt, VlMa.sim_name);
         break;
     case 100:
       time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
@@ -144,11 +227,11 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<2, GEMPIC_NUMSPEC, 1, 1, 1, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<2, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #endif
 
     amrex::Finalize();

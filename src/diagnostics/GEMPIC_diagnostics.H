@@ -15,12 +15,14 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_particle_positions.H>
 
 using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
 using namespace Utils;
+using namespace Profiling;
 
 #ifndef DIAGNOSTICS_H_
 #define DIAGNOSTICS_H_
@@ -64,6 +66,24 @@ public:
         freq_v = fv;
         freq_slice = fs;
         sim_name = sim_n;
+    }
+
+    void end_of_timestep(timers *profiling_timers, int t_step, infrastructure infra, maxwell_yee<vdim> *mw_yee,
+                         particle_groups<vdim, numspec> *part_gr, std::string filename, bool ctest){
+        if (profiling_timers->profiling)
+          profiling_timers->counter_diagnostics -= MPI_Wtime();
+        // save norms for diagnostics
+        save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
+
+        // save temporary results every n steps
+        if ((t_step+1)%5 == 0) {
+            save_all_to_textfile(mw_yee->dt, filename, t_step+1);
+        }
+        if (profiling_timers->profiling)
+          profiling_timers->counter_diagnostics += MPI_Wtime();
+        amrex::Print() << "finished step " << t_step+1 << std::endl;
+
+        if (ctest) ctest_output(filename, t_step);
     }
 
     // save position and velocities
@@ -182,6 +202,42 @@ public:
                                     << std::endl;
         }
         ofsfun.close();
+    }
+
+    void ctest_output(std::string simulation_name, int t_step){
+        switch (vdim) {
+        case 1:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0];
+            break;
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1] << " " << Efield[t_step][2];
+            break;
+        }
+        switch (vdim) {
+        case 1: // no break, so that case 1 and 2 are handled the same way
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0] << " " << Bfield[t_step][1] << " " << Bfield[t_step][2];
+            break;
+        }
+        amrex::AllPrintToFile(simulation_name) << " " << kin[t_step] << " ";
+        switch (vdim) {
+        case 1:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0];
+            break;
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
+            break;
+        }
+        amrex::AllPrintToFile(simulation_name) << std::endl;
     }
 };
 }

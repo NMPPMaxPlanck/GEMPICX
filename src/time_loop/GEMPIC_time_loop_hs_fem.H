@@ -14,6 +14,7 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_SumBoundary.H>
@@ -22,6 +23,7 @@ using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
+using namespace Profiling;
 
 #ifndef TIME_LOOP_HS_FEM_
 #define TIME_LOOP_HS_FEM_
@@ -37,24 +39,25 @@ namespace Time_Loop {
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
 void time_loop_hs_fem (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
+                       amrex::Real coeff,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                        bool ctest,
                        std::string simulation_name,
-                       std::ofstream *ofs) {
+                       std::ofstream *ofs,
+                       timers *profiling_timers) {
 
-    for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) {
-        (*mw_yee).advance_time();
+        (*mw_yee).advance_time(coeff);
 
         if (electromagnetic){
           // Operator H_B for dt/2
           mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-          mw_yee->advance_E(infra, mw_yee->dt*0.5, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+          mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
 
           //--------------------------------------------------------------------------
           // Operator H_E for dt/2 (field part)
           mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-          mw_yee->advance_B(infra, mw_yee->dt*0.5, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+          mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
         }
 
         //--------------------------------------------------------------------------
@@ -94,11 +97,11 @@ void time_loop_hs_fem (infrastructure infra,
                     std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degz,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
-                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
+                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
                     // push x and v with the magnetic field
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*mw_yee).dt, chargemass, bA, infra);
+                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*mw_yee).dt*coeff, chargemass, bA, infra);
                     std::array<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                     {
@@ -146,7 +149,7 @@ void time_loop_hs_fem (infrastructure infra,
         abort();*/
 
         // advance E from j (field part of H_p)
-        mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+        mw_yee->advance_E(infra, mw_yee->dt*coeff, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
 
 
         // Second particle loop for particle part from H_E
@@ -171,7 +174,7 @@ void time_loop_hs_fem (infrastructure infra,
                     std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
-                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5, chargemass, efield, infra);
+                    std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
                     std::copy(begin(newPosE),end(newPosE),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
                 }
             }
@@ -182,61 +185,13 @@ void time_loop_hs_fem (infrastructure infra,
           //--------------------------------------------------------------------------
           // Operator H_E for dt/2 (field part)
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
 
           // Operator H_B for dt/2
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
         }
 
-        // save norms for diagnostics
-        (*diagn).save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
-
-        // save temporary results every n steps
-        if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
-        }
-
-        amrex::Print() << "finished step " << t_step+1 << std::endl;
-
-        if (ctest) {
-            switch (vdim) {
-            case 1:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0];
-                break;
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << t_step << " " << (*diagn).Efield[t_step][0] << " " << (*diagn).Efield[t_step][1] << " " << (*diagn).Efield[t_step][2];
-                break;
-            }
-            switch (vdim) {
-            case 1: // no break, so that case 1 and 2 are handled the same way
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << " " << (*diagn).Bfield[t_step][0] << " " << (*diagn).Bfield[t_step][1] << " " << (*diagn).Bfield[t_step][2];
-                break;
-            }
-            amrex::AllPrintToFile(simulation_name) << " " << (*diagn).kin[t_step] << " ";
-            switch (vdim) {
-            case 1:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0];
-                break;
-            case 2:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1];
-                break;
-            case 3:
-                amrex::AllPrintToFile(simulation_name) << (*diagn).mom[t_step][0] << " " << (*diagn).mom[t_step][1] << " " << (*diagn).mom[t_step][2];
-                break;
-            }
-            amrex::AllPrintToFile(simulation_name) << std::endl;
-        }
-    } // end time loop
-
-    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
 }
 }
 }

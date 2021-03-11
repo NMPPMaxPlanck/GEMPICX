@@ -472,8 +472,8 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance time
      */
-    void advance_time () {
-        time = time+dt;
+    void advance_time (amrex::Real coeff = 1.0) {
+        time = time+dt*coeff;
     }
 
     /**
