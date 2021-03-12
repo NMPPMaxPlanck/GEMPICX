@@ -237,6 +237,7 @@ public:
             amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
             break;
         }
+        amrex::AllPrintToFile(simulation_name) << " " << gauss_error[t_step];
         amrex::AllPrintToFile(simulation_name) << std::endl;
     }
 };
