@@ -251,6 +251,51 @@ public:
         amrex::AllPrintToFile(simulation_name) << " " << gauss_error[t_step];
         amrex::AllPrintToFile(simulation_name) << std::endl;
     }
+
+#if (GEMPIC_SPACEDIM==3)
+    void cross_product (std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
+                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
+                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
+                        infrastructure infra) {
+
+        amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab EzBy(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab EzBx(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab ExBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab ExBy(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab EyBx(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+
+        std::cout << "before copy" << std::endl;
+        // "E"
+        EyBz.Copy(EyBz, *((*MultiInputE)[1]), 0, 0, 1, 0);
+        EzBy.Copy(EzBy, *((*MultiInputE)[2]), 0, 0, 1, 0);
+        EzBx.Copy(EzBx, *((*MultiInputE)[2]), 0, 0, 1, 0);
+        ExBz.Copy(ExBz, *((*MultiInputE)[0]), 0, 0, 1, 0);
+        ExBy.Copy(ExBy, *((*MultiInputE)[0]), 0, 0, 1, 0);
+        EyBx.Copy(EyBx, *((*MultiInputE)[1]), 0, 0, 1, 0);
+
+        std::cout << "before multiply" << std::endl;
+        // "EB"
+        EyBz.Multiply(EyBz, *((*MultiInputB)[2]), 0, 0, 1, 0);
+        EzBy.Multiply(EzBy, *((*MultiInputB)[1]), 0, 0, 1, 0);
+        EzBx.Multiply(EzBx, *((*MultiInputB)[0]), 0, 0, 1, 0);
+        ExBz.Multiply(ExBz, *((*MultiInputB)[2]), 0, 0, 1, 0);
+        ExBy.Multiply(ExBy, *((*MultiInputB)[1]), 0, 0, 1, 0);
+        EyBx.Multiply(EyBx, *((*MultiInputB)[0]), 0, 0, 1, 0);
+
+        std::cout << "before minus" << std::endl;
+        // "EB - EB"
+        EyBz.minus(EzBy, 0, 1, 0);
+        EzBx.minus(ExBz, 0, 1, 0);
+        ExBy.minus(EyBx, 0, 1, 0);
+
+        std::cout << "before final copy" << std::endl;
+        // Copy into out MF
+        (*((*MultiOutput)[0])).Copy(*((*MultiOutput)[0]), EyBz, 0, 0, 1, 0);
+        (*((*MultiOutput)[1])).Copy(*((*MultiOutput)[1]), EzBx, 0, 0, 1, 0);
+        (*((*MultiOutput)[2])).Copy(*((*MultiOutput)[2]), ExBy, 0, 0, 1, 0);
+    }
+#endif
 };
 }
 }
