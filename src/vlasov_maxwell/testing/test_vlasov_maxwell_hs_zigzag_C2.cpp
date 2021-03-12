@@ -140,6 +140,8 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_zigzag_C2.tmp.0");
+
     // Output for GEMPIC_SPACEDIM=3
     main_main<3, 1, 1, 2, 3>();
     main_main<3, 1, 4, 3, 2>();

@@ -131,6 +131,7 @@ void main_main ()
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_all.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
 
