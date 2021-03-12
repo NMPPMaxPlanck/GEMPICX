@@ -109,6 +109,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     (*mw_yee).template initB<degmw>(fields_B, VM.k, infra);
 
     if (time_staggered) {
+        std::cout << "ATTENTION: method is time staggered" << std::endl;
         //------------------------------------------------------------------------------
         //approximate e^1/2
         mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
