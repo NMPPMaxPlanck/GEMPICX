@@ -172,44 +172,44 @@ public:
             partial = n_time;
         }
         std::ofstream ofsfun(filename, std::ofstream::out);
-        amrex::Print(ofsfun) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
+        amrex::Print(ofsfun).SetPrecision(20) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
         for (int step=0;step<=partial;step++){
-            amrex::Print(ofsfun) << dt*(step) << " ";
+            amrex::Print(ofsfun).SetPrecision(20) << dt*(step) << " ";
             switch(vdim) {
             case 1:
-                amrex::Print(ofsfun) << Efield[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0];
                 break;
             case 2:
-                amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0] << " " << Efield[step][1];
                 break;
             case 3:
-                amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
                 break;
 
             }
 
             switch (int(vdim/2.5)*2+1) {
             case 1:
-                amrex::Print(ofsfun) << " " << Bfield[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield[step][0];
                 break;
             case 3:
-                amrex::Print(ofsfun) << " " << Bfield[step][0] << " " << Bfield[step][1] << " " << Bfield[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield[step][0] << " " << Bfield[step][1] << " " << Bfield[step][2];
                 break;
             }
-            amrex::Print(ofsfun) << " " << kin[step];
+            amrex::Print(ofsfun).SetPrecision(20) << " " << kin[step];
             switch(vdim) {
             case 1:
-                amrex::Print(ofsfun) << " "  << mom[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << " "  << mom[step][0];
                 break;
             case 2:
-                amrex::Print(ofsfun) << " "  << mom[step][0] << " " << mom[step][1];
+                amrex::Print(ofsfun).SetPrecision(20) << " "  << mom[step][0] << " " << mom[step][1];
                 break;
             case 3:
-                amrex::Print(ofsfun) << " "  << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << " "  << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
                 break;
 
             }
-            amrex::Print(ofsfun) << " " << gauss_error[step]
+            amrex::Print(ofsfun).SetPrecision(20) << " " << gauss_error[step]
                                     << std::endl;
         }
         ofsfun.close();
