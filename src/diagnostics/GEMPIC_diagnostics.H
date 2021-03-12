@@ -39,11 +39,10 @@ class diagnostics
 {
 public:
     int n_time; // number of timesteps
-    // 9 static so far!! need to fix this
-    std::array<std::array<amrex::Real,int(vdim/2.5)*2+1>,50001> Bfield;
-    std::array<std::array<amrex::Real,vdim>,50001> Efield, mom;
-    std::array<amrex::Real,50001> kin;
-    std::array<amrex::Real,50001> gauss_error;
+    std::vector<std::array<amrex::Real,int(vdim/2.5)*2+1>> Bfield;
+    std::vector<std::array<amrex::Real,vdim>> Efield, mom;
+    std::vector<amrex::Real> kin;
+    std::vector<amrex::Real> gauss_error;
     int freq_x;
     int freq_v;
     int freq_slice;
@@ -66,6 +65,12 @@ public:
         freq_v = fv;
         freq_slice = fs;
         sim_name = sim_n;
+
+        Bfield.reserve(n_time);
+        Efield.reserve(n_time);
+        mom.reserve(n_time);
+        kin.reserve(n_time);
+        gauss_error.reserve(n_time);
     }
 
     void end_of_timestep(timers *profiling_timers, int t_step, infrastructure infra, maxwell_yee<vdim> *mw_yee,
@@ -94,6 +99,12 @@ public:
                         infrastructure infra,
                         maxwell_yee<vdim> *mw_yee,
                         particle_groups<vdim, numspec> *part_gr){
+
+        Bfield.push_back({0., 0., 0.});
+        Efield.push_back({0., 0., 0.});
+        mom.push_back({0., 0., 0.});
+        kin.push_back(0.);
+        gauss_error.push_back(0.);
 
         // E and B field
         for(int cc=0;cc<vdim;cc++){
