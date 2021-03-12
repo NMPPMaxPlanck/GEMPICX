@@ -135,19 +135,19 @@ void main_main (bool ctest)
 
             switch (strang_order) {
             case 2:
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
                 break;
             case 4:
                 amrex::Real alpha = 1./(2.-pow(2.,1./3.));
                 amrex::Real beta = 1. - 2.*alpha;
 
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
                 break;
             }
 
-            diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_one_particle.tmp", ctest);
+            diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_one_part.tmp", ctest);
 
         }
         break;
@@ -156,19 +156,21 @@ void main_main (bool ctest)
 
             switch (strang_order) {
             case 2:
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
+                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
                 break;
             case 4:
                 amrex::Real alpha = 1./(2.-pow(2.,1./3.));
                 amrex::Real beta = 1. - 2.*alpha;
 
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_particle.tmp", &ofs, &profiling_timers);
+                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
+                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
+                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
                 break;
             }
 
-            diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_one_particle.tmp", ctest);
+            std::cout << "A" << std::endl;
+            diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_one_part.tmp", ctest);
+            std::cout << "B" << std::endl;
 
         }
         break;
