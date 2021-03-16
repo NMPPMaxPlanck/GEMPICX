@@ -1479,7 +1479,14 @@ if (int(vdim/2.5)*2+1 < 3) {
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
                 for (int pp=0;pp<np;pp++) {
-                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                    splines_at_particles<degx, degy, degz> spline;
+                    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      position[d] = particles[pp].pos(d);
+                    spline.init_particles( position, ifr.plo, ifr.dxi);
+                    gempic_deposit_rho_C3<degx, degy, degz> ( spline,
+                                                  (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
+                                                  rhoarr);
                 }
                 (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
