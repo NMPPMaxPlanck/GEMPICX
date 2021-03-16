@@ -35,16 +35,11 @@ namespace Time_Loop {
     This is the time propagator with a Hamiltonian splitting in a FEM formulation with mass lumping for Lagrange elements of order one and zero
    */
 
-
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
-void time_loop_hs_fem (infrastructure infra,
+void time_loop_hs_fem_step (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        amrex::Real coeff,
                        particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
-                       bool ctest,
-                       std::string simulation_name,
-                       std::ofstream *ofs,
                        timers *profiling_timers) {
 
         (*mw_yee).advance_time(coeff);
@@ -191,6 +186,43 @@ void time_loop_hs_fem (infrastructure infra,
             mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
             mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
         }
+
+}
+
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
+void time_loop_hs_fem (infrastructure infra,
+                       maxwell_yee<vdim> *mw_yee,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
+                       bool ctest,
+                       std::string simulation_name,
+                       int strang_order) {
+
+    timers profiling_timers(false);
+
+    amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
+
+    for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_hs_fem_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic>(infra, mw_yee, 1.0, part_gr, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_hs_fem_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic>(infra, mw_yee, alpha, part_gr, &profiling_timers);
+            time_loop_hs_fem_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic>(infra, mw_yee, beta, part_gr, &profiling_timers);
+            time_loop_hs_fem_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic>(infra, mw_yee, alpha, part_gr, &profiling_timers);
+            break;
+        }
+
+        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
+
+    }
+
+    diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
 
 }
 }

@@ -42,14 +42,10 @@ namespace Time_Loop {
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
-void time_loop_hs_zigzag_C2 (infrastructure infra,
+void time_loop_hs_zigzag_C2_step (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        amrex::Real coeff,
                        particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
-                       bool ctest,
-                       std::string simulation_name,
-                       std::ofstream *ofs,
                        timers *profiling_timers) {
 
 
@@ -325,6 +321,53 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
           profiling_timers->counter_fields += MPI_Wtime();
 
 }
+
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
+void time_loop_hs_zigzag_C2 (infrastructure infra,
+                       maxwell_yee<vdim> *mw_yee,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
+                       bool ctest,
+                       std::string simulation_name,
+                       int strang_order) {
+
+    timers profiling_timers(true);
+
+    amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
+
+    if (profiling_timers.profiling)
+        profiling_timers.counter_all -= MPI_Wtime();
+    for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
+
+        switch (strang_order) {
+        case 2:
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, 1.0, part_gr, &profiling_timers);
+            break;
+        case 4:
+            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
+            amrex::Real beta = 1. - 2.*alpha;
+
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, alpha, part_gr, &profiling_timers);
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, beta, part_gr, &profiling_timers);
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, alpha, part_gr, &profiling_timers);
+            break;
+        }
+
+        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
+
+    }
+
+    if (profiling_timers.profiling){
+      profiling_timers.counter_all += MPI_Wtime();
+      amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition << ", redistribute time: " << profiling_timers.counter_redistribute
+                     << ", field solver time: " << profiling_timers.counter_fields << ", sum boundary j time: " << profiling_timers.counter_jboundary
+                     << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
+      }
+    diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
+
+
+}
+
 }
 }
 

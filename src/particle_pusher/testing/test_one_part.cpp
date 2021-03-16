@@ -131,48 +131,10 @@ void main_main (bool ctest)
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
-
-            switch (strang_order) {
-            case 2:
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                break;
-            case 4:
-                amrex::Real alpha = 1./(2.-pow(2.,1./3.));
-                amrex::Real beta = 1. - 2.*alpha;
-
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                break;
-            }
-
-            diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_one_part.tmp", ctest);
-
-        }
+        time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
         break;
     case 1:
-        for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
-
-            switch (strang_order) {
-            case 2:
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                break;
-            case 4:
-                amrex::Real alpha = 1./(2.-pow(2.,1./3.));
-                amrex::Real beta = 1. - 2.*alpha;
-
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_one_part.tmp", &ofs, &profiling_timers);
-                break;
-            }
-
-            std::cout << "A" << std::endl;
-            diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_one_part.tmp", ctest);
-            std::cout << "B" << std::endl;
-
-        }
+        time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
         break;
     default:
         break;
@@ -237,7 +199,7 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
+    //AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1>(argc==1);
 #endif
 

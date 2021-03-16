@@ -99,33 +99,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-
-    timers profiling_timers(true);
-
-    std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-    AllPrintToFile("test_vlasov_maxwell_hs_all.tmp") << std::endl;
-
-    for (int t_step=0;t_step<mw_yee.nsteps;t_step++) {
-
-        switch (strang_order) {
-        case 2:
-            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, 1.0, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs, &profiling_timers);
-            break;
-        case 4:
-            amrex::Real alpha = 1./(2.-pow(2.,1./3.));
-            amrex::Real beta = 1. - 2.*alpha;
-
-            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs, &profiling_timers);
-            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, beta, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs, &profiling_timers);
-            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, alpha, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs, &profiling_timers);
-            break;
-        }
-
-        diagn.end_of_timestep(&profiling_timers, t_step, infra, &mw_yee, &part_gr, "test_vlasov_maxwell_hs_all.tmp", ctest);
-
-    }
-
-    diagn.save_all_to_textfile(mw_yee.dt, "test_vlasov_maxwell_hs_all.tmp");
+    time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all", strang_order);
 }
 
 int main(int argc, char* argv[])
