@@ -107,12 +107,32 @@ public:
         gauss_error.push_back(0.);
 
         // E and B field
+        mw_yee->template hodge_full<degree>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
         for(int cc=0;cc<vdim;cc++){
-            Efield[step][cc] = gempic_norm(&(*(*mw_yee).E_Array[cc]), infra, 2);
+            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]), 0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
+            val *= infra.dx[0]/infra.Length[0]
+            #if(GEMPIC_SPACEDIM > 1)
+                    *infra.dx[1]/infra.Length[1]
+            #endif
+            #if(GEMPIC_SPACEDIM > 2)
+                    *infra.dx[2]/infra.Length[2]
+            #endif
+                    ;
+            Efield[step][cc] = val;
         }
 
+        mw_yee->template hodge_full<degree>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
         for(int cc=0;cc<int(vdim/2.5)*2+1;cc++){
-            Bfield[step][cc] = gempic_norm(&(*(*mw_yee).B_Array[cc]), infra, 2);
+            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]), 0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
+            val *= infra.dx[0]/infra.Length[0]
+            #if(GEMPIC_SPACEDIM > 1)
+                    *infra.dx[1]/infra.Length[1]
+            #endif
+            #if(GEMPIC_SPACEDIM > 2)
+                    *infra.dx[2]/infra.Length[2]
+            #endif
+                    ;
+            Bfield[step][cc] = val;
         }
 
         // compute kinetic energy norm and momentum
