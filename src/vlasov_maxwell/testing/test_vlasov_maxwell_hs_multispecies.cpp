@@ -15,6 +15,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
+#include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_profiling.H>
@@ -31,10 +32,9 @@ using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 using namespace Profiling;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main ()
 {
-    const int degmw = 2;
     const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
@@ -119,7 +119,15 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-    time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
+    switch (propagator) {
+    case 1:
+        time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
+        break;
+    case 3:
+        time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
+        break;
+    }
+
 }
 
 int main(int argc, char* argv[])
@@ -228,7 +236,8 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs_multispecies.tmp") << "9 0.0412097 3.56089e-05 2.78074e-06 100.187 79.8439 79.5911" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 2, 1, 1, 1>();
+    main_main<3, 2, 1, 2, 1, 4, 1>(); // hs
+    main_main<3, 2, 3, 1, 2, 2, 3>(); // hs_zigzag
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_multispecies.tmp.0", "test_vlasov_maxwell_hs_multispecies.output");

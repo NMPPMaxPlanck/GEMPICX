@@ -29,11 +29,9 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int strang_order>
 void main_main ()
 {
-    const int degmw = 2;
-    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -142,7 +140,8 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1, 2, 2>();
+    main_main<3, 1, 1, 1, 1, 2, 4>();
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_all.tmp.0", "test_vlasov_maxwell_hs_all.output");

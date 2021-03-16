@@ -29,10 +29,9 @@ using namespace Profiling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template< int vdim, int numspec, int degx, int degy, int degz>
+template< int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main (bool ctest)
 {
-    int const degmw = 2;
     int const strang_order = 2;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
@@ -66,7 +65,6 @@ void main_main (bool ctest)
     }
     std::string phi = "4 * 0.5 * cos(0.5 * x)";
     std::string rho = "0.0";
-    int propagator = 1;
     bool time_staggered = false;
     amrex::Real tolerance_particles = 1.e-10;
 
@@ -126,7 +124,7 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // solve:
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation<vdim,numspec,degx,degy,degy,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
+    loop_preparation<vdim,numspec,degx,degy,degz,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
@@ -200,7 +198,8 @@ int main(int argc, char* argv[])
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
     //AllPrintToFile("test_one_part.tmp") << std::endl;
-    main_main<3, 1, 1, 1, 1>(argc==1);
+    main_main<3, 1, 1, 1, 1, 2, 0>(argc==1);
+    main_main<3, 1, 3, 2, 1, 4, 1>(argc==1);
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.tmp.0", "test_one_part.output");
