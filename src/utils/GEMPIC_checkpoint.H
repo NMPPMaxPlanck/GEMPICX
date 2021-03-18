@@ -239,37 +239,7 @@ Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, nums
     Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 7, step);
     Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 8, step);
 
-    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("Ex_before_2") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-    }
-
     (*mw_yee).FillBD(*infra);
-
-    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("Ex_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-    }
-
-    for ( amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-        const amrex::Box& bx = mfi.validbox();
-        amrex::IntVect lo = {bx.smallEnd()};
-        amrex::IntVect hi = {bx.bigEnd()};
-        int k=lo[2];
-        int j=lo[1];
-        int l=lo[0]-1;
-        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, (*(*mw_yee).E_Index[0]));
-        (*(*mw_yee).E_Array[0])[mfi].setVal(2.0, cc, 0, 1);
-
-    }
-
-    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("Ex_ghost_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-    }
-
-    (*(*mw_yee).E_Array[0]).FillBoundary(infra->geom.periodicity());
-
-    for (amrex::MFIter mfi((*(*mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("Ex_ghost_after_1") << (*(*mw_yee).E_Array[0])[mfi] << std::endl;
-    }
 
     // Particles
     if (particles) {
