@@ -313,6 +313,88 @@ if (int(vdim/2.5)*2+1 < 3) {
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
+    /*
+     * template<int degree>
+    void projection (std::string function_string,
+                     std::array<amrex::Real, 3> k,
+                     amrex::Real t,
+                     infrastructure ifr,
+                     std::array<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::IndexType IndexVect,
+                     amrex::MultiFab *MultiF
+                     ) {
+        double t_eval = t;
+        double kx = k[0];
+        double ky = k[1];
+        double kz = k[2];
+        int varcount = 7;
+
+        std::vector<amrex::Real> stencil;
+        switch (degree) {
+        case 2:
+            stencil = {1.0};
+            break;
+        case 4:
+            stencil = {1.0/6.0, 4.0/6.0, 1.0/6.0};
+            break;
+        case 6:
+            stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
+            break;
+        default: amrex::Print() << "degree not implemented" << std::endl;
+
+        }
+
+
+        int x_len[GEMPIC_SPACEDIM];
+        for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
+
+        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
+
+            const amrex::Box& bx = mfi.tilebox();
+
+            amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
+            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            {
+                double x_eval, y_eval, z_eval;
+                int err;
+                te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
+                te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
+
+                std::array<amrex::Real, degree-1> x;
+                amrex::Real x_midpoint;
+                std::array<amrex::Real, degree-1> y;
+                amrex::Real y_midpoint;
+                std::array<amrex::Real, degree-1> z;
+                amrex::Real z_midpoint;
+
+                z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
+                for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
+
+                y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
+                for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
+
+                x_midpoint = ifr.geom.ProbLo()[0] + ((double)i+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
+                for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
+
+                amrex::Real val = 0.0;
+                for (int zd = 0; zd<x_len[2];zd++)
+                    {
+                    for (int yd =0; yd<x_len[1]; yd++)
+                        {
+                        for (int xd =0; xd<x_len[0]; xd++) {
+                            x_eval = x[xd];
+                            y_eval = y[yd];
+                            z_eval = z[zd];
+                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(te_eval(function_parse));
+                        }
+                    }
+                }
+                proj_arr(i,j,k) = val;
+            });
+        }
+        (*MultiF).FillBoundary(ifr.geom.periodicity());
+    }
+    */
 
     /**
      * Initialize E and B field for time t=0 with a given array of functions.

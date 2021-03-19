@@ -137,6 +137,14 @@ void main_main ()
     }
 
     mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    //for (amrex::MFIter mfi((*(mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+    //        amrex::AllPrintToFile("Ex_old") << (*(mw_yee).E_Array[0])[mfi] << std::endl;
+    //    }
+
+    //for (amrex::MFIter mfi((*(mw_yee).B_Array[0])); mfi.isValid(); ++mfi ) {
+    //        amrex::AllPrintToFile("Bx_old") << (*(mw_yee).B_Array[0])[mfi] << std::endl;
+    //    }
+
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
