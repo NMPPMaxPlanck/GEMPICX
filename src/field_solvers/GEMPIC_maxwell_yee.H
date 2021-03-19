@@ -585,75 +585,55 @@ if (int(vdim/2.5)*2+1 < 3) {
     void hodge (infrastructure ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                 amrex::IndexType IndexVect){
 
-        amrex::Real c1[1];
+        std::vector<amrex::Real> stencil;
+        switch (start_from) {
+        case 0:
+            switch (degree) {
+            case 2:
+                stencil = {1.0};
+                break;
+            case 4:
+                 stencil = {1.0/8.0, 6.0/8.0, 1.0/8.0};
+                break;
+            case 6:
+                stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
+                break;
+            default: amrex::Print() << "degree not implemented" << std::endl;
+            }
+            break;
+        case 1:
+            switch (degree) {
+            case 2:
+                stencil = {1.0};
+                break;
+            case 4:
+                stencil = {-1.0/24.0, 13/12.0, -1.0/24.0};
+                break;
+            case 6:
+                stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
+                break;
+            default: amrex::Print() << "degree not implemented" << std::endl;
+            }
+            break;
+        }
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
 
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
-                std::vector<amrex::Real> stencil;
-                switch (start_from) {
-                case 0:
-                    switch (degree) {
-                    case 2:
-                        stencil = {1.0};
-                        break;
-                    case 4:
-                         stencil = {1.0/8.0, 6.0/8.0, 1.0/8.0};
-                        break;
-                    case 6:
-                        stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
-                        break;
-                    default: amrex::Print() << "degree not implemented" << std::endl;
-                    }
-                    break;
-                case 1:
-                    switch (degree) {
-                    case 2:
-                        stencil = {1.0};
-                        break;
-                    case 4:
-                        stencil = {-1.0/24.0, 13/12.0, -1.0/24.0};
-                        break;
-                    case 6:
-                        stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
-                        break;
-                    default: amrex::Print() << "degree not implemented" << std::endl;
-                    }
-                    break;
-                }
-
-
-
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
+                amrex::Array4<amrex::Real> const& vecIn = (*MultiInput)[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput)[mfi].array();
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                {
 
                             amrex::Real val = 0.0;
                             for (int d = 0; d<(degree-1); d++) {
                                 int shift = d - degree/2 + 1;
-                                (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
-                                val += stencil[d]*(*c1);
+                                val += stencil[d]*(vecIn(i+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0)));
                             }
+                            vecOut(i,j,k) = val;
 
-                            (*MultiOutput)[mfi].setVal(val, cc, 0, 1);
+                        });
 
-                        }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
                 // next mfi
             }
             (*MultiOutput).FillBoundary(ifr.geom.periodicity());
