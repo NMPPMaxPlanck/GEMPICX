@@ -711,14 +711,16 @@ if (int(vdim/2.5)*2+1 < 3) {
     void init_rho_phi (std::array<std::string, 2> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
 
         // rho
-        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IntVect::TheNodeVector(), &(rho));
+        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
         // phi
-        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IntVect::TheNodeVector(), &(phi));
+        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
+
 
     /**
      * Initialize rho and phi with given funtions
      */
+    /*
     void init_rho_phi(infrastructure ifr,
                       te_expr *phi_parse,
                       te_expr *rho_parse,
