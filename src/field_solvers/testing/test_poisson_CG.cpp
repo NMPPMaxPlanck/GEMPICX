@@ -146,6 +146,9 @@ void main_main ()
     varnames = {"Ez"};
     WriteSingleLevelPlotfile("Ez", *mw_yee.E_Array[2], varnames, infra.geom, 0, 0);
 
+    te_free(rho_parse);
+    te_free(phi_parse);
+
 }
 
 int main(int argc, char* argv[])

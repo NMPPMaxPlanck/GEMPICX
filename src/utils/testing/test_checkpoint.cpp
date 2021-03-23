@@ -113,6 +113,10 @@ void main_main ()
     Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, "test_checkpoint", 0); // last 2 args: field, step
     std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
 
+    te_free(WF_parse);
+    te_free(rho_parse);
+    te_free(phi_parse);
+
 }
 
 int main(int argc, char* argv[])

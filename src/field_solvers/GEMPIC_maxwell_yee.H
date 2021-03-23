@@ -311,11 +311,12 @@ if (int(vdim/2.5)*2+1 < 3) {
             // next mfi
         }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
+        te_free(function_parse);
     }
 
-    /*
-     * template<int degree>
-    void projection (std::string function_string,
+
+    template<int degree>
+    void projection_new (std::string function_string,
                      std::array<amrex::Real, 3> k,
                      amrex::Real t,
                      infrastructure ifr,
@@ -390,11 +391,12 @@ if (int(vdim/2.5)*2+1 < 3) {
                     }
                 }
                 proj_arr(i,j,k) = val;
+                te_free(function_parse);
             });
         }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
-    */
+
 
     /**
      * Initialize E and B field for time t=0 with a given array of functions.
@@ -705,6 +707,9 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         rho.FillBoundary(ifr.geom.periodicity());
         phi.FillBoundary(ifr.geom.periodicity());
+
+        te_free(rho_parse);
+        te_free(phi_parse);
     }
 
     template <int degree>
@@ -720,7 +725,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Initialize rho and phi with given funtions
      */
-    /*
+
     void init_rho_phi(infrastructure ifr,
                       te_expr *phi_parse,
                       te_expr *rho_parse,
@@ -769,6 +774,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         rho.FillBoundary(ifr.geom.periodicity());
         phi.FillBoundary(ifr.geom.periodicity());
     }
+
 
     template <int stencil_length>
     void matrix_mult (infrastructure ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,

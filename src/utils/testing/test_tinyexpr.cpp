@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     //Evaluate in other function
     test_parsed(comp_fct, &x, &y, &z, &alpha);
 
+    te_free(comp_fct);
 
     return 0;
 

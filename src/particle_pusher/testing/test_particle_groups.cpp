@@ -187,7 +187,7 @@ void main_main ()
 
     }
 
-
+    te_free(WF_parse);
 }
 
 int main(int argc, char* argv[])

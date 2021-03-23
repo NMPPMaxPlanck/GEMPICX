@@ -258,6 +258,7 @@ void init_particles_full_domain(infrastructure infra,
 #endif
         }
     }
+    te_free(WF_parse);
 }
 
 

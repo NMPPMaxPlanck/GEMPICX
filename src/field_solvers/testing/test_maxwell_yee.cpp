@@ -322,6 +322,8 @@ void main_main ()
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
     AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
 
+    te_free(rho_parse);
+    te_free(phi_parse);
     //ofs.close();
 }
 

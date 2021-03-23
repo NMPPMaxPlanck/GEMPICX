@@ -133,6 +133,7 @@ void main_main ()
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
     AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
     //ofs.close();
+    te_free(WF_parse);
 
 }
 
