@@ -563,48 +563,29 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     template <int stencil_length>
     void matrix_mult (infrastructure ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
-                amrex::IndexType IndexVect){
+                      amrex::IndexType IndexVect){
 
         amrex::Real c1[1];
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
+            const amrex::Box& bx = mfi.validbox();
 
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
+            amrex::Array4<amrex::Real> const& vecIn = (*MultiInput)[mfi].array();
+            amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput)[mfi].array();
 
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
-
-                            amrex::Real val = 0.0;
-                            for (int dimension=0; dimension < GEMPIC_SPACEDIM; dimension++) {
-                                for (int d = 0; d<(stencil_length); d++) {
-                                    int shift = d - (stencil_length+1)/2 + 1;
-                                    (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
-                                    val += stencil[dimension][d]*(*c1);
-                                }
-                            }
-
-                            (*MultiOutput)[mfi].setVal(val, cc, 0, 1);
-
-                        }
-#if (GEMPIC_SPACEDIM > 1)
+            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            {
+                amrex::Real val = 0.0;
+                for (int dimension=0; dimension < GEMPIC_SPACEDIM; dimension++) {
+                    for (int d = 0; d<(stencil_length); d++) {
+                        int shift = d - (stencil_length+1)/2 + 1;
+                        val += stencil[dimension][d]*vecIn(i+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0));
                     }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
                 }
-#endif
-                // next mfi
-            }
-            (*MultiOutput).FillBoundary(ifr.geom.periodicity());
+                vecOut(i,j,k) = val;
+            });
+        }
+        (*MultiOutput).FillBoundary(ifr.geom.periodicity());
     }
 
     template <int stencil_length, int dimension>
