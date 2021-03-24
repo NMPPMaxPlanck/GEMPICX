@@ -31,7 +31,7 @@ void main_main ()
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
     amrex::Real k = 0.5;
     int err;
-    std::string WF = "1.0 + 0.0 * cos(kvar * x)";
+    std::string WF = "1.0";
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
@@ -90,7 +90,9 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho
     // will be overwritten in next paragraph
-    mw_yee.init_rho_phi(infra, WF_parse, WF_parse, &x, &y, &z);
+    std::array<std::string, 2> fields = {WF, WF};
+    mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
+
     mw_yee.phi.mult(-1.0);
 
     //------------------------------------------------------------------------------

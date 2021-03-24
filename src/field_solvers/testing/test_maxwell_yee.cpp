@@ -286,15 +286,8 @@ void main_main ()
     std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
 #endif
 
-    double x, y, z;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-    int varcount = 3;
-
-    te_expr *rho_parse = te_compile(rho.c_str(), read_vars, varcount, &err);
-    te_expr *phi_parse = te_compile(phi.c_str(), read_vars, varcount, &err);
-
-    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
+    std::array<std::string, 2> fields = {rho, phi};
+    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
     mw_yee.solve_poisson(infra);
     E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k, false, infra);
 
@@ -322,8 +315,6 @@ void main_main ()
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
     AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
 
-    te_free(rho_parse);
-    te_free(phi_parse);
     //ofs.close();
 }
 

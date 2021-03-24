@@ -69,11 +69,6 @@ void main_main ()
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
-    te_variable read_vars_poi[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-    varcount = 3;
-    te_expr *rho_parse = te_compile(rho.c_str(), read_vars_poi, varcount, &err);
-    te_expr *phi_parse = te_compile(phi.c_str(), read_vars_poi, varcount, &err);
-
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
@@ -90,7 +85,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
+    std::array<std::string, 2> fields = {rho, phi};
+    mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -114,8 +110,6 @@ void main_main ()
     std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
 
     te_free(WF_parse);
-    te_free(rho_parse);
-    te_free(phi_parse);
 
 }
 

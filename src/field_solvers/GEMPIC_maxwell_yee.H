@@ -552,65 +552,6 @@ if (int(vdim/2.5)*2+1 < 3) {
         advance_B(ifr, dt_step, true, true, &HE_Array, &B_Array);
     }
 
-    /**
-     * Initialize rho and phi with given funtions
-     */
-    template <int numspec>
-    void init_rho_phi(infrastructure ifr,
-                      vlasov_maxwell<vdim, numspec> VM){
-
-        double x, y, z;
-        int err;
-        te_variable read_vars[3] = {{"x", &x}, {"y", &y}, {"z", &z}};
-        int varcount = 3;
-        te_expr *rho_parse = te_compile(VM.rho.c_str(), read_vars, varcount, &err);
-        te_expr *phi_parse = te_compile(VM.phi.c_str(), read_vars, varcount, &err);
-
-        for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
-            const amrex::Box& bx = mfi.validbox();
-
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-            for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                    for(int l=lo[0]; l<=hi[0]; l++){
-
-                        // the box for these values:
-                        x = l*ifr.dx[0];
-#if (GEMPIC_SPACEDIM > 1)
-                        y = j*ifr.dx[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                        z = k*ifr.dx[2];
-#endif
-                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-
-                        const double result_phi = te_eval(phi_parse);
-                        const double result_rho = te_eval(rho_parse);
-                        phi[mfi].setVal(result_phi, cc, 0, 1);
-                        rho[mfi].setVal(result_rho, cc, 0, 1);
-                    }
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            }
-#endif
-            // next mfi
-        }
-
-        rho.FillBoundary(ifr.geom.periodicity());
-        phi.FillBoundary(ifr.geom.periodicity());
-
-        te_free(rho_parse);
-        te_free(phi_parse);
-    }
-
     template <int degree>
     void init_rho_phi (std::array<std::string, 2> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
 
@@ -619,61 +560,6 @@ if (int(vdim/2.5)*2+1 < 3) {
         // phi
         projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
-
-
-    /**
-     * Initialize rho and phi with given funtions
-     */
-
-    void init_rho_phi(infrastructure ifr,
-                      te_expr *phi_parse,
-                      te_expr *rho_parse,
-                      double *x,
-                      double *y,
-                      double *z){
-
-        for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
-            const amrex::Box& bx = mfi.validbox();
-
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-            for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                    for(int l=lo[0]; l<=hi[0]; l++){
-
-                        // the box for these values:
-                        *x = l*ifr.dx[0];
-#if (GEMPIC_SPACEDIM > 1)
-                        *y = j*ifr.dx[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                        *z = k*ifr.dx[2];
-#endif
-                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-
-                        const double result_phi = te_eval(phi_parse);
-                        const double result_rho = te_eval(rho_parse);
-                        phi[mfi].setVal(result_phi, cc, 0, 1);
-                        rho[mfi].setVal(result_rho, cc, 0, 1);
-                    }
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            }
-#endif
-            // next mfi
-        }
-
-        rho.FillBoundary(ifr.geom.periodicity());
-        phi.FillBoundary(ifr.geom.periodicity());
-    }
-
 
     template <int stencil_length>
     void matrix_mult (infrastructure ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
