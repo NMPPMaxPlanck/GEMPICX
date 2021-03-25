@@ -159,27 +159,17 @@ if (int(vdim/2.5)*2+1 < 3) {
             (*(E_Masks[comp])).FillBoundary(ifr.geom.periodicity());
 
             for ( amrex::MFIter mfi((*(E_Masks[comp]))); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
+                const amrex::Box& bx = mfi.tilebox();
                 amrex::IntVect lo = {bx.smallEnd()};
                 amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=(comp==2?hi[2]:(hi[2]-1)); k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=(comp==1?hi[1]:(hi[1]-1)); j++){
-#endif
-                        for(int l=lo[0]; l<=(comp==0?hi[0]:(hi[0]-1)); l++){
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, (*E_Index[comp]));
-                            (*(E_Masks[comp]))[mfi].setVal(1, cc, 0, 1);
-                        }
 
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
+                amrex::Array4<int> const& mask_arr = (*(E_Masks[comp]))[mfi].array();
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                {
+                    // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
+                    if ((i<=(comp==0?hi[0]:(hi[0]-1))) && (j<=(comp==1?hi[1]:(hi[1]-1))) && (k<=(comp==2?hi[2]:(hi[2]-1))))
+                        mask_arr(i,j,k) = 1.0;
+                });
             }
         }
 
@@ -189,132 +179,40 @@ if (int(vdim/2.5)*2+1 < 3) {
             (*(B_Masks[comp])).FillBoundary(ifr.geom.periodicity());
 
             for ( amrex::MFIter mfi((*(B_Masks[comp]))); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.tilebox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+
+                amrex::Array4<int> const& mask_arr = (*(B_Masks[comp]))[mfi].array();
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                {
+                    // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
+                    if ((i<=(comp==0?hi[0]:(hi[0]-1))) && (j<=(comp==1?hi[1]:(hi[1]-1))) && (k<=(comp==2?hi[2]:(hi[2]-1))))
+                        mask_arr(i,j,k) = 1.0;
+                });
+            }
+        }
+
+        nodal_Mask.reset(new amrex::iMultiFab (convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,1,Nghost));
+        (*nodal_Mask).setVal(0.0);
+        (*nodal_Mask).FillBoundary(ifr.geom.periodicity());
+
+        for ( amrex::MFIter mfi(*nodal_Mask); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
                 amrex::IntVect lo = {bx.smallEnd()};
                 amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=(comp==2?(hi[2]-1):hi[2]); k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=(comp==1?(hi[1]-1):hi[1]); j++){
-#endif
-                        for(int l=lo[0]; l<=(comp==0?(hi[0]-1):hi[0]); l++){
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, (*B_Index[comp]));
-                            (*(B_Masks[comp]))[mfi].setVal(1, cc, 0, 1);
-                        }
 
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
-            }
-            nodal_Mask.reset(new amrex::iMultiFab (convert(ifr.grid, amrex::IntVect::TheNodeVector()),ifr.distriMap,1,Nghost));
-            (*nodal_Mask).setVal(0.0);
-            (*nodal_Mask).FillBoundary(ifr.geom.periodicity());
-
-            for ( amrex::MFIter mfi(*nodal_Mask); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=(hi[2]-1); k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=(hi[1]-1); j++){
-#endif
-                        for(int l=lo[0]; l<=(hi[0]-1); l++){
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-                            (*nodal_Mask)[mfi].setVal(1, cc, 0, 1);
-                        }
-
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
-            }
+                amrex::Array4<int> const& mask_arr = (*nodal_Mask)[mfi].array();
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                {
+                    // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
+                    if ((i<=(hi[0]-1)) && (j<=(hi[1]-1)) && (k<=(hi[2]-1)))
+                        mask_arr(i,j,k) = 1.0;
+                });
         }
 
     }
 
-
-    template<int degree>
-    void projection (double (field) (std::array<double,GEMPIC_SPACEDIM> x, double t),
-                     amrex::Real t,
-                     infrastructure ifr,
-                     std::array<bool, GEMPIC_SPACEDIM> integrate,
-                     amrex::IndexType IndexVect,
-                     amrex::MultiFab *MultiF
-                     ) {
-        std::vector<amrex::Real> stencil;
-        switch (degree) {
-        case 2:
-            stencil = {0};
-            break;
-        case 4:
-            stencil = {1.0/6.0, 4.0/6.0, 1.0/6.0};
-            break;
-        case 6:
-            stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
-            break;
-        default: amrex::Print() << "degree not implemented" << std::endl;
-
-        }
-        std::array<amrex::Real, degree-1> x;
-        amrex::Real x_midpoint;
-#if (GEMPIC_SPACEDIM > 1)
-        std::array<amrex::Real, degree-1> y;
-        amrex::Real y_midpoint;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        std::array<amrex::Real, degree-1> z;
-        amrex::Real z_midpoint;
-#endif
-        double half_dt = dt/2.0; // for leap frog initialization
-
-        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
-
-            const amrex::Box& bx = mfi.validbox();
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-            for(int k=lo[2]; k<=hi[2]; k++){
-                z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
-                for (int d = 0; d<(degree-1); d++) z[d] = z_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                for(int j=lo[1]; j<=hi[1]; j++){
-                    y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
-                    for (int d = 0; d<(degree-1); d++) y[d] = y_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
-#endif
-                    for(int l=lo[0]; l<=hi[0]; l++){
-                        x_midpoint = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
-                        for (int d = 0; d<(degree-1); d++) x[d] = x_midpoint + (d-(degree/2.0-1))*ifr.dx[0]/pow(2.0,degree/2.0-1);
-                        // the box for these values:
-                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
-                        amrex::Real val = 0.0;
-                        if (integrate[0]) {
-                            for (int d = 0; d<(degree-1); d++) val+= stencil[d]*(field({AMREX_D_DECL(x[d],y[d],z[d])},t));
-                        } else {
-                            val += field({AMREX_D_DECL(x_midpoint,y_midpoint,z_midpoint)},t);
-                        }
-                        (*MultiF)[mfi].setVal(val, cc, 0, 1);
-                    }
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            }
-#endif
-            // next mfi
-        }
-        (*MultiF).FillBoundary(ifr.geom.periodicity());
-    }
 
     template<int degree>
     void projection (std::string function_string,
@@ -325,15 +223,11 @@ if (int(vdim/2.5)*2+1 < 3) {
                      amrex::IndexType IndexVect,
                      amrex::MultiFab *MultiF
                      ) {
-        double x_eval, y_eval, z_eval;
         double t_eval = t;
         double kx = k[0];
         double ky = k[1];
         double kz = k[2];
-        int err;
-        te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
         int varcount = 7;
-        te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
 
         std::vector<amrex::Real> stencil;
         switch (degree) {
@@ -349,69 +243,55 @@ if (int(vdim/2.5)*2+1 < 3) {
         default: amrex::Print() << "degree not implemented" << std::endl;
 
         }
-        std::array<amrex::Real, degree-1> x;
-        amrex::Real x_midpoint;
-        std::array<amrex::Real, degree-1> y;
-        amrex::Real y_midpoint;
-        std::array<amrex::Real, degree-1> z;
-        amrex::Real z_midpoint;
+
 
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
 
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
 
-            const amrex::Box& bx = mfi.validbox();
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-            for(int k=lo[2]; k<=hi[2]; k++){
+            const amrex::Box& bx = mfi.tilebox();
+
+            amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
+            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            {
+                double x_eval, y_eval, z_eval;
+                int err;
+                te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
+                te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
+
+                std::array<amrex::Real, degree-1> x;
+                amrex::Real x_midpoint;
+                std::array<amrex::Real, degree-1> y;
+                amrex::Real y_midpoint;
+                std::array<amrex::Real, degree-1> z;
+                amrex::Real z_midpoint;
+
                 z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
                 for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                for(int j=lo[1]; j<=hi[1]; j++){
-                    y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
-                    for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
-#endif
-                    for(int l=lo[0]; l<=hi[0]; l++){
-                        x_midpoint = ifr.geom.ProbLo()[0] + ((double)l+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
-                        for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
-                        // the box for these values:
-                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
-                        amrex::Real val = 0.0;
-#if (GEMPIC_SPACEDIM > 2)
-                        for (int zd = 0; zd<x_len[2];zd++)
-#endif
-                            {
-#if (GEMPIC_SPACEDIM > 1)
-                            for (int yd =0; yd<x_len[1]; yd++)
-#endif
-                                {
-                                for (int xd =0; xd<x_len[0]; xd++) {
-                                    x_eval = x[xd];
-                                    y_eval = y[yd];
-                                    z_eval = z[zd];
-                                    val+= (integrate[0]?stencil[xd]:1)
-#if (GEMPIC_SPACEDIM > 1)
-                                            *(integrate[1]?stencil[yd]:1)
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                            *(integrate[2]?stencil[zd]:1)
-#endif
-                                            *(te_eval(function_parse));
-                                }
-                            }
+
+                y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
+                for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
+
+                x_midpoint = ifr.geom.ProbLo()[0] + ((double)i+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
+                for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
+
+                amrex::Real val = 0.0;
+                for (int zd = 0; zd<x_len[2];zd++)
+                    {
+                    for (int yd =0; yd<x_len[1]; yd++)
+                        {
+                        for (int xd =0; xd<x_len[0]; xd++) {
+                            x_eval = x[xd];
+                            y_eval = y[yd];
+                            z_eval = z[zd];
+                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(te_eval(function_parse));
                         }
-                        (*MultiF)[mfi].setVal(val, cc, 0, 1);
                     }
-#if (GEMPIC_SPACEDIM > 1)
                 }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            }
-#endif
-            // next mfi
+                proj_arr(i,j,k) = val;
+                te_free(function_parse);
+            });
         }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
@@ -476,97 +356,62 @@ if (int(vdim/2.5)*2+1 < 3) {
         time = time+dt*coeff;
     }
 
+
     /**
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
     void advance_E (infrastructure ifr, amrex::Real dt_step, bool from_B, bool from_J,
-                    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
-                    std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
+                        std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
+                        std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
 
-        amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1], cj[1];
-
-        // E-field
-        for (int i=0; i<vdim; i++) {
-            for (amrex::MFIter mfi(*(*MultiOutput)[i]); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
-
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
+        for (int d=0; d<vdim; d++) {
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
+            for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.tilebox();
 
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *E_Index[i]);
-
-                            // old field_out value
-                            (*(*MultiOutput)[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
-                            // J value
-                            (*J_Array[i])[mfi].getVal(cj, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
-
-                            // B-derivatives
-                            if((vdim < 3) & (GEMPIC_SPACEDIM == 1)){
-                                if (i == 0){
-                                    (*(*MultiOutput)[0])[mfi].setVal(*c1+(from_J?dt_step*(-*cj):0.0), cc, 0, 1);
-                                }
-                            }
-                            if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
-                                //Ex for 2D2V
-                                if (i == 0) {
-                                    (*(*MultiInput)[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
-                                    (*(*MultiInput)[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l,j-1,k)},0,1);
-                                    (*(*MultiOutput)[0])[mfi].setVal(*c1+dt_step*((from_B?(*c2-*c3)/ifr.dx[1]:0.0)-(from_J?*cj:0.0)), cc, 0, 1);
-                                }
-                            }
-                            if (vdim == 2){
-                                if (i == 1) {
-                                    (*(*MultiInput)[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,j,k)},0,1);
-                                    (*(*MultiInput)[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-1,j,k)},0,1);
-                                    (*(*MultiOutput)[1])[mfi].setVal(*c1+dt_step*((from_B?-(*c2-*c3)/ifr.dx[0]:0.0)-(from_J?*cj:0.0)), cc, 0, 1);
-                                }
-                            }
-                            if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
-                                if (i==2) {
-                                    (*(*MultiInput)[(i+2)%vdim])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                                    (*(*MultiInput)[(i+2)%vdim])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%vdim==2?1:0),j-(i%vdim==0?1:0),k)},0,1);
-                                    (*(*MultiInput)[(i+1)%vdim])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-                                    (*(*MultiInput)[(i+1)%vdim])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%vdim==1?1:0),j-(i%vdim==2?1:0),k)},0,1);
-
-                                    (*(*MultiOutput)[i])[mfi].setVal(*c1+dt_step*((from_B?(*c2-*c3)/ifr.dx[(i+1)%vdim]-
-                                                              (*c4-*c5)/ifr.dx[(i+2)%vdim]:0.0)-(from_J?*cj:0.0)), cc, 0, 1);
-                                } else {
-                                    (*(*MultiInput)[2])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-                                    (*(*MultiInput)[2])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l-(i%vdim==1?1:0),j-(i%vdim==0?1:0),k)},0,1);
-
-                                    (*(*MultiOutput)[i])[mfi].setVal(*c1+dt_step*((from_B?(i==0?1:-1)*(*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]:0.0)-(from_J?*cj:0.0)), cc, 0, 1);
-                                }
-                            }
-                            if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
-                                (*(*MultiInput)[(i+2)%bdim])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                                (*(*MultiInput)[(i+2)%bdim])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l-(i%bdim==2?1:0),j-(i%bdim==0?1:0),k-(i%bdim==1?1:0))},0,1);
-                                (*(*MultiInput)[(i+1)%bdim])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-                                (*(*MultiInput)[(i+1)%bdim])[mfi].getVal(c5,amrex::IntVect{AMREX_D_DECL(l-(i%bdim==1?1:0),j-(i%bdim==2?1:0),k-(i%bdim==0?1:0))},0,1);
-
-                                (*(*MultiOutput)[i])[mfi].setVal(*c1+dt_step*((from_B?(*c2-*c3)/ifr.dx[(i+1)%bdim]-
-                                                          (*c4-*c5)/ifr.dx[(i+2)%bdim]:0.0)-(from_J?*cj:0.0)), cc, 0, 1);
+                amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%vdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%vdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecJ = (*J_Array[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                    {
+                        if((vdim < 3) & (GEMPIC_SPACEDIM == 1)){
+                            if (d == 0){
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(from_J?(-vecJ(i,j,k)):0.0);
                             }
                         }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
+                        if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
+                            //Ex for 2D2V
+                            if (d == 0) {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/ifr.dx[1]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            }
+                        }
+                        if (vdim == 2){
+                            if (d == 1) {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            }
+                        }
+                        if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
+                            if (d==2) {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/ifr.dx[(d+1)%vdim]
+                                                                          -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/ifr.dx[(d+2)%vdim]:0.0)
+                                                                          + (from_J?(-vecJ(i,j,k)):0.0));
+                            } else {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            }
+                        }
+                        if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/ifr.dx[(d+1)%vdim]
+                                                                      -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/ifr.dx[(d+2)%vdim]):0.0)
+                                                                      + (from_J?(-vecJ(i,j,k)):0.0));
+                        }
+                    });
                 }
-#endif
-                // next mfi
-            }
-            (*(*MultiOutput)[i]).FillBoundary(ifr.geom.periodicity());
+            (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
@@ -579,83 +424,42 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         int bdim = int(vdim/2.5)*2+1;
 
-        amrex::Real c1[1], c2[1], c3[1], c4[1], c5[1];
-
         // B-field
-        for (int i=0; i<bdim; i++) {
-            for (amrex::MFIter mfi(*(*MultiOutput)[i]); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
-
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
+        for (int d=0; d<bdim; d++) {
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
+            for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.tilebox();
 
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, *B_Index[i]);
-
-                            // old field_out value
-                            (*(*MultiOutput)[i])[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
-
-                            // E-derivatives
-                            if (vdim == 1){}
-                            //no B
-                            else if ((vdim == 2) & (GEMPIC_SPACEDIM == 1)){
-                                (*(*MultiInput)[1])[mfi].getVal(c4, amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
-                                (*(*MultiInput)[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l  ,j,k)},0,1);
-
-                                (*(*MultiOutput)[0])[mfi].setVal(*c1-dt_step*((*c4-*c5)/ifr.dx[0]), cc, 0, 1);
-                            }
-                            else if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
-                                (*(*MultiInput)[0])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l,j+1,k)},0,1);
-                                (*(*MultiInput)[0])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
-                                (*(*MultiInput)[1])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+1,j,k)},0,1);
-                                (*(*MultiInput)[1])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
-
-                                (*(*MultiOutput)[0])[mfi].setVal(*c1+dt_step*((*c2-*c3)/ifr.dx[1]-
-                                                          (*c4-*c5)/ifr.dx[0]), cc, 0, 1);
-                            }
-                            else if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
-                                if (i==2) {
-                                    (*(*MultiInput)[(i+2)%bdim])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l+(i%bdim==2?1:0),j+(i%bdim==0?1:0),k)},0,1);
-                                    (*(*MultiInput)[(i+2)%bdim])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                                    (*(*MultiInput)[(i+1)%bdim])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+(i%bdim==1?1:0),j+(i%bdim==2?1:0),k)},0,1);
-                                    (*(*MultiInput)[(i+1)%bdim])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-
-                                    (*(*MultiOutput)[i])[mfi].setVal(*c1-dt_step*((*c2-*c3)/ifr.dx[(i+1)%bdim]-
-                                                              (*c4-*c5)/ifr.dx[(i+2)%bdim]), cc, 0, 1);
-                                } else {
-                                    (*(*MultiInput)[2])[mfi].getVal(c2, amrex::IntVect{AMREX_D_DECL(l+(i%bdim==1?1:0),j+(i%bdim==0?1:0),k)},0,1);
-                                    (*(*MultiInput)[2])[mfi].getVal(c3, amrex::IntVect{AMREX_D_DECL(l,j,k)},0,1);
-
-                                    (*(*MultiOutput)[i])[mfi].setVal(*c1+dt_step*((i==0?-1:1)*(*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]), cc, 0, 1);
-                                }
-                            }
-                            else if (bdim == 3) {
-                                (*(*MultiInput)[(i+2)%bdim])[mfi].getVal(c2,amrex::IntVect{AMREX_D_DECL(l+(i%bdim==2?1:0),j+(i%bdim==0?1:0),k+(i%bdim==1?1:0))},0,1);
-                                (*(*MultiInput)[(i+2)%bdim])[mfi].getVal(c3,amrex::IntVect{AMREX_D_DECL(  l,  j  ,k)},0,1);
-                                (*(*MultiInput)[(i+1)%bdim])[mfi].getVal(c4,amrex::IntVect{AMREX_D_DECL(l+(i%bdim==1?1:0),j+(i%bdim==2?1:0),k+(i%bdim==0?1:0))},0,1);
-                                (*(*MultiInput)[(i+1)%bdim])[mfi].getVal(c5, amrex::IntVect{AMREX_D_DECL(  l,  j,  k)},0,1);
-
-                                (*(*MultiOutput)[i])[mfi].setVal(*c1-dt_step*((*c2-*c3)/ifr.dx[(i+1)%GEMPIC_SPACEDIM]-
-                                                          (*c4-*c5)/ifr.dx[(i+2)%GEMPIC_SPACEDIM]), cc, 0, 1);
+                amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%bdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%bdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                    {
+                        if (vdim == 1){}
+                        //no B
+                        else if ((vdim == 2) & (GEMPIC_SPACEDIM == 1)){
+                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+1,j,k)-vecIn_1(i,j,k))/ifr.dx[0]);
+                        }
+                        else if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
+                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/ifr.dx[0] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/ifr.dx[0]);
+                        }
+                        else if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
+                            if (i==2) {
+                                vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k)-vecIn_1(i,j,k))/ifr.dx[(d+1)%bdim] -
+                                        (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k)-vecIn_2(i,j,k))/ifr.dx[(d+2)%bdim]);
+                            } else {
+                                vecOut(i,j,k) = vecOut(i,j,k) - dt_step*(-(d==0?-1:1)*(vecIn_1(i+(d%bdim==1?1:0),j+(d%bdim==0?1:0),k)-vecIn_1(i,j,k))/ifr.dx[(d+1)%GEMPIC_SPACEDIM]);
                             }
                         }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
+                        else if (bdim == 3) {
+                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k+(d%bdim==1?1:0))-vecIn_1(i,j,k))/ifr.dx[(d+1)%bdim] -
+                                    (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k+(d%bdim==0?1:0))-vecIn_2(i,j,k))/ifr.dx[(d+2)%bdim]);
+                        }
+                    });
                 }
-#endif
-                // next mfi
-            }
-            (*(*MultiOutput)[i]).FillBoundary(ifr.geom.periodicity());
+            (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
@@ -682,75 +486,55 @@ if (int(vdim/2.5)*2+1 < 3) {
     void hodge (infrastructure ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                 amrex::IndexType IndexVect){
 
-        amrex::Real c1[1];
+        std::vector<amrex::Real> stencil;
+        switch (start_from) {
+        case 0:
+            switch (degree) {
+            case 2:
+                stencil = {1.0};
+                break;
+            case 4:
+                 stencil = {1.0/8.0, 6.0/8.0, 1.0/8.0};
+                break;
+            case 6:
+                stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
+                break;
+            default: amrex::Print() << "degree not implemented" << std::endl;
+            }
+            break;
+        case 1:
+            switch (degree) {
+            case 2:
+                stencil = {1.0};
+                break;
+            case 4:
+                stencil = {-1.0/24.0, 13/12.0, -1.0/24.0};
+                break;
+            case 6:
+                stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
+                break;
+            default: amrex::Print() << "degree not implemented" << std::endl;
+            }
+            break;
+        }
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
 
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-
-                std::vector<amrex::Real> stencil;
-                switch (start_from) {
-                case 0:
-                    switch (degree) {
-                    case 2:
-                        stencil = {1.0};
-                        break;
-                    case 4:
-                         stencil = {1.0/8.0, 6.0/8.0, 1.0/8.0};
-                        break;
-                    case 6:
-                        stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
-                        break;
-                    default: amrex::Print() << "degree not implemented" << std::endl;
-                    }
-                    break;
-                case 1:
-                    switch (degree) {
-                    case 2:
-                        stencil = {1.0};
-                        break;
-                    case 4:
-                        stencil = {-1.0/24.0, 13/12.0, -1.0/24.0};
-                        break;
-                    case 6:
-                        stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
-                        break;
-                    default: amrex::Print() << "degree not implemented" << std::endl;
-                    }
-                    break;
-                }
-
-
-
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
+                amrex::Array4<amrex::Real> const& vecIn = (*MultiInput)[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput)[mfi].array();
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                {
 
                             amrex::Real val = 0.0;
                             for (int d = 0; d<(degree-1); d++) {
                                 int shift = d - degree/2 + 1;
-                                (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
-                                val += stencil[d]*(*c1);
+                                val += stencil[d]*(vecIn(i+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0)));
                             }
+                            vecOut(i,j,k) = val;
 
-                            (*MultiOutput)[mfi].setVal(val, cc, 0, 1);
+                        });
 
-                        }
-#if (GEMPIC_SPACEDIM > 1)
-                    }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                }
-#endif
                 // next mfi
             }
             (*MultiOutput).FillBoundary(ifr.geom.periodicity());
@@ -768,167 +552,40 @@ if (int(vdim/2.5)*2+1 < 3) {
         advance_B(ifr, dt_step, true, true, &HE_Array, &B_Array);
     }
 
-    /**
-     * Initialize rho and phi with given funtions
-     */
-    template <int numspec>
-    void init_rho_phi(infrastructure ifr,
-                      vlasov_maxwell<vdim, numspec> VM){
-
-        double x, y, z;
-        int err;
-        te_variable read_vars[3] = {{"x", &x}, {"y", &y}, {"z", &z}};
-        int varcount = 3;
-        te_expr *rho_parse = te_compile(VM.rho.c_str(), read_vars, varcount, &err);
-        te_expr *phi_parse = te_compile(VM.phi.c_str(), read_vars, varcount, &err);
-
-        for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
-            const amrex::Box& bx = mfi.validbox();
-
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-            for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                    for(int l=lo[0]; l<=hi[0]; l++){
-
-                        // the box for these values:
-                        x = l*ifr.dx[0];
-#if (GEMPIC_SPACEDIM > 1)
-                        y = j*ifr.dx[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                        z = k*ifr.dx[2];
-#endif
-                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-
-                        const double result_phi = te_eval(phi_parse);
-                        const double result_rho = te_eval(rho_parse);
-                        phi[mfi].setVal(result_phi, cc, 0, 1);
-                        rho[mfi].setVal(result_rho, cc, 0, 1);
-                    }
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            }
-#endif
-            // next mfi
-        }
-
-        rho.FillBoundary(ifr.geom.periodicity());
-        phi.FillBoundary(ifr.geom.periodicity());
-    }
-
     template <int degree>
     void init_rho_phi (std::array<std::string, 2> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
 
         // rho
-        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IntVect::TheNodeVector(), &(rho));
+        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
         // phi
-        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IntVect::TheNodeVector(), &(phi));
-    }
-
-    /**
-     * Initialize rho and phi with given funtions
-     */
-    void init_rho_phi(infrastructure ifr,
-                      te_expr *phi_parse,
-                      te_expr *rho_parse,
-                      double *x,
-                      double *y,
-                      double *z){
-
-        for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
-            const amrex::Box& bx = mfi.validbox();
-
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
-
-#if (GEMPIC_SPACEDIM > 2)
-            for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                    for(int l=lo[0]; l<=hi[0]; l++){
-
-                        // the box for these values:
-                        *x = l*ifr.dx[0];
-#if (GEMPIC_SPACEDIM > 1)
-                        *y = j*ifr.dx[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                        *z = k*ifr.dx[2];
-#endif
-                        amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-
-                        const double result_phi = te_eval(phi_parse);
-                        const double result_rho = te_eval(rho_parse);
-                        phi[mfi].setVal(result_phi, cc, 0, 1);
-                        rho[mfi].setVal(result_rho, cc, 0, 1);
-                    }
-#if (GEMPIC_SPACEDIM > 1)
-                }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            }
-#endif
-            // next mfi
-        }
-
-        rho.FillBoundary(ifr.geom.periodicity());
-        phi.FillBoundary(ifr.geom.periodicity());
+        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
 
     template <int stencil_length>
     void matrix_mult (infrastructure ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
-                amrex::IndexType IndexVect){
+                      amrex::IndexType IndexVect){
 
         amrex::Real c1[1];
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
-                const amrex::Box& bx = mfi.validbox();
+            const amrex::Box& bx = mfi.validbox();
 
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
+            amrex::Array4<amrex::Real> const& vecIn = (*MultiInput)[mfi].array();
+            amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput)[mfi].array();
 
-#if (GEMPIC_SPACEDIM > 2)
-                for(int k=lo[2]; k<=hi[2]; k++){
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-                    for(int j=lo[1]; j<=hi[1]; j++){
-#endif
-                        for(int l=lo[0]; l<=hi[0]; l++){
-
-                            // the box for these values:
-                            amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, IndexVect);
-
-                            amrex::Real val = 0.0;
-                            for (int dimension=0; dimension < GEMPIC_SPACEDIM; dimension++) {
-                                for (int d = 0; d<(stencil_length); d++) {
-                                    int shift = d - (stencil_length+1)/2 + 1;
-                                    (*MultiInput)[mfi].getVal(c1, amrex::IntVect{AMREX_D_DECL(l+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0))},0,1);
-                                    val += stencil[dimension][d]*(*c1);
-                                }
-                            }
-
-                            (*MultiOutput)[mfi].setVal(val, cc, 0, 1);
-
-                        }
-#if (GEMPIC_SPACEDIM > 1)
+            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            {
+                amrex::Real val = 0.0;
+                for (int dimension=0; dimension < GEMPIC_SPACEDIM; dimension++) {
+                    for (int d = 0; d<(stencil_length); d++) {
+                        int shift = d - (stencil_length+1)/2 + 1;
+                        val += stencil[dimension][d]*vecIn(i+(dimension==0?shift:0),j+(dimension==1?shift:0),k+(dimension==2?shift:0));
                     }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
                 }
-#endif
-                // next mfi
-            }
-            (*MultiOutput).FillBoundary(ifr.geom.periodicity());
+                vecOut(i,j,k) = val;
+            });
+        }
+        (*MultiOutput).FillBoundary(ifr.geom.periodicity());
     }
 
     template <int stencil_length, int dimension>
