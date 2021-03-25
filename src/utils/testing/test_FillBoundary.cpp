@@ -59,20 +59,12 @@ void main_main ()
         std::cout << "low: " << lo[0] << ", " << lo[1] << ", " << lo[2] << std::endl;
         std::cout << "low: " << hi[0] << ", " << hi[1] << ", " << hi[2] << std::endl;
 
-        for(int k=lo[2]-1; k<=hi[2]+1; k++){
+        amrex::Array4<amrex::Real> const& vecMF = (TestMF)[mfi].array();
 
-            for(int j=lo[1]-1; j<=hi[1]+1; j++){
-
-                for(int l=lo[0]-1; l<=hi[0]+1; l++){
-
-                    // the box for these values:
-                    amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, Index_A);
-
-                    TestMF[mfi].setVal(l*100+(j)*10+(k), cc, 0, 1);
-                }
-            }
-        }
-        // next mfi
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+        {
+            vecMF(i,j,k) = (i)*100+(j)*10+(k);
+        });
     }
 
     std::cout << TestMF.norm1(0) << std::endl;
