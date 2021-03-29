@@ -43,21 +43,25 @@ using namespace Particles;
 
 namespace Gempic {
 namespace Field_solvers {
-/**
+/** @brief Class Maxwell_Yee
+ *
  * Class storing all the field information (both analytical (@p E_sol_Array, @p B_sol_Array) and numerical (@p E_Array, @p B_Array, @p J_Array), infrastructure information
  * for the fields (@p E_Index, @p B_Index, @p Nghost, @p Ncomp, @p time) and the necessary components to solve the Poisson problem for the first step (@p phi_init, @p rho,
  * @p phi, @p sigma). In addition, the class can initialize the fields (init_E_B, init_B) and the functions for the Poisson problem (init_rho_phi), advance the complete
  * problem (advance) or parts of it (advance_E, advance_B, advance_time), initialize E by solving the Poisson problem (solve_poisson), fill ghost cells of all relevant MultiFabs
  * (FillBD), compute the analytical solution (exactSolution) and compute the error of the numerical solution (computeError).
- */
+ *
+ * @authors Irene Garnelo, Katharina Kormann
+ *
+*/
 template<int vdim>
 class maxwell_yee
 {
 public:
 
-    int nsteps; // number of simulation steps
-    amrex::Real dt;
-    std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_Array;
+    int nsteps; /** number of simulation steps */
+    amrex::Real dt; /** stepsize*/
+    std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_Array; /** Array storing components of E-Field */
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > HE_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > J_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_Array;
@@ -78,7 +82,7 @@ public:
 
 private:
 
-    int Ncomp;
+    int Ncomp; /** Number of components for each MultiFab. Is 1 because the different field components are differently staggered */
     amrex::Real time;
     amrex::MultiFab sigma; //for Poisson
 
@@ -92,7 +96,9 @@ public:
 
     // Explicit const
     /**
-     * Explicit constructor: all class attributes can be initialized by passing an object of class vlasov maxwell, infrastructure and the number of ghost cells.
+     * Explicit constructor. Initializes Indextypes, MultiFabs and OwnerMasks.
+     *  @param VM - object of type vlasov-maxwell with all relevant information
+     *  @param ifr - object of type infrastructure
      */
     template <int numspec>
     maxwell_yee (vlasov_maxwell<vdim, numspec> VM, infrastructure ifr){
