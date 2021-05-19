@@ -11,6 +11,7 @@ module load intel/19.1.1
 module load impi/2019.7
 module load mkl/2019.5
 module load cmake/3.15
+module load gcc
 
 BUILD_DIR=$HOME/gempic_obj
 
@@ -20,12 +21,12 @@ cd $BUILD_DIR
 mkdir -p amrex
 cd amrex
 
-cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D CMAKE_BUILD_TYPE=Release $AMREX_DIRECTORY
+cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D CMAKE_BUILD_TYPE=Release -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_CXX_FLAGS="-std=c++14" $AMREX_DIRECTORY
 
-make install
+make -j 10 install
 
 cd ..
 mkdir -p gempic
 cd gempic
-cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc CMAKE_CXX_FLAGS="-std=c++14" -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 make -j 10
