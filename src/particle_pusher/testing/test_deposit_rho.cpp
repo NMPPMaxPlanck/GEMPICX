@@ -133,7 +133,7 @@ void main_main ()
 
     //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
-    AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+    AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
     //ofs.close();
     te_free(WF_parse);
 

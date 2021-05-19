@@ -29,15 +29,15 @@ amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
     } else if (p==1) {
         result = (*MultiF).norm1(0, ifr.geom.periodicity());
     } else if (p==2) {
-        result = pow((*MultiF).norm2(0, ifr.geom.periodicity()),2.);
+        result = (*MultiF).norm2(0, ifr.geom.periodicity());
     }
     if (p > 0) {
-        result *= ifr.dx[0]/ifr.Length[0]
+        result *= ((p==2) ? (1.0/sqrt(ifr.n_cell[0])) : (1.0/ifr.n_cell[0]))
         #if(GEMPIC_SPACEDIM > 1)
-                *ifr.dx[1]/ifr.Length[1]
+                * ((p==2) ? (1.0/sqrt(ifr.n_cell[1])) : (1.0/ifr.n_cell[1]))
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                *ifr.dx[2]/ifr.Length[2]
+                * ((p==2) ? (1.0/sqrt(ifr.n_cell[2])) : (1.0/ifr.n_cell[2]))
         #endif
                 ;
     }

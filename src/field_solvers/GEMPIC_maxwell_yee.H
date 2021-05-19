@@ -1174,7 +1174,8 @@ if (int(vdim/2.5)*2+1 < 3) {
         rho_gauss_law.plus(-rho_gauss_mean,0,1);
 
         rho_gauss_law.minus(rho, 0, 1, 0);
-        return(gempic_norm(&(rho_gauss_law), ifr, 2));
+        amrex::Real rho_norm = gempic_norm(&(rho_gauss_law), ifr, 2);
+        return(rho_norm*rho_norm);
     }
 
     /**
@@ -1237,7 +1238,10 @@ if (int(vdim/2.5)*2+1 < 3) {
         (*E_Array[1]).minus(*E_sol_Array[1], 0, 1, 0);
         (*E_Array[2]).minus(*E_sol_Array[2], 0, 1, 0);
 
-        amrex::Real res = gempic_norm(&(*E_Array[0]), ifr, 2)+gempic_norm(&(*E_Array[1]), ifr, 2)+gempic_norm(&(*E_Array[2]), ifr, 2);
+        amrex::Real res1 = gempic_norm(&(*E_Array[0]), ifr, 2);
+        amrex::Real res2 = gempic_norm(&(*E_Array[1]), ifr, 2);
+        amrex::Real res3 = gempic_norm(&(*E_Array[2]), ifr, 2);
+        amrex::Real res = res1*res1 + res2*res2 + res3*res3;
 
         (*E_Array[0]).Copy(*E_Array[0], *E_sol_Array[0],0,0,1,Nghost);
         (*E_Array[1]).Copy(*E_Array[1], *E_sol_Array[1],0,0,1,Nghost);
@@ -1321,7 +1325,10 @@ if (int(vdim/2.5)*2+1 < 3) {
         (*E_sol_Array[1]).minus(*E_Array[1], 0, 1, 0);
         (*E_sol_Array[2]).minus(*E_Array[2], 0, 1, 0);
 
-        amrex::Real res = gempic_norm(&(*E_Array[0]), ifr, 2)+gempic_norm(&(*E_Array[1]), ifr, 2)+gempic_norm(&(*E_Array[2]), ifr, 2);
+        amrex::Real res1 = gempic_norm(&(*E_Array[0]), ifr, 2);
+        amrex::Real res2 = gempic_norm(&(*E_Array[1]), ifr, 2);
+        amrex::Real res3 = gempic_norm(&(*E_Array[2]), ifr, 2);
+        amrex::Real res = res1*res1 + res2*res2 + res3*res3;
 
         return(res);
     }
@@ -1340,12 +1347,14 @@ if (int(vdim/2.5)*2+1 < 3) {
 
             for (int i=0; i<vdim; i++){
                 (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
-                E_B_error[i] = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+                amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+                E_B_error[i] = norm_tmp*norm_tmp;
             }
             if (bool_B) {
                 for (int i=0; i<int(vdim/2.5)*2+1; i++){
                     (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
-                    E_B_error[i+vdim] = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                    amrex::Real norm_tmp = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                    E_B_error[i+vdim] = norm_tmp*norm_tmp;
                 }
             }
             return(E_B_error);

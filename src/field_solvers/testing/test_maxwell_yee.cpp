@@ -313,7 +313,8 @@ void main_main ()
     AllPrintToFile("test_maxwell_yee.tmp") << "rho_from_E" << endl;
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
-    AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
+    amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2);
+    AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << rho_norm*rho_norm << std::endl;
 
     //ofs.close();
 }
