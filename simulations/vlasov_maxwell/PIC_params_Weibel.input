@@ -3,7 +3,7 @@ sim_name = "Weibel"
 
 # Grid parameters
 n_cell_vector = 24 8 8
-max_grid_size = 4 4 4
+max_grid_size_vector = 4 4 4
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
