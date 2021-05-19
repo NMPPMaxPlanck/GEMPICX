@@ -137,6 +137,14 @@ void main_main ()
     }
 
     mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    //for (amrex::MFIter mfi((*(mw_yee).E_Array[0])); mfi.isValid(); ++mfi ) {
+    //        amrex::AllPrintToFile("Ex_old") << (*(mw_yee).E_Array[0])[mfi] << std::endl;
+    //    }
+
+    //for (amrex::MFIter mfi((*(mw_yee).B_Array[0])); mfi.isValid(); ++mfi ) {
+    //        amrex::AllPrintToFile("Bx_old") << (*(mw_yee).B_Array[0])[mfi] << std::endl;
+    //    }
+
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
@@ -278,15 +286,8 @@ void main_main ()
     std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
 #endif
 
-    double x, y, z;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-    int varcount = 3;
-
-    te_expr *rho_parse = te_compile(rho.c_str(), read_vars, varcount, &err);
-    te_expr *phi_parse = te_compile(phi.c_str(), read_vars, varcount, &err);
-
-    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
+    std::array<std::string, 2> fields = {rho, phi};
+    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
     mw_yee.solve_poisson(infra);
     E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k, false, infra);
 
@@ -312,7 +313,8 @@ void main_main ()
     AllPrintToFile("test_maxwell_yee.tmp") << "rho_from_E" << endl;
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
-    AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2) << std::endl;
+    amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2);
+    AllPrintToFile("test_maxwell_yee.tmp").SetPrecision(5) << "rho Error: " << rho_norm*rho_norm << std::endl;
 
     //ofs.close();
 }
@@ -320,6 +322,7 @@ void main_main ()
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_maxwell_yee.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();

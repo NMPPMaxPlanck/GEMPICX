@@ -25,6 +25,7 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
@@ -33,6 +34,7 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     const int degmw = 2;
+    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -87,7 +89,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, VlMa);
+    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -100,15 +103,14 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_vlasov_maxwell_by_lower.tmp") << std::endl;
-time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower.tmp", &ofs);
+    time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by_lower", strang_order);
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_by_lower.tmp.0");
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be

@@ -11,6 +11,7 @@
 #include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_positions.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
@@ -25,14 +26,15 @@ using namespace Gempic;
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
+using namespace Profiling;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
 void main_main ()
 {
-    const int degmw = 2;
+    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -87,7 +89,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, VlMa);
+    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -100,15 +103,14 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_vlasov_maxwell_by.tmp") << std::endl;
-time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by.tmp", &ofs);
+    time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_by", strang_order);
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_by.tmp.0");
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
@@ -211,7 +213,7 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_by.tmp") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1, 2>();
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_by.tmp.0", "test_vlasov_maxwell_by.output");

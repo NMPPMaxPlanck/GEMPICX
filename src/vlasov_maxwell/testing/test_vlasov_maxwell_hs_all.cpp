@@ -29,10 +29,9 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int strang_order>
 void main_main ()
 {
-    const int degmw = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -83,7 +82,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, VlMa);
+    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -98,16 +98,13 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_vlasov_maxwell_hs_all.tmp") << std::endl;
-time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all.tmp", &ofs);
-
+    time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_all", strang_order);
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_all.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
 
@@ -144,7 +141,8 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1, 2, 2>();
+    main_main<3, 1, 1, 1, 1, 2, 4>();
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_all.tmp.0", "test_vlasov_maxwell_hs_all.output");

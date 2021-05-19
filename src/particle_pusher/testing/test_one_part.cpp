@@ -25,13 +25,14 @@ using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace Particles;
 using namespace Sampling;
+using namespace Profiling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template< int vdim, int numspec, int degx, int degy, int degz>
+template< int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main (bool ctest)
 {
-    int const degmw = 2;
+    int const strang_order = 2;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
@@ -64,7 +65,6 @@ void main_main (bool ctest)
     }
     std::string phi = "4 * 0.5 * cos(0.5 * x)";
     std::string rho = "0.0";
-    int propagator = 1;
     bool time_staggered = false;
     amrex::Real tolerance_particles = 1.e-10;
 
@@ -99,7 +99,8 @@ void main_main (bool ctest)
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, VlMa);
+    std::array<std::string, 2> fields = {rho, phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -119,18 +120,20 @@ void main_main (bool ctest)
         }
     }
 
+    timers profiling_timers(true);
+
     //------------------------------------------------------------------------------
     // solve:
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name);
-    loop_preparation<vdim,numspec,degx,degy,degy,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
+    loop_preparation<vdim,numspec,degx,degy,degz,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
     case 0:
-        time_loop_boris_fd<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
+        time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
         break;
     case 1:
-        time_loop_hs_fem<vdim,numspec,degx,degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, true, "test_one_part.tmp", &ofs);
+        time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
         break;
     default:
         break;
@@ -141,6 +144,7 @@ void main_main (bool ctest)
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_one_part.tmp.0");
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
@@ -194,8 +198,9 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    main_main<3, 1, 1, 1, 1>(argc==1);
+    //AllPrintToFile("test_one_part.tmp") << std::endl;
+    main_main<3, 1, 1, 1, 1, 2, 0>(argc==1);
+    main_main<3, 1, 3, 2, 1, 4, 1>(argc==1);
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.tmp.0", "test_one_part.output");

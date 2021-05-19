@@ -74,12 +74,6 @@ void main_main ()
 
     std::string phi = "-cos(x)*cos(y)*cos(z) - 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
     std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
-    double x, y, z;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-    int varcount = 3;
-    te_expr *rho_parse = te_compile(rho.c_str(), read_vars, varcount, &err);
-    te_expr *phi_parse = te_compile(phi.c_str(), read_vars, varcount, &err);
 
     amrex::MultiFab kx(convert(infra.grid, *mw_yee.E_Index[0]),infra.distriMap,1,mw_yee.Nghost);
     kx.setVal(1.0, 0);
@@ -110,7 +104,8 @@ void main_main ()
     mlmg.setVerbose(0);
     mlmg.setBottomVerbose(0);
 
-    mw_yee.init_rho_phi(infra, phi_parse, rho_parse, &x, &y, &z);
+    std::array<std::string, 2> fields = {rho, phi};
+    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
     const int stencil_length = 3;
     std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
     //stencil_x[0] = {-1.0/infra.dx[0], 1.0/infra.dx[0], 0.0};
@@ -151,6 +146,7 @@ void main_main ()
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_poisson_CG.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -161,7 +157,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee.tmp.0", "test_maxwell_yee.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_poisson_CG.tmp.0", "test_poisson_CG.output");
     amrex::Finalize();
 }
 

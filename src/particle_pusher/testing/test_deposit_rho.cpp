@@ -31,7 +31,7 @@ void main_main ()
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
     amrex::Real k = 0.5;
     int err;
-    std::string WF = "1.0 + 0.0 * cos(kvar * x)";
+    std::string WF = "1.0";
     te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
@@ -90,7 +90,9 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho
     // will be overwritten in next paragraph
-    mw_yee.init_rho_phi(infra, WF_parse, WF_parse, &x, &y, &z);
+    std::array<std::string, 2> fields = {WF, WF};
+    mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
+
     mw_yee.phi.mult(-1.0);
 
     //------------------------------------------------------------------------------
@@ -131,14 +133,16 @@ void main_main ()
 
     //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
-    AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+    AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
     //ofs.close();
+    te_free(WF_parse);
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_deposit_rho.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();

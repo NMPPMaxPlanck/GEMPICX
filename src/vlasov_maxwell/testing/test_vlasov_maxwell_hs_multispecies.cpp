@@ -15,8 +15,10 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
+#include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_profiling.H>
 
 using namespace std;
 using namespace amrex;
@@ -28,11 +30,12 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
+using namespace Profiling;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main ()
 {
-    const int degmw = 2;
+    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -77,7 +80,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, VlMa);
+    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -116,16 +120,21 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-
-    std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-    AllPrintToFile("test_vlasov_maxwell_hs_multispecies.tmp") << std::endl;
-    time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies.tmp", &ofs);
+    switch (propagator) {
+    case 1:
+        time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
+        break;
+    case 3:
+        time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
+        break;
+    }
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_multispecies.tmp.0");
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
@@ -228,7 +237,8 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs_multispecies.tmp") << "9 0.0412097 3.56089e-05 2.78074e-06 100.187 79.8439 79.5911" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 2, 1, 1, 1>();
+    main_main<3, 2, 1, 2, 1, 4, 1>(); // hs
+    main_main<3, 2, 3, 1, 2, 2, 3>(); // hs_zigzag
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_multispecies.tmp.0", "test_vlasov_maxwell_hs_multispecies.output");

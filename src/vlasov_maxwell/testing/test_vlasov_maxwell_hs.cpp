@@ -29,10 +29,10 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
 void main_main ()
 {
-    const int degmw = 2;
+    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -90,7 +90,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.init_rho_phi(infra, VlMa);
+    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -106,15 +107,13 @@ void main_main ()
     //------------------------------------------------------------------------------
     // timeloop
 
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
-AllPrintToFile("test_vlasov_maxwell_hs.tmp") << std::endl;
-time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs.tmp", &ofs);
-
+    time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs", strang_order);
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs.tmp.0");
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
     outputted, so that the comparison to the expected_output (which contains all dimensions) works The order of the outputs is:
@@ -216,7 +215,8 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs.tmp") << "9 3.60436e-05 2.88822e-05 5.27541e-07 0.0321713 0.29391 0.968031" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1, 6>();
+    main_main<3, 1, 1, 1, 1, 2>();
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs.tmp.0", "test_vlasov_maxwell_hs.output");

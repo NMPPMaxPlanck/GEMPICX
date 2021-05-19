@@ -15,12 +15,14 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_profiling.H>
 #include <GEMPIC_particle_positions.H>
 
 using namespace Field_solvers;
 using namespace Infra;
 using namespace Particles;
 using namespace Utils;
+using namespace Profiling;
 
 #ifndef DIAGNOSTICS_H_
 #define DIAGNOSTICS_H_
@@ -37,11 +39,10 @@ class diagnostics
 {
 public:
     int n_time; // number of timesteps
-    // 9 static so far!! need to fix this
-    std::array<std::array<amrex::Real,int(vdim/2.5)*2+1>,50001> Bfield;
-    std::array<std::array<amrex::Real,vdim>,50001> Efield, mom;
-    std::array<amrex::Real,50001> kin;
-    std::array<amrex::Real,50001> gauss_error;
+    std::vector<std::array<amrex::Real,int(vdim/2.5)*2+1>> Bfield;
+    std::vector<std::array<amrex::Real,vdim>> Efield, mom;
+    std::vector<amrex::Real> kin;
+    std::vector<amrex::Real> gauss_error;
     int freq_x;
     int freq_v;
     int freq_slice;
@@ -64,6 +65,30 @@ public:
         freq_v = fv;
         freq_slice = fs;
         sim_name = sim_n;
+
+        Bfield.reserve(n_time);
+        Efield.reserve(n_time);
+        mom.reserve(n_time);
+        kin.reserve(n_time);
+        gauss_error.reserve(n_time);
+    }
+
+    void end_of_timestep(timers *profiling_timers, int t_step, infrastructure infra, maxwell_yee<vdim> *mw_yee,
+                         particle_groups<vdim, numspec> *part_gr, std::string filename, bool ctest){
+        if (profiling_timers->profiling)
+          profiling_timers->counter_diagnostics -= MPI_Wtime();
+        // save norms for diagnostics
+        save_step_data(t_step+1, infra, mw_yee, part_gr); // false: slices are not saved
+
+        // save temporary results every n steps
+        if ((t_step+1)%5 == 0) {
+            save_all_to_textfile(mw_yee->dt, filename, t_step+1);
+        }
+        if (profiling_timers->profiling)
+          profiling_timers->counter_diagnostics += MPI_Wtime();
+        amrex::Print() << "finished step " << t_step+1 << std::endl;
+
+        if (ctest) ctest_output(filename, t_step);
     }
 
     // save position and velocities
@@ -75,13 +100,39 @@ public:
                         maxwell_yee<vdim> *mw_yee,
                         particle_groups<vdim, numspec> *part_gr){
 
+        Bfield.push_back({0., 0., 0.});
+        Efield.push_back({0., 0., 0.});
+        mom.push_back({0., 0., 0.});
+        kin.push_back(0.);
+        gauss_error.push_back(0.);
+
         // E and B field
+        mw_yee->template hodge_full<degree>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
         for(int cc=0;cc<vdim;cc++){
-            Efield[step][cc] = gempic_norm(&(*(*mw_yee).E_Array[cc]), infra, 2);
+            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]), 0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
+            val *= infra.dx[0]/infra.Length[0]
+            #if(GEMPIC_SPACEDIM > 1)
+                    *infra.dx[1]/infra.Length[1]
+            #endif
+            #if(GEMPIC_SPACEDIM > 2)
+                    *infra.dx[2]/infra.Length[2]
+            #endif
+                    ;
+            Efield[step][cc] = val;
         }
 
+        mw_yee->template hodge_full<degree>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
         for(int cc=0;cc<int(vdim/2.5)*2+1;cc++){
-            Bfield[step][cc] = gempic_norm(&(*(*mw_yee).B_Array[cc]), infra, 2);
+            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]), 0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
+            val *= infra.dx[0]/infra.Length[0]
+            #if(GEMPIC_SPACEDIM > 1)
+                    *infra.dx[1]/infra.Length[1]
+            #endif
+            #if(GEMPIC_SPACEDIM > 2)
+                    *infra.dx[2]/infra.Length[2]
+            #endif
+                    ;
+            Bfield[step][cc] = val;
         }
 
         // compute kinetic energy norm and momentum
@@ -141,48 +192,130 @@ public:
             partial = n_time;
         }
         std::ofstream ofsfun(filename, std::ofstream::out);
-        amrex::Print(ofsfun) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
+        amrex::Print(ofsfun).SetPrecision(20) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
         for (int step=0;step<=partial;step++){
-            amrex::Print(ofsfun) << dt*(step) << " ";
+            amrex::Print(ofsfun).SetPrecision(20) << dt*(step) << " ";
             switch(vdim) {
             case 1:
-                amrex::Print(ofsfun) << Efield[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0];
                 break;
             case 2:
-                amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0] << " " << Efield[step][1];
                 break;
             case 3:
-                amrex::Print(ofsfun) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
                 break;
 
             }
 
             switch (int(vdim/2.5)*2+1) {
             case 1:
-                amrex::Print(ofsfun) << " " << Bfield[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield[step][0];
                 break;
             case 3:
-                amrex::Print(ofsfun) << " " << Bfield[step][0] << " " << Bfield[step][1] << " " << Bfield[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield[step][0] << " " << Bfield[step][1] << " " << Bfield[step][2];
                 break;
             }
-            amrex::Print(ofsfun) << " " << kin[step];
+            amrex::Print(ofsfun).SetPrecision(20) << " " << kin[step];
             switch(vdim) {
             case 1:
-                amrex::Print(ofsfun) << " "  << mom[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << " "  << mom[step][0];
                 break;
             case 2:
-                amrex::Print(ofsfun) << " "  << mom[step][0] << " " << mom[step][1];
+                amrex::Print(ofsfun).SetPrecision(20) << " "  << mom[step][0] << " " << mom[step][1];
                 break;
             case 3:
-                amrex::Print(ofsfun) << " "  << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << " "  << mom[step][0] << " " << mom[step][1] << " " << mom[step][2];
                 break;
 
             }
-            amrex::Print(ofsfun) << " " << gauss_error[step]
+            amrex::Print(ofsfun).SetPrecision(20) << " " << gauss_error[step]
                                     << std::endl;
         }
         ofsfun.close();
     }
+
+    void ctest_output(std::string simulation_name, int t_step){
+        switch (vdim) {
+        case 1:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0];
+            break;
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1] << " " << Efield[t_step][2];
+            break;
+        }
+        switch (vdim) {
+        case 1: // no break, so that case 1 and 2 are handled the same way
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0] << " " << Bfield[t_step][1] << " " << Bfield[t_step][2];
+            break;
+        }
+        amrex::AllPrintToFile(simulation_name) << " " << kin[t_step] << " ";
+        switch (vdim) {
+        case 1:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0];
+            break;
+        case 2:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1];
+            break;
+        case 3:
+            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
+            break;
+        }
+        amrex::AllPrintToFile(simulation_name) << " " << gauss_error[t_step];
+        amrex::AllPrintToFile(simulation_name) << std::endl;
+    }
+
+#if (GEMPIC_SPACEDIM==3)
+    void cross_product (std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
+                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
+                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
+                        infrastructure infra) {
+
+        amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab EzBy(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab EzBx(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab ExBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab ExBy(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+        amrex::MultiFab EyBx(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
+
+        std::cout << "before copy" << std::endl;
+        // "E"
+        EyBz.Copy(EyBz, *((*MultiInputE)[1]), 0, 0, 1, 0);
+        EzBy.Copy(EzBy, *((*MultiInputE)[2]), 0, 0, 1, 0);
+        EzBx.Copy(EzBx, *((*MultiInputE)[2]), 0, 0, 1, 0);
+        ExBz.Copy(ExBz, *((*MultiInputE)[0]), 0, 0, 1, 0);
+        ExBy.Copy(ExBy, *((*MultiInputE)[0]), 0, 0, 1, 0);
+        EyBx.Copy(EyBx, *((*MultiInputE)[1]), 0, 0, 1, 0);
+
+        std::cout << "before multiply" << std::endl;
+        // "EB"
+        EyBz.Multiply(EyBz, *((*MultiInputB)[2]), 0, 0, 1, 0);
+        EzBy.Multiply(EzBy, *((*MultiInputB)[1]), 0, 0, 1, 0);
+        EzBx.Multiply(EzBx, *((*MultiInputB)[0]), 0, 0, 1, 0);
+        ExBz.Multiply(ExBz, *((*MultiInputB)[2]), 0, 0, 1, 0);
+        ExBy.Multiply(ExBy, *((*MultiInputB)[1]), 0, 0, 1, 0);
+        EyBx.Multiply(EyBx, *((*MultiInputB)[0]), 0, 0, 1, 0);
+
+        std::cout << "before minus" << std::endl;
+        // "EB - EB"
+        EyBz.minus(EzBy, 0, 1, 0);
+        EzBx.minus(ExBz, 0, 1, 0);
+        ExBy.minus(EyBx, 0, 1, 0);
+
+        std::cout << "before final copy" << std::endl;
+        // Copy into out MF
+        (*((*MultiOutput)[0])).Copy(*((*MultiOutput)[0]), EyBz, 0, 0, 1, 0);
+        (*((*MultiOutput)[1])).Copy(*((*MultiOutput)[1]), EzBx, 0, 0, 1, 0);
+        (*((*MultiOutput)[2])).Copy(*((*MultiOutput)[2]), ExBy, 0, 0, 1, 0);
+    }
+#endif
 };
 }
 }
