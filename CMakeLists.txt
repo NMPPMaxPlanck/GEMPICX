@@ -44,8 +44,12 @@ ENDIF()
 # Enable ctests
 enable_testing()
 # This defines how the ctests are run
-include(cmake/define_ctest.cmake)
-
+message ("HOST is $ENV{HOST}" )
+IF ($ENV{HOST} MATCHES "cobra*")
+  include(cmake/cobra_ctest.cmake)
+ELSE()
+  include(cmake/define_ctest.cmake)
+ENDIF()
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations
