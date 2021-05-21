@@ -2,25 +2,15 @@
 sim_name = "Weibel" # (string) name to include in saved files
 
 # Grid parameters
-n_cell_vector = 24 8 8      # (integers) GEMPIC_DIM many: each describes the number of cells in each direction
-max_grid_size = 4           # (integer) biggest possible size of a tile for dividing grid into tiles
-is_periodic_vector = 1 1 1  # (integers) GEMPIC_DIM many, one for each direction: 1 -> periodic, 0 -> else
+n_cell_vector = 24 8 8       # (integers) GEMPIC_DIM many: each describes the number of cells in each direction
+max_grid_size_vector = 4 4 4 # (integers) biggest possible size of a tile in each dim for dividing grid into tiles
+is_periodic_vector = 1 1 1   # (integers) GEMPIC_DIM many, one for each direction: 1 -> periodic, 0 -> else
 
 # Particle parameters
 n_part_per_cell = 100   # (integer) number of particles per cell
 charge = -1.0           # (doubles) GEMPIC_NUMSPEC many, one entry per species
 mass = 1.0              # (doubles) GEMPIC_NUMSPEC many, one entry per species
-num_gaussians = 2       # (integer) how many gaussians will be passed for velocity distribution. Must be same as number of paragraphs passed in next section: Gaussian parameters
-
-# Gaussian parameters # each 'paragraph' corresponds to the parameters for one gaussian. Include index of paragraph in variable name as in this example. Each component of the weight vector should sum up to 1 when added over all paragraphs.
-
-velocity_mean_0 = 0.0 0.0 0.0       # (doubles) GEMPIC_VDIM many, means of gaussian vx, vy and vz
-velocity_deviation_0 = 0.1 0.4 0.4  # (doubles) GEMPIC_VDIM many, standard deviations of gaussian vx, vy and vz
-velocity_weight_0 = 0.5 0.5 0.2     # (doubles) GEMPIC_VDIM many, weighting of gaussian vx, vy and vz
-
-velocity_mean_1 = 0.0 0.0 0.0
-velocity_deviation_1 = 0.2 0.8 0.8
-velocity_weight_1 = 0.5 0.5 0.8
+num_gaussians = 2       # (integer) how many gaussians will be passed for velocity distribution
 
 # wave vector
 k = 1.25    # (double) e.g.  for standard test cases 1.25 (Weibel), 0.5 (Landau damping)
@@ -33,13 +23,12 @@ freq_v = 100001     # (integer) how often should the v-Coordinates of particles 
 freq_slice = 100001 # (integer) how often should slices of the fields be saved into a file
 
 # Function parameters
-WF = "1.0 + 0.0 * cos(kvar * x)"  # (string) is parsed into weight function for particle distibution
 Bx = "0.0"                          # (string) function: initial Bx-field
 By = "0.0"                          # (string) function: initial By-field
 Bz = "1e-3 * cos(kvar * x)"         # (string) function: initial Bz-field
 phi = "4 * 0.5 * cos(0.5 * x)"      # (string) function: initial phi
 
-# Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
+# Choose the propagator: 0 - Boris-FD, 1 - HS-FEM, 2 - HS-FEM-ALL, 3 - HS-FEM-ZIGZAG
 propagator = 0
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
