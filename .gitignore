@@ -5,3 +5,15 @@ gempic.creator
 gempic.creator.user
 gempic.files
 gempic.includes
+build/**/*
+**/cmake-build-debug
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/install_manifest.txt
+**/CMakeFiles/
+**/CTestTestfile.cmake
+**/Makefile
+**/*.cbp
+**/CMakeScripts
+**/compile_commands.json
+
