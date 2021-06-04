@@ -98,7 +98,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     kz.setVal(1.0, 0);
     kz.FillBoundary(infra.geom.periodicity());
 
-    (*mw_yee).solve_poisson(infra, 1e-11);
+     (*mw_yee).solve_poisson(infra, 1e-11, VM.max_coarsening_level);
     if (degmw > 2)
       {
         (*mw_yee).template solve_poisson_CG<degmw>(&(mw_yee->rho), &(mw_yee->phi), &kx, &ky, &kz, infra, 2, 1e-11, 100);

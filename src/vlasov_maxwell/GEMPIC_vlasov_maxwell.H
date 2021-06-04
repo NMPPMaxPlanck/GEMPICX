@@ -71,6 +71,7 @@ public:
     int propagator;
     bool time_staggered;
     amrex::Real tolerance_particles;
+    int max_coarsening_level = 30;
     int restart;
     std::string checkpoint_file;
     int curr_step;
@@ -123,6 +124,7 @@ public:
         pp.get("num_gaussians",num_gaussians);
         pp.get("propagator",propagator);
         pp.get("tolerance_particles", tolerance_particles);
+        pp.query("max_coarsening_level", max_coarsening_level); // no error if max_coarsening_level is not defined in input file
         pp.get("restart", restart);
         pp.get("checkpoint_file", checkpoint_file);
         pp.get("curr_step", curr_step);
@@ -199,6 +201,7 @@ public:
                      int NG = 1,
                      int PROP = 0,
                      amrex::Real TOL_P = 1.e-10,
+                     int MAX_C = 30,
                      int RST = 0,
                      std::string CF = "",
                      int CD = 0
@@ -262,7 +265,7 @@ public:
                 NP_cell_tot += n_part_per_cell[spec];
             }
 
-            double twopi = 2.0*3.14159265359;
+            double twopi = 4 * asin(1.0); // 2.0*3.14159265359;
 
             amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
             amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/k[0],twopi/k[1],twopi/k[2])};
