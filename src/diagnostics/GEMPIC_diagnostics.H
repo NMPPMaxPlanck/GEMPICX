@@ -176,7 +176,7 @@ public:
         gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
 
         // save Plot and Checkpoint-files
-        if ((step+1)%freq_slice == 0) {
+        if ((step == 0) || ((step+1)%freq_slice == 0)) {
             Gempic_WriteCheckpointFile(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
             Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step+1);
         }
