@@ -138,7 +138,7 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
                       vel[d] = particles[pp].rdata(d);
                     std::array<amrex::Real, 2> bfields;
                     // push x1
-                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*coeff*vel[0];
+                    amrex::Real x1_new = pos[0] +  (*mw_yee).dt*0.5*coeff*vel[0];
                     spline_new_x.init_position( x1_new, infra.plo[0], infra.dxi[0] );
                     spline_old_x.init_position( pos[0], infra.plo[0], infra.dxi[0] );
                     spline.template init_position<0,degx>( x1_new, infra.plo[0], infra.dxi[0] );
@@ -164,7 +164,7 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
                       {
 #if GEMPIC_SPACEDIM > 1
                         // push x2
-                      amrex::Real x2_new = pos[1] +  (*mw_yee).dt*coeff*vel[1];
+                      amrex::Real x2_new = pos[1] +  (*mw_yee).dt*0.5*coeff*vel[1];
 
                       spline_new_y.init_position( x2_new, infra.plo[1], infra.dxi[1] );
                       spline_old_y.init_position( pos[1], infra.plo[1], infra.dxi[1] );
@@ -224,6 +224,62 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
 
 
 }
+
+                    if ( vdim > 1 )
+                      {
+#if GEMPIC_SPACEDIM > 1
+                        // push x2
+                      amrex::Real x2_new = pos[1] +  (*mw_yee).dt*0.5*coeff*vel[1];
+
+                      spline_new_y.init_position( x2_new, infra.plo[1], infra.dxi[1] );
+                      spline_old_y.init_position( pos[1], infra.plo[1], infra.dxi[1] );
+                      spline.template init_position<1,degy>( x2_new, infra.plo[1], infra.dxi[1] );
+
+                      accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degy, degz, degx, 1>( spline,
+                                                        spline_new_y,
+                                                        spline_old_y,
+                                                        weight,
+                                                        infra.geom.CellSize(),
+                                                        bA,
+                                                        jA,
+                                                        bfields);
+
+                      // Push v2 and v3
+                      vel[0] = vel[0] + chargemass*bfields[1];
+                      if (vdim > 2 )
+                        vel[2] = vel[2] - chargemass*bfields[0];
+                      pos[1] = x2_new;
+#else
+                      std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                      gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[1]*(*mw_yee).dt*coeff,
+                                               jA[1]);
+                      // Push v2 and v3
+                      vel[0] = vel[0] + chargemass*bfields[0]*vel[1]*(*mw_yee).dt*coeff;
+  #endif
+}
+
+                    // second half step of Hp1
+                    x1_new = pos[0] +  (*mw_yee).dt*0.5*coeff*vel[0];
+                                        spline_new_x.init_position( x1_new, infra.plo[0], infra.dxi[0] );
+                                        spline_old_x.init_position( pos[0], infra.plo[0], infra.dxi[0] );
+                                        spline.template init_position<0,degx>( x1_new, infra.plo[0], infra.dxi[0] );
+
+                                        accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degx, degy, degz, 0>( spline,
+                                                                                                                                   spline_new_x,
+                                                                                                                                   spline_old_x,
+                                                                                                                                   weight,
+                                                                                                                                   infra.geom.CellSize(),
+                                                                                                                                   bA,
+                                                                                                                                   jA,
+                                                                                                                                   bfields);
+
+
+                                        // Push v2 and v3
+                                        if (vdim > 1)
+                                          vel[1] = vel[1] - chargemass*bfields[0];
+                                        if (vdim > 2)
+                                          vel[2] = vel[2] + chargemass*bfields[1];
+                                        pos[0] = x1_new;
                     std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 //exit(0);
