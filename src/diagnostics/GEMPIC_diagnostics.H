@@ -47,6 +47,7 @@ public:
     int freq_v;
     int freq_slice;
     std::string sim_name;
+    amrex::Real domain_volume;
 
     // The default constructor.
     /**
@@ -59,12 +60,13 @@ public:
      * Explicit constructor: object can be initialized by passing the parameters: number of time steps @p n_t, the frequency with which to output positins @p fx and velocities @p fv,
      * the frequency with which to generate slices and the name of the simulation @p sim_name.
      */
-    diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n){
+    diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
         n_time = n_t;
         freq_x = fx;
         freq_v = fv;
         freq_slice = fs;
         sim_name = sim_n;
+        domain_volume = vol;
 
         Bfield.reserve(n_time);
         Efield.reserve(n_time);
@@ -192,8 +194,10 @@ public:
             partial = n_time;
         }
         std::ofstream ofsfun(filename, std::ofstream::out);
-        amrex::Print(ofsfun).SetPrecision(20) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error" << std::endl;
+        amrex::Real init_tot_energy = 0.5*(Efield[0][0]+Efield[0][1]+Efield[0][2]+Bfield[0][0]+Bfield[0][1]+Bfield[0][2])+kin[0]/domain_volume;
+        amrex::Print(ofsfun).SetPrecision(20) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error total-energy energy-error" << std::endl;
         for (int step=0;step<=partial;step++){
+            amrex::Real tot_energy = 0.5*(Efield[step][0]+Efield[step][1]+Efield[step][2]+Bfield[step][0]+Bfield[step][1]+Bfield[step][2])+kin[step]/domain_volume;
             amrex::Print(ofsfun).SetPrecision(20) << dt*(step) << " ";
             switch(vdim) {
             case 1:
@@ -230,7 +234,7 @@ public:
 
             }
             amrex::Print(ofsfun).SetPrecision(20) << " " << gauss_error[step]
-                                    << std::endl;
+                                    << " " << tot_energy << " " << abs(tot_energy-init_tot_energy) << std::endl;
         }
         ofsfun.close();
     }

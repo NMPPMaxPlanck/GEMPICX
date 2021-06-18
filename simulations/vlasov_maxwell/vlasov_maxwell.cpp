@@ -69,7 +69,8 @@ void main_main (bool ctest)
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
-    diagnostics<vdim, numspec,degx,degy,degz,degvm> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name);
+    amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
+    diagnostics<vdim, numspec,degx,degy,degz,degvm> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
@@ -152,7 +153,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 2)
     main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 2, 2, 2, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
 #endif
 
     amrex::Finalize();
