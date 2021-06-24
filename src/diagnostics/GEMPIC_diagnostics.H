@@ -39,8 +39,8 @@ class diagnostics
 {
 public:
     int n_time; // number of timesteps
-    std::vector<std::array<amrex::Real,int(vdim/2.5)*2+1>> Bfield;
-    std::vector<std::array<amrex::Real,vdim>> Efield, mom;
+    std::vector<std::array<amrex::Real,int(vdim/2.5)*2+1>> Bfield_energy;
+    std::vector<std::array<amrex::Real,vdim>> Efield_energy, mom;
     std::vector<amrex::Real> kin;
     std::vector<amrex::Real> gauss_error;
     int freq_x;
@@ -68,8 +68,8 @@ public:
         sim_name = sim_n;
         domain_volume = vol;
 
-        Bfield.reserve(n_time);
-        Efield.reserve(n_time);
+        Bfield_energy.reserve(n_time);
+        Efield_energy.reserve(n_time);
         mom.reserve(n_time);
         kin.reserve(n_time);
         gauss_error.reserve(n_time);
@@ -102,8 +102,8 @@ public:
                         maxwell_yee<vdim> *mw_yee,
                         particle_groups<vdim, numspec> *part_gr){
 
-        Bfield.push_back({0., 0., 0.});
-        Efield.push_back({0., 0., 0.});
+        Bfield_energy.push_back({0., 0., 0.});
+        Efield_energy.push_back({0., 0., 0.});
         mom.push_back({0., 0., 0.});
         kin.push_back(0.);
         gauss_error.push_back(0.);
@@ -120,7 +120,7 @@ public:
                     *infra.dx[2]/infra.Length[2]
             #endif
                     ;
-            Efield[step][cc] = val;
+            Efield_energy[step][cc] = val;
         }
 
         mw_yee->template hodge_full<degree>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
@@ -134,7 +134,7 @@ public:
                     *infra.dx[2]/infra.Length[2]
             #endif
                     ;
-            Bfield[step][cc] = val;
+            Bfield_energy[step][cc] = val;
         }
 
         // compute kinetic energy norm and momentum
@@ -194,30 +194,30 @@ public:
             partial = n_time;
         }
         std::ofstream ofsfun(filename, std::ofstream::out);
-        amrex::Real init_tot_energy = 0.5*(Efield[0][0]+Efield[0][1]+Efield[0][2]+Bfield[0][0]+Bfield[0][1]+Bfield[0][2])+kin[0]/domain_volume;
-        amrex::Print(ofsfun).SetPrecision(20) << "# time   E-components   B-components   kinetic-energy   momentum-components gauss-error total-energy energy-error" << std::endl;
+        amrex::Real init_tot_energy = 0.5*(Efield_energy[0][0]+Efield_energy[0][1]+Efield_energy[0][2]+Bfield_energy[0][0]+Bfield_energy[0][1]+Bfield_energy[0][2])+kin[0]/domain_volume;
+        amrex::Print(ofsfun).SetPrecision(20) << "# time   E-energy-components   B-energy-components   kinetic-energy   momentum-components gauss-error total-energy energy-error" << std::endl;
         for (int step=0;step<=partial;step++){
-            amrex::Real tot_energy = 0.5*(Efield[step][0]+Efield[step][1]+Efield[step][2]+Bfield[step][0]+Bfield[step][1]+Bfield[step][2])+kin[step]/domain_volume;
+            amrex::Real tot_energy = 0.5*(Efield_energy[step][0]+Efield_energy[step][1]+Efield_energy[step][2]+Bfield_energy[step][0]+Bfield_energy[step][1]+Bfield_energy[step][2])+kin[step]/domain_volume;
             amrex::Print(ofsfun).SetPrecision(20) << dt*(step) << " ";
             switch(vdim) {
             case 1:
-                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield_energy[step][0];
                 break;
             case 2:
-                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0] << " " << Efield[step][1];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield_energy[step][0] << " " << Efield_energy[step][1];
                 break;
             case 3:
-                amrex::Print(ofsfun).SetPrecision(20) << Efield[step][0] << " " << Efield[step][1] << " " << Efield[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << Efield_energy[step][0] << " " << Efield_energy[step][1] << " " << Efield_energy[step][2];
                 break;
 
             }
 
             switch (int(vdim/2.5)*2+1) {
             case 1:
-                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield[step][0];
+                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield_energy[step][0];
                 break;
             case 3:
-                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield[step][0] << " " << Bfield[step][1] << " " << Bfield[step][2];
+                amrex::Print(ofsfun).SetPrecision(20) << " " << Bfield_energy[step][0] << " " << Bfield_energy[step][1] << " " << Bfield_energy[step][2];
                 break;
             }
             amrex::Print(ofsfun).SetPrecision(20) << " " << kin[step];
@@ -242,22 +242,22 @@ public:
     void ctest_output(std::string simulation_name, int t_step){
         switch (vdim) {
         case 1:
-            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0];
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0];
             break;
         case 2:
-            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1];
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1];
             break;
         case 3:
-            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield[t_step][0] << " " << Efield[t_step][1] << " " << Efield[t_step][2];
+            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1] << " " << Efield_energy[t_step][2];
             break;
         }
         switch (vdim) {
         case 1: // no break, so that case 1 and 2 are handled the same way
         case 2:
-            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0];
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield_energy[t_step][0];
             break;
         case 3:
-            amrex::AllPrintToFile(simulation_name) << " " << Bfield[t_step][0] << " " << Bfield[t_step][1] << " " << Bfield[t_step][2];
+            amrex::AllPrintToFile(simulation_name) << " " << Bfield_energy[t_step][0] << " " << Bfield_energy[t_step][1] << " " << Bfield_energy[t_step][2];
             break;
         }
         amrex::AllPrintToFile(simulation_name) << " " << kin[t_step] << " ";
