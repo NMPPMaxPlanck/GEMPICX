@@ -33,7 +33,7 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degvm, int strang_order, bool electromagnetic=true>
+template<int vdim, int numspec, int degx, int degy, int degz, int degvm, int strang_order, bool electromagnetic=true, bool output>
 void main_main (bool ctest)
 {
     bool readinfile = false;
@@ -84,7 +84,7 @@ void main_main (bool ctest)
                 }
             }
         }
-        loop_preparation<vdim, numspec, degx, degy, degz, degvm>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
+        loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
     } else {
     if (VlMa.restart == 0) {
         if (readinfile) {
@@ -98,7 +98,7 @@ void main_main (bool ctest)
             }
         }
 
-        loop_preparation<vdim, numspec, degx, degy, degz, degvm>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
+        loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
     } else {
         Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, VlMa.checkpoint_file, VlMa.curr_step);
     }
@@ -107,10 +107,6 @@ void main_main (bool ctest)
     //------------------------------------------------------------------------------
     // timeloop
 
-    timers profiling_timers(true);
-
-
-std::ofstream ofs("vlasov_maxwell.output", std::ofstream::out);
 auto start = high_resolution_clock::now();
 switch (VlMa.propagator) {
     case 0:
@@ -123,10 +119,10 @@ switch (VlMa.propagator) {
     time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
         break;      
     case 3:
-    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
+    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false, output>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
         break;
     case 100:
-      time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
+      //time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
         break;
     default:
         break;
@@ -149,11 +145,11 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<2, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<2, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC, false>(argc==1);
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC, false>(argc==1);
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, GEMPIC_NUMSPEC, 2, 2, 2, 2, 2, GEMPIC_ELECTROMAGNETIC>(argc==1);
+    main_main<3, GEMPIC_NUMSPEC, 2, 2, 2, 2, 2, GEMPIC_ELECTROMAGNETIC, false>(argc==1);
 #endif
 
     amrex::Finalize();

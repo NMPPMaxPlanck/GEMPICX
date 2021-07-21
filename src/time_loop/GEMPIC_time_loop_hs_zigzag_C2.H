@@ -50,7 +50,7 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
 
 
     // Initialize the counters for timing the various parts of the algorithm
-    bool profiling_count = false;
+    bool profiling_count = true;
 
     splines_at_particles<degx,degy,degz> spline;
     spline1d_at_particles<degx> spline_new_x;
@@ -378,7 +378,7 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
 
 }
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true, bool output=true>
 void time_loop_hs_zigzag_C2 (infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -389,12 +389,14 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
 
     timers profiling_timers(true);
 
-    amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
+    if (output)
+        amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
 
     if (profiling_timers.profiling)
-        profiling_timers.counter_all -= MPI_Wtime();
+        // profiling_timers.counter_all -= MPI_Wtime();
     for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
-
+        if (profiling_timers.profiling && t_step == 0)
+            profiling_timers.counter_all -= MPI_Wtime();
         switch (strang_order) {
         case 2:
             time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, 1.0, part_gr, &profiling_timers);
@@ -409,7 +411,8 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
             break;
         }
 
-        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
+        if (output)
+            diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
 
     }
 
@@ -419,7 +422,8 @@ void time_loop_hs_zigzag_C2 (infrastructure infra,
                      << ", field solver time: " << profiling_timers.counter_fields << ", sum boundary j time: " << profiling_timers.counter_jboundary
                      << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
       }
-    diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
+    if (output)
+        diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
 
 
 }

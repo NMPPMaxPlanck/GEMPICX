@@ -30,7 +30,7 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
                        infrastructure infra,
                        maxwell_yee<vdim> *mw_yee,
@@ -132,7 +132,8 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
 
     //------------------------------------------------------------------------------
     //Save "step 0" data
-    (*diagn).save_step_data(0, infra, mw_yee, part_gr); //false: slices are not saved
+    if (output)
+        (*diagn).save_step_data(0, infra, mw_yee, part_gr); //false: slices are not saved
 }
 }
 }

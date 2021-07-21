@@ -126,7 +126,7 @@ void main_main (bool ctest)
     // solve:
     amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name, vol);
-    loop_preparation<vdim,numspec,degx,degy,degz,degmw>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
+    loop_preparation<vdim,numspec,degx,degy,degz,degmw, false>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
