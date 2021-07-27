@@ -1021,7 +1021,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Initialize E by solving Poisson problem in two steps: 1) use the MLMG solver of amrex to solve rho -> phi 2) use differences for phi -> E
      */
-    void solve_poisson(infrastructure ifr){
+    void solve_poisson(infrastructure ifr, amrex::Real reltol = 1.e-11, int max_coarsening_level = 30){
         //--------------------------------------------------------------------------------
         // rho
 #if GEMPIC_SPACEDIM > 1 // for == 1: use analytical solution instead of MLMG solver
@@ -1033,7 +1033,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         int mg_bottom_maxiter = 10000;
 
         amrex::LPInfo lp_info;
-        lp_info.setMaxCoarseningLevel(ifr.max_coarsening_level);
+        lp_info.setMaxCoarseningLevel(max_coarsening_level);
         amrex::MLNodeLaplacian_FD linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}, lp_info); // linear operator class
 
         linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for lower ends
@@ -1053,7 +1053,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         mlmg.setBottomSolver(amrex::BottomSolver::cg);
 
         phi.setVal(0.0); // initialise phi
-        mlmg.solve({&phi}, {&rho}, ifr.reltol, 0.0);
+        mlmg.solve({&phi}, {&rho}, reltol, 0.0);
         phi.FillBoundary(ifr.geom.periodicity());
 
 #endif
@@ -1357,7 +1357,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
-        solve_poisson(ifr);
+        solve_poisson(ifr, 1e-11);
         if (degree> 2)
           {
             solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);

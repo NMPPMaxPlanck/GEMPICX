@@ -40,8 +40,6 @@ public:
     std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
     amrex::Real tolerance_particle; //
-    amrex::Real reltol;
-    int max_coarsening_level;
 
     // The default constructor.
     /**

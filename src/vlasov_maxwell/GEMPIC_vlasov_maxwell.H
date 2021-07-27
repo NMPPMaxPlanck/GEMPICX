@@ -71,7 +71,6 @@ public:
     int propagator;
     bool time_staggered;
     amrex::Real tolerance_particles;
-    amrex::Real reltol = 1.e-11;
     int max_coarsening_level = 30;
     int restart;
     std::string checkpoint_file;
@@ -125,7 +124,6 @@ public:
         pp.get("num_gaussians",num_gaussians);
         pp.get("propagator",propagator);
         pp.get("tolerance_particles", tolerance_particles);
-        pp.query("reltol", reltol); 
         pp.query("max_coarsening_level", max_coarsening_level); // no error if max_coarsening_level is not defined in input file
         pp.get("restart", restart);
         pp.get("checkpoint_file", checkpoint_file);
@@ -203,7 +201,6 @@ public:
                      int NG = 1,
                      int PROP = 0,
                      amrex::Real TOL_P = 1.e-10,
-                     amrex::Real RELTOL = 1.e-11,
                      int MAX_C = 30,
                      int RST = 0,
                      std::string CF = "",
@@ -233,7 +230,6 @@ public:
         num_gaussians = NG;
         propagator = PROP;
         tolerance_particles = TOL_P;
-        reltol = RELTOL;
         restart = RST;
         checkpoint_file = CF;
         curr_step = CD;
@@ -318,7 +314,6 @@ public:
             }
 
             ifr->tolerance_particle = tolerance_particles;
-            ifr->reltol = reltol;
 
         }
 
