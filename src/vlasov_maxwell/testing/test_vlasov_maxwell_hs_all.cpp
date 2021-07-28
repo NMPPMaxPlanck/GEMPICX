@@ -94,7 +94,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, false>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
 
     //------------------------------------------------------------------------------

@@ -116,7 +116,7 @@ void main_main ()
     VlMa.WF = "1.0 + 0.2 * cos(kvarx * x)";
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 1);
 
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, false>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
 
     //------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ void main_main ()
         time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
         break;
     case 3:
-        time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
+        time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
         break;
     }
 
