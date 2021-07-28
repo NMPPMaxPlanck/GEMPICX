@@ -1,10 +1,10 @@
-ubuntu2004_openmpi_1D:
+ubuntu2004_openmpi_3D:
   image: gitlab-registry.mpcdf.mpg.de/khr/docker/gempic/ubuntu2004
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
     - cd scripts
-    - bash gempic1D_ci.sh
+    - bash gempic3D_ci.sh
   tags:
     - avx2
     - docker
