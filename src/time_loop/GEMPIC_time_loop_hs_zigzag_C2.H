@@ -108,7 +108,7 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
-                    eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
+                    eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
                 }
                 for (int cc=0;cc < int(vdim/2.5)*2+1;cc++) {
                     bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
@@ -333,7 +333,7 @@ void time_loop_hs_zigzag_C2_step (infrastructure infra,
                 std::array<amrex::Array4<amrex::Real>,vdim> eA;
 
                 for (int cc=0;cc < vdim;cc++) {
-                    eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
+                    eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
                 }
 
                 // loop over particles: add contribution of old particle position to J and push
