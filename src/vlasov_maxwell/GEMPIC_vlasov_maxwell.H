@@ -44,37 +44,37 @@ public:
     int Nghost;
 
     // parameters from main input file
-    std::string sim_name;
-    std::array<int,GEMPIC_SPACEDIM> n_cell_vector;
+    std::string sim_name = "simulation";
+    std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {10, 10, 10};
     amrex::IntVect n_cell;
-    std::array<int, numspec> n_part_per_cell;
-    int n_steps;
-    int freq_x;
-    int freq_v;
-    int freq_slice;
-    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector;
+    std::array<int, numspec> n_part_per_cell = {100};
+    int n_steps = 10;
+    int freq_x = 1000;
+    int freq_v = 1000;
+    int freq_slice = 1000;
+    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {1,1,1};
     amrex::IntVect is_periodic;
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size_vector;
+    std::array<int,GEMPIC_SPACEDIM> max_grid_size_vector = {5,5,5};
     amrex::IntVect max_grid_size;
-    amrex::Real dt;
-    std::array<amrex::Real, numspec> charge;
-    std::array<amrex::Real, numspec> mass;
-    std::array<amrex::Real, 3> k;
+    amrex::Real dt = 0.01;
+    std::array<amrex::Real, numspec> charge = {-1};
+    std::array<amrex::Real, numspec> mass = {1};
+    std::array<amrex::Real, 3> k = {1.25, 1.25, 1.25};
     amrex::Real kx, ky, kz;
-    std::string WF;
-    std::string Bx;
-    std::string By;
-    std::string Bz;
-    std::string phi;
+    std::string WF = "1.0";
+    std::string Bx = "0.0";
+    std::string By = "0.0";
+    std::string Bz = "0.0";
+    std::string phi = "0.0";
     std::string rho = "0.0";
-    int num_gaussians;
-    int propagator;
+    int num_gaussians = 1;
+    int propagator = 3;
     bool time_staggered;
-    amrex::Real tolerance_particles;
+    amrex::Real tolerance_particles = 1e-10;
     int max_coarsening_level = 30;
-    int restart;
-    std::string checkpoint_file;
-    int curr_step;
+    int restart = 0;
+    std::string checkpoint_file = "";
+    int curr_step = 0;
 
     // parameters from particle species file
     std::array<std::vector<amrex::Real>, vdim> VM{};
@@ -101,33 +101,34 @@ public:
     }
 
     void read_pp_params () {
-        pp.get("sim_name",sim_name);
-        pp.get("n_cell_vector",n_cell_vector);
+        pp.query("sim_name",sim_name);
+        pp.query("n_cell_vector",n_cell_vector);
         n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-        pp.get("n_part_per_cell",n_part_per_cell);
-        pp.get("n_steps",n_steps);
-        pp.get("freq_x",freq_x);
-        pp.get("freq_v",freq_v);
-        pp.get("freq_slice",freq_slice);
-        pp.get("is_periodic_vector",is_periodic_vector);
+        pp.query("n_part_per_cell",n_part_per_cell);
+        std::cout << "query result: " << n_steps << std::endl;
+        pp.query("n_steps",n_steps);
+        pp.query("freq_x",freq_x);
+        pp.query("freq_v",freq_v);
+        pp.query("freq_slice",freq_slice);
+        pp.query("is_periodic_vector",is_periodic_vector);
         is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-        pp.get("max_grid_size_vector",max_grid_size_vector);
+        pp.query("max_grid_size_vector",max_grid_size_vector);
         max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
-        pp.get("dt",dt);
-        pp.get("charge",charge);
-        pp.get("mass",mass);
-        pp.get("k",k);
-        pp.get("Bx",Bx);
-        pp.get("By",By);
-        pp.get("Bz",Bz);
-        pp.get("phi",phi);
-        pp.get("num_gaussians",num_gaussians);
-        pp.get("propagator",propagator);
-        pp.get("tolerance_particles", tolerance_particles);
-        pp.query("max_coarsening_level", max_coarsening_level); // no error if max_coarsening_level is not defined in input file
-        pp.get("restart", restart);
-        pp.get("checkpoint_file", checkpoint_file);
-        pp.get("curr_step", curr_step);
+        pp.query("dt",dt);
+        pp.query("charge",charge);
+        pp.query("mass",mass);
+        pp.query("k",k);
+        pp.query("Bx",Bx);
+        pp.query("By",By);
+        pp.query("Bz",Bz);
+        pp.query("phi",phi);
+        pp.query("num_gaussians",num_gaussians);
+        pp.query("propagator",propagator);
+        pp.query("tolerance_particles", tolerance_particles);
+        pp.query("max_coarsening_level", max_coarsening_level);
+        pp.query("restart", restart);
+        pp.query("checkpoint_file", checkpoint_file);
+        pp.query("curr_step", curr_step);
 
         set_prop_related();
     }
