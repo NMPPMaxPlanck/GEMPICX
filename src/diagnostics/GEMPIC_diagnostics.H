@@ -120,7 +120,7 @@ public:
                     *infra.dx[2]/infra.Length[2]
             #endif
                     ;
-            Efield_energy[step][cc] = val;
+            Efield_energy[step][cc] = mw_yee->epref_ep0*val;
         }
 
         mw_yee->template hodge_full<degree>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
@@ -134,7 +134,7 @@ public:
                     *infra.dx[2]/infra.Length[2]
             #endif
                     ;
-            Bfield_energy[step][cc] = val;
+            Bfield_energy[step][cc] = mw_yee->energy_b_scaling*val;
         }
 
         // compute kinetic energy norm and momentum

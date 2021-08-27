@@ -88,6 +88,11 @@ public:
     int NP_cell_tot;
     amrex::RealBox real_box;
 
+    // Scaling parameters
+    amrex::Real curlB_scaling = 1.;
+    amrex::Real epref_ep0 = 1.;
+    amrex::Real energy_b_scaling = 1.;
+
     // The default constructor.
     /**
      * Default Constructor.
@@ -129,6 +134,10 @@ public:
         pp.query("restart", restart);
         pp.query("checkpoint_file", checkpoint_file);
         pp.query("curr_step", curr_step);
+
+        pp.query("epref_ep0", epref_ep0);
+        pp.query("curlB_scaling",curlB_scaling);
+        pp.query("energy_b_scaling", energy_b_scaling);
 
         set_prop_related();
     }

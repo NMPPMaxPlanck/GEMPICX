@@ -80,6 +80,10 @@ public:
     amrex::MultiFab phi; // for Poisson
     //amrex::MLMG* mlmg_ptr;
 
+    amrex::Real epref_ep0 = 1.;
+    amrex::Real curlB_scaling = 1.;
+    amrex::Real energy_b_scaling = 1.;
+
 private:
 
     int Ncomp; /** Number of components for each MultiFab. Is 1 because the different field components are differently staggered */
@@ -155,6 +159,10 @@ if (int(vdim/2.5)*2+1 < 3) {
         sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
 
         nsteps = VM.n_steps;
+
+        curlB_scaling = VM.curlB_scaling;
+        epref_ep0 = VM.epref_ep0;
+        energy_b_scaling = VM.energy_b_scaling;
 
         //-----------------------------------------------------------------------------
         // Fill Owner Mask
@@ -424,33 +432,33 @@ if (int(vdim/2.5)*2+1 < 3) {
                     {
                         if((vdim < 3) & (GEMPIC_SPACEDIM == 1)){
                             if (d == 0){
-                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(from_J?(-vecJ(i,j,k)):0.0);
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*epref_ep0*(from_J?(-vecJ(i,j,k)):0.0);
                             }
                         }
                         if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
                             //Ex for 2D2V
                             if (d == 0) {
-                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/ifr.dx[1]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/ifr.dx[1]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                             }
                         }
                         if (vdim == 2){
                             if (d == 1) {
-                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/ifr.dx[0]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                             }
                         }
                         if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
                             if (d==2) {
-                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/ifr.dx[(d+1)%vdim]
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/ifr.dx[(d+1)%vdim]
                                                                           -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/ifr.dx[(d+2)%vdim]:0.0)
-                                                                          + (from_J?(-vecJ(i,j,k)):0.0));
+                                                                          + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                             } else {
-                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/ifr.dx[0]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                             }
                         }
                         if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/ifr.dx[(d+1)%vdim]
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/ifr.dx[(d+1)%vdim]
                                                                       -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/ifr.dx[(d+2)%vdim]):0.0)
-                                                                      + (from_J?(-vecJ(i,j,k)):0.0));
+                                                                      + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                         }
                     });
                 }
@@ -950,6 +958,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
 
+        (*x).mult(epref_ep0, 0, 1, Nghost);
         (*x).FillBoundary(ifr.geom.periodicity());
     }
 
@@ -1058,6 +1067,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
 #endif
 
+    phi.mult(epref_ep0, 0, 1, Nghost);
         //----------------------------------------------------------------------------------
         // E
 
@@ -1096,7 +1106,6 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
             (*E_Array[i]).FillBoundary(ifr.geom.periodicity());
         }
-
     }
 
     /**
@@ -1142,7 +1151,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
                         }
 
-                        (rho_gauss_law)[mfi].setVal(rho_val, cc, 0, 1);
+                        (rho_gauss_law)[mfi].setVal(rho_val/epref_ep0, cc, 0, 1);
                     }
 #if (GEMPIC_SPACEDIM > 2)
                 }
