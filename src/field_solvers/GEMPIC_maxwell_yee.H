@@ -99,7 +99,9 @@ public:
     maxwell_yee ();
 
     // Explicit const
-        maxwell_yee  (infrastructure ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in){
+        maxwell_yee  (infrastructure ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in,
+        amrex::Real curlB_scaling_in ,
+        amrex::Real energy_b_scaling_in){
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
 
@@ -154,9 +156,9 @@ if (int(vdim/2.5)*2+1 < 3) {
 
         nsteps = nsteps_in;
 
-        curlB_scaling = VM.curlB_scaling;
-        epref_ep0 = VM.epref_ep0;
-        energy_b_scaling = VM.energy_b_scaling;
+        curlB_scaling = curlB_scaling_in;
+        epref_ep0 = epref_ep0_in;
+        energy_b_scaling = energy_b_scaling_in;
 
         //-----------------------------------------------------------------------------
         // Fill Owner Mask
@@ -265,7 +267,7 @@ if (int(vdim/2.5)*2+1 < 3) {
          */
         template <int numspec>
         maxwell_yee (vlasov_maxwell<vdim, numspec> VM, infrastructure ifr){
-            *this = maxwell_yee(ifr, VM.dt, VM.n_steps, VM.Nghost);
+            *this = maxwell_yee(ifr, VM.dt, VM.n_steps, VM.Nghost, VM.epref_ep0, VM.curlB_scaling, VM.energy_b_scaling);
 
         }
 
