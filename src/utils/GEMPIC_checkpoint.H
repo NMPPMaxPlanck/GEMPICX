@@ -219,9 +219,9 @@ Gempic_ReadCheckpointFile_Field (maxwell_yee<vdim> *mw_yee,
 
 }
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, int field_dim=vdim>
 void
-Gempic_ReadCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
+Gempic_ReadCheckpointFile (maxwell_yee<field_dim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
     amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
 
     // J
