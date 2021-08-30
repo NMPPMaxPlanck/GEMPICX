@@ -95,13 +95,7 @@ public:
     maxwell_yee ();
 
     // Explicit const
-    /**
-     * Explicit constructor. Initializes Indextypes, MultiFabs and OwnerMasks.
-     *  @param VM - object of type vlasov-maxwell with all relevant information
-     *  @param ifr - object of type infrastructure
-     */
-    template <int numspec>
-    maxwell_yee (vlasov_maxwell<vdim, numspec> VM, infrastructure ifr){
+        maxwell_yee  (infrastructure ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in){
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
 
@@ -124,10 +118,10 @@ if (int(vdim/2.5)*2+1 < 3) {
     B_Index[0].reset(new amrex::IndexType (amrex::IntVect{AMREX_D_DECL(0,0,1)}));
 }
 
-        Nghost = VM.Nghost;
+        Nghost = Nghost_in;
         Ncomp = 1;
 
-        dt = VM.dt;
+        dt = dt_in;
         time = 0.0;
 
         // make the multifabs nodal-/cell-centered according to indices
@@ -154,7 +148,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
         sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
 
-        nsteps = VM.n_steps;
+        nsteps = nsteps_in;
 
         //-----------------------------------------------------------------------------
         // Fill Owner Mask
@@ -256,6 +250,16 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     }
 
+        /**
+         * Explicit constructor. Initializes Indextypes, MultiFabs and OwnerMasks.
+         *  @param VM - object of type vlasov-maxwell with all relevant information
+         *  @param ifr - object of type infrastructure
+         */
+        template <int numspec>
+        maxwell_yee (vlasov_maxwell<vdim, numspec> VM, infrastructure ifr){
+            *this = maxwell_yee(ifr, VM.dt, VM.n_steps, VM.Nghost);
+
+        }
 
     template<int degree>
     void projection (std::string function_string,
