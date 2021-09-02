@@ -6,6 +6,7 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include <GEMPIC_assertion.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
@@ -23,7 +24,7 @@ using namespace Diagnostics_Output;
 using namespace Particles;
 using namespace Sampling;
 
-template<int vdim, int numspec>
+template<int vdim, int numspec, bool additional_output>
 void main_main ()
 {
     const int degmw = 2;
@@ -157,34 +158,51 @@ void main_main ()
         kinetic_energy[cmp] = mom_tmp;
     }
 
+    amrex::Real rel_mass = 32768;
+    std::array<amrex::Real,3> rel_mom = {584.1995254, -12972.79719, -1805.405324};
+    std::array<amrex::Real,3> rel_kin = {10.41531633, 5135.909025, 99.47169141};
+
+    bool passed = true;
+    gempic_assert(&passed, rel_mass, mass);
+    gempic_assert(&passed, rel_mom[0], momentum[0]);
+    gempic_assert(&passed, rel_mom[1], momentum[1]);
+    gempic_assert(&passed, rel_mom[2], momentum[2]);
+    gempic_assert(&passed, rel_kin[0], kinetic_energy[0]);
+    gempic_assert(&passed, rel_kin[1], kinetic_energy[1]);
+    gempic_assert(&passed, rel_kin[2], kinetic_energy[2]);
 
     AllPrintToFile("test_particle_groups.tmp") << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "mass: " << mass << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: " ;
-    switch (vdim) {
-    case 1:
-        AllPrintToFile("test_particle_groups.tmp") << momentum[0] << std::endl;
-        break;
-    case 2:
-        AllPrintToFile("test_particle_groups.tmp") << momentum[0] << " " << momentum[1] << std::endl;
-        break;
-    case 3:
-        AllPrintToFile("test_particle_groups.tmp") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
-        break;
+    AllPrintToFile("test_particle_groups.tmp") << passed << std::endl;
 
-    }
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: " ;
-    switch (vdim) {
-    case 1:
-        AllPrintToFile("test_particle_groups.tmp") << kinetic_energy[0] << std::endl;
-        break;
-    case 2:
-        AllPrintToFile("test_particle_groups.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
-        break;
-    case 3:
-        AllPrintToFile("test_particle_groups.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
-        break;
+    if (additional_output) {
+        AllPrintToFile("test_particle_groups_additional.tmp") << std::endl;
+        AllPrintToFile("test_particle_groups_additional.tmp") << "mass: " << mass << std::endl;
+        AllPrintToFile("test_particle_groups_additional.tmp") << "momentum: " ;
+        switch (vdim) {
+        case 1:
+            AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << std::endl;
+            break;
+        case 2:
+            AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << std::endl;
+            break;
+        case 3:
+            AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
+            break;
 
+        }
+        AllPrintToFile("test_particle_groups_additional.tmp") << "kinetic energy: " ;
+        switch (vdim) {
+        case 1:
+            AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << std::endl;
+            break;
+        case 2:
+            AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
+            break;
+        case 3:
+            AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
+            break;
+
+        }
     }
 
     te_free(WF_parse);
@@ -194,104 +212,12 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
     if (ParallelDescriptor::MyProc()==0) remove("test_particle_groups.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_particle_groups_additional.tmp.0");
 
-    /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the expected_output file contains all outputs.
-    For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
-    outputted, so that the comparison to the expected_output (which contains all dimensions) works The order of the outputs is:
-    GEMPIC_SPACEDIM=1 vdim=1, GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=2, GEMPIC_SPACEDIM=2 vdim=3, GEMPIC_SPACEDIM=3 vdim=3 */
-
-#if (GEMPIC_SPACEDIM == 1)
-
-    // Output for GEMPIC_SPACEDIM=1 vdim=1
-    main_main<1, 1>();
-    // Output for GEMPIC_SPACEDIM=1 vdim=2
-    main_main<2, 1>();
-
-    // Output for GEMPIC_SPACEDIM=2 vdim=2
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 6518.99" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -9092.65 642.819" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 12682.4 63.3867" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=2 vdim=3
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 6518.99" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -9092.65 642.819 5050.99" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 12682.4 63.3867 3913.57" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=3 vdim=3
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 32768" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: 584.2 -12972.8 -1805.41" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 10.4153 5135.91 99.4717" << std::endl;
-
-#elif (GEMPIC_SPACEDIM == 2)
-
-    // Output for GEMPIC_SPACEDIM=1 vdim=1
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 1296.91" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -392.235" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 118.627" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=1 vdim=2
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 1296.91" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -392.235 -494.437" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 118.627 188.5" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=2 vdim=2
-    main_main<2, 1>();
-    // Output for GEMPIC_SPACEDIM=2 vdim=3
-    main_main<3, 1>();
-
-    // Output for GEMPIC_SPACEDIM=3 vdim=3
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 32768" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: 584.2 -12972.8 -1805.41" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 10.4153 5135.91 99.4717" << std::endl;
-
-#elif (GEMPIC_SPACEDIM == 3)
-
-    // Output for GEMPIC_SPACEDIM=1 vdim=1
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 1296.91" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -392.235" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 118.627" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=1 vdim=2
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 1296.91" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -392.235 -494.437" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 118.627 188.5" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=2 vdim=2
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 6518.99" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -9092.65 642.819" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 12682.4 63.3867" << std::endl;
-
-    // Output for GEMPIC_SPACEDIM=2 vdim=3
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-
-    AllPrintToFile("test_particle_groups.tmp") << "mass: 6518.99" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "momentum: -9092.65 642.819 5050.99" << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << "kinetic energy: 12682.4 63.3867 3913.57" << std::endl;
-
-
-    // Output for GEMPIC_SPACEDIM=3 vdim=3
-    main_main<3, 1>();
-#endif
+    main_main<3, 1, true>();
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_particle_groups.tmp.0", "test_particle_groups.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_particle_groups_additional.tmp.0", "test_particle_groups_additional.output");
     amrex::Finalize();
 }
 

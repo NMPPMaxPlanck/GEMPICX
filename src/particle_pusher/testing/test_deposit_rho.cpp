@@ -5,6 +5,7 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include <GEMPIC_assertion.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -22,7 +23,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Utils;
 
-template<int vdim, int numspec, int degx, int degy, int degz>
+template<int vdim, int numspec, int degx, int degy, int degz, bool additional_output>
 void main_main ()
 {
     //------------------------------------------------------------------------------
@@ -133,8 +134,13 @@ void main_main ()
 
     //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
-    AllPrintToFile("test_deposit_rho.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
-    //ofs.close();
+    amrex::Real error = gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2);
+    bool passed = true;
+    gempic_assert_err(&passed, gempic_norm(&mw_yee.rho, infra, 2), error);
+    AllPrintToFile("test_deposit_rho.tmp") << passed << std::endl;
+
+    if (additional_output) AllPrintToFile("test_deposit_rho_additional.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+
     te_free(WF_parse);
 
 }
@@ -143,18 +149,21 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
     if (ParallelDescriptor::MyProc()==0) remove("test_deposit_rho.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_deposit_rho_additional.tmp.0");
+
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1>();
-    main_main<2, 1, 1, 1, 1>();
+    main_main<1, 1, 1, 1, 1, false>();
+    main_main<2, 1, 1, 1, 1, false>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<2, 1, 1, 1, 1>();
-    main_main<3, 1, 1, 1, 1>();
+    main_main<2, 1, 1, 1, 1, false>();
+    main_main<3, 1, 1, 1, 1, false>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>();
-    main_main<3, 1, 1, 1, 1>();
+    main_main<3, 1, 1, 1, 1, false>();
 #endif
     if (ParallelDescriptor::MyProc()==0) std::rename("test_deposit_rho.tmp.0", "test_deposit_rho.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_deposit_rho_additional.tmp.0", "test_deposit_rho_additional.output");
+
 
     amrex::Finalize();
 }
