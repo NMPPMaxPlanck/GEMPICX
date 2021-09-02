@@ -36,7 +36,7 @@ void main_main ()
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params();
+    VlMa.set_params("test_vlasov_maxwell_hs", {12,8,8});
     VlMa.propagator = 1;
     VlMa.set_prop_related();
     if (int(vdim/2.5)*2+1 < 3) {
@@ -59,7 +59,7 @@ void main_main ()
         VlMa.WF = "1.0 + 0.5 * cos(kvarx * x)";
         VlMa.Bz = "0.0";
     }
-    VlMa.n_steps = 10;
+    VlMa.n_steps = 5;
     VlMa.set_computed_params();
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
@@ -216,7 +216,6 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs.tmp") << "9 3.60436e-05 2.88822e-05 5.27541e-07 0.0321713 0.29391 0.968031" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 1, 1, 1, 6>();
     main_main<3, 1, 1, 1, 1, 2>();
 #endif
 

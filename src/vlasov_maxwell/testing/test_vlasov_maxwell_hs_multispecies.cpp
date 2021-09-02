@@ -40,7 +40,7 @@ void main_main ()
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("ctest_Ion_Acoustic_Wave", // sim_name
-    {AMREX_D_DECL(32, 2, 2)}, // n_cell_vector
+    {AMREX_D_DECL(16, 2, 2)}, // n_cell_vector
     {4000, 4000}, // n_part_per_cell
                     10, // n_steps
                     10000, // output freq
@@ -59,7 +59,7 @@ void main_main ()
                     "4 * 0.5 * cos(0.5 * x)", // phi
                     1, // num_gaussians
                     1); // propagator
-    VlMa.n_steps = 10;
+    VlMa.n_steps = 5;
     VlMa.set_computed_params();
 
     std::array<std::string, int(vdim/2.5)*2+1> fields_B;
@@ -238,7 +238,6 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_hs_multispecies.tmp") << "9 0.0412097 3.56089e-05 2.78074e-06 100.187 79.8439 79.5911" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 2, 1, 2, 1, 4, 1>(); // hs
     main_main<3, 2, 3, 1, 2, 2, 3>(); // hs_zigzag
 #endif
 
