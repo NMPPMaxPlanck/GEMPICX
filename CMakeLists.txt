@@ -57,13 +57,14 @@ include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/forms")
 include_directories("${CMAKE_SOURCE_DIR}/src/particle_mesh_coupling")
 include_directories("${CMAKE_SOURCE_DIR}/src/diagnostics")
-include_directories("${CMAKE_SOURCE_DIR}/src/third_party")
+include_directories("${CMAKE_SOURCE_DIR}/third_party")
 include_directories("${CMAKE_SOURCE_DIR}/src/pic_io")
 include_directories("${CMAKE_SOURCE_DIR}/src/particle")
 include_directories("${CMAKE_SOURCE_DIR}/src/profiling")
 include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
 include_directories("${CMAKE_SOURCE_DIR}")
 
+add_subdirectory(third_party)
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations
