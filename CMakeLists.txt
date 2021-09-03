@@ -52,6 +52,7 @@ ELSE()
 ENDIF()
 
 include_directories(src)
+include_directories("${CMAKE_SOURCE_DIR}/src/utils")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/forms")
