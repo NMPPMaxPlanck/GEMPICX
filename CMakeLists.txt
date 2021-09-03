@@ -61,7 +61,7 @@ include_directories("${CMAKE_SOURCE_DIR}/src/io/diagnostics")
 include_directories("${CMAKE_SOURCE_DIR}/third_party/tinyexpr")
 include_directories("${CMAKE_SOURCE_DIR}/src/io")
 include_directories("${CMAKE_SOURCE_DIR}/src/particle")
-include_directories("${CMAKE_SOURCE_DIR}/src/profiling")
+include_directories("${CMAKE_SOURCE_DIR}/src/io/profiling")
 include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
 include_directories("${CMAKE_SOURCE_DIR}")
 
