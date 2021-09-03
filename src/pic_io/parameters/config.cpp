@@ -24,8 +24,8 @@ void ConfigGempic::printConfigGempic(std::ofstream& ofs){
   ofs << "            Configuration structure                  \n";
   ofs << "/***************************************************/\n";
   ofs << "\n";
-  ofs << "  ConfigTest: \n";
-  ofs << "   - testKey: " << test.testKey << "\n";
+  ofs << "  Propagator: \n";
+  ofs << "   - n_steps: " << propagator.n_steps << "\n";
   ofs << "\n";
   ofs << "\n";
  

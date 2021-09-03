@@ -20,8 +20,8 @@
 
 namespace Gempic{
 
-struct t_ConfigTest {
-  int testKey;
+struct t_ConfigPropagator {
+  int n_steps;
 };
 
 class ConfigGempic {
@@ -31,7 +31,7 @@ class ConfigGempic {
     ~ConfigGempic() = default;
     void printConfigGempic(std::ofstream& ofs);
     
-    t_ConfigTest test;
+    t_ConfigPropagator propagator;
 
 };
 

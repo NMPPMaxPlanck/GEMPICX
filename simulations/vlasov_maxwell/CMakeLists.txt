@@ -3,7 +3,7 @@ add_executable ( vlasov_maxwell vlasov_maxwell.cpp ${CMAKE_SOURCE_DIR}/src/third
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( vlasov_maxwell AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( vlasov_maxwell IO AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 
 ######## Ctest

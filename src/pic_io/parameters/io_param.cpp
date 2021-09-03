@@ -19,17 +19,22 @@
 #include <fstream>
 #include "io_param.hpp"
 
+#include <AMReX.H>
+#include <AMReX_ParmParse.H>
+
 namespace io{
   
-void ParamGempic::getDataFromConfigFile(std::string const fileName){
+void ParamGempic::getDataFromConfigFile( ){
   
   /***************************************************************/
   /* Get Data from config file */
-//  IConfFile readConfig(fileName,getLoggedBSL6DParams());
+  amrex::ParmParse pp;
+	//  IConfFile readConfig(fileName,getLoggedBSL6DParams());
 
   /***************************************************************/
   /* Store data into parameters */
-//  testKey = readConfig.getParam_int("testKey",0);
+  /* Propagator parameters */
+  pp.query("n_steps", n_steps);
 
 
 }
@@ -40,8 +45,8 @@ void ParamGempic::printParams(std::ofstream& ofs) {
   ofs << "/***************************************************/\n";
   ofs << " Parameters in configuration file: \n";
   ofs << "\n";
-  ofs << "  Test Parameters:\n";
-  ofs << "   - testKey: " << testKey << "\n";
+  ofs << "  Propagator parameters:\n";
+  ofs << "   - n_steps: " << n_steps << "\n";
   ofs << "\n";
   ofs << "\n";
   ofs.flush();

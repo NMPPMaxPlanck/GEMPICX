@@ -34,21 +34,21 @@ void createGempicConfigStructure(ParamGempic const param,
   ofs << "/***************************************************/\n";
   ofs << "\n";
   ofs << "/***************************/\n";
-  ofs << " Check Test Strucutre: \n";
-  ofs << "   - Parameter testKey: " << param.testKey << "\n";
-  if(param.testKey<0){
+  ofs << " Check propagator structure: \n";
+  ofs << "   - Parameter n_steps: " << param.n_steps << "\n";
+  if(param.n_steps<0){
     ofs << "     ERROR:\n";
-    ofs << "     testKey has to be at least zero! \n";
+    ofs << "     n_steps has to be at least zero! \n";
     err++;
-  } else if(param.testKey == 0) {
-    config.test.testKey = param.testKey;
-    ofs << "       -> Use param testKey \n";
+  } else if(param.n_steps == 0) {
+    config.propagator.n_steps = param.n_steps;
+    ofs << "       -> Use param n_steps \n";
     ofs << "     WARNING:\n";
-    ofs << "     testKey is recommended to be larger than zero! \n";
+    ofs << "     n_steps is zero and only initilization is done! \n";
     warn++;
   } else {
-    config.test.testKey = param.testKey;
-    ofs << "       -> Use param testKey \n";
+    config.propagator.n_steps = param.n_steps;
+    ofs << "       -> Use param n_steps \n";
   }
   ofs << "\n";
   ofs << "\n";
@@ -75,7 +75,7 @@ void createGempicConfigStructure(ParamGempic const param,
     ofs << "\n";
     ofs << "\n";
     ofs.flush();
-    throw std::invalid_argument(std::to_string(err)+" parameters in the config file do not contain valid values. Details are listed in 'bsl6d.out'.\n");
+    throw std::invalid_argument(std::to_string(err)+" parameters in the config file do not contain valid values. Details are listed in 'gempic.out'.\n");
   }
   ofs.flush();
 

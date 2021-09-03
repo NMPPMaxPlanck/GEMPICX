@@ -20,7 +20,7 @@ class ParamGempic{
   public:
     ParamGempic() = default;
     ~ParamGempic() = default;
-    void getDataFromConfigFile(std::string const fileName);
+    void getDataFromConfigFile();
     void printParams(std::ofstream& ofs);
 
     /*************************************************************/
@@ -29,8 +29,8 @@ class ParamGempic{
     */
     /*************************************************************/
 
-    /* First test parameter */
-    int testKey;
+    /* Propagator parameters */
+    int n_steps = 1;
 
 };
 
