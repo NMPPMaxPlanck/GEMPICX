@@ -17,7 +17,7 @@
 #include <GEMPIC_particle_groups.H>
 
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 
 #ifndef PARTICLE_POSITION_H_
@@ -28,7 +28,7 @@ namespace Diagnostics_Output {
 
 template<int vdim, int numspec>
 void
-Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step, const std::string& name = "electrons",
+Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, computational_domain *infra, const std::string& plot_file, const int step, const std::string& name = "electrons",
                       int species = 0)
 {
     //TODO: other dims
@@ -145,7 +145,7 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
 
 template<int vdim, int numspec>
 void
-Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, infrastructure *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, computational_domain *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 

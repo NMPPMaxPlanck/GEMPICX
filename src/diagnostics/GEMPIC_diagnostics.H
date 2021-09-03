@@ -19,7 +19,7 @@
 #include <GEMPIC_particle_positions.H>
 
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 using namespace Utils;
 using namespace Profiling;
@@ -75,7 +75,7 @@ public:
         gauss_error.reserve(n_time);
     }
 
-    void end_of_timestep(timers *profiling_timers, int t_step, infrastructure infra, maxwell_yee<vdim> *mw_yee,
+    void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim, numspec> *part_gr, std::string filename, bool ctest){
         if (profiling_timers->profiling)
           profiling_timers->counter_diagnostics -= MPI_Wtime();
@@ -98,7 +98,7 @@ public:
      * This function saves all the relevant data for the step in field arrays and saves SlicePlots if needed according to the Slice Plot frequency.
      */
     void save_step_data(int step,
-                        infrastructure infra,
+                        computational_domain infra,
                         maxwell_yee<vdim> *mw_yee,
                         particle_groups<vdim, numspec> *part_gr){
 
@@ -280,7 +280,7 @@ public:
     void cross_product (std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
                         std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
                         std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
-                        infrastructure infra) {
+                        computational_domain infra) {
 
         amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
         amrex::MultiFab EzBy(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);

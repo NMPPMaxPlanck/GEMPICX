@@ -16,12 +16,12 @@
 #define INFRASTRUCTURE_H_
 
 namespace Gempic {
-namespace Infra {
+namespace CompDom {
 
 /**
  * Class containing all the necessary structures (such as the @p domain and the @p distriMap) and information (such as @p dx and @p n_cell).
  */
-class infrastructure
+class computational_domain
 {
 public:
 
@@ -45,7 +45,7 @@ public:
     /**
      * Default Constructor.
      */
-    infrastructure (){};
+    computational_domain (){};
 
 };
 }

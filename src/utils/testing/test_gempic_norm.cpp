@@ -88,7 +88,7 @@ void main_main ()
     VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {64,64,64});
     VlMa.set_computed_params();
 
-    infrastructure infra;
+    computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     maxwell_yee<vdim> mw_yee(VlMa, infra);

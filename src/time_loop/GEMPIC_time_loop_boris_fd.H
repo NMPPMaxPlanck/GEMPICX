@@ -22,7 +22,7 @@
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;
 
@@ -33,7 +33,7 @@ namespace Gempic {
 namespace Time_Loop {
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
-void time_loop_boris_fd_step (infrastructure infra,
+void time_loop_boris_fd_step (computational_domain infra,
                          maxwell_yee<vdim> *mw_yee,
                          amrex::Real coeff,
                          particle_groups<vdim,numspec> *part_gr,
@@ -190,7 +190,7 @@ void time_loop_boris_fd_step (infrastructure infra,
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
-void time_loop_boris_fd (infrastructure infra,
+void time_loop_boris_fd (computational_domain infra,
                          maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim,numspec> *part_gr,
                          diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,

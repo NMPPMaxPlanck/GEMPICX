@@ -88,7 +88,7 @@ void main_main ()
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);
     VlMa.set_computed_params();
 
-    Infra::infrastructure infra;
+    CompDom::computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     maxwell_yee<vdim> mw_yee(VlMa, infra);

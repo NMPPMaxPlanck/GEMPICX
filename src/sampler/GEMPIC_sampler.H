@@ -15,7 +15,7 @@
 #include <GEMPIC_infrastructure.H>
 #include <GEMPIC_particle_groups.H>
 
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 
 #ifndef SAMPLER_H_
@@ -25,7 +25,7 @@ namespace Gempic {
 namespace Sampling {
 
 template<int vdim, int numspec>
-void init_particles_cellwise(infrastructure infra,
+void init_particles_cellwise(computational_domain infra,
                              particle_groups<vdim, numspec> &ppg,
                              vlasov_maxwell<vdim, numspec> VM,
                              std::array<std::vector<amrex::Real>, vdim> Vmean,
@@ -148,7 +148,7 @@ void init_particles_cellwise(infrastructure infra,
 
 
 template<int vdim, int numspec>
-void init_particles_full_domain(infrastructure infra,
+void init_particles_full_domain(computational_domain infra,
                                 particle_groups<vdim, numspec> &ppg,
                                 vlasov_maxwell<vdim, numspec> VM,
                                 std::array<std::vector<amrex::Real>, vdim> Vmean,

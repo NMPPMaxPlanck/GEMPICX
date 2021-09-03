@@ -1430,7 +1430,7 @@ std::array<amrex::Real, vdim> push_v_efield(P const& p,
                                             amrex::Real dt,
                                             amrex::Real chargemass, //charge/mass
                                             std::array<amrex::Real,vdim> Ep,
-                                            Infra::infrastructure infra){
+                                            CompDom::computational_domain infra){
     std::array<amrex::Real,vdim> newPos;
 
     newPos[0] = p.rdata(0) + dt*chargemass*(Ep[0]);
@@ -1452,7 +1452,7 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
                                                               std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
-                                                              Infra::infrastructure infra){
+                                                              CompDom::computational_domain infra){
     std::array<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
         oldX[d]= p.pos(d);
@@ -1522,7 +1522,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
                                                            amrex::Real chargemass, //charge/mass
                                                            std::array<amrex::Real,vdim> Ep,
                                                            std::array<amrex::Real,int(vdim/2.5)*2+1> Bp,
-                                                           Infra::infrastructure infra){
+                                                           CompDom::computational_domain infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
@@ -1550,7 +1550,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
 template <typename P, int vdim>
 std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
                                                                amrex::Real dt,
-                                                               Infra::infrastructure infra){
+                                                               CompDom::computational_domain infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
@@ -1577,7 +1577,7 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
                                                                  amrex::Real chargemass, //charge/mass
                                                                  std::array<amrex::Real,vdim> Ep,
                                                                  std::array<amrex::Real,int(vdim/2.5)*2+1> Bp,
-                                                                 Infra::infrastructure infra){
+                                                                 CompDom::computational_domain infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     std::array<amrex::Real,vdim> vm;

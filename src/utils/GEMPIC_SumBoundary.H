@@ -18,7 +18,7 @@
 #include <GEMPIC_particle_groups.H>
 
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 
 #ifndef SUMBOUNDARY_H_
@@ -29,7 +29,7 @@ namespace Utils {
 
 template<int vdim>
 void
-Gempic_SumBoundary (maxwell_yee<vdim> *mw_yee, infrastructure *infra)
+Gempic_SumBoundary (maxwell_yee<vdim> *mw_yee, computational_domain *infra)
 {
     for (int i=0; i<vdim; i++) {
         (*(*mw_yee).J_Array[i]).SumBoundary(infra->geom.periodicity());

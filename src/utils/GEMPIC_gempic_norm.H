@@ -13,7 +13,7 @@
 #include <GEMPIC_infrastructure.H>
 
 using namespace Gempic;
-using namespace Infra;
+using namespace CompDom;
 
 #ifndef GEMPIC_NORM_H_
 #define GEMPIC_NORM_H_
@@ -21,7 +21,7 @@ using namespace Infra;
 namespace Gempic {
 namespace Utils {
 
-amrex::Real gempic_norm(amrex::MultiFab *MultiF, infrastructure ifr, int p){
+amrex::Real gempic_norm(amrex::MultiFab *MultiF, computational_domain ifr, int p){
     //TODOrefine
     amrex::Real result;
     if (p==0) {

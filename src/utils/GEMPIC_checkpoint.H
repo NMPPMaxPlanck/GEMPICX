@@ -18,7 +18,7 @@
 #include <GEMPIC_particle_groups.H>
 
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 
 #ifndef CHECKPOINT_H_
@@ -37,7 +37,7 @@ Gempic_GotoNextLine (std::istream& is)
 
 template<int vdim>
 void
-Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, infrastructure *infra,
+Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, computational_domain *infra,
                                   const std::string& dirname, int field, const int step,
                                   amrex::IndexType IndexT,
                                   int header_precision)
@@ -120,7 +120,7 @@ Gempic_WriteCheckpointFile_Field (maxwell_yee<vdim> *mw_yee, infrastructure *inf
 
 template<int vdim, int numspec>
 void
-Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra,
+Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr, computational_domain *infra,
                             const std::string& dirname, const int step,
                             int header_precision, bool particles = true)
 {
@@ -221,7 +221,7 @@ Gempic_ReadCheckpointFile_Field (maxwell_yee<vdim> *mw_yee,
 
 template<int vdim, int numspec, int field_dim=vdim>
 void
-Gempic_ReadCheckpointFile (maxwell_yee<field_dim> *mw_yee, particle_groups<vdim, numspec> *part_gr, infrastructure *infra, const std::string& dirname, const int step, bool particles = true) {
+Gempic_ReadCheckpointFile (maxwell_yee<field_dim> *mw_yee, particle_groups<vdim, numspec> *part_gr, computational_domain *infra, const std::string& dirname, const int step, bool particles = true) {
     amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
 
     // J

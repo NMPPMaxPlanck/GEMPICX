@@ -112,7 +112,7 @@ void main_main ()
     VlMa.dt = 0.01;
     VlMa.set_computed_params();
 
-    Infra::infrastructure infra;
+    CompDom::computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------

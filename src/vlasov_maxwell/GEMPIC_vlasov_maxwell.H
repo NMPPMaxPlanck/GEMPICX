@@ -28,7 +28,7 @@
 #ifndef VLASOV_MAXWELL_H_
 #define VLASOV_MAXWELL_H_
 
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 using namespace Utils;
 
@@ -288,7 +288,7 @@ public:
             kz = k[2];
         }
 
-        void initialize_infrastructure(Infra::infrastructure *ifr){
+        void initialize_infrastructure(CompDom::computational_domain *ifr){
 
             // Initialize infrastructure:
 

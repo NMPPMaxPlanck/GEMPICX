@@ -73,7 +73,7 @@ void main_main ()
     VlMa.VW = VW;
 
     // infrastructure
-    infrastructure infra;
+    computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee

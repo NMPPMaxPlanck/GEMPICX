@@ -65,7 +65,7 @@ void main_main ()
     VlMa.set_computed_params();
     VlMa.Nghost = 3;
 
-    Infra::infrastructure infra;
+    CompDom::computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------

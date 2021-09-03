@@ -21,7 +21,7 @@
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 
 #ifndef LOOP_PREPARATION_H_
@@ -32,7 +32,7 @@ namespace Time_Loop {
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
-                       infrastructure infra,
+                       computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,

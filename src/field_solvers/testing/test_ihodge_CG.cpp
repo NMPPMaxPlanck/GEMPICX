@@ -66,7 +66,7 @@ void main_main ()
                     mx_grid, 0.01, {1.0}, {1.0}, 0.5);
     VlMa.set_computed_params();
 
-    Infra::infrastructure infra;
+    CompDom::computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------

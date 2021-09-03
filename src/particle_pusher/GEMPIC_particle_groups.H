@@ -26,7 +26,7 @@ class vlasov_maxwell; // forward declaration
 }
 
 using namespace Gempic;
-using namespace Infra;
+using namespace CompDom;
 using namespace Vlasov_Maxwell;
 
 namespace Gempic {
@@ -58,7 +58,7 @@ public:
      * can be done one by one (see method add_particle) or with the particle samples in the folder sampler.
      */
     particle_groups (vlasov_maxwell<vdim, numspec> VM,
-                     infrastructure ifr){
+                     computational_domain ifr){
 
         charge = VM.charge;
         mass = VM.mass;

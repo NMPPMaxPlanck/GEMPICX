@@ -73,7 +73,7 @@ void main_main ()
     VlMa.VD = VD;
     VlMa.VW = VW;
 
-    infrastructure infra;
+    computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
