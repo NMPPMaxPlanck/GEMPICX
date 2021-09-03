@@ -1,5 +1,5 @@
 add_subdirectory( field_solvers )
-add_subdirectory( infrastructure )
+add_subdirectory( forms )
 add_subdirectory( particle_pusher )
 add_subdirectory( sampler )
 add_subdirectory( time_loop )

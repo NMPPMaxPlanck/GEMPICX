@@ -50,6 +50,20 @@ IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "draco*"))
 ELSE()
   include(cmake/define_ctest.cmake)
 ENDIF()
+
+include_directories(src)
+include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
+include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
+include_directories("${CMAKE_SOURCE_DIR}/src/forms")
+include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
+include_directories("${CMAKE_SOURCE_DIR}/src/diagnostics")
+include_directories("${CMAKE_SOURCE_DIR}/src/utils")
+include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
+include_directories("${CMAKE_SOURCE_DIR}/src/vlasov_maxwell")
+include_directories("${CMAKE_SOURCE_DIR}/src/profiling")
+include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
+include_directories("${CMAKE_SOURCE_DIR}")
+
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations

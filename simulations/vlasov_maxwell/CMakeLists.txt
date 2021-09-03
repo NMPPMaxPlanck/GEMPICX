@@ -4,17 +4,6 @@ add_executable ( vlasov_maxwell vlasov_maxwell.cpp ${CMAKE_SOURCE_DIR}/src/utils
 #message( ${AMReX_DIR} )
 #message( " ######")
 target_link_libraries( vlasov_maxwell AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
-include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
-include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
-include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
-include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
-include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
-include_directories("${CMAKE_SOURCE_DIR}/src/diagnostics")
-include_directories("${CMAKE_SOURCE_DIR}/src/profiling")
-include_directories("${CMAKE_SOURCE_DIR}/src/utils")
-include_directories("${CMAKE_SOURCE_DIR}/src/vlasov_maxwell")
-include_directories("${CMAKE_SOURCE_DIR}")
 
 
 ######## Ctest

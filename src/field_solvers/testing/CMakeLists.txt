@@ -15,15 +15,7 @@ target_link_libraries( test_ihodge_CG AMReX::amrex AMReX::Flags_CXX AMReX::Flags
 target_link_libraries( test_ampere_faraday AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
-include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
-include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")
-include_directories("${CMAKE_SOURCE_DIR}/src/infrastructure")
-include_directories("${CMAKE_SOURCE_DIR}/src/particle_pusher")
-include_directories("${CMAKE_SOURCE_DIR}/src/diagnostics")
-include_directories("${CMAKE_SOURCE_DIR}/src/utils")
-include_directories("${CMAKE_SOURCE_DIR}/src/sampler")
-include_directories("${CMAKE_SOURCE_DIR}/src/vlasov_maxwell")
-include_directories("${CMAKE_SOURCE_DIR}")
+
 
 ######## Ctest
 
