@@ -1,6 +1,6 @@
 add_subdirectory( field_solvers )
 add_subdirectory( forms )
-add_subdirectory( particle_pusher )
+add_subdirectory( particle_mesh_coupling )
 add_subdirectory( time_loop )
 add_subdirectory( diagnostics )
 add_subdirectory( third_party )
