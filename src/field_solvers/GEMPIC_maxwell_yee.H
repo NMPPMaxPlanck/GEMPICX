@@ -62,6 +62,7 @@ public:
     int nsteps; /** number of simulation steps */
     amrex::Real dt; /** stepsize*/
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_Array; /** Array storing components of E-Field */
+  std::array<std::unique_ptr<amrex::MultiFab>, vdim > Alfven_Tensor; /** Array storing the Alfven tensor */
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > HE_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, vdim > J_Array;
     std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_Array;
@@ -133,6 +134,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         // make the multifabs nodal-/cell-centered according to indices
         for (int i = 0; i<vdim; i++) {
             E_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+            Alfven_Tensor[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
             HE_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
             E_sol_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
             J_Array[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
@@ -471,6 +473,67 @@ if (int(vdim/2.5)*2+1 < 3) {
             (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
         }
     }
+
+    /**
+     * Advance E by a time step of length @p dt_step with a Yee scheme
+     */
+    void advance_E (infrastructure ifr, amrex::Real dt_step, bool from_B, bool from_J,
+                        std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
+                        std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiAlfvenTensor,
+                        std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
+
+        int bdim = int(vdim/2.5)*2+1;
+
+        for (int d=0; d<vdim; d++) {
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+            for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
+                const amrex::Box& bx = mfi.tilebox();
+
+                amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%vdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%vdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecJ = (*J_Array[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecAT = (*(*MultiAlfvenTensor)[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                    ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+                    {
+                        if((vdim < 3) & (GEMPIC_SPACEDIM == 1)){
+                            if (d == 0){
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(from_J?(-vecJ(i,j,k)):0.0);
+                            }
+                        }
+                        if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
+                            //Ex for 2D2V
+                            if (d == 0) {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/ifr.dx[1]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            }
+                        }
+                        if (vdim == 2){
+                            if (d == 1) {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            }
+                        }
+                        if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
+                            if (d==2) {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/ifr.dx[(d+1)%vdim]
+                                                                          -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/ifr.dx[(d+2)%vdim]:0.0)
+                                                                          + (from_J?(-vecJ(i,j,k)):0.0));
+                            } else {
+                                vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            }
+                        }
+                        if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(vecAT(i,j,k)*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/ifr.dx[(d+1)%vdim]
+                                                                      -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/ifr.dx[(d+2)%vdim]):0.0)
+                                                                      + (from_J?(-vecJ(i,j,k)):0.0));
+                        }
+                    });
+                }
+            (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
+        }
+    }
+
 
     /**
      * Advance B by a time step of length @p dt_step with a Yee scheme
