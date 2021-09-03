@@ -1,4 +1,4 @@
-add_executable ( test_tinyexpr test_tinyexpr.cpp ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
+add_executable ( test_tinyexpr test_tinyexpr.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )

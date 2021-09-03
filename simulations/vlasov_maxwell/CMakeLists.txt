@@ -1,9 +1,9 @@
-add_executable ( vlasov_maxwell vlasov_maxwell.cpp ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
+add_executable ( vlasov_maxwell vlasov_maxwell.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( vlasov_maxwell IO tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( vlasov_maxwell IO gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 
 ######## Ctest

@@ -1,9 +1,9 @@
-add_executable ( test_particle_groups test_particle_groups.cpp  ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
-add_executable ( test_initialize test_initialize.cpp  ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
-add_executable ( test_splines test_splines.cpp ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
-add_executable ( test_norm_masks test_norm_masks.cpp ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
-add_executable ( test_deposit_rho test_deposit_rho.cpp  ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
-add_executable ( test_one_part test_one_part.cpp ${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers/GEMPIC_MLNodeLaplacian_FD.cpp)
+add_executable ( test_particle_groups test_particle_groups.cpp )
+add_executable ( test_initialize test_initialize.cpp  )
+add_executable ( test_splines test_splines.cpp )
+add_executable ( test_norm_masks test_norm_masks.cpp )
+add_executable ( test_deposit_rho test_deposit_rho.cpp  )
+add_executable ( test_one_part test_one_part.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
@@ -13,7 +13,7 @@ target_link_libraries( test_norm_masks tinyexpr AMReX::amrex AMReX::Flags_CXX AM
 target_link_libraries( test_initialize tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
 target_link_libraries( test_splines tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
 target_link_libraries( test_deposit_rho tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
-target_link_libraries( test_one_part tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_one_part gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
 
 
 ######## Ctest
