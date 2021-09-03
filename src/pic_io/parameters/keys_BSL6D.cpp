@@ -37,7 +37,7 @@ namespace io {
   };
 
 
-  std::map<std::string,std::string> getLoggedBSL6DParams(){
+  std::map<std::string,std::string> getLoggedGempicParams(){
     return loggedParams;
   };
 

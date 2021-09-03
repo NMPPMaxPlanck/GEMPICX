@@ -14,7 +14,7 @@
 
 #include "io_init.hpp"
 
-namespace bsl6d{
+namespace Gempic{
 
 std::ofstream initMasterOut(std::string fileName) {
   

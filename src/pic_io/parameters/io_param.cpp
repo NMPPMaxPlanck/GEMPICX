@@ -21,7 +21,7 @@
 
 namespace io{
   
-void ParamBSL6D::getDataFromConfigFile(std::string const fileName){
+void ParamGempic::getDataFromConfigFile(std::string const fileName){
   
   /***************************************************************/
   /* Get Data from config file */
@@ -34,7 +34,7 @@ void ParamBSL6D::getDataFromConfigFile(std::string const fileName){
 
 }
 
-void ParamBSL6D::printParams(std::ofstream& ofs) {
+void ParamGempic::printParams(std::ofstream& ofs) {
 
   /***************************************************************/
   ofs << "/***************************************************/\n";

@@ -16,9 +16,9 @@
 
 #include "config.hpp"
 
-namespace bsl6d{
+namespace Gempic{
 
-void ConfigBSL6D::printConfigBSL6D(std::ofstream& ofs){
+void ConfigGempic::printConfigGempic(std::ofstream& ofs){
   
   ofs << "/***************************************************/\n";
   ofs << "            Configuration structure                  \n";

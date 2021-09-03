@@ -22,9 +22,9 @@
 
 namespace io {
 
-void createBSL6DConfigStructure(ParamBSL6D const param,
-                                bsl6d::ConfigBSL6D& config, 
-                                std::ofstream& ofs){
+void createGempicConfigStructure(ParamGempic const param,
+                                 Gempic::ConfigGempic& config,
+                                 std::ofstream& ofs){
   
   int err = 0;
   int warn = 0;

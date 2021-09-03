@@ -18,18 +18,18 @@
 #include <string>
 #include <fstream>
 
-namespace bsl6d{
+namespace Gempic{
 
 struct t_ConfigTest {
   int testKey;
 };
 
-class ConfigBSL6D {
+class ConfigGempic {
 
   public : 
-    ConfigBSL6D() = default;
-    ~ConfigBSL6D() = default;
-    void printConfigBSL6D(std::ofstream& ofs);
+    ConfigGempic() = default;
+    ~ConfigGempic() = default;
+    void printConfigGempic(std::ofstream& ofs);
     
     t_ConfigTest test;
 

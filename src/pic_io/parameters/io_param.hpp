@@ -15,11 +15,11 @@
 
 namespace io{
 
-class ParamBSL6D{
+class ParamGempic{
   
   public:
-    ParamBSL6D() = default;
-    ~ParamBSL6D() = default;
+    ParamGempic() = default;
+    ~ParamGempic() = default;
     void getDataFromConfigFile(std::string const fileName);
     void printParams(std::ofstream& ofs);
 
