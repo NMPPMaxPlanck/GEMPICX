@@ -12,8 +12,8 @@
 #include <GEMPIC_Config.H>
 
 
-#ifndef INFRASTRUCTURE_H_
-#define INFRASTRUCTURE_H_
+#ifndef COMPUTATIONAL_DOMAIN_H_
+#define COMPUTATIONAL_DOMAIN_H_
 
 namespace Gempic {
 namespace CompDom {

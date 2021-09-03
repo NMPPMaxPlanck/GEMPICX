@@ -16,7 +16,7 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 
 namespace Gempic {
 namespace Vlasov_Maxwell {

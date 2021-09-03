@@ -10,7 +10,7 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 
 using namespace Gempic;
 using namespace CompDom;

@@ -13,7 +13,7 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_Utility.H>
 
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 

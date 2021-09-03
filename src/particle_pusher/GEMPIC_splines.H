@@ -13,7 +13,7 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 
 #ifndef SPLINES_H_
 #define SPLINES_H_
