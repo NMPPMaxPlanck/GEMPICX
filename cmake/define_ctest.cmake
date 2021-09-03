@@ -86,6 +86,9 @@ IF("${TEST_DIFF}" STREQUAL "")
     ENDIF()
   ELSEIF(NOT DIFF_EXECUTABLE MATCHES "-NOTFOUND")
     SET(TEST_DIFF ${DIFF_EXECUTABLE})
+    MESSAGE(
+      "######### Could not find numdiff. This will cause a number of ctests to fail. \n"
+      )
   ELSE()
     MESSAGE(FATAL_ERROR
       "Could not find diff or numdiff. One of those are required for running the tests.\n"
