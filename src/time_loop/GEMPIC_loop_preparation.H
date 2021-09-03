@@ -1,3 +1,6 @@
+#ifndef LOOP_PREPARATION_H_
+#define LOOP_PREPARATION_H_
+
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -23,9 +26,6 @@ using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
-
-#ifndef LOOP_PREPARATION_H_
-#define LOOP_PREPARATION_H_
 
 namespace Gempic {
 namespace Time_Loop {

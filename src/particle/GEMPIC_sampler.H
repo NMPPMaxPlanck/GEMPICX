@@ -1,3 +1,6 @@
+#ifndef SAMPLER_H_
+#define SAMPLER_H_
+
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -17,9 +20,6 @@
 
 using namespace CompDom;
 using namespace Particles;
-
-#ifndef SAMPLER_H_
-#define SAMPLER_H_
 
 namespace Gempic {
 namespace Sampling {

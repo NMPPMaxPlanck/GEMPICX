@@ -1,3 +1,6 @@
+#ifndef TIME_LOOP_HSALL_FEM_
+#define TIME_LOOP_HSALL_FEM_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -23,9 +26,6 @@ using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;
-
-#ifndef TIME_LOOP_HSALL_FEM_
-#define TIME_LOOP_HSALL_FEM_
 
 namespace Gempic {
 namespace Time_Loop {

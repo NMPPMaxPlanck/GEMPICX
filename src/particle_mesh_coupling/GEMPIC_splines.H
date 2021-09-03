@@ -1,3 +1,6 @@
+#ifndef SPLINES_H_
+#define SPLINES_H_
+
 #include <AMReX.H>
 #include <AMReX_ArrayOfStructs.H>
 #include <AMReX_Box.H>
@@ -14,9 +17,6 @@
 #include <AMReX_StructOfArrays.H>
 
 #include <GEMPIC_computational_domain.H>
-
-#ifndef SPLINES_H_
-#define SPLINES_H_
 
 namespace Gempic {
 namespace Particles {

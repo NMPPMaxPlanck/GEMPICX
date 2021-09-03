@@ -1,4 +1,7 @@
 #include <AMReX.H>
+#ifndef SUMBOUNDARY_H_
+#define SUMBOUNDARY_H_
+
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -20,9 +23,6 @@
 using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
-
-#ifndef SUMBOUNDARY_H_
-#define SUMBOUNDARY_H_
 
 namespace Gempic {
 namespace Utils {

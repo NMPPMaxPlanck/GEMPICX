@@ -1,8 +1,8 @@
-#include <AMReX.H>
-#include <AMReX_REAL.H>
-
 #ifndef PROFILING_H_
 #define PROFILING_H_
+
+#include <AMReX.H>
+#include <AMReX_REAL.H>
 
 namespace Gempic {
 namespace Profiling {

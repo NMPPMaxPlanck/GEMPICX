@@ -1,3 +1,6 @@
+#ifndef TIME_LOOP_PARTICLES_H_
+#define TIME_LOOP_PARTICLES_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -23,9 +26,6 @@ using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
-
-#ifndef TIME_LOOP_PARTICLES_H_
-#define TIME_LOOP_PARTICLES_H_
 
 namespace Gempic {
 namespace Time_Loop {

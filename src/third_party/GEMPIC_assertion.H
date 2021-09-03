@@ -1,8 +1,8 @@
-#include <AMReX.H>
-#include <AMReX_REAL.H>
-
 #ifndef GEMPIC_ASSERT_H_
 #define GEMPIC_ASSERT_H_
+
+#include <AMReX.H>
+#include <AMReX_REAL.H>
 
 #include <GEMPIC_Config.H>
 

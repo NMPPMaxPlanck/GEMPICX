@@ -1,3 +1,6 @@
+#ifndef MAXWELL_YEE_H_
+#define MAXWELL_YEE_H_
+
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -37,9 +40,6 @@ using namespace CompDom;
 using namespace Utils;
 using namespace Vlasov_Maxwell;
 using namespace Particles;
-
-#ifndef MAXWELL_YEE_H_
-#define MAXWELL_YEE_H_
 
 namespace Gempic {
 namespace Field_solvers {

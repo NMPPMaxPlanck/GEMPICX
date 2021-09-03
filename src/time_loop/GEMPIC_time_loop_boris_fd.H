@@ -1,3 +1,6 @@
+#ifndef TIME_LOOP_BORIS_FD_H_
+#define TIME_LOOP_BORIS_FD_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -25,9 +28,6 @@ using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;
-
-#ifndef TIME_LOOP_BORIS_FD_H_
-#define TIME_LOOP_BORIS_FD_H_
 
 namespace Gempic {
 namespace Time_Loop {

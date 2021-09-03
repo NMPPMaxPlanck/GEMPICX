@@ -1,3 +1,6 @@
+#ifndef DIAGNOSTICS_H_
+#define DIAGNOSTICS_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -23,9 +26,6 @@ using namespace CompDom;
 using namespace Particles;
 using namespace Utils;
 using namespace Profiling;
-
-#ifndef DIAGNOSTICS_H_
-#define DIAGNOSTICS_H_
 
 namespace Gempic {
 namespace Diagnostics_Output {

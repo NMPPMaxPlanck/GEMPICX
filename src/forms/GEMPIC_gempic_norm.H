@@ -1,3 +1,6 @@
+#ifndef GEMPIC_NORM_H_
+#define GEMPIC_NORM_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -14,9 +17,6 @@
 
 using namespace Gempic;
 using namespace CompDom;
-
-#ifndef GEMPIC_NORM_H_
-#define GEMPIC_NORM_H_
 
 namespace Gempic {
 namespace Utils {

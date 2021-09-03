@@ -1,3 +1,6 @@
+#ifndef VLASOV_MAXWELL_H_
+#define VLASOV_MAXWELL_H_
+
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -24,9 +27,6 @@
 #include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_groups.H>
-
-#ifndef VLASOV_MAXWELL_H_
-#define VLASOV_MAXWELL_H_
 
 using namespace CompDom;
 using namespace Particles;

@@ -1,3 +1,6 @@
+#ifndef CHECKPOINT_H_
+#define CHECKPOINT_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -20,9 +23,6 @@
 using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
-
-#ifndef CHECKPOINT_H_
-#define CHECKPOINT_H_
 
 namespace Gempic {
 namespace Utils {

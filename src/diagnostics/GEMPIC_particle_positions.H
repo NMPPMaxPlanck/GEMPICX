@@ -1,3 +1,6 @@
+#ifndef PARTICLE_POSITION_H_
+#define PARTICLE_POSITION_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -19,9 +22,6 @@
 using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
-
-#ifndef PARTICLE_POSITION_H_
-#define PARTICLE_POSITION_H_
 
 namespace Gempic {
 namespace Diagnostics_Output {

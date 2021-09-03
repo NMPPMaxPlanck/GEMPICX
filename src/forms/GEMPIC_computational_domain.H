@@ -1,3 +1,6 @@
+#ifndef COMPUTATIONAL_DOMAIN_H_
+#define COMPUTATIONAL_DOMAIN_H_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -10,10 +13,6 @@
 #include <AMReX_RealBox.H>
 
 #include <GEMPIC_Config.H>
-
-
-#ifndef COMPUTATIONAL_DOMAIN_H_
-#define COMPUTATIONAL_DOMAIN_H_
 
 namespace Gempic {
 namespace CompDom {
