@@ -20,9 +20,9 @@
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
-#include "../../src/pic_io/parameters/io_param.hpp"
-#include "../../src/pic_io/parameters/config.hpp"
-#include "../../src/pic_io/parameters/io.hpp"
+#include "../../src/io/parameters/io_param.hpp"
+#include "../../src/io/parameters/config.hpp"
+#include "../../src/io/parameters/io.hpp"
 
 using namespace std;
 using namespace std::chrono;
