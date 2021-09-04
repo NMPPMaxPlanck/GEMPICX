@@ -13,6 +13,6 @@
 /*****************************************************************/
 namespace io {
 
-  std::map<std::string,std::string> getLoggedGempicParams();
+  std::map<std::string,std::string> get_logged_gempic_params();
 
 }

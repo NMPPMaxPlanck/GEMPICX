@@ -28,17 +28,17 @@
 /*****************************************************************/
 #include <map>
 #include <string>
-#include "keys.hpp"
+#include "GEMPIC_parameter_keys.hpp"
 
 namespace io {
 
-  std::map<std::string,std::string> loggedParams {
+  std::map<std::string,std::string> logged_params {
     {"testKey","0:E:Integer:This keyword just tests the functionality of IConfigFile in io_file.cpp"}
   };
 
 
-  std::map<std::string,std::string> getLoggedGempicParams(){
-    return loggedParams;
+  std::map<std::string,std::string> get_logged_gempic_params(){
+    return logged_params;
   };
 
 }
