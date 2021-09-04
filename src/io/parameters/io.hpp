@@ -12,7 +12,7 @@
 
 
 namespace io{
-  void createGempicConfigStructure(ParamGempic const param,
+  void createGempicConfigStructure(param_gempic const param,
                                    Gempic::ConfigGempic& config,
                                    std::ofstream& ofs);
 }

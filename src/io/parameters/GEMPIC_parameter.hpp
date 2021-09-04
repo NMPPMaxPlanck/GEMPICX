@@ -15,13 +15,13 @@
 
 namespace io{
 
-class ParamGempic{
+class param_gempic{
   
   public:
-    ParamGempic() = default;
-    ~ParamGempic() = default;
-    void getDataFromConfigFile();
-    void printParams(std::ofstream& ofs);
+    param_gempic() = default;
+    ~param_gempic() = default;
+    void get_data_from_config_file();
+    void print_params(std::ofstream& ofs);
 
     /*************************************************************/
     /*

@@ -16,13 +16,13 @@
 
 
 #include <fstream>
-#include "io_param.hpp"
+#include "GEMPIC_parameter.hpp"
 
 #include <stdexcept>
 
 namespace io {
 
-void createGempicConfigStructure(ParamGempic const param,
+void createGempicConfigStructure(param_gempic const param,
                                  Gempic::ConfigGempic& config,
                                  std::ofstream& ofs){
   

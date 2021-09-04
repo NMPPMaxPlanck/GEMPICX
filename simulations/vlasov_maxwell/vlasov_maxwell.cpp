@@ -20,7 +20,7 @@
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
-#include "../../src/io/parameters/io_param.hpp"
+#include "../../src/io/parameters/GEMPIC_parameter.hpp"
 #include "../../src/io/parameters/config.hpp"
 #include "../../src/io/parameters/io.hpp"
 
@@ -43,11 +43,11 @@ void main_main (bool ctest)
     bool readinfile = false;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
-    io::ParamGempic param;
-    param.getDataFromConfigFile();
+    io::param_gempic param;
+    param.get_data_from_config_file();
     // param.sim_name
     std::ofstream ofs("gempic_"+std::to_string(param.n_steps)+"_parameters.out");
-    param.printParams(ofs);
+    param.print_params(ofs);
     ConfigGempic config;
     io::createGempicConfigStructure(param, config, ofs);
     config.printConfigGempic(ofs);

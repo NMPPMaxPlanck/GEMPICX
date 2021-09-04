@@ -17,14 +17,14 @@
 #include "GEMPIC_parameter_keys.hpp"
 
 #include <fstream>
-#include "io_param.hpp"
+#include "GEMPIC_parameter.hpp"
 
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
 namespace io{
   
-void ParamGempic::getDataFromConfigFile( ){
+void param_gempic::get_data_from_config_file( ){
   
   /***************************************************************/
   /* Get Data from config file */
@@ -39,7 +39,7 @@ void ParamGempic::getDataFromConfigFile( ){
 
 }
 
-void ParamGempic::printParams(std::ofstream& ofs) {
+void param_gempic::print_params(std::ofstream& ofs) {
 
   /***************************************************************/
   ofs << "/***************************************************/\n";
