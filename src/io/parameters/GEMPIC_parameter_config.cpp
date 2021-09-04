@@ -14,11 +14,11 @@
 #include <string>
 #include <fstream>
 
-#include "config.hpp"
+#include "GEMPIC_parameter_config.hpp"
 
 namespace Gempic{
 
-void ConfigGempic::printConfigGempic(std::ofstream& ofs){
+void gempic_param_config::print_gempic_param_config(std::ofstream& ofs){
   
   ofs << "/***************************************************/\n";
   ofs << "            Configuration structure                  \n";

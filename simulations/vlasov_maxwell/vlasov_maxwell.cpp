@@ -21,8 +21,8 @@
 #include <GEMPIC_particle_groups.H>
 
 #include "../../src/io/parameters/GEMPIC_parameter.hpp"
-#include "../../src/io/parameters/config.hpp"
-#include "../../src/io/parameters/io.hpp"
+#include "../../src/io/parameters/GEMPIC_parameter_config.hpp"
+#include "../../src/io/parameters/GEMPIC_parameter_struct.hpp"
 
 using namespace std;
 using namespace std::chrono;
@@ -48,9 +48,9 @@ void main_main (bool ctest)
     // param.sim_name
     std::ofstream ofs("gempic_"+std::to_string(param.n_steps)+"_parameters.out");
     param.print_params(ofs);
-    ConfigGempic config;
-    io::createGempicConfigStructure(param, config, ofs);
-    config.printConfigGempic(ofs);
+    gempic_param_config config;
+    io::create_gempic_param_config_structure(param, config, ofs);
+    config.print_gempic_param_config(ofs);
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);

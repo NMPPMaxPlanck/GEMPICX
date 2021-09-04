@@ -20,18 +20,18 @@
 
 namespace Gempic{
 
-struct t_ConfigPropagator {
+struct t_params_propagator {
   int n_steps;
 };
 
-class ConfigGempic {
+class gempic_param_config {
 
   public : 
-    ConfigGempic() = default;
-    ~ConfigGempic() = default;
-    void printConfigGempic(std::ofstream& ofs);
+    gempic_param_config() = default;
+    ~gempic_param_config() = default;
+    void print_gempic_param_config(std::ofstream& ofs);
     
-    t_ConfigPropagator propagator;
+    t_params_propagator propagator;
 
 };
 
