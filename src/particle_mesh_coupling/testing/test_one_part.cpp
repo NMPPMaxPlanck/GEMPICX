@@ -15,6 +15,7 @@
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
+#include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_vlasov_maxwell.H>
 
 using namespace std;
@@ -136,6 +137,8 @@ void main_main (bool ctest)
     case 1:
         time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
         break;
+    case 3:
+        time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
     default:
         break;
     }
@@ -202,6 +205,7 @@ int main(int argc, char* argv[])
     //AllPrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1, 2, 0>(argc==1);
     main_main<3, 1, 3, 2, 1, 4, 1>(argc==1);
+    main_main<3, 1, 2, 4, 2, 4, 3>(argc==1);
 #endif
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.tmp.0", "test_one_part.output");
