@@ -12,11 +12,11 @@
 #include <string>
 #include <fstream>
 
-#include "io_init.hpp"
+#include "GEMPIC_parameter_i_init.hpp"
 
 namespace Gempic{
 
-std::ofstream initMasterOut(std::string fileName) {
+std::ofstream init_master_out(std::string fileName) {
   
   std::ofstream ofs(fileName);
   if(!ofs) 

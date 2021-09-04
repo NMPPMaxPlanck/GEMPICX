@@ -13,6 +13,6 @@
 
 namespace Gempic{
   
-  std::ofstream initMasterOut(std::string fileName);
+  std::ofstream init_master_out(std::string fileName);
 
 }
