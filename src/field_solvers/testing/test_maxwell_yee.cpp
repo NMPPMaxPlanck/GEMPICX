@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
     main_main<2, 1, 1, 1, 1, false>();
     main_main<3, 1, 1, 1, 1, false>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1, false>();
+    main_main<3, 1, 1, 1, 1, true>();
 #endif
     if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee.tmp.0", "test_maxwell_yee.output");
     if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee_additional.tmp.0", "test_maxwell_yee_additional.output");
