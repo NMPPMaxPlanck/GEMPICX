@@ -11,10 +11,12 @@ namespace Gempic {
 void gempic_assert(bool *passed, amrex::Real solution, amrex::Real value){
 
     // check absolute error
-    *passed = *passed && (fabs(solution-value) < TOL);
+    bool pass_abs = fabs(solution-value) < TOL;
 
     // check relative error
-    *passed = *passed && (fabs(solution-value)/std::max(fabs(solution), std::numeric_limits<double>::epsilon()) < RELTOL);
+    bool pass_rel = fabs(solution-value)/std::max(fabs(solution), std::numeric_limits<double>::epsilon()) < RELTOL;
+
+    *passed = *passed && (pass_abs || pass_rel);
 
 }
 
