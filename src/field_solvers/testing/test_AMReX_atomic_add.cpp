@@ -1,15 +1,3 @@
-/*------------------------------------------------------------------------------
- Test 3D Maxwell Yee Solver (finite differences) on periodic grid
-
-  We test the solution
-  E(x,t) =  \begin{pmatrix} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
-                          -2\cos(x_1+x_2+x_3 - \sqrt(3) t) \\
-                            \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
-  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
-                            0 \\
-                            -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
-------------------------------------------------------------------------------*/
-
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -62,13 +50,15 @@ void main_main ()
     }
     rho.SumBoundary(infra.geom.periodicity());
 
+    amrex::Real readval[1];
     for ( amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("test_AMReX_atomic_add_additional.tmp") << rho[mfi] << std::endl;
+        rho[mfi].getVal(readval,amrex::IntVect{5,6,7},0,1);
     }
 
 
     bool passed = true;
-    //gempic_assert(&passed, testval, rho(5,6,7,0));
+    gempic_assert(&passed, testval, *readval);
     amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << passed << std::endl;
 
 }
@@ -76,6 +66,8 @@ void main_main ()
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) std::remove("test_AMReX_atomic_add.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) std::remove("test_AMReX_atomic_add_additional.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -86,7 +78,8 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_ampere_faraday.tmp.0", "test_ampere_faraday.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_atomic_add.tmp.0", "test_AMReX_atomic_add.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_atomic_add_additional.tmp.0", "test_AMReX_atomic_add_additional.output");
     amrex::Finalize();
 }
 
