@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------------
- Test 3D Maxwell Yee Solver (finite differences) on periodic grid
+ Test 3D Maxwell Solver (finite differences) for 4th order on periodic grid
 
   For the Maxwell-equations we use the solution
   E(x,t) =  \begin{pmatrix} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
@@ -24,6 +24,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_assertion.H>
 
 using namespace std;
 using namespace amrex;
@@ -126,27 +127,27 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
-    AllPrintToFile("test_maxwell_yee_order.tmp") << endl;
-    AllPrintToFile("test_maxwell_yee_order.tmp") << "Maxwell" << endl;
-    AllPrintToFile("test_maxwell_yee_order.tmp") << "step " << 0 << endl;
+    AllPrintToFile("test_maxwell_yee_order_additional.tmp") << endl;
+    AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "Maxwell" << endl;
+    AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "step " << 0 << endl;
     switch (vdim) {
     case 1:
-        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
+        AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
         break;
     case 2:
-        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+        AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
         break;
     case 3:
-        AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         break;
     }
 
     switch (bdim) {
     case 1:
-        amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
+        amrex::AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
         break;
     case 3:
-        amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+        amrex::AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
         break;
     }
 
@@ -160,29 +161,38 @@ void main_main ()
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
 
-        AllPrintToFile("test_maxwell_yee_order.tmp") << "step " << n << endl;
+        AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "step " << n << endl;
         switch (vdim) {
         case 1:
-            AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
+            AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
             break;
         case 2:
-            AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
             break;
         case 3:
-            AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+            AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
             break;
         }
 
         switch (bdim) {
         case 1:
-            amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
+            amrex::AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
             break;
         case 3:
-            amrex::AllPrintToFile("test_maxwell_yee_order.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+            amrex::AllPrintToFile("test_maxwell_yee_order_additional.tmp").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
             break;
         }
     }
+    bool passed = true;
+    gempic_assert_err(&passed, 1, E_B_error[0]);
+    gempic_assert_err(&passed, 1, E_B_error[1]);
+    gempic_assert_err(&passed, 1, E_B_error[2]);
+    gempic_assert_err(&passed, 1, E_B_error[3]);
+    gempic_assert_err(&passed, 1, E_B_error[4]);
+    gempic_assert_err(&passed, 1, E_B_error[5]);
 
+    amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << std::endl;
+    amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << passed << std::endl;
 
 }
 
@@ -190,6 +200,7 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
     if (ParallelDescriptor::MyProc()==0) remove("test_maxwell_yee_order.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_maxwell_yee_order_additional.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<2, 1, 1, 1, 1>();
@@ -198,6 +209,7 @@ int main(int argc, char* argv[])
     main_main<3, 1, 1, 1, 1>();
 #endif
     if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee_order.tmp.0", "test_maxwell_yee_order.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee_order_additional.tmp.0", "test_maxwell_yee_order_additional.output");
     amrex::Finalize();
 }
 
