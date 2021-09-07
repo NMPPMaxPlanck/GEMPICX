@@ -26,7 +26,6 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     const int degmw = 2;
-    bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params();
@@ -42,7 +41,7 @@ void main_main ()
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[2] = VlMa.Bz;
     }
-    if (GEMPIC_SPACEDIM==1 & vdim==1) {
+    if (GEMPIC_SPACEDIM==1 && vdim==1) {
         // For 1D1V change parameters to make a Landau damping
         VlMa.sim_name = "Landau";
         VlMa.n_part_per_cell = {10000};

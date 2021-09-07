@@ -51,7 +51,7 @@ void main_main ()
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[2] = VlMa.Bz;
     }
-    if (GEMPIC_SPACEDIM==1 & vdim==1) {
+    if (GEMPIC_SPACEDIM==1 && vdim==1) {
         // For 1D1V change parameters to make a Landau damping
         VlMa.sim_name = "Landau";
         VlMa.n_part_per_cell = {10000};
@@ -63,7 +63,7 @@ void main_main ()
     VlMa.set_computed_params();
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
-    if (GEMPIC_SPACEDIM==1 & vdim==1) {
+    if (GEMPIC_SPACEDIM==1 && vdim==1) {
         VM[0].push_back(0.0);
         VD[0].push_back(1.0);
         VW[0].push_back(1.0);

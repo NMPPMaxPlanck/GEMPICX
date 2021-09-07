@@ -77,12 +77,9 @@ void main_main ()
     // Some setting up of data structures -- you can ignore this
 
     const int degree = 2;
-    int bdim = int(vdim/2.5)*2+1;
     array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);

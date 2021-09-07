@@ -101,9 +101,6 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
-
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.Nghost++;

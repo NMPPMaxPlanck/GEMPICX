@@ -90,7 +90,6 @@ void main_main (bool ctest)
         for (int spec=0; spec<numspec; spec++) {
             for(amrex::MFIter mfi=(*(part_gr).mypc[spec]).MakeMFIter(0); mfi.isValid(); ++mfi) {
                 if(mfi.index() == 0) {
-                    using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
                     amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[spec]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
                     (part_gr).add_particle({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.0, 0.0)}, 1.0, particles);
                 }

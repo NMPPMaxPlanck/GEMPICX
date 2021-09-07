@@ -685,8 +685,6 @@ if (int(vdim/2.5)*2+1 < 3) {
     void matrix_mult (computational_domain ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                       amrex::IndexType IndexVect){
 
-        amrex::Real c1[1];
-
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
             const amrex::Box& bx = mfi.validbox();
 
@@ -864,7 +862,6 @@ if (int(vdim/2.5)*2+1 < 3) {
                            amrex::Real reltol = 1.e-11, int maxsteps = 100) {
 
         int dimension = 0;
-        amrex::Real kern_factor;
 
         const int stencil_length = 3;
         std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;

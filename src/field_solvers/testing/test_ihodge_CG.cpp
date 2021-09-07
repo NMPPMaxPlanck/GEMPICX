@@ -45,7 +45,6 @@ void main_main ()
     fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
 
     const int degree = 4;
-    int bdim = int(vdim/2.5)*2+1;
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
@@ -56,9 +55,6 @@ void main_main ()
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
     std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -73,8 +69,8 @@ void main_main ()
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
     mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
-    amrex::Real err;
-    amrex::Real change;
+    //amrex::Real err;
+    //amrex::Real change;
     amrex::Vector<std::string> varnames = {"Ex"};
     WriteSingleLevelPlotfile("initEx", *mw_yee.E_Array[0], varnames, infra.geom, 0, 0);
     varnames = {"Ey"};

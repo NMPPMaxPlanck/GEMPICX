@@ -2086,7 +2086,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void mlndlap_stencil_rap (int i, int j, int k, Array4<Real> const& csten,
                           Array4<Real const> const& fsten) noexcept
 {
-    auto interp_from_mmm_to = [&fsten] (int i_, int j_, int k_) -> Real {
+    /* auto interp_from_mmm_to = [&fsten] (int i_, int j_, int k_) -> Real {
         Real p = 1._rt;
         p += amrex::Math::abs(fsten(i_-1,j_  ,k_  ,ist_p00)) /
            ( amrex::Math::abs(fsten(i_-1,j_-1,k_-1,ist_ppp))
@@ -2114,7 +2114,7 @@ void mlndlap_stencil_rap (int i, int j, int k, Array4<Real> const& csten,
            + amrex::Math::abs(fsten(i_  ,j_-1,k_-1,ist_ppp)) + eps);
         p *= amrex::Math::abs(fsten(i_-1,j_-1,k_-1,ist_ppp)) * fsten(i_,j_,k_,ist_inv);
         return p;
-    };
+    }; */
 
     auto interp_from_pmm_to = [&fsten] (int i_, int j_, int k_) -> Real {
         Real p = 1._rt;
@@ -2578,9 +2578,9 @@ void mlndlap_stencil_rap (int i, int j, int k, Array4<Real> const& csten,
         }
     };
 
-    auto Ammm = [&fsten] (int i_, int j_, int k_) -> Real {
+    /*auto Ammm = [&fsten] (int i_, int j_, int k_) -> Real {
         return fsten(i_-1,j_-1,k_-1,ist_ppp);
-    };
+    };*/
 
     auto A0mm = [&fsten] (int i_, int j_, int k_) -> Real {
         return fsten(i_  ,j_-1,k_-1,ist_0pp);
@@ -2686,7 +2686,7 @@ void mlndlap_stencil_rap (int i, int j, int k, Array4<Real> const& csten,
         return fsten(i_  ,j_  ,k_  ,ist_ppp);
     };
 
-    auto restrict_from_mmm_to = [&fsten] (int ii_, int jj_, int kk_) -> Real {
+    /*auto restrict_from_mmm_to = [&fsten] (int ii_, int jj_, int kk_) -> Real {
         Real r = 1._rt;
         r += amrex::Math::abs(fsten(ii_-1,jj_-1,kk_-1,ist_p00)) /
            ( amrex::Math::abs(fsten(ii_-1,jj_-2,kk_-2,ist_ppp))
@@ -2714,7 +2714,7 @@ void mlndlap_stencil_rap (int i, int j, int k, Array4<Real> const& csten,
            + amrex::Math::abs(fsten(ii_-1,jj_-1,kk_-1,ist_ppp)) + eps);
         r *= amrex::Math::abs(fsten(ii_-1,jj_-1,kk_-1,ist_ppp)) * fsten(ii_-1,jj_-1,kk_-1,ist_inv);
         return r;
-    };
+    };*/
 
     auto restrict_from_0mm_to = [&fsten] (int ii_, int jj_, int kk_) -> Real {
         Real w1m = amrex::Math::abs(fsten(ii_,jj_-2,kk_-1,ist_0p0)) / (amrex::Math::abs(fsten(ii_,jj_-2,kk_-2,ist_0pp))

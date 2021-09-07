@@ -25,11 +25,6 @@ void main_main ()
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
 
-    // compile parameters
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
-    int Nghost = maxdeg;
-
     // initialize parameters
     std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1};
