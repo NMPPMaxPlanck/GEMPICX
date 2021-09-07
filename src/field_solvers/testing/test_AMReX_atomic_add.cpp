@@ -59,6 +59,7 @@ void main_main ()
 
     bool passed = true;
     gempic_assert(&passed, testval, *readval);
+    amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << std::endl;
     amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << passed << std::endl;
 
 }
