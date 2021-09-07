@@ -24,7 +24,7 @@ using namespace Diagnostics_Output;
 using namespace Particles;
 using namespace Sampling;
 
-template<int vdim, int numspec, bool additional_output>
+template<int vdim, int numspec>
 void main_main ()
 {
     const int degmw = 2;
@@ -174,35 +174,33 @@ void main_main ()
     AllPrintToFile("test_particle_groups.tmp") << std::endl;
     AllPrintToFile("test_particle_groups.tmp") << passed << std::endl;
 
-    if (additional_output) {
-        AllPrintToFile("test_particle_groups_additional.tmp") << std::endl;
-        AllPrintToFile("test_particle_groups_additional.tmp") << "mass: " << mass << std::endl;
-        AllPrintToFile("test_particle_groups_additional.tmp") << "momentum: " ;
-        switch (vdim) {
-        case 1:
-            AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << std::endl;
-            break;
-        case 2:
-            AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << std::endl;
-            break;
-        case 3:
-            AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
-            break;
+    AllPrintToFile("test_particle_groups_additional.tmp") << std::endl;
+    AllPrintToFile("test_particle_groups_additional.tmp") << "mass: " << mass << std::endl;
+    AllPrintToFile("test_particle_groups_additional.tmp") << "momentum: " ;
+    switch (vdim) {
+    case 1:
+        AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << std::endl;
+        break;
+    case 2:
+        AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << std::endl;
+        break;
+    case 3:
+        AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
+        break;
 
-        }
-        AllPrintToFile("test_particle_groups_additional.tmp") << "kinetic energy: " ;
-        switch (vdim) {
-        case 1:
-            AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << std::endl;
-            break;
-        case 2:
-            AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
-            break;
-        case 3:
-            AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
-            break;
+    }
+    AllPrintToFile("test_particle_groups_additional.tmp") << "kinetic energy: " ;
+    switch (vdim) {
+    case 1:
+        AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << std::endl;
+        break;
+    case 2:
+        AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
+        break;
+    case 3:
+        AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
+        break;
 
-        }
     }
 
     te_free(WF_parse);
@@ -214,7 +212,7 @@ int main(int argc, char* argv[])
     if (ParallelDescriptor::MyProc()==0) remove("test_particle_groups.tmp.0");
     if (ParallelDescriptor::MyProc()==0) remove("test_particle_groups_additional.tmp.0");
 
-    main_main<3, 1, true>();
+    main_main<3, 1>();
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_particle_groups.tmp.0", "test_particle_groups.output");
     if (ParallelDescriptor::MyProc()==0) std::rename("test_particle_groups_additional.tmp.0", "test_particle_groups_additional.output");
