@@ -67,15 +67,22 @@ void main_main ()
         });
     }
 
-    std::cout << TestMF.norm1(0) << std::endl;
-    TestMF.FillBoundary(geom.periodicity());
-    std::cout << TestMF.norm1(0) << std::endl;
-
-
-    //-----------------------------------------------------------------------------
-    // Output
+    amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_FillBoundary_2.output") << TestMF[mfi] << std::endl;
+        amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << TestMF[mfi] << std::endl;
+    }
+
+    bool passed = true;
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 4932) < 1e-12);
+    TestMF.FillBoundary(geom.periodicity());
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-12);
+
+    amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << std::endl;
+    amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << passed << std::endl;
+
+    amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << "FILLBOUNDARY" << std::endl;
+    for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
 }
@@ -84,7 +91,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_FillBoundary.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_FillBoundary_additional.tmp.0");
+
     main_main();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_FillBoundary.tmp.0", "test_AMReX_FillBoundary.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_FillBoundary_additional.tmp.0", "test_AMReX_FillBoundary_additional.output");
 
     amrex::Finalize();
 }
