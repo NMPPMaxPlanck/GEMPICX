@@ -76,7 +76,7 @@ void main_main ()
     }
 
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("OW_before") << TestMF[mfi] << std::endl;
+        amrex::AllPrintToFile("test_AMReX_OverrideSync_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
     //-----------------------------------------------------------------------------
@@ -100,12 +100,19 @@ void main_main ()
         }
     }
 
-    //-----------------------------------------------------------------------------
-    // OverrideSync
+    bool passed = true;
+    std::cout << TestMF.norm1(0,Nghost) << std::endl;
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 43578) < 1e-12);
     TestMF.OverrideSync(Mask, geom.periodicity());
+    std::cout << TestMF.norm1(0,Nghost) << std::endl;
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 40938) < 1e-12);
 
+    amrex::AllPrintToFile("test_AMReX_OverrideSync.tmp") << std::endl;
+    amrex::AllPrintToFile("test_AMReX_OverrideSync.tmp") << passed << std::endl;
+
+    amrex::AllPrintToFile("test_AMReX_OverrideSync_additional.tmp") << "OVERRIDESYNC" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("OW_after") << TestMF[mfi] << std::endl;
+        amrex::AllPrintToFile("test_AMReX_OverrideSync_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
 
@@ -115,7 +122,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_OverrideSync.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_OverrideSync_additional.tmp.0");
+
     main_main();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_OverrideSync.tmp.0", "test_AMReX_OverrideSync.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_OverrideSync_additional.tmp.0", "test_AMReX_OverrideSync_additional.output");
 
     amrex::Finalize();
 }
