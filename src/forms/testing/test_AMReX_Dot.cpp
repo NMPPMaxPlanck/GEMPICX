@@ -66,10 +66,15 @@ void main_main ()
     amrex::Real ScalarProd = amrex::MultiFab::Dot(*mw_yee.B_Masks[2], *mw_yee.B_Array[2], 0, *mw_yee.B_Array[2], 0, 1, VlMa.Nghost);
     amrex::Real NormSquared = pow((*mw_yee.B_Array[2]).norm2(0, infra.geom.periodicity()),2.);
     amrex::Real Norm = (*mw_yee.B_Array[2]).norm2(0, infra.geom.periodicity());
-    std::cout << "<x,x> = " << ScalarProd << std::endl;
-    std::cout << "||x||2 = " << NormSquared << std::endl;
-    std::cout << "||x|| = " << Norm << std::endl;
-    std::cout << "<x,x>-||x||2 = " << ScalarProd-NormSquared << std::endl;
+    amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << std::endl;
+    amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "<x,x> = " << ScalarProd << std::endl;
+    amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "||x||2 = " << NormSquared << std::endl;
+    amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "||x|| = " << Norm << std::endl;
+    amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "<x,x>-||x||2 = " << ScalarProd-NormSquared << std::endl;
+
+    bool passed = (std::abs(ScalarProd-NormSquared) < 1e-12);
+    amrex::AllPrintToFile("test_AMReX_Dot.tmp") << std::endl;
+    amrex::AllPrintToFile("test_AMReX_Dot.tmp") << passed << std::endl;
 
 }
 
@@ -77,7 +82,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_Dot.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_Dot.tmp.0");
+
     main_main<3, 1, 1, 1, 1>();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_Dot.tmp.0", "test_AMReX_Dot.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_Dot_additional.tmp.0", "test_AMReX_Dot_additional.output");
 
     amrex::Finalize();
 }

@@ -100,14 +100,24 @@ void main_main ()
         TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
     }
 
+    amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
+    for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
+        amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << TestMF[mfi] << std::endl;
+    }
+
     //-----------------------------------------------------------------------------
     // SumBoundary
 
     TestMF.SumBoundary(geom.periodicity());
 
+    amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << "SUMBOUNDARY" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("Tst_MF_full_2").SetPrecision(20) << TestMF[mfi] << std::endl;
+        amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp").SetPrecision(20) << TestMF[mfi] << std::endl;
     }
+
+    bool passed = (std::abs(TestMF.norm1(0,Nghost) - 5) < 1e-12);
+    amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << std::endl;
+    amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << passed << std::endl;
 
 }
 
@@ -115,7 +125,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_SumBoundary.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_SumBoundary_additional.tmp.0");
+
     main_main<3,1,1,1>();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_SumBoundary.tmp.0", "test_AMReX_SumBoundary.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_SumBoundary_additional.tmp.0", "test_AMReX_SumBoundary_additional.output");
 
     amrex::Finalize();
 }

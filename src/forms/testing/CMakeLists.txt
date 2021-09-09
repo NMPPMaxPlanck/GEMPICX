@@ -1,8 +1,8 @@
 add_executable ( test_gempic_norm test_gempic_norm.cpp)
 add_executable ( test_AMReX_FillBoundary test_AMReX_FillBoundary.cpp )
 add_executable ( test_AMReX_OverrideSync test_AMReX_OverrideSync.cpp )
-add_executable ( test_SumBoundary test_SumBoundary.cpp )
-add_executable ( test_scalarprod test_scalarprod.cpp )
+add_executable ( test_AMReX_SumBoundary test_AMReX_SumBoundary.cpp )
+add_executable ( test_AMReX_Dot test_AMReX_Dot.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
@@ -10,8 +10,8 @@ add_executable ( test_scalarprod test_scalarprod.cpp )
 target_link_libraries( test_gempic_norm tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_FillBoundary gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_OverrideSync gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_SumBoundary tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_scalarprod tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_SumBoundary tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_Dot tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 ######## Ctest
 
