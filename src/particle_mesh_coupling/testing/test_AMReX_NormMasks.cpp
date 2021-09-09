@@ -118,25 +118,17 @@ void main_main ()
             amrex::Box cc23(amrex::IntVect{AMREX_D_DECL(4,1,1)}, amrex::IntVect{AMREX_D_DECL(4,1,1)}, Index_A);
             TestMF[mfi].setVal(60000000, cc23, 0, 1);
         }
-        //for(int k=lo[2]; k<=hi[2]; k++){
-        //for(int j=lo[1]; j<=hi[1]; j++){
-        //for(int l=lo[0]; l<=hi[0]; l++){
-        // the box for these values:
-        //amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, Index_A);
-        //TestMF[mfi].setVal(1000*lo[0]+100*l+10*j+k, cc, 0, 1);
-        //TestMF[mfi].setVal(1000*lo[0]+100*l+10*j+k, cc, 0, 1);
-        //}
-
-        //}
-
-        //}
     }
 
-    std::cout << TestMF.norm1(0, geom.periodicity(), false) << std::endl;
+    amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << "Norm of mask:" << TestMF.norm1(0, geom.periodicity(), false) << std::endl;
+    amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << std::endl;
 
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_norm_masks") << TestMF[mfi] << std::endl;
+        amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << TestMF[mfi] << std::endl;
     }
+
+    amrex::AllPrintToFile("test_AMReX_NormMasks.tmp") << std::endl;
+    amrex::AllPrintToFile("test_AMReX_NormMasks.tmp") << (std::abs(TestMF.norm1(0, geom.periodicity(), false)-83333332.5) < 1e-12) << std::endl;
 
 
 }
@@ -145,7 +137,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_NormMasks.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_AMReX_NormMasks_additional.tmp.0");
+
     main_main();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_NormMasks.tmp.0", "test_AMReX_NormMasks.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_NormMasks_additional.tmp.0", "test_AMReX_NormMasks_additional.output");
 
     amrex::Finalize();
 }
