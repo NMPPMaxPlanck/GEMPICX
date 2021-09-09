@@ -21,6 +21,8 @@ using namespace Particles;
 template<int vdim, int numspec>
 void main_main ()
 {
+    // This test only checks if the initialization runs through, no values are checked
+
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
@@ -129,13 +131,20 @@ void main_main ()
 #endif
         }
     }
+
+    amrex::AllPrintToFile("test_initialize.tmp") << "" << std::endl;
+    amrex::AllPrintToFile("test_initialize.tmp") << 1 << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_initialize.tmp.0");
+
     main_main<3, 1>();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_initialize.tmp.0", "test_initialize.output");
 
     amrex::Finalize();
 }
