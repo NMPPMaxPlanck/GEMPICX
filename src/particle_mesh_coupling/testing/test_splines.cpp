@@ -30,7 +30,13 @@ void main_main ()
     int cell_index = 0;
     int dimension = 0;
     std::array<amrex::Real, GEMPIC_SPACEDIM> x = {AMREX_D_DECL(0.25, 0.25, 0.25)};
-    std::cout << spl.compute_cell_index (cell_index, dimension, x[0], cent_eval[0]) << std::endl;
+    int ind = spl.compute_cell_index (cell_index, dimension, x[0], cent_eval[0]);
+
+    amrex::AllPrintToFile("test_splines_additional.tmp") << std::endl;
+    amrex::AllPrintToFile("test_splines_additional.tmp") << ind << std::endl;
+
+    amrex::AllPrintToFile("test_splines.tmp") << std::endl;
+    amrex::AllPrintToFile("test_splines.tmp") << (std::abs(ind-0)<1e-12) << std::endl;
 
 }
 
@@ -38,7 +44,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_splines.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_splines_additional.tmp.0");
+
     main_main();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_splines.tmp.0", "test_splines.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_splines_additional.tmp.0", "test_splines_additional.output");
 
     amrex::Finalize();
 }
