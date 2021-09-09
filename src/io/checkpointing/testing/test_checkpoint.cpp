@@ -64,6 +64,7 @@ void main_main ()
     int varcount = 4;
     te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
+
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
@@ -86,23 +87,33 @@ void main_main ()
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
 
+
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, species);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VM, VD, VW, species);
 
     //------------------------------------------------------------------------------
     // test:
 
     (*(mw_yee).J_Array[0]).setVal(1.0, 0);
-    std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
+    amrex::Real old_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
     Gempic_WriteCheckpointFile (&mw_yee, &part_gr, &infra, "test_checkpoint", 0, 20);
 
     (*(mw_yee).J_Array[0]).setVal(2.0, 0);
-    std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
+    amrex::Real new_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
 
     Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, "test_checkpoint", 0); // last 2 args: field, step
-    std::cout << gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0) << std::endl;
+    amrex::Real read_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
+
+    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "" << std::endl;
+    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is written out: " << old_val << std::endl;
+    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm the MF has after changing it: " << new_val << std::endl;
+    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is read in: " << read_val << std::endl;
+
+    bool passed = (std::abs(old_val-read_val)<1e-12) && (std::abs(old_val-new_val)>1e-1);
+    amrex::AllPrintToFile("test_checkpoint.tmp") << "" << std::endl;
+    amrex::AllPrintToFile("test_checkpoint.tmp") << passed << std::endl;
 
     te_free(WF_parse);
 
@@ -112,7 +123,13 @@ int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
 
+    if (ParallelDescriptor::MyProc()==0) remove("test_checkpoint.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_checkpoint_additional.tmp.0");
+
     main_main<3, 1, 1, 1, 1>();
+
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_checkpoint.tmp.0", "test_checkpoint.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_checkpoint_additional.tmp.0", "test_checkpoint_additional.output");
 
     amrex::Finalize();
 }
