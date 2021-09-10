@@ -1,3 +1,6 @@
+#ifndef LOOP_PREPARATION_H_
+#define LOOP_PREPARATION_H_
+
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -13,7 +16,7 @@
 #include <AMReX_RealBox.H>
 
 #include <GEMPIC_diagnostics.H>
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
@@ -21,18 +24,15 @@
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
-
-#ifndef LOOP_PREPARATION_H_
-#define LOOP_PREPARATION_H_
 
 namespace Gempic {
 namespace Time_Loop {
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
-                       infrastructure infra,
+                       computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
@@ -83,7 +83,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     }
 
     //add values from ghost cells and periodic boundary
-    (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
+    (*mw_yee).rho.SumBoundary(0, 1, {(*mw_yee).Nghost, (*mw_yee).Nghost, (*mw_yee).Nghost}, {0, 0, 0}, infra.geom.periodicity());
     (*mw_yee).rho.OverrideSync(*((*mw_yee).nodal_Mask), infra.geom.periodicity());
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 

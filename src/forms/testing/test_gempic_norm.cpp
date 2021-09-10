@@ -1,0 +1,201 @@
+
+/*------------------------------------------------------------------------------
+ Test Gempic Norm
+
+  Constant function
+  g(x,y,z) = C
+  norm(g,0) = norm(g,1) = norm(g,2) = C
+
+  linear function
+  f(x,y,z) = ax + by + cz
+  norm(f,0) = aLx + bLy + cLz
+  1D
+  norm(f,1) = 1/2*Lx*a
+  norm(f,2) = 1/3*Lx^2a^2
+  2D
+  norm(f,1) = 1/2*(a*Lx + b*Ly)
+  norm(f,2) = 1/6*(2*a^2*Lx^2 + 3*a*b*Lx*Ly + 2*b^2*Ly^2)
+  3D
+  norm(f,1) = 1/2*(a*Lx + b*Ly + c*Lz)
+  norm(f,2) = 1/6*(2*a^2*Lx^2 + 3*a*c*Lx*Lz + 3*b*c*Ly*Lz + 3*a*b*Lx*Ly + 2*b^2*Ly^2 + 2*c^2*Lz^2)
+------------------------------------------------------------------------------*/
+
+#include <cmath>
+#include <tinyexpr.h>
+
+#include <AMReX.H>
+#include <AMReX_ParmParse.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_Print.H>
+
+#include <GEMPIC_assertion.H>
+#include <GEMPIC_Config.H>
+#include <GEMPIC_gempic_norm.H>
+#include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_vlasov_maxwell.H>
+
+using namespace std;
+using namespace amrex;
+using namespace Gempic;
+
+using namespace Field_solvers;
+using namespace Utils;
+
+//------------------------------------------------------------------------------
+// function
+double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){return(a*x[0]
+        #if (GEMPIC_SPACEDIM > 0)
+            +b*x[1]
+        #endif
+        #if (GEMPIC_SPACEDIM > 2)
+            +c*x[2]
+        #endif
+            );}
+
+template<int vdim, int numspec>
+void main_main ()
+{
+    double C = 2.;
+    double a = 1.;
+    double b = 1.;
+    double c = 1.;
+    //------------------------------------------------------------------------------
+    // Initialize Infrastructure
+
+    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1, 1, 1)};
+    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(128, 128, 128)};
+
+    std::array<std::vector<amrex::Real>, vdim> VM{};
+    std::array<std::vector<amrex::Real>, vdim> VD{};
+    std::array<std::vector<amrex::Real>, vdim> VW{};
+
+    VM[0].push_back(0.0);
+    VD[0].push_back(1.0);
+    VW[0].push_back(1.0);
+    if (vdim > 1) {
+        VM[1].push_back(0.0);
+        VD[1].push_back(1.0);
+        VW[1].push_back(1.0);
+    }
+    if (vdim > 2) {
+        VM[2].push_back(0.0);
+        VD[2].push_back(1.0);
+        VW[2].push_back(1.0);
+    }
+
+    vlasov_maxwell<vdim, numspec> VlMa;
+    VlMa.init_Nghost(1, 1, 1);
+    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {64,64,64});
+    VlMa.set_computed_params();
+
+    computational_domain infra;
+    VlMa.initialize_infrastructure(&infra);
+
+    maxwell_yee<vdim> mw_yee(VlMa, infra);
+
+    // Constant case
+    mw_yee.rho.setVal(C, 0);
+    AllPrintToFile("test_gempic_norm_additional.tmp") << endl << "Constant case: " << endl;
+    AllPrintToFile("test_gempic_norm_additional.tmp") << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
+    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - C) << endl;
+    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 2) - C) << endl;
+    AllPrintToFile("test_gempic_norm_additional.tmp") << endl;
+
+    bool passed = true;
+    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 0));
+    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 1));
+    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 2));
+
+
+    // Linear case
+    std::array<double,GEMPIC_SPACEDIM> x;
+    for ( amrex::MFIter mfi(mw_yee.rho); mfi.isValid(); ++mfi ){
+
+        const amrex::Box& bx = mfi.validbox();
+        amrex::IntVect lo = {bx.smallEnd()};
+        amrex::IntVect hi = {bx.bigEnd()};
+#if (GEMPIC_SPACEDIM > 2)
+        for(int k=lo[2]; k<=hi[2]; k++){
+            x[2] = infra.geom.ProbLo()[2] + ((double)k)*infra.dx[2];
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+            for(int j=lo[1]; j<=hi[1]; j++){
+                x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
+#endif
+                for(int l=lo[0]; l<=hi[0]; l++){
+                    x[0] = infra.geom.ProbLo()[0] + ((double)l)*infra.dx[0];
+                    // the box for these values:
+                    amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
+                    (mw_yee.rho)[mfi].setVal(f(x,a,b,c), cc, 0, 1);
+                }
+#if (GEMPIC_SPACEDIM > 1)
+            }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+        }
+#endif
+    }
+    AllPrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << endl;
+#if(GEMPIC_SPACEDIM == 1)
+    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - a*infra.Length[0]) << endl;
+    double Lx = infra.Length[0];
+    double norm1 = 1./2.*Lx*a;
+    double norm2 = sqrt(1./3.*pow(Lx,2.)*pow(a,2.));
+    AllPrintToFile("test_gempic_norm.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(3) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1])) << endl;
+    double Lx = infra.Length[0];
+    double Ly = infra.Length[1];
+    double norm1 = 1./2.*(a*Lx + b*Ly);
+    double norm2 = sqrt(1./6.*(2.*pow(a,2.)*pow(Lx,2.) + 3.*a*b*Lx*Ly + 2.*pow(b,2.)*pow(Ly,2.)));
+    AllPrintToFile("test_gempic_norm.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
+#endif
+#if (GEMPIC_SPACEDIM == 3)
+    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
+    amrex::Real Lx = infra.Length[0];
+    amrex::Real Ly = infra.Length[1];
+    amrex::Real Lz = infra.Length[2];
+    amrex::Real norm0 = a*Lx + b*Ly + c*Lz;
+    amrex::Real norm1 = 1./2.*(a*Lx + b*Ly + c*Lz);
+    amrex::Real norm2 = sqrt(1./6.*(2.*pow(a,2.)*pow(Lx,2.) + 3.*a*c*Lx*Lz + 3.*b*c*Ly*Lz + 3.*a*b*Lx*Ly + 2.*pow(b,2.)*pow(Ly,2.) + 2.*pow(c,2.)*pow(Lz,2.)));
+    AllPrintToFile("test_gempic_norm_additional.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
+
+    gempic_assert(&passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
+    gempic_assert(&passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
+    gempic_assert(&passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
+
+#endif
+
+    AllPrintToFile("test_gempic_norm.tmp") << endl;
+    AllPrintToFile("test_gempic_norm.tmp") << passed << endl;
+
+
+}
+
+int main(int argc, char* argv[])
+{
+    amrex::Initialize(argc,argv);
+    if (ParallelDescriptor::MyProc()==0) remove("test_gempic_norm.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_gempic_norm_additional.tmp.0");
+
+#if (GEMPIC_SPACEDIM == 1)
+    main_main<1, 1>();
+    main_main<2, 1>();
+#elif (GEMPIC_SPACEDIM == 2)
+    main_main<2, 1>();
+    main_main<3, 1>();
+#elif (GEMPIC_SPACEDIM == 3)
+    main_main<3, 1>();
+#endif
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_gempic_norm.tmp.0", "test_gempic_norm.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_gempic_norm_additional.tmp.0", "test_gempic_norm_additional.output");
+
+    amrex::Finalize();
+}
+
+
+

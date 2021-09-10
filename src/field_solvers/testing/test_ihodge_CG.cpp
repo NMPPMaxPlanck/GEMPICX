@@ -24,6 +24,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_assertion.H>
 
 using namespace std;
 using namespace amrex;
@@ -45,7 +46,6 @@ void main_main ()
     fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
 
     const int degree = 4;
-    int bdim = int(vdim/2.5)*2+1;
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
@@ -57,39 +57,21 @@ void main_main ()
     std::array<std::vector<amrex::Real>, vdim> VD{};
     std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-    int maxdeg = *(std::max_element(degs.begin(), degs.end()));
-
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
                     mx_grid, 0.01, {1.0}, {1.0}, 0.5);
     VlMa.set_computed_params();
 
-    Infra::infrastructure infra;
+    CompDom::computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
     mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
-    amrex::Real err;
-    amrex::Real change;
-    amrex::Vector<std::string> varnames = {"Ex"};
-    WriteSingleLevelPlotfile("initEx", *mw_yee.E_Array[0], varnames, infra.geom, 0, 0);
-    varnames = {"Ey"};
-    WriteSingleLevelPlotfile("initEy", *mw_yee.E_Array[1], varnames, infra.geom, 0, 0);
-    varnames = {"Ez"};
-    WriteSingleLevelPlotfile("initEz", *mw_yee.E_Array[2], varnames, infra.geom, 0, 0);
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
-
-    varnames = {"Ex"};
-    WriteSingleLevelPlotfile("hodgeEx", *mw_yee.HE_Array[0], varnames, infra.geom, 0, 0);
-    varnames = {"Ey"};
-    WriteSingleLevelPlotfile("hodgeEy", *mw_yee.HE_Array[1], varnames, infra.geom, 0, 0);
-    varnames = {"Ez"};
-    WriteSingleLevelPlotfile("hodgeEz", *mw_yee.HE_Array[2], varnames, infra.geom, 0, 0);
 
     for (int dim = 0; dim < vdim; dim++) {
         amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]),infra.distriMap,1,mw_yee.Nghost);
@@ -98,38 +80,30 @@ void main_main ()
 
         (mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
         (mw_yee.E_sol_Array[dim])->FillBoundary(infra.geom.periodicity());
-        //amrex::MultiFab::Copy(*mw_yee.E_sol_Array[dim], *mw_yee.E_Array[dim], 0, 0, 1, mw_yee.Nghost);
+
         mw_yee.template solve_hodge_CG<degree>(&(*mw_yee.HE_Array[dim]), &(*mw_yee.E_sol_Array[dim]), &k, infra, dim, 2, 1.e-16);
 
-        /*
-        //error
-        (*mw_yee.E_sol_Array[dim]).minus(*mw_yee.E_Array[dim], 0, 1, VlMa.Nghost);
-        err = gempic_norm(&(*mw_yee.E_sol_Array[dim]), infra, 0);
-
-        //change
-        amrex::MultiFab::Copy(*mw_yee.E_sol_Array[dim], *mw_yee.B_sol_Array[dim], 0, 0, 1, mw_yee.Nghost);
-        (*mw_yee.B_sol_Array[dim]).minus(*mw_yee.HE_Array[dim], 0, 1, VlMa.Nghost);
-        change = gempic_norm(&(*mw_yee.B_sol_Array[dim]), infra, 2);
-
-
-        std::cout << "component " << dim << " had an error of: " << err <<std::endl;
-        std::cout << "change " << change << std::endl;
-        */
     }
 
-    varnames = {"Ex"};
-    WriteSingleLevelPlotfile("solEx", *mw_yee.E_sol_Array[0], varnames, infra.geom, 0, 0);
-    varnames = {"Ey"};
-    WriteSingleLevelPlotfile("solEy", *mw_yee.E_sol_Array[1], varnames, infra.geom, 0, 0);
-    varnames = {"Ez"};
-    WriteSingleLevelPlotfile("solEz", *mw_yee.E_sol_Array[2], varnames, infra.geom, 0, 0);
-
+    amrex::AllPrintToFile("test_ihodge_CG_additional.tmp") << std::endl;
+    // comparing ihodge(hoge(E)) to E
+    bool passed = true;
+    for (int dim = 0; dim < vdim; dim++) {
+        (mw_yee.E_sol_Array[dim])->minus(*(mw_yee.E_Array[dim]), 0, 1, 0);
+        amrex::Real err_norm = Utils::gempic_norm(&(*(mw_yee.E_sol_Array[dim])), infra, 2);
+        amrex::AllPrintToFile("test_ihodge_CG_additional.tmp") << "For component " << dim << " the error is: " << err_norm << std::endl;
+        amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
+        gempic_assert_err(&passed, E_norm, err_norm*err_norm);
+    }
+    amrex::AllPrintToFile("test_ihodge_CG.tmp") << std::endl;
+    amrex::AllPrintToFile("test_ihodge_CG.tmp") << passed << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
     if (ParallelDescriptor::MyProc()==0) remove("test_ihodge_CG.tmp.0");
+    if (ParallelDescriptor::MyProc()==0) remove("test_ihodge_CG_additional.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -141,6 +115,7 @@ int main(int argc, char* argv[])
     main_main<3, 1, 1, 1, 1>();
 #endif
     if (ParallelDescriptor::MyProc()==0) std::rename("test_ihodge_CG.tmp.0", "test_ihodge_CG.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_ihodge_CG_additional.tmp.0", "test_ihodge_CG_additional.output");
     amrex::Finalize();
 }
 

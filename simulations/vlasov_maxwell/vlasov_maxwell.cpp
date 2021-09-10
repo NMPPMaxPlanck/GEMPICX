@@ -20,6 +20,10 @@
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
+#include "../../src/io/parameters/GEMPIC_parameter.hpp"
+#include "../../src/io/parameters/GEMPIC_parameter_config.hpp"
+#include "../../src/io/parameters/GEMPIC_parameter_struct.hpp"
+
 using namespace std;
 using namespace std::chrono;
 using namespace amrex;
@@ -39,6 +43,14 @@ void main_main (bool ctest)
     bool readinfile = false;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
+    io::param_gempic param;
+    param.get_data_from_config_file();
+    // param.sim_name
+    std::ofstream ofs("gempic_"+std::to_string(param.n_steps)+"_parameters.out");
+    param.print_params(ofs);
+    gempic_param_config config;
+    io::create_gempic_param_config_structure(param, config, ofs);
+    config.print_gempic_param_config(ofs);
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -58,7 +70,7 @@ void main_main (bool ctest)
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
     // infrastructure
-    infrastructure infra;
+    computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
@@ -78,7 +90,6 @@ void main_main (bool ctest)
         for (int spec=0; spec<numspec; spec++) {
             for(amrex::MFIter mfi=(*(part_gr).mypc[spec]).MakeMFIter(0); mfi.isValid(); ++mfi) {
                 if(mfi.index() == 0) {
-                    using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
                     amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[spec]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
                     (part_gr).add_particle({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.0, 0.0)}, 1.0, particles);
                 }

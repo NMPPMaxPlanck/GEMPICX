@@ -15,7 +15,7 @@ Install AMReX first enabeling particles (for each dimension):
 2.) make install  
 3.) Run a cmake configuration that specifies the directory where AMReX is installed and the directory where the gempic code is located  
 
-cmake -D AMReX_ROOT=~/Documents/Codes/amrex/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx -D ~/Documents/Codes/gempic
+cmake -D AMReX_ROOT=~/Documents/Codes/amrex/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx ~/Documents/Codes/gempic
 
 
 4.) Build the library  

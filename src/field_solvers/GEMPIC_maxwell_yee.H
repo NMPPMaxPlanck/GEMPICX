@@ -1,3 +1,6 @@
+#ifndef MAXWELL_YEE_H_
+#define MAXWELL_YEE_H_
+
 #include <tinyexpr.h>
 
 #include <AMReX.H>
@@ -20,7 +23,7 @@
 #include <AMReX_RealBox.H>
 
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 #include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
@@ -33,13 +36,10 @@ class vlasov_maxwell;
 }
 }
 
-using namespace Infra;
+using namespace CompDom;
 using namespace Utils;
 using namespace Vlasov_Maxwell;
 using namespace Particles;
-
-#ifndef MAXWELL_YEE_H_
-#define MAXWELL_YEE_H_
 
 namespace Gempic {
 namespace Field_solvers {
@@ -100,7 +100,7 @@ public:
     maxwell_yee ();
 
     // Explicit const
-        maxwell_yee  (infrastructure ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in,
+        maxwell_yee  (computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in,
         amrex::Real curlB_scaling_in ,
         amrex::Real energy_b_scaling_in){
         // set index indicating nodal-/cell-centered
@@ -268,7 +268,7 @@ if (int(vdim/2.5)*2+1 < 3) {
          *  @param ifr - object of type infrastructure
          */
         template <int numspec>
-        maxwell_yee (vlasov_maxwell<vdim, numspec> VM, infrastructure ifr){
+        maxwell_yee (vlasov_maxwell<vdim, numspec> VM, computational_domain ifr){
             *this = maxwell_yee(ifr, VM.dt, VM.n_steps, VM.Nghost, VM.epref_ep0, VM.curlB_scaling, VM.energy_b_scaling);
 
         }
@@ -277,7 +277,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     void projection (std::string function_string,
                      std::array<amrex::Real, 3> k,
                      amrex::Real t,
-                     infrastructure ifr,
+                     computational_domain ifr,
                      std::array<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
                      amrex::MultiFab *MultiF
@@ -361,7 +361,7 @@ if (int(vdim/2.5)*2+1 < 3) {
      */
     template <int degree>
     void init_E_B (std::array<std::string, vdim> fieldsE, std::array<std::string, int(vdim/2.5)*2+1> fieldsB,
-                   std::array<amrex::Real, 3> k,infrastructure ifr){
+                   std::array<amrex::Real, 3> k,computational_domain ifr){
         initE<degree> (fieldsE, k, ifr);
         initB<degree> (fieldsB, k, ifr);
     }
@@ -370,7 +370,7 @@ if (int(vdim/2.5)*2+1 < 3) {
      * Initialize E field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initE (std::array<std::string, vdim> fields, std::array<amrex::Real, 3> k,infrastructure ifr) {
+    void initE (std::array<std::string, vdim> fields, std::array<amrex::Real, 3> k,computational_domain ifr) {
         // E_field
         for (int i = 0; i<vdim; i++) {
             projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]));
@@ -381,7 +381,7 @@ if (int(vdim/2.5)*2+1 < 3) {
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initB (std::array<std::string, int(vdim/2.5)*2+1> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
+    void initB (std::array<std::string, int(vdim/2.5)*2+1> fields, std::array<amrex::Real, 3> k,computational_domain ifr){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
@@ -394,7 +394,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Fill Boundaries of all relevant Fabs (E, J, B, rho).
      */
-    void FillBD (infrastructure ifr){
+    void FillBD (computational_domain ifr){
         for(int cc=0;cc<vdim;cc++){
             (*E_Array[cc]).FillBoundary(ifr.geom.periodicity());
             (*E_sol_Array[cc]).FillBoundary(ifr.geom.periodicity()); //TODO: remove
@@ -419,7 +419,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
-    void advance_E (infrastructure ifr, amrex::Real dt_step, bool from_B, bool from_J,
+    void advance_E (computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J,
                         std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
                         std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
 
@@ -477,7 +477,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
-    void advance_E (infrastructure ifr, amrex::Real dt_step, bool from_B, bool from_J,
+    void advance_E (computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J,
                         std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
                         std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiAlfvenTensor,
                         std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
@@ -538,7 +538,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance B by a time step of length @p dt_step with a Yee scheme
      */
-    void advance_B (infrastructure ifr, amrex::Real dt_step,
+    void advance_B (computational_domain ifr, amrex::Real dt_step,
                     std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
                     std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiOutput){
 
@@ -585,7 +585,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
 #if (GEMPIC_SPACEDIM ==3)
     template<int degree>
-    void hodge_full (infrastructure ifr, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
+    void hodge_full (computational_domain ifr, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
                      std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput, bool is_E) {
         for (int field=0; field<vdim; field++) {
 
@@ -603,7 +603,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 #endif
 
     template <int degree, int dimension>
-    void hodge (infrastructure ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+    void hodge (computational_domain ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                 amrex::IndexType IndexVect){
 
         std::vector<amrex::Real> stencil;
@@ -664,7 +664,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Advance time and both fields by a time step of length @p dt_step with a Yee scheme
      */
-    void advance (infrastructure ifr, amrex::Real dt_step){
+    void advance (computational_domain ifr, amrex::Real dt_step){
 
         time = time+dt_step;
 
@@ -673,7 +673,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
     template <int degree>
-    void init_rho_phi (std::array<std::string, 2> fields, std::array<amrex::Real, 3> k,infrastructure ifr){
+    void init_rho_phi (std::array<std::string, 2> fields, std::array<amrex::Real, 3> k,computational_domain ifr){
 
         // rho
         projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
@@ -682,10 +682,8 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
     template <int stencil_length>
-    void matrix_mult (infrastructure ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+    void matrix_mult (computational_domain ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                       amrex::IndexType IndexVect){
-
-        amrex::Real c1[1];
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
             const amrex::Box& bx = mfi.validbox();
@@ -710,7 +708,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     template <int stencil_length, int dimension>
     void solve_stencil_CG(std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil,
-                          amrex::MultiFab *b, amrex::MultiFab *x, infrastructure ifr, amrex::IndexType IndexVect,
+                          amrex::MultiFab *b, amrex::MultiFab *x, computational_domain ifr, amrex::IndexType IndexVect,
                           int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100){
         if(verbose > 0) {
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
@@ -778,7 +776,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
     template<int degree>
-    void solve_hodge_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *k, infrastructure ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
+    void solve_hodge_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *k, computational_domain ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
                         int maxsteps = 100){
         if(verbose > 0) {
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
@@ -860,11 +858,10 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     template <int degree>
     void poisson_operator (amrex::MultiFab *MultiIn, amrex::MultiFab *MultiOut, amrex::MultiFab *kx,
-                           amrex::MultiFab *ky, amrex::MultiFab *kz, infrastructure ifr, int verbose = 0,
+                           amrex::MultiFab *ky, amrex::MultiFab *kz, computational_domain ifr, int verbose = 0,
                            amrex::Real reltol = 1.e-11, int maxsteps = 100) {
 
         int dimension = 0;
-        amrex::Real kern_factor;
 
         const int stencil_length = 3;
         std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
@@ -943,7 +940,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     template<int degree>
     void solve_poisson_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,
-                          infrastructure ifr, int verbose = 0, amrex::Real reltol = 1.e-11,
+                          computational_domain ifr, int verbose = 0, amrex::Real reltol = 1.e-11,
                         int maxsteps = 100){
         if(verbose > 0) {
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
@@ -1033,7 +1030,7 @@ if (int(vdim/2.5)*2+1 < 3) {
 
     template<int degree>
     void D_from_phi(amrex::MultiFab *phi_mf, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *D,
-                    amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,infrastructure ifr, int verbose = 0,
+                    amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,computational_domain ifr, int verbose = 0,
                     amrex::Real reltol = 1.e-11, int maxsteps = 100) {
 
         std::array<std::unique_ptr<amrex::MultiFab>, vdim > tmp;
@@ -1099,7 +1096,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Initialize E by solving Poisson problem in two steps: 1) use the MLMG solver of amrex to solve rho -> phi 2) use differences for phi -> E
      */
-    void solve_poisson(infrastructure ifr, amrex::Real reltol = 1.e-11, int max_coarsening_level = 30){
+    void solve_poisson(computational_domain ifr, amrex::Real reltol = 1.e-11, int max_coarsening_level = 30){
         //--------------------------------------------------------------------------------
         // rho
 #if GEMPIC_SPACEDIM > 1 // for == 1: use analytical solution instead of MLMG solver
@@ -1180,7 +1177,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     /**
      * Compute rho for a given rho (for diagnostics: Gauss law)
      */
-    void rho_from_E(infrastructure ifr){
+    void rho_from_E(computational_domain ifr){
 
         amrex::Real c1[1], c2[1];
 
@@ -1238,7 +1235,7 @@ if (int(vdim/2.5)*2+1 < 3) {
      * Compute rho for a given rho (for diagnostics: Gauss law)
      */
     template<int numspec, int degx, int degy, int degz>
-    amrex::Real compute_gauss_error(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
+    amrex::Real compute_gauss_error(computational_domain ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         rho_from_E(ifr); // fills rho_gauss_law
 
@@ -1276,7 +1273,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
         }
 
-        rho.SumBoundary(ifr.geom.periodicity());
+        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
@@ -1303,7 +1300,7 @@ if (int(vdim/2.5)*2+1 < 3) {
      * Compute E for rho from particles (for diagnostics: Gauss law)
      */
     template<int numspec>
-    amrex::Real compute_gauss_error_E(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
+    amrex::Real compute_gauss_error_E(computational_domain ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         (*E_sol_Array[0]).Copy(*E_sol_Array[0], *E_Array[0],0,0,1,Nghost);
         (*E_sol_Array[1]).Copy(*E_sol_Array[1], *E_Array[1],0,0,1,Nghost);
@@ -1349,7 +1346,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
         }
 
-        rho.SumBoundary(ifr.geom.periodicity());
+        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
@@ -1372,7 +1369,7 @@ if (int(vdim/2.5)*2+1 < 3) {
     }
 
     template<int numspec, int degx, int degy, int degz, int degree>
-    amrex::Real compute_gauss_error_hodge(infrastructure ifr, Particles::particle_groups<vdim, numspec> *part_gr){
+    amrex::Real compute_gauss_error_hodge(computational_domain ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         amrex::MultiFab kx(convert(ifr.grid, *E_Index[0]),ifr.distriMap,1,Nghost);
         kx.setVal(1.0, 0);
@@ -1431,7 +1428,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
         }
 
-        rho.SumBoundary(ifr.geom.periodicity());
+        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
@@ -1461,7 +1458,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(std::array<std::string, vdim> fields_E,
                                                                     std::array<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
                                                               bool bool_B,
-                                                              infrastructure ifr){
+                                                              computational_domain ifr){
             std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
             exactSolution<degree>(fields_E, fields_B, k, bool_B, ifr);
@@ -1487,7 +1484,7 @@ if (int(vdim/2.5)*2+1 < 3) {
         template<int degree>
         void exactSolution(std::array<std::string, vdim> fields_E,
                            std::array<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
-                           bool bool_B, infrastructure ifr){
+                           bool bool_B, computational_domain ifr){
             amrex::Real btime = time + dt/2.0;
 
             // E-field

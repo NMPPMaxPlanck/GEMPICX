@@ -1,3 +1,6 @@
+#ifndef TIME_LOOP_HS_FEM_
+#define TIME_LOOP_HS_FEM_
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -11,7 +14,7 @@
 #include <AMReX_RealBox.H>
 
 #include <GEMPIC_diagnostics.H>
-#include <GEMPIC_infrastructure.H>
+#include <GEMPIC_computational_domain.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_profiling.H>
@@ -21,12 +24,9 @@
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
-using namespace Infra;
+using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;
-
-#ifndef TIME_LOOP_HS_FEM_
-#define TIME_LOOP_HS_FEM_
 
 namespace Gempic {
 namespace Time_Loop {
@@ -36,7 +36,7 @@ namespace Time_Loop {
    */
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
-void time_loop_hs_fem_step (infrastructure infra,
+void time_loop_hs_fem_step (computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        amrex::Real coeff,
                        particle_groups<vdim, numspec> *part_gr,
@@ -190,7 +190,7 @@ void time_loop_hs_fem_step (infrastructure infra,
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
-void time_loop_hs_fem (infrastructure infra,
+void time_loop_hs_fem (computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
