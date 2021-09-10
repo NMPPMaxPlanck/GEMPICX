@@ -36,7 +36,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     amrex::MultiFab rho; // for Poisson
     const amrex::BoxArray& nba = amrex::convert(infra.grid,amrex::IntVect::TheNodeVector());
-    amrex::Real Nghost = 1;
+    int Nghost = 1;
     rho.define(nba, infra.distriMap, 1, Nghost);
     rho.setVal(0.0);
 
@@ -48,7 +48,7 @@ void main_main ()
         amrex::Gpu::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
 
     }
-    rho.SumBoundary(infra.geom.periodicity());
+    rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
 
     amrex::Real readval[1];
     for ( amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {

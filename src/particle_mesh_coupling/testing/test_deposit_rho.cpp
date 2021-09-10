@@ -121,7 +121,7 @@ void main_main ()
         }
     }
 
-    (mw_yee).rho.SumBoundary(infra.geom.periodicity());
+    (mw_yee).rho.SumBoundary(0, 1, {(mw_yee).Nghost, (mw_yee).Nghost, (mw_yee).Nghost}, {0, 0, 0}, infra.geom.periodicity());
     (mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     //------------------------------------------------------------------------------

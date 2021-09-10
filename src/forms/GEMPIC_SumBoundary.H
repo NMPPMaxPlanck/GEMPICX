@@ -32,7 +32,7 @@ void
 Gempic_SumBoundary (maxwell_yee<vdim> *mw_yee, computational_domain *infra)
 {
     for (int i=0; i<vdim; i++) {
-        (*(*mw_yee).J_Array[i]).SumBoundary(infra->geom.periodicity());
+        (*(*mw_yee).J_Array[i]).SumBoundary(0, 1, {(*mw_yee).Nghost, (*mw_yee).Nghost, (*mw_yee).Nghost}, {0, 0, 0}, infra->geom.periodicity());
         (*(*mw_yee).J_Array[i]).OverrideSync((*(*mw_yee).E_Masks[i]), infra->geom.periodicity());
     }
 

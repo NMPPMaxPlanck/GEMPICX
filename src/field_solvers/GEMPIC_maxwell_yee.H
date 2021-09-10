@@ -1273,7 +1273,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
         }
 
-        rho.SumBoundary(ifr.geom.periodicity());
+        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
@@ -1346,7 +1346,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
         }
 
-        rho.SumBoundary(ifr.geom.periodicity());
+        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
@@ -1428,7 +1428,7 @@ if (int(vdim/2.5)*2+1 < 3) {
             }
         }
 
-        rho.SumBoundary(ifr.geom.periodicity());
+        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 

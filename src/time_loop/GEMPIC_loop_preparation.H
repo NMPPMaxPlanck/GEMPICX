@@ -83,7 +83,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     }
 
     //add values from ghost cells and periodic boundary
-    (*mw_yee).rho.SumBoundary(infra.geom.periodicity());
+    (*mw_yee).rho.SumBoundary(0, 1, {(*mw_yee).Nghost, (*mw_yee).Nghost, (*mw_yee).Nghost}, {0, 0, 0}, infra.geom.periodicity());
     (*mw_yee).rho.OverrideSync(*((*mw_yee).nodal_Mask), infra.geom.periodicity());
     (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
