@@ -7,11 +7,11 @@ add_executable ( test_AMReX_Dot test_AMReX_Dot.cpp )
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( test_gempic_norm tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_AMReX_FillBoundary gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_AMReX_OverrideSync gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_AMReX_SumBoundary tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_AMReX_Dot tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_gempic_norm AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_FillBoundary  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_OverrideSync  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_SumBoundary  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_Dot tinyexpr  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 ######## Ctest
 
