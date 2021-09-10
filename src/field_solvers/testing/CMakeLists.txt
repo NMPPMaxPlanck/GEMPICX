@@ -4,6 +4,7 @@ add_executable ( test_poisson_CG test_poisson_CG.cpp )
 add_executable ( test_ihodge_CG test_ihodge_CG.cpp )
 add_executable ( test_ampere_faraday test_ampere_faraday.cpp )
 add_executable ( test_AMReX_atomic_add test_AMReX_atomic_add.cpp )
+add_executable ( test_constval test_constval.cpp )
 #add_executable ( test_FillBD test_FillBD.cpp )
 
 #message("#########")
@@ -15,6 +16,7 @@ target_link_libraries( test_poisson_CG tinyexpr gempic_poisson AMReX::amrex AMRe
 target_link_libraries( test_ihodge_CG tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_ampere_faraday tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_atomic_add tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_constval gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
 
