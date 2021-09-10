@@ -5,21 +5,32 @@ add_executable ( test_ihodge_CG test_ihodge_CG.cpp )
 add_executable ( test_ampere_faraday test_ampere_faraday.cpp )
 add_executable ( test_AMReX_atomic_add test_AMReX_atomic_add.cpp )
 add_executable ( test_constval test_constval.cpp )
-#add_executable ( test_FillBD test_FillBD.cpp )
 
-#message("#########")
-#message( ${AMReX_DIR} )
-#message( " ######")
+if (USE_CUDA)
+	setup_target_for_cuda_compilation( test_maxwell_yee )
+	setup_target_for_cuda_compilation( test_maxwell_yee_order )
+	setup_target_for_cuda_compilation( test_poisson_CG )
+	setup_target_for_cuda_compilation( test_ihodge_CG )
+	setup_target_for_cuda_compilation( test_ampere_faraday )
+	setup_target_for_cuda_compilation( test_AMReX_atomic_add )
+	setup_target_for_cuda_compilation( test_constval )
+endif()
+
+
 target_link_libraries( test_maxwell_yee tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_maxwell_yee_order tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_poisson_CG tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_ihodge_CG tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_ampere_faraday tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_atomic_add tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_constval gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_constval AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
 
+
+if (USE_CUDA)
+  setup_target_for_cuda_compilation( test_constval )
+endif()
 
 ######## Ctest
 

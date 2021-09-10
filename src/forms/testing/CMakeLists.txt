@@ -13,6 +13,16 @@ target_link_libraries( test_AMReX_OverrideSync  AMReX::amrex AMReX::Flags_CXX AM
 target_link_libraries( test_AMReX_SumBoundary  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_Dot tinyexpr  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
+if (USE_CUDA)
+	setup_target_for_cuda_compilation( test_gempic_norm )
+	setup_target_for_cuda_compilation( test_AMReX_FillBoundary )
+	setup_target_for_cuda_compilation( test_AMReX_OverrideSync )
+	setup_target_for_cuda_compilation( test_AMReX_SumBoundary )
+	setup_target_for_cuda_compilation( test_AMReX_Dot )
+endif()
+
+
+
 ######## Ctest
 
 FILE(GLOB _tests *.expected_output)
