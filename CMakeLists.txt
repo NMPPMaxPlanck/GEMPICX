@@ -5,7 +5,17 @@ set(CMAKE_CXX_STANDARD 14)
 # Name of the project
 project(gempic)
 
-find_package(MPI REQUIRED)
+option(USE_CUDA "Use CUDA" OFF)
+
+# Enable Languages
+enable_language(CXX)
+if (USE_CUDA)
+  enable_language(CUDA)
+  set(CUDA_SEPARABLE_COMPILATION ON)
+  find_package(CUDA QUIET REQUIRED)
+endif()
+
+find_package(MPI REQUIRED CXX)
 
 message("AMReX Dir is ${AMReX_ROOT}")
 
@@ -38,7 +48,13 @@ ELSE()
   set (CMAKE_CXX_FLAGS "")
   set (CMAKE_CXX_FLAGS_RELEASE "")
   set (CMAKE_CXX_FLAGS_DEBUG   "")
+  message("Unknown compiler")
+ENDIF()
 
+IF (USE_CUDA)
+  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
 ENDIF()
 
 # Enable ctests
@@ -73,3 +89,16 @@ add_subdirectory(simulations)
 # Add doxygen documentation
 add_subdirectory(doc)
 
+# Config summary
+message( STATUS "GEMPIC configuration summary: ")
+message( STATUS "   Build type               = ${CMAKE_BUILD_TYPE}")
+message( STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
+if ( ${CMAKE_BUILD_TYPE} MATCHES "Release" )
+  message( STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS_RELEASE}")
+elseif( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+  message( STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS_RELEASE}")
+endif()
+if (USE_CUDA)
+message( STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
+message( STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
+endif()
