@@ -9,9 +9,20 @@ echo $AMREX_DIRECTORY
 
 source /etc/profile.d/modules.sh
 module purge
+  if [ x"$CLUSTER" == x"COBRA" ] || [ x"$CLUSTER" == x"SAKURA" ] || [ x"$CLUSTER" == x"TALOS" ]; then
+        # high usage of AVX512 registers seems slightly beneficial
+        INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -qopt-zmm-usage=high"
+    fi
+if [ x"$CLUSTER" == x"COBRA"  ]; then
 module load intel/19.1.1
 module load impi/2019.7
 module load mkl/2019.5
+fi
+if [ x"$CLUSTER" == x"RAVEN" ]; then
+module load intel/19.1.2
+module load impi/2019.8
+module load mkl/2021.2
+fi
 module load cmake/3.15
 module load gcc
 
