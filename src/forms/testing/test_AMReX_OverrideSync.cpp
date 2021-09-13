@@ -57,22 +57,18 @@ void main_main ()
     //-----------------------------------------------------------------------------
     // Fill MultiFab
 
-
     for ( amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
-        for(int k=lo[2]; k<=hi[2]; k++){
-            for(int j=lo[1]; j<=hi[1]; j++){
-                for(int l=lo[0]; l<=hi[0]; l++){
-                    // the box for these values:
-                    amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, Index_A);
-                    TestMF[mfi].setVal(1000*lo[0]+100*l+10*j+k, cc, 0, 1);
-                }
 
-            }
-
-        }
+        amrex::Array4<amrex::Real> const& mf_arr = (TestMF)[mfi].array();
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+        {
+            // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
+            if ((i<=(Index_A[0]==0?hi[0]:(hi[0]-1))) && (j<=(Index_A[1]==0?hi[1]:(hi[1]-1))) && (k<=(Index_A[2]==0?hi[2]:(hi[2]-1))))
+                mf_arr(i,j,k) = 1000*lo[0]+100*i+10*j+k;
+        });
     }
 
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
@@ -82,27 +78,23 @@ void main_main ()
     //-----------------------------------------------------------------------------
     // Fill Owner Mask
 
-
     for ( amrex::MFIter mfi(Mask); mfi.isValid(); ++mfi ) {
         const amrex::Box& bx = mfi.validbox();
-        amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
-        for(int k=lo[2]; k<=(Index_A[2]==0?hi[2]:(hi[2]-1)); k++){
-            for(int j=lo[1]; j<=(Index_A[1]==0?hi[1]:(hi[1]-1)); j++){
-                for(int l=lo[0]; l<=(Index_A[0]==0?hi[0]:(hi[0]-1)); l++){
-                    // the box for these values:
-                    amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, Index_A);
-                    Mask[mfi].setVal(1, cc, 0, 1);
-                }
 
-            }
+        amrex::Array4<int> const& mask_arr = (Mask)[mfi].array();
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+        {
+            // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
+            if ((i<=(Index_A[0]==0?hi[0]:(hi[0]-1))) && (j<=(Index_A[1]==0?hi[1]:(hi[1]-1))) && (k<=(Index_A[2]==0?hi[2]:(hi[2]-1))))
+                mask_arr(i,j,k) = 1;
+        });
 
-        }
     }
 
     bool passed = true;
     std::cout << TestMF.norm1(0,Nghost) << std::endl;
-    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 43578) < 1e-12);
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 18488) < 1e-12);
     TestMF.OverrideSync(Mask, geom.periodicity());
     std::cout << TestMF.norm1(0,Nghost) << std::endl;
     passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 40938) < 1e-12);
