@@ -108,32 +108,19 @@ void main_main ()
 
 
     // Linear case
-    std::array<double,GEMPIC_SPACEDIM> x;
     for ( amrex::MFIter mfi(mw_yee.rho); mfi.isValid(); ++mfi ){
 
         const amrex::Box& bx = mfi.validbox();
-        amrex::IntVect lo = {bx.smallEnd()};
-        amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-        for(int k=lo[2]; k<=hi[2]; k++){
+
+        amrex::Array4<amrex::Real> const& rho_arr = mw_yee.rho[mfi].array();
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+        {
+            std::array<double,GEMPIC_SPACEDIM> x;
+            x[0] = infra.geom.ProbLo()[0] + ((double)i)*infra.dx[0];
+            x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
             x[2] = infra.geom.ProbLo()[2] + ((double)k)*infra.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-            for(int j=lo[1]; j<=hi[1]; j++){
-                x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
-#endif
-                for(int l=lo[0]; l<=hi[0]; l++){
-                    x[0] = infra.geom.ProbLo()[0] + ((double)l)*infra.dx[0];
-                    // the box for these values:
-                    amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-                    (mw_yee.rho)[mfi].setVal(f(x,a,b,c), cc, 0, 1);
-                }
-#if (GEMPIC_SPACEDIM > 1)
-            }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        }
-#endif
+            rho_arr(i,j,k) = f(x,a,b,c);
+        });
     }
     AllPrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << endl;
 #if(GEMPIC_SPACEDIM == 1)
