@@ -45,7 +45,7 @@ void main_main ()
 
         amrex::Array4<amrex::Real> rhoarr = rho[pti].array();
 
-        amrex::Gpu::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
+        amrex::HostDevice::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
 
     }
     rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
