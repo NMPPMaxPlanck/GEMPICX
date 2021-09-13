@@ -13,7 +13,7 @@ module load mkl/2021.2
 module load cmake/3.15
 module load cuda/10.2
 
-BUILD_DIR=$HOME/gempic_obj
+BUILD_DIR=$HOME/gempic_gpu_obj
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
