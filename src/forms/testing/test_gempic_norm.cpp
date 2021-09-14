@@ -43,7 +43,7 @@ using namespace Utils;
 
 //------------------------------------------------------------------------------
 // function
-double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){return(a*x[0]
+AMREX_GPU_DEVICE amrex::Real f(std::array<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
         #if (GEMPIC_SPACEDIM > 0)
             +b*x[1]
         #endif
@@ -55,10 +55,10 @@ double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){ret
 template<int vdim, int numspec>
 void main_main ()
 {
-    double C = 2.;
-    double a = 1.;
-    double b = 1.;
-    double c = 1.;
+    amrex::Real C = 2.;
+    amrex::Real a = 1.;
+    amrex::Real b = 1.;
+    amrex::Real c = 1.;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
@@ -115,7 +115,7 @@ void main_main ()
         amrex::Array4<amrex::Real> const& rho_arr = mw_yee.rho[mfi].array();
         ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
         {
-            std::array<double,GEMPIC_SPACEDIM> x;
+            std::array<amrex::Real,GEMPIC_SPACEDIM> x;
             x[0] = infra.geom.ProbLo()[0] + ((double)i)*infra.dx[0];
             x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
             x[2] = infra.geom.ProbLo()[2] + ((double)k)*infra.dx[2];

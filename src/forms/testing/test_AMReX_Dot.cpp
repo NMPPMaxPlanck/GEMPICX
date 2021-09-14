@@ -22,6 +22,12 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Vlasov_Maxwell;
 
+amrex::Real initial_bfield(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1e-3 * std::cos(1.25 * x);
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
@@ -61,7 +67,7 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    (mw_yee).template initB<degmw>(fields_B, VlMa.k, infra);
+    (mw_yee).template initB<degmw>(*initial_bfield, *initial_bfield, *initial_bfield, VlMa.k, infra);
 
     amrex::Real ScalarProd = amrex::MultiFab::Dot(*mw_yee.B_Masks[2], *mw_yee.B_Array[2], 0, *mw_yee.B_Array[2], 0, 1, VlMa.Nghost);
     amrex::Real NormSquared = pow((*mw_yee.B_Array[2]).norm2(0, infra.geom.periodicity()),2.);
