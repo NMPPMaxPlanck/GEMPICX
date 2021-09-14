@@ -73,9 +73,9 @@ void main_main ()
     }
 
     bool passed = true;
-    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 4932) < 1e-12);
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 4932) < 1e-6);
     TestMF.FillBoundary(geom.periodicity());
-    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-12);
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-6);
 
     amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << std::endl;
     amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << passed << std::endl;
