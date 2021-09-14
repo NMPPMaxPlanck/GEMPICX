@@ -103,6 +103,12 @@ public:
     maxwell_yee  (computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in,
                   amrex::Real curlB_scaling_in ,
                   amrex::Real energy_b_scaling_in){
+      initialize(ifr, dt_in, nsteps_in, Nghost_in, epref_ep0_in, curlB_scaling_in, energy_b_scaling_in);
+    }
+
+    void initialize (computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in,
+                  amrex::Real curlB_scaling_in ,
+                  amrex::Real energy_b_scaling_in){
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
 
@@ -217,8 +223,7 @@ public:
             amrex::IntVect hi = {bx.bigEnd()};
 
             amrex::Array4<int> const& mask_arr = (*nodal_Mask)[mfi].array();
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
-            {
+            ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
                 // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
                 if ((i<=(hi[0]-1)) && (j<=(hi[1]-1)) && (k<=(hi[2]-1)))
                     mask_arr(i,j,k) = 1.0;
@@ -278,7 +283,7 @@ public:
             const amrex::Box& bx = mfi.tilebox();
 
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            ParallelFor(bx, [=] (int i, int j, int k)
             {
                 double x_eval, y_eval, z_eval;
                 int err;
