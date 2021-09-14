@@ -1146,20 +1146,12 @@ public:
         for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                amrex::Box tilebox;
-                amrex::FArrayBox local_rho;
-
-                tilebox = pti.tilebox();
-                tilebox.grow(Nghost);
-                const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
-
-                local_rho.resize(tb,1); // second arg: number of comps
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
-                ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
+                amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
+
                 for (int pp=0;pp<np;pp++) {
                     splines_at_particles<degx, degy, degz> spline;
                     std::array<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -1170,7 +1162,6 @@ public:
                                                               (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
                                                               rhoarr);
                 }
-                (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
         }
 
@@ -1226,24 +1217,14 @@ public:
         for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                amrex::Box tilebox;
-                amrex::FArrayBox local_rho;
-
-                tilebox = pti.tilebox();
-                tilebox.grow(Nghost);
-                const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
-
-                local_rho.resize(tb,1); // second arg: number of comps
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
-                ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
+                amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
                 for (int pp=0;pp<np;pp++) {
                     Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
                 }
-                (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
         }
 
@@ -1301,20 +1282,11 @@ public:
         for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                amrex::Box tilebox;
-                amrex::FArrayBox local_rho;
-
-                tilebox = pti.tilebox();
-                tilebox.grow(Nghost);
-                const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
-
-                local_rho.resize(tb,1); // second arg: number of comps
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
-                ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
+                amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
                 for (int pp=0;pp<np;pp++) {
                     splines_at_particles<degx, degy, degz> spline;
                     std::array<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -1325,7 +1297,6 @@ public:
                                                               (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
                                                               rhoarr);
                 }
-                (rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
             }
         }
 

@@ -80,24 +80,14 @@ void main_main ()
     // Deposit charge
     // Deposit charges:
     for (amrex::ParIter<vdim+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
-        amrex::Box tilebox;
-        amrex::FArrayBox local_rho;
-
-        tilebox = pti.tilebox();
-        tilebox.grow(Nghost);
-        const amrex::Box tb = amrex::convert(tilebox, Index_A);
-
-        local_rho.resize(tb,1); // second arg: number of comps
 
         auto& particles = pti.GetArrayOfStructs();
         const long np  = pti.numParticles();
 
-        amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
-        ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
+        amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
         for (int pp=0;pp<np;pp++) {
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
-        TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
     }
 
     amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
