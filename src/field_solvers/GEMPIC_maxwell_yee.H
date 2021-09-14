@@ -206,7 +206,7 @@ public:
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     // if-loop to exclude ownership for the point that is at the upper boundary for nodal dimensions
-                    if ((i<=(comp==0?hi[0]:(hi[0]-1))) && (j<=(comp==1?hi[1]:(hi[1]-1))) && (k<=(comp==2?hi[2]:(hi[2]-1))))
+                    if ((i<=(comp==0?(hi[0]-1):hi[0])) && (j<=(comp==1?(hi[1]-1):hi[1])) && (k<=(comp==2?(hi[2]-1):hi[2])))
                         mask_arr(i,j,k) = 1.0;
                 });
 
