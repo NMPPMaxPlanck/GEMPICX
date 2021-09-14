@@ -56,12 +56,12 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
             const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
 
             local_rho.resize(tb,1); // second arg: number of comps
-            local_rho.setVal(0.0);
 
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();
 
             amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+            ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
             for (int pp=0;pp<np;pp++) {
                 //gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
                 splines_at_particles<degx, degy, degz> spline;

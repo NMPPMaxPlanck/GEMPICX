@@ -88,12 +88,12 @@ void main_main ()
         const amrex::Box tb = amrex::convert(tilebox, Index_A);
 
         local_rho.resize(tb,1); // second arg: number of comps
-        local_rho.setVal(0.0);
 
         auto& particles = pti.GetArrayOfStructs();
         const long np  = pti.numParticles();
 
         amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+        ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
         for (int pp=0;pp<np;pp++) {
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
