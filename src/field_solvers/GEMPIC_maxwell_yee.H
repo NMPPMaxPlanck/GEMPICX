@@ -1021,7 +1021,7 @@ public:
                 amrex::Array4<amrex::Real> const& tmp_arr = (*tmp[comp])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
-                    tmp_arr(i,j,k) = -(phi_arr(i+(comp==0?1:0),j+(comp==1?1:0),k+(comp==2?1:0))-phi_arr(comp,j,k))/ifr.dx[comp];
+                    tmp_arr(i,j,k) = -(phi_arr(i+(comp==0?1:0),j+(comp==1?1:0),k+(comp==2?1:0))-phi_arr(i,j,k))/ifr.dx[comp];
                 });
 
             }
