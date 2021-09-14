@@ -318,9 +318,9 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
         #endif
                         ;
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::HostDevice::Atomic::Add(&rho(cell_index[0], 0, 0, 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff*weight);
 #else
-		amrex::HostDevice::Atomic::Add(&rho(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight);
+        amrex::HostDevice::Atomic::Add(rho.ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight);
 #endif
             }
         }
@@ -389,9 +389,9 @@ void accumulate_j_update_v_C2(S const& spline,
                         *spline.spline_node[pdim1][jj]
                         *spline.spline_node[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::HostDevice::Atomic::Add(&(jArray[pdim])(cell_index[0], 0, 0 , 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0 , 0), s_coeff*weight);
 #else
-                amrex::HostDevice::Atomic::Add(&(jArray[pdim])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight);
 #endif
 
                     if ( jj < degp1 )
