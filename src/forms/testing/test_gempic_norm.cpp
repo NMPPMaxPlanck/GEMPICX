@@ -24,6 +24,7 @@
 #include <tinyexpr.h>
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
@@ -43,7 +44,7 @@ using namespace Utils;
 
 //------------------------------------------------------------------------------
 // function
-AMREX_GPU_DEVICE amrex::Real f(std::array<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
+AMREX_GPU_DEVICE amrex::Real func(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
         #if (GEMPIC_SPACEDIM > 0)
             +b*x[1]
         #endif
@@ -115,11 +116,11 @@ void main_main ()
         amrex::Array4<amrex::Real> const& rho_arr = mw_yee.rho[mfi].array();
         ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
         {
-            std::array<amrex::Real,GEMPIC_SPACEDIM> x;
+            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x;
             x[0] = infra.geom.ProbLo()[0] + ((double)i)*infra.dx[0];
             x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
             x[2] = infra.geom.ProbLo()[2] + ((double)k)*infra.dx[2];
-            rho_arr(i,j,k) = f(x,a,b,c);
+            rho_arr(i,j,k) = func(x,a,b,c);
         });
     }
     AllPrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << endl;

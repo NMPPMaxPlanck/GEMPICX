@@ -2,6 +2,7 @@
 #define COMPUTATIONAL_DOMAIN_H_
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -34,9 +35,9 @@ public:
     amrex::Geometry geom;
     amrex::Box domain;
     amrex::DistributionMapping distriMap;
-    const amrex::Real* dx;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
-    std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
     amrex::Real tolerance_particle; //
 

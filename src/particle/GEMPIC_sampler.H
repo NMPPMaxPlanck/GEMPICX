@@ -4,6 +4,7 @@
 #include <tinyexpr.h>
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -263,8 +264,8 @@ void init_particles_full_domain(computational_domain infra,
 
 
 template <int vdim>
-void init_one_particle_cellwise(std::array<amrex::Real,GEMPIC_SPACEDIM> const& dx,
-                                std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dx,
+                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                 amrex::ParticleContainer<3+1, 0, 0, 0> *mypc,
                                 std::array<amrex::Real,GEMPIC_SPACEDIM> position){
     amrex::Real x,y,z;

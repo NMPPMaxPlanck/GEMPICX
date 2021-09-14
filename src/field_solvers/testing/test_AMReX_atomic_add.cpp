@@ -1,6 +1,7 @@
 #include <tinyexpr.h>
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
@@ -28,8 +29,8 @@ void main_main ()
     CompDom::computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
-    const std::array<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
-    const std::array<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
+    const amrex::GpuArray<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
+    const amrex::GpuArray<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
     std::array<amrex::Real, 3> x = {0.2, 0.2, 0.2};
     init_one_particle_cellwise<vdim>(dx, plo, &(*(part_gr).mypc[0]), x);
 

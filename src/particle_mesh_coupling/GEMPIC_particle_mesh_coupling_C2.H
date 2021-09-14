@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+#include <AMReX_Array.H>
 #include <AMReX_FArrayBox.H>
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
@@ -136,8 +137,8 @@ public :
         }
 
         void init_particles(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                            std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {
             init_position<0,degx>(position[0],plo[0],dxi[0]);
 #if (GEMPIC_SPACEDIM>1)

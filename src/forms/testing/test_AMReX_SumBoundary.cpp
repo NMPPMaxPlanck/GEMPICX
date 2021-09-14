@@ -1,6 +1,7 @@
 #include <tinyexpr.h>
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_MFIter.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particle.H>
@@ -54,9 +55,9 @@ void main_main ()
     amrex::MultiFab TestMF(convert(grid, Index_A),distriMap,1,Nghost);
     TestMF.setVal(0.0,0);
     TestMF.FillBoundary(geom.periodicity());
-    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> dx;
-    std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
     dxi[GEMPIC_SPACEDIM] = 1.;
     for (int cc=0;cc<3;cc++){
         plo[cc] = geom.ProbLo()[cc];

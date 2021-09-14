@@ -312,12 +312,13 @@ public:
             ifr->grid.define(ifr->domain);
             ifr->grid.maxSize(max_grid_size);
             ifr->geom.define(ifr->domain,&ifr->real_box,amrex::CoordSys::cartesian,ifr->is_periodic);
-            ifr->dx = ifr->geom.CellSize();
+            //ifr->dx = *(ifr->geom.CellSize());
 
             ifr->distriMap.define(ifr->grid);
 
             ifr->dxi[GEMPIC_SPACEDIM] = 1.;
             for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+                ifr->dx[cc] = ifr->geom.CellSize()[cc];
                 ifr->plo[cc] = ifr->geom.ProbLo()[cc];
                 ifr->dxi[cc] = 1.0/ifr->dx[cc];
                 ifr->dxi[GEMPIC_SPACEDIM] *= ifr->dxi[cc];

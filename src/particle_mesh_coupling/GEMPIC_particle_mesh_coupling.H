@@ -9,6 +9,7 @@
 
 #include <cmath>
 
+#include <AMReX_Array.H>
 #include <AMReX_FArrayBox.H>
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
@@ -30,8 +31,8 @@ amrex::Real mod_dom(amrex::Real val,
 template <typename P, int vdim, int degx, int degy, int degz>
 void gempic_deposit_rho (P const& p, amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
-                         std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                         std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
+                         amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                         amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
 
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
@@ -92,8 +93,8 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
      */
 template<typename P, int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
-                                                  std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                  std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                   std::array<amrex::Array4<amrex::Real>,vdim> eArray)
 {
     std::array<amrex::Real,vdim> fields;
@@ -289,8 +290,8 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
                                std::array<amrex::Real,GEMPIC_SPACEDIM> position_new,
                                std::array<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
-                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                std::array<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     // The quadrature formula TODO: Make this part of the class and generic for variable degree
@@ -418,8 +419,8 @@ void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> 
                                amrex::Real charge, // q*p.rdata(vdim)
                                //std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dx,
                                const amrex::Real* dx,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                std::array<amrex::Array4<amrex::Real>,vdim> jArray,
                                std::array<amrex::Real, 2> &fields         )
@@ -551,8 +552,8 @@ void accumulate_j_update_v_x1_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
                                amrex::Real charge, // q*p.rdata(vdim)
                                //std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dx,
                                const amrex::Real* dx,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                std::array<amrex::Array4<amrex::Real>,vdim> jArray,
                                std::array<amrex::Real, 2> &fields         )
@@ -715,8 +716,8 @@ void accumulate_j_update_v_x2_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
                                amrex::Real charge, // q*p.rdata(vdim)
                                //std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dx,
                                const amrex::Real* dx,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                std::array<amrex::Array4<amrex::Real>,vdim> jArray,
                                std::array<amrex::Real, 2> &fields         )
@@ -871,8 +872,8 @@ void accumulate_j_update_v_x3_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
                                amrex::Real charge, // q*p.rdata(vdim)
                                //std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dx,
                                const amrex::Real* dx,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                std::array<amrex::Array4<amrex::Real>,vdim> jArray,
                                std::array<amrex::Real, 2> &fields         )
@@ -1025,8 +1026,8 @@ template<int vdim, int degx, int degy, int degz>
 void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                std::array<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
-                               std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                std::array<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
@@ -1113,8 +1114,8 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
      */
 template <int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                                                                      std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                                      std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                       std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
 {
     std::array<amrex::Real, int(vdim/2.5)*2+1> fields;
@@ -1245,8 +1246,8 @@ std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(std::array<amrex:
 
 template <typename P, int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
-                                                                                         std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                                                         std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                                                  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                                                  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                                          std::array<amrex::Array4<amrex::Real>,vdim> jArray,
                                                                                          std::array<amrex::Array4<amrex::Real>,vdim> eArray,
                                                                                          std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
@@ -1371,8 +1372,8 @@ std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate
 
 template <typename P, int vdim, int degx, int degy, int degz>
 void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
-                                      std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                      std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                      amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                      amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                       amrex::Array4<amrex::Real> jArray,
                                       amrex::IndexType IndT)
 
@@ -1637,8 +1638,8 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
 template<int vdim, int degx, int degy, int degz>
 void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                    amrex::Real mu,
-                                   std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                   std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                    std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                    std::array<amrex::Array4<amrex::Real>,vdim> mArray)
 
@@ -1759,8 +1760,8 @@ void gempic_deposit_magnetization (std::array<amrex::Real,GEMPIC_SPACEDIM> posit
      */
 template <int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_grad_mod_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                                                                           std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                                           std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                                                                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+                                                                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                            std::array<amrex::Array4<amrex::Real>, int(vdim/2.5)*2+1> bArray)
 {
     std::array<amrex::Real, int(vdim/2.5)*2+1> fields;
