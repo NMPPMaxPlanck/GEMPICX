@@ -1154,12 +1154,12 @@ public:
                 const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
 
                 local_rho.resize(tb,1); // second arg: number of comps
-                local_rho.setVal(0.0);
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+                ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
                 for (int pp=0;pp<np;pp++) {
                     splines_at_particles<degx, degy, degz> spline;
                     std::array<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -1234,12 +1234,12 @@ public:
                 const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
 
                 local_rho.resize(tb,1); // second arg: number of comps
-                local_rho.setVal(0.0);
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+                ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
                 for (int pp=0;pp<np;pp++) {
                     Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
                 }
@@ -1309,12 +1309,12 @@ public:
                 const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
 
                 local_rho.resize(tb,1); // second arg: number of comps
-                local_rho.setVal(0.0);
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
                 amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+                ParallelFor(tilebox, [=] AMREX_GPU_DEVICE (int i, int j, int k){rhoarr(i,j,k) = 0.0;});
                 for (int pp=0;pp<np;pp++) {
                     splines_at_particles<degx, degy, degz> spline;
                     std::array<amrex::Real,GEMPIC_SPACEDIM> position;
