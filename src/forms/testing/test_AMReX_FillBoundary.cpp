@@ -44,7 +44,7 @@ void main_main ()
     amrex::IndexType Index_A(amrex::IntVect{AMREX_D_DECL(1,0,0)});
     int Nghost = 1;
     amrex::MultiFab TestMF(convert(grid, Index_A),distriMap,1,Nghost);
-    TestMF.setVal(0.0,0);
+    TestMF.setVal(0.0);
     TestMF.FillBoundary(geom.periodicity());
 
     //-----------------------------------------------------------------------------
