@@ -413,11 +413,9 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
      */
 
 template <int vdim, int degp, int degp1, int degp2, int pdim>
-void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_old,
+void accumulate_j_update_v_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position_old,
                                amrex::Real position_new,
-                               //std::array<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
-                               //std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dx,
                                const amrex::Real* dx,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,

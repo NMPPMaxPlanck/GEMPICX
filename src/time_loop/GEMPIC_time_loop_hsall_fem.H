@@ -102,10 +102,10 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
                     amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
 
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                       pos[d]= particles[pp].pos(d);
-                    std::array<amrex::Real,vdim> vel;
+                    amrex::GpuArray<amrex::Real,vdim> vel;
                     for (unsigned int d=0;d<vdim;++d)
                       vel[d] = particles[pp].rdata(d);
                     amrex::GpuArray<amrex::Real, 2> bfields;
@@ -214,8 +214,8 @@ void time_loop_hsall_fem_step (computational_domain infra,
 #endif
 
 }
-                    std::copy(begin(pos),end(pos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
-                    std::copy(begin(vel),end(vel),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
                 }
             }
