@@ -92,12 +92,12 @@ void gempic_deposit_rho (P const& p, amrex::Real charge,
      *  Evaluation of a FEM one form
      */
 template<typename P, int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim> evaluate_fem_efield(P const& p,
+amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(P const& p,
                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                  std::array<amrex::Array4<amrex::Real>,vdim> eArray)
+                                                  amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
 {
-    std::array<amrex::Real,vdim> fields;
+    amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
         fields[comp] = 0.;
     }
@@ -188,7 +188,7 @@ template <int vdim, int degx, int degy, int degz>
 void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> position_box,
                                      std::array<int,GEMPIC_SPACEDIM> box,
                                      std::array<amrex::Real, vdim>  weight,
-                                     std::array<amrex::Array4<amrex::Real>,vdim> jArray)
+                                     amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
@@ -292,7 +292,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                               std::array<amrex::Array4<amrex::Real>,vdim> jArray)
+                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     // The quadrature formula TODO: Make this part of the class and generic for variable degree
     const int n_quad_points = 2;
@@ -421,9 +421,9 @@ void accumulate_j_update_v_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> 
                                const amrex::Real* dx,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                               std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
-                               std::array<amrex::Array4<amrex::Real>,vdim> jArray,
-                               std::array<amrex::Real, 2> &fields         )
+                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
+                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
+                               amrex::GpuArray<amrex::Real, 2> &fields         )
 {
   int pdim1 = (pdim+1)%3;
   int pdim2 = (pdim+2)%3;
@@ -1028,7 +1028,7 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                               std::array<amrex::Array4<amrex::Real>,vdim> jArray)
+                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray)
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
@@ -1116,7 +1116,7 @@ template <int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                                      std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
+                                                                      amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
 {
     std::array<amrex::Real, int(vdim/2.5)*2+1> fields;
     for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
@@ -1430,7 +1430,7 @@ template <typename P, int vdim>
 std::array<amrex::Real, vdim> push_v_efield(P const& p,
                                             amrex::Real dt,
                                             amrex::Real chargemass, //charge/mass
-                                            std::array<amrex::Real,vdim> Ep,
+                                            amrex::GpuArray<amrex::Real,vdim> Ep,
                                             CompDom::computational_domain infra){
     std::array<amrex::Real,vdim> newPos;
 
@@ -1452,7 +1452,7 @@ template <typename P, int vdim, int degx, int degy, int degz>
 std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
-                                                              std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
+                                                              amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                                               CompDom::computational_domain infra){
     std::array<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)

@@ -102,9 +102,9 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> jA;
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
@@ -124,7 +124,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // evaluate the spline
                     spline.init_particles(pos , infra.plo, infra.dxi);
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
@@ -136,7 +136,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     std::array<amrex::Real,vdim> vel;
                     for (unsigned int d=0;d<vdim;++d)
                       vel[d] = particles[pp].rdata(d);
-                    std::array<amrex::Real, 2> bfields;
+                    amrex::GpuArray<amrex::Real, 2> bfields;
                     // push x1
                     amrex::Real x1_new = pos[0] +  (*mw_yee).dt*0.5*coeff*vel[0];
                     spline_new_x.init_position( x1_new, infra.plo[0], infra.dxi[0] );
@@ -185,7 +185,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                         vel[2] = vel[2] - chargemass*bfields[0];
                       pos[1] = x2_new;
 #else
-                      std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                      amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
                       gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[1]*(*mw_yee).dt*coeff,
                                                jA[1]);
                       // Push v2 and v3
@@ -214,7 +214,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     vel[1] = vel[1] + chargemass*bfields[1];
                     pos[2] = x3_new;
 #else
-                    std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_bfield<vdim,degx,degy,degz>(spline,  bA);
+                    amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_bfield<vdim,degx,degy,degz>(spline,  bA);
                     gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[2]*(*mw_yee).dt*coeff,
                                              jA[2]);
                     // Push v2 and v3
@@ -250,7 +250,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                         vel[2] = vel[2] - chargemass*bfields[0];
                       pos[1] = x2_new;
 #else
-                      std::array<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
+                      amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> bfield = evaluate_fem_bfield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  bA);
                       gempic_deposit_rho<degx,degy,degz> (spline, weight*vel[1]*(*mw_yee).dt*coeff,
                                                jA[1]);
                       // Push v2 and v3
@@ -330,7 +330,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
@@ -346,7 +346,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // evaluate the spline
                     spline.init_particles(pos , infra.plo, infra.dxi);
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
