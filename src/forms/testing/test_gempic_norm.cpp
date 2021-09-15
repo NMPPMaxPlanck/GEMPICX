@@ -44,7 +44,7 @@ using namespace Utils;
 
 //------------------------------------------------------------------------------
 // function
-AMREX_GPU_DEVICE amrex::Real func(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
         #if (GEMPIC_SPACEDIM > 0)
             +b*x[1]
         #endif
@@ -113,13 +113,15 @@ void main_main ()
 
         const amrex::Box& bx = mfi.validbox();
 
+	amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = infra.plo;
+	amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = infra.dx;
         amrex::Array4<amrex::Real> const& rho_arr = mw_yee.rho[mfi].array();
         ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
         {
             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x;
-            x[0] = infra.geom.ProbLo()[0] + ((double)i)*infra.dx[0];
-            x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
-            x[2] = infra.geom.ProbLo()[2] + ((double)k)*infra.dx[2];
+            x[0] = plo[0] + ((amrex::Real)i)*dx[0];
+            x[1] = plo[1] + ((amrex::Real)j)*dx[1];
+            x[2] = plo[2] + ((amrex::Real)k)*dx[2];
             rho_arr(i,j,k) = func(x,a,b,c);
         });
     }
