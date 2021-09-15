@@ -1421,11 +1421,11 @@ public:
      * Compute norm of errors of E and B field from function with exact solution
      */
     template<int degree>
-    std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(amrex::GpuArray<std::string, vdim> fields_E,
+    amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(amrex::GpuArray<std::string, vdim> fields_E,
                                                                 amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
                                                                 bool bool_B,
                                                                 computational_domain ifr){
-        std::array<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
+        amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
         exactSolution<degree>(fields_E, fields_B, k, bool_B, ifr);
 

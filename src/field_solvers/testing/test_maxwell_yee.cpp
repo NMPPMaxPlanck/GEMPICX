@@ -92,7 +92,7 @@ void main_main ()
     std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
 
     //------------------------------------------------------------------------------
-    array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
+    amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure

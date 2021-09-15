@@ -77,7 +77,7 @@ void main_main ()
 
 
     //------------------------------------------------------------------------------
-    array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
+    amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
