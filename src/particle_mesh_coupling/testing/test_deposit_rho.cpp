@@ -87,7 +87,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho
     // will be overwritten in next paragraph
-    std::array<std::string, 2> fields = {WF, WF};
+    amrex::GpuArray<std::string, 2> fields = {WF, WF};
     mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
 
     mw_yee.phi.mult(-1.0);

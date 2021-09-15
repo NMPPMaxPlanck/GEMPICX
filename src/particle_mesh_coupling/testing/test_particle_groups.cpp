@@ -81,7 +81,7 @@ void main_main ()
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvar * x)";
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_B[0] = Bx;
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[1] = By;
@@ -92,7 +92,7 @@ void main_main ()
     std::string Ex = "0.0";
     std::string Ey = "0.0";
     std::string Ez = "0.0";
-    std::array<std::string, int(vdim/2.5)*2+1> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_E;
     fields_E[0] = Ex;
     if (int(vdim/2.5)*2+1 > 1) {
         fields_E[1] = Ey;

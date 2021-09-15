@@ -37,7 +37,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
                        particle_groups<vdim, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                        bool time_staggered,
-                       std::array<std::string, int(vdim/2.5)*2+1> fields_B) {
+                       amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B) {
 
     // initial rho by: deposition of particle charge
     //Set rho to 0

@@ -34,8 +34,8 @@ void main_main ()
 {  //------------------------------------------------------------------------------
     // Analytical solutions - you can change them here
 
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
 
     amrex::Real mi = 1836.15267596;
     amrex::Real me = 1.0;

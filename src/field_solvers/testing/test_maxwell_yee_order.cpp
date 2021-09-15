@@ -39,8 +39,8 @@ void main_main ()
 {
     //------------------------------------------------------------------------------
     // Analytical solutions
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
         fields_E[0] = "cos(x+y+z)";
         fields_B[0] = "0.0";

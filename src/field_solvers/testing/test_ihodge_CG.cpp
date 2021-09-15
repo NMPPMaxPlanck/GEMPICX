@@ -35,8 +35,8 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
     fields_E[0] = "cos(x)";
     fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";

@@ -81,7 +81,7 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::array<std::string, 2> fields = {rho, phi};
+    amrex::GpuArray<std::string, 2> fields = {rho, phi};
     mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
 
     // particles

@@ -37,8 +37,8 @@ void main_main ()
     bool passed = true;
     //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
         fields_E[0] = "cos(x+y+z)";
         fields_B[0] = "0.0";
@@ -67,7 +67,7 @@ void main_main ()
     }
     //------------------------------------------------------------------------------
     // Analytical solutions -- Poisson
-    std::array<std::string, vdim> fields_EP;
+    amrex::GpuArray<std::string, vdim> fields_EP;
     if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
         fields_EP[0] = "-sin(x)-0.5*sin(2*x)";
     } else if (GEMPIC_SPACEDIM == 1 && vdim == 2) {
@@ -244,7 +244,7 @@ void main_main ()
     std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
 #endif
 
-    std::array<std::string, 2> fields = {rho, phi};
+    amrex::GpuArray<std::string, 2> fields = {rho, phi};
     mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
     mw_yee.solve_poisson(infra);
     E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k, false, infra);
