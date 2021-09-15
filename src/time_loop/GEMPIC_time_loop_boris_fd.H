@@ -3,6 +3,7 @@
 
 #include <AMReX.H>
 #include <AMReX_Box.H>
+#include <AMReX_Array.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
 #include <AMReX_DistributionMapping.H>
