@@ -87,7 +87,7 @@ void main_main ()
     mlmg.setBottomVerbose(0);
 
     amrex::GpuArray<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
+    mw_yee.template init_rho_phi<degree>(fields, VlMa.k_gpu, infra);
     const int stencil_length = 3;
 
     // ----------------------------------------------------------------------------------

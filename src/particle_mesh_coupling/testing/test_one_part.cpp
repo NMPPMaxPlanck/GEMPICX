@@ -101,7 +101,7 @@ void main_main (bool ctest)
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
     amrex::GpuArray<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k_gpu, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);

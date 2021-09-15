@@ -62,6 +62,7 @@ public:
     std::array<amrex::Real, numspec> mass = {1};
     amrex::GpuArray<amrex::Real, numspec> mass_gpu = {1};
     std::array<amrex::Real, 3> k = {1.25, 1.25, 1.25};
+    amrex::GpuArray<amrex::Real, 3> k_gpu = {1.25, 1.25, 1.25};
     amrex::Real kx, ky, kz;
     std::string WF = "1.0";
     std::string Bx = "0.0";
@@ -127,6 +128,7 @@ public:
         pp.query("mass",mass);
         for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
         pp.query("k",k);
+        for (int i = 0; i < numspec; i++) k_gpu[i] = k[i];
         pp.query("Bx",Bx);
         pp.query("By",By);
         pp.query("Bz",Bz);
@@ -238,6 +240,7 @@ public:
         mass = M;
         for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
         k = {K,K,K};
+        k_gpu = {K,K,K};
         WF = wf;
         Bx = BX;
         By = BY;

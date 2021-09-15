@@ -69,7 +69,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k_gpu, infra);
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 

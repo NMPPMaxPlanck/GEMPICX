@@ -246,7 +246,7 @@ public:
 
     template<int degree>
     void projection (std::string function_string,
-                     std::array<amrex::Real, 3> k,
+                     amrex::GpuArray<amrex::Real, 3> k,
                      amrex::Real t,
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
@@ -329,7 +329,7 @@ public:
 
     template<int degree>
     void projection ( amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                     std::array<amrex::Real, 3> k,
+                     amrex::GpuArray<amrex::Real, 3> k,
                      amrex::Real t,
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
@@ -411,7 +411,7 @@ public:
      */
     template <int degree>
     void init_E_B (amrex::GpuArray<std::string, vdim> fieldsE, amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fieldsB,
-                   std::array<amrex::Real, 3> k,computational_domain ifr){
+                   amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
         initE<degree> (fieldsE, k, ifr);
         initB<degree> (fieldsB, k, ifr);
     }
@@ -420,7 +420,7 @@ public:
      * Initialize E field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initE (amrex::GpuArray<std::string, vdim> fields, std::array<amrex::Real, 3> k,computational_domain ifr) {
+    void initE (amrex::GpuArray<std::string, vdim> fields, amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr) {
         // E_field
         for (int i = 0; i<vdim; i++) {
             projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]));
@@ -431,7 +431,7 @@ public:
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), std::array<amrex::Real, 3> k,computational_domain ifr){
+    void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
@@ -445,7 +445,7 @@ public:
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initB (amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields, std::array<amrex::Real, 3> k,computational_domain ifr){
+    void initB (amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields, amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
@@ -737,7 +737,7 @@ public:
     }
 
     template <int degree>
-    void init_rho_phi (amrex::GpuArray<std::string, 2> fields, std::array<amrex::Real, 3> k,computational_domain ifr){
+    void init_rho_phi (amrex::GpuArray<std::string, 2> fields, amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
 
         // rho
         projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
@@ -1382,7 +1382,7 @@ public:
                 amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
                 for (int pp=0;pp<np;pp++) {
                     splines_at_particles<degx, degy, degz> spline;
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                         position[d] = particles[pp].pos(d);
                     spline.init_particles( position, ifr.plo, ifr.dxi);
@@ -1421,7 +1421,7 @@ public:
      */
     template<int degree>
     amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(amrex::GpuArray<std::string, vdim> fields_E,
-                                                                amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
+                                                                amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B, amrex::GpuArray<amrex::Real, 3> k,
                                                                 bool bool_B,
                                                                 computational_domain ifr){
         amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
@@ -1448,7 +1448,7 @@ private:
 
     template<int degree>
     void exactSolution(amrex::GpuArray<std::string, vdim> fields_E,
-                       amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B, std::array<amrex::Real, 3> k,
+                       amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B, amrex::GpuArray<amrex::Real, 3> k,
                        bool bool_B, computational_domain ifr){
         amrex::Real btime = time + dt/2.0;
 

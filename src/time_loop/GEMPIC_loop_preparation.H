@@ -97,7 +97,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
       }
 
     // initial B_field
-    (*mw_yee).template initB<degmw>(fields_B, VM.k, infra);
+    (*mw_yee).template initB<degmw>(fields_B, VM.k_gpu, infra);
 
     if (time_staggered) {
         amrex::Print() << "ATTENTION: method is time staggered" << std::endl;

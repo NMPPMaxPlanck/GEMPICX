@@ -136,11 +136,11 @@ void main_main ()
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k_gpu, infra);
 
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k_gpu, true, infra);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -163,7 +163,7 @@ void main_main ()
         mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
         mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k_gpu, true, infra);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -188,10 +188,10 @@ void main_main ()
         (*(mw_yee_2).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee_2.template init_E_B<2>(fields_E, fields_B, VlMa.k, infra);
+    mw_yee_2.template init_E_B<2>(fields_E, fields_B, VlMa.k_gpu, infra);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+    E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k_gpu, true, infra);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -214,7 +214,7 @@ void main_main ()
         mw_yee_2.advance_E(infra, mw_yee_2.dt, false, true, &(mw_yee_2.HB_Array), &(mw_yee_2.E_Array));
         mw_yee_2.template hodge_full<degree>(infra, &(mw_yee_2.E_Array), &(mw_yee_2.HE_Array), true);
         mw_yee_2.advance_B(infra, mw_yee_2.dt, &(mw_yee_2.HE_Array), &(mw_yee_2.B_Array));
-        E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+        E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k_gpu, true, infra);
 
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
@@ -245,9 +245,9 @@ void main_main ()
 #endif
 
     amrex::GpuArray<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
+    mw_yee.template init_rho_phi<degree>(fields, VlMa.k_gpu, infra);
     mw_yee.solve_poisson(infra);
-    E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k, false, infra);
+    E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k_gpu, false, infra);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);

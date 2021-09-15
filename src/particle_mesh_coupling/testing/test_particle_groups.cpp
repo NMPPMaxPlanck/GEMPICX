@@ -100,8 +100,8 @@ void main_main ()
     if (int(vdim/2.5)*2+1 > 1) {
         fields_E[2] = Ez;
     }
-    mw_yee.template initB<degmw>(fields_B, VlMa.k, infra);
-    mw_yee.template initE<degmw>(fields_E, VlMa.k, infra);
+    mw_yee.template initB<degmw>(fields_B, VlMa.k_gpu, infra);
+    mw_yee.template initE<degmw>(fields_E, VlMa.k_gpu, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
