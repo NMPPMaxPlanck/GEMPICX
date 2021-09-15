@@ -365,6 +365,9 @@ public:
 
             const amrex::Box& bx = mfi.tilebox();
 
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo;
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
+
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
             ParallelFor(bx, [=] (int i, int j, int k)
             {
@@ -378,14 +381,14 @@ public:
                 amrex::GpuArray<amrex::Real, degree-1> z;
                 amrex::Real z_midpoint;
 
-                z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
-                for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
+                z_midpoint = plo[2] + ((double)k+0.5-0.5*(IndexVect)[2])*dx[2];
+                for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
 
                 y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
-                for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
+                for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
 
-                x_midpoint = ifr.geom.ProbLo()[0] + ((double)i+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
-                for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
+                x_midpoint = plo[0] + ((double)i+0.5-0.5*(IndexVect)[0])*dx[0];
+                for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
 
                 amrex::Real val = 0.0;
                 for (int zd = 0; zd<x_len[2];zd++)
