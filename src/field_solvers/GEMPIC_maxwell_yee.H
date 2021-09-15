@@ -290,11 +290,11 @@ public:
                 te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
                 te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
 
-                std::array<amrex::Real, degree-1> x;
+                amrex::GpuArray<amrex::Real, degree-1> x;
                 amrex::Real x_midpoint;
-                std::array<amrex::Real, degree-1> y;
+                amrex::GpuArray<amrex::Real, degree-1> y;
                 amrex::Real y_midpoint;
-                std::array<amrex::Real, degree-1> z;
+                amrex::GpuArray<amrex::Real, degree-1> z;
                 amrex::Real z_midpoint;
 
                 z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
@@ -371,11 +371,11 @@ public:
                 double x_eval, y_eval, z_eval;
                 int err;
 
-                std::array<amrex::Real, degree-1> x;
+                amrex::GpuArray<amrex::Real, degree-1> x;
                 amrex::Real x_midpoint;
-                std::array<amrex::Real, degree-1> y;
+                amrex::GpuArray<amrex::Real, degree-1> y;
                 amrex::Real y_midpoint;
-                std::array<amrex::Real, degree-1> z;
+                amrex::GpuArray<amrex::Real, degree-1> z;
                 amrex::Real z_midpoint;
 
                 z_midpoint = ifr.geom.ProbLo()[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
@@ -747,7 +747,7 @@ public:
     }
 
     template <int stencil_length>
-    void matrix_mult (computational_domain ifr, std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+    void matrix_mult (computational_domain ifr, amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                       amrex::IndexType IndexVect){
 
         for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
@@ -772,7 +772,7 @@ public:
     }
 
     template <int stencil_length, int dimension>
-    void solve_stencil_CG(std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil,
+    void solve_stencil_CG(amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil,
                           amrex::MultiFab *b, amrex::MultiFab *x, computational_domain ifr, amrex::IndexType IndexVect,
                           int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100){
         if(verbose > 0) {
@@ -929,15 +929,15 @@ public:
         int dimension = 0;
 
         const int stencil_length = 3;
-        std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_x;
         stencil_x[0] = {-1.0/ifr.dx[0], 1.0/ifr.dx[0], 0.0};
         stencil_x[1] = {0.0, 0.0, 0.0};
         stencil_x[2] = {0.0, 0.0, 0.0};
-        std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_y;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_y;
         stencil_y[0] = {0.0, 0.0, 0.0};
         stencil_y[1] = {-1.0/ifr.dx[1], 1.0/ifr.dx[1], 0.0};
         stencil_y[2] = {0.0, 0.0, 0.0};
-        std::array<std::array<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_z;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil_z;
         stencil_z[0] = {0.0, 0.0, 0.0};
         stencil_z[1] = {0.0, 0.0, 0.0};
         stencil_z[2] = {-1.0/ifr.dx[2], 1.0/ifr.dx[2], 0.0};
