@@ -39,8 +39,8 @@ class diagnostics
 {
 public:
     int n_time; // number of timesteps
-    std::vector<std::array<amrex::Real,int(vdim/2.5)*2+1>> Bfield_energy;
-    std::vector<std::array<amrex::Real,vdim>> Efield_energy, mom;
+    std::vector<amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1>> Bfield_energy;
+    std::vector<amrex::GpuArray<amrex::Real,vdim>> Efield_energy, mom;
     std::vector<amrex::Real> kin;
     std::vector<amrex::Real> gauss_error;
     int freq_x;
@@ -277,9 +277,9 @@ public:
     }
 
 #if (GEMPIC_SPACEDIM==3)
-    void cross_product (std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
-                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
-                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
+    void cross_product (amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
+                        amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
+                        amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
                         computational_domain infra) {
 
         amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
