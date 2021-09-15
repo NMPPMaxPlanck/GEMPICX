@@ -249,7 +249,7 @@ public:
                      std::array<amrex::Real, 3> k,
                      amrex::Real t,
                      computational_domain ifr,
-                     std::array<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
                      amrex::MultiFab *MultiF
                      ) {
@@ -332,7 +332,7 @@ public:
                      std::array<amrex::Real, 3> k,
                      amrex::Real t,
                      computational_domain ifr,
-                     std::array<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
                      amrex::MultiFab *MultiF
                      ) {
