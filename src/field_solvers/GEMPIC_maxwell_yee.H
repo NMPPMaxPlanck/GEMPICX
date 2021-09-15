@@ -1247,7 +1247,7 @@ public:
 
                 for (int pp=0;pp<np;pp++) {
                     splines_at_particles<degx, degy, degz> spline;
-                    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                         position[d] = particles[pp].pos(d);
                     spline.init_particles( position, ifr.plo, ifr.dxi);

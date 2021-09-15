@@ -82,14 +82,14 @@ void time_loop_particles (computational_domain infra,
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                     amrex::Real d = 1.0;
                     amrex::Real Omega = 1.0;
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
                     newPos[0] = 0.0;
                     newPos[1] = 0.0;
                     newPos[2] = pow(-1.0,spec)*d*sin(Omega*mw_yee->dt);
                     newPos[0] = 0.0;
                     newPos[0] = 0.0;
                     newPos[0] = pow(-1.0,spec)*d*Omega*cos(Omega*mw_yee->dt);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in

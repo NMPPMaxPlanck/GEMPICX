@@ -136,7 +136,7 @@ public :
 
         }
 
-        void init_particles(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+        void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {

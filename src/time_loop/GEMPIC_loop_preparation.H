@@ -57,7 +57,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
             for (int pp=0;pp<np;pp++) {
                 //gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
                 splines_at_particles<degx, degy, degz> spline;
-                std::array<amrex::Real,GEMPIC_SPACEDIM> position;
+                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
                 for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                   position[d] = particles[pp].pos(d);
                 spline.init_particles( position, infra.plo, infra.dxi);
