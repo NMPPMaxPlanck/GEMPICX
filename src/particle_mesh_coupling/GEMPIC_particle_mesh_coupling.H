@@ -1427,12 +1427,12 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
      * Push the velocity with a given electric field
      */
 template <typename P, int vdim>
-std::array<amrex::Real, vdim> push_v_efield(P const& p,
+amrex::GpuArray<amrex::Real, vdim> push_v_efield(P const& p,
                                             amrex::Real dt,
                                             amrex::Real chargemass, //charge/mass
                                             amrex::GpuArray<amrex::Real,vdim> Ep,
                                             CompDom::computational_domain infra){
-    std::array<amrex::Real,vdim> newPos;
+    amrex::GpuArray<amrex::Real,vdim> newPos;
 
     newPos[0] = p.rdata(0) + dt*chargemass*(Ep[0]);
     if (vdim > 1) {
