@@ -23,13 +23,13 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Init splines
 
-    std::array<bool,GEMPIC_SPACEDIM> cent_eval = {AMREX_D_DECL(false, false, true)};
-    std::array<bool,GEMPIC_SPACEDIM> int_eval = {AMREX_D_DECL(false, false, false)};
+    amrex::GpuArray<bool,GEMPIC_SPACEDIM> cent_eval = {AMREX_D_DECL(false, false, true)};
+    amrex::GpuArray<bool,GEMPIC_SPACEDIM> int_eval = {AMREX_D_DECL(false, false, false)};
     splines spl(cent_eval, int_eval);
 
     int cell_index = 0;
     int dimension = 0;
-    std::array<amrex::Real, GEMPIC_SPACEDIM> x = {AMREX_D_DECL(0.25, 0.25, 0.25)};
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> x = {AMREX_D_DECL(0.25, 0.25, 0.25)};
     int ind = spl.compute_cell_index (cell_index, dimension, x[0], cent_eval[0]);
 
     amrex::AllPrintToFile("test_splines_additional.tmp") << std::endl;

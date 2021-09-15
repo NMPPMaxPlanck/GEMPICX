@@ -125,7 +125,7 @@ void main_main ()
             (mass, amrex::ParallelDescriptor::IOProcessorNumber());
 
     // momentum
-    std::array<amrex::Real,vdim> momentum;
+    amrex::GpuArray<amrex::Real,vdim> momentum;
     for (int cmp=0;cmp<vdim;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
                                          [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
@@ -142,7 +142,7 @@ void main_main ()
     }
 
     // kinetic energy
-    std::array<amrex::Real,vdim> kinetic_energy;
+    amrex::GpuArray<amrex::Real,vdim> kinetic_energy;
     for (int cmp=0;cmp<vdim;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
                                          [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
@@ -159,8 +159,8 @@ void main_main ()
     }
 
     amrex::Real rel_mass = 32768;
-    std::array<amrex::Real,3> rel_mom = {584.1995254, -12972.79719, -1805.405324};
-    std::array<amrex::Real,3> rel_kin = {10.41531633, 5135.909025, 99.47169141};
+    amrex::GpuArray<amrex::Real,3> rel_mom = {584.1995254, -12972.79719, -1805.405324};
+    amrex::GpuArray<amrex::Real,3> rel_kin = {10.41531633, 5135.909025, 99.47169141};
 
     bool passed = true;
     gempic_assert(&passed, rel_mass, mass);
