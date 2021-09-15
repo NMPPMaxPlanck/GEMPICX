@@ -30,14 +30,15 @@ using namespace Particles;
 namespace Gempic {
 namespace Time_Loop {
 
+
+
+
+
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
-                       particle_groups<vdim, numspec> *part_gr,
-                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
-                       bool time_staggered,
-                       amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B) {
+                       particle_groups<vdim, numspec> *part_gr) {
 
     // initial rho by: deposition of particle charge
     //Set rho to 0
@@ -96,8 +97,15 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
         (*mw_yee).template D_from_phi<degmw>(&(mw_yee->phi), &(mw_yee->E_Array), &kx, &ky, &kz, infra);
       }
 
-    // initial B_field
-    (*mw_yee).template initB<degmw>(fields_B, VM.k_gpu, infra);
+}
+
+    template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
+    void loop_staggering (vlasov_maxwell<vdim, numspec> VM,
+                           computational_domain infra,
+                           maxwell_yee<vdim> *mw_yee,
+                           particle_groups<vdim, numspec> *part_gr,
+                           diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
+                           bool time_staggered) {
 
     if (time_staggered) {
         amrex::Print() << "ATTENTION: method is time staggered" << std::endl;
@@ -126,8 +134,46 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     if (output)
         (*diagn).save_step_data(0, infra, mw_yee, part_gr); //false: slices are not saved
 }
-}
+
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
+void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+                       computational_domain infra,
+                       maxwell_yee<vdim> *mw_yee,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
+                       bool time_staggered,
+                       amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B) {
+
+    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
+
+    // initial B_field
+    (*mw_yee).template initB<degmw>(fields_B, VM.k_gpu, infra);
+
+    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 
+
+
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
+void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+                       computational_domain infra,
+                       maxwell_yee<vdim> *mw_yee,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
+                       bool time_staggered,
+                       amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)) {
+
+    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
+
+    // initial B_field
+    (*mw_yee).template initB<degmw>(function_to_project_0,function_to_project_1, function_to_project_2, VM.k_gpu, infra);
+
+    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+}
+
+}
+}
 
 #endif
