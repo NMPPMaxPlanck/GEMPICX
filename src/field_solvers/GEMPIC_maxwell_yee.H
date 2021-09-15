@@ -61,18 +61,18 @@ public:
 
     int nsteps; /** number of simulation steps */
     amrex::Real dt; /** stepsize*/
-    std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_Array; /** Array storing components of E-Field */
-    std::array<std::unique_ptr<amrex::MultiFab>, vdim > Alfven_Tensor; /** Array storing the Alfven tensor */
-    std::array<std::unique_ptr<amrex::MultiFab>, vdim > HE_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, vdim > J_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > HB_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, vdim > E_sol_Array;
-    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_sol_Array;
-    std::array<std::unique_ptr<amrex::IndexType>, vdim> E_Index;
-    std::array<std::unique_ptr<amrex::IndexType>, int(vdim/2.5)*2+1 > B_Index;
-    std::array<std::unique_ptr<amrex::iMultiFab>, vdim> E_Masks;
-    std::array<std::unique_ptr<amrex::iMultiFab>, vdim> B_Masks;
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > E_Array; /** Array storing components of E-Field */
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > Alfven_Tensor; /** Array storing the Alfven tensor */
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > HE_Array;
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > J_Array;
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_Array;
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > HB_Array;
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > E_sol_Array;
+    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > B_sol_Array;
+    amrex::GpuArray<std::unique_ptr<amrex::IndexType>, vdim> E_Index;
+    amrex::GpuArray<std::unique_ptr<amrex::IndexType>, int(vdim/2.5)*2+1 > B_Index;
+    amrex::GpuArray<std::unique_ptr<amrex::iMultiFab>, vdim> E_Masks;
+    amrex::GpuArray<std::unique_ptr<amrex::iMultiFab>, vdim> B_Masks;
     std::unique_ptr<amrex::iMultiFab> nodal_Mask;
     amrex::MultiFab phi_init; // for Poisson
     amrex::MultiFab rho; // for Poisson
@@ -485,8 +485,8 @@ public:
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
     void advance_E (computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J,
-                    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
-                    std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
 
@@ -543,9 +543,9 @@ public:
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
     void advance_E (computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J,
-                    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
-                    std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiAlfvenTensor,
-                    std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiInput,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *MultiAlfvenTensor,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
 
@@ -604,8 +604,8 @@ public:
      * Advance B by a time step of length @p dt_step with a Yee scheme
      */
     void advance_B (computational_domain ifr, amrex::Real dt_step,
-                    std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
-                    std::array<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiOutput){
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
 
@@ -650,8 +650,8 @@ public:
 
 #if (GEMPIC_SPACEDIM ==3)
     template<int degree>
-    void hodge_full (computational_domain ifr, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
-                     std::array<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput, bool is_E) {
+    void hodge_full (computational_domain ifr, amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *MultiInput,
+                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *MultiOutput, bool is_E) {
         for (int field=0; field<vdim; field++) {
 
             amrex::MultiFab tmp(convert(ifr.grid, (is_E?*E_Index[field]:*B_Index[field])),ifr.distriMap,Ncomp,Nghost);
@@ -1094,11 +1094,11 @@ public:
     }
 
     template<int degree>
-    void D_from_phi(amrex::MultiFab *phi_mf, std::array<std::unique_ptr<amrex::MultiFab>, vdim > *D,
+    void D_from_phi(amrex::MultiFab *phi_mf, amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > *D,
                     amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,computational_domain ifr, int verbose = 0,
                     amrex::Real reltol = 1.e-11, int maxsteps = 100) {
 
-        std::array<std::unique_ptr<amrex::MultiFab>, vdim > tmp;
+        amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > tmp;
         for (int i=0; i<vdim;i++) {
             tmp[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
         }
@@ -1212,7 +1212,7 @@ public:
             const amrex::Box& bx = mfi.validbox();
 
             amrex::Array4<amrex::Real> const& rho_arr = rho_gauss_law[mfi].array();
-            std::array<amrex::Array4<amrex::Real>, 3> const& E_arr = {(*E_Array[0])[mfi].array(), (*E_Array[1])[mfi].array(), (*E_Array[2])[mfi].array()};
+            amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& E_arr = {(*E_Array[0])[mfi].array(), (*E_Array[1])[mfi].array(), (*E_Array[2])[mfi].array()};
             ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
                 rho_arr(i,j,k) = (E_arr[0](i,j,k)-E_arr[0](i-1,j,k))/ifr.dx[0];
