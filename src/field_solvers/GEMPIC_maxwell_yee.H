@@ -47,7 +47,7 @@ namespace Field_solvers {
  *
  * Class storing all the field information (both analytical (@p E_sol_Array, @p B_sol_Array) and numerical (@p E_Array, @p B_Array, @p J_Array), infrastructure information
  * for the fields (@p E_Index, @p B_Index, @p Nghost, @p Ncomp, @p time) and the necessary components to solve the Poisson problem for the first step (@p phi_init, @p rho,
- * @p phi, @p sigma). In addition, the class can initialize the fields (init_E_B, init_B) and the functions for the Poisson problem (init_rho_phi), advance the complete
+ * @p phi, @p sigma). In addition, the class can initialize the fields (init_E_B, ) and the functions for the Poisson problem (init_rho_phi), advance the complete
  * problem (advance) or parts of it (advance_E, advance_B, advance_time), initialize E by solving the Poisson problem (solve_poisson), fill ghost cells of all relevant MultiFabs
  * (FillBD), compute the analytical solution (exactSolution) and compute the error of the numerical solution (computeError).
  *
@@ -410,10 +410,30 @@ public:
      * Initialize E and B field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void init_E_B (amrex::GpuArray<std::string, vdim> fieldsE, amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fieldsB,
-                   amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
+    void init_E_B (amrex::GpuArray<std::string, vdim> fieldsE,
+                   amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fieldsB,
+                   amrex::GpuArray<amrex::Real, 3> k,
+                   computational_domain ifr){
         initE<degree> (fieldsE, k, ifr);
         initB<degree> (fieldsB, k, ifr);
+    }
+
+
+    /**
+     * Initialize E field for time t=0 with a given array of functions.
+     */
+    template <int degree>
+    void initE ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
+
+        double half_dt = dt/2.0; // for leap frog initialization
+
+        // B_field
+        projection<degree>(function_to_project_0, k, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
+        projection<degree>(function_to_project_1, k, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
+        projection<degree>(function_to_project_2, k, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
     }
 
     /**
@@ -431,7 +451,10 @@ public:
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
+    void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
