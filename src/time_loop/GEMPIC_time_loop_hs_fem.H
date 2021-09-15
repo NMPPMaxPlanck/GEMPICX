@@ -73,9 +73,9 @@ void time_loop_hs_fem_step (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> jA;
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
@@ -89,7 +89,7 @@ void time_loop_hs_fem_step (computational_domain infra,
 
                 for (int pp=0;pp<np;pp++){
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degz,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degz,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
@@ -156,7 +156,7 @@ void time_loop_hs_fem_step (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
@@ -166,7 +166,7 @@ void time_loop_hs_fem_step (computational_domain infra,
 
                 for (int pp=0;pp<np;pp++){
                     // evaluate the electric field
-                    std::array<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
                     std::array<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
