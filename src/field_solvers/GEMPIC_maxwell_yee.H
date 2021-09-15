@@ -360,16 +360,12 @@ public:
 
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
-
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
-
             const amrex::Box& bx = mfi.tilebox();
-
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo;
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
-
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = ifr.plo;
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = ifr.dx;
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            ParallelFor(bx, [=] (int i, int j, int k)
+            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
                 double x_eval, y_eval, z_eval;
                 int err;
@@ -384,7 +380,7 @@ public:
                 z_midpoint = plo[2] + ((double)k+0.5-0.5*(IndexVect)[2])*dx[2];
                 for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
 
-                y_midpoint = ifr.geom.ProbLo()[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
+                y_midpoint = plo[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
                 for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
 
                 x_midpoint = plo[0] + ((double)i+0.5-0.5*(IndexVect)[0])*dx[0];
@@ -405,7 +401,7 @@ public:
                 }
                 proj_arr(i,j,k) = val;
             });
-        }
+	}
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
