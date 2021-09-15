@@ -1,6 +1,7 @@
 #include <tinyexpr.h>
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_Print.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
@@ -39,7 +40,7 @@ void main_main ()
         VlMa.Bx = VlMa.Bz;
         VlMa.Bz = "0.0";
     }
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_B[0] = VlMa.Bx;
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[1] = VlMa.By;
