@@ -102,8 +102,8 @@ void time_loop_boris_fd_step (computational_domain infra,
                         bres[comp] = field_interp[vdim+comp];
                     }
 
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*coeff, chargemass, eres, bres, infra);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*coeff, chargemass, eres, bres, infra);
+                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
             if (profiling_timers->profiling)

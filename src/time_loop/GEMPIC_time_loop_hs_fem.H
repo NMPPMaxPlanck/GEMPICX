@@ -96,15 +96,15 @@ void time_loop_hs_fem_step (computational_domain infra,
                     std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
                     // push x and v with the magnetic field
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*mw_yee).dt*coeff, chargemass, bA, infra);
-                    std::array<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*mw_yee).dt*coeff, chargemass, bA, infra);
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                     {
                         xOld[d] = particles[pp].pos(d);
                         xNew[d] = newPos[d];
                     }
 
-                    std::array<amrex::Real, vdim> velocity;
+                    amrex::GpuArray<amrex::Real, vdim> velocity;
                     for (unsigned int d=0;d<vdim;++d)
                         velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particles[pp].rdata(d));
                     /*  //Old version with only depositon at the mid point
@@ -124,7 +124,7 @@ void time_loop_hs_fem_step (computational_domain infra,
                                                     infra.dxi,
                                                     infra.plo,
                                                     jA);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in

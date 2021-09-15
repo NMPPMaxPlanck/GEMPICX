@@ -286,9 +286,9 @@ void accumulate_j_fem_integral_point(std::array<amrex::Real,GEMPIC_SPACEDIM> pos
      * integral for each box
      */
 template <int vdim, int degx, int degy, int degz>
-void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position_old,
-                               std::array<amrex::Real,GEMPIC_SPACEDIM> position_new,
-                               std::array<amrex::Real, vdim> velocity,
+void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position_old,
+                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position_new,
+                               amrex::GpuArray<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
@@ -1021,8 +1021,8 @@ void accumulate_j_update_v_x3_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDI
      *  Currently this is implemented for Gauss-Quadrature with only one point
      */
 template<int vdim, int degx, int degy, int degz>
-void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                               std::array<amrex::Real, vdim> velocity,
+void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+                               amrex::GpuArray<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
@@ -1111,12 +1111,12 @@ void accumulate_j_fem_integral(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
+amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                       amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
 {
-    std::array<amrex::Real, int(vdim/2.5)*2+1> fields;
+    amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> fields;
     for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
         fields[comp] = 0.;
     }
@@ -1447,21 +1447,21 @@ amrex::GpuArray<amrex::Real, vdim> push_v_efield(P const& p,
      * Push the position and the velocity (only the vxB part) in a nonlinear iteration
      */
 template <typename P, int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
+amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
                                                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                                               CompDom::computational_domain infra){
-    std::array<amrex::Real, GEMPIC_SPACEDIM> oldX;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
         oldX[d]= p.pos(d);
-    std::array<amrex::Real, vdim> oldV;
+    amrex::GpuArray<amrex::Real, vdim> oldV;
     for (unsigned int d=0;d<vdim;++d)
         oldV[d] = p.rdata(d);
-    std::array<amrex::Real, GEMPIC_SPACEDIM> newX = oldX;
-    std::array<amrex::Real, vdim> newV = oldV;
-    std::array<amrex::Real, GEMPIC_SPACEDIM> newXiter;
-    std::array<amrex::Real, vdim> newViter;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newX = oldX;
+    amrex::GpuArray<amrex::Real, vdim> newV = oldV;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newXiter;
+    amrex::GpuArray<amrex::Real, vdim> newViter;
     amrex::Real tolerance = infra.tolerance_particle;
 
     amrex::Real diff = tolerance + 1.0;
@@ -1478,14 +1478,14 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
                 newX[d] = oldX[d] + dt*0.5*( newV[d] + oldV[d] );
         }
         // Compute xMean
-        std::array<amrex::Real,GEMPIC_SPACEDIM> xMean;
+        amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> xMean;
         for (unsigned int d=0; d<GEMPIC_SPACEDIM; ++d)
         {
             if (d<vdim)
                 xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
         }
         // evaluate B at xMean
-        std::array<amrex::Real,int(vdim/2.5)*2+1> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(xMean,
+        amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(xMean,
                                                                                                        infra.dxi,
                                                                                                        infra.plo,
                                                                                                        bArray);
@@ -1505,7 +1505,7 @@ std::array<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
     }
     if (iter_counter == max_iter)
         amrex::Print() << " Number of itertions: " << iter_counter << " " << diff << std::endl;
-    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
         newPos[d] = newX[d];
     for (unsigned int d=0;d<vdim;++d)
@@ -1571,17 +1571,17 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
 }
 
 template <typename P, int vdim>
-std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
+amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
                                                                  amrex::Real dt,
                                                                  amrex::Real chargemass, //charge/mass
                                                                  amrex::GpuArray<amrex::Real,vdim> Ep,
                                                                  amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1> Bp,
                                                                  CompDom::computational_domain infra){
 
-    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
-    std::array<amrex::Real,vdim> vm;
-    std::array<amrex::Real,vdim> vt;
-    std::array<amrex::Real,vdim> vp;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+    amrex::GpuArray<amrex::Real,vdim> vm;
+    amrex::GpuArray<amrex::Real,vdim> vt;
+    amrex::GpuArray<amrex::Real,vdim> vp;
     amrex::Real S;
 
     // v-
