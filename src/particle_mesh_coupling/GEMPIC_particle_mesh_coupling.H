@@ -1245,17 +1245,17 @@ std::array<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(std::array<amrex:
 
 
 template <typename P, int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
+amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
                                                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                                                         std::array<amrex::Array4<amrex::Real>,vdim> jArray,
-                                                                                         std::array<amrex::Array4<amrex::Real>,vdim> eArray,
-                                                                                         std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
+                                                                                         amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
+                                                                                         amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray,
+                                                                                         amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                                                                                          amrex::Real coefficient = 1.,
                                                                                          bool field_int = false)
 
 {
-    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> fields = {AMREX_D_DECL(0.,0.,0.)};
+    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> fields = {AMREX_D_DECL(0.,0.,0.)};
 
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
     amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
@@ -1576,8 +1576,8 @@ template <typename P, int vdim>
 std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
                                                                  amrex::Real dt,
                                                                  amrex::Real chargemass, //charge/mass
-                                                                 std::array<amrex::Real,vdim> Ep,
-                                                                 std::array<amrex::Real,int(vdim/2.5)*2+1> Bp,
+                                                                 amrex::GpuArray<amrex::Real,vdim> Ep,
+                                                                 amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1> Bp,
                                                                  CompDom::computational_domain infra){
 
     std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
