@@ -1547,11 +1547,11 @@ std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
 }
 
 template <typename P, int vdim>
-std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
+amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
                                                                amrex::Real dt,
                                                                CompDom::computational_domain infra){
 
-    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
     newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
     newPos[GEMPIC_SPACEDIM] = p.rdata(0);
