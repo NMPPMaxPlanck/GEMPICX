@@ -58,7 +58,9 @@ public:
     amrex::IntVect max_grid_size;
     amrex::Real dt = 0.01;
     std::array<amrex::Real, numspec> charge = {-1};
+    amrex::GpuArray<amrex::Real, numspec> charge_gpu = {-1};
     std::array<amrex::Real, numspec> mass = {1};
+    amrex::GpuArray<amrex::Real, numspec> mass_gpu = {1};
     std::array<amrex::Real, 3> k = {1.25, 1.25, 1.25};
     amrex::Real kx, ky, kz;
     std::string WF = "1.0";
@@ -121,7 +123,9 @@ public:
         max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         pp.query("dt",dt);
         pp.query("charge",charge);
+        for (int i = 0; i < numspec; i++) charge_gpu[i] = charge[i];
         pp.query("mass",mass);
+        for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
         pp.query("k",k);
         pp.query("Bx",Bx);
         pp.query("By",By);
@@ -230,7 +234,9 @@ public:
         max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         dt = DT;
         charge = C;
+        for (int i = 0; i < numspec; i++) charge_gpu[i] = charge[i];
         mass = M;
+        for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
         k = {K,K,K};
         WF = wf;
         Bx = BX;
@@ -348,8 +354,8 @@ public:
                                 readVal.push_back(line);
                             }
 
-                            std::array<amrex::Real,GEMPIC_SPACEDIM> position;
-                            std::array<amrex::Real,vdim> velocity;
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
+                            amrex::GpuArray<amrex::Real,vdim> velocity;
                             amrex::Real weight = stod(readVal[GEMPIC_SPACEDIM+vdim]);
                             for (int comp = 0; comp < vdim; comp++) {
                                 position[comp] = stod(readVal[comp]);

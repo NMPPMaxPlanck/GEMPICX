@@ -69,9 +69,9 @@ void main_main ()
     //set particles for first cell (and copies in remaining cells)
     int Np_cell = 100; //number of particles per cell
     int species = 0; // all particles are same species for now
-    std::array<double,GEMPIC_SPACEDIM> position;
-    std::array<double,GEMPIC_SPACEDIM> shifted_position;
-    std::array<double,vdim> velocity;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> shifted_position;
+    amrex::GpuArray<double,vdim> velocity;
     Real weight;
 
     // normally distributed random number generator:
@@ -79,7 +79,7 @@ void main_main ()
     std::mt19937 gen(rd());
     std::normal_distribution<> normD(0,1);
 
-    std::array<double,GEMPIC_SPACEDIM> x;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> x;
 
     for (int pp=0;pp<Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
@@ -110,16 +110,16 @@ void main_main ()
 
 #if (GEMPIC_SPACEDIM > 2)
             for(int k=lo[2]; k<=hi[2]; k++){
-                x[2] = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
+                x[2] = infra.plo[2] + (double)k*infra.dx[2];
                 shifted_position[2] = position[2] + x[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
                 for(int j=lo[1]; j<=hi[1]; j++){
-                    x[1] = infra.geom.ProbLo()[1] + (double)j*infra.dx[1];
+                    x[1] = infra.plo[1] + (double)j*infra.dx[1];
                     shifted_position[1] = position[1] + x[1];
 #endif
                     for(int l=lo[0]; l<=hi[0]; l++){
-                        x[0] = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
+                        x[0] = infra.plo[0] + (double)l*infra.dx[0];
                         shifted_position[0] = position[0] + x[0];
                         part_gr.add_particle(shifted_position, velocity, weight, particles);
                     }

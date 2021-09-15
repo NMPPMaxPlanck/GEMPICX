@@ -42,9 +42,9 @@ class particle_groups
 public:
 
     // array of ParticleContainers (one container per species)
-    std::array<amrex::Real, numspec> charge;
-    std::array<amrex::Real, numspec> mass;
-    std::array<std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>>, numspec> mypc;
+    amrex::GpuArray<amrex::Real, numspec> charge;
+    amrex::GpuArray<amrex::Real, numspec> mass;
+    amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>>, numspec> mypc;
 
     // The default constructor.
     /**
@@ -60,8 +60,8 @@ public:
     particle_groups (vlasov_maxwell<vdim, numspec> VM,
                      computational_domain ifr){
 
-        charge = VM.charge;
-        mass = VM.mass;
+        charge = VM.charge_gpu;
+        mass = VM.mass_gpu;
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
@@ -79,8 +79,8 @@ public:
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p velocity and the weight @p weight to the Particle Tile @p particles.
      */
-    void add_particle(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                      std::array<amrex::Real,vdim> velocity,
+    void add_particle(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+                      amrex::GpuArray<amrex::Real,vdim> velocity,
                       amrex::Real weight,
                       amrex::ParticleTile<vdim+n_data, 0, 0, 0>& particles){
 

@@ -31,7 +31,7 @@ void main_main ()
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
     const amrex::GpuArray<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
     const amrex::GpuArray<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
-    std::array<amrex::Real, 3> x = {0.2, 0.2, 0.2};
+    amrex::GpuArray<amrex::Real, 3> x = {0.2, 0.2, 0.2};
     init_one_particle_cellwise<vdim>(dx, plo, &(*(part_gr).mypc[0]), x);
 
     //------------------------------------------------------------------------------

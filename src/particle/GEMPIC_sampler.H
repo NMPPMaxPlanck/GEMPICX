@@ -47,8 +47,8 @@ void init_particles_cellwise(computational_domain infra,
             ,z_c
         #endif
             ; // cell-corner coordinates
-    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
-    std::array<amrex::Real,vdim> velocity;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
 
     int num_gauss = Vmean[0].size();
@@ -56,7 +56,7 @@ void init_particles_cellwise(computational_domain infra,
 
     srand(rSeed);
     // cumulative sum of vel_weights
-    std::array<std::vector<amrex::Real>,vdim> vel_cum;
+    amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
     for(int i=0;i<vdim;i++) {
         vel_cum[i].resize(num_gauss);
         std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
@@ -79,7 +79,7 @@ void init_particles_cellwise(computational_domain infra,
 #endif
 
         amrex::Real gauss_choice[vdim];
-        std::array<amrex::Real,vdim> gauss_idx;
+        amrex::GpuArray<amrex::Real,vdim> gauss_idx;
         for(int i=0;i<vdim;i++){
             gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX)); // uniform in [0, 1]
             gauss_idx[i] = 0;
@@ -168,14 +168,14 @@ void init_particles_full_domain(computational_domain infra,
     te_expr *WF_parse = te_compile(VM.WF.c_str(), read_vars, varcount, &err);
 
     amrex::Real x_c,y_c,z_c; // cell-corner coordinates
-    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
-    std::array<amrex::Real,vdim> velocity;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
 
     int num_gauss = Vmean[0].size();
 
     // cumulative sum of vel_weights
-    std::array<std::vector<amrex::Real>,vdim> vel_cum;
+    amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
     for(int i=0;i<vdim;i++) {
         vel_cum[i].resize(num_gauss);
         std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
@@ -215,7 +215,7 @@ void init_particles_full_domain(computational_domain infra,
                         for(int i=0;i<vdim;i++){
                             gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
                         }
-                        std::array<int,vdim> gauss_idx;
+                        amrex::GpuArray<int,vdim> gauss_idx;
                         for (int comp = 0; comp < vdim; comp++) {
                             gauss_idx[comp] = 0;
                         }
@@ -267,10 +267,10 @@ template <int vdim>
 void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dx,
                                 amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                 amrex::ParticleContainer<3+1, 0, 0, 0> *mypc,
-                                std::array<amrex::Real,GEMPIC_SPACEDIM> position){
+                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position){
     amrex::Real x,y,z;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
-    std::array<amrex::Real,vdim> velocity;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
+    amrex::GpuArray<amrex::Real,vdim> velocity;
 
     velocity[0] = 1.;
     if (vdim > 1) {
