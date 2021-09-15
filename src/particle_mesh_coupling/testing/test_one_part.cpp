@@ -30,6 +30,18 @@ using namespace Profiling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real cosine(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1e-3 * std::cos(1.25 * x);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
 template< int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main (bool ctest)
 {
@@ -126,7 +138,7 @@ void main_main (bool ctest)
     // solve:
     amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name, vol);
-    loop_preparation<vdim,numspec,degx,degy,degz,degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
+    loop_preparation<vdim,numspec,degx,degy,degz,degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, zero, zero, cosine);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {
