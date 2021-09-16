@@ -168,8 +168,8 @@ void init_particles_cellwise(computational_domain infra,
             ,z_c
         #endif
             ; // cell-corner coordinates
-    std::array<amrex::Real,GEMPIC_SPACEDIM> position;
-    std::array<amrex::Real,vdim> velocity;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
 
     int num_gauss = Vmean[0].size();
@@ -177,7 +177,7 @@ void init_particles_cellwise(computational_domain infra,
 
     srand(rSeed);
     // cumulative sum of vel_weights
-    std::array<std::vector<amrex::Real>,vdim> vel_cum;
+    amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
     for(int i=0;i<vdim;i++) {
         vel_cum[i].resize(num_gauss);
         std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
