@@ -20,15 +20,15 @@ if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_checkpoint )
 endif()
 
-target_link_libraries( test_vlasov_maxwell_by gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_vlasov_maxwell_by gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 #target_link_libraries( test_vlasov_maxwell_by_lower gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_vlasov_maxwell_hs gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_vlasov_maxwell_hs gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_vlasov_maxwell_hs_multispecies gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 #target_link_libraries( test_vlasov_maxwell_hs_lower gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_vlasov_maxwell_hs_all gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_vlasov_maxwell_hs_all gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 #target_link_libraries( test_vlasov_maxwell_hs_all_lower gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_vlasov_maxwell_hs_zigzag_C2 gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_checkpoint gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_vlasov_maxwell_hs_zigzag_C2 gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_checkpoint gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 
 ######## Ctest
