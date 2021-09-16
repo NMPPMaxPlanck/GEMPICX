@@ -760,6 +760,18 @@ public:
         projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
 
+    template <int degree>
+    void init_rho_phi (amrex::Real (*function_to_project_rho)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_phi)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::GpuArray<amrex::Real, 3> k,
+                       computational_domain ifr){
+
+        // rho
+        projection<degree>(function_to_project_rho, k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        // phi
+        projection<degree>(function_to_project_phi, k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+    }
+
     template <int stencil_length>
     void matrix_mult (computational_domain ifr, amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                       amrex::IndexType IndexVect){
