@@ -49,6 +49,11 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real
     return val;
 }
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real valfvensq(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = std::sqrt(1836.15267596*0.005);
+    return val;
+}
 
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
@@ -76,7 +81,7 @@ void main_main ()
  //    std::string valfvensq = "1.0";
 
     
-    std::string valfvensq = std::to_string(mi/me*betae);
+    //std::string valfvensq = std::to_string(mi/me*betae);
 
     fields_E[0] = std::to_string(amplitudeE) + "*sin(" + std::to_string(kz) + "*z - " + std::to_string(omega) + "*t)"; // A*sin(kz*z-omega*t)
     fields_E[1] = "0.0";
@@ -134,7 +139,7 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k_gpu, true, infra);
-    AllPrintToFile("test_ampere_faraday.tmp") << endl;
+/*    AllPrintToFile("test_ampere_faraday.tmp") << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
     AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
@@ -169,7 +174,7 @@ void main_main ()
 
         //Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", n);
     }
-
+*/
 }
 
 int main(int argc, char* argv[])
