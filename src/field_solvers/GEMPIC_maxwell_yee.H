@@ -336,11 +336,6 @@ public:
                      amrex::IndexType IndexVect,
                      amrex::MultiFab *MultiF
                      ) {
-        double t_eval = t;
-        double kx = k[0];
-        double ky = k[1];
-        double kz = k[2];
-        int varcount = 7;
 
         std::vector<amrex::Real> stencil;
         switch (degree) {
@@ -368,7 +363,6 @@ public:
             ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
                 double x_eval, y_eval, z_eval;
-                int err;
 
                 amrex::GpuArray<amrex::Real, degree-1> x;
                 amrex::Real x_midpoint;
@@ -427,8 +421,6 @@ public:
                  amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
-
-        double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
         projection<degree>(function_to_project_0, k, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
@@ -1127,8 +1119,6 @@ public:
         // ---------------------------------------------------------------------
         // D-operator
 
-        amrex::Real c1[1], c2[1];
-
         for (int comp=0; comp<vdim; comp++) {
             for (amrex::MFIter mfi(*tmp[comp]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
@@ -1205,7 +1195,6 @@ public:
         //----------------------------------------------------------------------------------
         // E
 
-        amrex::Real c1[1], c2[1];
 
         for (int comp=0; comp<vdim; comp++) {
             for (amrex::MFIter mfi(*E_Array[comp]); mfi.isValid(); ++mfi ) {
@@ -1227,8 +1216,6 @@ public:
      * Compute rho for a given rho (for diagnostics: Gauss law)
      */
     void rho_from_E(computational_domain ifr){
-
-        amrex::Real c1[1], c2[1];
 
         for (amrex::MFIter mfi(rho_gauss_law); mfi.isValid(); ++mfi ) {
             const amrex::Box& bx = mfi.validbox();
