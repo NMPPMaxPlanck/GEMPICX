@@ -1466,6 +1466,46 @@ public:
         return(E_B_error);
     }
 
+    /**
+     * Compute norm of errors of E and B field from function with exact solution (without tinyexpr)
+     */
+    template<int degree>
+    amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::GpuArray<amrex::Real, 3> k,
+                                                                     bool bool_B,
+                                                                     computational_domain ifr){
+        amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
+
+        exactSolution<degree>(function_to_project_E0,
+                              function_to_project_E1,
+                              function_to_project_E2,
+                              function_to_project_B0,
+                              function_to_project_B1,
+                              function_to_project_B2,
+                              k,
+                              bool_B,
+                              ifr);
+
+        for (int i=0; i<vdim; i++){
+            (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
+            amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+            E_B_error[i] = norm_tmp*norm_tmp;
+        }
+        if (bool_B) {
+            for (int i=0; i<int(vdim/2.5)*2+1; i++){
+                (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
+                amrex::Real norm_tmp = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                E_B_error[i+vdim] = norm_tmp*norm_tmp;
+            }
+        }
+        return(E_B_error);
+    }
+
 private:
 
 
@@ -1485,6 +1525,31 @@ private:
             for (int i=0; i<int(vdim/2.5)*2+1; i++) {
                 projection<degree>(fields_B[i], k, btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_sol_Array[i]));
             }
+        }
+    }
+
+    template<int degree>
+    void exactSolution(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::GpuArray<amrex::Real, 3> k,
+                       bool bool_B,
+                       computational_domain ifr){
+        amrex::Real btime = time + dt/2.0;
+
+        // E-field
+        projection<degree>(function_to_project_E0, k, time, ifr, {false, true, true}, *E_Index[0], &(*E_sol_Array[0]));
+        projection<degree>(function_to_project_E1, k, time, ifr, {true, false, true}, *E_Index[1], &(*E_sol_Array[1]));
+        projection<degree>(function_to_project_E2, k, time, ifr, {true, true, false}, *E_Index[2], &(*E_sol_Array[2]));
+
+        if (bool_B){
+            // B-field
+            projection<degree>(function_to_project_B0, k, btime, ifr, {false, true, true}, *B_Index[0], &(*B_sol_Array[0]));
+            projection<degree>(function_to_project_B1, k, btime, ifr, {true, false, true}, *B_Index[1], &(*B_sol_Array[1]));
+            projection<degree>(function_to_project_B2, k, btime, ifr, {true, true, false}, *B_Index[2], &(*B_sol_Array[2]));
         }
     }
 

@@ -133,7 +133,7 @@ void main_main ()
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k_gpu, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, VlMa.k_gpu, true, infra);
     AllPrintToFile("test_ampere_faraday.tmp") << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
