@@ -51,7 +51,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real
 
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real valfvensq(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
 {
-    amrex::Real val = std::sqrt(1836.15267596*0.005);
+    amrex::Real val = (1836.15267596*0.005);
     return val;
 }
 
@@ -80,7 +80,7 @@ void main_main ()
  */
  //    std::string valfvensq = "1.0";
 
-    
+
     //std::string valfvensq = std::to_string(mi/me*betae);
 
     fields_E[0] = std::to_string(amplitudeE) + "*sin(" + std::to_string(kz) + "*z - " + std::to_string(omega) + "*t)"; // A*sin(kz*z-omega*t)
