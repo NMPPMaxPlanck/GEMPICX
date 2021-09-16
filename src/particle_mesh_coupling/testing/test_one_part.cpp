@@ -42,6 +42,13 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real
     return val;
 }
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 2.0 * std::cos(0.5 * x);
+    return val;
+}
+
+
 template< int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main (bool ctest)
 {
@@ -112,8 +119,7 @@ void main_main (bool ctest)
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    amrex::GpuArray<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k_gpu, infra);
+    mw_yee.template init_rho_phi<degmw>(zero, func_phi, VlMa.k_gpu, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
