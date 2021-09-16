@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -30,19 +28,20 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, a
     return val;
 }
 
+// wave function
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_rho_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1.0;
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     //------------------------------------------------------------------------------
     // Initialize Function
-    double x, y, z;
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
     amrex::Real k = 0.5;
-    int err;
-    std::string WF = "1.0";
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
-    int varcount = 4;
-    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
@@ -70,7 +69,7 @@ void main_main ()
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
-                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, WF);
+                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, " ");
     VlMa.set_computed_params();
     VlMa.VM = VM;
     VlMa.VD = VD;
@@ -94,8 +93,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho
     // will be overwritten in next paragraph
-    amrex::GpuArray<std::string, 2> fields = {WF, WF};
-    mw_yee.template init_rho_phi<2>(fields, VlMa.k_gpu, infra);
+    mw_yee.template init_rho_phi<2>(funct_rho_phi, funct_rho_phi, VlMa.k_gpu, infra);
 
     mw_yee.phi.mult(-1.0);
 
@@ -134,8 +132,6 @@ void main_main ()
     AllPrintToFile("test_deposit_rho.tmp") << passed << std::endl;
 
     AllPrintToFile("test_deposit_rho_additional.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
-
-    te_free(WF_parse);
 
 }
 

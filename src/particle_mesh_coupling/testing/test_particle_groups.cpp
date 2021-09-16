@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
@@ -25,11 +23,28 @@ using namespace Particles;
 using namespace Sampling;
 
 // wave function
+// we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
+// multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
 {
     amrex::Real val = (32*1.25/6.28318530718)*(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*1.0;
     return val;
 }
+
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_Bz(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1e-3 * std::cos(1.25 * x);
+    return val;
+}
+
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    return 0.0;
+}
+
+
 
 template<int vdim, int numspec>
 void main_main ()
@@ -60,20 +75,10 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
-    // multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
-    std::string WF = "(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*1.0";
-    double x, y, z;
-    double k = 1.25;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
-    int varcount = 4;
-    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
-
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2,
-                    is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, WF);
+                    is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, " ");
     VlMa.set_computed_params();
     VlMa.VM = VM;
     VlMa.VD = VD;
@@ -85,30 +90,9 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::string Bx = "0.0";
-    std::string By = "0.0";
-    std::string Bz = "1e-3 * cos(kvar * x)";
-    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
-    fields_B[0] = Bx;
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[1] = By;
-    }
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[2] = Bz;
-    }
-    std::string Ex = "0.0";
-    std::string Ey = "0.0";
-    std::string Ez = "0.0";
-    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_E;
-    fields_E[0] = Ex;
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_E[1] = Ey;
-    }
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_E[2] = Ez;
-    }
-    mw_yee.template initB<degmw>(fields_B, VlMa.k_gpu, infra);
-    mw_yee.template initE<degmw>(fields_E, VlMa.k_gpu, infra);
+
+    mw_yee.template initB<degmw>(zero, zero, funct_Bz, VlMa.k_gpu, infra);
+    mw_yee.template initE<degmw>(zero, zero, zero, VlMa.k_gpu, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -209,8 +193,6 @@ void main_main ()
         break;
 
     }
-
-    te_free(WF_parse);
 }
 
 int main(int argc, char* argv[])
