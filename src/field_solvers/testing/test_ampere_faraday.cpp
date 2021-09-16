@@ -29,6 +29,27 @@ using namespace Gempic;
 using namespace Field_solvers;
 using namespace Diagnostics_Output;
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real E0_sin(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real omega = std::sqrt(1836.15267596*0.005);
+    amrex::Real val = 1.0*std::sin(z-omega*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real B1_sin(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real omega = std::sqrt(1836.15267596*0.005);
+    amrex::Real val = 1.0/omega*std::sin(z-omega*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
@@ -93,7 +114,9 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialization of E and B: this is done via a projection-operator
 
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k_gpu, infra);
+    //mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k_gpu, infra);
+    mw_yee.template initE<degree> (E0_sin, zero, zero, VlMa.k_gpu, infra);
+    mw_yee.template initB<degree> (zero, B1_sin, zero, VlMa.k_gpu, infra);
     for (int comp=0; comp<3; comp++) {
         mw_yee.template projection<2>(valfvensq,
                                       VlMa.k_gpu,
