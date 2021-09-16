@@ -31,11 +31,47 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_e0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::cos(x);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_e1(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_e2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_b0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_b2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-    amrex::GpuArray<std::string, vdim> fields_E;
+   /* amrex::GpuArray<std::string, vdim> fields_E;
     amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
     fields_E[0] = "cos(x)";
@@ -44,6 +80,7 @@ void main_main ()
     fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
     fields_B[1] = "0.0";
     fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+    */
 
     const int degree = 4;
 
@@ -69,7 +106,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k_gpu, infra);
+    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, VlMa.k_gpu, infra);
+    mw_yee.template initE<degree>(funct_e0, funct_e1, funct_e2, VlMa.k_gpu, infra);
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 
