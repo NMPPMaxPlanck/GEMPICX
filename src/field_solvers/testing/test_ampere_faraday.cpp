@@ -29,14 +29,14 @@ using namespace Gempic;
 using namespace Field_solvers;
 using namespace Diagnostics_Output;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real E0_sin(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real E0_sin(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t)
 {
     amrex::Real omega = std::sqrt(1836.15267596*0.005);
     amrex::Real val = 1.0*std::sin(z-omega*t);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real B1_sin(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real B1_sin(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t)
 {
     amrex::Real omega = std::sqrt(1836.15267596*0.005);
     amrex::Real val = 1.0/omega*std::sin(z-omega*t);
@@ -63,33 +63,6 @@ void main_main ()
     amrex::GpuArray<std::string, vdim> fields_E;
     amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
 
-    amrex::Real mi = 1836.15267596;
-    amrex::Real me = 1.0;
-    amrex::Real betae = 0.005;
-    amrex::Real kz = 1.0;
-    amrex::Real amplitudeE = 1.0;
-    amrex::Real omega = kz*sqrt(mi/me*betae);
-
-  /*      fields_E[0] = "2*cos(x+y+z-sqrt(3.0)*t)"; //Ex
-        fields_E[1] = "-4*cos(x+y+z-sqrt(3.0)*t)"; //Ey
-        fields_E[2] = "2*cos(x+y+z-sqrt(3.0)*t)"; //Ez
-
-        fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)"; //Bx
-        fields_B[1] = "0.0"; //By
-        fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)"; //Bz
- */
- //    std::string valfvensq = "1.0";
-
-
-    //std::string valfvensq = std::to_string(mi/me*betae);
-
-    fields_E[0] = std::to_string(amplitudeE) + "*sin(" + std::to_string(kz) + "*z - " + std::to_string(omega) + "*t)"; // A*sin(kz*z-omega*t)
-    fields_E[1] = "0.0";
-    fields_E[2] = "0.0";
-
-    fields_B[0] = "0.0";
-    fields_B[1] = "1.0/sqrt(" + std::to_string(mi/me*betae) + ")*" + std::to_string(amplitudeE) + "*sin(" + std::to_string(kz) + "*z - " + std::to_string(omega) + "*t)"; // 1/va*A*sin(kz*z-omega*t)
-    fields_B[2] = "0.0";
 
 
     //------------------------------------------------------------------------------
