@@ -84,6 +84,7 @@ void main_main ()
 
     const int degree = 4;
 
+    double twopi = 4 * asin(1.0); // 2.0*3.14159265359;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
@@ -91,22 +92,21 @@ void main_main ()
     amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
     amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
 
-    //std::array<std::vector<amrex::Real>, vdim> VM{};
-    //std::array<std::vector<amrex::Real>, vdim> VD{};
-    //std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    vlasov_maxwell<vdim, numspec> VlMa;
-    VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
-                    mx_grid, 0.01, {1.0}, {1.0}, 0.5);
-    VlMa.set_computed_params();
+    amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
+    amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/0.5,twopi/0.5,twopi/0.5)};
+    amrex::RealBox real_box;
+    real_box.setLo(boxLo);
+    real_box.setHi(boxHi);
 
-    CompDom::computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+
+    CompDom::computational_domain infra(n_cell, mx_grid, is_periodic, real_box);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
+    int Nghost = *(std::max_element(degs.begin(), degs.end()));
+    maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
     mw_yee.template initB<degree>(funct_b0, zero, funct_b2, infra);
     mw_yee.template initE<degree>(funct_e0, funct_e1, funct_e2, infra);
 
