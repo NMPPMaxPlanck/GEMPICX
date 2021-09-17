@@ -30,6 +30,10 @@ target_link_libraries( test_vlasov_maxwell_hs_all gempic_poisson AMReX::amrex AM
 target_link_libraries( test_vlasov_maxwell_hs_zigzag_C2 gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_checkpoint gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
+if (NOT USE_CUDA)
+  add_executable ( test_vlasov_maxwell_hs_multispecies test_vlasov_maxwell_hs_multispecies.cpp  )
+  target_link_libraries( test_vlasov_maxwell_hs_multispecies gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+endif()
 
 ######## Ctest
 
