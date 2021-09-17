@@ -60,8 +60,8 @@ public:
     particle_groups (vlasov_maxwell<vdim, numspec> VM,
                      computational_domain ifr){
 
-        charge = VM.charge_gpu;
-        mass = VM.mass_gpu;
+        charge = VM.charge;
+        mass = VM.mass;
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {

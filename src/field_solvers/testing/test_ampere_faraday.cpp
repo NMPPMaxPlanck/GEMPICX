@@ -92,12 +92,12 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialization of E and B: this is done via a projection-operator
 
-    //mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k_gpu, infra);
-    mw_yee.template initE<degree> (E0_sin, zero, zero, VlMa.k_gpu, infra);
-    mw_yee.template initB<degree> (zero, B1_sin, zero, VlMa.k_gpu, infra);
+    //mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    mw_yee.template initE<degree> (E0_sin, zero, zero, VlMa.k, infra);
+    mw_yee.template initB<degree> (zero, B1_sin, zero, VlMa.k, infra);
     for (int comp=0; comp<3; comp++) {
         mw_yee.template projection<2>(valfvensq,
-                                      VlMa.k_gpu,
+                                      VlMa.k,
                                       0.0,
                                       infra,
                                       {false, false, false},
@@ -111,7 +111,7 @@ void main_main ()
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, VlMa.k_gpu, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, VlMa.k, true, infra);
     AllPrintToFile("test_ampere_faraday.tmp") << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
@@ -140,7 +140,7 @@ void main_main ()
         //------------------------------------------------------------------------------
         // This generates error output once more: comparing current E and B to the analytical solution -- you can ignore the code
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, VlMa.k_gpu, true, infra);
+        E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, VlMa.k, true, infra);
         AllPrintToFile("test_ampere_faraday.tmp") << "step " << n << endl;
         AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         amrex::AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;

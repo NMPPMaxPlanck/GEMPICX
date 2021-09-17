@@ -183,11 +183,11 @@ void main_main ()
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, VlMa.k_gpu, infra);
-    mw_yee.template initE<degree>(funct_e2, funct_e1, funct_e2, VlMa.k_gpu, infra);
+    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, VlMa.k, infra);
+    mw_yee.template initE<degree>(funct_e2, funct_e1, funct_e2, VlMa.k, infra);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, VlMa.k_gpu, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, VlMa.k, true, infra);
     AllPrintToFile("test_maxwell_yee_order_additional.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "step " << 0 << endl;
@@ -220,7 +220,7 @@ void main_main ()
         mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
         mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2,  VlMa.k_gpu, true, infra);
+        E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2,  VlMa.k, true, infra);
 
         AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "step " << n << endl;
         switch (vdim) {

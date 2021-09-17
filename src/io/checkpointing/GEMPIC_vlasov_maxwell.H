@@ -45,24 +45,18 @@ public:
 
     // parameters from main input file
     std::string sim_name = "simulation";
-    std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {10, 10, 10};
     amrex::IntVect n_cell;
-    std::array<int, numspec> n_part_per_cell = {100};
+    amrex::GpuArray<int, numspec> n_part_per_cell = {100};
     int n_steps = 10;
     int freq_x = 1000;
     int freq_v = 1000;
     int freq_slice = 1000;
-    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {1,1,1};
     amrex::IntVect is_periodic;
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size_vector = {5,5,5};
     amrex::IntVect max_grid_size;
     amrex::Real dt = 0.01;
-    std::array<amrex::Real, numspec> charge = {-1};
-    amrex::GpuArray<amrex::Real, numspec> charge_gpu = {-1};
-    std::array<amrex::Real, numspec> mass = {1};
-    amrex::GpuArray<amrex::Real, numspec> mass_gpu = {1};
-    std::array<amrex::Real, 3> k = {1.25, 1.25, 1.25};
-    amrex::GpuArray<amrex::Real, 3> k_gpu = {1.25, 1.25, 1.25};
+    amrex::GpuArray<amrex::Real, numspec> charge = {-1};
+    amrex::GpuArray<amrex::Real, numspec> mass = {1};
+    amrex::GpuArray<amrex::Real, 3> k = {1.25, 1.25, 1.25};
     amrex::Real kx, ky, kz;
     std::string WF = "1.0";
     std::string Bx = "0.0";
@@ -109,10 +103,20 @@ public:
     }
 
     void read_pp_params () {
+
+        std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {1,1,1};
+        std::array<int,GEMPIC_SPACEDIM> max_grid_size_vector = {5,5,5};
+        std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {10, 10, 10};
+        std::array<amrex::Real, numspec> charge_in = {-1};
+        std::array<amrex::Real, numspec> mass_in = {1};
+        std::array<amrex::Real, 3> k_in = {1.25, 1.25, 1.25};
+        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100};
+
         pp.query("sim_name",sim_name);
         pp.query("n_cell_vector",n_cell_vector);
         n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-        pp.query("n_part_per_cell",n_part_per_cell);
+        pp.query("n_part_per_cell",n_part_per_cell_in);
+        for (int i = 0; i < numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
         std::cout << "query result: " << n_steps << std::endl;
         pp.query("n_steps",n_steps);
         pp.query("freq_x",freq_x);
@@ -123,12 +127,12 @@ public:
         pp.query("max_grid_size_vector",max_grid_size_vector);
         max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         pp.query("dt",dt);
-        pp.query("charge",charge);
-        for (int i = 0; i < numspec; i++) charge_gpu[i] = charge[i];
-        pp.query("mass",mass);
-        for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
-        pp.query("k",k);
-        for (int i = 0; i < numspec; i++) k_gpu[i] = k[i];
+        pp.query("charge",charge_in);
+        for (int i = 0; i < numspec; i++) charge[i] = charge_in[i];
+        pp.query("mass",mass_in);
+        for (int i = 0; i < numspec; i++) mass[i] = mass_in[i];
+        pp.query("k",k_in);
+        for (int i = 0; i < numspec; i++) k[i] = k_in[i];
         pp.query("Bx",Bx);
         pp.query("By",By);
         pp.query("Bz",Bz);
@@ -197,17 +201,17 @@ public:
     }
 
     void set_params (std::string sm = "Weibel",
-                     std::array<int,GEMPIC_SPACEDIM> NC = {AMREX_D_DECL(24, 8, 8)},
-                     std::array<int, numspec> NPP = {100},
+                     amrex::IntVect n_cell_vector = {AMREX_D_DECL(24, 8, 8)}, //std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
+                     std::array<int, numspec> n_part_per_cell_in = {100},
                      int NS = 10,
                      int FX = 12,
                      int FV = 12,
                      int FS = 12,
-                     std::array<int,GEMPIC_SPACEDIM> PER = {AMREX_D_DECL(1, 1, 1)},
-                     std::array<int,GEMPIC_SPACEDIM> MG = {AMREX_D_DECL(4, 4, 4)},
+                     amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
+                     amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)},
                      amrex::Real DT = 0.02,
-                     std::array<amrex::Real, numspec> C = {-1.0},
-                     std::array<amrex::Real, numspec> M = {1.0},
+                     amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
+                     amrex::GpuArray<amrex::Real, numspec> M = {1.0},
                      amrex::Real K = 1.25,
                      std::string wf = "1.0",
                      std::string BX = "0.0",
@@ -223,24 +227,19 @@ public:
                      int CD = 0
                      ) {
         sim_name = sm;
-        n_cell_vector = NC;
-        n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-        n_part_per_cell = NPP;
+        n_cell = n_cell_vector;//amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
+        for (int i=0; i<GEMPIC_SPACEDIM; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
         freq_x = FX;
         freq_v = FV;
         freq_slice = FS;
-        is_periodic_vector = PER;
-        is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-        max_grid_size_vector = MG;
-        max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
+        //is_periodic_vector = PER;
+        is_periodic = is_periodic_vector;//amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
+        max_grid_size = max_grid_size_vector;//amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         dt = DT;
-        charge = C;
-        for (int i = 0; i < numspec; i++) charge_gpu[i] = charge[i];
-        mass = M;
-        for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
+        for (int i = 0; i < numspec; i++) charge[i] = C[i];
+        for (int i = 0; i < numspec; i++) mass[i] = M[i];
         k = {K,K,K};
-        k_gpu = {K,K,K};
         WF = wf;
         Bx = BX;
         By = BY;
@@ -255,6 +254,68 @@ public:
 
         set_prop_related();
     }
+
+
+  /*      void set_params (std::string sm = "Weibel",
+                         amrex::GpuArray<int,GEMPIC_SPACEDIM> NC = {AMREX_D_DECL(24, 8, 8)},
+                         amrex::GpuArray<int, numspec> NPP = {100},
+                         int NS = 10,
+                         int FX = 12,
+                         int FV = 12,
+                         int FS = 12,
+                         amrex::GpuArray<int,GEMPIC_SPACEDIM> PER = {AMREX_D_DECL(1, 1, 1)},
+                         amrex::GpuArray<int,GEMPIC_SPACEDIM> MG = {AMREX_D_DECL(4, 4, 4)},
+                         amrex::Real DT = 0.02,
+                         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
+                         amrex::GpuArray<amrex::Real, numspec> M = {1.0},
+                         amrex::Real K = 1.25,
+                         std::string wf = "1.0",
+                         std::string BX = "0.0",
+                         std::string BY = "0.0",
+                         std::string BZ = "1e-3 * cos(kvarx * x)",
+                         std::string PHI = "4 * 0.5 * cos(0.5 * x)",
+                         int NG = 1,
+                         int PROP = 0,
+                         amrex::Real TOL_P = 1.e-10,
+                         int MAX_C = 30,
+                         int RST = 0,
+                         std::string CF = "",
+                         int CD = 0
+                         ) {
+            sim_name = sm;
+            n_cell_vector = NC;
+            n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
+            n_part_per_cell = NPP;
+            n_steps = NS;
+            freq_x = FX;
+            freq_v = FV;
+            freq_slice = FS;
+            is_periodic_vector = PER;
+            is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
+            max_grid_size_vector = MG;
+            max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
+            dt = DT;
+            charge = C;
+            for (int i = 0; i < numspec; i++) charge_gpu[i] = charge[i];
+            mass = M;
+            for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
+            k = {K,K,K};
+            k_gpu = {K,K,K};
+            WF = wf;
+            Bx = BX;
+            By = BY;
+            Bz = BZ;
+            phi = PHI;
+            num_gaussians = NG;
+            propagator = PROP;
+            tolerance_particles = TOL_P;
+            restart = RST;
+            checkpoint_file = CF;
+            curr_step = CD;
+
+            set_prop_related();
+        }
+*/
 
         void set_prop_related () {
             switch (propagator) {

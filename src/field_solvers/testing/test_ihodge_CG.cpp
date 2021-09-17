@@ -86,9 +86,10 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    std::array<int,GEMPIC_SPACEDIM> mx_grid = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+   // std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -106,8 +107,8 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, VlMa.k_gpu, infra);
-    mw_yee.template initE<degree>(funct_e0, funct_e1, funct_e2, VlMa.k_gpu, infra);
+    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, VlMa.k, infra);
+    mw_yee.template initE<degree>(funct_e0, funct_e1, funct_e2, VlMa.k, infra);
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 

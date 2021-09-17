@@ -93,7 +93,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho
     // will be overwritten in next paragraph
-    mw_yee.template init_rho_phi<2>(funct_rho_phi, funct_rho_phi, VlMa.k_gpu, infra);
+    mw_yee.template init_rho_phi<2>(funct_rho_phi, funct_rho_phi, VlMa.k, infra);
 
     mw_yee.phi.mult(-1.0);
 

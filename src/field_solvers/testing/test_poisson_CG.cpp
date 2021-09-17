@@ -85,7 +85,7 @@ void main_main ()
     mlmg.setVerbose(0);
     mlmg.setBottomVerbose(0);
 
-    mw_yee.template init_rho_phi<degree>(func_rho, func_phi, VlMa.k_gpu, infra);
+    mw_yee.template init_rho_phi<degree>(func_rho, func_phi, VlMa.k, infra);
 
     // ----------------------------------------------------------------------------------
 
