@@ -168,7 +168,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
 
     // initial B_field
-    (*mw_yee).template initB<degmw>(function_to_project_0,function_to_project_1, function_to_project_2, VM.k, infra);
+    (*mw_yee).template initB<degmw>(function_to_project_0,function_to_project_1, function_to_project_2, infra);
 
     loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
 }

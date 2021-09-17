@@ -73,7 +73,7 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template init_rho_phi<degmw>(zero, zero, VlMa.k, infra);
+    mw_yee.template init_rho_phi<degmw>(zero, zero, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);

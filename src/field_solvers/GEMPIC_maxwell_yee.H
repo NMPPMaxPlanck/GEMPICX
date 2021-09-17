@@ -329,7 +329,6 @@ public:
 
     template<int degree>
     void projection ( amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                     amrex::GpuArray<amrex::Real, 3> k,
                      amrex::Real t,
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
@@ -420,12 +419,12 @@ public:
     void initE ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
+                 computational_domain ifr){
 
         // B_field
-        projection<degree>(function_to_project_0, k, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
-        projection<degree>(function_to_project_1, k, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
-        projection<degree>(function_to_project_2, k, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
+        projection<degree>(function_to_project_0, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
+        projection<degree>(function_to_project_1, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
+        projection<degree>(function_to_project_2, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
     }
 
     /**
@@ -446,14 +445,14 @@ public:
     void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 amrex::GpuArray<amrex::Real, 3> k,computational_domain ifr){
+                 computational_domain ifr){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
-        projection<degree>(function_to_project_0, k, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
-        projection<degree>(function_to_project_1, k, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
-        projection<degree>(function_to_project_2, k, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+        projection<degree>(function_to_project_0, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
+        projection<degree>(function_to_project_1, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
+        projection<degree>(function_to_project_2, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
     }
 
     /**
@@ -763,13 +762,12 @@ public:
     template <int degree>
     void init_rho_phi (amrex::Real (*function_to_project_rho)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                        amrex::Real (*function_to_project_phi)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::GpuArray<amrex::Real, 3> k,
                        computational_domain ifr){
 
         // rho
-        projection<degree>(function_to_project_rho, k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        projection<degree>(function_to_project_rho, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
         // phi
-        projection<degree>(function_to_project_phi, k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+        projection<degree>(function_to_project_phi, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
 
     template <int stencil_length>
@@ -1475,7 +1473,6 @@ public:
                                                                      amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                                                                      amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                                                                      amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     amrex::GpuArray<amrex::Real, 3> k,
                                                                      bool bool_B,
                                                                      computational_domain ifr){
         amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
@@ -1486,7 +1483,6 @@ public:
                               function_to_project_B0,
                               function_to_project_B1,
                               function_to_project_B2,
-                              k,
                               bool_B,
                               ifr);
 
@@ -1534,21 +1530,20 @@ private:
                        amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                        amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                        amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::GpuArray<amrex::Real, 3> k,
                        bool bool_B,
                        computational_domain ifr){
         amrex::Real btime = time + dt/2.0;
 
         // E-field
-        projection<degree>(function_to_project_E0, k, time, ifr, {false, true, true}, *E_Index[0], &(*E_sol_Array[0]));
-        projection<degree>(function_to_project_E1, k, time, ifr, {true, false, true}, *E_Index[1], &(*E_sol_Array[1]));
-        projection<degree>(function_to_project_E2, k, time, ifr, {true, true, false}, *E_Index[2], &(*E_sol_Array[2]));
+        projection<degree>(function_to_project_E0, time, ifr, {false, true, true}, *E_Index[0], &(*E_sol_Array[0]));
+        projection<degree>(function_to_project_E1, time, ifr, {true, false, true}, *E_Index[1], &(*E_sol_Array[1]));
+        projection<degree>(function_to_project_E2, time, ifr, {true, true, false}, *E_Index[2], &(*E_sol_Array[2]));
 
         if (bool_B){
             // B-field
-            projection<degree>(function_to_project_B0, k, btime, ifr, {false, true, true}, *B_Index[0], &(*B_sol_Array[0]));
-            projection<degree>(function_to_project_B1, k, btime, ifr, {true, false, true}, *B_Index[1], &(*B_sol_Array[1]));
-            projection<degree>(function_to_project_B2, k, btime, ifr, {true, true, false}, *B_Index[2], &(*B_sol_Array[2]));
+            projection<degree>(function_to_project_B0, btime, ifr, {false, true, true}, *B_Index[0], &(*B_sol_Array[0]));
+            projection<degree>(function_to_project_B1, btime, ifr, {true, false, true}, *B_Index[1], &(*B_sol_Array[1]));
+            projection<degree>(function_to_project_B2, btime, ifr, {true, true, false}, *B_Index[2], &(*B_sol_Array[2]));
         }
     }
 
