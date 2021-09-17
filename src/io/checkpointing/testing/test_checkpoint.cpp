@@ -33,14 +33,14 @@ void main_main ()
     // ------------PARAMETERS--------------------------------------------------------
 
     // initialize parameters
-    std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(4,4,4)};
+    amrex::IntVect n_cell_vector = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 2;
-    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {2,2,2};
+    amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect max_grid_size = {2,2,2};
     amrex::Real dt = 0.1;
-    std::array<amrex::Real, numspec> charge = {-1.0};
-    std::array<amrex::Real, numspec> mass = {1.0};
+    amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
+    amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     amrex::Real k = 1.25;
     amrex::Real tolerance_particles = 1.e-10;

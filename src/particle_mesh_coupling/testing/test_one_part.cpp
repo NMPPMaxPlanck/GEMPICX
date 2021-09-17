@@ -56,17 +56,17 @@ void main_main (bool ctest)
 
     // initialize parameters
     std::string sim_name = "One_Particle";
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(4,4,4)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 1;
     int freq_x = 2;
     int freq_v = 2;
     int freq_slice = 1;
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {4,4,4};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect max_grid_size = {4,4,4};
     amrex::Real dt = 0.02;
-    std::array<amrex::Real, numspec> charge = {-1.0};
-    std::array<amrex::Real, numspec> mass = {1.0};
+    amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
+    amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     amrex::Real k = 1.25;
     std::string WF = "1.0";
@@ -86,17 +86,6 @@ void main_main (bool ctest)
     bool time_staggered = false;
     amrex::Real tolerance_particles = 1.e-10;
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    for (int j=0; j<vdim; j++) {
-        VM[j].push_back(0.0);
-        VW[j].push_back(1.0);
-    }
-    VD[0].push_back(0.02/sqrt(2));
-    VD[1].push_back(sqrt(12)*VD[0][0]);
-    VD[2].push_back(VD[1][0]);
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
@@ -107,9 +96,6 @@ void main_main (bool ctest)
                     freq_slice, is_periodic, max_grid_size, dt, charge, mass, k,
                     WF, Bx, By, Bz, phi, 1, propagator, tolerance_particles);
     VlMa.set_computed_params();
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
 
     // infrastructure
     computational_domain infra;

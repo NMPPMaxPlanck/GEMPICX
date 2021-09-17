@@ -91,9 +91,9 @@ void main_main ()
     amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
     amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
+    //std::array<std::vector<amrex::Real>, vdim> VM{};
+    //std::array<std::vector<amrex::Real>, vdim> VD{};
+    //std::array<std::vector<amrex::Real>, vdim> VW{};
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);

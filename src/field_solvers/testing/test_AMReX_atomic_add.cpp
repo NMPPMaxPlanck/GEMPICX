@@ -22,7 +22,7 @@ using namespace Sampling;
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(8,10,12)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(8,10,12)};
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.set_params("add_test", n_cell, {1}, 10, 12, 12, 12, {AMREX_D_DECL(1, 1, 1)}, {AMREX_D_DECL(8, 10, 12)});
     VlMa.set_computed_params();

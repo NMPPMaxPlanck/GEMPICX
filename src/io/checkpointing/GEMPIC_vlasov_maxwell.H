@@ -110,7 +110,7 @@ public:
         std::array<amrex::Real, numspec> charge_in = {-1};
         std::array<amrex::Real, numspec> mass_in = {1};
         std::array<amrex::Real, 3> k_in = {1.25, 1.25, 1.25};
-        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100};
+        std::array<int, numspec> n_part_per_cell_in = {100};
 
         pp.query("sim_name",sim_name);
         pp.query("n_cell_vector",n_cell_vector);

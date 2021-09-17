@@ -68,7 +68,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Parameters that could be relevant for you:
 
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(16,16,16)}; // spatial discretization: number of cells in each direction, currently: 128x128x128
+    amrex::IntVect n_cell = {AMREX_D_DECL(16,16,16)}; // spatial discretization: number of cells in each direction, currently: 128x128x128
     int numstep = 2; // number of timesteps
     amrex::Real dt = 0.01; // size of timesteps
 
@@ -78,7 +78,7 @@ void main_main ()
     const int degree = 2;
     amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);

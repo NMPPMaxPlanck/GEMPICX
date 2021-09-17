@@ -26,35 +26,14 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(64,64,64)};
-
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    VM[0].push_back(0.0);
-    VD[0].push_back(1.0);
-    VW[0].push_back(1.0);
-    if (vdim > 1) {
-        VM[1].push_back(0.0);
-        VD[1].push_back(1.0);
-        VW[1].push_back(1.0);
-    }
-    if (vdim > 2) {
-        VM[2].push_back(0.0);
-        VD[2].push_back(1.0);
-        VW[2].push_back(1.0);
-    }
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(64,64,64)};
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("initialize_ctest", n_cell, {1000}, 5, 10, 10, 10,
                     is_periodic, {32,32,32}, 0.01, {1.0}, {1.0}, 1);
     VlMa.set_computed_params();
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
 
     computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
