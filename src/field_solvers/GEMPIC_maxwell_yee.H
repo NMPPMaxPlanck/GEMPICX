@@ -513,6 +513,11 @@ public:
 
         int bdim = int(vdim/2.5)*2+1;
 
+        // make copies for GPU
+        amrex::Real dt_step_cp = dt_step;
+        amrex::Real curlB_scaling_cp = curlB_scaling;
+        amrex::Real epref_ep0_cp = epref_ep0;
+
         for (int d=0; d<vdim; d++) {
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -553,9 +558,9 @@ public:
                         }
                     }
                     if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
-                        vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/dx[(d+1)%vdim]
+                        vecOut(i,j,k) = vecOut(i,j,k) + dt_step_cp*(curlB_scaling_cp*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/dx[(d+1)%vdim]
                                                                                        -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/dx[(d+2)%vdim]):0.0)
-                                + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
+                                + epref_ep0_cp*(from_J?(-vecJ(i,j,k)):0.0));
                     }
                 });
             }
@@ -633,6 +638,7 @@ public:
                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
+        amrex::Real dt_step_cp = dt_step;
 
         // B-field
         for (int d=0; d<bdim; d++) {
@@ -665,7 +671,7 @@ public:
                         }
                     }
                     else if (bdim == 3) {
-                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k+(d%bdim==1?1:0))-vecIn_1(i,j,k))/dx[(d+1)%bdim] -
+                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step_cp*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k+(d%bdim==1?1:0))-vecIn_1(i,j,k))/dx[(d+1)%bdim] -
                                 (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k+(d%bdim==0?1:0))-vecIn_2(i,j,k))/dx[(d+2)%bdim]);
                     }
                 });
