@@ -17,12 +17,12 @@ if (USE_CUDA)
 endif()
 
 
-target_link_libraries( test_maxwell_yee tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_maxwell_yee_order tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_poisson_CG tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_ihodge_CG tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_ampere_faraday tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_AMReX_atomic_add tinyexpr gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_maxwell_yee gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_maxwell_yee_order gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_poisson_CG gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_ihodge_CG gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_ampere_faraday gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_atomic_add gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_constval AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )

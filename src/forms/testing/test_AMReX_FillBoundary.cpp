@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_MFIter.H>
 #include <AMReX_ParmParse.H>
