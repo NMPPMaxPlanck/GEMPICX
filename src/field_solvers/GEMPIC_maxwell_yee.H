@@ -283,8 +283,13 @@ public:
             const amrex::Box& bx = mfi.tilebox();
 
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            ParallelFor(bx, [=] (int i, int j, int k)
-            {
+            //ParallelFor(bx, [=] (int i, int j, int k)
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+            for (int k=lo[2];k<=hi[2];++k)
+                for (int j=lo[1];j<=hi[1];++j)
+                    for (int i=lo[0];i<=hi[0];++i)
+                {
                 double x_eval, y_eval, z_eval;
                 int err;
                 te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
@@ -321,7 +326,7 @@ public:
                 }
                 proj_arr(i,j,k) = val;
                 te_free(function_parse);
-            });
+            }//);
         }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
@@ -359,7 +364,12 @@ public:
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = ifr.plo;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = ifr.dx;
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            //ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+            for (int k=lo[2];k<=hi[2];++k)
+                for (int j=lo[1];j<=hi[1];++j)
+                    for (int i=lo[0];i<=hi[0];++i)
             {
                 double x_eval, y_eval, z_eval;
 
@@ -393,7 +403,7 @@ public:
                     }
                 }
                 proj_arr(i,j,k) = val;
-            });
+            }//);
 	}
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
