@@ -108,8 +108,9 @@ void main_main ()
 #endif
         }
     }
-
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_initialize.tmp") << "" << std::endl;
+#endif
     amrex::AllPrintToFile("test_initialize.tmp") << 1 << std::endl;
 }
 

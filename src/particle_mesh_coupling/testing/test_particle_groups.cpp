@@ -162,7 +162,9 @@ void main_main ()
     gempic_assert(&passed, rel_kin[1], kinetic_energy[1]);
     gempic_assert(&passed, rel_kin[2], kinetic_energy[2]);
 
+#if  !(GEMPIC_GPU)
     AllPrintToFile("test_particle_groups.tmp") << std::endl;
+#endif
     AllPrintToFile("test_particle_groups.tmp") << passed << std::endl;
 
     AllPrintToFile("test_particle_groups_additional.tmp") << std::endl;

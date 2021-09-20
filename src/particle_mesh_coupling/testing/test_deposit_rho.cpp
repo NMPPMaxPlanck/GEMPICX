@@ -125,7 +125,9 @@ void main_main ()
     (mw_yee.phi).minus(mw_yee.rho, 0, 1, 0);
 
     //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
+#if  !(GEMPIC_GPU)
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
+#endif
     amrex::Real error = gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2);
     bool passed = true;
     gempic_assert_err(&passed, gempic_norm(&mw_yee.rho, infra, 2), error);
