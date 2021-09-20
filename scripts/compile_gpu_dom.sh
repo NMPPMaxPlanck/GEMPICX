@@ -1,6 +1,6 @@
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
-AMREX_DIRECTORY=`pwd`/../../amrex.git
+AMREX_DIRECTORY=`pwd`/../../amrex
 AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
 
 echo $SOURCE_DIRECTORY

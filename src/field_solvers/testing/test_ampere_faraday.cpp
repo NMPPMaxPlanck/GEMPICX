@@ -109,7 +109,9 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, true, infra);
+#if  !(GEMPIC_GPU)
     AllPrintToFile("test_ampere_faraday.tmp") << endl;
+#endif
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
     AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;

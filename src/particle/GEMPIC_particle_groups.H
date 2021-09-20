@@ -66,7 +66,11 @@ public:
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
             mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
-            (*mypc[i]).do_tiling = true;
+#if GEMPIC_GPU
+	    (*mypc[i]).do_tiling = false;
+#else
+	    (*mypc[i]).do_tiling = true;
+#endif
 # if (GEMPIC_SPACEDIM > 1)
             (*mypc[i]).tile_size = ifr.max_grid_size;
 #else

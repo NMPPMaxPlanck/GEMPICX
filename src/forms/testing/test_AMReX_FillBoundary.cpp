@@ -74,8 +74,9 @@ void main_main ()
     passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 4932) < 1e-6);
     TestMF.FillBoundary(geom.periodicity());
     passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-6);
-
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << std::endl;
+#endif
     amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << passed << std::endl;
 
     amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << "FILLBOUNDARY" << std::endl;
