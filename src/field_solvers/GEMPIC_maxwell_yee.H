@@ -40,6 +40,7 @@ using namespace CompDom;
 using namespace Utils;
 using namespace Vlasov_Maxwell;
 using namespace Particles;
+using funcToProjType = amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real);
 
 namespace Gempic {
 namespace Field_solvers {
@@ -283,7 +284,7 @@ public:
             const amrex::Box& bx = mfi.tilebox();
 
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            //ParallelFor(bx, [=] (int i, int j, int k)
+            //ParallelFor(bx, [=] (int i, int j, int k) {
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
             for (int k=lo[2];k<=hi[2];++k)
@@ -332,9 +333,9 @@ public:
     }
 
 
-    template<int degree>
-    void projection ( amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                     amrex::Real t,
+    template<int degree,
+             funcToProjType function_to_project>
+    void projection (amrex::Real t,
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
@@ -398,7 +399,10 @@ public:
                             x_eval = x[xd];
                             y_eval = y[yd];
                             z_eval = z[zd];
-                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(function_to_project(x_eval, y_eval, z_eval,  t));
+                            val+= (integrate[0]?stencil[xd]:1)*
+                                  (integrate[1]?stencil[yd]:1)*
+                                  (integrate[2]?stencil[zd]:1)*
+                                  (function_to_project(x_eval, y_eval, z_eval,  t));
                         }
                     }
                 }
@@ -425,17 +429,18 @@ public:
     /**
      * Initialize E field for time t=0 with a given array of functions.
      */
-    template <int degree>
-    void initE ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 computational_domain ifr){
+    template <int degree,
+             funcToProjType function_to_project_0,
+             funcToProjType function_to_project_1,
+             funcToProjType function_to_project_2
+             >
+    void initE ( computational_domain ifr ){
 
         // B_field
-        projection<degree>(function_to_project_0, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
-        projection<degree>(function_to_project_1, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
-        projection<degree>(function_to_project_2, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
-    }
+        projection<degree,function_to_project_0>( 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
+        projection<degree,function_to_project_1>( 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
+        projection<degree,function_to_project_2>( 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
+    };
 
     /**
      * Initialize E field for time t=0 with a given array of functions.
@@ -446,23 +451,24 @@ public:
         for (int i = 0; i<vdim; i++) {
             projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]));
         }
-    }
+    };
 
     /**
      * Initialize B field for time t=0 with a given array of functions.
      */
-    template <int degree>
-    void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                 computational_domain ifr){
+    template <int degree, 
+             funcToProjType function_to_project_0,
+             funcToProjType function_to_project_1,
+             funcToProjType function_to_project_2
+             >
+    void initB ( computational_domain ifr ){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
-        projection<degree>(function_to_project_0, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
-        projection<degree>(function_to_project_1, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
-        projection<degree>(function_to_project_2, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+        projection<degree,function_to_project_0>( half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
+        projection<degree,function_to_project_1>( half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
+        projection<degree,function_to_project_2>( half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
     }
 
     /**
