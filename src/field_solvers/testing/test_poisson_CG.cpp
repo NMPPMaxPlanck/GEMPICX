@@ -61,7 +61,7 @@ void main_main ()
     kz.FillBoundary(infra.geom.periodicity());
 
 
-    amrex::MLNodeLaplacian_FD linop({infra.geom}, {infra.grid}, {infra.distriMap}); // linear operator class
+    amrex::MLNodeLaplacian linop({infra.geom}, {infra.grid}, {infra.distriMap}); // linear operator class
     amrex::MultiFab sigma;
     sigma.define(infra.grid, infra.distriMap, 1, 0);
     sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
