@@ -55,6 +55,7 @@ IF (USE_CUDA)
   set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
   set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
   set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  add_definitions(-DGEMPIC_GPU)
 ENDIF()
 
 # Enable ctests
