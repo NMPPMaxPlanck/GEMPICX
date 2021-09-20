@@ -69,9 +69,7 @@ void main_main ()
     amrex::Real ScalarProd = amrex::MultiFab::Dot(*mw_yee.B_Masks[2], *mw_yee.B_Array[2], 0, *mw_yee.B_Array[2], 0, 1, VlMa.Nghost);
     amrex::Real NormSquared = pow((*mw_yee.B_Array[2]).norm2(0, infra.geom.periodicity()),2.);
     amrex::Real Norm = (*mw_yee.B_Array[2]).norm2(0, infra.geom.periodicity());
-#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << std::endl;
-#endif
     amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "<x,x> = " << ScalarProd << std::endl;
     amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "||x||2 = " << NormSquared << std::endl;
     amrex::AllPrintToFile("test_AMReX_Dot_additional.tmp") << "||x|| = " << Norm << std::endl;
