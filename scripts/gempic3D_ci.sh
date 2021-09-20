@@ -15,8 +15,7 @@ mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 # now download amrex
-#git clone https://github.com/AMReX-Codes/amrex.git
-git clone git@gitlab.mpcdf.mpg.de:gempic/amrex.git
+git clone https://github.com/AMReX-Codes/amrex.git
 
 # ---- 3D ----
 cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_3D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
