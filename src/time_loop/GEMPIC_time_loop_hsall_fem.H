@@ -289,8 +289,9 @@ void time_loop_hsall_fem (computational_domain infra,
                           int strang_order) {
 
     timers profiling_timers(false);
-
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
+#endif
 
     for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
 

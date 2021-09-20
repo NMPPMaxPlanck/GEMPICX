@@ -390,8 +390,10 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
 
     timers profiling_timers(true);
 
+#if  !(GEMPIC_GPU)
     if (output)
         amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
+#endif
 
     if (profiling_timers.profiling)
         // profiling_timers.counter_all -= MPI_Wtime();

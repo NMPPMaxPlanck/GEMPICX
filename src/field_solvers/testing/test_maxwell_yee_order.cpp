@@ -232,7 +232,9 @@ void main_main ()
     gempic_assert_err(&passed, 1, E_B_error[4]);
     gempic_assert_err(&passed, 1, E_B_error[5]);
 
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << std::endl;
+#endif
     amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << passed << std::endl;
 
 }
