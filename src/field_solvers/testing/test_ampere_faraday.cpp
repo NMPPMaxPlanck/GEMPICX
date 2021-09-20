@@ -10,8 +10,6 @@
                             -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
 ------------------------------------------------------------------------------*/
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>

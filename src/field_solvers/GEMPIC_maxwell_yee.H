@@ -283,8 +283,13 @@ public:
             const amrex::Box& bx = mfi.tilebox();
 
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            ParallelFor(bx, [=] (int i, int j, int k)
-            {
+            //ParallelFor(bx, [=] (int i, int j, int k)
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+            for (int k=lo[2];k<=hi[2];++k)
+                for (int j=lo[1];j<=hi[1];++j)
+                    for (int i=lo[0];i<=hi[0];++i)
+                {
                 double x_eval, y_eval, z_eval;
                 int err;
                 te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
@@ -321,7 +326,7 @@ public:
                 }
                 proj_arr(i,j,k) = val;
                 te_free(function_parse);
-            });
+            }//);
         }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
@@ -359,7 +364,12 @@ public:
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = ifr.plo;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = ifr.dx;
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            //ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+            for (int k=lo[2];k<=hi[2];++k)
+                for (int j=lo[1];j<=hi[1];++j)
+                    for (int i=lo[0];i<=hi[0];++i)
             {
                 double x_eval, y_eval, z_eval;
 
@@ -393,7 +403,7 @@ public:
                     }
                 }
                 proj_arr(i,j,k) = val;
-            });
+            }//);
 	}
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
@@ -503,6 +513,11 @@ public:
 
         int bdim = int(vdim/2.5)*2+1;
 
+        // make copies for GPU
+        amrex::Real dt_step_cp = dt_step;
+        amrex::Real curlB_scaling_cp = curlB_scaling;
+        amrex::Real epref_ep0_cp = epref_ep0;
+
         for (int d=0; d<vdim; d++) {
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -514,6 +529,7 @@ public:
                 amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%vdim])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecJ = (*J_Array[d])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx = ifr.dx;
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     if((vdim < 3) & (GEMPIC_SPACEDIM == 1)){
@@ -524,27 +540,27 @@ public:
                     if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
                         //Ex for 2D2V
                         if (d == 0) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/ifr.dx[1]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/dx[1]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                         }
                     }
                     if (vdim == 2){
                         if (d == 1) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/ifr.dx[0]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/dx[0]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                         }
                     }
                     if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
                         if (d==2) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/ifr.dx[(d+1)%vdim]
-                                                                                    -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/ifr.dx[(d+2)%vdim]:0.0)
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/dx[(d+1)%vdim]
+                                                                                    -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/dx[(d+2)%vdim]:0.0)
                                     + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                         } else {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/ifr.dx[0]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/dx[0]:0.0) + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
                         }
                     }
                     if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
-                        vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(curlB_scaling*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/ifr.dx[(d+1)%vdim]
-                                                                                       -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/ifr.dx[(d+2)%vdim]):0.0)
-                                + epref_ep0*(from_J?(-vecJ(i,j,k)):0.0));
+                        vecOut(i,j,k) = vecOut(i,j,k) + dt_step_cp*(curlB_scaling_cp*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/dx[(d+1)%vdim]
+                                                                                       -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/dx[(d+2)%vdim]):0.0)
+                                + epref_ep0_cp*(from_J?(-vecJ(i,j,k)):0.0));
                     }
                 });
             }
@@ -574,6 +590,7 @@ public:
                 amrex::Array4<amrex::Real> const& vecJ = (*J_Array[d])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecAT = (*(*MultiAlfvenTensor)[d])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx = ifr.dx;
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     if((vdim < 3) & (GEMPIC_SPACEDIM == 1)){
@@ -584,26 +601,26 @@ public:
                     if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
                         //Ex for 2D2V
                         if (d == 0) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/ifr.dx[1]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_1(i,j,k)-vecIn_1(i,j-1,k))/dx[1]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
                         }
                     }
                     if (vdim == 2){
                         if (d == 1) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(-(vecIn_2(i,j,k)-vecIn_2(i-1,j,k)))/dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
                         }
                     }
                     if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
                         if (d==2) {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/ifr.dx[(d+1)%vdim]
-                                                                      -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/ifr.dx[(d+2)%vdim]:0.0)
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==2?1:0),j-(d%vdim==0?1:0),k))/dx[(d+1)%vdim]
+                                                                      -(vecIn_2(i,j,k)-vecIn_2(i-(d%vdim==1?1:0),j-(d%vdim==2?1:0),k))/dx[(d+2)%vdim]:0.0)
                                     + (from_J?(-vecJ(i,j,k)):0.0));
                         } else {
-                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/ifr.dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
+                            vecOut(i,j,k) = vecOut(i,j,k) + dt_step*((from_B?((d==0?1:-1)*(vecIn_1(i,j,k)-vecIn_1(i-(d%vdim==1?1:0),j-(d%vdim==0?1:0),k)))/dx[0]:0.0) + (from_J?(-vecJ(i,j,k)):0.0));
                         }
                     }
                     if ((vdim == 3) & (GEMPIC_SPACEDIM == 3)) {
-                        vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(vecAT(i,j,k)*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/ifr.dx[(d+1)%vdim]
-                                                                                      -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/ifr.dx[(d+2)%vdim]):0.0)
+                        vecOut(i,j,k) = vecOut(i,j,k) + dt_step*(vecAT(i,j,k)*(from_B?((vecIn_1(i,j,k)-vecIn_1(i-(d%bdim==2?1:0),j-(d%bdim==0?1:0),k-(d%bdim==1?1:0)))/dx[(d+1)%vdim]
+                                                                                      -(vecIn_2(i,j,k)-vecIn_2(i-(d%bdim==1?1:0),j-(d%bdim==2?1:0),k-(d%bdim==0?1:0)))/dx[(d+2)%vdim]):0.0)
                                 + (from_J?(-vecJ(i,j,k)):0.0));
                     }
                 });
@@ -621,6 +638,7 @@ public:
                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, int(vdim/2.5)*2+1 > *MultiOutput){
 
         int bdim = int(vdim/2.5)*2+1;
+        amrex::Real dt_step_cp = dt_step;
 
         // B-field
         for (int d=0; d<bdim; d++) {
@@ -633,27 +651,28 @@ public:
                 amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%bdim])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%bdim])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx = ifr.dx;
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     if (vdim == 1){}
                     //no B
                     else if ((vdim == 2) & (GEMPIC_SPACEDIM == 1)){
-                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+1,j,k)-vecIn_1(i,j,k))/ifr.dx[0]);
+                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+1,j,k)-vecIn_1(i,j,k))/dx[0]);
                     }
                     else if ((vdim == 2) & (GEMPIC_SPACEDIM == 2)){
-                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/ifr.dx[0] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/ifr.dx[0]);
+                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/dx[0] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/dx[0]);
                     }
                     else if ((vdim == 3) & (GEMPIC_SPACEDIM == 2)) {
                         if (i==2) {
-                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k)-vecIn_1(i,j,k))/ifr.dx[(d+1)%bdim] -
-                                    (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k)-vecIn_2(i,j,k))/ifr.dx[(d+2)%bdim]);
+                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k)-vecIn_1(i,j,k))/dx[(d+1)%bdim] -
+                                    (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k)-vecIn_2(i,j,k))/dx[(d+2)%bdim]);
                         } else {
-                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*(-(d==0?-1:1)*(vecIn_1(i+(d%bdim==1?1:0),j+(d%bdim==0?1:0),k)-vecIn_1(i,j,k))/ifr.dx[(d+1)%GEMPIC_SPACEDIM]);
+                            vecOut(i,j,k) = vecOut(i,j,k) - dt_step*(-(d==0?-1:1)*(vecIn_1(i+(d%bdim==1?1:0),j+(d%bdim==0?1:0),k)-vecIn_1(i,j,k))/dx[(d+1)%GEMPIC_SPACEDIM]);
                         }
                     }
                     else if (bdim == 3) {
-                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k+(d%bdim==1?1:0))-vecIn_1(i,j,k))/ifr.dx[(d+1)%bdim] -
-                                (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k+(d%bdim==0?1:0))-vecIn_2(i,j,k))/ifr.dx[(d+2)%bdim]);
+                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step_cp*((vecIn_1(i+(d%bdim==2?1:0),j+(d%bdim==0?1:0),k+(d%bdim==1?1:0))-vecIn_1(i,j,k))/dx[(d+1)%bdim] -
+                                (vecIn_2(i+(d%bdim==1?1:0),j+(d%bdim==2?1:0),k+(d%bdim==0?1:0))-vecIn_2(i,j,k))/dx[(d+2)%bdim]);
                     }
                 });
             }
@@ -684,18 +703,24 @@ public:
     void hodge (computational_domain ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
                 amrex::IndexType IndexVect){
 
-        std::vector<amrex::Real> stencil;
+        amrex::GpuArray<amrex::Real, degree-1> stencil;
         switch (start_from) {
         case 0:
             switch (degree) {
             case 2:
-                stencil = {1.0};
+                stencil[0] = 1.0;
                 break;
             case 4:
-                stencil = {1.0/8.0, 6.0/8.0, 1.0/8.0};
+                stencil[0] = 1.0/8.0;
+                stencil[1] = 6.0/8.0;
+                stencil[2] = 1.0/8.0;
                 break;
             case 6:
-                stencil = {-7.0/384.0, 44.0/384.0, 310.0/384.0, 44.0/384.0, -7.0/384.0};
+                stencil[0] = -7.0/384.0;
+                stencil[1] = 44.0/384.0;
+                stencil[2] = 310.0/384.0;
+                stencil[3] = 44.0/384.0;
+                stencil[4] = -7.0/384.0;
                 break;
             default: amrex::Print() << "degree not implemented" << std::endl;
             }
@@ -703,13 +728,19 @@ public:
         case 1:
             switch (degree) {
             case 2:
-                stencil = {1.0};
+                stencil[0] = 1.0;
                 break;
             case 4:
-                stencil = {-1.0/24.0, 13/12.0, -1.0/24.0};
+                stencil[0] = -1.0/24.0;
+               stencil[1] = 13/12.0;
+              stencil[2] =  -1.0/24.0;
                 break;
             case 6:
-                stencil = {3.0/640.0, -29.0/480.0, 1067.0/960.0, -29.0/480.0, 3.0/640.0};
+                stencil[0] = 3.0/640.0;
+               stencil[1] = -29.0/480.0;
+              stencil[2] =  1067.0/960.0;
+             stencil[3] = -29.0/480.0;
+            stencil[4] =  3.0/640.0;
                 break;
             default: amrex::Print() << "degree not implemented" << std::endl;
             }

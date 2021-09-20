@@ -21,7 +21,6 @@
 ------------------------------------------------------------------------------*/
 
 #include <cmath>
-#include <tinyexpr.h>
 
 #include <AMReX.H>
 #include <AMReX_Array.H>

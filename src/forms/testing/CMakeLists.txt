@@ -11,7 +11,7 @@ target_link_libraries( test_gempic_norm AMReX::amrex AMReX::Flags_CXX AMReX::Fla
 target_link_libraries( test_AMReX_FillBoundary  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_OverrideSync  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_AMReX_SumBoundary  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
-target_link_libraries( test_AMReX_Dot tinyexpr  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_AMReX_Dot  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_gempic_norm )
