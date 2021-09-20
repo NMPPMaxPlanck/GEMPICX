@@ -108,7 +108,9 @@ void main_main ()
     amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is read in: " << read_val << std::endl;
 
     bool passed = (std::abs(old_val-read_val)<1e-12) && (std::abs(old_val-new_val)>1e-1);
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_checkpoint.tmp") << "" << std::endl;
+#endif
     amrex::AllPrintToFile("test_checkpoint.tmp") << passed << std::endl;
 
 }

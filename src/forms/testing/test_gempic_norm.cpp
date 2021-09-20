@@ -140,8 +140,9 @@ void main_main ()
     gempic_assert(&passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
 
 #endif
-
+#if  !(GEMPIC_GPU)
     AllPrintToFile("test_gempic_norm.tmp") << endl;
+#endif
     AllPrintToFile("test_gempic_norm.tmp") << passed << endl;
 
 

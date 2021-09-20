@@ -132,7 +132,9 @@ void main_main ()
         amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
         gempic_assert_err(&passed, E_norm, err_norm*err_norm);
     }
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_ihodge_CG.tmp") << std::endl;
+#endif
     amrex::AllPrintToFile("test_ihodge_CG.tmp") << passed << std::endl;
 }
 

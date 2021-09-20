@@ -35,7 +35,9 @@ void main_main ()
     amrex::AllPrintToFile("test_splines_additional.tmp") << std::endl;
     amrex::AllPrintToFile("test_splines_additional.tmp") << ind << std::endl;
 
+#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_splines.tmp") << std::endl;
+#endif
     amrex::AllPrintToFile("test_splines.tmp") << (std::abs(ind-0)<1e-12) << std::endl;
 
 }
