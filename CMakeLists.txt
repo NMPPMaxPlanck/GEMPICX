@@ -120,9 +120,11 @@ add_subdirectory(third_party)
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations
-#add_subdirectory(simulations)
+if (NOT USE_CUDA )
+ add_subdirectory(simulations)
+endif()
 # Add doxygen documentation
-#add_subdirectory(doc)
+add_subdirectory(doc)
 
 # Config summary
 message( STATUS "GEMPIC configuration summary: ")
