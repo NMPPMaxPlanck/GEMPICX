@@ -62,7 +62,7 @@ ENDIF()
 enable_testing()
 # This defines how the ctests are run
 message ("HOST is $ENV{HOST}" )
-IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*"))
+IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*") OR ($ENV{HOST} MATCHES "daint*") )
   include(cmake/cobra_ctest.cmake)
 ELSE()
   include(cmake/define_ctest.cmake)
