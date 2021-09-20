@@ -58,7 +58,9 @@ void main_main ()
 
     bool passed = true;
     gempic_assert(&passed, testval, *readval);
+#if  !(AMREX_USE_GPU)
     amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << std::endl;
+#endif
     amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << passed << std::endl;
 
 }
