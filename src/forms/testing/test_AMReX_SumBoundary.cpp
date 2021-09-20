@@ -88,9 +88,7 @@ void main_main ()
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
     }
-#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
-#endif
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << TestMF[mfi] << std::endl;
     }

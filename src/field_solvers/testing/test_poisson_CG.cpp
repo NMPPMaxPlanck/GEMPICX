@@ -100,9 +100,7 @@ void main_main ()
     amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho), infra, 2);
     gempic_assert_err(&passed, rho_norm, err_norm*err_norm);
 
-#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_poisson_CG.tmp") << std::endl;
-#endif
     amrex::AllPrintToFile("test_poisson_CG.tmp") << passed << std::endl;
 
 }

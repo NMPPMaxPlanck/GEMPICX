@@ -190,9 +190,7 @@ void main_main ()
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
-#if  !(GEMPIC_GPU)
     AllPrintToFile("test_maxwell_yee.tmp") << endl;
-#endif
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << 0 << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;

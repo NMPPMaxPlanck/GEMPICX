@@ -101,9 +101,7 @@ void main_main ()
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << TestMF[mfi] << std::endl;
     }
-#if  !(GEMPIC_GPU)
     amrex::AllPrintToFile("test_AMReX_NormMasks.tmp") << std::endl;
-#endif
     amrex::AllPrintToFile("test_AMReX_NormMasks.tmp") << (std::abs(TestMF.norm1(0, geom.periodicity(), false)-83333332.5) < 1e-12) << std::endl;
 
 

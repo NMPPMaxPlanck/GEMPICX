@@ -178,9 +178,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
 
     // Output for GEMPIC_SPACEDIM=1
-#if  !(GEMPIC_GPU)
     AllPrintToFile("test_vlasov_maxwell_by.tmp") << std::endl;
-#endif
 
     AllPrintToFile("test_vlasov_maxwell_by.tmp") << "0 0.497151 5e-07 6.26259 9.99417" << std::endl;
     AllPrintToFile("test_vlasov_maxwell_by.tmp") << "1 0.497055 5e-07 6.2635 9.99486" << std::endl;
