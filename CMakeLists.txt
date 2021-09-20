@@ -15,7 +15,7 @@ if (USE_CUDA)
   find_package(CUDA QUIET REQUIRED)
 endif()
 
-find_package(MPI REQUIRED CXX)
+#find_package(MPI REQUIRED CXX)
 
 message("AMReX Dir is ${AMReX_ROOT}")
 
@@ -52,9 +52,9 @@ ELSE()
 ENDIF()
 
 IF (USE_CUDA)
-  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
-  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
-  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
 ENDIF()
 
 # Enable ctests
@@ -120,11 +120,9 @@ add_subdirectory(third_party)
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations
-if (NOT USE_CUDA )
- add_subdirectory(simulations)
-endif()
+#add_subdirectory(simulations)
 # Add doxygen documentation
-add_subdirectory(doc)
+#add_subdirectory(doc)
 
 # Config summary
 message( STATUS "GEMPIC configuration summary: ")
