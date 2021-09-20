@@ -66,7 +66,12 @@ void main_main ()
     // Particles
     amrex::Real charge = -1.0;
     amrex::ParticleContainer<vdim+1, 0, 0, 0> mypc(geom, distriMap, grid);
-    mypc.do_tiling = true;
+#if GEMPIC_GPU
+        mypc.do_tiling = false;
+#else
+        mypc.do_tiling = true;
+#endif
+
 #if (GEMPIC_SPACEDIM >1)
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
 #else
