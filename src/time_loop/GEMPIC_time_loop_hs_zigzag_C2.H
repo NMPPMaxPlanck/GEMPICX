@@ -341,24 +341,25 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                 }
 
                 // loop over particles: add contribution of old particle position to J and push
-
-               // amrex::ParallelFor(np,
-               //     [=] AMREX_GPU_DEVICE (long pp)
-               //                                              {
-                for( int pp=0;pp<np;pp++){
+                amrex::Real *part_ptr = particles.data();
+                amrex::ParallelFor(np,
+                    [=] AMREX_GPU_DEVICE (long pp)
+                {
+                //for( int pp=0;pp<np;pp++){
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                       pos[d]= particles[pp].pos(d);
 
+                    splines_at_particles<degx,degy,degz> splines;
                     // evaluate the spline
-                    spline.init_particles(pos , infra.plo, infra.dxi);
+                    splines.init_particles(pos , infra.plo, infra.dxi);
                     // evaluate the electric field
-                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(splines,  eA);
 
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
-                    std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
-                  }//);
+                    std::copy(newPosE.begin(),newPosE.end(),part_ptr+pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM);//&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                  });
             }
             if (profiling_timers->profiling && profiling_count)
              profiling_timers->counter_deposition += MPI_Wtime();
