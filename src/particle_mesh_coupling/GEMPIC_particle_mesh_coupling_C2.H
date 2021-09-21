@@ -20,7 +20,7 @@ public :
     std::vector<amrex::Real> primitive;
     int box;
 
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE   void init_position(amrex::Real position,
+void init_position(amrex::Real position,
             amrex::Real plo,
                    amrex::Real dxi)
     {
@@ -53,7 +53,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE   void init_position(amrex::Real position
 private :
 
     template<int degree>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE       std::vector<amrex::Real> spline_eval_primitive (amrex::Real x)  {
+     	    std::vector<amrex::Real> spline_eval_primitive (amrex::Real x)  {
         std::vector<amrex::Real> s;
         switch (degree) {
         case 0:
@@ -204,7 +204,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE       amrex::GpuArray<amrex::Real, length
 };
 
 template<int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
                                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
 {
     amrex::GpuArray<amrex::Real,vdim> fields;
