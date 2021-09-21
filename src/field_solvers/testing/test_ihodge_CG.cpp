@@ -105,8 +105,8 @@ void main_main ()
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
     maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
-    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, infra);
-    mw_yee.template initE<degree,funct_e0,funct_e1,funct_e2>(infra);
+    mw_yee.template initB<degree, funct_b0, zero , funct_b2>( infra );
+    mw_yee.template initE<degree, funct_e0, funct_e1 ,funct_e2>(infra );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 

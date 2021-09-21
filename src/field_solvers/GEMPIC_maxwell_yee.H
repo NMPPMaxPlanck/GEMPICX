@@ -40,6 +40,7 @@ using namespace CompDom;
 using namespace Utils;
 using namespace Vlasov_Maxwell;
 using namespace Particles;
+
 using funcToProjType = amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real);
 
 namespace Gempic {
