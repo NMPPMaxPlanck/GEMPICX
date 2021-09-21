@@ -45,7 +45,7 @@ public:
     /**
      * Default Constructor.
      */
-    computational_domain (){};
+  /*  computational_domain (){};
 
     computational_domain(amrex::IntVect n_cell_in,
                          amrex::IntVect max_grid_size_in,
@@ -53,15 +53,15 @@ public:
                          amrex::RealBox real_box_in,
                          amrex::Real tolerance_particle_in = 1.e-10){
         initialize(n_cell_in, max_grid_size_in, is_periodic_in, real_box_in, tolerance_particle_in);
-    };
+    };*/
 
-private:
+//private:
 
-    void initialize(amrex::IntVect n_cell_in,
+    void initialize_computational_domain(amrex::IntVect n_cell_in,
                     amrex::IntVect max_grid_size_in,
                     amrex::IntVect is_periodic_in,
                     amrex::RealBox real_box_in,
-                    amrex::Real tolerance_particle_in ){
+                    amrex::Real tolerance_particle_in = 1.e-10 ){
 
         // Initialize infrastructure:
 

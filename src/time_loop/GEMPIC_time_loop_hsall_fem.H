@@ -97,7 +97,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
                     amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degz,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
-                    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
+                    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield);
                     std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 
                     amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
@@ -259,7 +259,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
                     amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],infra.dxi, infra.plo,  eA);
 
                     // push v with the electric field
-                    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
+                    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield);
                     std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
                 }
             }

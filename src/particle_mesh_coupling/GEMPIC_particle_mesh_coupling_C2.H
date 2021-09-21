@@ -17,10 +17,10 @@ template<int deg>
 class spline1d_at_particles
 {
 public :
-    std::vector<amrex::Real> primitive;
+    amrex::GpuArray<amrex::Real,deg> primitive;
     int box;
 
-    void init_position(amrex::Real position,
+void init_position(amrex::Real position,
             amrex::Real plo,
                    amrex::Real dxi)
     {
@@ -53,35 +53,50 @@ public :
 private :
 
     template<int degree>
-    std::vector<amrex::Real> spline_eval_primitive (amrex::Real x)  {
-        std::vector<amrex::Real> s;
+            amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
+        amrex::GpuArray<amrex::Real,degree+1> s;
         switch (degree) {
         case 0:
-            s = {x};
+            s[0] = x;
             break;
         case 1:
-            s = {pow(x,2)/2., 1.-pow(x-1.,2)/2.};
+            s[0] = pow(x,2)/2.;
+            s[1] = 1.-pow(x-1.,2)/2.;
             break;
         case 2:
-            s = {pow(x,3)/6., (((-2.*x+3)*x+3.)*x+1.)/6., pow(x-1.,3)/6.+1.};
+            s[0] = pow(x,3)/6.;
+            s[1] = (((-2.*x+3)*x+3.)*x+1.)/6.;
+            s[2] = pow(x-1.,3)/6.+1.;
             break;
         case 3:
-            s = {pow(x,4)/24.,  -pow(x,4)/8.+pow(x,3)/6.+pow(x,2)/4.+x/6.+1./24., pow(x,4)/8.-pow(x,3)/3.+x*2./3.+0.5, -pow((1.-x),4)/24.+1.};
+            s[0] = pow(x,4)/24.;
+            s[1] = -pow(x,4)/8.+pow(x,3)/6.+pow(x,2)/4.+x/6.+1./24.;
+            s[2] = pow(x,4)/8.-pow(x,3)/3.+x*2./3.+0.5;
+            s[3] = -pow((1.-x),4)/24.+1.;
             break;
         case 4:
-            s = {  pow(x,5)/120. ,  (((((-4.*x+5.)*x+10.)*x+10.)*x+5.)*x+1.)/120., (((((6.*x-15.)*x-10.)*x+30.)*x+55.)*x+27.)/120.  ,(((((-4.*x+15.)*x-10.)*x-30.)*x+55.)*x+93.)/120.   ,  -pow(1.-x,5)/120.+1. };
+            s[0] =   pow(x,5)/120. ;
+            s[1] = (((((-4.*x+5.)*x+10.)*x+10.)*x+5.)*x+1.)/120.;
+            s[2] = (((((6.*x-15.)*x-10.)*x+30.)*x+55.)*x+27.)/120.;
+            s[3] = (((((-4.*x+15.)*x-10.)*x-30.)*x+55.)*x+93.)/120.  ;
+            s[4] = -pow(1.-x,5)/120.+1.;
             break;
         case 5:
-            s = {  pow(x,6)/720. , ((((((-5.*x+6.)*x+15.)*x+20.)*x+15.)*x+6.)*x+1.)/720., ((((((10.*x-24.)*x-30.)*x+40.)*x+150.)*x+156.)*x+58.)/720., ((((-10.*x+36.)*x*x-120.)*x*x+396.)*x+360.)/720., ((((((5.*x-24.)*x+30.)*x+40.)*x-150.)*x+156.)*x+662.)/720., ((((((-x+6.)*x-15.)*x+20.)*x-15.)*x+6.)*x+719.)/720.};
+            s[0] =   pow(x,6)/720. ;
+            s[1] = ((((((-5.*x+6.)*x+15.)*x+20.)*x+15.)*x+6.)*x+1.)/720.;
+            s[2] = ((((((10.*x-24.)*x-30.)*x+40.)*x+150.)*x+156.)*x+58.)/720.;
+            s[3] = ((((-10.*x+36.)*x*x-120.)*x*x+396.)*x+360.)/720.;
+            s[4] = ((((((5.*x-24.)*x+30.)*x+40.)*x-150.)*x+156.)*x+662.)/720.;
+            s[5] = ((((((-x+6.)*x-15.)*x+20.)*x-15.)*x+6.)*x+719.)/720.;
             break;
         case 6:
-            s = {pow(x,7)/5040.,
-                -pow(x,7)/840. + pow(x,6)/720. + pow(x,5)/240. + pow(x,4)/144. + pow(x,3)/144. + pow(x,2)/240. + x/720. + 1./5040.,
-                 pow(x,7)/336. - pow(x,6)/144. - pow(x,5)/80. + pow(x,4)/144. + pow(x,3)/16. + 5.*pow(x,2)/48. + 19.*x/240. + 121./5040.,
-                -pow(x,7)/252. + pow(x,6)/72. + pow(x,5)/120. - pow(x,4)/18. - 5.*pow(x,3)/72. + pow(x,2)/6. + 151.*x/360. + 82./315.,
-                pow(x,7)/336. - pow(x,6)/72. + pow(x,5)/120. + pow(x,4)/18. - 5.*pow(x,3)/72. - pow(x,2)/6. + 151.*x/360. + 233./315.,
-                -pow(x,7)/840. + pow(x,6)/144. - pow(x,5)/80. - pow(x,4)/144. + pow(x,3)/16. - 5.*pow(x,2)/48. + 19.*x/240. + 691./5040.,
-                pow(x,7)/5040. - pow(x,6)/720. + pow(x,5)/240. - pow(x,4)/144. + pow(x,3)/144. - pow(x,2)/240. + x/720. + 811./5040.};
+            s[0] = pow(x,7)/5040.;
+            s[1] = -pow(x,7)/840. + pow(x,6)/720. + pow(x,5)/240. + pow(x,4)/144. + pow(x,3)/144. + pow(x,2)/240. + x/720. + 1./5040.;
+            s[2] =  pow(x,7)/336. - pow(x,6)/144. - pow(x,5)/80. + pow(x,4)/144. + pow(x,3)/16. + 5.*pow(x,2)/48. + 19.*x/240. + 121./5040.;
+            s[3] = -pow(x,7)/252. + pow(x,6)/72. + pow(x,5)/120. - pow(x,4)/18. - 5.*pow(x,3)/72. + pow(x,2)/6. + 151.*x/360. + 82./315.;
+            s[4] =  pow(x,7)/336. - pow(x,6)/72. + pow(x,5)/120. + pow(x,4)/18. - 5.*pow(x,3)/72. - pow(x,2)/6. + 151.*x/360. + 233./315.;
+            s[5] = -pow(x,7)/840. + pow(x,6)/144. - pow(x,5)/80. - pow(x,4)/144. + pow(x,3)/16. - 5.*pow(x,2)/48. + 19.*x/240. + 691./5040.;
+            s[6] = pow(x,7)/5040. - pow(x,6)/720. + pow(x,5)/240. - pow(x,4)/144. + pow(x,3)/144. - pow(x,2)/240. + x/720. + 811./5040.;
             break;
         }
         return(s);
@@ -94,8 +109,8 @@ template<int degx,int degy,int degz>
 class splines_at_particles
 {
 public :
-        amrex::GpuArray<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_cell;
-        amrex::GpuArray<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_node;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz)>,GEMPIC_SPACEDIM> spline_cell;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz)+1>,GEMPIC_SPACEDIM> spline_node;
 
         amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
 
@@ -103,7 +118,7 @@ public :
         //splines_at_particles();
 
         template<int dim, int deg>
-        void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE           void init_position(amrex::Real position,
                            amrex::Real plo,
                            amrex::Real dxi)
         {
@@ -131,12 +146,12 @@ public :
                     xint = 1. - xint;
                 }
 
-            spline_cell[dim] = spline_eval<deg-1> (xint);
-            spline_node[dim] = spline_eval<deg> (xint);
+            spline_cell[dim] = spline_eval<deg-1, std::max(std::max(degx, degy), degz)> (xint);
+            spline_node[dim] = spline_eval<deg, std::max(std::max(degx, degy), degz)+1> (xint);
 
         }
 
-        void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE                  void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {
@@ -150,36 +165,51 @@ public :
         }
 
 private :
-    template<int degree>
-    std::vector<amrex::Real> spline_eval (amrex::Real x)  {
-            std::vector<amrex::Real> s;
+    template<int degree,int length>
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE       amrex::GpuArray<amrex::Real, length> spline_eval (amrex::Real x)  {
+            amrex::GpuArray<amrex::Real, length> s;
             switch (degree) {
             case 0:
-                s = {1.};
+                s[0] = 1.;
                 break;
             case 1:
-                s = {x, 1.-x};
+                s[0] = x;
+                s[1] = 1.-x;
                 break;
             case 2:
-                s = {pow(x,2)/2., (1.-x)*x+0.5, pow(x-1,2)/2.};
+                s[0] = pow(x,2)/2.;
+                s[1] = (1.-x)*x+0.5;
+                s[2] = pow(x-1,2)/2.;
                 break;
             case 3:
-                s = { pow(x,3)/6., (((-x+1)*x+1.)*3.*x+1.)/6. , ((3.*x-6.)*x*x+4.)/6., pow((1.-x),3)/6. };
+                s[0] = pow(x,3)/6.;
+                s[1] = (((-x+1)*x+1.)*3.*x+1.)/6. ;
+                s[2] = ((3.*x-6.)*x*x+4.)/6.;
+                s[3] = pow((1.-x),3)/6.;
                 break;
               case 4:
-                s = {pow(x,4)/24., ((((-x+1.)*4.*x+6.)*x+4.)*x+1.)/24., ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.,((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24. , pow(1.-x,4)/24. };
+                s[0] = pow(x,4)/24.;
+                s[1] = ((((-x+1.)*4.*x+6.)*x+4.)*x+1.)/24.;
+                s[2] = ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.;
+                s[3] = ((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24. ;
+                s[4] = pow(1.-x,4)/24.;
                 break;
             case 5:
-                s = {pow(x,5)/120., (((((-x+1.)*x+2.)*x+2.)*x+1.)*5.*x+1.)/120., (((((x-2.)*x-2.)*x+2.)*x+5.)*10.*x+26.)/120., (((-x+3.)*x*x-6.)*x*10.*x+66.)/120., (((((x-4.)*x+4.)*x+4.)*x-10.)*5.*x+26.)/120., (((((-x+5.)*x-10.)*x+10.)*x-5.)*x+1.)/120. };
+                s[0] = pow(x,5)/120.;
+                s[1] = (((((-x+1.)*x+2.)*x+2.)*x+1.)*5.*x+1.)/120.;
+                s[2] = (((((x-2.)*x-2.)*x+2.)*x+5.)*10.*x+26.)/120.;
+                s[3] = (((-x+3.)*x*x-6.)*x*10.*x+66.)/120.;
+                s[4] = (((((x-4.)*x+4.)*x+4.)*x-10.)*5.*x+26.)/120.;
+                s[5] = (((((-x+5.)*x-10.)*x+10.)*x-5.)*x+1.)/120.;
                 break;
             case 6:
-                s = {pow(x,6)/720.,
-                    -pow(x,6)/120. + pow(x,5)/120. + pow(x,4)/48. + pow(x,3)/36. + pow(x,2)/48. + x/120. + 1./720.,
-                    pow(x,6)/48. - pow(x,5)/24. - pow(x,4)/16. + pow(x,3)/36. + 3.*pow(x,2)/16. + 5.*x/24. + 19./240.,
-                    -pow(x,6)/36. + pow(x,5)/12. + pow(x,4)/24. - 2.*pow(x,3)/9. - 5.*pow(x,2)/24. + 1.*x/3. + 151./360.,
-                    pow(x,6)/48. - pow(x,5)/12. + pow(x,4)/24. + 2.*pow(x,3)/9. - 5.*pow(x,2)/24. - x/3. + 151./360.,
-                    -pow(x,6)/120. + pow(x,5)/24. - pow(x,4)/16. - pow(x,3)/36. + 3.*pow(x,2)/16. - 5.*x/24. + 19./240.,
-                    pow(x,6)/720. - pow(x,5)/120. + pow(x,4)/48. - pow(x,3)/36. + pow(x,2)/48. - x/120. + 1./720.};
+                s[0] = pow(x,6)/720.;
+                s[1] = -pow(x,6)/120. + pow(x,5)/120. + pow(x,4)/48. + pow(x,3)/36. + pow(x,2)/48. + x/120. + 1./720.;
+                s[2] = pow(x,6)/48. - pow(x,5)/24. - pow(x,4)/16. + pow(x,3)/36. + 3.*pow(x,2)/16. + 5.*x/24. + 19./240.;
+                s[3] = -pow(x,6)/36. + pow(x,5)/12. + pow(x,4)/24. - 2.*pow(x,3)/9. - 5.*pow(x,2)/24. + 1.*x/3. + 151./360.;
+                s[4] = pow(x,6)/48. - pow(x,5)/12. + pow(x,4)/24. + 2.*pow(x,3)/9. - 5.*pow(x,2)/24. - x/3. + 151./360.;
+                s[5] = -pow(x,6)/120. + pow(x,5)/24. - pow(x,4)/16. - pow(x,3)/36. + 3.*pow(x,2)/16. - 5.*x/24. + 19./240.;
+                s[6] = pow(x,6)/720. - pow(x,5)/120. + pow(x,4)/48. - pow(x,3)/36. + pow(x,2)/48. - x/120. + 1./720.;
                 break;
             }
             return(s);
@@ -189,7 +219,7 @@ private :
 };
 
 template<int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
                                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
 {
     amrex::GpuArray<amrex::Real,vdim> fields;
