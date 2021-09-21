@@ -108,7 +108,6 @@ void main_main ()
 #endif
         }
     }
-
     amrex::AllPrintToFile("test_initialize.tmp") << "" << std::endl;
     amrex::AllPrintToFile("test_initialize.tmp") << 1 << std::endl;
 }

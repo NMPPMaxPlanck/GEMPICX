@@ -1215,7 +1215,7 @@ public:
 
         amrex::LPInfo lp_info;
         lp_info.setMaxCoarseningLevel(max_coarsening_level);
-        amrex::MLNodeLaplacian_FD linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}, lp_info); // linear operator class
+        amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}, lp_info); // linear operator class
 
         linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for lower ends
                            amrex::LinOpBCType::Periodic,

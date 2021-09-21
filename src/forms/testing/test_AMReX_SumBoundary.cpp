@@ -66,7 +66,12 @@ void main_main ()
     // Particles
     amrex::Real charge = -1.0;
     amrex::ParticleContainer<vdim+1, 0, 0, 0> mypc(geom, distriMap, grid);
-    mypc.do_tiling = true;
+#if GEMPIC_GPU
+        mypc.do_tiling = false;
+#else
+        mypc.do_tiling = true;
+#endif
+
 #if (GEMPIC_SPACEDIM >1)
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
 #else
@@ -88,7 +93,6 @@ void main_main ()
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
         }
     }
-
     amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << TestMF[mfi] << std::endl;
