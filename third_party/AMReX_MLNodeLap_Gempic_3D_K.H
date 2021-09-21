@@ -867,26 +867,8 @@ Real mlndlap_adotx_aa (int i, int j, int k, Array4<Real const> const& x,
         Real face_x = dxinv[0]*dxinv[0]*(1.0);
         Real face_y = dxinv[1]*dxinv[1]*(1.0);
         Real face_z = dxinv[2]*dxinv[2]*(1.0);
-        // Edges
-        Real edge_xy = 0.0;
-        Real edge_xz = 0.0;
-        Real edge_yz = 0.0;
-        // Corners
-        Real corner = 0.0;
 
-        return -1.0*point*x(i,j,k)
-            + -1.0*corner*(x(i-1,j-1,k-1)
-                  + x(i+1,j-1,k-1)
-                  + x(i-1,j+1,k-1)
-                  + x(i+1,j+1,k-1)
-                  + x(i-1,j-1,k+1)
-                  + x(i+1,j-1,k+1)
-                  + x(i-1,j+1,k+1)
-                  + x(i+1,j+1,k+1))
-            + -1.0*edge_yz*(x(i  ,j-1,k-1) + x(i  ,j+1,k-1) + x(i  ,j-1,k+1) + x(i  ,j+1,k+1))
-            + -1.0*edge_xz*(x(i-1,j  ,k-1) + x(i+1,j  ,k-1) + x(i-1,j  ,k+1) + x(i+1,j  ,k+1))
-            + -1.0*edge_xy*(x(i-1,j-1,k  ) + x(i+1,j-1,k  ) + x(i-1,j+1,k  ) + x(i+1,j+1,k  ))
-            + -1.0*face_x*(x(i-1,j,k) + x(i+1,j,k))
+        return -1.0*face_x*(x(i-1,j,k) + x(i+1,j,k))
             + -1.0*face_y*(x(i,j-1,k) + x(i,j+1,k))
             + -1.0*face_z*(x(i,j,k-1) + x(i,j,k+1));
     }
@@ -1219,12 +1201,6 @@ void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
     Real face_x = dxinv[0]*dxinv[0]*(1.0);
     Real face_y = dxinv[1]*dxinv[1]*(1.0);
     Real face_z = dxinv[2]*dxinv[2]*(1.0);
-    // Edges
-    Real edge_xy = 0.0;
-    Real edge_xz = 0.0;
-    Real edge_yz = 0.0;
-    // Corners
-    Real corner = 0.0;
 
     amrex::Loop(bx, [=] (int i, int j, int k) noexcept
     {
@@ -1232,19 +1208,7 @@ void mlndlap_gauss_seidel_aa (Box const& bx, Array4<Real> const& sol,
             sol(i,j,k) = Real(0.0);
         } else {
             // -1 is from operator sigma (in our case constant -1)
-                Real Ax = -1.0*point*sol(i,j,k)
-                        + -1.0*corner*(sol(i-1,j-1,k-1)
-                            + sol(i+1,j-1,k-1)
-                            + sol(i-1,j+1,k-1)
-                            + sol(i+1,j+1,k-1)
-                            + sol(i-1,j-1,k+1)
-                            + sol(i+1,j-1,k+1)
-                            + sol(i-1,j+1,k+1)
-                            + sol(i+1,j+1,k+1))
-                        + -1.0*edge_yz*(sol(i  ,j-1,k-1) + sol(i  ,j+1,k-1) + sol(i  ,j-1,k+1) + sol(i  ,j+1,k+1))
-                        + -1.0*edge_xz*(sol(i-1,j  ,k-1) + sol(i+1,j  ,k-1) + sol(i-1,j  ,k+1) + sol(i+1,j  ,k+1))
-                        + -1.0*edge_xy*(sol(i-1,j-1,k  ) + sol(i+1,j-1,k  ) + sol(i-1,j+1,k  ) + sol(i+1,j+1,k  ))
-                        + -1.0*face_x*(sol(i-1,j,k) + sol(i+1,j,k))
+                Real Ax = -1.0*face_x*(sol(i-1,j,k) + sol(i+1,j,k))
                         + -1.0*face_y*(sol(i,j-1,k) + sol(i,j+1,k))
                         + -1.0*face_z*(sol(i,j,k-1) + sol(i,j,k+1));
 
