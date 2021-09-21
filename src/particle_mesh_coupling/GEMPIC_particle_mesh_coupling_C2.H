@@ -20,7 +20,7 @@ public :
     std::vector<amrex::Real> primitive;
     int box;
 
-    void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE   void init_position(amrex::Real position,
             amrex::Real plo,
                    amrex::Real dxi)
     {

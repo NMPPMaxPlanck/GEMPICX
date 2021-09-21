@@ -116,7 +116,10 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
 
                 // loop over particles: add contribution of old particle position to J and push
 
-                for (int pp=0;pp<np;pp++){
+                  //  amrex::ParallelFor(np,
+                  //                                               [=] AMREX_GPU_DEVICE (long pp )
+                  //                                               {
+                for ( int pp=0; pp<np;pp++){
                     // Read out particle position
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
@@ -284,6 +287,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 //exit(0);
                 }
+          //  );
             }
             if (profiling_timers->profiling && profiling_count)
               profiling_timers->counter_deposition += MPI_Wtime();
@@ -338,7 +342,10 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
 
                 // loop over particles: add contribution of old particle position to J and push
 
-                for (int pp=0;pp<np;pp++){
+               // amrex::ParallelFor(np,
+               //     [=] AMREX_GPU_DEVICE (long pp)
+               //                                              {
+                for( int pp=0;pp<np;pp++){
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                       pos[d]= particles[pp].pos(d);
@@ -351,7 +358,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield, infra);
                     std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
-                  }
+                  }//);
             }
             if (profiling_timers->profiling && profiling_count)
              profiling_timers->counter_deposition += MPI_Wtime();
