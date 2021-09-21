@@ -192,9 +192,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
 
     // Output for GEMPIC_SPACEDIM=1 vdim=2
-#if  !(GEMPIC_GPU)
     AllPrintToFile("test_one_part.tmp") << std::endl;
-#endif
     AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=2 vdim=2
