@@ -29,6 +29,8 @@
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 
+#include <iostream>
+
 namespace Gempic {
 namespace Vlasov_Maxwell {
 template<int vdim, int numspec>
@@ -358,7 +360,7 @@ public:
 
         }
 
-
+        std::cout << function_to_project(0, 0, 0, 0) << "\n";
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
