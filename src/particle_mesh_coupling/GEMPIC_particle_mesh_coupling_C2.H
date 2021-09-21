@@ -20,7 +20,7 @@ public :
     amrex::GpuArray<amrex::Real,deg> primitive;
     int box;
 
-void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void init_position(amrex::Real position,
             amrex::Real plo,
                    amrex::Real dxi)
     {
@@ -53,7 +53,7 @@ void init_position(amrex::Real position,
 private :
 
     template<int degree>
-            amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE             amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
         amrex::GpuArray<amrex::Real,degree+1> s;
         switch (degree) {
         case 0:

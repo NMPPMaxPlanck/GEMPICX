@@ -29,7 +29,7 @@ amrex::Real mod_dom(amrex::Real val,
 }
 
 template <typename P, int vdim, int degx, int degy, int degz>
-void gempic_deposit_rho (P const& p, amrex::Real charge,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (P const& p, amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
@@ -1111,7 +1111,7 @@ void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> posi
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                       amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
