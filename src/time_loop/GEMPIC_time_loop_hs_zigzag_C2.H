@@ -358,7 +358,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
 
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*0.5*coeff, chargemass, efield);
-                    std::copy(newPosE.begin(), newPosE.end(), part_ptr+pp*(GEMPIC_SPACEDIM+vdim+2));
+                    std::copy(newPosE.begin(), newPosE.end(), part_ptr+pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM);
                 });
             }
             if (profiling_timers->profiling && profiling_count)
