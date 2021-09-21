@@ -29,8 +29,6 @@
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 
-#include <iostream>
-
 namespace Gempic {
 namespace Vlasov_Maxwell {
 template<int vdim, int numspec>
@@ -43,7 +41,7 @@ using namespace Utils;
 using namespace Vlasov_Maxwell;
 using namespace Particles;
 
-using funcToProjType = amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real);
+using funcToProjType = amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real, int);
 
 namespace Gempic {
 namespace Field_solvers {
@@ -342,7 +340,8 @@ public:
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
-                     amrex::MultiFab *MultiF
+                     amrex::MultiFab *MultiF,
+                     int funcSelect
                      ) {
 
         std::vector<amrex::Real> stencil;
@@ -360,7 +359,7 @@ public:
 
         }
 
-        std::cout << function_to_project(0, 0, 0, 0) << "\n";
+        std::cout <<"Function: " << funcSelect << " ->  " <<  function_to_project(0, 0, 0, 0,funcSelect) << "\n";
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
@@ -405,7 +404,7 @@ public:
                             val+= (integrate[0]?stencil[xd]:1)*
                                   (integrate[1]?stencil[yd]:1)*
                                   (integrate[2]?stencil[zd]:1)*
-                                  (function_to_project(x_eval, y_eval, z_eval,  t));
+                                  (function_to_project(x_eval, y_eval, z_eval,  t, funcSelect));
                         }
                     }
                 }
@@ -433,16 +432,12 @@ public:
      * Initialize E field for time t=0 with a given array of functions.
      */
     template <int degree,
-             funcToProjType function_to_project_0,
-             funcToProjType function_to_project_1,
-             funcToProjType function_to_project_2
+             funcToProjType function_to_project
              >
-    void initE ( computational_domain ifr ){
+    void initE ( computational_domain ifr , int funcSelect[3] ){
 
-        // B_field
-        projection<degree,function_to_project_0>( 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
-        projection<degree,function_to_project_1>( 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
-        projection<degree,function_to_project_2>( 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
+        for(int i=0;i<3;i++)
+          projection<degree,function_to_project>( 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]), funcSelect[i]);
     };
 
     /**
@@ -460,18 +455,15 @@ public:
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree, 
-             funcToProjType function_to_project_0,
-             funcToProjType function_to_project_1,
-             funcToProjType function_to_project_2
+             funcToProjType function_to_project
              >
-    void initB ( computational_domain ifr ){
+    void initB ( computational_domain ifr , int funcSelect[3]){
 
         double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
-        projection<degree,function_to_project_0>( half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
-        projection<degree,function_to_project_1>( half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
-        projection<degree,function_to_project_2>( half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+        for(int i=0;i<3;i++)
+          projection<degree,function_to_project>( half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]), funcSelect[i]);
     }
 
     /**

@@ -29,42 +29,39 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_e0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
-{
-    amrex::Real val = std::cos(x);
-    return val;
-}
+#define ZERO 0
+#define E0 1
+#define E1 2
+#define E2 3
+#define B0 4
+#define B2 5
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_e1(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_setup(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
-    amrex::Real val = -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_e2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
-{
-    amrex::Real val = std::cos(x+y+z-std::sqrt(3.0)*t);
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_b0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
-{
-    amrex::Real val = std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_b2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
-{
-    amrex::Real val = -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
-{
+  switch(funcSelect){
+  case E0 :
+    return std::cos(x) ;
+    break;
+  case E1 :
+    return -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case E2 :
+    return std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case B0 :
+    return std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case B2 :
+    return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case ZERO:
     amrex::Real val = 0.0;
-    return val;
-}
+    return 0.0;
+    break;
+  }
+  return 0.0;
 
+}
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
@@ -105,8 +102,16 @@ void main_main ()
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
     maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
-    mw_yee.template initB<degree, funct_b0, zero , funct_b2>( infra );
-    mw_yee.template initE<degree, funct_e0, funct_e1 ,funct_e2>(infra );
+
+    int funcSelect[3];
+    funcSelect[0] = B0;
+    funcSelect[1] = ZERO;
+    funcSelect[2] = B2;
+    mw_yee.template initB<degree, funct_setup>( infra , funcSelect );
+    funcSelect[0] = E0;
+    funcSelect[1] = E1;
+    funcSelect[2] = E2;
+    mw_yee.template initE<degree, funct_setup>(infra , funcSelect );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 
