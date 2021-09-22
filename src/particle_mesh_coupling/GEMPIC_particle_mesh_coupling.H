@@ -16,6 +16,7 @@
 
 #include <GEMPIC_Config.H>
 #include <GEMPIC_splines.H>
+#include <GEMPIC_particle_mesh_coupling_C2.H>
 
 namespace Gempic {
 namespace Particles {
@@ -1313,6 +1314,8 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0), s_coeff*particle_coeff*p.rdata(cc));
 #else
+                        std::cout << "coeff: " << s_coeff << std::endl;
+                        std::cout << "box: " << cell_index[0] << ", " << cell_index[1] << ", " << cell_index[2] << ", " <<std::endl;
                 amrex::HostDevice::Atomic::Add(jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*p.rdata(cc));
 #endif
 
@@ -1347,6 +1350,128 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
                             amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, xint, degx-(cc%3==0?0:1), cc%3==0?false:true),
                                                                           spl.compute_cell_index(j+jj, yint, degy-(cc%3==1?0:1), cc%3==1?false:true),
                                                                           spl.compute_cell_index(k+kk, zint, degz-(cc%3==2?0:1), cc%3==2?false:true))};
+
+
+#if (GEMPIC_SPACEDIM == 1)
+                fields[cc+vdim] += s_coeff*(bArray[cc])(cell_index[0], 0, 0, 0);
+#else
+
+                fields[cc+vdim] += s_coeff*(bArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
+                        }
+                    }
+                }
+
+            }
+#if (GEMPIC_SPACEDIM > 1)
+        }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+    }
+#endif
+    return(fields);
+}
+
+template <typename P, int vdim, int degx, int degy, int degz>
+amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::Real charge_weight_dxi_coeff,
+                                                                                       amrex::GpuArray<amrex::Real, vdim> vel,
+                                                                                       splines_at_particles<degx, degy, degz> const& spline,
+                                                                                         amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
+                                                                                         amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray,
+                                                                                         amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
+                                                                                         bool field_int = false)
+
+{
+    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> fields = {AMREX_D_DECL(0.,0.,0.)};
+
+    amrex::Real particle_coeff = charge_weight_dxi_coeff;
+
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= degz; ++kk) {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= degy; ++jj) {
+#endif
+            for (int ii = 0; ii <= degx; ++ii) {
+
+                // deposit in J and interpolate in E
+                for (int cc=0;cc<vdim;cc++) {
+                    if(!(
+            #if (GEMPIC_SPACEDIM > 2)
+                                ((kk==degz) & (cc%3==2))|
+            #endif
+            #if (GEMPIC_SPACEDIM > 1)
+                                ((jj==degy) & (cc%3==1))|
+            #endif
+                                ((ii==degx) & (cc%3==0)))) {
+                        double s_coeff = 0;
+                        if (cc%3==0) {
+                            s_coeff = spline.spline_cell[0][ii];
+                        } else {
+                            s_coeff = spline.spline_node[0][ii];
+                        }
+                        if (cc%3==1) {
+                            s_coeff *= spline.spline_cell[1][jj];
+                        } else {
+                            s_coeff *= spline.spline_node[1][jj];
+                        }
+                        if (cc%3==2) {
+                            s_coeff *= spline.spline_cell[2][kk];
+                        } else {
+                            s_coeff *= spline.spline_node[2][kk];
+                        }
+                        std::cout << "coeff: " << s_coeff << std::endl;
+                        std::cout << "box: " << spline.box[0]+ii << ", " << spline.box[1]+jj << ", " << spline.box[2]+kk << ", " <<std::endl;
+                        amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii,
+                                                                      spline.box[1]+jj,
+                                                                      spline.box[2]+kk)};
+
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0), s_coeff*particle_coeff*p.rdata(cc));
+#else
+                amrex::HostDevice::Atomic::Add(jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*vel[cc]);
+#endif
+
+                        if (field_int) {
+#if (GEMPIC_SPACEDIM == 1)
+                fields[cc] += s_coeff*(eArray[cc])(cell_index[0], 0, 0, 0);
+#else
+                fields[cc] += s_coeff*(eArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+#endif
+                        }
+                    }
+                }
+                if (field_int) {
+                    // deposit in B
+                    for (int cc=0;cc<int(vdim/2.5)*2+1;cc++) {
+                        if(!(
+            #if (GEMPIC_SPACEDIM > 2)
+                                    ((kk==degz) & (cc%3!=2))|
+            #endif
+            #if (GEMPIC_SPACEDIM > 1)
+                                    ((jj==degy) & (cc%3!=1))|
+            #endif
+                                    ((ii==degx) & (cc%3!=0)))) {
+
+                            double s_coeff = 0;
+                            if (cc%3==0) {
+                                s_coeff = spline.spline_node[0][ii];
+                            } else {
+                                s_coeff = spline.spline_cell[0][ii];
+                            }
+                            if (cc%3==1) {
+                                s_coeff *= spline.spline_node[1][jj];
+                            } else {
+                                s_coeff *= spline.spline_cell[1][jj];
+                            }
+                            if (cc%3==2) {
+                                s_coeff *= spline.spline_node[2][kk];
+                            } else {
+                                s_coeff *= spline.spline_cell[2][kk];
+                            }
+                            amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii,
+                                                                               spline.box[1]+jj,
+                                                                               spline.box[2]+kk)};
 
 
 #if (GEMPIC_SPACEDIM == 1)
