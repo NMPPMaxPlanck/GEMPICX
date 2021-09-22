@@ -15,7 +15,7 @@ if (USE_CUDA)
   find_package(CUDA QUIET REQUIRED)
 endif()
 
-find_package(MPI REQUIRED CXX)
+#find_package(MPI REQUIRED CXX)
 
 message("AMReX Dir is ${AMReX_ROOT}")
 
@@ -52,16 +52,17 @@ ELSE()
 ENDIF()
 
 IF (USE_CUDA)
-  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
-  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
-  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+  add_definitions(-DGEMPIC_GPU)
 ENDIF()
 
 # Enable ctests
 enable_testing()
 # This defines how the ctests are run
 message ("HOST is $ENV{HOST}" )
-IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*"))
+IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*") OR ($ENV{HOST} MATCHES "daint*") )
   include(cmake/cobra_ctest.cmake)
 ELSE()
   include(cmake/define_ctest.cmake)
@@ -120,7 +121,9 @@ add_subdirectory(third_party)
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations
-add_subdirectory(simulations)
+if (NOT USE_CUDA )
+ add_subdirectory(simulations)
+endif()
 # Add doxygen documentation
 add_subdirectory(doc)
 

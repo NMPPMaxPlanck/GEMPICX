@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
@@ -26,35 +24,14 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(64,64,64)};
-
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    VM[0].push_back(0.0);
-    VD[0].push_back(1.0);
-    VW[0].push_back(1.0);
-    if (vdim > 1) {
-        VM[1].push_back(0.0);
-        VD[1].push_back(1.0);
-        VW[1].push_back(1.0);
-    }
-    if (vdim > 2) {
-        VM[2].push_back(0.0);
-        VD[2].push_back(1.0);
-        VW[2].push_back(1.0);
-    }
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(64,64,64)};
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("initialize_ctest", n_cell, {1000}, 5, 10, 10, 10,
                     is_periodic, {32,32,32}, 0.01, {1.0}, {1.0}, 1);
     VlMa.set_computed_params();
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
 
     computational_domain infra;
     VlMa.initialize_infrastructure(&infra);
@@ -69,9 +46,9 @@ void main_main ()
     //set particles for first cell (and copies in remaining cells)
     int Np_cell = 100; //number of particles per cell
     int species = 0; // all particles are same species for now
-    std::array<double,GEMPIC_SPACEDIM> position;
-    std::array<double,GEMPIC_SPACEDIM> shifted_position;
-    std::array<double,vdim> velocity;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> shifted_position;
+    amrex::GpuArray<double,vdim> velocity;
     Real weight;
 
     // normally distributed random number generator:
@@ -79,7 +56,7 @@ void main_main ()
     std::mt19937 gen(rd());
     std::normal_distribution<> normD(0,1);
 
-    std::array<double,GEMPIC_SPACEDIM> x;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> x;
 
     for (int pp=0;pp<Np_cell;pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
@@ -110,16 +87,16 @@ void main_main ()
 
 #if (GEMPIC_SPACEDIM > 2)
             for(int k=lo[2]; k<=hi[2]; k++){
-                x[2] = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
+                x[2] = infra.plo[2] + (double)k*infra.dx[2];
                 shifted_position[2] = position[2] + x[2];
 #endif
 #if (GEMPIC_SPACEDIM > 1)
                 for(int j=lo[1]; j<=hi[1]; j++){
-                    x[1] = infra.geom.ProbLo()[1] + (double)j*infra.dx[1];
+                    x[1] = infra.plo[1] + (double)j*infra.dx[1];
                     shifted_position[1] = position[1] + x[1];
 #endif
                     for(int l=lo[0]; l<=hi[0]; l++){
-                        x[0] = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
+                        x[0] = infra.plo[0] + (double)l*infra.dx[0];
                         shifted_position[0] = position[0] + x[0];
                         part_gr.add_particle(shifted_position, velocity, weight, particles);
                     }
@@ -131,7 +108,6 @@ void main_main ()
 #endif
         }
     }
-
     amrex::AllPrintToFile("test_initialize.tmp") << "" << std::endl;
     amrex::AllPrintToFile("test_initialize.tmp") << 1 << std::endl;
 }

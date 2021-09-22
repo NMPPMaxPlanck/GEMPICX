@@ -16,12 +16,12 @@ endif()
 
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( test_particle_groups tinyexpr  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
-target_link_libraries( test_AMReX_NormMasks tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
-target_link_libraries( test_initialize tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
-target_link_libraries( test_splines tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
-target_link_libraries( test_deposit_rho tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
-target_link_libraries( test_one_part gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_particle_groups  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_AMReX_NormMasks AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_initialize AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_splines AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_deposit_rho AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_one_part gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
 
 
 ######## Ctest

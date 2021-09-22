@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -16,30 +14,28 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::cos(x)-std::cos(x)*std::cos(y)*std::cos(z) - 1.0/4.0*std::cos(2*x)*std::cos(2*y)*std::cos(2*z);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func_rho(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -3.0*(std::cos(x)*std::cos(y)*std::cos(z)+std::cos(2*x)*std::cos(2*y)*std::cos(2*z));
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
-{  //------------------------------------------------------------------------------
-    // Analytical solutions -- Maxwell
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
-    fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
-    fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
-    fields_E[2] = "cos(x+y+z-sqrt(3.0)*t)";
-    fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
-    fields_B[1] = "0.0";
-    fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
-
+{
     const int degree = 4;
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    std::array<int,GEMPIC_SPACEDIM> mx_grid = {AMREX_D_DECL(32,32,32)};
-
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
 
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
@@ -54,9 +50,6 @@ void main_main ()
     // Solve
     maxwell_yee<vdim> mw_yee(VlMa, infra);
 
-    std::string phi = "-cos(x)*cos(y)*cos(z) - 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
-    std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
-
     amrex::MultiFab kx(convert(infra.grid, *mw_yee.E_Index[0]),infra.distriMap,1,mw_yee.Nghost);
     kx.setVal(1.0, 0);
     kx.FillBoundary(infra.geom.periodicity());
@@ -68,7 +61,7 @@ void main_main ()
     kz.FillBoundary(infra.geom.periodicity());
 
 
-    amrex::MLNodeLaplacian_FD linop({infra.geom}, {infra.grid}, {infra.distriMap}); // linear operator class
+    amrex::MLNodeLaplacian linop({infra.geom}, {infra.grid}, {infra.distriMap}); // linear operator class
     amrex::MultiFab sigma;
     sigma.define(infra.grid, infra.distriMap, 1, 0);
     sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
@@ -86,9 +79,7 @@ void main_main ()
     mlmg.setVerbose(0);
     mlmg.setBottomVerbose(0);
 
-    std::array<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
-    const int stencil_length = 3;
+    mw_yee.template init_rho_phi<degree>(func_rho, func_phi, infra);
 
     // ----------------------------------------------------------------------------------
 

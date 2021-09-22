@@ -57,7 +57,7 @@ void main_main (bool ctest)
     VlMa.read_pp_params();
     VlMa.set_computed_params();
 
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_B[0] = VlMa.Bx;
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[1] = VlMa.By;
@@ -75,7 +75,7 @@ void main_main (bool ctest)
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    amrex::GpuArray<std::string, 2> fields = {VlMa.rho, VlMa.phi};
     mw_yee.template init_rho_phi<degvm>(fields, VlMa.k, infra);
 
     // particles

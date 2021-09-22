@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_Print.H>
 #include <AMReX_PlotFileUtil.H>
@@ -29,6 +27,18 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+{
+    amrex::Real val = 1.0 ;//+ 0.5 * std::cos(0.5 * x);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
 void main_main ()
 {
@@ -39,26 +49,7 @@ void main_main ()
     VlMa.set_params("test_vlasov_maxwell_hs", {12,8,8});
     VlMa.propagator = 1;
     VlMa.set_prop_related();
-    if (int(vdim/2.5)*2+1 < 3) {
-        VlMa.Bx = VlMa.Bz;
-        VlMa.Bz = "0.0";
-    }
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
-    fields_B[0] = VlMa.Bx;
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[1] = VlMa.By;
-    }
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[2] = VlMa.Bz;
-    }
-    if (GEMPIC_SPACEDIM==1 && vdim==1) {
-        // For 1D1V change parameters to make a Landau damping
-        VlMa.sim_name = "Landau";
-        VlMa.n_part_per_cell = {10000};
-        VlMa.k = {0.5,0.5,0.5};
-        VlMa.WF = "1.0 + 0.5 * cos(kvarx * x)";
-        VlMa.Bz = "0.0";
-    }
+
     VlMa.n_steps = 5;
     VlMa.set_computed_params();
 
@@ -90,8 +81,7 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
-    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
+    mw_yee.template init_rho_phi<degmw>(zero, zero, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -101,8 +91,9 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0, wave_function);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered,
+                                                                   zero, zero, zero);
 
 
     //------------------------------------------------------------------------------

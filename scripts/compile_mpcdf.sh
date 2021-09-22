@@ -7,6 +7,8 @@ AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
 echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
 
+cp $SOURCE_DIRECTORY/third_party/AMReX_MLNodeLap_Gempic_3D_K.H $AMREX_DIRECTORY/Src/LinearSolvers/MLMG/AMReX_MLNodeLap_3D_K.H
+
 source /etc/profile.d/modules.sh
 module purge
 if [ x"$CLUSTER" == x"COBRA"  ]; then

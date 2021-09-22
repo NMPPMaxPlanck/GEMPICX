@@ -10,8 +10,6 @@
                             -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
 ------------------------------------------------------------------------------*/
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -29,47 +27,46 @@ using namespace Gempic;
 using namespace Field_solvers;
 using namespace Diagnostics_Output;
 
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real E0_sin(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t)
+{
+    amrex::Real omega = std::sqrt(1836.15267596*0.005);
+    amrex::Real val = 1.0*std::sin(z-omega*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real B1_sin(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t)
+{
+    amrex::Real omega = std::sqrt(1836.15267596*0.005);
+    amrex::Real val = 1.0/omega*std::sin(z-omega*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real valfvensq(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = (1836.15267596*0.005);
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
     // Analytical solutions - you can change them here
 
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
 
-    amrex::Real mi = 1836.15267596;
-    amrex::Real me = 1.0;
-    amrex::Real betae = 0.005;
-    amrex::Real kz = 1.0;
-    amrex::Real amplitudeE = 1.0;
-    amrex::Real omega = kz*sqrt(mi/me*betae);
-
-  /*      fields_E[0] = "2*cos(x+y+z-sqrt(3.0)*t)"; //Ex
-        fields_E[1] = "-4*cos(x+y+z-sqrt(3.0)*t)"; //Ey
-        fields_E[2] = "2*cos(x+y+z-sqrt(3.0)*t)"; //Ez
-
-        fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)"; //Bx
-        fields_B[1] = "0.0"; //By
-        fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)"; //Bz
- */
- //    std::string valfvensq = "1.0";
-
-    
-    std::string valfvensq = std::to_string(mi/me*betae);
-
-    fields_E[0] = std::to_string(amplitudeE) + "*sin(" + std::to_string(kz) + "*z - " + std::to_string(omega) + "*t)"; // A*sin(kz*z-omega*t)
-    fields_E[1] = "0.0";
-    fields_E[2] = "0.0";
-
-    fields_B[0] = "0.0";
-    fields_B[1] = "1.0/sqrt(" + std::to_string(mi/me*betae) + ")*" + std::to_string(amplitudeE) + "*sin(" + std::to_string(kz) + "*z - " + std::to_string(omega) + "*t)"; // 1/va*A*sin(kz*z-omega*t)
-    fields_B[2] = "0.0";
 
 
     //------------------------------------------------------------------------------
     // Parameters that could be relevant for you:
 
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(16,16,16)}; // spatial discretization: number of cells in each direction, currently: 128x128x128
+    amrex::IntVect n_cell = {AMREX_D_DECL(16,16,16)}; // spatial discretization: number of cells in each direction, currently: 128x128x128
     int numstep = 2; // number of timesteps
     amrex::Real dt = 0.01; // size of timesteps
 
@@ -77,9 +74,9 @@ void main_main ()
     // Some setting up of data structures -- you can ignore this
 
     const int degree = 2;
-    array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
+    amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);
@@ -93,10 +90,11 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialization of E and B: this is done via a projection-operator
 
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    //mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    mw_yee.template initE<degree> (E0_sin, zero, zero, infra);
+    mw_yee.template initB<degree> (zero, B1_sin, zero, infra);
     for (int comp=0; comp<3; comp++) {
         mw_yee.template projection<2>(valfvensq,
-                                      VlMa.k,
                                       0.0,
                                       infra,
                                       {false, false, false},
@@ -110,7 +108,7 @@ void main_main ()
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, true, infra);
     AllPrintToFile("test_ampere_faraday.tmp") << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
@@ -139,14 +137,13 @@ void main_main ()
         //------------------------------------------------------------------------------
         // This generates error output once more: comparing current E and B to the analytical solution -- you can ignore the code
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+        E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, true, infra);
         AllPrintToFile("test_ampere_faraday.tmp") << "step " << n << endl;
         AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         amrex::AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
 
         //Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", n);
     }
-
 }
 
 int main(int argc, char* argv[])

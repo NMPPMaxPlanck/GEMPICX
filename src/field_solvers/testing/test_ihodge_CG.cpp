@@ -13,8 +13,6 @@
                           -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
 ------------------------------------------------------------------------------*/
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -31,12 +29,44 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
+#define ZERO 0
+#define E0 1
+#define E1 2
+#define E2 3
+#define B0 4
+#define B2 5
+
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+{
+  switch(funcSelect){
+  case E0 :
+    return std::cos(x) ;
+    break;
+  case E1 :
+    return -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case E2 :
+    return std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case B0 :
+    return std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case B2 :
+    return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case ZERO:
+    return 0.0;
+    break;
+  }
+  return 0.0;
+
+}
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+   /* amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
     fields_E[0] = "cos(x)";
     fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
@@ -44,32 +74,43 @@ void main_main ()
     fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
     fields_B[1] = "0.0";
     fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+    */
 
     const int degree = 4;
 
+    double twopi = 4 * asin(1.0); // 2.0*3.14159265359;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    std::array<int,GEMPIC_SPACEDIM> mx_grid = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+   // std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    vlasov_maxwell<vdim, numspec> VlMa;
-    VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
-                    mx_grid, 0.01, {1.0}, {1.0}, 0.5);
-    VlMa.set_computed_params();
+    amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
+    amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/0.5,twopi/0.5,twopi/0.5)};
+    amrex::RealBox real_box;
+    real_box.setLo(boxLo);
+    real_box.setHi(boxHi);
 
-    CompDom::computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+
+    CompDom::computational_domain infra(n_cell, mx_grid, is_periodic, real_box);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
+    int Nghost = *(std::max_element(degs.begin(), degs.end()));
+    maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
+
+    amrex::GpuArray<int, vdim> funcSelect;
+    funcSelect[0] = B0;
+    funcSelect[1] = ZERO;
+    funcSelect[2] = B2;
+    mw_yee.template initB<degree>( infra , funcSelect );
+    funcSelect[0] = E0;
+    funcSelect[1] = E1;
+    funcSelect[2] = E2;
+    mw_yee.template initE<degree>( infra , funcSelect );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 

@@ -1,5 +1,10 @@
 add_executable ( vlasov_maxwell vlasov_maxwell.cpp )
 
+
+if (USE_CUDA)
+  setup_target_for_cuda_compilation( vlasov_maxwell )
+endif()
+
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")

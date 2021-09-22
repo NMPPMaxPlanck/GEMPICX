@@ -66,9 +66,9 @@ void time_loop_particles (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> jA;
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
@@ -78,18 +78,18 @@ void time_loop_particles (computational_domain infra,
 
                 for (int pp=0;pp<np;pp++){
 
-                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                     amrex::Real d = 1.0;
                     amrex::Real Omega = 1.0;
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
                     newPos[0] = 0.0;
                     newPos[1] = 0.0;
                     newPos[2] = pow(-1.0,spec)*d*sin(Omega*mw_yee->dt);
                     newPos[0] = 0.0;
                     newPos[0] = 0.0;
                     newPos[0] = pow(-1.0,spec)*d*Omega*cos(Omega*mw_yee->dt);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -103,16 +103,16 @@ void time_loop_particles (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> jA;
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
                 for (int pp=0;pp<np;pp++){
-                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
                                                                                                                                                           infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
                 }
             }

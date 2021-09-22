@@ -2,6 +2,7 @@
 #define COMPUTATIONAL_DOMAIN_H_
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -34,9 +35,9 @@ public:
     amrex::Geometry geom;
     amrex::Box domain;
     amrex::DistributionMapping distriMap;
-    const amrex::Real* dx;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
-    std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
     amrex::Real tolerance_particle; //
 
@@ -45,6 +46,61 @@ public:
      * Default Constructor.
      */
     computational_domain (){};
+
+    computational_domain(amrex::IntVect n_cell_in,
+                         amrex::IntVect max_grid_size_in,
+                         amrex::IntVect is_periodic_in,
+                         amrex::RealBox real_box_in,
+                         amrex::Real tolerance_particle_in = 1.e-10){
+        initialize(n_cell_in, max_grid_size_in, is_periodic_in, real_box_in, tolerance_particle_in);
+    };
+
+private:
+
+    void initialize(amrex::IntVect n_cell_in,
+                    amrex::IntVect max_grid_size_in,
+                    amrex::IntVect is_periodic_in,
+                    amrex::RealBox real_box_in,
+                    amrex::Real tolerance_particle_in ){
+
+        // Initialize infrastructure:
+
+        n_cell = n_cell_in;
+        max_grid_size = max_grid_size_in;
+
+        for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            is_periodic[cc] = is_periodic_in[cc];
+        }
+        real_box = real_box_in;
+
+        for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            Length[cc] = (real_box.hi(cc)-real_box.lo(cc));
+        }
+
+        amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
+        amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[0]-1, n_cell[1]-1, n_cell[2]-1));
+
+        domain.setSmall(dom_lo);
+        domain.setBig(dom_hi);
+        grid.define(domain);
+        grid.maxSize(max_grid_size);
+        geom.define(domain,&real_box,amrex::CoordSys::cartesian,is_periodic);
+        //ifr->dx = *(ifr->geom.CellSize());
+
+        distriMap.define(grid);
+
+        dxi[GEMPIC_SPACEDIM] = 1.;
+        for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
+            dx[cc] = geom.CellSize()[cc];
+            plo[cc] = geom.ProbLo()[cc];
+            dxi[cc] = 1.0/dx[cc];
+            dxi[GEMPIC_SPACEDIM] *= dxi[cc];
+        }
+
+        tolerance_particle = tolerance_particle_in;
+
+    }
+
 
 };
 }

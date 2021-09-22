@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+#include <AMReX_Array.H>
 #include <AMReX_FArrayBox.H>
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
@@ -93,10 +94,10 @@ template<int degx,int degy,int degz>
 class splines_at_particles
 {
 public :
-        std::array<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_cell;
-        std::array<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_node;
+        amrex::GpuArray<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_cell;
+        amrex::GpuArray<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_node;
 
-        std::array<int, GEMPIC_SPACEDIM> box;
+        amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
 
         // Default constructor
         //splines_at_particles();
@@ -135,9 +136,9 @@ public :
 
         }
 
-        void init_particles(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                            std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
+        void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {
             init_position<0,degx>(position[0],plo[0],dxi[0]);
 #if (GEMPIC_SPACEDIM>1)
@@ -188,10 +189,10 @@ private :
 };
 
 template<int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
-                                              std::array<amrex::Array4<amrex::Real>,vdim> eArray)
+amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
+                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
 {
-    std::array<amrex::Real,vdim> fields;
+    amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
         fields[comp] = 0.;
     }
@@ -205,7 +206,7 @@ std::array<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,deg
 #endif
           {
             for (int ii = 0; ii <= degx; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
                     double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
@@ -252,10 +253,10 @@ std::array<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,deg
 
 #if GEMPIC_SPACEDIM == 3
 template<int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,degz> &spline,
-                                              std::array<amrex::Array4<amrex::Real>,vdim> eArray)
+amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,degz> &spline,
+                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
 {
-    std::array<amrex::Real,vdim> fields;
+    amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
         fields[comp] = 0.;
     }
@@ -263,7 +264,7 @@ std::array<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,deg
     for (int kk = 0; kk <= degz; ++kk) {
         for (int jj = 0; jj <= degy; ++jj) {
             for (int ii = 0; ii <= degx; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
                     double s_coeff = spline.spline_node[0][ii]
                             *spline.spline_cell[1][jj]
@@ -308,7 +309,7 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
 #endif
           {
             for (int ii = 0; ii <= degx; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 double s_coeff = spline.spline_node[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
                         * spline.spline_node[1][jj]
@@ -318,9 +319,9 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
         #endif
                         ;
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::Gpu::Atomic::Add(&rho(cell_index[0], 0, 0, 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff*weight);
 #else
-                amrex::Gpu::Atomic::Add(&rho(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight);
+        amrex::HostDevice::Atomic::Add(rho.ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight);
 #endif
             }
         }
@@ -334,9 +335,9 @@ void accumulate_j_update_v_C2(S const& spline,
                               spline1d_at_particles<degp> const& spline_old,
                               amrex::Real weight,
                               const amrex::Real* dx,
-                              std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
-                              std::array<amrex::Array4<amrex::Real>,vdim> jArray,
-                              std::array<amrex::Real, 2> &fields   )
+                              amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
+                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
+                              amrex::GpuArray<amrex::Real, 2> &fields   )
 {
     int pdim1 = (pdim+1)%3;
     int pdim2 = (pdim+2)%3;
@@ -378,7 +379,7 @@ void accumulate_j_update_v_C2(S const& spline,
           {
             for (int ii = 0; ii <= local_size; ++ii)
               {
-                std::array<int,GEMPIC_SPACEDIM> cell_index;
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index;
                 if ( pdim == 0 )
                   cell_index = {AMREX_D_DECL(box_start+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 else if (pdim == 1 )
@@ -389,9 +390,9 @@ void accumulate_j_update_v_C2(S const& spline,
                         *spline.spline_node[pdim1][jj]
                         *spline.spline_node[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::Gpu::Atomic::Add(&(jArray[pdim])(cell_index[0], 0, 0 , 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0 , 0), s_coeff*weight);
 #else
-                amrex::Gpu::Atomic::Add(&(jArray[pdim])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight);
 #endif
 
                     if ( jj < degp1 )

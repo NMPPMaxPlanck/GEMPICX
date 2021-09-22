@@ -47,7 +47,13 @@ void main_main ()
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_vlasov_maxwell_hs_all", {12,8,8});
+    VlMa.set_params("test_vlasov_maxwell_hs_all",
+
+    {12,8,8}); // Number of cells:
+    VlMa.n_part_per_cell = {2000};
+    VlMa.n_steps = 10;
+
+
     VlMa.propagator = 3;
     VlMa.set_prop_related();
 
@@ -91,7 +97,9 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
+    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true,
+            false, // bool to activate profiling
+            true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
 
 }
 
