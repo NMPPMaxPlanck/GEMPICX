@@ -324,7 +324,7 @@ amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,deg
 #endif
 
 template <int degx, int degy, int degz>
-void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
                                 amrex::Real weight,
                             amrex::Array4<amrex::Real> const& rho)
 {
