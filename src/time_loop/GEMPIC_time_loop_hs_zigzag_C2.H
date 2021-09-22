@@ -108,10 +108,10 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                 // loop over particles: add contribution of old particle position to J and push
 
                 amrex::Real dt = (*mw_yee).dt;
-                  //  amrex::ParallelFor(np,
-                  //                                               [=] AMREX_GPU_DEVICE (long pp )
-                  //                                               {
-                for ( int pp=0; pp<np;pp++){
+                   amrex::ParallelFor(np,
+                                                                [=] AMREX_GPU_DEVICE (long pp )
+                                                                 {
+                //for ( int pp=0; pp<np;pp++){
 
 
                     splines_at_particles<degx,degy,degz> spline;
@@ -300,7 +300,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     //std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 //exit(0);
                 }
-          //  );
+            );
             }
             if (profiling_timers->profiling && profiling_count)
               profiling_timers->counter_deposition += MPI_Wtime();
