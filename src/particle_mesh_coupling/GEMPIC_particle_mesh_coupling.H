@@ -1671,7 +1671,7 @@ amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
 }
 
 template <typename P, int vdim>
-amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
                                                                amrex::Real dt,
                                                                CompDom::computational_domain infra){
 
