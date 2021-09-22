@@ -29,32 +29,32 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
-#define ZERO 0
-#define E0 1
-#define E1 2
-#define E2 3
-#define B0 4
-#define B2 5
+#define IHODGE_CG_ZERO 0
+#define IHODGE_CG_E0 1
+#define IHODGE_CG_E1 2
+#define IHODGE_CG_E2 3
+#define IHODGE_CG_B0 4
+#define IHODGE_CG_B2 5
 
 AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
   switch(funcSelect){
-  case E0 :
+  case IHODGE_CG_E0 :
     return std::cos(x) ;
     break;
-  case E1 :
+  case IHODGE_CG_E1 :
     return -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
     break;
-  case E2 :
+  case IHODGE_CG_E2 :
     return std::cos(x+y+z-std::sqrt(3.0)*t);
     break;
-  case B0 :
+  case IHODGE_CG_B0 :
     return std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
     break;
-  case B2 :
+  case IHODGE_CG_B2 :
     return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
     break;
-  case ZERO:
+  case IHODGE_CG_ZERO:
     return 0.0;
     break;
   }
@@ -102,15 +102,17 @@ void main_main ()
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
     maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
 
-    amrex::GpuArray<int, vdim> funcSelect;
-    funcSelect[0] = B0;
-    funcSelect[1] = ZERO;
-    funcSelect[2] = B2;
-    mw_yee.template initB<degree>( infra , funcSelect );
-    funcSelect[0] = E0;
-    funcSelect[1] = E1;
-    funcSelect[2] = E2;
-    mw_yee.template initE<degree>( infra , funcSelect );
+    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
+    funcSelectB[0] = IHODGE_CG_B0;
+    funcSelectB[1] = IHODGE_CG_ZERO;
+    funcSelectB[2] = IHODGE_CG_B2;
+    mw_yee.template initB<degree>( infra , funcSelectB );
+
+    amrex::GpuArray<int, vdim> funcSelectE;
+    funcSelectE[0] = IHODGE_CG_E0;
+    funcSelectE[1] = IHODGE_CG_E1;
+    funcSelectE[2] = IHODGE_CG_E2;
+    mw_yee.template initE<degree>( infra , funcSelectE );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 

@@ -790,9 +790,9 @@ public:
     void init_rho_phi (computational_domain ifr, amrex::GpuArray<int,2> funcSelect){
 
         // rho
-        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), funcSelect[0]);
+        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()) , &(rho), funcSelect[0]);
         // phi
-        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), funcSelect[1]);
+        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()) , &(phi), funcSelect[1]);
     }
 
     template <int stencil_length>
