@@ -380,6 +380,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_C2(S const& spl
     if (spline_new.box<spline_old.box)
       box_start = spline_new.box;
 
+    for (unsigned int j=0;j<local_size+degp;j++)
+        (*primitive)[j] = 0.0;
+
     if ( spline_old.box < spline_new.box ) {
             for (unsigned int j=0;j<degp;j++)
               (*primitive)[j] = spline_old.primitive[j]*dx[pdim];
