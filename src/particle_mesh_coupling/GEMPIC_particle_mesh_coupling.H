@@ -1314,8 +1314,7 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0), s_coeff*particle_coeff*p.rdata(cc));
 #else
-                        std::cout << "coeff: " << s_coeff << std::endl;
-                        std::cout << "box: " << cell_index[0] << ", " << cell_index[1] << ", " << cell_index[2] << ", " <<std::endl;
+                
                 amrex::HostDevice::Atomic::Add(jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*p.rdata(cc));
 #endif
 
@@ -1420,8 +1419,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim
                         } else {
                             s_coeff *= spline.spline_node[2][kk];
                         }
-                        std::cout << "coeff: " << s_coeff << std::endl;
-                        std::cout << "box: " << spline.box[0]+ii << ", " << spline.box[1]+jj << ", " << spline.box[2]+kk << ", " <<std::endl;
+
                         amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii,
                                                                       spline.box[1]+jj,
                                                                       spline.box[2]+kk)};
