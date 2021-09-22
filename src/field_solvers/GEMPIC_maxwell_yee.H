@@ -434,8 +434,8 @@ public:
     template <int degree>
     void initE ( computational_domain ifr , amrex::GpuArray<int,vdim> funcSelect ){
 
-        for(int i=0;i<3;i++)
-          projection<degree>( 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]), funcSelect[i]);
+        for(int i=0;i<vdim;i++)
+          projection<degree>( 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]), funcSelect[i]);
     };
 
     /**
@@ -453,12 +453,12 @@ public:
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree>
-    void initB ( computational_domain ifr , amrex::GpuArray<int,vdim> funcSelect){
+    void initB ( computational_domain ifr , amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelect){
         double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
-        for(int i=0;i<vdim;i++)
-          projection<degree>( half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]), funcSelect[i] );
+        for(int i=0;i<int(vdim/2.5)*2+1;i++)
+          projection<degree>( half_dt, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_Array[i]), funcSelect[i] );
     }
 
     /**
@@ -787,14 +787,12 @@ public:
     }
 
     template <int degree>
-    void init_rho_phi (amrex::Real (*function_to_project_rho)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::Real (*function_to_project_phi)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       computational_domain ifr){
+    void init_rho_phi (computational_domain ifr, amrex::GpuArray<int,2> funcSelect){
 
         // rho
-        projection<degree>(function_to_project_rho, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), funcSelect[0]);
         // phi
-        projection<degree>(function_to_project_phi, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), funcSelect[1]);
     }
 
     template <int stencil_length>
@@ -1494,24 +1492,15 @@ public:
      * Compute norm of errors of E and B field from function with exact solution (without tinyexpr)
      */
     template<int degree>
-    amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     amrex::Real (*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     amrex::Real (*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                                                                     bool bool_B,
-                                                                     computational_domain ifr){
+    amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(bool bool_B,
+                                                                     computational_domain ifr,
+                                                                     amrex::GpuArray<int,vdim> funcSelectE,
+                                                                     amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelectB){
         amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
-        exactSolution<degree>(function_to_project_E0,
-                              function_to_project_E1,
-                              function_to_project_E2,
-                              function_to_project_B0,
-                              function_to_project_B1,
-                              function_to_project_B2,
-                              bool_B,
-                              ifr);
+        exactSolution<degree>(bool_B,ifr,
+                              funcSelectE,
+                              funcSelectB);
 
         for (int i=0; i<vdim; i++){
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
@@ -1551,26 +1540,18 @@ private:
     }
 
     template<int degree>
-    void exactSolution(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::Real (*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::Real (*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                       bool bool_B,
-                       computational_domain ifr){
+    void exactSolution( bool bool_B,
+                        computational_domain ifr, amrex::GpuArray<int,vdim> funcSelectE, amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelectB){
         amrex::Real btime = time + dt/2.0;
 
         // E-field
-        projection<degree>(function_to_project_E0, time, ifr, {false, true, true}, *E_Index[0], &(*E_sol_Array[0]));
-        projection<degree>(function_to_project_E1, time, ifr, {true, false, true}, *E_Index[1], &(*E_sol_Array[1]));
-        projection<degree>(function_to_project_E2, time, ifr, {true, true, false}, *E_Index[2], &(*E_sol_Array[2]));
+        for (int i=0; i<vdim; i++)
+          projection<degree>(time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_sol_Array[i]), funcSelectE[i]);
 
         if (bool_B){
             // B-field
-            projection<degree>(function_to_project_B0, btime, ifr, {false, true, true}, *B_Index[0], &(*B_sol_Array[0]));
-            projection<degree>(function_to_project_B1, btime, ifr, {true, false, true}, *B_Index[1], &(*B_sol_Array[1]));
-            projection<degree>(function_to_project_B2, btime, ifr, {true, true, false}, *B_Index[2], &(*B_sol_Array[2]));
+            for (int i=0; i<int(vdim/2.5)*2+1; i++)
+              projection<degree>(btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_sol_Array[i]),funcSelectB[i]);
         }
     }
 
