@@ -41,7 +41,8 @@ using namespace Utils;
 using namespace Vlasov_Maxwell;
 using namespace Particles;
 
-using funcToProjType = amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real, int);
+// To be defined in the object file or executable by the user of projection-function
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real, amrex::Real, amrex::Real, amrex::Real, int);
 
 namespace Gempic {
 namespace Field_solvers {
@@ -334,8 +335,7 @@ public:
     }
 
 
-    template<int degree,
-             funcToProjType function_to_project>
+    template<int degree>
     void projection (amrex::Real t,
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
@@ -431,13 +431,11 @@ public:
     /**
      * Initialize E field for time t=0 with a given array of functions.
      */
-    template <int degree,
-             funcToProjType function_to_project
-             >
-    void initE ( computational_domain ifr , int funcSelect[3] ){
+    template <int degree>
+    void initE ( computational_domain ifr , amrex::GpuArray<int,vdim> funcSelect ){
 
         for(int i=0;i<3;i++)
-          projection<degree,function_to_project>( 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]), funcSelect[i]);
+          projection<degree>( 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]), funcSelect[i]);
     };
 
     /**
@@ -454,16 +452,13 @@ public:
     /**
      * Initialize B field for time t=0 with a given array of functions.
      */
-    template <int degree, 
-             funcToProjType function_to_project
-             >
-    void initB ( computational_domain ifr , int funcSelect[3]){
-
+    template <int degree>
+    void initB ( computational_domain ifr , amrex::GpuArray<int,vdim> funcSelect){
         double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
-        for(int i=0;i<3;i++)
-          projection<degree,function_to_project>( half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]), funcSelect[i]);
+        for(int i=0;i<vdim;i++)
+          projection<degree>( half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]), funcSelect[i] );
     }
 
     /**

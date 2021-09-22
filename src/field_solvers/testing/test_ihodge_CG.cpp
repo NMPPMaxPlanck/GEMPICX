@@ -36,7 +36,7 @@ using namespace Field_solvers;
 #define B0 4
 #define B2 5
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_setup(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
   switch(funcSelect){
   case E0 :
@@ -55,7 +55,6 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_setup(amrex::Real x, amr
     return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
     break;
   case ZERO:
-    amrex::Real val = 0.0;
     return 0.0;
     break;
   }
@@ -103,15 +102,15 @@ void main_main ()
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
     maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
 
-    int funcSelect[3];
+    amrex::GpuArray<int, vdim> funcSelect;
     funcSelect[0] = B0;
     funcSelect[1] = ZERO;
     funcSelect[2] = B2;
-    mw_yee.template initB<degree, funct_setup>( infra , funcSelect );
+    mw_yee.template initB<degree>( infra , funcSelect );
     funcSelect[0] = E0;
     funcSelect[1] = E1;
     funcSelect[2] = E2;
-    mw_yee.template initE<degree, funct_setup>( infra , funcSelect );
+    mw_yee.template initE<degree>( infra , funcSelect );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 
