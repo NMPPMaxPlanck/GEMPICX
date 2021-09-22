@@ -27,6 +27,7 @@ module swap cudatoolkit cudatoolkit/11.2.0_3.39-2.1__gf93aa1c
 module load daint-gpu
 module load CMake/3.14.5
 module use /apps/daint/UES/eurohack/modules/all
+module load numdiff/5.9.0
 module load nsys/2021-3
 module list
 
