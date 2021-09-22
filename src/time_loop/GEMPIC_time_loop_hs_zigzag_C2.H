@@ -148,14 +148,16 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     spline_old_x.init_position( pos[0], infra.plo[0], infra.dxi[0] );
                     spline.template init_position<0,degx>( x1_new, infra.plo[0], infra.dxi[0] );
 
-                    accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degx, degy, degz, 0>( spline,
+                    amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz))+3> primitive;
+                    accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degx, degy, degz, 0, std::max(degx, std::max(degy, degz))+3>( spline,
                                                                                                                spline_new_x,
                                                                                                                spline_old_x,
                                                                                                                weight,
                                                                                                                infra.geom.CellSize(),
                                                                                                                bA,
                                                                                                                jA,
-                                                                                                               bfields);
+                                                                                                               bfields,
+                                                                                                               &primitive);
 
 
                     // Push v2 and v3
@@ -175,14 +177,15 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                       spline_old_y.init_position( pos[1], infra.plo[1], infra.dxi[1] );
                       spline.template init_position<1,degy>( x2_new, infra.plo[1], infra.dxi[1] );
 
-                      accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degy, degz, degx, 1>( spline,
+                      accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degy, degz, degx, 1, std::max(degx, std::max(degy, degz))+3>( spline,
                                                         spline_new_y,
                                                         spline_old_y,
                                                         weight,
                                                         infra.geom.CellSize(),
                                                         bA,
                                                         jA,
-                                                        bfields);
+                                                        bfields,
+                                                        &primitive);
 
                       // Push v2 and v3
                       vel[0] = vel[0] + chargemass*bfields[1];
@@ -206,14 +209,15 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     spline_old_z.init_position( pos[2], infra.plo[2], infra.dxi[2] );
                     spline.template init_position<2,degz>( x3_new, infra.plo[2], infra.dxi[2] );
 
-                    accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degz, degx, degy, 2>( spline,
+                    accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degz, degx, degy, 2, std::max(degx, std::max(degy, degz))+3>( spline,
                                                       spline_new_z,
                                                       spline_old_z,
                                                       weight,
                                                       infra.geom.CellSize(),
                                                       bA,
                                                       jA,
-                                                      bfields);
+                                                      bfields,
+                                                      &primitive);
                     // Push v2 and v3
                     vel[0] = vel[0] - chargemass*bfields[0];
                     vel[1] = vel[1] + chargemass*bfields[1];
@@ -240,14 +244,15 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                       spline_old_y.init_position( pos[1], infra.plo[1], infra.dxi[1] );
                       spline.template init_position<1,degy>( x2_new, infra.plo[1], infra.dxi[1] );
 
-                      accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degy, degz, degx, 1>( spline,
+                      accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degy, degz, degx, 1, std::max(degx, std::max(degy, degz))+3>( spline,
                                                         spline_new_y,
                                                         spline_old_y,
                                                         weight,
                                                         infra.geom.CellSize(),
                                                         bA,
                                                         jA,
-                                                        bfields);
+                                                        bfields,
+                                                        &primitive);
 
                       // Push v2 and v3
                       vel[0] = vel[0] + chargemass*bfields[1];
@@ -269,14 +274,15 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                                         spline_old_x.init_position( pos[0], infra.plo[0], infra.dxi[0] );
                                         spline.template init_position<0,degx>( x1_new, infra.plo[0], infra.dxi[0] );
 
-                                        accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degx, degy, degz, 0>( spline,
+                                        accumulate_j_update_v_C2<splines_at_particles<degx,degy,degz>, vdim, degx, degy, degz, 0, std::max(degx, std::max(degy, degz))+3>( spline,
                                                                                                                                    spline_new_x,
                                                                                                                                    spline_old_x,
                                                                                                                                    weight,
                                                                                                                                    infra.geom.CellSize(),
                                                                                                                                    bA,
                                                                                                                                    jA,
-                                                                                                                                   bfields);
+                                                                                                                                   bfields,
+                                                                                                                                   &primitive);
 
 
                                         // Push v2 and v3
