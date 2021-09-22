@@ -1373,7 +1373,7 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
 }
 
 template <typename P, int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::Real charge_weight_dxi_coeff,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::Real charge_weight_dxi_coeff,
                                                                                        amrex::GpuArray<amrex::Real, vdim> vel,
                                                                                        splines_at_particles<degx, degy, degz> const& spline,
                                                                                          amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
