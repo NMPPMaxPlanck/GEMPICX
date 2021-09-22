@@ -1498,10 +1498,22 @@ public:
                                                                      amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelectB){
         amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
+        for (int i=0; i<vdim; i++){
+        std::cout << i << "\n";
+        std::cout << "Before Calc exact sol\n";
+        std::cout << "Norm Esol: " <<  gempic_norm(&(*E_sol_Array[i]), ifr, 2) << "\n"; 
+        std::cout << "Norm E: " <<  gempic_norm(&(*E_Array[i]), ifr, 2) << "\n"; 
+        std::cout << "Norm Bsol: " <<  gempic_norm(&(*B_sol_Array[i]), ifr, 2) << "\n";
+        std::cout << "Norm B: " <<  gempic_norm(&(*B_Array[i]), ifr, 2) << "\n";
         exactSolution<degree>(bool_B,ifr,
                               funcSelectE,
                               funcSelectB);
-
+        std::cout << "After Calc exact sol\n";
+        std::cout << "Norm Esol: " <<  gempic_norm(&(*E_sol_Array[i]), ifr, 2) << "\n"; 
+        std::cout << "Norm E: " <<  gempic_norm(&(*E_Array[i]), ifr, 2) << "\n"; 
+        std::cout << "Norm Bsol: " <<  gempic_norm(&(*B_sol_Array[i]), ifr, 2) << "\n";
+        std::cout << "Norm B: " <<  gempic_norm(&(*B_Array[i]), ifr, 2) << "\n";
+        }
         for (int i=0; i<vdim; i++){
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
             amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
@@ -1541,17 +1553,23 @@ private:
 
     template<int degree>
     void exactSolution( bool bool_B,
-                        computational_domain ifr, amrex::GpuArray<int,vdim> funcSelectE, amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelectB){
+                        computational_domain ifr, 
+                        amrex::GpuArray<int,vdim> funcSelectE, 
+                        amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelectB){
         amrex::Real btime = time + dt/2.0;
 
         // E-field
         for (int i=0; i<vdim; i++)
           projection<degree>(time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_sol_Array[i]), funcSelectE[i]);
+        
 
         if (bool_B){
+            
             // B-field
-            for (int i=0; i<int(vdim/2.5)*2+1; i++)
+            for (int i=0; i<int(vdim/2.5)*2+1; i++) {
               projection<degree>(btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_sol_Array[i]),funcSelectB[i]);
+            }
+
         }
     }
 

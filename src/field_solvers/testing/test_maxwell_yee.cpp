@@ -159,7 +159,7 @@ void main_main ()
     funcSelectB[1] = MAXWELL_YEE_ZERO;
     funcSelectB[2] = MAXWELL_YEE_B2;
     mw_yee.template initB<degree>(infra, funcSelectB);
-    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectE;
+    amrex::GpuArray<int, vdim> funcSelectE;
     funcSelectE[0] = MAXWELL_YEE_E2;
     funcSelectE[1] = MAXWELL_YEE_E1;
     funcSelectE[2] = MAXWELL_YEE_E2;
@@ -173,7 +173,7 @@ void main_main ()
     funcSelectB[0]=MAXWELL_YEE_B0;
     funcSelectB[1]=MAXWELL_YEE_ZERO;
     funcSelectB[2]=MAXWELL_YEE_B2;
-    E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
+    E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -201,7 +201,7 @@ void main_main ()
         funcSelectB[0]=MAXWELL_YEE_B0;
         funcSelectB[1]=MAXWELL_YEE_ZERO;
         funcSelectB[2]=MAXWELL_YEE_B2;
-        E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
+        E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -242,7 +242,7 @@ void main_main ()
     funcSelectB[0]=MAXWELL_YEE_B0;
     funcSelectB[1]=MAXWELL_YEE_ZERO;
     funcSelectB[2]=MAXWELL_YEE_B2;
-    E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
+    E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -271,7 +271,7 @@ void main_main ()
         funcSelectB[0]=MAXWELL_YEE_B0;
         funcSelectB[1]=MAXWELL_YEE_ZERO;
         funcSelectB[2]=MAXWELL_YEE_B2;
-        E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
+        E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
