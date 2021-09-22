@@ -111,7 +111,7 @@ void main_main ()
     funcSelect[0] = E0;
     funcSelect[1] = E1;
     funcSelect[2] = E2;
-    mw_yee.template initE<degree, funct_setup>(infra , funcSelect );
+    mw_yee.template initE<degree, funct_setup>( infra , funcSelect );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 
