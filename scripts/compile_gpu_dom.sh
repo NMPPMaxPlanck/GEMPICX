@@ -29,6 +29,8 @@ module load CMake/3.14.5
 module use /apps/daint/UES/eurohack/modules/all
 module load numdiff/5.9.0
 module load nsys/2021-3
+module use /apps/daint/UES/eurohack/modules/all
+module load numdiff/5.9.0
 module list
 
 BUILD_DIR=$SCRATCH/gempic_gpu_obj2
