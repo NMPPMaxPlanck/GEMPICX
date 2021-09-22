@@ -360,7 +360,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_rho_C3 ( splines_at_pa
 
 
 template<typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_C2(S const& spline,
+AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(S const& spline,
                               spline1d_at_particles<degp> const& spline_new,
                               spline1d_at_particles<degp> const& spline_old,
                               amrex::Real weight,
