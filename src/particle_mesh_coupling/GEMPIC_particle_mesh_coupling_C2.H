@@ -359,15 +359,16 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
 }
 
 
-template<typename S, int vdim, int degp, int degp1, int degp2, int pdim>
-void accumulate_j_update_v_C2(S const& spline,
+template<typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_C2(S const& spline,
                               spline1d_at_particles<degp> const& spline_new,
                               spline1d_at_particles<degp> const& spline_old,
                               amrex::Real weight,
                               const amrex::Real* dx,
                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
-                              amrex::GpuArray<amrex::Real, 2> &fields   )
+                              amrex::GpuArray<amrex::Real, 2> &fields,
+                              amrex::GpuArray<amrex::Real, plength> *primitive)
 {
     int pdim1 = (pdim+1)%3;
     int pdim2 = (pdim+2)%3;
@@ -379,26 +380,28 @@ void accumulate_j_update_v_C2(S const& spline,
     if (spline_new.box<spline_old.box)
       box_start = spline_new.box;
 
-    std::vector<amrex::Real> primitive(local_size+degp);
+    for (unsigned int j=0;j<local_size+degp;j++)
+        (*primitive)[j] = 0.0;
+
     if ( spline_old.box < spline_new.box ) {
             for (unsigned int j=0;j<degp;j++)
-              primitive[j] = spline_old.primitive[j]*dx[pdim];
+              (*primitive)[j] = spline_old.primitive[j]*dx[pdim];
             for (unsigned int j=degp;j<local_size;j++)
-              primitive[j] = dx[pdim];
+              (*primitive)[j] = dx[pdim];
 
             for (unsigned int j =0;j<degp; j++) {
-                primitive[local_size-degp+j] -= spline_new.primitive[j]*dx[pdim];
+                (*primitive)[local_size-degp+j] -= spline_new.primitive[j]*dx[pdim];
               }
           }
         else {
             for(unsigned int j=degp;j<local_size;j++) {
-                primitive[j] = -dx[pdim];
+                (*primitive)[j] = -dx[pdim];
               }
             for (unsigned int j=0;j<degp;j++) {
-                primitive[j] = -spline_new.primitive[j]*dx[pdim];
+                (*primitive)[j] = -spline_new.primitive[j]*dx[pdim];
               }
             for (unsigned int j =0;j<degp; j++) {
-                primitive[local_size-degp+j] += spline_old.primitive[j]*dx[pdim];
+                (*primitive)[local_size-degp+j] += spline_old.primitive[j]*dx[pdim];
               }
           }
 
@@ -416,7 +419,7 @@ void accumulate_j_update_v_C2(S const& spline,
                   cell_index = {AMREX_D_DECL( spline.box[0]+kk, box_start+ii, spline.box[2]+jj)};
                 else if (pdim == 2)
                   cell_index = {AMREX_D_DECL( spline.box[0]+jj, spline.box[1]+kk, box_start+ii)};
-                double s_coeff = primitive[ii]
+                double s_coeff = (*primitive)[ii]
                         *spline.spline_node[pdim1][jj]
                         *spline.spline_node[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
@@ -427,7 +430,7 @@ void accumulate_j_update_v_C2(S const& spline,
 
                     if ( jj < degp1 )
                       {
-                        double s_coeff = primitive[ii]
+                        double s_coeff = (*primitive)[ii]
                               *spline.spline_cell[pdim1][jj]
                               *spline.spline_node[pdim2][kk];
 
@@ -438,7 +441,7 @@ void accumulate_j_update_v_C2(S const& spline,
 #endif
                           }
                   if ( kk < degp2 ){
-                      double s_coeff = primitive[ii]
+                      double s_coeff = (*primitive)[ii]
                               *spline.spline_node[pdim1][jj]
                               *spline.spline_cell[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
