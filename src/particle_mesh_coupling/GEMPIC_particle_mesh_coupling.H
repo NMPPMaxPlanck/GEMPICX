@@ -1695,7 +1695,7 @@ amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
 }
 
 template <typename P, int vdim>
-amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
                                                                  amrex::Real dt,
                                                                  amrex::Real chargemass, //charge/mass
                                                                  amrex::GpuArray<amrex::Real,vdim> Ep,

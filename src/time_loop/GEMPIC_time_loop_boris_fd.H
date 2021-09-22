@@ -91,7 +91,9 @@ void time_loop_boris_fd_step (computational_domain infra,
                 amrex::Real time_step = (*mw_yee).dt;
 
                 // loop over particles: add contribution of old particle position to J and push
-                for (int pp=0;pp<np;pp++){
+                amrex::ParallelFor(np,
+                                                             [=] AMREX_GPU_DEVICE (long pp )
+                                                              {
 
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
@@ -121,7 +123,7 @@ void time_loop_boris_fd_step (computational_domain infra,
                         particles[pp].pos(xd) = newPos[xd];
                     for (int vd=0;vd<vdim; vd++)
                         (particles[pp].rdata(vd)) = newPos[GEMPIC_SPACEDIM+vd];
-                }
+                });
             }
             if (profiling_timers->profiling)
              profiling_timers->counter_deposition += MPI_Wtime();
@@ -169,7 +171,9 @@ void time_loop_boris_fd_step (computational_domain infra,
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
-                for (int pp=0;pp<np;pp++){
+                amrex::ParallelFor(np,
+                                                             [=] AMREX_GPU_DEVICE (long pp )
+                                                              {
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                       pos[d]= particles[pp].pos(d);
@@ -183,7 +187,7 @@ void time_loop_boris_fd_step (computational_domain infra,
                     amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
                                                                                                                                                           particle_vel,
                                                                                                                                                           spline, jA, eA, bA, false);
-                }
+                });
             }
         }
         if (profiling_timers->profiling){
