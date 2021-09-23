@@ -1693,7 +1693,8 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDI
 }
 
 template <typename P, int vdim>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(P const& p,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+                                                                 amrex::GpuArray<amrex::Real, vdim> vel,
                                                                  amrex::Real dt,
                                                                  amrex::Real chargemass, //charge/mass
                                                                  amrex::GpuArray<amrex::Real,vdim>& Ep,
@@ -1708,7 +1709,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACED
 
     // v-
     for (int vd=0;vd<vdim;vd++) {
-        vm[vd] = p.rdata(vd) + dt*chargemass/2*Ep[vd];
+        vm[vd] = vel[vd] + dt*chargemass/2*Ep[vd];
     }
 
     if (vdim == 1) {
@@ -1743,12 +1744,12 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACED
     }
 
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.phi[0], infra.plo[0]);
+    newPos[0] = mod_dom(pos[0] + newPos[GEMPIC_SPACEDIM]*dt, infra.phi[0], infra.plo[0]);
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(p.pos(1) + newPos[GEMPIC_SPACEDIM+1]*dt, infra.phi[1], infra.plo[1]);
+    newPos[1] = mod_dom(pos[1] + newPos[GEMPIC_SPACEDIM+1]*dt, infra.phi[1], infra.plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(p.pos(2) + newPos[GEMPIC_SPACEDIM+2]*dt, infra.phi[2], infra.plo[2]);
+    newPos[2] = mod_dom(pos[2] + newPos[GEMPIC_SPACEDIM+2]*dt, infra.phi[2], infra.plo[2]);
 #endif
 
 
