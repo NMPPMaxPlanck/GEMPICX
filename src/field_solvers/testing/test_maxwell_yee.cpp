@@ -167,12 +167,6 @@ void main_main ()
 
 
     std::cout <<  "step: " << 0 << std::endl;
-    funcSelectE[0]=MAXWELL_YEE_E2;
-    funcSelectE[1]=MAXWELL_YEE_E1;
-    funcSelectE[2]=MAXWELL_YEE_E2;
-    funcSelectB[0]=MAXWELL_YEE_B0;
-    funcSelectB[1]=MAXWELL_YEE_ZERO;
-    funcSelectB[2]=MAXWELL_YEE_B2;
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
@@ -195,12 +189,6 @@ void main_main ()
         mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
         mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
-        funcSelectE[0]=MAXWELL_YEE_E2;
-        funcSelectE[1]=MAXWELL_YEE_E1;
-        funcSelectE[2]=MAXWELL_YEE_E2;
-        funcSelectB[0]=MAXWELL_YEE_B0;
-        funcSelectB[1]=MAXWELL_YEE_ZERO;
-        funcSelectB[2]=MAXWELL_YEE_B2;
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
@@ -236,13 +224,7 @@ void main_main ()
     mw_yee_2.template initE<degree>(infra, funcSelectE);
 
     std::cout <<  "step: " << 0 << std::endl;
-    funcSelectE[0]=MAXWELL_YEE_E2;
-    funcSelectE[1]=MAXWELL_YEE_E1;
-    funcSelectE[2]=MAXWELL_YEE_E2;
-    funcSelectB[0]=MAXWELL_YEE_B0;
-    funcSelectB[1]=MAXWELL_YEE_ZERO;
-    funcSelectB[2]=MAXWELL_YEE_B2;
-    E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+    E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
@@ -265,13 +247,7 @@ void main_main ()
         mw_yee_2.advance_E(infra, mw_yee_2.dt, false, true, &(mw_yee_2.HB_Array), &(mw_yee_2.E_Array));
         mw_yee_2.template hodge_full<degree>(infra, &(mw_yee_2.E_Array), &(mw_yee_2.HE_Array), true);
         mw_yee_2.advance_B(infra, mw_yee_2.dt, &(mw_yee_2.HE_Array), &(mw_yee_2.B_Array));
-        funcSelectE[0]=MAXWELL_YEE_E2;
-        funcSelectE[1]=MAXWELL_YEE_E1;
-        funcSelectE[2]=MAXWELL_YEE_E2;
-        funcSelectB[0]=MAXWELL_YEE_B0;
-        funcSelectB[1]=MAXWELL_YEE_ZERO;
-        funcSelectB[2]=MAXWELL_YEE_B2;
-        E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+        E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
         gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);

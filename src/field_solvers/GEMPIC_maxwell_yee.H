@@ -359,7 +359,6 @@ public:
 
         }
 
-        std::cout <<"Function: " << funcSelect << " ->  " <<  function_to_project(0, 0, 0, 0,funcSelect) << "\n";
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
@@ -1498,22 +1497,9 @@ public:
                                                                      amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelectB){
         amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
 
-        for (int i=0; i<vdim; i++){
-        std::cout << i << "\n";
-        std::cout << "Before Calc exact sol\n";
-        std::cout << "Norm Esol: " <<  gempic_norm(&(*E_sol_Array[i]), ifr, 2) << "\n"; 
-        std::cout << "Norm E: " <<  gempic_norm(&(*E_Array[i]), ifr, 2) << "\n"; 
-        std::cout << "Norm Bsol: " <<  gempic_norm(&(*B_sol_Array[i]), ifr, 2) << "\n";
-        std::cout << "Norm B: " <<  gempic_norm(&(*B_Array[i]), ifr, 2) << "\n";
         exactSolution<degree>(bool_B,ifr,
                               funcSelectE,
                               funcSelectB);
-        std::cout << "After Calc exact sol\n";
-        std::cout << "Norm Esol: " <<  gempic_norm(&(*E_sol_Array[i]), ifr, 2) << "\n"; 
-        std::cout << "Norm E: " <<  gempic_norm(&(*E_Array[i]), ifr, 2) << "\n"; 
-        std::cout << "Norm Bsol: " <<  gempic_norm(&(*B_sol_Array[i]), ifr, 2) << "\n";
-        std::cout << "Norm B: " <<  gempic_norm(&(*B_Array[i]), ifr, 2) << "\n";
-        }
         for (int i=0; i<vdim; i++){
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
             amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
