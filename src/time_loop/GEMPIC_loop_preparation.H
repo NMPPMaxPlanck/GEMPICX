@@ -134,7 +134,7 @@ void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
                         vel[comp] = particles[pp].rdata(comp);
                     }
 
-                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<vdim>(pos, vel, 0.5*dt, infra);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<vdim>(infra.plo, infra.phi, pos, vel, 0.5*dt);
                     for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
                         particles[pp].pos(xd) = newPos[xd];
                 });

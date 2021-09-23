@@ -11,6 +11,7 @@
 
 #include <AMReX_Array.H>
 #include <AMReX_FArrayBox.H>
+#include <AMReX_Math.H>
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
 
@@ -26,7 +27,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real mod_dom(amrex::Real val,
                     amrex::Real upper,
                     amrex::Real lower)
 {
-    return(val-(upper-lower)*floor((val-lower)/(upper-lower)));
+    return(val-(upper-lower)*amrex::Math::floor((val-lower)/(upper-lower)));
 }
 
 template <int vdim, int degx, int degy, int degz>
@@ -1678,20 +1679,21 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDI
 }
 
 template <int vdim>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo,
+                                                                                                          amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> phi,
+                                                                                                          amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
                                                                amrex::GpuArray<amrex::Real, vdim> vel,
-                                                               amrex::Real dt,
-                                                               CompDom::computational_domain infra){
+                                                               amrex::Real dt){
 
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(pos[0] + vel[0]*dt, infra.phi[0], infra.plo[0]);
+    newPos[0] = mod_dom(pos[0] + vel[0]*dt, phi[0], plo[0]);
     newPos[GEMPIC_SPACEDIM] = vel[0];
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(pos[1] + vel[1]*dt, infra.phi[1], infra.plo[1]);
+    newPos[1] = mod_dom(pos[1] + vel[1]*dt, phi[1], plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(pos[2] + vel[2]*dt, infra.phi[2], infra.plo[2]);
+    newPos[2] = mod_dom(pos[2] + vel[2]*dt, phi[2], plo[2]);
 #endif
     if (vdim > 1) {
         newPos[GEMPIC_SPACEDIM+1] = vel[1];
