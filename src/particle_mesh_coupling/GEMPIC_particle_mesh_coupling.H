@@ -1743,12 +1743,12 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACED
     }
 
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
+    newPos[0] = mod_dom(p.pos(0) + newPos[GEMPIC_SPACEDIM]*dt, infra.phi[0], infra.plo[0]);
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(p.pos(1) + newPos[GEMPIC_SPACEDIM+1]*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
+    newPos[1] = mod_dom(p.pos(1) + newPos[GEMPIC_SPACEDIM+1]*dt, infra.phi[1], infra.plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(p.pos(2) + newPos[GEMPIC_SPACEDIM+2]*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
+    newPos[2] = mod_dom(p.pos(2) + newPos[GEMPIC_SPACEDIM+2]*dt, infra.phi[2], infra.plo[2]);
 #endif
 
 
