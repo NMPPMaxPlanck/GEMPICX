@@ -121,9 +121,7 @@ add_subdirectory(third_party)
 # Add subfolder with source files of the library
 add_subdirectory(src)
 # Add subfolder with simulations
-if (NOT USE_CUDA )
- add_subdirectory(simulations)
-endif()
+add_subdirectory(simulations)
 # Add doxygen documentation
 add_subdirectory(doc)
 
