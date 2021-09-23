@@ -94,7 +94,8 @@ void main_main ()
     real_box.setHi(boxHi);
 
 
-    CompDom::computational_domain infra(n_cell, mx_grid, is_periodic, real_box);
+    CompDom::computational_domain infra;
+    infra.initialize_computational_domain(n_cell, mx_grid, is_periodic, real_box);
 
     //------------------------------------------------------------------------------
     // Solve

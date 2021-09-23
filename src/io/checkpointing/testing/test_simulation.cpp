@@ -106,6 +106,7 @@ void main_main ()
     amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
     diagnostics<vdim, numspec,degx,degy,degz,degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
 
+    const bool output = false;
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0, wave_function);
@@ -114,14 +115,14 @@ void main_main ()
     funcSelectB[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, funcSelectB);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, funcSelectB);
 
 
     //------------------------------------------------------------------------------
     // timeloop
     time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true,
             false, // bool to activate profiling
-            true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
+            output>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
 
 }
 

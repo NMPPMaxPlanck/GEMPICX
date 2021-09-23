@@ -27,6 +27,7 @@ module swap cudatoolkit cudatoolkit/11.2.0_3.39-2.1__gf93aa1c
 module load daint-gpu
 module load CMake/3.14.5
 module use /apps/daint/UES/eurohack/modules/all
+module load numdiff/5.9.0
 module load nsys/2021-3
 module use /apps/daint/UES/eurohack/modules/all
 module load numdiff/5.9.0
@@ -50,5 +51,5 @@ rm -rf gempic
 mkdir -p gempic
 cd gempic
 
-CXX=CC cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D MPI_CUDA_INCLUDE_PATH='' -D MPI_CUDA_LIBRARIES='' -D CMAKE_BUILD_TYPE=Debug $SOURCE_DIRECTORY
-gmake VERBOSE=1 -j 16
+CXX=CC cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D MPI_CUDA_INCLUDE_PATH='' -D MPI_CUDA_LIBRARIES='' -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+gmake VERBOSE=1 &> compile_out.txt

@@ -50,12 +50,14 @@ void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
         (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
+		amrex::Real charge = (*part_gr).charge[spec];
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();
 
             amrex::Array4<amrex::Real> const& rhoarr = (*mw_yee).rho[pti].array();
-
-            for (int pp=0;pp<np;pp++) {
+            amrex::ParallelFor(np,[=] AMREX_GPU_DEVICE (long pp )
+			    {                                                     
+            //for (int pp=0;pp<np;pp++) {
                 //gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
                 splines_at_particles<degx, degy, degz> spline;
                 amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -63,9 +65,9 @@ void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
                   position[d] = particles[pp].pos(d);
                 spline.init_particles( position, infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                              (*part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
+                                              charge*infra.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
                                               rhoarr);
-              }
+              });
         }
     }
 
@@ -117,12 +119,15 @@ void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
         //approximate x^1/2
         for (int spec=0;spec<numspec;spec++) {
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                auto& particles = pti.GetArrayOfStructs(); // get particles
+                amrex::Particle<vdim+1,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]); // get particles
+
                 const long np  = pti.numParticles();
-                for (int pp=0;pp<np;pp++){
-                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<amrex::Particle<vdim+1>,vdim>(particles[pp], 0.5*(*mw_yee).dt, infra);
-                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
-                }
+                const amrex::Real dt = (*mw_yee).dt;
+                amrex::ParallelFor(np,[=] AMREX_GPU_DEVICE (long pp){
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<amrex::Particle<vdim+1>,vdim>(particles[pp], 0.5*dt, infra);
+                    for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
+                        particles[pp].pos(xd) = newPos[xd];
+                });
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         }

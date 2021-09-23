@@ -29,7 +29,7 @@ amrex::Real mod_dom(amrex::Real val,
 }
 
 template <typename P, int vdim, int degx, int degy, int degz>
-void gempic_deposit_rho (P const& p, amrex::Real charge,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (P const& p, amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
@@ -1111,7 +1111,7 @@ void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> posi
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                       amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray)
@@ -1425,11 +1425,10 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
      * Push the velocity with a given electric field
      */
 template <typename P, int vdim>
-amrex::GpuArray<amrex::Real, vdim> push_v_efield(P const& p,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> push_v_efield(P const& p,
                                             amrex::Real dt,
                                             amrex::Real chargemass, //charge/mass
-                                            amrex::GpuArray<amrex::Real,vdim> Ep,
-                                            CompDom::computational_domain infra){
+                                            amrex::GpuArray<amrex::Real,vdim> Ep){
     amrex::GpuArray<amrex::Real,vdim> newPos;
 
     newPos[0] = p.rdata(0) + dt*chargemass*(Ep[0]);
@@ -1547,7 +1546,7 @@ amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
 }
 
 template <typename P, int vdim>
-amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
                                                                amrex::Real dt,
                                                                CompDom::computational_domain infra){
 
