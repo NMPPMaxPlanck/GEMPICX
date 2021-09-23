@@ -64,6 +64,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real function_to_project(amrex::Rea
   case MAXWELL_YEE_ZERO :
     return 0.0;
   }
+  return 0.0;
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz>
