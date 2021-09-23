@@ -106,7 +106,6 @@ void main_main ()
     for (int spec=0;spec<numspec;spec++) {
         (*(part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-            amrex::Box validbox = pti.validbox();
 
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();

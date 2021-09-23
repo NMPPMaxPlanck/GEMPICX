@@ -30,7 +30,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real mod_dom(amrex::Real val,
 }
 
 template <int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>  pos,
                                                                 amrex::Real weight,
                                                                 amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
@@ -1246,7 +1246,10 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5
 
 
 template <typename P, int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (P const& p, amrex::Real charge,
+amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
+                                                                                       amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& vel,
+                                                                                       amrex::Real weight,
+                                                                                       amrex::Real charge,
                                                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                                          amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray,
@@ -1259,14 +1262,14 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
     amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> fields = {AMREX_D_DECL(0.,0.,0.)};
 
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-    amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
+    amrex::Real lx = (pos[0]-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
     std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, degx, false), degx);
     std::vector<amrex::Real> sx_cell_1 = spl.spline_eval_vec (spl.shifted_x(xint, degx-1, true), degx-1);
     amrex::GpuArray<std::vector<amrex::Real>,2> sx_1 = {sx_cell_1, sx_node};
 #if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
+    amrex::Real ly = (pos[1]-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
     std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy, false), degy);
@@ -1274,14 +1277,14 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
     amrex::GpuArray<std::vector<amrex::Real>,2> sy_1 = {sy_cell_1, sy_node};
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
+    amrex::Real lz = (pos[2]-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
     std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz, false), degz);
     std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, degz-1, true), degz-1);
     amrex::GpuArray<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node};
 #endif
-    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*p.rdata(vdim);
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*weight;
 
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= degz; ++kk) {
@@ -1317,7 +1320,7 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
                 amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0), s_coeff*particle_coeff*p.rdata(cc));
 #else
                 
-                amrex::HostDevice::Atomic::Add(jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*p.rdata(cc));
+                amrex::HostDevice::Atomic::Add(jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*vel[cc]);
 #endif
 
                         if (field_int) {
@@ -1494,7 +1497,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim
 }
 
 template <typename P, int vdim, int degx, int degy, int degz>
-void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
+void gempic_deposit_charge_indextype (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
+                                      amrex::Real weight,
+                                      amrex::Real charge,
                                       amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                       amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                       amrex::Array4<amrex::Real> const& jArray,
@@ -1503,25 +1508,25 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
 {
 
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-    amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
+    amrex::Real lx = (pos[0]-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
     std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, degx, false), degx);
     std::vector<amrex::Real> sx_cell_1 = spl.spline_eval_vec (spl.shifted_x(xint, degx, true), degx);
     amrex::GpuArray<std::vector<amrex::Real>,2> sx_1 = {sx_cell_1, sx_node};
-    amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
+    amrex::Real ly = (pos[1]-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
     std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy, false), degy);
     std::vector<amrex::Real> sy_cell_1 = spl.spline_eval_vec (spl.shifted_x(yint, degy, true), degy);
     amrex::GpuArray<std::vector<amrex::Real>,2> sy_1 = {sy_cell_1, sy_node};
-    amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
+    amrex::Real lz = (pos[2]-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
     std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz, false), degz);
     std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, degz, true), degz);
     amrex::GpuArray<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node};
-    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(vdim);
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*weight;
 
     for (int kk = 0; kk <= degz; ++kk) {
         for (int jj = 0; jj <= degy; ++jj) {
