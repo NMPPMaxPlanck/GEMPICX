@@ -334,6 +334,80 @@ public:
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
+    template<int degree>
+    void projection ( amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                     amrex::Real t,
+                     computational_domain ifr,
+                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::IndexType IndexVect,
+                     amrex::MultiFab *MultiF
+                     ) {
+
+        std::vector<amrex::Real> stencil;
+        switch (degree) {
+        case 2:
+            stencil = {1.0};
+            break;
+        case 4:
+            stencil = {1.0/6.0, 4.0/6.0, 1.0/6.0};
+            break;
+        case 6:
+            stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
+            break;
+        default: amrex::Print() << "degree not implemented" << std::endl;
+
+        }
+
+
+        int x_len[GEMPIC_SPACEDIM];
+        for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
+        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
+            const amrex::Box& bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
+            //ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+            for (int k=lo[2];k<=hi[2];++k)
+                for (int j=lo[1];j<=hi[1];++j)
+                    for (int i=lo[0];i<=hi[0];++i)
+            {
+                double x_eval, y_eval, z_eval;
+
+                amrex::GpuArray<amrex::Real, degree-1> x;
+                amrex::Real x_midpoint;
+                amrex::GpuArray<amrex::Real, degree-1> y;
+                amrex::Real y_midpoint;
+                amrex::GpuArray<amrex::Real, degree-1> z;
+                amrex::Real z_midpoint;
+
+                z_midpoint = ifr.plo[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
+                for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
+
+                y_midpoint = ifr.plo[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
+                for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
+
+                x_midpoint = ifr.plo[0] + ((double)i+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
+                for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
+
+                amrex::Real val = 0.0;
+                for (int zd = 0; zd<x_len[2];zd++)
+                {
+                    for (int yd =0; yd<x_len[1]; yd++)
+                    {
+                        for (int xd =0; xd<x_len[0]; xd++) {
+                            x_eval = x[xd];
+                            y_eval = y[yd];
+                            z_eval = z[zd];
+                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(function_to_project(x_eval, y_eval, z_eval,  t));
+                        }
+                    }
+                }
+                proj_arr(i,j,k) = val;
+            }//);
+	}
+        (*MultiF).FillBoundary(ifr.geom.periodicity());
+    }
+
 
     template<int degree>
     void projection (amrex::Real t,
@@ -426,6 +500,20 @@ public:
         initB<degree> (fieldsB, k, ifr);
     }
 
+    /**
+     * Initialize E field for time t=0 with a given array of functions.
+     */
+    template <int degree>
+    void initE ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 computational_domain ifr){
+
+        // B_field
+        projection<degree>(function_to_project_0, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
+        projection<degree>(function_to_project_1, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
+        projection<degree>(function_to_project_2, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
+    }
 
     /**
      * Initialize E field for time t=0 with a given array of functions.
@@ -447,6 +535,24 @@ public:
             projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]));
         }
     };
+
+        /**
+     * Initialize B field for time t=0 with a given array of functions.
+     */
+    template <int degree>
+    void initB ( amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                 computational_domain ifr){
+
+        double half_dt = dt/2.0; // for leap frog initialization
+
+        // B_field
+        projection<degree>(function_to_project_0, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
+        projection<degree>(function_to_project_1, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
+        projection<degree>(function_to_project_2, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+    }
+
 
     /**
      * Initialize B field for time t=0 with a given array of functions.
@@ -784,6 +890,18 @@ public:
         // phi
         projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
+
+    template <int degree>
+    void init_rho_phi (amrex::Real (*function_to_project_rho)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_phi)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       computational_domain ifr){
+
+        // rho
+        projection<degree>(function_to_project_rho, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        // phi
+        projection<degree>(function_to_project_phi, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+    }
+
 
     template <int degree>
     void init_rho_phi (computational_domain ifr, amrex::GpuArray<int,2> funcSelect){
@@ -1487,6 +1605,45 @@ public:
         return(E_B_error);
     }
 
+     /**
+     * Compute norm of errors of E and B field from function with exact solution (without tinyexpr)
+     */
+    template<int degree>
+    amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> computeError(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                                                                     bool bool_B,
+                                                                     computational_domain ifr){
+        amrex::GpuArray<amrex::Real,vdim+int(vdim/2.5)*2+1> E_B_error;
+
+        exactSolution<degree>(function_to_project_E0,
+                              function_to_project_E1,
+                              function_to_project_E2,
+                              function_to_project_B0,
+                              function_to_project_B1,
+                              function_to_project_B2,
+                              bool_B,
+                              ifr);
+
+        for (int i=0; i<vdim; i++){
+            (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
+            amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+            E_B_error[i] = norm_tmp*norm_tmp;
+        }
+        if (bool_B) {
+            for (int i=0; i<int(vdim/2.5)*2+1; i++){
+                (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
+                amrex::Real norm_tmp = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                E_B_error[i+vdim] = norm_tmp*norm_tmp;
+            }
+        }
+        return(E_B_error);
+    }
+
+
     /**
      * Compute norm of errors of E and B field from function with exact solution (without tinyexpr)
      */
@@ -1536,6 +1693,32 @@ private:
             }
         }
     }
+
+    template<int degree>
+    void exactSolution(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       amrex::Real (*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                       bool bool_B,
+                       computational_domain ifr){
+        amrex::Real btime = time + dt/2.0;
+
+        // E-field
+        projection<degree>(function_to_project_E0, time, ifr, {false, true, true}, *E_Index[0], &(*E_sol_Array[0]));
+        projection<degree>(function_to_project_E1, time, ifr, {true, false, true}, *E_Index[1], &(*E_sol_Array[1]));
+        projection<degree>(function_to_project_E2, time, ifr, {true, true, false}, *E_Index[2], &(*E_sol_Array[2]));
+
+        if (bool_B){
+            // B-field
+            projection<degree>(function_to_project_B0, btime, ifr, {false, true, true}, *B_Index[0], &(*B_sol_Array[0]));
+            projection<degree>(function_to_project_B1, btime, ifr, {true, false, true}, *B_Index[1], &(*B_sol_Array[1]));
+            projection<degree>(function_to_project_B2, btime, ifr, {true, true, false}, *B_Index[2], &(*B_sol_Array[2]));
+        }
+    }
+
+
 
     template<int degree>
     void exactSolution( bool bool_B,
