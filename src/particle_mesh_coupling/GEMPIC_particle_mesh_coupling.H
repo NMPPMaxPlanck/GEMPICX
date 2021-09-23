@@ -1681,7 +1681,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDI
     newPos[1] = mod_dom(p.pos(1) + p.rdata(1)*dt, infra.phi[1], infra.plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.phi()[2], infra.plo[2]);
+    newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.phi[2], infra.plo[2]);
 #endif
     if (vdim > 1) {
         newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
