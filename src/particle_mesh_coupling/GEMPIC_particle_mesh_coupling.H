@@ -1635,7 +1635,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
             diff = std::max(diff, std::abs(newViter[d] - newV[d]));
     }
     if (iter_counter == max_iter)
-        amrex::Print() << " Number of itertions: " << iter_counter << " " << diff << std::endl;
+        printf(" Number of itertions: %d %e\n.", iter_counter, diff);
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
         newPos[d] = newX[d];
