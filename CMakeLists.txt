@@ -51,12 +51,23 @@ ELSE()
   message("Unknown compiler")
 ENDIF()
 
+IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*")  )
+IF (USE_CUDA)
+  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
+add_definitions(-DGEMPIC_GPU)
+ENDIF()
+endif()
+
+IF (($ENV{HOST} MATCHES "daint*") )
 IF (USE_CUDA)
   set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
   set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
   set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
   add_definitions(-DGEMPIC_GPU)
 ENDIF()
+endif()
 
 # Enable ctests
 enable_testing()
