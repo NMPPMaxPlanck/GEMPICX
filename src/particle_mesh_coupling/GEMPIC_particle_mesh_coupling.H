@@ -95,7 +95,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<
      *  Evaluation of a FEM one form
      */
 template<int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos,
                                                        amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                   amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& eArray)
@@ -188,7 +188,7 @@ amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(amrex::GpuArray<amrex::Re
      * TODO: This function should better combine all points from one interval to reduce the number of loops
      */
 template <int vdim, int degx, int degy, int degz>
-void accumulate_j_fem_integral_point(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_box,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_box,
                                      amrex::GpuArray<int,GEMPIC_SPACEDIM>& box,
                                      amrex::GpuArray<amrex::Real, vdim>&  weight,
                                      amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray)
@@ -289,7 +289,7 @@ void accumulate_j_fem_integral_point(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM
      * integral for each box
      */
 template <int vdim, int degx, int degy, int degz>
-void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_new,
                                amrex::GpuArray<amrex::Real, vdim>& velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
@@ -416,7 +416,7 @@ void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos
      */
 
 template <int vdim, int degp, int degp1, int degp2, int pdim>
-void accumulate_j_update_v_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::Real position_new,
                                amrex::Real charge, // q*p.rdata(vdim)
                                const amrex::Real* dx,
@@ -547,7 +547,7 @@ void accumulate_j_update_v_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACE
      * integral for each box
      */
 template <int vdim, int degx, int degy, int degz>
-void accumulate_j_update_v_x1_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x1_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::Real position_new,
                                //amrex::GpuArray<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
@@ -711,7 +711,7 @@ void accumulate_j_update_v_x1_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SP
      * integral for each box
      */
 template <int vdim, int degx, int degy, int degz>
-void accumulate_j_update_v_x2_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x2_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::Real position_new,
                                //amrex::GpuArray<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
@@ -867,7 +867,7 @@ void accumulate_j_update_v_x2_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SP
      * integral for each box
      */
 template <int vdim, int degx, int degy, int degz>
-void accumulate_j_update_v_x3_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position_old,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x3_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position_old,
                                amrex::Real position_new,
                                //amrex::GpuArray<amrex::Real, vdim> velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
@@ -1024,7 +1024,7 @@ void accumulate_j_update_v_x3_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SP
      *  Currently this is implemented for Gauss-Quadrature with only one point
      */
 template<int vdim, int degx, int degy, int degz>
-void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                                amrex::GpuArray<amrex::Real, vdim>& velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
@@ -1246,7 +1246,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5
 
 
 template <typename P, int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
                                                                                        amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& vel,
                                                                                        amrex::Real weight,
                                                                                        amrex::Real charge,
@@ -1497,7 +1497,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim
 }
 
 template <typename P, int vdim, int degx, int degy, int degz>
-void gempic_deposit_charge_indextype (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_charge_indextype (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
                                       amrex::Real weight,
                                       amrex::Real charge,
                                       amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
@@ -1576,7 +1576,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> push_v_
      * Push the position and the velocity (only the vxB part) in a nonlinear iteration
      */
 template <int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
                                                                    amrex::GpuArray<amrex::Real, vdim> vel,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
@@ -1646,7 +1646,7 @@ amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(amrex::GpuArr
 
 
 template <int vdim>
-amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
                                                                 amrex::GpuArray<amrex::Real, vdim> vel,
                                                            amrex::Real dt,
                                                            amrex::Real chargemass, //charge/mass
@@ -1767,7 +1767,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACED
 }
 
 template<int vdim, int degx, int degy, int degz>
-void gempic_deposit_magnetization (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_magnetization (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                                    amrex::Real mu,
                                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
@@ -1890,7 +1890,7 @@ void gempic_deposit_magnetization (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>&
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_grad_mod_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_grad_mod_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                                                                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                                            amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim/2.5)*2+1>& bArray)
