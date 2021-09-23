@@ -1648,21 +1648,22 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
 
 template <int vdim>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+                                                                                                      amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo,
+                                                                                                      amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> phi,
                                                                 amrex::GpuArray<amrex::Real, vdim> vel,
                                                            amrex::Real dt,
                                                            amrex::Real chargemass, //charge/mass
                                                            amrex::GpuArray<amrex::Real,vdim>& Ep,
-                                                           amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1>& Bp,
-                                                           CompDom::computational_domain infra){
+                                                           amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1>& Bp){
 
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(pos[0] + vel[0]*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
+    newPos[0] = mod_dom(pos[0] + vel[0]*dt, phi[0], plo[0]);
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(pos[1] + vel[1]*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
+    newPos[1] = mod_dom(pos[1] + vel[1]*dt, phi[1], plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(pos[2] + vel[2]*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
+    newPos[2] = mod_dom(pos[2] + vel[2]*dt, phi[2], plo[2]);
 #endif
 
     if (vdim == 1) {
@@ -1706,12 +1707,13 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDI
 
 template <int vdim>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+                                                                                                             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo,
+                                                                                                             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> phi,
                                                                  amrex::GpuArray<amrex::Real, vdim> vel,
                                                                  amrex::Real dt,
                                                                  amrex::Real chargemass, //charge/mass
                                                                  amrex::GpuArray<amrex::Real,vdim>& Ep,
-                                                                 amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1>& Bp,
-                                                                 CompDom::computational_domain infra){
+                                                                 amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1>& Bp){
 
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     amrex::GpuArray<amrex::Real,vdim> vm;
@@ -1756,12 +1758,12 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACED
     }
 
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(pos[0] + newPos[GEMPIC_SPACEDIM]*dt, infra.phi[0], infra.plo[0]);
+    newPos[0] = mod_dom(pos[0] + newPos[GEMPIC_SPACEDIM]*dt, phi[0], plo[0]);
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(pos[1] + newPos[GEMPIC_SPACEDIM+1]*dt, infra.phi[1], infra.plo[1]);
+    newPos[1] = mod_dom(pos[1] + newPos[GEMPIC_SPACEDIM+1]*dt, phi[1], plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(pos[2] + newPos[GEMPIC_SPACEDIM+2]*dt, infra.phi[2], infra.plo[2]);
+    newPos[2] = mod_dom(pos[2] + newPos[GEMPIC_SPACEDIM+2]*dt, phi[2], plo[2]);
 #endif
 
 

@@ -125,7 +125,7 @@ void time_loop_boris_fd_step (computational_domain infra,
                         vel[comp] = particles[pp].rdata(comp);
                     }
 
-                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<vdim>(pos, vel, time_step*coeff, chargemass, eres, bres, infra);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<vdim>(pos, infra.plo, infra.phi, vel, time_step*coeff, chargemass, eres, bres);
                     for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
                         particles[pp].pos(xd) = newPos[xd];
                     for (int vd=0;vd<vdim; vd++)
