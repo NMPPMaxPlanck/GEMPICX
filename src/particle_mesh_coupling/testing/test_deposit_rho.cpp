@@ -113,7 +113,13 @@ void main_main ()
 
             amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim, degx, degy, degz>(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+
+                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
+                    pos[comp] = particles[pp].pos(comp);
+                }
+                amrex::Real weight = particles[pp].rdata(vdim);
+                gempic_deposit_rho<vdim, degx, degy, degz>(pos, weight, (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
             }
         }
     }

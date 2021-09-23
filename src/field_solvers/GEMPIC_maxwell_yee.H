@@ -1363,7 +1363,12 @@ public:
 
                 amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
                 for (int pp=0;pp<np;pp++) {
-                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(particles[pp], (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
+                        pos[comp] = particles[pp].pos(comp);
+                    }
+                    amrex::Real weight = particles[pp].rdata(vdim);
+                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(pos, weight, (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
                 }
             }
         }

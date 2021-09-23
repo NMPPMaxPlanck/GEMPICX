@@ -29,31 +29,33 @@ AMREX_GPU_HOST_DEVICE amrex::Real mod_dom(amrex::Real val,
     return(val-(upper-lower)*floor((val-lower)/(upper-lower)));
 }
 
-template <typename P, int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (P const& p, amrex::Real charge,
+template <int vdim, int degx, int degy, int degz>
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos,
+                                                                amrex::Real weight,
+                                                                amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
 
 {
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-    amrex::Real lx = (p.pos(0) - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
+    amrex::Real lx = (pos[0] - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
     std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, degx, false), degx);
 #if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (p.pos(1) - plo[1]) * dxi[1];
+    amrex::Real ly = (pos[1] - plo[1]) * dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
     std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy, false), degy);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (p.pos(2) - plo[2]) * dxi[2];
+    amrex::Real lz = (pos[2] - plo[2]) * dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
     std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz, false), degz);
 #endif
-    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*p.rdata(vdim);
+    amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*weight;
 
     //TODOrefine
 #if (GEMPIC_SPACEDIM > 2)
@@ -92,9 +94,9 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (P const& p, amre
 /*!
      *  Evaluation of a FEM one form
      */
-template<typename P, int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(P const& p,
-                                                  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
+template<int vdim, int degx, int degy, int degz>
+amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos,
+                                                       amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                                   amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                                   amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& eArray)
 {
@@ -104,20 +106,20 @@ amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(P const& p,
     }
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
-    amrex::Real lx = (p.pos(0)-plo[0])*dxi[0];
+    amrex::Real lx = (pos[0]-plo[0])*dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
     std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> ( xint );
     std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> ( xint );
 #if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (p.pos(1)-plo[1])*dxi[1];
+    amrex::Real ly = (pos[1]-plo[1])*dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
     std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (yint);
     std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (yint);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (p.pos(2)-plo[2])*dxi[2];
+    amrex::Real lz = (pos[2]-plo[2])*dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
     std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (zint);
@@ -1371,7 +1373,7 @@ amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interp
     return(fields);
 }
 
-template <typename P, int vdim, int degx, int degy, int degz>
+template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::Real charge_weight_dxi_coeff,
                                                                                        amrex::GpuArray<amrex::Real, vdim>& vel,
                                                                                        splines_at_particles<degx, degy, degz> const& spline,
@@ -1547,19 +1549,19 @@ void gempic_deposit_charge_indextype (P const& p, amrex::Real charge,
 /*!
      * Push the velocity with a given electric field
      */
-template <typename P, int vdim>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> push_v_efield(P const& p,
+template <int vdim>
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> push_v_efield(amrex::GpuArray<amrex::Real, vdim> vel,
                                             amrex::Real dt,
                                             amrex::Real chargemass, //charge/mass
                                             amrex::GpuArray<amrex::Real,vdim>& Ep){
     amrex::GpuArray<amrex::Real,vdim> newPos;
 
-    newPos[0] = p.rdata(0) + dt*chargemass*(Ep[0]);
+    newPos[0] = vel[0] + dt*chargemass*(Ep[0]);
     if (vdim > 1) {
-        newPos[1] = p.rdata(1) + dt*chargemass*(Ep[1]);
+        newPos[1] = vel[1] + dt*chargemass*(Ep[1]);
     }
     if (vdim > 2) {
-        newPos[2] = p.rdata(2) + dt*chargemass*(Ep[2]);
+        newPos[2] = vel[2] + dt*chargemass*(Ep[2]);
     }
     return(newPos);
 }
@@ -1568,18 +1570,19 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> push_v_
 /*!
      * Push the position and the velocity (only the vxB part) in a nonlinear iteration
      */
-template <typename P, int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
+template <int vdim, int degx, int degy, int degz>
+amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+                                                                   amrex::GpuArray<amrex::Real, vdim> vel,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
                                                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
                                                               CompDom::computational_domain infra){
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
-        oldX[d]= p.pos(d);
+        oldX[d]= pos[d];
     amrex::GpuArray<amrex::Real, vdim> oldV;
     for (unsigned int d=0;d<vdim;++d)
-        oldV[d] = p.rdata(d);
+        oldV[d] = vel[d];
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newX = oldX;
     amrex::GpuArray<amrex::Real, vdim> newV = oldV;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newXiter;
@@ -1615,9 +1618,9 @@ amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
             newV[0] = oldV[0] + dt*chargemass*( 0.5*(oldV[1]+newViter[1])*Bp[0]);
             newV[1] = oldV[1] + dt*chargemass*( 0.5*(oldV[0]+newViter[0])*Bp[0]);
         } else if (vdim == 3) {
-            newV[0] = p.rdata(0) + dt*chargemass*(0.5*(oldV[1]+newViter[1])*Bp[2]-0.5*(oldV[2]+newViter[2])*Bp[1]);
-            newV[1] = p.rdata(1) + dt*chargemass*(0.5*(oldV[2]+newViter[2])*Bp[0]-0.5*(oldV[0]+newViter[0])*Bp[2]);
-            newV[2] = p.rdata(2) + dt*chargemass*(0.5*(oldV[0]+newViter[0])*Bp[1]-0.5*(oldV[1]+newViter[1])*Bp[0]);
+            newV[0] = vel[0] + dt*chargemass*(0.5*(oldV[1]+newViter[1])*Bp[2]-0.5*(oldV[2]+newViter[2])*Bp[1]);
+            newV[1] = vel[1] + dt*chargemass*(0.5*(oldV[2]+newViter[2])*Bp[0]-0.5*(oldV[0]+newViter[0])*Bp[2]);
+            newV[2] = vel[2] + dt*chargemass*(0.5*(oldV[0]+newViter[0])*Bp[1]-0.5*(oldV[1]+newViter[1])*Bp[0]);
         }
         diff = 0.0;
         for (unsigned d=0;d<GEMPIC_SPACEDIM;++d)
@@ -1637,8 +1640,9 @@ amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(P const& p,
 
 
 
-template <typename P, int vdim>
-amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
+template <int vdim>
+amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+                                                                amrex::GpuArray<amrex::Real, vdim> vel,
                                                            amrex::Real dt,
                                                            amrex::Real chargemass, //charge/mass
                                                            amrex::GpuArray<amrex::Real,vdim>& Ep,
@@ -1647,52 +1651,53 @@ amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle(P const& p,
 
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
+    newPos[0] = mod_dom(pos[0] + vel[0]*dt, infra.geom.ProbHi()[0], infra.geom.ProbLo()[0]);
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(p.pos(1) + p.rdata(1)*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
+    newPos[1] = mod_dom(pos[1] + vel[1]*dt, infra.geom.ProbHi()[1], infra.geom.ProbLo()[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
+    newPos[2] = mod_dom(pos[2] + vel[2]*dt, infra.geom.ProbHi()[2], infra.geom.ProbLo()[2]);
 #endif
 
     if (vdim == 1) {
-        newPos[1] = p.rdata(0) + dt*chargemass*(Ep[0]);
+        newPos[1] = vel[0] + dt*chargemass*(Ep[0]);
     } else if (vdim == 2) {
-        newPos[2] = p.rdata(0) + dt*chargemass*(Ep[0]+p.rdata(1)*Bp[0]);
-        newPos[3] = p.rdata(1) + dt*chargemass*(Ep[1]+p.rdata(0)*Bp[0]);
+        newPos[2] = vel[0] + dt*chargemass*(Ep[0]+vel[1]*Bp[0]);
+        newPos[3] = vel[1] + dt*chargemass*(Ep[1]+vel[0]*Bp[0]);
     } else if (vdim == 3) {
-        newPos[3] = p.rdata(0) + dt*chargemass*(Ep[0]+(p.rdata(1)*Bp[2]-p.rdata(2)*Bp[1]));
-        newPos[4] = p.rdata(1) + dt*chargemass*(Ep[1]+(p.rdata(2)*Bp[0]-p.rdata(0)*Bp[2]));
-        newPos[5] = p.rdata(2) + dt*chargemass*(Ep[2]+(p.rdata(0)*Bp[1]-p.rdata(1)*Bp[0]));
+        newPos[3] = vel[0] + dt*chargemass*(Ep[0]+(vel[1]*Bp[2]-vel[2]*Bp[1]));
+        newPos[4] = vel[1] + dt*chargemass*(Ep[1]+(vel[2]*Bp[0]-vel[0]*Bp[2]));
+        newPos[5] = vel[2] + dt*chargemass*(Ep[2]+(vel[0]*Bp[1]-vel[1]*Bp[0]));
     }
     return(newPos);
 }
 
-template <typename P, int vdim>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(P const& p,
+template <int vdim>
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_pos(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
+                                                               amrex::GpuArray<amrex::Real, vdim> vel,
                                                                amrex::Real dt,
                                                                CompDom::computational_domain infra){
 
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
     // new positions (modulo the upper bound of the box)
-    newPos[0] = mod_dom(p.pos(0) + p.rdata(0)*dt, infra.phi[0], infra.plo[0]);
-    newPos[GEMPIC_SPACEDIM] = p.rdata(0);
+    newPos[0] = mod_dom(pos[0] + vel[0]*dt, infra.phi[0], infra.plo[0]);
+    newPos[GEMPIC_SPACEDIM] = vel[0];
 #if (GEMPIC_SPACEDIM > 1)
-    newPos[1] = mod_dom(p.pos(1) + p.rdata(1)*dt, infra.phi[1], infra.plo[1]);
+    newPos[1] = mod_dom(pos[1] + vel[1]*dt, infra.phi[1], infra.plo[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    newPos[2] = mod_dom(p.pos(2) + p.rdata(2)*dt, infra.phi[2], infra.plo[2]);
+    newPos[2] = mod_dom(pos[2] + vel[2]*dt, infra.phi[2], infra.plo[2]);
 #endif
     if (vdim > 1) {
-        newPos[GEMPIC_SPACEDIM+1] = p.rdata(1);
+        newPos[GEMPIC_SPACEDIM+1] = vel[1];
     }
     if (vdim > 2) {
-        newPos[GEMPIC_SPACEDIM+2] = p.rdata(2);
+        newPos[GEMPIC_SPACEDIM+2] = vel[2];
     }
     return(newPos);
 }
 
-template <typename P, int vdim>
+template <int vdim>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> push_particle_boris(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
                                                                  amrex::GpuArray<amrex::Real, vdim> vel,
                                                                  amrex::Real dt,

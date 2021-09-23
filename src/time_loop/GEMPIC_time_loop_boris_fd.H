@@ -105,7 +105,7 @@ void time_loop_boris_fd_step (computational_domain infra,
                     for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
                     amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
 
-                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<vdim,degx,degy,degz> (charge_weight_dxi_coeff,
                                                                                                                                                           particle_vel,
                                                                                                                                                           spline, jA, eA, bA, true);
 
@@ -125,7 +125,7 @@ void time_loop_boris_fd_step (computational_domain infra,
                         vel[comp] = particles[pp].rdata(comp);
                     }
 
-                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(pos, vel, time_step*coeff, chargemass, eres, bres, infra);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<vdim>(pos, vel, time_step*coeff, chargemass, eres, bres, infra);
                     for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
                         particles[pp].pos(xd) = newPos[xd];
                     for (int vd=0;vd<vdim; vd++)
@@ -191,7 +191,7 @@ void time_loop_boris_fd_step (computational_domain infra,
                     for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
                     amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
 
-                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<vdim,degx,degy,degz> (charge_weight_dxi_coeff,
                                                                                                                                                           particle_vel,
                                                                                                                                                           spline, jA, eA, bA, false);
                 });
