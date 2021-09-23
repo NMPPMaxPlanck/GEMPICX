@@ -34,17 +34,18 @@ using namespace Diagnostics_Output;
 
 AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t, int funcSelect)
 {
-    amrex::Real omega = std::sqrt(1836.15267596*0.005);
+    amrex::Real omega = 1836.15267596*0.005;
     switch(funcSelect){
     case AMPERE_FARADAY_E0_SIN :
-      return 1.0*std::sin(z-omega*t);
+      return 1.0*std::sin(z-std::sqrt(omega)*t);
     case AMPERE_FARADAY_B1_SIN :
-      return 1.0/omega*std::sin(z-omega*t);
+      return 1.0/std::sqrt(omega)*std::sin(z-std::sqrt(omega)*t);
     case AMPERE_FARADAY_OMEGA :
       return omega;
     case AMPERE_FARADAY_ZERO : 
       return 0.0;
     }
+  return 0.0;
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz>
@@ -110,12 +111,6 @@ void main_main ()
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
     std::cout <<  "step: " << 0 << std::endl;
-    funcSelectE[0] = AMPERE_FARADAY_E0_SIN;
-    funcSelectE[1] = AMPERE_FARADAY_ZERO;
-    funcSelectE[2] = AMPERE_FARADAY_ZERO;
-    funcSelectE[0] = AMPERE_FARADAY_ZERO;
-    funcSelectE[1] = AMPERE_FARADAY_B1_SIN;
-    funcSelectE[2] = AMPERE_FARADAY_ZERO;
     E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
     AllPrintToFile("test_ampere_faraday.tmp") << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
@@ -146,12 +141,6 @@ void main_main ()
         //------------------------------------------------------------------------------
         // This generates error output once more: comparing current E and B to the analytical solution -- you can ignore the code
         mw_yee.advance_time();
-        funcSelectE[0] = AMPERE_FARADAY_E0_SIN;
-        funcSelectE[1] = AMPERE_FARADAY_ZERO;
-        funcSelectE[2] = AMPERE_FARADAY_ZERO;
-        funcSelectE[0] = AMPERE_FARADAY_ZERO;
-        funcSelectE[1] = AMPERE_FARADAY_B1_SIN;
-        funcSelectE[2] = AMPERE_FARADAY_ZERO;
         E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
         AllPrintToFile("test_ampere_faraday.tmp") << "step " << n << endl;
         AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
