@@ -66,13 +66,14 @@ void time_loop_boris_fd_step (computational_domain infra,
         if (profiling_timers->profiling)
           profiling_timers->counter_jboundary += MPI_Wtime();
         for (int spec=0;spec<numspec;spec++) {
+            amrex::Real spec_charge = (*part_gr).charge[spec];
             if (profiling_timers->profiling)
               profiling_timers->counter_deposition -= MPI_Wtime();
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
-                auto& particles = pti.GetArrayOfStructs(); // get particles
+                amrex::Particle<vdim+1,0>*  AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]); // get particles
                 const long np  = pti.numParticles();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
@@ -87,11 +88,26 @@ void time_loop_boris_fd_step (computational_domain infra,
                     bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
                 }
 
-                // loop over particles: add contribution of old particle position to J and push
-                for (int pp=0;pp<np;pp++){
+                amrex::Real time_step = (*mw_yee).dt;
 
-                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, true);
+                // loop over particles: add contribution of old particle position to J and push
+                amrex::ParallelFor(np,
+                                                             [=] AMREX_GPU_DEVICE (long pp )
+                                                              {
+
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      pos[d]= particles[pp].pos(d);
+                    splines_at_particles<degx,degy,degz> spline;
+                    spline.init_particles(pos, infra.plo, infra.dxi);
+
+                    amrex::GpuArray<amrex::Real, vdim> particle_vel;
+                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
+                    amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
+
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<vdim,degx,degy,degz> (charge_weight_dxi_coeff,
+                                                                                                                                                          particle_vel,
+                                                                                                                                                          spline, jA, eA, bA, true);
 
                     amrex::GpuArray<amrex::Real,vdim> eres;
                     for (int comp = 0; comp < vdim; comp++) {
@@ -101,10 +117,20 @@ void time_loop_boris_fd_step (computational_domain infra,
                     for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
                         bres[comp] = field_interp[vdim+comp];
                     }
+                    for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
+                        pos[comp] = particles[pp].pos(comp);
+                    }
+                    amrex::GpuArray<amrex::Real,vdim> vel;
+                    for (int comp = 0; comp < vdim; comp++) {
+                        vel[comp] = particles[pp].rdata(comp);
+                    }
 
-                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<amrex::Particle<vdim+1>,vdim>(particles[pp], (*mw_yee).dt*coeff, chargemass, eres, bres, infra);
-                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
-                }
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_boris<vdim>(pos, infra.plo, infra.phi, vel, time_step*coeff, chargemass, eres, bres);
+                    for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
+                        particles[pp].pos(xd) = newPos[xd];
+                    for (int vd=0;vd<vdim; vd++)
+                        (particles[pp].rdata(vd)) = newPos[GEMPIC_SPACEDIM+vd];
+                });
             }
             if (profiling_timers->profiling)
              profiling_timers->counter_deposition += MPI_Wtime();
@@ -139,8 +165,9 @@ void time_loop_boris_fd_step (computational_domain infra,
         if (profiling_timers->profiling)
           profiling_timers->counter_deposition -= MPI_Wtime();
         for (int spec=0;spec<numspec;spec++) {
+            amrex::Real spec_charge = (*part_gr).charge[spec];
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                auto& particles = pti.GetArrayOfStructs();
+                amrex::Particle<vdim+1,0>*  AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
                 const long np  = pti.numParticles();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
@@ -151,10 +178,23 @@ void time_loop_boris_fd_step (computational_domain infra,
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
-                for (int pp=0;pp<np;pp++){
-                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
-                }
+                amrex::ParallelFor(np,
+                                                             [=] AMREX_GPU_DEVICE (long pp )
+                                                              {
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      pos[d]= particles[pp].pos(d);
+                    splines_at_particles<degx,degy,degz> spline;
+                    spline.init_particles(pos, infra.plo, infra.dxi);
+
+                    amrex::GpuArray<amrex::Real, vdim> particle_vel;
+                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
+                    amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
+
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<vdim,degx,degy,degz> (charge_weight_dxi_coeff,
+                                                                                                                                                          particle_vel,
+                                                                                                                                                          spline, jA, eA, bA, false);
+                });
             }
         }
         if (profiling_timers->profiling){
