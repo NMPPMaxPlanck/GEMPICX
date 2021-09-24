@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_zigzag_C2.tmp.0");
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 6, 5, 4, 4>();
+    main_main<3, 1, 2, 2, 2, 4>();
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_zigzag_C2.tmp.0", "test_vlasov_maxwell_hs_zigzag_C2.output");
     amrex::Finalize();
