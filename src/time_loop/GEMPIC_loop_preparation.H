@@ -178,6 +178,24 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
     loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
+void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+                       computational_domain infra,
+                       maxwell_yee<vdim> *mw_yee,
+                       particle_groups<vdim, numspec> *part_gr,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
+                       bool time_staggered,
+                       amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelect
+                       ) {
+
+    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
+
+    // initial B_field
+    (*mw_yee).template initB<degmw>(infra, funcSelect);
+
+    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+}
+
 }
 }
 

@@ -27,30 +27,25 @@ using namespace Gempic;
 using namespace Field_solvers;
 using namespace Diagnostics_Output;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real E0_sin(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t)
-{
-    amrex::Real omega = std::sqrt(1836.15267596*0.005);
-    amrex::Real val = 1.0*std::sin(z-omega*t);
-    return val;
-}
+#define AMPERE_FARADAY_ZERO   0
+#define AMPERE_FARADAY_E0_SIN 1
+#define AMPERE_FARADAY_B1_SIN 2
+#define AMPERE_FARADAY_OMEGA  3
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real B1_sin(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real , amrex::Real , amrex::Real z, amrex::Real t, int funcSelect)
 {
-    amrex::Real omega = std::sqrt(1836.15267596*0.005);
-    amrex::Real val = 1.0/omega*std::sin(z-omega*t);
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
-{
-    amrex::Real val = 0.0;
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real valfvensq(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
-{
-    amrex::Real val = (1836.15267596*0.005);
-    return val;
+    amrex::Real omega = 1836.15267596*0.005;
+    switch(funcSelect){
+    case AMPERE_FARADAY_E0_SIN :
+      return 1.0*std::sin(z-std::sqrt(omega)*t);
+    case AMPERE_FARADAY_B1_SIN :
+      return 1.0/std::sqrt(omega)*std::sin(z-std::sqrt(omega)*t);
+    case AMPERE_FARADAY_OMEGA :
+      return omega;
+    case AMPERE_FARADAY_ZERO : 
+      return 0.0;
+    }
+  return 0.0;
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz>
@@ -91,15 +86,23 @@ void main_main ()
     // Initialization of E and B: this is done via a projection-operator
 
     //mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
-    mw_yee.template initE<degree> (E0_sin, zero, zero, infra);
-    mw_yee.template initB<degree> (zero, B1_sin, zero, infra);
+    amrex::GpuArray<int, vdim> funcSelectE;
+    funcSelectE[0] = AMPERE_FARADAY_E0_SIN;
+    funcSelectE[1] = AMPERE_FARADAY_ZERO;
+    funcSelectE[2] = AMPERE_FARADAY_ZERO;
+    mw_yee.template initE<degree> ( infra, funcSelectE );
+    amrex::GpuArray<int, vdim> funcSelectB;
+    funcSelectB[0] = AMPERE_FARADAY_ZERO;
+    funcSelectB[1] = AMPERE_FARADAY_B1_SIN;
+    funcSelectB[2] = AMPERE_FARADAY_ZERO;
+    mw_yee.template initB<degree> ( infra, funcSelectB );
     for (int comp=0; comp<3; comp++) {
-        mw_yee.template projection<2>(valfvensq,
-                                      0.0,
+        mw_yee.template projection<2>(0.0,
                                       infra,
                                       {false, false, false},
                                       *(mw_yee.E_Index[comp]),
-                                      &(*mw_yee.Alfven_Tensor[comp]));
+                                      &(*mw_yee.Alfven_Tensor[comp]),
+                                      AMPERE_FARADAY_OMEGA);
     }
 
 
@@ -108,7 +111,7 @@ void main_main ()
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, true, infra);
+    E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
     AllPrintToFile("test_ampere_faraday.tmp") << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
@@ -124,6 +127,7 @@ void main_main ()
 
         //------------------------------------------------------------------------------
         // Ampere
+
         mw_yee.template hodge_full<degree>(infra, &(mw_yee.B_Array), &(mw_yee.HB_Array), false); // we apply the hodge to B (you can ignore this, when degree=2, this is the identity)
         mw_yee.advance_E(infra, VlMa.dt, true, false, &(mw_yee.HB_Array), &(mw_yee.Alfven_Tensor), &(mw_yee.E_Array)); // we apply curl to B and set E = E+dt*curl(B)
         // you can find the function advance_E in src/field_solvers/GEMPIC_maxwell_yee.H line 480 (you can ignore lines 513-548, they are for other cases)
@@ -137,7 +141,7 @@ void main_main ()
         //------------------------------------------------------------------------------
         // This generates error output once more: comparing current E and B to the analytical solution -- you can ignore the code
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(E0_sin, zero, zero, zero, B1_sin, zero, true, infra);
+        E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
         AllPrintToFile("test_ampere_faraday.tmp") << "step " << n << endl;
         AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
         amrex::AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;

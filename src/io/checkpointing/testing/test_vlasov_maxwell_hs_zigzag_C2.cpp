@@ -27,6 +27,20 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
+#define VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO 0
+#define VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION 1
+
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+{
+    switch(funcSelect){
+    case VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION :
+      return 1.0 ;//+ 0.5 * std::cos(0.5 * x);
+    case VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO :
+      return 0.0 ;
+    }
+    return 0.0;
+}
+
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
 {
     amrex::Real val = 1.0 ;//+ 0.5 * std::cos(0.5 * x);
@@ -38,6 +52,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real
     amrex::Real val = 0.0;
     return val;
 }
+
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
@@ -75,7 +90,10 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template init_rho_phi<degmw>(zero, zero, infra);
+    amrex::GpuArray<int, 2> funcSelect;
+    funcSelect[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelect[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    mw_yee.template init_rho_phi<degmw>(infra, funcSelect);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);
@@ -86,7 +104,12 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0, wave_function);
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, zero, zero, zero);
+
+    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
+    funcSelectB[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, funcSelectB);
 
 
     //------------------------------------------------------------------------------

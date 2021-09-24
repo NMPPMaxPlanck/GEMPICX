@@ -11,10 +11,6 @@ cp $SOURCE_DIRECTORY/third_party/AMReX_MLNodeLap_Gempic_3D_K.H $AMREX_DIRECTORY/
 
 source /etc/profile.d/modules.sh
 module purge
-  if [ x"$CLUSTER" == x"COBRA" ] || [ x"$CLUSTER" == x"SAKURA" ] || [ x"$CLUSTER" == x"TALOS" ]; then
-        # high usage of AVX512 registers seems slightly beneficial
-        INTEL_OPT_FLAGS="$INTEL_OPT_FLAGS -qopt-zmm-usage=high"
-    fi
 if [ x"$CLUSTER" == x"COBRA"  ]; then
 module load intel/19.1.1
 module load impi/2019.7
@@ -44,4 +40,4 @@ cd ..
 mkdir -p gempic
 cd gempic
 cmake  -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc  -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
-make -j 10
+make VERBOSE=1 -j 10
