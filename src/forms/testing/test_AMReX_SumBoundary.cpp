@@ -90,7 +90,12 @@ void main_main ()
 
         amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
         for (int pp=0;pp<np;pp++) {
-            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
+            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+            for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
+                pos[comp] = particles[pp].pos(comp);
+            }
+            amrex::Real weight = particles[pp].rdata(vdim);
+            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(pos, weight, charge, dxi, plo, rhoarr,Index_A);
         }
     }
     amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;

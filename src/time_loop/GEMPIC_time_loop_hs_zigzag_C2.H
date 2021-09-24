@@ -131,14 +131,16 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
-                    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], dt*0.5*coeff, chargemass, efield);
+                    amrex::GpuArray<amrex::Real,vdim> vel;
+                    for (int comp = 0; comp < vdim; comp++) {
+                        vel[comp] = particles[pp].rdata(comp);
+                    }
+                    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, dt*0.5*coeff, chargemass, efield);
                     for (int vd=0;vd<vdim; vd++)
                         (particles[pp].rdata(vd)) = newPosE[vd];
 
                     amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
 
-
-                    amrex::GpuArray<amrex::Real,vdim> vel;
                     for (unsigned int d=0;d<vdim;++d)
                       vel[d] = particles[pp].rdata(d);
                     amrex::GpuArray<amrex::Real, 2> bfields;
@@ -369,7 +371,11 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // evaluate the electric field
                     amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(splines,  eA);
                     // push v with the electric field
-		    amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<amrex::Particle<vdim+1>,vdim>(particles[pp], dt*0.5*coeff, chargemass, efield);
+                    amrex::GpuArray<amrex::Real,vdim> vel;
+                    for (int comp = 0; comp < vdim; comp++) {
+                        vel[comp] = particles[pp].rdata(comp);
+                    }
+            amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, dt*0.5*coeff, chargemass, efield);
 		   for (int vd=0;vd<vdim; vd++)
 			   (particles[pp].rdata(vd)) = newPosE[vd];
                 });

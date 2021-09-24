@@ -151,7 +151,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE           void init_position(amrex::Real 
 
         }
 
- AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE                  void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
+ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE                  void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {
@@ -220,7 +220,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE       amrex::GpuArray<amrex::Real, length
 
 template<int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
-                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
+                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>const& eArray)
 {
     amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
@@ -284,7 +284,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluat
 #if GEMPIC_SPACEDIM == 3
 template<int vdim, int degx, int degy, int degz>
 amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,degz> &spline,
-                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eArray)
+                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& eArray)
 {
     amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
@@ -360,13 +360,13 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_rho_C3 ( splines_at_pa
 
 
 template<typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_C2(S const& spline,
+AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(S const& spline,
                               spline1d_at_particles<degp> const& spline_new,
                               spline1d_at_particles<degp> const& spline_old,
                               amrex::Real weight,
                               const amrex::Real* dx,
-                              amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
-                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jArray,
+                              amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
+                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>const& jArray,
                               amrex::GpuArray<amrex::Real, 2> &fields,
                               amrex::GpuArray<amrex::Real, plength> *primitive)
 {

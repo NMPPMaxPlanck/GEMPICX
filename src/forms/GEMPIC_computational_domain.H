@@ -37,6 +37,7 @@ public:
     amrex::DistributionMapping distriMap;
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx;
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> phi;
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
 
     amrex::Real tolerance_particle; //
@@ -93,6 +94,7 @@ public:
         for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
             dx[cc] = geom.CellSize()[cc];
             plo[cc] = geom.ProbLo()[cc];
+            phi[cc] = geom.ProbHi()[cc];
             dxi[cc] = 1.0/dx[cc];
             dxi[GEMPIC_SPACEDIM] *= dxi[cc];
         }

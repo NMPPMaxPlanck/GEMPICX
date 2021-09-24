@@ -14,16 +14,21 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
-{
-    amrex::Real val = std::cos(x)-std::cos(x)*std::cos(y)*std::cos(z) - 1.0/4.0*std::cos(2*x)*std::cos(2*y)*std::cos(2*z);
-    return val;
-}
+#define POISSON_CG_PHI 0
+#define POISSON_CG_RHO 1
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func_rho(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
-    amrex::Real val = -3.0*(std::cos(x)*std::cos(y)*std::cos(z)+std::cos(2*x)*std::cos(2*y)*std::cos(2*z));
-    return val;
+  switch(funcSelect){
+  case POISSON_CG_PHI :
+    return std::cos(x)-std::cos(x)*std::cos(y)*std::cos(z) - 1.0/4.0*std::cos(2*x)*std::cos(2*y)*std::cos(2*z);
+    break;
+  case POISSON_CG_RHO :
+    return -3.0*(std::cos(x)*std::cos(y)*std::cos(z)+std::cos(2*x)*std::cos(2*y)*std::cos(2*z));
+    break;
+  }
+  return 0.0;
+
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz>
@@ -44,6 +49,7 @@ void main_main ()
     VlMa.Nghost = 3;
 
     CompDom::computational_domain infra;
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
     VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
@@ -79,7 +85,10 @@ void main_main ()
     mlmg.setVerbose(0);
     mlmg.setBottomVerbose(0);
 
-    mw_yee.template init_rho_phi<degree>(func_rho, func_phi, infra);
+    amrex::GpuArray<int, 2> funcSelect;
+    funcSelect[0] = POISSON_CG_PHI;
+    funcSelect[1] = POISSON_CG_RHO;
+    mw_yee.template init_rho_phi<degree>(infra, funcSelect);
 
     // ----------------------------------------------------------------------------------
 
