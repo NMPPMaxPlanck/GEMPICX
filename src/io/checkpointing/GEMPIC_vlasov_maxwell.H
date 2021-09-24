@@ -117,7 +117,6 @@ public:
         n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
         pp.query("n_part_per_cell",n_part_per_cell_in);
         for (int i = 0; i < numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
-        std::cout << "query result: " << n_steps << std::endl;
         pp.query("n_steps",n_steps);
         pp.query("freq_x",freq_x);
         pp.query("freq_v",freq_v);
