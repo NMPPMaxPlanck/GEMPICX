@@ -286,7 +286,6 @@ void main_main ()
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
     gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
-    */
 
 
     AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
