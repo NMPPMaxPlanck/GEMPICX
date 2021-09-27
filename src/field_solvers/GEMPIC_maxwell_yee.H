@@ -621,9 +621,9 @@ public:
         amrex::Real epref_ep0_cp = epref_ep0;
 
         for (int d=0; d<vdim; d++) {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
+//#ifdef AMREX_USE_OMP
+//#pragma omp parallel if (Gpu::notInLaunchRegion())
+//#endif
             for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
 
@@ -680,9 +680,9 @@ public:
         int bdim = int(vdim/2.5)*2+1;
 
         for (int d=0; d<vdim; d++) {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
+//#ifdef AMREX_USE_OMP
+//#pragma omp parallel if (Gpu::notInLaunchRegion())
+//#endif
             for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
 
@@ -742,9 +742,9 @@ public:
 
         // B-field
         for (int d=0; d<bdim; d++) {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
+//#ifdef AMREX_USE_OMP
+//#pragma omp parallel if (Gpu::notInLaunchRegion())
+//#endif
             for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
 

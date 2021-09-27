@@ -15,6 +15,15 @@ if (USE_CUDA)
   find_package(CUDA QUIET REQUIRED)
 endif()
 
+if (USE_OMP)
+  find_package(OpenMP REQUIRED)
+  if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  endif()
+endif()
+
 #find_package(MPI REQUIRED CXX)
 
 message("AMReX Dir is ${AMReX_ROOT}")
