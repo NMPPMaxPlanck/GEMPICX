@@ -15,6 +15,9 @@
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
+//#include <cudaProfiler.h>
+//#include <nvToolsExt.h>
+
 using namespace std;
 using namespace amrex;
 using namespace Gempic;
@@ -63,10 +66,9 @@ void main_main ()
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_simulation",
 
-    {12,8,8}); // Number of cells:
-    VlMa.n_part_per_cell = {2000};
+		    {12,8,8});//{40,40,40}); // Number of cells:
+    VlMa.n_part_per_cell = {2000};//{20};
     VlMa.n_steps = 10;
-
 
     VlMa.propagator = 3;
     VlMa.set_prop_related();
@@ -118,12 +120,15 @@ void main_main ()
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, funcSelectB);
 
-
+  //  cuProfilerStart();
+  //  nvtxRangePush("time_loop");
     //------------------------------------------------------------------------------
     // timeloop
     time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true,
             false, // bool to activate profiling
             output>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
+  //  nvtxRangePop();
+  //  cuProfilerStop();
 
 }
 
@@ -134,7 +139,7 @@ int main(int argc, char* argv[])
     if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_zigzag_C2.tmp.0");
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 2, 2, 2, 4>();
+    main_main<3, 1, 2, 2, 2, 2>();
 
     if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_zigzag_C2.tmp.0", "test_vlasov_maxwell_hs_zigzag_C2.output");
     amrex::Finalize();
