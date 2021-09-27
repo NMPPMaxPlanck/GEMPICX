@@ -46,11 +46,11 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        amrex::Real coeff,
                        particle_groups<vdim, numspec> *part_gr,
-                       timers *profiling_timers) {
+                       timers *profiling_timers,
+                       bool profiling_count) {
 
 
     // Initialize the counters for timing the various parts of the algorithm
-    bool profiling_count = true;
 
         (*mw_yee).advance_time(coeff);
 
@@ -415,6 +415,7 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
                        std::string simulation_name,
                        int strang_order) {
 
+    bool profiling_count = false;
     timers profiling_timers(true);
 
     if (output)
@@ -427,21 +428,21 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
             profiling_timers.counter_all -= MPI_Wtime();
         switch (strang_order) {
         case 2:
-            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, 1.0, part_gr, &profiling_timers);
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, 1.0, part_gr, &profiling_timers, profiling_count);
             break;
         case 4:
             amrex::Real alpha = 1./(2.-pow(2.,1./3.));
             amrex::Real beta = 1. - 2.*alpha;
 
-            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, alpha, part_gr, &profiling_timers);
-            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, beta, part_gr, &profiling_timers);
-            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, alpha, part_gr, &profiling_timers);
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, alpha, part_gr, &profiling_timers,profiling_count);
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, beta, part_gr, &profiling_timers,profiling_count);
+            time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic, profiling>(infra, mw_yee, alpha, part_gr, &profiling_timers,profiling_count);
             break;
         }
 
         if (output)
             diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
-
+        profiling_count = true;
     }
 
     if (profiling_timers.profiling){
