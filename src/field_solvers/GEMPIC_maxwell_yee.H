@@ -438,8 +438,6 @@ public:
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
         for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
             const amrex::Box& bx = mfi.tilebox();
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = ifr.plo;
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = ifr.dx;
             amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
             //ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             amrex::IntVect lo = {bx.smallEnd()};
