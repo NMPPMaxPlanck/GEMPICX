@@ -116,7 +116,7 @@ void main_main ()
         amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp").SetPrecision(20) << TestMF[mfi] << std::endl;
     }
 
-    bool passed = (std::abs(TestMF.norm1(0,Nghost) - 5) < 1e-12);
+    bool passed = (std::abs(TestMF.norm1(0,Nghost) - 7.8) < 1e-12);
     amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << std::endl;
     amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << passed << std::endl;
 

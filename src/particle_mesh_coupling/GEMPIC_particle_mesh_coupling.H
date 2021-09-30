@@ -1509,7 +1509,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_charge_indextype (spli
             for (int ii = 0; ii <= degx; ++ii) {
 
                 // deposit in J and interpolate in E
-                amrex::Real s_coeff = 0.5;
+                amrex::Real s_coeff = 1.0;
                 if (IndT[0]==0) {
                     s_coeff *= spline.spline_cell[0][ii];
                 } else {
@@ -1521,9 +1521,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_charge_indextype (spli
                     s_coeff *= spline.spline_node[1][jj];
                 }
                 if (IndT[2]==0) {
-                    s_coeff *= spline.spline_cell[1][kk];
+                    s_coeff *= spline.spline_cell[2][kk];
                 } else {
-                    s_coeff *= spline.spline_node[1][kk];
+                    s_coeff *= spline.spline_node[2][kk];
                 }
                 amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
 
