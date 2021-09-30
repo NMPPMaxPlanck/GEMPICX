@@ -112,7 +112,8 @@ void time_loop_hs_fem_step (computational_domain infra,
                     for (int comp = 0; comp < vdim; comp++) {
                         vel[comp] = particles[pp].rdata(comp);
                     }
-                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<vdim,degx,degy,degz>(pos, vel, (*mw_yee).dt*coeff, chargemass, bA, infra);
+                    spline.init_particles(pos , infra.plo, infra.dxi);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_x_v_bfield<vdim,degx,degy,degz>(pos, vel, (*mw_yee).dt*coeff, chargemass, bA, infra, spline);
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
                     for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
                     {

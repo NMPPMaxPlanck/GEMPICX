@@ -1092,36 +1092,13 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuA
      *  Field evluation of a two form described by finite elements
      */
 template <int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
-                                                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> evaluate_fem_bfield(splines_at_particles<degx,degy,degz> &spline,
                                                                       amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray)
 {
     amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> fields;
     for (int comp = 0; comp < int(vdim/2.5)*2+1; comp++) {
         fields[comp] = 0.;
     }
-    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-
-    amrex::Real lx = (position[0]-plo[0])*dxi[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> ( xint );
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> ( xint );
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (position[1]-plo[1])*dxi[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> ( yint );
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> ( yint );
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (position[2]-plo[2])*dxi[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> ( zint );
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> ( zint );
-#endif
 
     // First B_0
 #if (GEMPIC_SPACEDIM > 2)
@@ -1132,13 +1109,13 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                double s_coeff = sx_node[ii]
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                double s_coeff = spline.spline_node[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        *sy_cell[jj]
+                        *spline.spline_cell[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        *sz_cell[kk]
+                        *spline.spline_cell[2][kk]
         #endif
                         ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -1163,13 +1140,13 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5
 #endif
                 for (int ii = 0; ii <= degx; ++ii) {
                     // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                    amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                    double s_coeff = sx_cell[ii]
+                    amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                    double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                            *sy_node[jj]
+                            *spline.spline_node[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                            *sz_cell[kk]
+                            *spline.spline_cell[2][kk]
         #endif
                             ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -1196,13 +1173,13 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5
 #endif
                 for (int ii = 0; ii <= degx-1; ++ii) {
                     // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                    amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
-                    double s_coeff = sx_cell[ii]
+                    amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                    double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                            *sy_cell[jj]
+                            *spline.spline_cell[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                            *sz_node[kk]
+                            *spline.spline_node[2][kk]
         #endif
                             ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -1546,7 +1523,8 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
                                                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
-                                                              CompDom::computational_domain infra){
+                                                              CompDom::computational_domain infra,
+                                                              splines_at_particles<degx,degy,degz> &spline){
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
         oldX[d]= pos[d];
@@ -1580,9 +1558,8 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
                 xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
         }
         // evaluate B at xMean
-        amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(xMean,
-                                                                                                       infra.dxi,
-                                                                                                       infra.plo,
+        spline.init_particles(xMean , infra.plo, infra.dxi);
+        amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(spline,
                                                                                                        bArray);
         if  (vdim == 2) {
             newV[0] = oldV[0] + dt*chargemass*( 0.5*(oldV[1]+newViter[1])*Bp[0]);
@@ -1740,7 +1717,8 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_magnetization (amrex::
                                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                    amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>& bArray,
-                                   amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& mArray)
+                                   amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& mArray,
+                                                                         splines_at_particles<degx,degy,degz> &spline)
 
 {
     // 1. Identify the box and relative position of position old
@@ -1753,23 +1731,12 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_magnetization (amrex::
         position_box[d] = pos_norm - box[d];
     }
 
-    // 2. Evaluate the splines at the particle position
-    Gempic::Particles::splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
+    // 2. Evaluate the splines at the particle position (done before call now)
 
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(position_box[0], degx-1, true), degx-1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(position_box[0], degx, false), degx);
-#if (GEMPIC_SPACEDIM > 1)
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(position_box[1], degy-1, true), degy-1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(position_box[1], degy, false), degy);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(position_box[2], degz-1, true), degz-1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(position_box[2], degz, false), degz);
-#endif
 
     // 3. Provide the magnetic field and other parts of the weighting factor
     // Evaluate the magnetic field
-    amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> bfield = Gempic::Particles::evaluate_fem_bfield(position, dxi, plo, bArray);
+    amrex::GpuArray<amrex::Real, int(vdim/2.5)*2+1> bfield = Gempic::Particles::evaluate_fem_bfield(spline, bArray);
     // Compute modulus of magnetic field
     amrex::Real bfield_mod = 0.0;
     for (int d =0;d<int(vdim/2.5)*2+1;++d )
@@ -1790,12 +1757,12 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_magnetization (amrex::
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
                 amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box[0]+ii, box[1]+jj, box[2]+kk)};
                 if ( ii < degx ) {
-                    double s_coeff = sx_node[ii]
+                    double s_coeff = spline.spline_node[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                            *sy_cell[jj]
+                            *spline.spline_cell[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                            *sz_cell[kk]
+                            *spline.spline_cell[2][kk]
         #endif
                             ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -1807,10 +1774,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_magnetization (amrex::
                 if(vdim > 1) {
 #if (GEMPIC_SPACEDIM > 1)
                     if ( jj < degy ) {
-                        double s_coeff = sx_node[ii]
-                                *sy_node[jj]
+                        double s_coeff = spline.spline_node[0][ii]
+                                *spline.spline_node[1][jj]
         #if(GEMPIC_SPACEDIM > 2)
-                                *sz_node[kk]
+                                *spline.spline_node[2][kk]
         #endif
                                 ;
 #else
@@ -1826,9 +1793,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_magnetization (amrex::
 
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < degz ) {
-                    double s_coeff = sx_cell[ii]
-                            *sy_cell[jj]
-                            *sz_node[kk];
+                    double s_coeff = spline.spline_cell[0][ii]
+                            *spline.spline_cell[1][jj]
+                            *spline.spline_node[2][kk];
 #else
                 double s_coeff = sx_cell[ii]
         #if (GEMPIC_SPACEDIM > 1)
