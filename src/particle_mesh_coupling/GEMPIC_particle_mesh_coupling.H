@@ -96,36 +96,13 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<
      *  Evaluation of a FEM one form
      */
 template<int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos,
-                                                       amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                                                  amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                                  amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& eArray)
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(splines_at_particles<degx,degy,degz> &spline,
+                                                                                             amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& eArray)
 {
     amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
         fields[comp] = 0.;
     }
-    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-
-    amrex::Real lx = (pos[0]-plo[0])*dxi[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> ( xint );
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> ( xint );
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (pos[1]-plo[1])*dxi[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (yint);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (yint);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (pos[2]-plo[2])*dxi[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (zint);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> (zint);
-#endif
 
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= degz; ++kk) {
@@ -135,14 +112,14 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluat
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
-                    double s_coeff = sx_cell[ii]
+                    double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                            *sy_node[jj]
+                            *spline.spline_node[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                            *sz_node[kk]
+                            *spline.spline_node[2][kk]
         #endif
                             ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -154,10 +131,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluat
 #if (GEMPIC_SPACEDIM > 1)
                 if(vdim > 1) {
                     if ( jj < degy ) {
-                        double s_coeff = sx_node[ii]
-                                *sy_cell[jj]
+                        double s_coeff = spline.spline_node[0][ii]
+                                *spline.spline_cell[1][jj]
         #if(GEMPIC_SPACEDIM > 2)
-                                *sz_node[kk]
+                                *spline.spline_node[2][kk]
         #endif
                                 ;
                         fields[1] += s_coeff*(eArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) ,0);
@@ -166,9 +143,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluat
 #endif
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < degz ) {
-                    double s_coeff = sx_node[ii]
-                            *sy_node[jj]
-                            *sz_cell[kk]
+                    double s_coeff = spline.spline_node[0][ii]
+                            *spline.spline_node[1][jj]
+                            *spline.spline_cell[2][kk]
                             ;
                     fields[2] += s_coeff*(eArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) ,0);
                 }

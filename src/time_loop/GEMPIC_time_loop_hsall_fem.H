@@ -94,11 +94,13 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
                 for (int pp=0;pp<np;pp++){
                     // evaluate the electric field
+                    splines_at_particles<degx,degy,degz> spline;
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
                         pos[comp] = particles[pp].pos(comp);
                     }
-                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<vdim,degz,degy,degz>(pos,infra.dxi, infra.plo,  eA);
+                    spline.init_particles(pos , infra.plo, infra.dxi);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> vel;
@@ -263,11 +265,13 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
                 for (int pp=0;pp<np;pp++){
                     // evaluate the electric field
+                    splines_at_particles<degx,degy,degz> spline;
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
                     for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
                         pos[comp] = particles[pp].pos(comp);
                     }
-                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<vdim,degx,degy,degz>(pos,infra.dxi, infra.plo,  eA);
+                    spline.init_particles(pos , infra.plo, infra.dxi);
+                    amrex::GpuArray<amrex::Real, vdim> efield = evaluate_fem_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> vel;
