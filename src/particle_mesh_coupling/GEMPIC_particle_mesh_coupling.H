@@ -1523,7 +1523,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
                                                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
-                                                              CompDom::computational_domain infra,
+                                                                                                         amrex::Real tolerance_particle,
+                                                                                                         amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo,
+                                                                                                         amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> phi,
+                                                                                                         amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi,
                                                               splines_at_particles<degx,degy,degz> &spline){
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> oldX;
     for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
@@ -1535,7 +1538,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
     amrex::GpuArray<amrex::Real, vdim> newV = oldV;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newXiter;
     amrex::GpuArray<amrex::Real, vdim> newViter;
-    amrex::Real tolerance = infra.tolerance_particle;
+    amrex::Real tolerance = tolerance_particle;
 
     amrex::Real diff = tolerance + 1.0;
     int iter_counter = 0;
@@ -1555,10 +1558,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, GEMPIC_SPACED
         for (unsigned int d=0; d<GEMPIC_SPACEDIM; ++d)
         {
             if (d<vdim)
-                xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),infra.geom.ProbHi()[d],infra.geom.ProbLo()[d]);
+                xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),phi[d],plo[d]);
         }
         // evaluate B at xMean
-        spline.init_particles(xMean , infra.plo, infra.dxi);
+        spline.init_particles(xMean , plo, dxi);
         amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1> Bp = evaluate_fem_bfield<vdim,degx,degy,degz>(spline,
                                                                                                        bArray);
         if  (vdim == 2) {
