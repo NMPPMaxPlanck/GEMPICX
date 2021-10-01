@@ -304,7 +304,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_
 
     amrex::GpuArray<int,GEMPIC_SPACEDIM>  sigma_counter = {AMREX_D_DECL(0, 0, 0)};
 
-    amrex::GpuArray<std::vector<amrex::Real>, GEMPIC_SPACEDIM> sigmas;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 3>, GEMPIC_SPACEDIM> sigmas;
     amrex::GpuArray<int, GEMPIC_SPACEDIM> increment;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> sigma_next;
 
@@ -312,7 +312,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_
     {
         if (boxdiff[d] > 0 )
         {
-            sigmas[d].resize(boxdiff[d]+1);
+            //sigmas[d].resize(boxdiff[d]+1);
             for (unsigned int bl=0; bl<boxdiff[d];++bl)
                 sigmas[d][bl] = (bl+1  - position_box_old[d])/(xnewtilde[d]-position_box_old[d]) ;
 
@@ -322,7 +322,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_
         }
         else if (boxdiff[d] < 0 )
         {
-            sigmas[d].resize(-boxdiff[d]+1);
+            //sigmas[d].resize(-boxdiff[d]+1);
             for (unsigned int bl=boxdiff[d]+1; bl<=0; --bl )
                 sigmas[d][-bl] = (bl  - position_box_old[d])/(xnewtilde[d]-position_box_old[d]);
 
