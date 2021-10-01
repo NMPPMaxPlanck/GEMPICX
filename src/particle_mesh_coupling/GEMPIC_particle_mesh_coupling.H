@@ -166,23 +166,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluat
      * TODO: This function should better combine all points from one interval to reduce the number of loops
      */
 template <int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_box,
-                                     amrex::GpuArray<int,GEMPIC_SPACEDIM>& box,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(splines_at_particles<degx,degy,degz> &spline,
                                      amrex::GpuArray<amrex::Real, vdim>&  weight,
                                      amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray)
 {
-    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> (position_box[0]);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> (position_box[0]);
-#if (GEMPIC_SPACEDIM > 1)
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (position_box[1]);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (position_box[1]);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (position_box[2]);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> (position_box[2]);
-#endif
 
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -193,14 +180,14 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(amrex
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box[0]+ii, box[1]+jj, box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
-                    double s_coeff = sx_cell[ii]
+                    double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                            *sy_node[jj]
+                            *spline.spline_node[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                            *sz_node[kk]
+                            *spline.spline_node[2][kk]
         #endif
                             ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -212,10 +199,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(amrex
                 if(vdim > 1) {
 #if (GEMPIC_SPACEDIM > 1)
                     if ( jj < degy ) {
-                        double s_coeff = sx_node[ii]
-                                *sy_cell[jj]
+                        double s_coeff = spline.spline_node[0][ii]
+                                *spline.spline_cell[1][jj]
         #if(GEMPIC_SPACEDIM > 2)
-                                *sz_node[kk]
+                                *spline.spline_node[2][kk]
         #endif
                                 ;
 #else
@@ -234,9 +221,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(amrex
 
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < degz ) {
-                    double s_coeff = sx_node[ii]
-                            *sy_node[jj]
-                            *sz_cell[kk];
+                    double s_coeff = spline.spline_node[0][ii]
+                            *spline.spline_node[1][jj]
+                            *spline.spline_cell[2][kk];
 #else
                 double s_coeff = sx_node[ii]
         #if (GEMPIC_SPACEDIM > 1)
@@ -267,7 +254,8 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral_point(amrex
      * integral for each box
      */
 template <int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_particles<degx,degy,degz> &spline,
+                                                                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_new,
                                amrex::GpuArray<amrex::Real, vdim>& velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
@@ -373,7 +361,11 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuA
             amrex::GpuArray<amrex::Real, vdim> weight_vec;
             for (unsigned int d=0;d<vdim;++d)
                 weight_vec[d] = velocity[d]*weight;
-            accumulate_j_fem_integral_point<vdim,degx,degy,degz>(position_box, box, weight_vec, jArray);
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> ppos;
+            for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                ppos[d] = box[d]/dxi[d]+position_box[d]/dxi[d];
+            spline.init_particles(ppos , plo, dxi);
+            accumulate_j_fem_integral_point<vdim,degx,degy,degz>(spline, weight_vec, jArray);
         }
         if (sigma_r < 1.0 )
         {
@@ -1002,34 +994,15 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x3_fem_integral
      *  Currently this is implemented for Gauss-Quadrature with only one point
      */
 template<int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_particles<degx,degy,degz> &spline,
+                                                                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                                amrex::GpuArray<amrex::Real, vdim>& velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray)
 {
-    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
-    amrex::Real lx = (position[0]-plo[0])*dxi[0];
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec (spl.shifted_x(xint, degx-1, true), degx-1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, degx, false), degx);
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (position[1]-plo[1])*dxi[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec (spl.shifted_x(yint, degy-1, true), degy-1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy, false), degy);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (position[2]-plo[2])*dxi[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec (spl.shifted_x(zint, degz-1, true), degz-1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz, false), degz);
-#endif
     amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge;
 
 
@@ -1041,14 +1014,14 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuA
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index needs to be shifted somehow
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(i+ii, j+jj, k+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
-                    double s_coeff = sx_cell[ii]
+                    double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                            *sy_node[jj]
+                            *spline.spline_node[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                            *sz_node[kk]
+                            *spline.spline_node[2][kk]
         #endif
                             ;
 #if (GEMPIC_SPACEDIM == 1)
@@ -1060,10 +1033,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuA
 #if (GEMPIC_SPACEDIM > 1)
                 if(vdim > 1) {
                     if ( jj < degy ) {
-                        double s_coeff = sx_node[ii]
-                                *sy_cell[jj]
+                        double s_coeff = spline.spline_node[0][ii]
+                                *spline.spline_cell[1][jj]
         #if(GEMPIC_SPACEDIM > 2)
-                                *sz_node[kk]
+                                *spline.spline_node[2][kk]
         #endif
                                 ;
                         amrex::HostDevice::Atomic::Add(jArray[1].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*velocity[1]);
@@ -1072,9 +1045,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(amrex::GpuA
 #endif
 #if(GEMPIC_SPACEDIM > 2)
                 if ( kk < degz ) {
-                    double s_coeff = sx_node[ii]
-                            *sy_node[jj]
-                            *sz_cell[kk]
+                    double s_coeff = spline.spline_node[0][ii]
+                            *spline.spline_node[1][jj]
+                            *spline.spline_cell[2][kk]
                             ;
                     amrex::HostDevice::Atomic::Add(jArray[2].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*velocity[2]);
                 }
