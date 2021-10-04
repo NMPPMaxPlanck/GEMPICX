@@ -11,7 +11,10 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
+#include <GEMPIC_time_loop_hs_fem.H>
+#include <GEMPIC_time_loop_hsall_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
+#include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
@@ -55,15 +58,14 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real
 
 
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
-void main_main ()
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int strang_order, bool output>
+void vlasov_maxwell_test (int propagator, string test_name)
 {
-    const int strang_order = 2;
     bool ctest = true;
     vlasov_maxwell<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_vlasov_maxwell_hs_all", {12,8,8});
-    VlMa.propagator = 3;
+    VlMa.set_params(test_name, {12,8,8});
+    VlMa.propagator = propagator;
     VlMa.set_prop_related();
 
     VlMa.n_steps = 5;
@@ -87,7 +89,7 @@ void main_main ()
     // infrastructure
     computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
+    //VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
@@ -115,22 +117,23 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // timeloop
-    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
-
+    switch (propagator) {
+    case 0:
+    time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, test_name, strang_order);
+        break;
+    case 1:
+    time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, test_name, strang_order);
+        break;
+    case 2:
+    time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degmw, true>(infra, &mw_yee, &part_gr, &diagn, ctest, test_name, strang_order);
+        break;
+    case 3:
+    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, output>(infra, &mw_yee, &part_gr, &diagn, ctest, test_name, strang_order);
+        break;
+    case 100:
+      //time_loop_particles<vdim, numspec, degx, degy, degz, degmw, true, false, output>(infra, &mw_yee, &part_gr, &diagn, ctest, test_name, strang_order);
+        break;
+    default:
+        break;
+    }
 }
-
-int main(int argc, char* argv[])
-{
-    amrex::Initialize(argc,argv);
-
-    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_zigzag_C2.tmp.0");
-
-    // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 6, 5, 4, 4>();
-
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_zigzag_C2.tmp.0", "test_vlasov_maxwell_hs_zigzag_C2.output");
-    amrex::Finalize();
-}
-
-
-

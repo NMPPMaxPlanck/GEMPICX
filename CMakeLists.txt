@@ -134,6 +134,7 @@ include_directories("${CMAKE_SOURCE_DIR}/third_party/tinyexpr")
 include_directories("${CMAKE_SOURCE_DIR}/src/io/checkpointing")
 include_directories("${CMAKE_SOURCE_DIR}/src/particle")
 include_directories("${CMAKE_SOURCE_DIR}/src/io/profiling")
+include_directories("${CMAKE_SOURCE_DIR}/src/simulations")
 include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
 include_directories("${CMAKE_SOURCE_DIR}")
 

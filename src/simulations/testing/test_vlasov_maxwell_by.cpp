@@ -16,6 +16,7 @@
 #include <GEMPIC_time_loop_hsall_fem.H>
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_vlasov_maxwell_simulation.H>
 
 using namespace std;
 using namespace amrex;
@@ -29,17 +30,6 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
-{
-    amrex::Real val = 1.0 ;//+ 0.5 * std::cos(0.5 * x);
-    return val;
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
-{
-    amrex::Real val = 0.0;
-    return val;
-}
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
@@ -104,7 +94,12 @@ void main_main ()
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_by.tmp.0");
+
+    std::string test_name = "test_vlasov_maxwell_by";
+    std::string test_name_tmp = test_name + ".tmp.0";
+    std::string test_name_end = test_name + ".output";
+
+    if (amrex::ParallelDescriptor::MyProc()==0) remove(test_name_tmp.c_str());
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
@@ -207,10 +202,10 @@ int main(int argc, char* argv[])
     AllPrintToFile("test_vlasov_maxwell_by.tmp") << "9 3.6043e-05 2.88571e-05 4.35711e-08 0.0321717 0.293915 0.968039" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 1, 1, 1, 2>();
+    vlasov_maxwell_test<3, 1, 1, 1, 1, 2, 2, true>(0,test_name);
 #endif
 
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_by.tmp.0", "test_vlasov_maxwell_by.output");
+    if (amrex::ParallelDescriptor::MyProc()==0) std::rename(test_name_tmp.c_str(), test_name_end.c_str());
 
     amrex::Finalize();
 }

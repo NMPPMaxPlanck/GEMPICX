@@ -66,7 +66,7 @@ void main_main ()
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_simulation",
 
-		    {12,8,8});//{40,40,40}); // Number of cells:
+            {12,8,8});//{40,40,40}); // Number of cells:
     VlMa.n_part_per_cell = {2000};//{20};
     VlMa.n_steps = 10;
 
