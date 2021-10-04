@@ -81,7 +81,7 @@ void main_main ()
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
     VlMa.initialize_infrastructure(&infra);
 
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     //------------------------------------------------------------------------------
     // Initialization of E and B: this is done via a projection-operator
@@ -119,7 +119,7 @@ void main_main ()
     AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
     amrex::AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
 
-    particle_groups<vdim, 1> part_gr(VlMa, infra);
+    particle_groups<vdim, 1> part_gr(VlMa.charge, VlMa.mass, infra);
     //------------------------------------------------------------------------------
     // time loop
     //Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", 0);

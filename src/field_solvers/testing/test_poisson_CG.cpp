@@ -50,11 +50,10 @@ void main_main ()
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     amrex::MultiFab kx(convert(infra.grid, *mw_yee.E_Index[0]),infra.distriMap,1,mw_yee.Nghost);
     kx.setVal(1.0, 0);

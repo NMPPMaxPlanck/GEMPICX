@@ -74,7 +74,7 @@ void main_main ()
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
     VlMa.initialize_infrastructure(&infra);
 
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     // Constant case
     mw_yee.rho.setVal(C, 0);

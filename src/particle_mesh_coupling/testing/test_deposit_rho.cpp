@@ -81,10 +81,10 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize fields and particles
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:

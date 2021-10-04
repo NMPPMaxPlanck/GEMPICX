@@ -104,9 +104,9 @@ public:
     maxwell_yee ();
 
     // Explicit const
-    maxwell_yee  (computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in,
-                  amrex::Real curlB_scaling_in ,
-                  amrex::Real energy_b_scaling_in){
+    maxwell_yee  (computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in = 1.0,
+                  amrex::Real curlB_scaling_in = 1.0,
+                  amrex::Real energy_b_scaling_in = 1.0){
       initialize(ifr, dt_in, nsteps_in, Nghost_in, epref_ep0_in, curlB_scaling_in, energy_b_scaling_in);
     }
 
@@ -242,11 +242,11 @@ public:
          *  @param VM - object of type vlasov-maxwell with all relevant information
          *  @param ifr - object of type infrastructure
          */
-    template <int numspec>
+ /*   template <int numspec>
     maxwell_yee (vlasov_maxwell<vdim, numspec> VM, computational_domain ifr){
         *this = maxwell_yee(ifr, VM.dt, VM.n_steps, VM.Nghost, VM.epref_ep0, VM.curlB_scaling, VM.energy_b_scaling);
 
-    }
+    }*/
 
     template<int degree>
     void projection (std::string function_string,

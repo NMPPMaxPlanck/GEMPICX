@@ -57,11 +57,12 @@ public:
      * Explicit Constructor: By passing an object of class vlasov maxwell and infrastructure one can set up the empty particle object. The particles themselves need to be added separately. This
      * can be done one by one (see method add_particle) or with the particle samples in the folder sampler.
      */
-    particle_groups (vlasov_maxwell<vdim, numspec> VM,
+    particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
+                     amrex::GpuArray<amrex::Real, numspec> mass_in,
                      computational_domain ifr){
 
-        charge = VM.charge;
-        mass = VM.mass;
+        charge = charge_in;
+        mass = mass_in;
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {

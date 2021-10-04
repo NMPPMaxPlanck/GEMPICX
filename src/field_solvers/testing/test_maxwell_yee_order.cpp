@@ -156,7 +156,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
 
     for (int i=0; i<vdim; i++) {

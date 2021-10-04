@@ -90,13 +90,13 @@ void main_main ()
     VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     mw_yee.template initB<degmw>(zero, zero, funct_Bz, infra);
     mw_yee.template initE<degmw>(zero, zero, zero, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:

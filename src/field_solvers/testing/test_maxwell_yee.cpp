@@ -148,7 +148,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
 
     for (int i=0; i<vdim; i++) {
@@ -209,7 +209,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Second maxwell test
-    maxwell_yee<vdim> mw_yee_2(VlMa, infra);
+    maxwell_yee<vdim> mw_yee_2(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     for (int i=0; i<vdim; i++) {
         (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component
