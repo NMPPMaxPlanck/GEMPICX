@@ -237,16 +237,6 @@ public:
 
     }
 
-    /**
-         * Explicit constructor. Initializes Indextypes, MultiFabs and OwnerMasks.
-         *  @param VM - object of type vlasov-maxwell with all relevant information
-         *  @param ifr - object of type infrastructure
-         */
- /*   template <int numspec>
-    maxwell_yee (vlasov_maxwell<vdim, numspec> VM, computational_domain ifr){
-        *this = maxwell_yee(ifr, VM.dt, VM.n_steps, VM.Nghost, VM.epref_ep0, VM.curlB_scaling, VM.energy_b_scaling);
-
-    }*/
 
     template<int degree>
     void projection (std::string function_string,

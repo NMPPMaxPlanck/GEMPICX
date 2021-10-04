@@ -255,66 +255,6 @@ public:
     }
 
 
-  /*      void set_params (std::string sm = "Weibel",
-                         amrex::GpuArray<int,GEMPIC_SPACEDIM> NC = {AMREX_D_DECL(24, 8, 8)},
-                         amrex::GpuArray<int, numspec> NPP = {100},
-                         int NS = 10,
-                         int FX = 12,
-                         int FV = 12,
-                         int FS = 12,
-                         amrex::GpuArray<int,GEMPIC_SPACEDIM> PER = {AMREX_D_DECL(1, 1, 1)},
-                         amrex::GpuArray<int,GEMPIC_SPACEDIM> MG = {AMREX_D_DECL(4, 4, 4)},
-                         amrex::Real DT = 0.02,
-                         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
-                         amrex::GpuArray<amrex::Real, numspec> M = {1.0},
-                         amrex::Real K = 1.25,
-                         std::string wf = "1.0",
-                         std::string BX = "0.0",
-                         std::string BY = "0.0",
-                         std::string BZ = "1e-3 * cos(kvarx * x)",
-                         std::string PHI = "4 * 0.5 * cos(0.5 * x)",
-                         int NG = 1,
-                         int PROP = 0,
-                         amrex::Real TOL_P = 1.e-10,
-                         int MAX_C = 30,
-                         int RST = 0,
-                         std::string CF = "",
-                         int CD = 0
-                         ) {
-            sim_name = sm;
-            n_cell_vector = NC;
-            n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-            n_part_per_cell = NPP;
-            n_steps = NS;
-            freq_x = FX;
-            freq_v = FV;
-            freq_slice = FS;
-            is_periodic_vector = PER;
-            is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-            max_grid_size_vector = MG;
-            max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
-            dt = DT;
-            charge = C;
-            for (int i = 0; i < numspec; i++) charge_gpu[i] = charge[i];
-            mass = M;
-            for (int i = 0; i < numspec; i++) mass_gpu[i] = mass[i];
-            k = {K,K,K};
-            k_gpu = {K,K,K};
-            WF = wf;
-            Bx = BX;
-            By = BY;
-            Bz = BZ;
-            phi = PHI;
-            num_gaussians = NG;
-            propagator = PROP;
-            tolerance_particles = TOL_P;
-            restart = RST;
-            checkpoint_file = CF;
-            curr_step = CD;
-
-            set_prop_related();
-        }
-*/
 
         void set_prop_related () {
             switch (propagator) {
@@ -355,46 +295,6 @@ public:
             kx = k[0];
             ky = k[1];
             kz = k[2];
-        }
-
-        void initialize_infrastructure(CompDom::computational_domain *ifr){
-
-            // Initialize infrastructure:
-
-            ifr->n_cell = n_cell;
-            ifr->max_grid_size = max_grid_size;
-
-            for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
-                ifr->is_periodic[cc] = is_periodic[cc];
-            }
-            ifr->real_box = real_box;
-
-            for(int cc=0;cc<GEMPIC_SPACEDIM;cc++){
-                ifr->Length[cc] = (real_box.hi(cc)-real_box.lo(cc));
-            }
-
-            amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
-            amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[0]-1, n_cell[1]-1, n_cell[2]-1));
-
-            ifr->domain.setSmall(dom_lo);
-            ifr->domain.setBig(dom_hi);
-            ifr->grid.define(ifr->domain);
-            ifr->grid.maxSize(max_grid_size);
-            ifr->geom.define(ifr->domain,&ifr->real_box,amrex::CoordSys::cartesian,ifr->is_periodic);
-            //ifr->dx = *(ifr->geom.CellSize());
-
-            ifr->distriMap.define(ifr->grid);
-
-            ifr->dxi[GEMPIC_SPACEDIM] = 1.;
-            for (int cc=0;cc<GEMPIC_SPACEDIM;cc++){
-                ifr->dx[cc] = ifr->geom.CellSize()[cc];
-                ifr->plo[cc] = ifr->geom.ProbLo()[cc];
-                ifr->dxi[cc] = 1.0/ifr->dx[cc];
-                ifr->dxi[GEMPIC_SPACEDIM] *= ifr->dxi[cc];
-            }
-
-            ifr->tolerance_particle = tolerance_particles;
-
         }
 
         void init_particles_from_file(particle_groups<vdim, numspec> *part_gr,
