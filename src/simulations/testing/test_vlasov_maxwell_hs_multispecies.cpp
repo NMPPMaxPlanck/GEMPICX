@@ -102,7 +102,7 @@ void main_main ()
     VlMa.VM = VM;
     VlMa.VD = VD;
     VlMa.VW = VW;
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VlMa.VM, VlMa.VD, VlMa.VW, 0);
 
     // SECOND SPECIES
     std::array<std::vector<amrex::Real>, vdim> VM2{}, VD2{}, VW2{};
@@ -115,7 +115,7 @@ void main_main ()
     VlMa.VD = VD2;
     VlMa.VW = VW2;
     VlMa.WF = "1.0 + 0.2 * cos(kvarx * x)";
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 1);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VlMa.VM, VlMa.VD, VlMa.VW, 1);
 
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 

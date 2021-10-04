@@ -106,7 +106,7 @@ void main_main (bool ctest)
         } else {
             for (int spec=0; spec<numspec; spec++) {
                 VlMa.read_particle_spec(spec);
-                init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, spec);
+                init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VlMa.VM, VlMa.VD, VlMa.VW, spec);
             }
         }
 

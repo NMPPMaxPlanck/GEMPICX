@@ -88,7 +88,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VM, VD, VW, species, wave_function);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VM, VD, VW, species, wave_function);
 
     //------------------------------------------------------------------------------
     // test:

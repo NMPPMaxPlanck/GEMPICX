@@ -107,7 +107,7 @@ void vlasov_maxwell_test (int propagator, string test_name)
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0, wave_function);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM, VlMa.VD, VlMa.VW, 0, wave_function);
 
     amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
     funcSelectB[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
