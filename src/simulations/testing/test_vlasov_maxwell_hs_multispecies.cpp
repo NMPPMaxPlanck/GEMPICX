@@ -77,15 +77,14 @@ void main_main ()
     // infrastructure
     computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
     amrex::GpuArray<std::string, 2> fields = {VlMa.rho, VlMa.phi};
     mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
     diagnostics<vdim, numspec,degx,degy,degz,degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
@@ -102,7 +101,7 @@ void main_main ()
     VlMa.VM = VM;
     VlMa.VD = VD;
     VlMa.VW = VW;
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VlMa.VM, VlMa.VD, VlMa.VW, 0);
 
     // SECOND SPECIES
     std::array<std::vector<amrex::Real>, vdim> VM2{}, VD2{}, VW2{};
@@ -115,7 +114,7 @@ void main_main ()
     VlMa.VD = VD2;
     VlMa.VW = VW2;
     VlMa.WF = "1.0 + 0.2 * cos(kvarx * x)";
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 1);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VlMa.VM, VlMa.VD, VlMa.VW, 1);
 
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
