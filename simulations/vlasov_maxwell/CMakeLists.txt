@@ -8,7 +8,7 @@ endif()
 #message("#########")
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( vlasov_maxwell gempic_io gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( vlasov_maxwell gempic_poisson tinyexpr AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 
 ######## Ctest

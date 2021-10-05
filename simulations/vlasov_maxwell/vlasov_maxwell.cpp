@@ -20,10 +20,6 @@
 #include <GEMPIC_vlasov_maxwell.H>
 #include <GEMPIC_particle_groups.H>
 
-#include "../../src/io/parameters/GEMPIC_parameter.hpp"
-#include "../../src/io/parameters/GEMPIC_parameter_config.hpp"
-#include "../../src/io/parameters/GEMPIC_parameter_struct.hpp"
-
 using namespace std;
 using namespace std::chrono;
 using namespace amrex;
@@ -43,15 +39,6 @@ void main_main (bool ctest)
     bool readinfile = false;
     // ------------------------------------------------------------------------------
     // ------------PARAMETERS--------------------------------------------------------
-    io::param_gempic param;
-    param.get_data_from_config_file();
-    // param.sim_name
-    std::ofstream ofs("gempic_"+std::to_string(param.n_steps)+"_parameters.out");
-    param.print_params(ofs);
-    gempic_param_config config;
-    io::create_gempic_param_config_structure(param, config, ofs);
-    config.print_gempic_param_config(ofs);
-
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.read_pp_params();
