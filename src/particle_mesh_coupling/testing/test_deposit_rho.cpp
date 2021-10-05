@@ -118,7 +118,9 @@ void main_main ()
                     pos[comp] = particles[pp].pos(comp);
                 }
                 amrex::Real weight = particles[pp].rdata(vdim);
-                gempic_deposit_rho<vdim, degx, degy, degz>(pos, weight, (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                splines_at_particles<degx,degy,degz> spline;
+                spline.init_particles(pos , infra.plo, infra.dxi);
+                gempic_deposit_rho_C3<degx, degy, degz>(spline, weight*(part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM], rhoarr);
             }
         }
     }

@@ -1442,7 +1442,7 @@ public:
     /**
      * Compute E for rho from particles (for diagnostics: Gauss law)
      */
-    template<int numspec>
+    template<int numspec, int degx, int degy, int degz>
     amrex::Real compute_gauss_error_E(computational_domain ifr, Particles::particle_groups<vdim, numspec> *part_gr){
 
         (*E_sol_Array[0]).Copy(*E_sol_Array[0], *E_Array[0],0,0,1,Nghost);
@@ -1479,7 +1479,10 @@ public:
                         pos[comp] = particles[pp].pos(comp);
                     }
                     amrex::Real weight = particles[pp].rdata(vdim);
-                    Particles::gempic_deposit_rho<amrex::Particle<vdim+1>,vdim>(pos, weight, (*part_gr).charge[spec], rhoarr, ifr.plo, ifr.dxi);
+
+                    splines_at_particles<degx,degy,degz> spline;
+                    spline.init_particles(pos , ifr.plo, ifr.dxi);
+                    Particles::gempic_deposit_rho_C3<degx,degy,degz>(spline, weight, rhoarr);
                 }
             }
         }

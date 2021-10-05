@@ -31,7 +31,8 @@ AMREX_GPU_HOST_DEVICE amrex::Real mod_dom(amrex::Real val,
 }
 
 template <int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>  pos,
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (splines_at_particles<degx,degy,degz> &spline,
+                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>  pos,
                                                                 amrex::Real weight,
                                                                 amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
@@ -39,23 +40,6 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
 
 {
-    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-    amrex::Real lx = (pos[0] - plo[0]) * dxi[0]; // don't need to displace because rho is nodal
-    int i = std::floor(lx);
-    amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, degx, false), degx);
-#if (GEMPIC_SPACEDIM > 1)
-    amrex::Real ly = (pos[1] - plo[1]) * dxi[1];
-    int j = std::floor(ly);
-    amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy, false), degy);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-    amrex::Real lz = (pos[2] - plo[2]) * dxi[2];
-    int k = std::floor(lz);
-    amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz, false), degz);
-#endif
     amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*weight;
 
     //TODOrefine
@@ -66,17 +50,15 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (amrex::GpuArray<
         for (int jj = 0; jj <= degy; ++jj) {
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
-                double s_coeff = sx_node[ii]
+                double s_coeff = spline.spline_node[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
-                        *sy_node[jj]
+                        *spline.spline_node[1][jj]
         #endif
         #if(GEMPIC_SPACEDIM > 2)
-                        *sz_node[kk]
+                        *spline.spline_node[2][kk]
         #endif
                         ;
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spl.compute_cell_index(i+ii, xint, degx, false),
-                                                              spl.compute_cell_index(j+jj, yint, degy, false),
-                                                              spl.compute_cell_index(k+kk, zint,  degz, false))};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff*particle_coeff);
 #else
