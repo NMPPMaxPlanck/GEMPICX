@@ -62,7 +62,7 @@ void main_main ()
 {
     const int strang_order = 2;
     bool ctest = true;
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_simulation",
 

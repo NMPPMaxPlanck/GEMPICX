@@ -31,7 +31,7 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     const int degmw = 2;
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params();
     if (int(vdim/2.5)*2+1 < 3) {

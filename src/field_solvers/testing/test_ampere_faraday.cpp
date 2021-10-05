@@ -72,7 +72,7 @@ void main_main ()
     amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);
     VlMa.set_computed_params();

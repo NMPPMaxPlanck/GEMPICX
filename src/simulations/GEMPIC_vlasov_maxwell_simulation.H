@@ -62,7 +62,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int str
 void vlasov_maxwell_test (int propagator, string test_name)
 {
     bool ctest = true;
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params(test_name, {12,8,8});
     VlMa.propagator = propagator;

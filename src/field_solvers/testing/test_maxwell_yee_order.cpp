@@ -142,7 +142,7 @@ void main_main ()
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(64,64,64)};
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.Nghost++;
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,

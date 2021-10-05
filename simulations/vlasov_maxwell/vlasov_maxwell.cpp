@@ -52,7 +52,7 @@ void main_main (bool ctest)
     io::create_gempic_param_config_structure(param, config, ofs);
     config.print_gempic_param_config(ofs);
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.read_pp_params();
     VlMa.set_computed_params();

@@ -136,7 +136,7 @@ void main_main ()
     amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
 
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
     {32, 32, 32}, 0.01, {1.0}, {1.0}, 0.5);

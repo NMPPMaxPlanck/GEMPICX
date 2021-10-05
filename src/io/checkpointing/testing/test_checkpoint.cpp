@@ -65,7 +65,7 @@ void main_main ()
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("checkpoint_ctest", n_cell_vector, n_part_per_cell, n_steps, 10, 10,
                     10, is_periodic_vector, max_grid_size, dt, charge, mass, k,

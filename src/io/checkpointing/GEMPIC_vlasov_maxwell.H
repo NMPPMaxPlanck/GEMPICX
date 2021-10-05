@@ -36,7 +36,7 @@ namespace Gempic {
 namespace Vlasov_Maxwell {
 
 template<int vdim, int numspec>
-class vlasov_maxwell
+class gempic_parameters
 {
 public:
 
@@ -94,7 +94,7 @@ public:
     /**
      * Default Constructor.
      */
-    vlasov_maxwell (){};
+    gempic_parameters (){};
 
     void init_Nghost (int degx, int degy, int degz) {
         std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};

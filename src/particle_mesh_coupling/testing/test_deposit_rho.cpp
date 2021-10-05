@@ -66,7 +66,7 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
                     is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, " ");

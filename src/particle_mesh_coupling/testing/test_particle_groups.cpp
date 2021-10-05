@@ -75,7 +75,7 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2,
                     is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, " ");
