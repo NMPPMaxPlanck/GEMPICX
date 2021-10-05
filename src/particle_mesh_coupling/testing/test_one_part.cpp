@@ -14,7 +14,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;

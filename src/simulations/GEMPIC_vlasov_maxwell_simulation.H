@@ -15,7 +15,7 @@
 #include <GEMPIC_time_loop_hsall_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_time_loop_boris_fd.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 
 using namespace std;

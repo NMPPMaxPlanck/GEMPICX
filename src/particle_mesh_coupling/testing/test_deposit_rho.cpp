@@ -10,7 +10,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;

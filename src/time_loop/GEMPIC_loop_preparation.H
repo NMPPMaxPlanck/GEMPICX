@@ -21,7 +21,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;

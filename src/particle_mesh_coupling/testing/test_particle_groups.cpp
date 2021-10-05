@@ -11,7 +11,7 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;

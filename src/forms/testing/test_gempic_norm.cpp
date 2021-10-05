@@ -32,7 +32,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
