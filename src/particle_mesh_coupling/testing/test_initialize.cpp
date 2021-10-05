@@ -35,14 +35,13 @@ void main_main ()
 
     computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     //need a multifab to be able to iterate later:
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //set particles for first cell (and copies in remaining cells)
     int Np_cell = 100; //number of particles per cell

@@ -77,19 +77,18 @@ void main_main ()
 
     computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Initialize fields and particles
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, species, wave_function);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM, VlMa.VD, VlMa.VW, species, wave_function);
 
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho

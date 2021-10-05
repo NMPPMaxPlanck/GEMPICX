@@ -62,10 +62,9 @@ void main_main ()
     // infrastructure
     computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
     (mw_yee).template initB<degmw>(initial_bfield, initial_bfield, initial_bfield, infra);
     amrex::Real ScalarProd = amrex::MultiFab::Dot(*mw_yee.B_Masks[2], *mw_yee.B_Array[2], 0, *mw_yee.B_Array[2], 0, 1, VlMa.Nghost);
     amrex::Real NormSquared = pow((*mw_yee.B_Array[2]).norm2(0, infra.geom.periodicity()),2.);

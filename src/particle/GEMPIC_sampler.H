@@ -28,7 +28,7 @@ namespace Sampling {
 template<int vdim, int numspec>
 void init_particles_cellwise(computational_domain infra,
                              particle_groups<vdim, numspec> &ppg,
-                             vlasov_maxwell<vdim, numspec> VM,
+                             amrex::GpuArray<int, numspec> n_part_per_cell,
                              std::array<std::vector<amrex::Real>, vdim> Vmean,
                              std::array<std::vector<amrex::Real>, vdim> Vdev,
                              std::array<std::vector<amrex::Real>, vdim> Vweight,
@@ -68,7 +68,7 @@ void init_particles_cellwise(computational_domain infra,
     std::uniform_real_distribution<> unif(0.0, 1.0);
 
 
-    for (int pp=0;pp<VM.n_part_per_cell[species];pp++) {
+    for (int pp=0;pp<n_part_per_cell[species];pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
         position[0] = unif(gen)*infra.dx[0]; // uniform in [0, dx]
 #if (GEMPIC_SPACEDIM > 1)
@@ -125,7 +125,7 @@ void init_particles_cellwise(computational_domain infra,
 
                         //TODOrefine
                         const double result = te_eval(WF_parse);
-                        weight = result/VM.n_part_per_cell[species]*infra.dx[0]
+                        weight = result/n_part_per_cell[species]*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
@@ -152,7 +152,7 @@ void init_particles_cellwise(computational_domain infra,
 template<int vdim, int numspec>
 void init_particles_cellwise(computational_domain infra,
                              particle_groups<vdim, numspec> &ppg,
-                             vlasov_maxwell<vdim, numspec> VM,
+                             amrex::GpuArray<int, numspec> n_part_per_cell,
                              std::array<std::vector<amrex::Real>, vdim> Vmean,
                              std::array<std::vector<amrex::Real>, vdim> Vdev,
                              std::array<std::vector<amrex::Real>, vdim> Vweight,
@@ -189,7 +189,7 @@ void init_particles_cellwise(computational_domain infra,
     std::uniform_real_distribution<> unif(0.0, 1.0);
 
 
-    for (int pp=0;pp<VM.n_part_per_cell[species];pp++) {
+    for (int pp=0;pp<n_part_per_cell[species];pp++) {
         //position in model cell [0,dx]x[0,dy]x[0,dz]:
         position[0] = unif(gen)*infra.dx[0]; // uniform in [0, dx]
 #if (GEMPIC_SPACEDIM > 1)
@@ -247,7 +247,7 @@ void init_particles_cellwise(computational_domain infra,
                         //TODOrefine
                         //const double result = te_eval(WF_parse);
                         amrex::Real result = wave_function(x,y,z);
-                        weight = result/VM.n_part_per_cell[species]*infra.dx[0]
+                        weight = result/n_part_per_cell[species]*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
@@ -273,7 +273,9 @@ void init_particles_cellwise(computational_domain infra,
 template<int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra,
                                 particle_groups<vdim, numspec> &ppg,
-                                vlasov_maxwell<vdim, numspec> VM,
+                                amrex::GpuArray<int, numspec> n_part_per_cell,
+                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> k_vec,
+                                std::string wave_function,
                                 std::array<std::vector<amrex::Real>, vdim> Vmean,
                                 std::array<std::vector<amrex::Real>, vdim> Vdev,
                                 std::array<std::vector<amrex::Real>, vdim> Vweight,
@@ -281,13 +283,13 @@ void init_particles_full_domain(computational_domain infra,
                                 int rSeed = 925){
 
     double x, y, z;
-    double kx = VM.k[0];
-    double ky = VM.k[1];
-    double kz = VM.k[2];
+    double kx = k_vec[0];
+    double ky = k_vec[1];
+    double kz = k_vec[2];
     int err;
     te_variable read_vars[6] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
     int varcount = 6;
-    te_expr *WF_parse = te_compile(VM.WF.c_str(), read_vars, varcount, &err);
+    te_expr *WF_parse = te_compile(wave_function.c_str(), read_vars, varcount, &err);
 
     amrex::Real x_c,y_c,z_c; // cell-corner coordinates
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -329,7 +331,7 @@ void init_particles_full_domain(computational_domain infra,
 #endif
                 for(int l=lo[0]; l<=hi[0]; l++){
 
-                    for (int pp=0;pp<VM.n_part_per_cell[species];pp++) {
+                    for (int pp=0;pp<n_part_per_cell[species];pp++) {
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
                             position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
                         }
@@ -363,7 +365,7 @@ void init_particles_full_domain(computational_domain infra,
                         x = position[0] + x_c;
 
                         const double result = te_eval(WF_parse);
-                        weight = result/VM.n_part_per_cell[species]*infra.dx[0]
+                        weight = result/n_part_per_cell[species]*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif
@@ -387,7 +389,7 @@ void init_particles_full_domain(computational_domain infra,
 template<int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra,
                                 particle_groups<vdim, numspec> &ppg,
-                                vlasov_maxwell<vdim, numspec> VM,
+                                amrex::GpuArray<int, numspec> n_part_per_cell,
                                 std::array<std::vector<amrex::Real>, vdim> Vmean,
                                 std::array<std::vector<amrex::Real>, vdim> Vdev,
                                 std::array<std::vector<amrex::Real>, vdim> Vweight,
@@ -437,7 +439,7 @@ void init_particles_full_domain(computational_domain infra,
 #endif
                 for(int l=lo[0]; l<=hi[0]; l++){
 
-                    for (int pp=0;pp<VM.n_part_per_cell[species];pp++) {
+                    for (int pp=0;pp<n_part_per_cell[species];pp++) {
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
                             position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
                         }
@@ -471,7 +473,7 @@ void init_particles_full_domain(computational_domain infra,
                         x = position[0] + x_c;
 
                         const double result = wave_function(x,y,z);
-                        weight = result/VM.n_part_per_cell[species]*infra.dx[0]
+                        weight = result/n_part_per_cell[species]*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
         #endif

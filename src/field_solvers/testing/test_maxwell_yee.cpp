@@ -144,11 +144,10 @@ void main_main ()
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
 
     for (int i=0; i<vdim; i++) {
@@ -209,7 +208,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Second maxwell test
-    maxwell_yee<vdim> mw_yee_2(VlMa, infra);
+    maxwell_yee<vdim> mw_yee_2(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     for (int i=0; i<vdim; i++) {
         (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component

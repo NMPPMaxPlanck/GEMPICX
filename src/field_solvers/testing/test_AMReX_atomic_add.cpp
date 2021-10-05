@@ -26,8 +26,7 @@ void main_main ()
     VlMa.set_computed_params();
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
     const amrex::GpuArray<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
     const amrex::GpuArray<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
     amrex::GpuArray<amrex::Real, 3> x = {0.2, 0.2, 0.2};

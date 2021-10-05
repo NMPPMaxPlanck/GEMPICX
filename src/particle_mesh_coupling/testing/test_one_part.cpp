@@ -100,14 +100,13 @@ void main_main (bool ctest)
     // infrastructure
     computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    VlMa.initialize_infrastructure(&infra);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
     mw_yee.template init_rho_phi<degmw>(zero, func_phi, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
