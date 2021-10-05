@@ -66,7 +66,8 @@ public:
     std::string rho = "0.0";
     int num_gaussians = 1;
     int propagator = 3;
-    bool time_staggered;
+    int strang_order = 2;
+    bool time_staggered = false;
     amrex::Real tolerance_particles = 1e-10;
     int max_coarsening_level = 30;
     int restart = 0;

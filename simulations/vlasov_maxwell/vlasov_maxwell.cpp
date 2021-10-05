@@ -1,142 +1,9 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
-#include <AMReX_Particles.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_loop_preparation.H>
-#include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_particle_positions.H>
-#include <GEMPIC_sampler.H>
-#include <GEMPIC_time_loop_boris_fd.H>
-#include <GEMPIC_time_loop_hs_fem.H>
-#include <GEMPIC_time_loop_hsall_fem.H>
-#include <GEMPIC_time_loop_hs_zigzag_C2.H>
-#include <GEMPIC_time_loop_particles.H>
-#include <GEMPIC_parameters.H>
-#include <GEMPIC_particle_groups.H>
 
-using namespace std;
-using namespace std::chrono;
-using namespace amrex;
-using namespace Gempic;
+#include <GEMPIC_vlasov_maxwell.H>
 
-using namespace Diagnostics_Output;
-using namespace Field_solvers;
-using namespace Particles;
-using namespace Profiling;
-using namespace Sampling;
-using namespace Time_Loop;
-using namespace Vlasov_Maxwell;
-
-template<int vdim, int numspec, int degx, int degy, int degz, int degvm, int strang_order, bool electromagnetic=true, bool output>
-void main_main (bool ctest)
-{
-    bool readinfile = false;
-    // ------------------------------------------------------------------------------
-    // ------------PARAMETERS--------------------------------------------------------
-    gempic_parameters<vdim, numspec> VlMa;
-    VlMa.init_Nghost(degx, degy, degz);
-    VlMa.read_pp_params();
-    VlMa.set_computed_params();
-
-    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
-    fields_B[0] = VlMa.Bx;
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[1] = VlMa.By;
-    }
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[2] = VlMa.Bz;
-    }
-
-    // ------------------------------------------------------------------------------
-    // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
-
-    // infrastructure
-    computational_domain infra;
-    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-
-    // maxwell_yee
-    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
-    amrex::GpuArray<std::string, 2> fields = {VlMa.rho, VlMa.phi};
-    mw_yee.template init_rho_phi<degvm>(fields, VlMa.k, infra);
-
-    // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
-
-    amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
-    diagnostics<vdim, numspec,degx,degy,degz,degvm> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
-
-    //------------------------------------------------------------------------------
-    // initialize particles & loop preparation:
-    if (VlMa.propagator==100) {
-        for (int spec=0; spec<numspec; spec++) {
-            for(amrex::MFIter mfi=(*(part_gr).mypc[spec]).MakeMFIter(0); mfi.isValid(); ++mfi) {
-                if(mfi.index() == 0) {
-                    amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[spec]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-                    (part_gr).add_particle({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.0, 0.0)}, 1.0, particles);
-                }
-            }
-        }
-        loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
-    } else {
-    if (VlMa.restart == 0) {
-        if (readinfile) {
-            for (int spec=0; spec<numspec; spec++) {
-                VlMa.init_particles_from_file(&part_gr, spec, "particle_input.txt");
-            }
-        } else {
-            for (int spec=0; spec<numspec; spec++) {
-                VlMa.read_particle_spec(spec);
-                init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VlMa.VM, VlMa.VD, VlMa.VW, spec);
-            }
-        }
-
-        loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
-    } else {
-        Gempic_ReadCheckpointFile (&mw_yee, &part_gr, &infra, VlMa.checkpoint_file, VlMa.curr_step);
-    }
-    }
-
-    //------------------------------------------------------------------------------
-    // timeloop
-
-auto start = high_resolution_clock::now();
-switch (VlMa.propagator) {
-    case 0:
-    time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
-        break;
-    case 1:
-    time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
-        break;
-    case 2:
-    time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
-        break;      
-    case 3:
-    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false, output>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, strang_order);
-        break;
-    case 100:
-      //time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(infra, &mw_yee, &part_gr, &diagn, ctest, VlMa.sim_name, &ofs);
-        break;
-    default:
-        break;
-}
-MPI_Barrier(MPI_COMM_WORLD);
-auto stop = high_resolution_clock::now();
-auto duration = duration_cast<seconds>(stop - start);
-amrex::Print()  << "execution lasted: " <<  duration.count() << " s" << endl;
-switch (VlMa.propagator) {
-  case 100:
-    Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Edipole", 10);
-    break;
-  default:
-    break;
-  }
-}
 
 int main(int argc, char* argv[])
 {
@@ -147,7 +14,13 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 2)
     main_main<3, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC, true>(argc==1);
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, GEMPIC_NUMSPEC, 2, 2, 2, 2, 2, GEMPIC_ELECTROMAGNETIC, true>(argc==1);
+   // main_main<3, GEMPIC_NUMSPEC, 2, 2, 2, 2, 2, GEMPIC_ELECTROMAGNETIC, true>(argc==1);
+
+    vlasov_maxwell_simulation<3,1,2,2,2,2> vlasovMaxwell;
+    vlasovMaxwell.initialize_vlasov_maxwell_from_file();
+    vlasovMaxwell.initialize_gempic_structures_tinyexpr();
+    vlasovMaxwell.run_time_loop();
+
 #endif
 
     amrex::Finalize();

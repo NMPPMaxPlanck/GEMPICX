@@ -53,7 +53,7 @@ public:
     /**
      * Default Constructor.
      */
-    diagnostics ();
+    diagnostics (){}
 
     // Explicit const
     /**
