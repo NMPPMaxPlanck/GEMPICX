@@ -137,7 +137,7 @@ void main_main ()
         amrex::Real err_norm = Utils::gempic_norm(&(*(mw_yee.E_sol_Array[dim])), infra, 2);
         amrex::AllPrintToFile("test_ihodge_CG_additional.tmp") << "For component " << dim << " the error is: " << err_norm << std::endl;
         amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
-        gempic_assert_err(&passed, E_norm, err_norm*err_norm);
+        gempic_assert_err(passed, E_norm, err_norm*err_norm);
     }
     amrex::AllPrintToFile("test_ihodge_CG.tmp") << std::endl;
     amrex::AllPrintToFile("test_ihodge_CG.tmp") << passed << std::endl;

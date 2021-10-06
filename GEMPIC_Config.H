@@ -6,7 +6,7 @@
 #define GEMPIC_NUMSPEC 1
 #define GEMPIC_ELECTROMAGNETIC true
 
-#define TOL 1e-4
-#define RELTOL 1e-4
+#define GEMPIC_CTEST_TOL 1e-4
+#define GEMPIC_CTEST_RELTOL 1e-4
 
 #endif

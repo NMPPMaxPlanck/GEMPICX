@@ -169,12 +169,12 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
     AllPrintToFile("test_maxwell_yee.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
@@ -191,12 +191,12 @@ void main_main ()
         mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
 
         AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << n << endl;
@@ -226,12 +226,12 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
     AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
@@ -250,12 +250,12 @@ void main_main ()
         mw_yee_2.advance_B(infra, mw_yee_2.dt, &(mw_yee_2.HE_Array), &(mw_yee_2.B_Array));
         E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
 
         AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << n << endl;
@@ -279,12 +279,12 @@ void main_main ()
     funcSelectB[1]=MAXWELL_YEE_ZERO;
     funcSelectB[2]=MAXWELL_YEE_B2;
     E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
 
 
@@ -303,7 +303,7 @@ void main_main ()
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
     amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2);
-    gempic_assert_err(&passed, gempic_norm(&(mw_yee.rho), infra, 2), rho_norm*rho_norm);
+    gempic_assert_err(passed, gempic_norm(&(mw_yee.rho), infra, 2), rho_norm*rho_norm);
 
     AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "rho Error: " << rho_norm*rho_norm << std::endl;
 

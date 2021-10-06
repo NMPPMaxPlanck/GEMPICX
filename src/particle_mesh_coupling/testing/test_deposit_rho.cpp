@@ -135,7 +135,7 @@ void main_main ()
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
     amrex::Real error = gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2);
     bool passed = true;
-    gempic_assert_err(&passed, gempic_norm(&mw_yee.rho, infra, 2), error);
+    gempic_assert_err(passed, gempic_norm(&mw_yee.rho, infra, 2), error);
     AllPrintToFile("test_deposit_rho.tmp") << passed << std::endl;
 
     AllPrintToFile("test_deposit_rho_additional.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;

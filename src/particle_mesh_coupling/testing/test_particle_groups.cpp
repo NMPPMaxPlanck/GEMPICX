@@ -154,13 +154,13 @@ void main_main ()
     amrex::GpuArray<amrex::Real,3> rel_kin = {10.41531633, 5135.909025, 99.47169141};
 
     bool passed = true;
-    gempic_assert(&passed, rel_mass, mass);
-    gempic_assert(&passed, rel_mom[0], momentum[0]);
-    gempic_assert(&passed, rel_mom[1], momentum[1]);
-    gempic_assert(&passed, rel_mom[2], momentum[2]);
-    gempic_assert(&passed, rel_kin[0], kinetic_energy[0]);
-    gempic_assert(&passed, rel_kin[1], kinetic_energy[1]);
-    gempic_assert(&passed, rel_kin[2], kinetic_energy[2]);
+    gempic_assert(passed, rel_mass, mass);
+    gempic_assert(passed, rel_mom[0], momentum[0]);
+    gempic_assert(passed, rel_mom[1], momentum[1]);
+    gempic_assert(passed, rel_mom[2], momentum[2]);
+    gempic_assert(passed, rel_kin[0], kinetic_energy[0]);
+    gempic_assert(passed, rel_kin[1], kinetic_energy[1]);
+    gempic_assert(passed, rel_kin[2], kinetic_energy[2]);
 
     AllPrintToFile("test_particle_groups.tmp") << std::endl;
     AllPrintToFile("test_particle_groups.tmp") << passed << std::endl;
