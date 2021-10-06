@@ -1108,25 +1108,31 @@ public:
 
         // 1) Apply D
         matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, &Drho_x, *E_Index[0]);
+        Drho_x.FillBoundary(ifr.geom.periodicity());
         matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, &Drho_y, *E_Index[1]);
+        Drho_y.FillBoundary(ifr.geom.periodicity());
         matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, &Drho_z, *E_Index[2]);
+        Drho_y.FillBoundary(ifr.geom.periodicity());
 
         // 2) Apply hodge
         // to x comp
         amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
         solve_hodge_CG<degree>(&Drho_x, &HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
+        HDrho_x.FillBoundary(ifr.geom.periodicity());
         //amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
 
         // to y comp
         dimension = 1;
         amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
         solve_hodge_CG<degree>(&Drho_y, &HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
+        HDrho_y.FillBoundary(ifr.geom.periodicity());
         //amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
 
         // to z comp
         dimension = 2;
         amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
         solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
+        HDrho_z.FillBoundary(ifr.geom.periodicity());
         //amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);;
 
         // 3) Apply D^T
@@ -1148,9 +1154,9 @@ public:
         matrix_mult<3>(ifr, stencil_z, &HDrho_z, &Drho_z, *E_Index[2]);
 
 
-        amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, Nghost);
-        MultiOut->plus(Drho_y, 0, 1, Nghost);
-        MultiOut->plus(Drho_z, 0, 1, Nghost);
+        amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, 0);
+        MultiOut->plus(Drho_y, 0, 1, 0);
+        MultiOut->plus(Drho_z, 0, 1, 0);
 
         MultiOut->FillBoundary(ifr.geom.periodicity());
     }
