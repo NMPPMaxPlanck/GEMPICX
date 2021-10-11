@@ -504,7 +504,6 @@ public:
                  amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  computational_domain ifr){
 
-        // B_field
         projection<degree>(function_to_project_0, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
         projection<degree>(function_to_project_1, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
         projection<degree>(function_to_project_2, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
@@ -950,6 +949,7 @@ public:
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
         r.plus(*b, 0, 1, Nghost);
+        r.FillBoundary(ifr.geom.periodicity());
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
 
@@ -960,6 +960,7 @@ public:
 
             // z = A*d
             matrix_mult<stencil_length>(ifr, stencil, &d, &z, IndexVect);
+            z.FillBoundary(ifr.geom.periodicity());
 
             // alpha = <r,r>/<d,z>
             rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
@@ -968,11 +969,14 @@ public:
             // x = x + alpha*d
             d.mult(alpha, 0, 1, Nghost);
             x->plus(d, 0, 1, Nghost);
+            x->FillBoundary(ifr.geom.periodicity());
             d.mult(1.0/alpha, 0, 1, Nghost);
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
+            z.FillBoundary(ifr.geom.periodicity());
             r.minus(z, 0, 1, Nghost);
+            r.FillBoundary(ifr.geom.periodicity());
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
             beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0)/rr;
@@ -980,6 +984,7 @@ public:
             // d = r + beta*d
             d.mult(beta, 0, 1, Nghost);
             d.plus(r, 0, 1, Nghost);
+            d.FillBoundary(ifr.geom.periodicity());
 
             step++;
             norm_r = r.norm2(0, ifr.geom.periodicity());
@@ -1026,6 +1031,7 @@ public:
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
         r.plus(*b, 0, 1, Nghost);
+        r.FillBoundary(ifr.geom.periodicity());
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
 
@@ -1048,6 +1054,7 @@ public:
             amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
             k_scaled.mult(kern_factor, 0, 1, Nghost);
             z.plus(k_scaled, 0, 1, Nghost);
+            z.FillBoundary(ifr.geom.periodicity());
 
             // alpha = <r,r>/<d,z>
             alpha = rr/amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
@@ -1056,10 +1063,12 @@ public:
             amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
             k_scaled.mult(alpha, 0, 1, Nghost);
             x->plus(k_scaled, 0, 1, Nghost);
+            x->FillBoundary(ifr.geom.periodicity());
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
             r.minus(z, 0, 1, Nghost);
+            r.FillBoundary(ifr.geom.periodicity());
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
             beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0)/rr;
@@ -1067,6 +1076,7 @@ public:
             // d = r + beta*d
             d.mult(beta, 0, 1, Nghost);
             d.plus(r, 0, 1, Nghost);
+            d.FillBoundary(ifr.geom.periodicity());
 
         }
 
@@ -1075,8 +1085,6 @@ public:
             amrex::Print() << "Finished solve_hodge_CG" << std::endl;
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
-
-        (*x).FillBoundary(ifr.geom.periodicity());
     }
 
     template <int degree>
@@ -1107,33 +1115,36 @@ public:
 
         amrex::MultiFab HDrho_x(convert(ifr.grid, *E_Index[0]),ifr.distriMap,Ncomp,Nghost);
         HDrho_x.setVal(1.0,0);
+        HDrho_x.FillBoundary(ifr.geom.periodicity());
         amrex::MultiFab HDrho_y(convert(ifr.grid, *E_Index[1]),ifr.distriMap,Ncomp,Nghost);
         HDrho_y.setVal(1.0,0);
+        HDrho_y.FillBoundary(ifr.geom.periodicity());
         amrex::MultiFab HDrho_z(convert(ifr.grid, *E_Index[2]),ifr.distriMap,Ncomp,Nghost);
         HDrho_z.setVal(1.0,0);
+        HDrho_z.FillBoundary(ifr.geom.periodicity());
 
         // 1) Apply D
         matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, &Drho_x, *E_Index[0]);
+        Drho_x.FillBoundary(ifr.geom.periodicity());
         matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, &Drho_y, *E_Index[1]);
+        Drho_y.FillBoundary(ifr.geom.periodicity());
         matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, &Drho_z, *E_Index[2]);
+        Drho_y.FillBoundary(ifr.geom.periodicity());
 
         // 2) Apply hodge
         // to x comp
         amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
         solve_hodge_CG<degree>(&Drho_x, &HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
-        //amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
 
         // to y comp
         dimension = 1;
         amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
         solve_hodge_CG<degree>(&Drho_y, &HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
-        //amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
 
         // to z comp
         dimension = 2;
         amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
         solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
-        //amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);;
 
         // 3) Apply D^T
 
@@ -1154,9 +1165,9 @@ public:
         matrix_mult<3>(ifr, stencil_z, &HDrho_z, &Drho_z, *E_Index[2]);
 
 
-        amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, Nghost);
-        MultiOut->plus(Drho_y, 0, 1, Nghost);
-        MultiOut->plus(Drho_z, 0, 1, Nghost);
+        amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, 0);
+        MultiOut->plus(Drho_y, 0, 1, 0);
+        MultiOut->plus(Drho_z, 0, 1, 0);
 
         MultiOut->FillBoundary(ifr.geom.periodicity());
     }
@@ -1188,6 +1199,7 @@ public:
         amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
         k_scaled.mult(kern_factor, 0, 1, Nghost);
         b->minus(k_scaled, 0, 1, Nghost);
+        b->FillBoundary(ifr.geom.periodicity());
 
         // r = A*x
         poisson_operator<degree> (x, &r, kx, ky, kz, ifr, verbose, reltol, maxsteps);
@@ -1200,6 +1212,7 @@ public:
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
         r.plus(*b, 0, 1, Nghost);
+        r.FillBoundary(ifr.geom.periodicity());
 
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
@@ -1219,6 +1232,7 @@ public:
             amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
             k_scaled.mult(kern_factor, 0, 1, Nghost);
             d.plus(k_scaled, 0, 1, Nghost);
+            d.FillBoundary(ifr.geom.periodicity());
 
             // alpha = <r,r>/<d,z>
             alpha = rr/amrex::MultiFab::Dot(*nodal_Mask, d, 0, z, 0, 1, 0);
@@ -1227,10 +1241,12 @@ public:
             amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
             k_scaled.mult(alpha, 0, 1, Nghost);
             x->plus(k_scaled, 0, 1, Nghost);
+            x->FillBoundary(ifr.geom.periodicity());
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
             r.minus(z, 0, 1, Nghost);
+            r.FillBoundary(ifr.geom.periodicity());
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
             beta = amrex::MultiFab::Dot(*nodal_Mask, r, 0, r, 0, 1, 0)/rr;
@@ -1238,6 +1254,7 @@ public:
             // d = r + beta*d
             d.mult(beta, 0, 1, Nghost);
             d.plus(r, 0, 1, Nghost);
+            d.FillBoundary(ifr.geom.periodicity());
 
         }
 
@@ -1247,8 +1264,8 @@ public:
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
 
-        (*x).mult(epref_ep0, 0, 1, Nghost);
-        (*x).FillBoundary(ifr.geom.periodicity());
+        x->mult(epref_ep0, 0, 1, Nghost);
+        x->FillBoundary(ifr.geom.periodicity());
     }
 
     template<int degree>
@@ -1259,6 +1276,8 @@ public:
         amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, vdim > tmp;
         for (int i=0; i<vdim;i++) {
             tmp[i].reset(new amrex::MultiFab (convert(ifr.grid, *E_Index[i]),ifr.distriMap,Ncomp,Nghost));
+            tmp[i]->setVal(0.0);
+            tmp[i]->FillBoundary(ifr.geom.periodicity());
         }
         // ---------------------------------------------------------------------
         // D-operator
@@ -1330,12 +1349,13 @@ public:
         mlmg.setBottomSolver(amrex::BottomSolver::cg);
 
         phi.setVal(0.0); // initialise phi
-        mlmg.solve({&phi}, {&rho}, reltol, 0.0);
         phi.FillBoundary(ifr.geom.periodicity());
+        mlmg.solve({&phi}, {&rho}, reltol, 0.0);
 
 #endif
 
         phi.mult(epref_ep0, 0, 1, Nghost);
+        phi.FillBoundary(ifr.geom.periodicity());
         //----------------------------------------------------------------------------------
         // E
 
@@ -1424,11 +1444,13 @@ public:
         amrex::Real rhomean = rho.norm1(0, ifr.geom.periodicity())/(ifr.n_cell[0]*ifr.n_cell[1]*ifr.n_cell[2]);
         // 3) subtract new mean from rho
         rho.plus(-rhomean,0,1);
+        rho.FillBoundary(ifr.geom.periodicity());
 
         // repeat for rho_gauss_law
         rho_gauss_law.plus(-rho_gauss_law.min(0),0,1);
         amrex::Real rho_gauss_mean = rho_gauss_law.norm1(0, ifr.geom.periodicity())/(ifr.n_cell[0]*ifr.n_cell[1]*ifr.n_cell[2]);
         rho_gauss_law.plus(-rho_gauss_mean,0,1);
+        rho_gauss_law.FillBoundary(ifr.geom.periodicity());
 
         rho_gauss_law.minus(rho, 0, 1, 0);
         amrex::Real rho_norm = gempic_norm(&(rho_gauss_law), ifr, 2);
@@ -1499,8 +1521,11 @@ public:
         amrex::Real res = res1*res1 + res2*res2 + res3*res3;
 
         (*E_Array[0]).Copy(*E_Array[0], *E_sol_Array[0],0,0,1,Nghost);
+        E_Array[0]->FillBoundary(ifr.geom.periodicity());
         (*E_Array[1]).Copy(*E_Array[1], *E_sol_Array[1],0,0,1,Nghost);
+        E_Array[1]->FillBoundary(ifr.geom.periodicity());
         (*E_Array[2]).Copy(*E_Array[2], *E_sol_Array[2],0,0,1,Nghost);
+        E_Array[2]->FillBoundary(ifr.geom.periodicity());
 
         return(res);
     }

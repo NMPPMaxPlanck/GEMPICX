@@ -106,7 +106,7 @@ void main_main ()
     amrex::Real err_norm = Utils::gempic_norm(&rho_copy, infra, 2);
     amrex::AllPrintToFile("test_poisson_CG_additional.tmp") << "error is: " << err_norm << std::endl;
     amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho), infra, 2);
-    gempic_assert_err(&passed, rho_norm, err_norm*err_norm);
+    gempic_assert_err(passed, rho_norm, err_norm*err_norm);
 
     amrex::AllPrintToFile("test_poisson_CG.tmp") << std::endl;
     amrex::AllPrintToFile("test_poisson_CG.tmp") << passed << std::endl;

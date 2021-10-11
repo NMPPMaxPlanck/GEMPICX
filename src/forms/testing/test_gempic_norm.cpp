@@ -84,9 +84,9 @@ void main_main ()
     AllPrintToFile("test_gempic_norm_additional.tmp") << endl;
 
     bool passed = true;
-    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 0));
-    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 1));
-    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 2));
+    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 0));
+    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 1));
+    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 2));
 
 
     // Linear case
@@ -135,9 +135,9 @@ void main_main ()
     AllPrintToFile("test_gempic_norm_additional.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
     AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 
-    gempic_assert(&passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
-    gempic_assert(&passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
-    gempic_assert(&passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
+    gempic_assert(passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
+    gempic_assert(passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
+    gempic_assert(passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
 
 #endif
     AllPrintToFile("test_gempic_norm.tmp") << endl;

@@ -225,12 +225,12 @@ void main_main ()
         }
     }
     bool passed = true;
-    gempic_assert_err(&passed, 1, E_B_error[0]);
-    gempic_assert_err(&passed, 1, E_B_error[1]);
-    gempic_assert_err(&passed, 1, E_B_error[2]);
-    gempic_assert_err(&passed, 1, E_B_error[3]);
-    gempic_assert_err(&passed, 1, E_B_error[4]);
-    gempic_assert_err(&passed, 1, E_B_error[5]);
+    gempic_assert_err(passed, 1, E_B_error[0]);
+    gempic_assert_err(passed, 1, E_B_error[1]);
+    gempic_assert_err(passed, 1, E_B_error[2]);
+    gempic_assert_err(passed, 1, E_B_error[3]);
+    gempic_assert_err(passed, 1, E_B_error[4]);
+    gempic_assert_err(passed, 1, E_B_error[5]);
 
     amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << std::endl;
     amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << passed << std::endl;
