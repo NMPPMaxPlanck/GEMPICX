@@ -8,7 +8,7 @@
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-
+    {
 #if (GEMPIC_SPACEDIM == 1)
     main_main<2, GEMPIC_NUMSPEC, 1, 1, 1, 2, 2, GEMPIC_ELECTROMAGNETIC, true>(argc==1);
 #elif (GEMPIC_SPACEDIM == 2)
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     vlasovMaxwell.run_time_loop();
 
 #endif
-
+    }
     amrex::Finalize();
 }
 

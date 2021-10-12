@@ -1,3 +1,5 @@
+include_directories("${CMAKE_SOURCE_DIR}/src/simulations/testing")
+
 add_executable ( test_vlasov_maxwell_by test_vlasov_maxwell_by.cpp )
 #add_executable ( test_vlasov_maxwell_by_lower test_vlasov_maxwell_by_lower.cpp )
 add_executable ( test_vlasov_maxwell_hs test_vlasov_maxwell_hs.cpp  )
