@@ -46,7 +46,7 @@ class vlasov_maxwell_simulation
 public :
     gempic_parameters<vdim, numspec> params;
     computational_domain domain;
-    maxwell_yee<vdim> mw_yee;
+    maxwell_yee<vdim, int(vdim/2.5)*2+1> mw_yee;
     particle_groups<vdim, numspec> part_gr;
     diagnostics<vdim, numspec,degx,degy,degz,degvm> diagn;
     bool readinfile = false;
