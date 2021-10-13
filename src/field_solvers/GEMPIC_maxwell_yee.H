@@ -30,13 +30,6 @@
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 
-namespace Gempic {
-namespace Vlasov_Maxwell {
-template<int vdim, int numspec>
-class vlasov_maxwell;
-}
-}
-
 using namespace CompDom;
 using namespace Utils;
 using namespace Vlasov_Maxwell;

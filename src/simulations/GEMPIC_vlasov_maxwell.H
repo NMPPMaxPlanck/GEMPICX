@@ -16,6 +16,7 @@
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
+#include <GEMPIC_time_loop_ls_rungekutta.H>
 #include <GEMPIC_time_loop_particles.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
@@ -137,17 +138,20 @@ public :
         auto start = std::chrono::high_resolution_clock::now();
         switch (params.propagator) {
             case 0:
-            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 1:
-            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 2:
-            time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 3:
-            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false, output>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false, output>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
+        case 4:
+                ls_rungekutta<3> rk_prop();
+                rk_prop.time_loop(domain, &mw_yee, &art_gr);
             case 100:
               //time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, &ofs);
                 break;
