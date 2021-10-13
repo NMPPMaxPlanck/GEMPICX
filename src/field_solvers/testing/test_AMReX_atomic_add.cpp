@@ -7,7 +7,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_assertion.H>
 
@@ -21,7 +21,7 @@ template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     amrex::IntVect n_cell = {AMREX_D_DECL(8,10,12)};
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.set_params("add_test", n_cell, {1}, 10, 12, 12, 12, {AMREX_D_DECL(1, 1, 1)}, {AMREX_D_DECL(8, 10, 12)});
     VlMa.set_computed_params();
     CompDom::computational_domain infra;

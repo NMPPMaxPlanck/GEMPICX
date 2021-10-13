@@ -101,10 +101,21 @@ public:
     /**
      * Default Constructor.
      */
-    maxwell_yee ();
+    maxwell_yee (){}
 
     // Explicit const
     maxwell_yee  (computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in,  amrex::Real epref_ep0_in = 1.0,
+                  amrex::Real curlB_scaling_in = 1.0,
+                  amrex::Real energy_b_scaling_in = 1.0){
+      initialize(ifr, dt_in, nsteps_in, Nghost_in, epref_ep0_in, curlB_scaling_in, energy_b_scaling_in);
+    }
+
+    ~maxwell_yee(){}
+
+    void reinit  (computational_domain ifr,
+                  amrex::Real dt_in, amrex::Real nsteps_in,
+                  int Nghost_in,
+                  amrex::Real epref_ep0_in = 1.0,
                   amrex::Real curlB_scaling_in = 1.0,
                   amrex::Real energy_b_scaling_in = 1.0){
       initialize(ifr, dt_in, nsteps_in, Nghost_in, epref_ep0_in, curlB_scaling_in, energy_b_scaling_in);

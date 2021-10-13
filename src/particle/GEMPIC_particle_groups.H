@@ -50,7 +50,7 @@ public:
     /**
      * Default Constructor.
      */
-    particle_groups ();
+    particle_groups (){}
 
     // Explicit const
     /**
@@ -71,6 +71,29 @@ public:
 	    (*mypc[i]).do_tiling = false;
 #else
 	    (*mypc[i]).do_tiling = true;
+#endif
+# if (GEMPIC_SPACEDIM > 1)
+            (*mypc[i]).tile_size = ifr.max_grid_size;
+#else
+            (*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
+#endif
+        }
+    }
+
+    void reinit (amrex::GpuArray<amrex::Real, numspec> charge_in,
+                     amrex::GpuArray<amrex::Real, numspec> mass_in,
+                     computational_domain ifr){
+
+        charge = charge_in;
+        mass = mass_in;
+
+        // set infrastructure for each species
+        for (int i=0;i<mypc.size();i++) {
+            mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+#if GEMPIC_GPU
+        (*mypc[i]).do_tiling = false;
+#else
+        (*mypc[i]).do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
             (*mypc[i]).tile_size = ifr.max_grid_size;

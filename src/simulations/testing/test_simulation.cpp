@@ -12,7 +12,7 @@
 #include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 
 //#include <cudaProfiler.h>
@@ -62,7 +62,7 @@ void main_main ()
 {
     const int strang_order = 2;
     bool ctest = true;
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_simulation",
 

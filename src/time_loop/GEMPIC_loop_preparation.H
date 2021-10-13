@@ -21,6 +21,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
+#include <GEMPIC_parameters.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -35,7 +36,7 @@ namespace Time_Loop {
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
+void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr) {
@@ -111,7 +112,7 @@ void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
 }
 
     template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-    void loop_staggering (vlasov_maxwell<vdim, numspec> VM,
+    void loop_staggering (gempic_parameters<vdim, numspec> VM,
                            computational_domain infra,
                            maxwell_yee<vdim> *mw_yee,
                            particle_groups<vdim, numspec> *part_gr,
@@ -160,7 +161,7 @@ void loop_preparation_init (vlasov_maxwell<vdim, numspec> VM,
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+void loop_preparation (gempic_parameters<vdim, numspec> VM,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -179,7 +180,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+void loop_preparation (gempic_parameters<vdim, numspec> VM,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -198,7 +199,7 @@ void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (vlasov_maxwell<vdim, numspec> VM,
+void loop_preparation (gempic_parameters<vdim, numspec> VM,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,

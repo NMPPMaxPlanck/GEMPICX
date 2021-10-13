@@ -36,7 +36,7 @@ namespace Gempic {
 namespace Vlasov_Maxwell {
 
 template<int vdim, int numspec>
-class vlasov_maxwell
+class gempic_parameters
 {
 public:
 
@@ -66,7 +66,8 @@ public:
     std::string rho = "0.0";
     int num_gaussians = 1;
     int propagator = 3;
-    bool time_staggered;
+    int strang_order = 2;
+    bool time_staggered = false;
     amrex::Real tolerance_particles = 1e-10;
     int max_coarsening_level = 30;
     int restart = 0;
@@ -94,7 +95,7 @@ public:
     /**
      * Default Constructor.
      */
-    vlasov_maxwell (){};
+    gempic_parameters (){};
 
     void init_Nghost (int degx, int degy, int degz) {
         std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
