@@ -367,20 +367,26 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_
      *
      */
 
-template <int vdim, int degp, int degp1, int degp2, int pdim>
+template <int vdim, int degp, int degp1, int degp2, int pdim, int plength>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::Real position_new,
+                               spline1d_at_particles<degp-1> spline_y_cell,
+                               spline1d_at_particles<degp> spline_y_node,
+                               spline1d_at_particles<degp-1> spline_z_cell,
+                               spline1d_at_particles<degp> spline_z_node,
+                               spline1d_at_particles<degp> spline_new,
+                               spline1d_at_particles<degp> spline_old,
                                amrex::Real charge, // q*p.rdata(vdim)
                                const amrex::Real* dx,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
                                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>const& jArray,
-                               amrex::GpuArray<amrex::Real, 2> &fields         )
+                               amrex::GpuArray<amrex::Real, 2> &fields,
+                               amrex::GpuArray<amrex::Real, plength> *primitive)
 {
   int pdim1 = (pdim+1)%3;
   int pdim2 = (pdim+2)%3;
-
   fields = {0.,0.};
 
 
@@ -406,39 +412,37 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(am
     if (box_new<box[pdim])
       box_start = box_new;
 
+    for (unsigned int j=0;j<plength;j++)
+        (*primitive)[j] = 0.0;
     // 2a. Evaluate the spline for the dimensions other than pdim
-    splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
-
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degp1-1> (position_box[pdim1]);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degp1> (position_box[pdim1]);
-
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degp2-1> (position_box[pdim2]);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degp2> (position_box[pdim2]);
+    spline_y_cell.init_position(position_old[pdim1], plo[pdim1], dxi[pdim1]);
+    spline_y_node.init_position( position_old[pdim1], plo[pdim1], dxi[pdim1]);
+    spline_z_cell.init_position( position_old[pdim2], plo[pdim2], dxi[pdim2]);
+    spline_z_node.init_position( position_old[pdim2], plo[pdim2], dxi[pdim2]);
+    spline_new.init_position(position_new, plo[pdim], dxi[pdim]);
+    spline_old.init_position(position_old[pdim], plo[pdim], dxi[pdim]);
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
-    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degp-1> (position_box[pdim]);
-    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degp-1> (position_box_new);
-    std::vector<amrex::Real> primitive(local_size+degp);
     if ( box[pdim] < box_new ) {
         for (unsigned int j =0;j<degp; j++) {
-            primitive[local_size-degp+j] = sx_prim_new[j]*dx[pdim];
+            (*primitive)[local_size-degp+j] = (1.0-spline_new.primitive[j])*dx[pdim];
           }
         for(unsigned int j=0;j<local_size-degp;j++) {
-            primitive[j] = dx[pdim];
+            (*primitive)[j] = dx[pdim];
           }
         for (unsigned int j=0;j<degp;j++) {
-            primitive[j] -= sx_prim_old[j]*dx[pdim];
+            (*primitive)[j] -= (1.0-spline_old.primitive[j])*dx[pdim];
           }
       }
     else {
         for (unsigned int j =0;j<degp; j++) {
-            primitive[local_size-degp+j] = -sx_prim_old[j]*dx[pdim];
+            (*primitive)[local_size-degp+j] = -(1.0-spline_old.primitive[j])*dx[pdim];
           }
         for(unsigned int j=0;j<local_size-degp;j++) {
-            primitive[j] = -dx[pdim];
+            (*primitive)[j] = -dx[pdim];
           }
         for (unsigned int j=0;j<degp;j++) {
-            primitive[j] += sx_prim_new[j]*dx[pdim];
+            (*primitive)[j] += (1.0-spline_new.primitive[j])*dx[pdim];
           }
       }
 
@@ -456,20 +460,19 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(am
                   cell_index = {AMREX_D_DECL( box[0]+kk, box_start+ii, box[2]+jj)};
                 else if (pdim == 2)
                   cell_index = {AMREX_D_DECL( box[0]+jj, box[1]+kk, box_start+ii)};
-                double s_coeff = primitive[ii]
-                        *sy_node[jj]
-                        *sz_node[kk];
+                double s_coeff = (*primitive)[ii]
+                        *spline_y_node.spline[jj]
+                        *spline_z_node.spline[kk];
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0 , 0), s_coeff*charge);
 #else
                 amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*charge);
 #endif
-
                     if ( jj < degp1 )
                       {
-                        double s_coeff = primitive[ii]
-                              *sy_cell[jj]
-                              *sz_node[kk];
+                        double s_coeff = (*primitive)[ii]
+                                *spline_y_cell.spline[jj]
+                                *spline_z_node.spline[kk];
 
 #if (GEMPIC_SPACEDIM == 1)
                 fields[0] += s_coeff*(bArray[pdim2])(cell_index[0], 0, 0, 0);
@@ -478,9 +481,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(am
 #endif
                           }
                   if ( kk < degp2 ){
-                      double s_coeff = primitive[ii]
-                              *sy_node[jj]
-                              *sz_cell[kk];
+                      double s_coeff = (*primitive)[ii]
+                              *spline_y_node.spline[jj]
+                              *spline_z_cell.spline[kk];
 #if (GEMPIC_SPACEDIM == 1)
                 fields[1] += s_coeff*(bArray[pdim1])(cell_index[0], 0, 0, 0);
 #else
@@ -493,11 +496,11 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(am
 }
 
 
-/*!
-     *  Accumulation of the current for a FEM solver with integral over time (line integral)
-     *  Currently this is implemented for degree one with two quadrature points in the line
-     * integral for each box
-     */
+/*
+     // Accumulation of the current for a FEM solver with integral over time (line integral)
+     // Currently this is implemented for degree one with two quadrature points in the line
+     // integral for each box
+
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x1_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::Real position_new,
@@ -657,11 +660,10 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x1_fem_integral
 }
 
 
-/*!
-     *  Accumulation of the current for a FEM solver with integral over time (line integral)
-     *  Currently this is implemented for degree one with two quadrature points in the line
-     * integral for each box
-     */
+     //  Accumulation of the current for a FEM solver with integral over time (line integral)
+     //  Currently this is implemented for degree one with two quadrature points in the line
+     // integral for each box
+
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x2_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position_old,
                                amrex::Real position_new,
@@ -813,11 +815,11 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x2_fem_integral
 }
 
 
-/*!
-     *  Accumulation of the current for a FEM solver with integral over time (line integral)
-     *  Currently this is implemented for degree one with two quadrature points in the line
-     * integral for each box
-     */
+
+     //  Accumulation of the current for a FEM solver with integral over time (line integral)
+     //  Currently this is implemented for degree one with two quadrature points in the line
+     // integral for each box
+
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x3_fem_integral(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position_old,
                                amrex::Real position_new,
@@ -970,6 +972,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x3_fem_integral
 
 
 }
+*/
 
 /*!
      *  Accumulation of the current for a FEM solver with integral over time (line integral)

@@ -18,6 +18,7 @@ class spline1d_at_particles
 {
 public :
     amrex::GpuArray<amrex::Real,deg> primitive;
+    amrex::GpuArray<amrex::Real,deg+1> spline;
     int box;
 
 AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void init_position(amrex::Real position,
@@ -48,14 +49,68 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void init_position(amrex::Real position,
                 xint = 1. - xint;
             }
         primitive = spline_eval_primitive<deg-1> (xint);
+        spline = spline_eval<deg> (xint);
     }
 
 private :
+
+template<int degree>
+AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE             amrex::GpuArray<amrex::Real,degree+1> spline_eval (amrex::Real x)  {
+    amrex::GpuArray<amrex::Real,degree+1> s;
+    switch (degree) {
+    case 0:
+        s[0] = 1;
+        break;
+    case 1:
+        s[0] = x;
+        s[1] = 1-x;
+        break;
+    case 2:
+        s[0] = pow(x,2)/2.;
+        s[1] = 1./2.+x-pow(x,2);
+        s[2] = 1./2.-x+pow(x,2)/2.;
+        break;
+    case 3:
+        s[0] = pow(x,3)/6.;
+        s[1] = 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3));
+        s[2] = 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3));
+        s[3] = 1./6.*pow((1.-x),3);
+        break;
+    case 4:
+        s[0] = pow(x,4)/24.;
+        s[1] = ((((-x+1.)*4.*x+6.)*x+4.)*x+1.)/24.;
+        s[2] = ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.;
+        s[3] = ((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24.;
+        s[4] = pow(1.-x,4)/24.;
+        break;
+    case 5:
+        s[0] =   pow(x,5)/120. ;
+        s[1] = (((((-x+1.)*x+2.)*x+2.)*x+1.)*5.*x+1.)/120.;
+        s[2] = (((((x-2.)*x-2.)*x+2.)*x+5.)*10.*x+26.)/120.;
+        s[3] = (((-x+3.)*x*x-6.)*x*10.*x+66.)/120.;
+        s[4] = (((((x-4.)*x+4.)*x+4.)*x-10.)*5.*x+26.)/120.;
+        s[5] = (((((-x+5.)*x-10.)*x+10.)*x-5.)*x+1.)/120.;
+        break;
+    case 6:
+        s[0] =   pow(x,6)/720. ;
+        s[1] = -pow(x,6)/120. + pow(x,5)/120. + pow(x,4)/48. + pow(x,3)/36. + pow(x,2)/48. + x/120. + 1./720.;
+        s[2] = pow(x,6)/48. - pow(x,5)/24. - pow(x,4)/16. + pow(x,3)/36. + 3.*pow(x,2)/16. + 5.*x/24. + 19./240.;
+        s[3] = -pow(x,6)/36. + pow(x,5)/12. + pow(x,4)/24. - 2.*pow(x,3)/9. - 5.*pow(x,2)/24. + 1.*x/3. + 151./360.;
+        s[4] = pow(x,6)/48. - pow(x,5)/12. + pow(x,4)/24. + 2.*pow(x,3)/9. - 5.*pow(x,2)/24. - x/3. + 151./360.;
+        s[5] = -pow(x,6)/120. + pow(x,5)/24. - pow(x,4)/16. - pow(x,3)/36. + 3.*pow(x,2)/16. - 5.*x/24. + 19./240.;
+        s[6] = pow(x,6)/720. - pow(x,5)/120. + pow(x,4)/48. - pow(x,3)/36. + pow(x,2)/48. - x/120. + 1./720.;
+        break;
+    }
+    return(s);
+}
 
     template<int degree>
 AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE             amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
         amrex::GpuArray<amrex::Real,degree+1> s;
         switch (degree) {
+        case -1:
+            s[0] = 1;
+            break;
         case 0:
             s[0] = x;
             break;

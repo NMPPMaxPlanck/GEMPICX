@@ -129,15 +129,29 @@ void time_loop_hsall_fem_step (computational_domain infra,
                                                         bA,
                                                         jA,
                                                         bfields);*/
-                    accumulate_j_update_v_fem_integral<vdim, degx, degy, degz, 0>( pos,
+                    amrex::GpuArray<amrex::Real, 2*std::max(degx, std::max(degy, degz))+4> primitive;
+                    spline1d_at_particles<degx-1> spline_y_cell;
+                    spline1d_at_particles<degx> spline_y_node;
+                    spline1d_at_particles<degx-1> spline_z_cell;
+                    spline1d_at_particles<degx> spline_z_node;
+                    spline1d_at_particles<degx> spline_new;
+                    spline1d_at_particles<degx> spline_old;
+                    accumulate_j_update_v_fem_integral<vdim, degx, degy, degz, 0, 2*std::max(degx, std::max(degy, degz))+4>( pos,
                                                       x1_new,
+                                                      spline_y_cell,
+                                                      spline_y_node,
+                                                      spline_z_cell,
+                                                      spline_z_node,
+                                                      spline_new,
+                                                      spline_old,
                                                       weight,
                                                       infra.geom.CellSize(),
                                                       infra.dxi,
                                                       infra.plo,
                                                       bA,
                                                       jA,
-                                                      bfields);
+                                                      bfields,
+                                                      &primitive);
 
                     // Push v2 and v3
                     if (vdim > 1)
@@ -160,15 +174,28 @@ void time_loop_hsall_fem_step (computational_domain infra,
                                                         bA,
                                                         jA,
                                                         bfields);*/
-                      accumulate_j_update_v_fem_integral<vdim, degy, degz, degx, 1>( pos,
+                      spline1d_at_particles<degy-1> spline_y_cell;
+                      spline1d_at_particles<degy> spline_y_node;
+                      spline1d_at_particles<degy-1> spline_z_cell;
+                      spline1d_at_particles<degy> spline_z_node;
+                      spline1d_at_particles<degy> spline_new;
+                      spline1d_at_particles<degy> spline_old;
+                      accumulate_j_update_v_fem_integral<vdim, degy, degz, degx, 1, 2*std::max(degx, std::max(degy, degz))+4>( pos,
                                                         x2_new,
+                                                        spline_y_cell,
+                                                        spline_y_node,
+                                                        spline_z_cell,
+                                                        spline_z_node,
+                                                        spline_new,
+                                                        spline_old,
                                                         weight,
                                                         infra.geom.CellSize(),
                                                         infra.dxi,
                                                         infra.plo,
                                                         bA,
                                                         jA,
-                                                        bfields);
+                                                        bfields,
+                                                        &primitive);
 
                       // Push v2 and v3
                       vel[0] = vel[0] + chargemass*bfields[1];
@@ -198,15 +225,28 @@ void time_loop_hsall_fem_step (computational_domain infra,
                                                         bA,
                                                         jA,
                                                         bfields);*/
-                    accumulate_j_update_v_fem_integral<vdim, degz, degx, degy, 2>( pos,
+                    spline1d_at_particles<degz-1> spline_y_cell;
+                    spline1d_at_particles<degz> spline_y_node;
+                    spline1d_at_particles<degz-1> spline_z_cell;
+                    spline1d_at_particles<degz> spline_z_node;
+                    spline1d_at_particles<degz> spline_new;
+                    spline1d_at_particles<degz> spline_old;
+                    accumulate_j_update_v_fem_integral<vdim, degz, degx, degy, 2, 2*std::max(degx, std::max(degy, degz))+4>( pos,
                                                       x3_new,
+                                                      spline_y_cell,
+                                                      spline_y_node,
+                                                      spline_z_cell,
+                                                      spline_z_node,
+                                                      spline_new,
+                                                      spline_old,
                                                       weight,
                                                       infra.geom.CellSize(),
                                                       infra.dxi,
                                                       infra.plo,
                                                       bA,
                                                       jA,
-                                                      bfields);
+                                                      bfields,
+                                                      &primitive);
                     // Push v2 and v3
                     vel[0] = vel[0] - chargemass*bfields[0];
                     vel[1] = vel[1] + chargemass*bfields[1];
