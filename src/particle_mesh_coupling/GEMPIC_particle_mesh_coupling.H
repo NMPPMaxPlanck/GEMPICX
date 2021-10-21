@@ -1158,6 +1158,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE amrex::GpuArray<amrex::Real, int(vdim/2.5
 
 
 
+/*
 template <typename P, int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& pos,
                                                                                        amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& vel,
@@ -1288,6 +1289,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim
 #endif
     return(fields);
 }
+*/
 
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> gempic_deposit_J_and_interpolate (amrex::Real charge_weight_dxi_coeff,
