@@ -32,11 +32,9 @@ AMREX_GPU_HOST_DEVICE amrex::Real mod_dom(amrex::Real val,
 
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void gempic_deposit_rho (splines_at_particles<degx,degy,degz> &spline,
-                                                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>  pos,
                                                                 amrex::Real weight,
                                                                 amrex::Real charge,
                          amrex::Array4<amrex::Real> const& rho,
-                         amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
 
 {
@@ -295,7 +293,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_
         if (boxdiff[d] > 0 )
         {
             //sigmas[d].resize(boxdiff[d]+1);
-            for (unsigned int bl=0; bl<boxdiff[d];++bl)
+            for (int bl=0; bl<boxdiff[d];++bl)
                 sigmas[d][bl] = (bl+1  - position_box_old[d])/(xnewtilde[d]-position_box_old[d]) ;
 
             sigmas[d][boxdiff[d]] = 1.0;
@@ -401,11 +399,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(am
     }
 
     // 1b. Identify the box and relative position of position new
-    amrex::Real position_box_new;
     int box_new;
     amrex::Real pos_norm = (position_new-plo[pdim])*dxi[pdim];
     box_new = std::floor(pos_norm);
-    position_box_new = pos_norm - box_new;
 
     int local_size = std::abs(box_new-box[pdim])+degp;
     int box_start = box[pdim];
@@ -980,11 +976,9 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_x3_fem_integral
      */
 template<int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_fem_integral(splines_at_particles<degx,degy,degz> &spline,
-                                                                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                                amrex::GpuArray<amrex::Real, vdim>& velocity,
                                amrex::Real charge, // q*p.rdata(vdim)
                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi,
-                               amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray)
 {
 
