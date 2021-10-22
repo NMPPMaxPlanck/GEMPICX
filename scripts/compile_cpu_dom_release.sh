@@ -33,17 +33,16 @@ module use /apps/daint/UES/eurohack/modules/all
 module load numdiff/5.9.0
 module list
 
-BUILD_DIR=$SCRATCH/gempic_gpu_obj3
+BUILD_DIR=$SCRATCH/gempic_cpu_obj
 
 #rmdir -r $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 mkdir -p amrex
-mkdir -p amrex_install
 cd amrex
 
-CXX=CC cmake -D CMAKE_BUILD_TYPE=Release -D AMReX_GPU_BACKEND=CUDA -D AMReX_CUDA_ARCH=Pascal -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_LINKER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D CMAKE_INSTALL_PREFIX=../amrex_install --expt-extended-lambda $AMREX_DIRECTORY
+CXX=CC cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=../amrex_install -DAMReX_OMP=NO -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_LINKER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC --expt-extended-lambda $AMREX_DIRECTORY
 
 make install -j 16
 
@@ -52,5 +51,5 @@ rm -rf gempic
 mkdir -p gempic
 cd gempic
 
-CXX=CC cmake -D AMReX_DIR=$BUILD_DIR/amrex_install -D USE_CUDA=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D MPI_CUDA_INCLUDE_PATH='' -D MPI_CUDA_LIBRARIES='' -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY -D CMAKE_EXE_LINKER_FLAGS=-lnvToolsExt
-gmake -j 16
+CXX=CC cmake -D AMReX_DIR=$BUILD_DIR/amrex_install -D USE_CUDA=OFF -D USE_OMP=OFF -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D MPI_CUDA_INCLUDE_PATH='' -D MPI_CUDA_LIBRARIES='' -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+gmake -j 16 VERBOSE=1 &> compile_out.txt
