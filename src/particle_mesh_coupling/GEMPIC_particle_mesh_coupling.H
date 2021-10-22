@@ -410,13 +410,7 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void accumulate_j_update_v_fem_integral(am
 
     for (unsigned int j=0;j<plength;j++)
         (*primitive)[j] = 0.0;
-    // 2a. Evaluate the spline for the dimensions other than pdim
-    spline_y_cell.init_position(position_old[pdim1], plo[pdim1], dxi[pdim1]);
-    spline_y_node.init_position( position_old[pdim1], plo[pdim1], dxi[pdim1]);
-    spline_z_cell.init_position( position_old[pdim2], plo[pdim2], dxi[pdim2]);
-    spline_z_node.init_position( position_old[pdim2], plo[pdim2], dxi[pdim2]);
-    spline_new.init_position(position_new, plo[pdim], dxi[pdim]);
-    spline_old.init_position(position_old[pdim], plo[pdim], dxi[pdim]);
+    // 2a. Evaluate the spline for the dimensions other than pdim (happens before fct call now)
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
     if ( box[pdim] < box_new ) {

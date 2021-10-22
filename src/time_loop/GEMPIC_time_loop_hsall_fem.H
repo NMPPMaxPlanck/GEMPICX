@@ -118,7 +118,10 @@ void time_loop_hsall_fem_step (computational_domain infra,
                     for (unsigned int d=0;d<vdim;++d)
                       vel[d] = particles[pp].rdata(d);
                     amrex::GpuArray<amrex::Real, 2> bfields;
+                    amrex::GpuArray<amrex::Real, 2*std::max(degx, std::max(degy, degz))+4> primitive;
+                    for (int dd=0; dd< 2*std::max(degx, std::max(degy, degz))+4; dd++) primitive[dd] = 0.0;
                     // push x1
+                    {
                     amrex::Real x1_new = pos[0] +  (*mw_yee).dt*coeff*vel[0];
                     /*accumulate_j_update_v_x1_fem_integral<vdim, degx, degy, degz>( pos,
                                                         x1_new,
@@ -129,13 +132,18 @@ void time_loop_hsall_fem_step (computational_domain infra,
                                                         bA,
                                                         jA,
                                                         bfields);*/
-                    amrex::GpuArray<amrex::Real, 2*std::max(degx, std::max(degy, degz))+4> primitive;
                     spline1d_at_particles<degx-1> spline_y_cell;
+                    spline_y_cell.init_position(pos[1], infra.plo[1], infra.dxi[1]);
                     spline1d_at_particles<degx> spline_y_node;
+                    spline_y_node.init_position(pos[1], infra.plo[1], infra.dxi[1]);
                     spline1d_at_particles<degx-1> spline_z_cell;
+                    spline_z_cell.init_position(pos[2], infra.plo[2], infra.dxi[2]);
                     spline1d_at_particles<degx> spline_z_node;
+                    spline_z_node.init_position(pos[2], infra.plo[2], infra.dxi[2]);
                     spline1d_at_particles<degx> spline_new;
+                    spline_new.init_position(x1_new, infra.plo[0], infra.dxi[0]);
                     spline1d_at_particles<degx> spline_old;
+                    spline_old.init_position(pos[0], infra.plo[0], infra.dxi[0]);
                     accumulate_j_update_v_fem_integral<vdim, degx, degy, degz, 0, 2*std::max(degx, std::max(degy, degz))+4>( pos,
                                                       x1_new,
                                                       spline_y_cell,
@@ -159,6 +167,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
                     if (vdim > 2)
                       vel[2] = vel[2] + chargemass*bfields[1];
                     pos[0] = x1_new;
+                }
 
                     if ( vdim > 1 )
                       {
@@ -175,11 +184,17 @@ void time_loop_hsall_fem_step (computational_domain infra,
                                                         jA,
                                                         bfields);*/
                       spline1d_at_particles<degy-1> spline_y_cell;
+                      spline_y_cell.init_position(pos[2], infra.plo[2], infra.dxi[2]);
                       spline1d_at_particles<degy> spline_y_node;
+                      spline_y_node.init_position(pos[2], infra.plo[2], infra.dxi[2]);
                       spline1d_at_particles<degy-1> spline_z_cell;
+                      spline_z_cell.init_position(pos[0], infra.plo[0], infra.dxi[0]);
                       spline1d_at_particles<degy> spline_z_node;
+                      spline_z_node.init_position(pos[0], infra.plo[0], infra.dxi[0]);
                       spline1d_at_particles<degy> spline_new;
+                      spline_new.init_position(x2_new, infra.plo[1], infra.dxi[1]);
                       spline1d_at_particles<degy> spline_old;
+                      spline_old.init_position(pos[1], infra.plo[1], infra.dxi[1]);
                       accumulate_j_update_v_fem_integral<vdim, degy, degz, degx, 1, 2*std::max(degx, std::max(degy, degz))+4>( pos,
                                                         x2_new,
                                                         spline_y_cell,
@@ -226,11 +241,17 @@ void time_loop_hsall_fem_step (computational_domain infra,
                                                         jA,
                                                         bfields);*/
                     spline1d_at_particles<degz-1> spline_y_cell;
+                    spline_y_cell.init_position(pos[0], infra.plo[0], infra.dxi[0]);
                     spline1d_at_particles<degz> spline_y_node;
+                    spline_y_node.init_position(pos[0], infra.plo[0], infra.dxi[0]);
                     spline1d_at_particles<degz-1> spline_z_cell;
+                    spline_z_cell.init_position(pos[1], infra.plo[1], infra.dxi[1]);
                     spline1d_at_particles<degz> spline_z_node;
+                    spline_z_node.init_position(pos[1], infra.plo[1], infra.dxi[1]);
                     spline1d_at_particles<degz> spline_new;
+                    spline_new.init_position(x3_new, infra.plo[2], infra.dxi[2]);
                     spline1d_at_particles<degz> spline_old;
+                    spline_old.init_position(pos[2], infra.plo[2], infra.dxi[2]);
                     accumulate_j_update_v_fem_integral<vdim, degz, degx, degy, 2, 2*std::max(degx, std::max(degy, degz))+4>( pos,
                                                       x3_new,
                                                       spline_y_cell,
