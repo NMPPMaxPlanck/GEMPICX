@@ -21,7 +21,7 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Vlasov_Maxwell;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real initial_bfield(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real initial_bfield(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 1e-3 * std::cos(1.25 * x);
     return val;

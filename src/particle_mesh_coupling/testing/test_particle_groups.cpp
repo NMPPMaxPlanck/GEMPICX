@@ -25,21 +25,21 @@ using namespace Sampling;
 // wave function
 // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
 // multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
 {
     amrex::Real val = (32*1.25/6.28318530718)*(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*1.0;
     return val;
 }
 
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_Bz(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real funct_Bz(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 1e-3 * std::cos(1.25 * x);
     return val;
 }
 
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     return 0.0;
 }

@@ -40,7 +40,7 @@ using namespace Field_solvers;
 #define MAXWELL_YEE_E1_1 8
 #define MAXWELL_YEE_E2_1 9
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
   switch(funcSelect){
   case MAXWELL_YEE_E1 :

@@ -33,7 +33,7 @@ using namespace Vlasov_Maxwell;
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO 0
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION 1
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
     switch(funcSelect){
     case VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION :
@@ -44,13 +44,13 @@ AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real function_to_project(amrex::Rea
     return 0.0;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
 {
     amrex::Real val = 1.0 ;//+ 0.5 * std::cos(0.5 * x);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
 {
     amrex::Real val = 0.0;
     return val;
