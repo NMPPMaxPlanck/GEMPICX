@@ -30,5 +30,5 @@ rm -rf gempic
 mkdir -p gempic
 cd gempic
 
-cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CUDA_HOST_COMPILER=mpiicc -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+cmake -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CUDA_HOST_COMPILER=mpiicc -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 gmake VERBOSE=1 -j 16
