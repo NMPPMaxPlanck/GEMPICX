@@ -75,7 +75,7 @@ public :
         // initialize particles & loop preparation:
         init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM, params.VD, params.VW, 0, wave_function);
 
-        loop_preparation<vdim, numspec, degx, degy, degz, degvm, true>(params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
+        loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
 
     }
 

@@ -28,7 +28,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real ,
     return val;
 }
 
-template <int degx, int degy, int degz, int degmw, int vdim>
+template <int degx, int degy, int degz, int degmw, int vdim, bool electromagnetic, bool output>
 void vlasov_maxwell_run(std::string test_name, int propagator)
 {
     std::string test_name_tmp = test_name + ".tmp.0";
@@ -46,7 +46,7 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
 
     // Output for GEMPIC_SPACEDIM=3
     //vlasov_maxwell_test<3, 1, 6, 5, 4, 4, 2, true>(3, test_name);
-    vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw> sim;
+    vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw, electromagnetic, output> sim;
     sim.params.init_Nghost(degx,degy,degz);
     sim.params.set_params(test_name, {12,8,8});
     sim.params.propagator = propagator;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
     std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
 
-    vlasov_maxwell_run<6,5,4,4,3> (test_name, 3);
+    vlasov_maxwell_run<6,5,4,4,3,true,false> (test_name, 3);
 
     amrex::Finalize();
 }
