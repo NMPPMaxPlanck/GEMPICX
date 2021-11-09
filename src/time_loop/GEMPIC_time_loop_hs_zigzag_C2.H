@@ -419,6 +419,7 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
     amrex::Real init_energy = 0.5*(diagn->Efield_energy[0][0] + diagn->Efield_energy[0][1] + diagn->Efield_energy[0][2]
                                  + diagn->Bfield_energy[0][0] + diagn->Bfield_energy[0][1] + diagn->Bfield_energy[0][2])
                                  + diagn->kin[0]/(infra.Length[0]*infra.Length[1]*infra.Length[2]);
+    if (amrex::ParallelDescriptor::MyProc()==0) remove("energy_error.out.0");
     bool profiling_count = false;
     timers profiling_timers(true);
 
@@ -452,7 +453,7 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
                                         + diagn->Bfield_energy[t_step][0] + diagn->Bfield_energy[t_step][1] + diagn->Bfield_energy[t_step][2])
                                         + diagn->kin[t_step]/(infra.Length[0]*infra.Length[1]*infra.Length[2]);
 
-            amrex::PrintToFile("energy_error.out") << t_step*mw_yee->dt << " " << std::abs(init_energy-end_energy) << std::endl;
+            if (amrex::ParallelDescriptor::MyProc()==0) amrex::PrintToFile("energy_error.out") << t_step*mw_yee->dt << " " << std::abs(init_energy-end_energy) << std::endl;
         }
     }
 

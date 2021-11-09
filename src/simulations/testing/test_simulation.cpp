@@ -56,6 +56,7 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
     sim.params.dt = 0.01;
     sim.params.n_part_per_cell = {500};
     sim.params.set_computed_params();
+    sim.params.freq_slice = 1e6;
     sim.ctest = true;
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
@@ -79,7 +80,7 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
     std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
 
-    vlasov_maxwell_run<2,2,2,2,3,true,false> (test_name, 3);
+    vlasov_maxwell_run<2,2,2,2,3,true,true> (test_name, 3);
 
     amrex::Finalize();
 }
