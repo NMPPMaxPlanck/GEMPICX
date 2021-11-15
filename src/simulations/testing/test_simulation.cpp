@@ -9,6 +9,7 @@
 
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO 0
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION 1
+#define VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ 2
 
 AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
@@ -17,6 +18,8 @@ AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real
       return 1.0 ;//+ 0.5 * std::cos(0.5 * x);
     case VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO :
       return 0.0 ;
+    case VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ:
+        return 1e-4*cos(t*x); // using t here as kx
     }
     return 0.0;
 }
@@ -42,7 +45,7 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
     amrex::GpuArray<int, 3> funcSelectB;
     funcSelectB[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ;
 
     // Output for GEMPIC_SPACEDIM=3
     //vlasov_maxwell_test<3, 1, 6, 5, 4, 4, 2, true>(3, test_name);
