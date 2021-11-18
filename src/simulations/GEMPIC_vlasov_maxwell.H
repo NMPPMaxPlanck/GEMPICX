@@ -91,7 +91,7 @@ public :
         part_gr.reinit(params.charge, params.mass, domain);
 
         amrex::Real vol = (domain.geom.ProbHi(0)-domain.geom.ProbLo(0))*(domain.geom.ProbHi(1)-domain.geom.ProbLo(1))*(domain.geom.ProbHi(2)-domain.geom.ProbLo(2));
-        diagnostics<vdim, numspec,degx,degy,degz,degvm> diagn(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
+        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
 
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
