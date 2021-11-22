@@ -51,13 +51,13 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
     //vlasov_maxwell_test<3, 1, 6, 5, 4, 4, 2, true>(3, test_name);
     vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw, electromagnetic, output> sim;
     sim.params.init_Nghost(degx,degy,degz);
-    sim.params.set_params(test_name, {24,8,8});
+    sim.params.set_params(test_name, {20,20,20});
     sim.params.propagator = propagator;
     sim.params.strang_order = 2;
     sim.params.set_prop_related();
-    sim.params.n_steps = 10;
+    sim.params.n_steps = 5;
     sim.params.dt = 0.01;
-    sim.params.n_part_per_cell = {500};
+    sim.params.n_part_per_cell = {2000};
     sim.params.set_computed_params();
     sim.params.freq_slice = 1e6;
     sim.ctest = true;
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
     std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
 
-    vlasov_maxwell_run<2,2,2,2,3,true,true> (test_name, 3);
+    vlasov_maxwell_run<2,2,2,2,3,true,false> (test_name, 3);
 
     amrex::Finalize();
 }
