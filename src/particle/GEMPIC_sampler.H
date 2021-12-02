@@ -318,6 +318,7 @@ void init_particles_full_domain(computational_domain infra,
         srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         std::mt19937 gen(rSeed);
         std::normal_distribution<> norm01(0,1);
+        std::uniform_real_distribution<> unif(0.0, 1.0); //ES
 
         auto& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -333,11 +334,13 @@ void init_particles_full_domain(computational_domain infra,
 
                     for (int pp=0;pp<n_part_per_cell[species];pp++) {
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
-                            position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                           //ES position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                           position[0] = unif(gen)*infra.dx[0];
                         }
                         amrex::Real gauss_choice[vdim];
                         for(int i=0;i<vdim;i++){
-                            gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                            //ES gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                            gauss_choice[i] = unif(gen);
                         }
                         amrex::GpuArray<int,vdim> gauss_idx;
                         for (int comp = 0; comp < vdim; comp++) {
@@ -427,6 +430,7 @@ void init_particles_full_domain(computational_domain infra,
         srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         std::mt19937 gen(rSeed);
         std::normal_distribution<> norm01(0,1);
+        std::uniform_real_distribution<> unif(0.0, 1.0); //ES
 
         auto& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -443,11 +447,13 @@ void init_particles_full_domain(computational_domain infra,
                     for (int pp=0;pp<n_part_per_cell[species];pp++) {
                         npart++; // ES test
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
-                            position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                            //ES position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                            position[i] = unif(gen)*infra.dx[i];
                         }
                         amrex::Real gauss_choice[vdim];
                         for(int i=0;i<vdim;i++){
-                            gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                            //ES gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                            gauss_choice[i] = unif(gen);
                         }
                         amrex::GpuArray<int,vdim> gauss_idx;
                         for (int comp = 0; comp < vdim; comp++) {
