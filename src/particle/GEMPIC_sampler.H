@@ -398,6 +398,7 @@ void init_particles_full_domain(computational_domain infra,
                                 int rSeed = 925){
 
     double x, y, z;
+    int npart = 0; // ES test
 
     amrex::Real x_c,y_c,z_c; // cell-corner coordinates
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -440,6 +441,7 @@ void init_particles_full_domain(computational_domain infra,
                 for(int l=lo[0]; l<=hi[0]; l++){
 
                     for (int pp=0;pp<n_part_per_cell[species];pp++) {
+                        npart++; // ES test
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
                             position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
                         }
@@ -482,6 +484,8 @@ void init_particles_full_domain(computational_domain infra,
         #endif
                                 ;
                         (ppg).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        // Check random number
+                        if (npart <10 ) std::cout << npart << " " << x << " "<< y << " " << z << std::endl;
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
