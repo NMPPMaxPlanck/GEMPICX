@@ -402,11 +402,13 @@ void init_particles_full_domain(computational_domain infra,
 
     double x, y, z;
     int npart = 0; // ES test
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
 
     amrex::Real x_c,y_c,z_c; // cell-corner coordinates
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
+    amrex::Real u1, u2, z0;
 
     int num_gauss = Vmean[0].size();
 
@@ -429,10 +431,10 @@ void init_particles_full_domain(computational_domain infra,
 
         //srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         //std::mt19937 gen(rSeed);
-        std::mt19937 gen(rSeed); //ES
-        std::normal_distribution<> norm01(0.0,1.0);
-        std::mt19937 genv(rSeed); //ES
+        std::mt19937 gen(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000); //ES
+        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000); //ES
         std::uniform_real_distribution<> unif(0.0, 1.0); //ES
+        std::uniform_real_distribution<> unifv(0.0,1.0);
 
         auto& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -469,8 +471,15 @@ void init_particles_full_domain(computational_domain infra,
                             }
                         }
                         for (int cc = 0; cc < vdim; cc++) {
-                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(genv)+Vmean[cc][gauss_idx[cc]]; //ES
-                            if (npart <10 ) std::cout << norm01(genv) << std::endl;
+                            do {
+                                u1 = unifv(genv);
+                                u2 = unifv(genv);
+                            }
+                            while (u1 < epsilon); // make sure epsilon large enough to take log
+                            // first value from Box-Muller algorithm
+                            z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
+                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*z0+Vmean[cc][gauss_idx[cc]];   
+                            //ES velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(genv)+Vmean[cc][gauss_idx[cc]]; 
                         }
 #if (GEMPIC_SPACEDIM > 2)
                         z_c = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
