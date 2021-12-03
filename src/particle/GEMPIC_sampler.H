@@ -427,9 +427,11 @@ void init_particles_full_domain(computational_domain infra,
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
-        std::mt19937 gen(rSeed);
-        std::normal_distribution<> norm01(0,1);
+        //srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
+        //std::mt19937 gen(rSeed);
+        std::mt19937 gen(rSeed); //ES
+        std::normal_distribution<> norm01(0.0,1.0);
+        std::mt19937 genv(rSeed); //ES
         std::uniform_real_distribution<> unif(0.0, 1.0); //ES
 
         auto& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
@@ -467,7 +469,8 @@ void init_particles_full_domain(computational_domain infra,
                             }
                         }
                         for (int cc = 0; cc < vdim; cc++) {
-                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
+                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(genv)+Vmean[cc][gauss_idx[cc]]; //ES
+                            if (npart <10 ) std::cout << norm01(genv) << std::endl;
                         }
 #if (GEMPIC_SPACEDIM > 2)
                         z_c = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
