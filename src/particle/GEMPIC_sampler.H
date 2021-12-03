@@ -491,7 +491,8 @@ void init_particles_full_domain(computational_domain infra,
                                 ;
                         (ppg).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                         // Check random number
-                        if (npart <10 ) std::cout << npart << " " << x << " "<< y << " " << z << std::endl;
+                        if (npart <10 ) std::cout << npart << " " << x << " "<< y << " " << z << " " << velocity[0] << " " << velocity[1] 
+                        << " " << velocity[2] << " " << weight << std::endl;
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
