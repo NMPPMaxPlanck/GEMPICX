@@ -50,11 +50,12 @@ void init_particles_cellwise(computational_domain infra,
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
+    amrex::Real u1, u2, z0;
 
     int num_gauss = Vmean[0].size();
 
 
-    srand(rSeed);
     // cumulative sum of vel_weights
     amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
     for(int i=0;i<vdim;i++) {
@@ -63,8 +64,11 @@ void init_particles_cellwise(computational_domain infra,
     }
 
     // (0,1)-normally distributed random number generator:
+    srand(rSeed);
     std::mt19937 gen(rSeed);
-    std::normal_distribution<> norm01(0,1);
+    std::mt19937 genv(rSeed);
+    //std::normal_distribution<> norm01(0,1);
+    std::uniform_real_distribution<> unifv(0.0, 1.0);
     std::uniform_real_distribution<> unif(0.0, 1.0);
 
 
@@ -95,7 +99,15 @@ void init_particles_cellwise(computational_domain infra,
         }
 
         for (int cc = 0; cc < vdim; cc++) {
-            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
+            do {
+                u1 = unifv(genv);
+                u2 = unifv(genv);
+            }
+            while (u1 < epsilon); // make sure epsilon large enough to take log
+            // first value from Box-Muller algorithm
+            z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
+            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];
+            // velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
         }
 
         //Adding particle from the model cell to all cells
@@ -171,11 +183,12 @@ void init_particles_cellwise(computational_domain infra,
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
+    amrex::Real u1, u2, z0;
 
     int num_gauss = Vmean[0].size();
 
 
-    srand(rSeed);
     // cumulative sum of vel_weights
     amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
     for(int i=0;i<vdim;i++) {
@@ -184,9 +197,13 @@ void init_particles_cellwise(computational_domain infra,
     }
 
     // (0,1)-normally distributed random number generator:
+    srand(rSeed);
+    amrex::Print() << "rSeed" << rSeed << std::endl;
     std::mt19937 gen(rSeed);
-    std::normal_distribution<> norm01(0,1);
+    std::mt19937 genv(rSeed);
+    //std::normal_distribution<> norm01(0,1);
     std::uniform_real_distribution<> unif(0.0, 1.0);
+    std::uniform_real_distribution<> unifv(0.0, 1.0);
 
 
     for (int pp=0;pp<n_part_per_cell[species];pp++) {
@@ -216,7 +233,15 @@ void init_particles_cellwise(computational_domain infra,
         }
 
         for (int cc = 0; cc < vdim; cc++) {
-            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
+            do {
+                u1 = unifv(genv);
+                u2 = unifv(genv);
+            }
+            while (u1 < epsilon); // make sure epsilon large enough to take log
+            // first value from Box-Muller algorithm
+            z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
+            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];                          
+            //velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
         }
 
         //Adding particle from the model cell to all cells
@@ -295,6 +320,8 @@ void init_particles_full_domain(computational_domain infra,
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
+    amrex::Real u1, u2, z0;
 
     int num_gauss = Vmean[0].size();
 
@@ -305,10 +332,6 @@ void init_particles_full_domain(computational_domain infra,
         std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
     }
 
-    // (0,1)-normally distributed random number generator:
-
-
-
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi= (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
         const amrex::Box& bx = mfi.validbox();
@@ -316,9 +339,11 @@ void init_particles_full_domain(computational_domain infra,
         amrex::IntVect hi = {bx.bigEnd()};
 
         srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
-        std::mt19937 gen(rSeed);
-        std::normal_distribution<> norm01(0,1);
-        std::uniform_real_distribution<> unif(0.0, 1.0); //ES
+        std::mt19937 gen(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
+        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 10); // different from above
+        //std::normal_distribution<> norm01(0,1);
+        std::normal_distribution<> unif(0.0,1.0);
+        std::uniform_real_distribution<> unifv(0.0, 1.0); //ES
 
         auto& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -334,13 +359,13 @@ void init_particles_full_domain(computational_domain infra,
 
                     for (int pp=0;pp<n_part_per_cell[species];pp++) {
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
-                           //ES position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
-                           position[0] = unif(gen)*infra.dx[0];
+                           //position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                           position[i] = unif(gen)*infra.dx[i];
                         }
                         amrex::Real gauss_choice[vdim];
                         for(int i=0;i<vdim;i++){
-                            //ES gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
-                            gauss_choice[i] = unif(gen);
+                            gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                            //gauss_choice[i] = unif(gen);
                         }
                         amrex::GpuArray<int,vdim> gauss_idx;
                         for (int comp = 0; comp < vdim; comp++) {
@@ -354,7 +379,15 @@ void init_particles_full_domain(computational_domain infra,
                             }
                         }
                         for (int cc = 0; cc < vdim; cc++) {
-                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
+                            do {
+                                u1 = unifv(genv);
+                                u2 = unifv(genv);
+                            }
+                            while (u1 < epsilon); // make sure epsilon large enough to take log
+                            // first value from Box-Muller algorithm
+                            z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
+                            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];
+                            //velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
                         }
 #if (GEMPIC_SPACEDIM > 2)
                         z_c = infra.geom.ProbLo()[2] + (double)k*infra.dx[2];
@@ -402,12 +435,12 @@ void init_particles_full_domain(computational_domain infra,
 
     double x, y, z;
     int npart = 0; // ES test
-    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
 
     amrex::Real x_c,y_c,z_c; // cell-corner coordinates
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real,vdim> velocity;
     amrex::Real weight;
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
 
     int num_gauss = Vmean[0].size();
@@ -419,20 +452,15 @@ void init_particles_full_domain(computational_domain infra,
         std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
     }
 
-    // (0,1)-normally distributed random number generator:
-
-
-
-    //MFI that adds particle from the model cell to all cells
+   //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi= (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        //srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
-        //std::mt19937 gen(rSeed);
+        srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         std::mt19937 gen(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000); //ES
-        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000); //ES
+        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 10); //ES
         std::uniform_real_distribution<> unif(0.0, 1.0); //ES
         std::uniform_real_distribution<> unifv(0.0,1.0);
 
@@ -451,12 +479,12 @@ void init_particles_full_domain(computational_domain infra,
                     for (int pp=0;pp<n_part_per_cell[species];pp++) {
                         npart++; // ES test
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++) {
-                            //ES position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                            //position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
                             position[i] = unif(gen)*infra.dx[i];
                         }
                         amrex::Real gauss_choice[vdim];
                         for(int i=0;i<vdim;i++){
-                            //ES gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                            //gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
                             gauss_choice[i] = unif(gen);
                         }
                         amrex::GpuArray<int,vdim> gauss_idx;
@@ -478,7 +506,7 @@ void init_particles_full_domain(computational_domain infra,
                             while (u1 < epsilon); // make sure epsilon large enough to take log
                             // first value from Box-Muller algorithm
                             z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
-                            velocity[cc] = Vdev[cc][gauss_idx[cc]]*z0+Vmean[cc][gauss_idx[cc]];   
+                            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];   
                             //ES velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(genv)+Vmean[cc][gauss_idx[cc]]; 
                         }
 #if (GEMPIC_SPACEDIM > 2)
@@ -503,7 +531,7 @@ void init_particles_full_domain(computational_domain infra,
                                 ;
                         (ppg).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                         // Check random number
-                        if (npart <10 ) std::cout << npart << " " << x << " "<< y << " " << z << " " << velocity[0] << " " << velocity[1] 
+                        if (npart <10 ) amrex::Print() << npart << " " << x << " "<< y << " " << z << " " << velocity[0] << " " << velocity[1] 
                         << " " << velocity[2] << " " << weight << std::endl;
                     }
 #if (GEMPIC_SPACEDIM > 1)
