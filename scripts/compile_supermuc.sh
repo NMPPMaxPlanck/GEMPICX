@@ -26,5 +26,5 @@ make install
 cd ..
 mkdir -p gempic
 cd gempic
-cmake -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+cmake -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 make -j 10

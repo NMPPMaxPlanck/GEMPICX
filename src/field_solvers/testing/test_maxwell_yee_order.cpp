@@ -13,8 +13,6 @@
                           -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
 ------------------------------------------------------------------------------*/
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -23,7 +21,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_assertion.H>
 
 using namespace std;
@@ -33,14 +31,74 @@ using namespace Field_solvers;
 
 //------------------------------------------------------------------------------
 // Solutions
+AMREX_GPU_HOST_DEVICE amrex::Real funct_e1(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real funct_e2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real funct_b0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real funct_b2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = std::cos(x)-std::cos(x)*std::cos(y)*std::cos(z) - 1.0/4.0*std::cos(2*x)*std::cos(2*y)*std::cos(2*z);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real func_rho(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -3.0*(std::cos(x)*std::cos(y)*std::cos(z)+std::cos(2*x)*std::cos(2*y)*std::cos(2*z));
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real func_e0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -sin(x)*cos(y)*cos(z)-0.5*sin(2*x)*cos(2*y)*cos(2*z);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real func_e1(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -cos(x)*sin(y)*cos(z)-0.5*cos(2*x)*sin(2*y)*cos(2*z);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real func_e2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = -cos(x)*cos(y)*sin(z)-0.5*cos(2*x)*cos(2*y)*sin(2*z);
+    return val;
+}
+
 
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     //------------------------------------------------------------------------------
     // Analytical solutions
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
         fields_E[0] = "cos(x+y+z)";
         fields_B[0] = "0.0";
@@ -77,32 +135,14 @@ void main_main ()
 
 
     //------------------------------------------------------------------------------
-    array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
+    amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(64,64,64)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(64,64,64)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    VM[0].push_back(0.0);
-    VD[0].push_back(1.0);
-    VW[0].push_back(1.0);
-    if (vdim > 1) {
-        VM[1].push_back(0.0);
-        VD[1].push_back(1.0);
-        VW[1].push_back(1.0);
-    }
-    if (vdim > 2) {
-        VM[2].push_back(0.0);
-        VD[2].push_back(1.0);
-        VW[2].push_back(1.0);
-    }
-
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.Nghost++;
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
@@ -111,11 +151,11 @@ void main_main ()
     VlMa.set_computed_params();
 
     CompDom::computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
 
     for (int i=0; i<vdim; i++) {
@@ -123,10 +163,11 @@ void main_main ()
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    mw_yee.template initB<degree>(funct_b0, zero, funct_b2, infra);
+    mw_yee.template initE<degree>(funct_e2, funct_e1, funct_e2, infra);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, true, infra);
     AllPrintToFile("test_maxwell_yee_order_additional.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "Maxwell" << endl;
     AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "step " << 0 << endl;
@@ -159,7 +200,7 @@ void main_main ()
         mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
         mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+        E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, true, infra);
 
         AllPrintToFile("test_maxwell_yee_order_additional.tmp") << "step " << n << endl;
         switch (vdim) {
@@ -184,12 +225,12 @@ void main_main ()
         }
     }
     bool passed = true;
-    gempic_assert_err(&passed, 1, E_B_error[0]);
-    gempic_assert_err(&passed, 1, E_B_error[1]);
-    gempic_assert_err(&passed, 1, E_B_error[2]);
-    gempic_assert_err(&passed, 1, E_B_error[3]);
-    gempic_assert_err(&passed, 1, E_B_error[4]);
-    gempic_assert_err(&passed, 1, E_B_error[5]);
+    gempic_assert_err(passed, 1, E_B_error[0]);
+    gempic_assert_err(passed, 1, E_B_error[1]);
+    gempic_assert_err(passed, 1, E_B_error[2]);
+    gempic_assert_err(passed, 1, E_B_error[3]);
+    gempic_assert_err(passed, 1, E_B_error[4]);
+    gempic_assert_err(passed, 1, E_B_error[5]);
 
     amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << std::endl;
     amrex::AllPrintToFile("test_maxwell_yee_order.tmp") << passed << std::endl;

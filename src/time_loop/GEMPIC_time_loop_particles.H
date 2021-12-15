@@ -59,6 +59,7 @@ void time_loop_particles (computational_domain infra,
         }
 
         for (int spec=0;spec<numspec;spec++) {
+            amrex::Real spec_charge = (*part_gr).charge[spec];
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
@@ -66,9 +67,9 @@ void time_loop_particles (computational_domain infra,
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> jA;
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
@@ -78,18 +79,29 @@ void time_loop_particles (computational_domain infra,
 
                 for (int pp=0;pp<np;pp++){
 
-                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      pos[d]= particles[pp].pos(d);
+                    splines_at_particles<degx,degy,degz> spline;
+                    spline.init_particles(pos, infra.plo, infra.dxi);
+
+                    amrex::GpuArray<amrex::Real, vdim> particle_vel;
+                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
+                    amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
+
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
+                                                                                                                                                          particle_vel,
+                                                                                                                                                          spline, jA, eA, bA, false);
                     amrex::Real d = 1.0;
                     amrex::Real Omega = 1.0;
-                    std::array<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos;
                     newPos[0] = 0.0;
                     newPos[1] = 0.0;
                     newPos[2] = pow(-1.0,spec)*d*sin(Omega*mw_yee->dt);
                     newPos[0] = 0.0;
                     newPos[0] = 0.0;
                     newPos[0] = pow(-1.0,spec)*d*Omega*cos(Omega*mw_yee->dt);
-                    std::copy(begin(newPos),end(newPos),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
@@ -99,21 +111,33 @@ void time_loop_particles (computational_domain infra,
         // deposit remaining charge in J one particle at a time
 
         for (int spec=0;spec<numspec;spec++) {
+            amrex::Real spec_charge = (*part_gr).charge[spec];
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
 
-                std::array<amrex::Array4<amrex::Real>,vdim> jA;
-                std::array<amrex::Array4<amrex::Real>,vdim> eA;
-                std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bA;
 
                 for (int cc=0;cc < vdim;cc++) {
                     jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
                 }
 
                 for (int pp=0;pp<np;pp++){
-                    std::array<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (particles[pp], (*part_gr).charge[spec],
-                                                                                                                                                          infra.dxi, infra.plo, jA, eA, bA, 0.5, false);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                      pos[d]= particles[pp].pos(d);
+                    splines_at_particles<degx,degy,degz> spline;
+                    spline.init_particles(pos, infra.plo, infra.dxi);
+
+                    amrex::GpuArray<amrex::Real, vdim> particle_vel;
+                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
+                    amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
+
+                    amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
+                                                                                                                                                          particle_vel,
+                                                                                                                                                          spline, jA, eA, bA, false);
                 }
             }
         }

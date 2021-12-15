@@ -15,7 +15,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 
 using namespace std;
@@ -45,7 +45,7 @@ void main_main ()
         VlMa.Bx = VlMa.Bz;
         VlMa.Bz = "0.0";
     }
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_B[0] = VlMa.Bx;
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[1] = VlMa.By;
@@ -88,8 +88,8 @@ void main_main ()
 
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::array<std::string, 2> fields = {VlMa.rho, VlMa.phi};
-    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
+    amrex::GpuArray<std::string, 2> fields = {VlMa.rho, VlMa.phi};
+    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k_gpu, infra);
 
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa, infra);

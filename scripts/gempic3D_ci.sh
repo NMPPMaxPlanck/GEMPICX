@@ -20,6 +20,8 @@ git clone https://github.com/AMReX-Codes/amrex.git
 # ---- 3D ----
 cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_3D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
 
+cp $GEMPIC_BASE/third_party/AMReX_MLNodeLap_Gempic_3D_K.H $BUILD_DIR/amrex/Src/LinearSolvers/MLMG/AMReX_MLNodeLap_3D_K.H
+
 # install amrex
 rm -rf build_amrex
 mkdir build_amrex
@@ -32,7 +34,7 @@ cd ..
 #export CXX=g++
 
 cmake $GEMPIC_BASE \
-      -D AMReX_ROOT=$BUILD_DIR/amrex/installdir \
+      -D AMReX_DIR=$BUILD_DIR/amrex/installdir \
       -D CMAKE_C_COMPILER=mpicc \
       -D CMAKE_CXX_COMPILER=mpicxx \
       -D CMAKE_CXX_FLAGS="-std=c++11" \

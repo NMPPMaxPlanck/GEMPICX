@@ -13,8 +13,6 @@
                           -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
 ------------------------------------------------------------------------------*/
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -24,12 +22,50 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
+
+#define MAXWELL_YEE_ZERO 0
+#define MAXWELL_YEE_E1   1
+#define MAXWELL_YEE_E2   2
+#define MAXWELL_YEE_B0   3
+#define MAXWELL_YEE_B2   4
+#define MAXWELL_YEE_PHI  5
+#define MAXWELL_YEE_RHO  6
+#define MAXWELL_YEE_E0_1 7
+#define MAXWELL_YEE_E1_1 8
+#define MAXWELL_YEE_E2_1 9
+
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+{
+  switch(funcSelect){
+  case MAXWELL_YEE_E1 :
+    return -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
+  case MAXWELL_YEE_E2 :
+    return std::cos(x+y+z-std::sqrt(3.0)*t);
+  case MAXWELL_YEE_B0 :
+    return std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+  case MAXWELL_YEE_B2 :
+    return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+  case MAXWELL_YEE_PHI :
+    return std::cos(x)-std::cos(x)*std::cos(y)*std::cos(z) - 1.0/4.0*std::cos(2*x)*std::cos(2*y)*std::cos(2*z);
+  case MAXWELL_YEE_RHO :
+    return -3.0*(std::cos(x)*std::cos(y)*std::cos(z)+std::cos(2*x)*std::cos(2*y)*std::cos(2*z));
+  case MAXWELL_YEE_E0_1:
+    return -sin(x)*cos(y)*cos(z)-0.5*sin(2*x)*cos(2*y)*cos(2*z); 
+  case MAXWELL_YEE_E1_1 :
+    return -cos(x)*sin(y)*cos(z)-0.5*cos(2*x)*sin(2*y)*cos(2*z);
+  case MAXWELL_YEE_E2_1 :
+    return -cos(x)*cos(y)*sin(z)-0.5*cos(2*x)*cos(2*y)*sin(2*z);
+  case MAXWELL_YEE_ZERO :
+    return 0.0;
+  }
+  return 0.0;
+}
 
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
@@ -37,8 +73,8 @@ void main_main ()
     bool passed = true;
     //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
         fields_E[0] = "cos(x+y+z)";
         fields_B[0] = "0.0";
@@ -67,7 +103,7 @@ void main_main ()
     }
     //------------------------------------------------------------------------------
     // Analytical solutions -- Poisson
-    std::array<std::string, vdim> fields_EP;
+    amrex::GpuArray<std::string, vdim> fields_EP;
     if (GEMPIC_SPACEDIM == 1 && vdim == 1) {
         fields_EP[0] = "-sin(x)-0.5*sin(2*x)";
     } else if (GEMPIC_SPACEDIM == 1 && vdim == 2) {
@@ -92,43 +128,26 @@ void main_main ()
     std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
 
     //------------------------------------------------------------------------------
-    array<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
+    amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    VM[0].push_back(0.0);
-    VD[0].push_back(1.0);
-    VW[0].push_back(1.0);
-    if (vdim > 1) {
-        VM[1].push_back(0.0);
-        VD[1].push_back(1.0);
-        VW[1].push_back(1.0);
-    }
-    if (vdim > 2) {
-        VM[2].push_back(0.0);
-        VD[2].push_back(1.0);
-        VW[2].push_back(1.0);
-    }
-
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
     {32, 32, 32}, 0.01, {1.0}, {1.0}, 0.5);
     VlMa.set_computed_params();
 
     CompDom::computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
 
     for (int i=0; i<vdim; i++) {
@@ -136,18 +155,26 @@ void main_main ()
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
+    funcSelectB[0] = MAXWELL_YEE_B0;
+    funcSelectB[1] = MAXWELL_YEE_ZERO;
+    funcSelectB[2] = MAXWELL_YEE_B2;
+    mw_yee.template initB<degree>(infra, funcSelectB);
+    amrex::GpuArray<int, vdim> funcSelectE;
+    funcSelectE[0] = MAXWELL_YEE_E2;
+    funcSelectE[1] = MAXWELL_YEE_E1;
+    funcSelectE[2] = MAXWELL_YEE_E2;
+    mw_yee.template initE<degree>(infra, funcSelectE);
 
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
-
+    E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
     AllPrintToFile("test_maxwell_yee.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
@@ -163,13 +190,13 @@ void main_main ()
         mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
         mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+        E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
 
         AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << n << endl;
@@ -181,23 +208,30 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Second maxwell test
-    maxwell_yee<vdim> mw_yee_2(VlMa, infra);
+    maxwell_yee<vdim> mw_yee_2(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     for (int i=0; i<vdim; i++) {
         (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component
         (*(mw_yee_2).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
-    mw_yee_2.template init_E_B<2>(fields_E, fields_B, VlMa.k, infra);
+    funcSelectB[0] = MAXWELL_YEE_B0;
+    funcSelectB[1] = MAXWELL_YEE_ZERO;
+    funcSelectB[2] = MAXWELL_YEE_B2;
+    mw_yee_2.template initB<degree>(infra, funcSelectB);
+    funcSelectE[0] = MAXWELL_YEE_E2;
+    funcSelectE[1] = MAXWELL_YEE_E1;
+    funcSelectE[2] = MAXWELL_YEE_E2;
+    mw_yee_2.template initE<degree>(infra, funcSelectE);
 
     std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+    E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
     AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
@@ -214,14 +248,14 @@ void main_main ()
         mw_yee_2.advance_E(infra, mw_yee_2.dt, false, true, &(mw_yee_2.HB_Array), &(mw_yee_2.E_Array));
         mw_yee_2.template hodge_full<degree>(infra, &(mw_yee_2.E_Array), &(mw_yee_2.HE_Array), true);
         mw_yee_2.advance_B(infra, mw_yee_2.dt, &(mw_yee_2.HE_Array), &(mw_yee_2.B_Array));
-        E_B_error = mw_yee_2.template computeError<degree>(fields_E, fields_B, VlMa.k, true, infra);
+        E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-        gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
+        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
 
         AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << n << endl;
@@ -232,30 +266,22 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Poisson
-
-#if (GEMPIC_SPACEDIM == 1)
-    std::string phi = "-cos(x) - 1.0/4.0*cos(2*x)";
-    std::string rho = "-cos(x) - cos(2*x)";
-#elif (GEMPIC_SPACEDIM == 2)
-    std::string phi = "cos(x)*cos(y) + 1.0/4.0*cos(2*x)*cos(2*y)";
-    std::string rho = "-2*(cos(x)*cos(y)+cos(2*x)*cos(2*y))";
-#else
-    std::string phi = "-cos(x)*cos(y)*cos(z) - 1.0/4.0*cos(2*x)*cos(2*y)*cos(2*z)";
-    std::string rho = "-3*(cos(x)*cos(y)*cos(z)+cos(2*x)*cos(2*y)*cos(2*z))";
-#endif
-
-    std::array<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degree>(fields, VlMa.k, infra);
+  
+    amrex::GpuArray<int,2> funcSelectRhoPhi;
+    funcSelectRhoPhi[0] = MAXWELL_YEE_RHO;
+    funcSelectRhoPhi[1] = MAXWELL_YEE_PHI;
+    mw_yee.template init_rho_phi<degree>(infra, funcSelectRhoPhi);
     mw_yee.solve_poisson(infra);
-    E_B_error = mw_yee.template computeError<degree>(fields_EP, fields_B, VlMa.k, false, infra);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(&passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
-
-
+    funcSelectE[0]=MAXWELL_YEE_E0_1;
+    funcSelectE[1]=MAXWELL_YEE_E1_1;
+    funcSelectE[2]=MAXWELL_YEE_E2_1;
+    funcSelectB[0]=MAXWELL_YEE_B0;
+    funcSelectB[1]=MAXWELL_YEE_ZERO;
+    funcSelectB[2]=MAXWELL_YEE_B2;
+    E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
+    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
 
     AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
     AllPrintToFile("test_maxwell_yee_additional.tmp") << "Poisson" << endl;
@@ -272,7 +298,7 @@ void main_main ()
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
     amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2);
-    gempic_assert_err(&passed, gempic_norm(&(mw_yee.rho), infra, 2), rho_norm*rho_norm);
+    gempic_assert_err(passed, gempic_norm(&(mw_yee.rho), infra, 2), rho_norm*rho_norm);
 
     AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "rho Error: " << rho_norm*rho_norm << std::endl;
 

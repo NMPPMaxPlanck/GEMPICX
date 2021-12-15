@@ -39,8 +39,8 @@ class diagnostics
 {
 public:
     int n_time; // number of timesteps
-    std::vector<std::array<amrex::Real,int(vdim/2.5)*2+1>> Bfield_energy;
-    std::vector<std::array<amrex::Real,vdim>> Efield_energy, mom;
+    std::vector<amrex::GpuArray<amrex::Real,int(vdim/2.5)*2+1>> Bfield_energy;
+    std::vector<amrex::GpuArray<amrex::Real,vdim>> Efield_energy, mom;
     std::vector<amrex::Real> kin;
     std::vector<amrex::Real> gauss_error;
     int freq_x;
@@ -53,7 +53,7 @@ public:
     /**
      * Default Constructor.
      */
-    diagnostics ();
+    diagnostics (){}
 
     // Explicit const
     /**
@@ -61,19 +61,14 @@ public:
      * the frequency with which to generate slices and the name of the simulation @p sim_name.
      */
     diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
-        n_time = n_t;
-        freq_x = fx;
-        freq_v = fv;
-        freq_slice = fs;
-        sim_name = sim_n;
-        domain_volume = vol;
-
-        Bfield_energy.reserve(n_time);
-        Efield_energy.reserve(n_time);
-        mom.reserve(n_time);
-        kin.reserve(n_time);
-        gauss_error.reserve(n_time);
+        initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol);
     }
+
+
+    void reinit(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
+        initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol);
+    }
+
 
     void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim, numspec> *part_gr, std::string filename, bool ctest){
@@ -178,9 +173,10 @@ public:
         gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
 
         // save Plot and Checkpoint-files
-        if ((step == 0) || ((step+1)%freq_slice == 0)) {
-            Gempic_WriteCheckpointFile(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
-            Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step+1);
+        //if ((step == 0) || ((step+1)%freq_slice == 0)) {
+        if ((step+1)%freq_slice == 0) {
+           Gempic_WriteCheckpointFile(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
+           Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step+1);
         }
 
     }
@@ -277,9 +273,9 @@ public:
     }
 
 #if (GEMPIC_SPACEDIM==3)
-    void cross_product (std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
-                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
-                        std::array<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
+    void cross_product (amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
+                        amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
+                        amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
                         computational_domain infra) {
 
         amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()),infra.distriMap,0,0);
@@ -320,7 +316,27 @@ public:
         (*((*MultiOutput)[2])).Copy(*((*MultiOutput)[2]), ExBy, 0, 0, 1, 0);
     }
 #endif
+
+
+private :
+
+void initialize_diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
+    n_time = n_t;
+    freq_x = fx;
+    freq_v = fv;
+    freq_slice = fs;
+    sim_name = sim_n;
+    domain_volume = vol;
+
+    Bfield_energy.reserve(n_time);
+    Efield_energy.reserve(n_time);
+    mom.reserve(n_time);
+    kin.reserve(n_time);
+    gauss_error.reserve(n_time);
+}
 };
+
+
 }
 }
 

@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
@@ -13,7 +11,7 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -24,6 +22,30 @@ using namespace Diagnostics_Output;
 using namespace Particles;
 using namespace Sampling;
 
+// wave function
+// we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
+// multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+{
+    amrex::Real val = (32*1.25/6.28318530718)*(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*1.0;
+    return val;
+}
+
+
+AMREX_GPU_HOST_DEVICE amrex::Real funct_Bz(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1e-3 * std::cos(1.25 * x);
+    return val;
+}
+
+
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    return 0.0;
+}
+
+
+
 template<int vdim, int numspec>
 void main_main ()
 {
@@ -31,9 +53,9 @@ void main_main ()
     //------------------------------------------------------------------------------
     //build objects:
 
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {2,2,2};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect max_grid_size = {2,2,2};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -53,20 +75,10 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc, to make up for it here we
-    // multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
-    std::string WF = "(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*(32*1.25/6.28318530718)*1.0";
-    double x, y, z;
-    double k = 1.25;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
-    int varcount = 4;
-    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
-
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2,
-                    is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, WF);
+                    is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, " ");
     VlMa.set_computed_params();
     VlMa.VM = VM;
     VlMa.VD = VD;
@@ -74,42 +86,21 @@ void main_main ()
 
     // infrastructure
     computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::string Bx = "0.0";
-    std::string By = "0.0";
-    std::string Bz = "1e-3 * cos(kvar * x)";
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
-    fields_B[0] = Bx;
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[1] = By;
-    }
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_B[2] = Bz;
-    }
-    std::string Ex = "0.0";
-    std::string Ey = "0.0";
-    std::string Ez = "0.0";
-    std::array<std::string, int(vdim/2.5)*2+1> fields_E;
-    fields_E[0] = Ex;
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_E[1] = Ey;
-    }
-    if (int(vdim/2.5)*2+1 > 1) {
-        fields_E[2] = Ez;
-    }
-    mw_yee.template initB<degmw>(fields_B, VlMa.k, infra);
-    mw_yee.template initE<degmw>(fields_E, VlMa.k, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
+
+    mw_yee.template initB<degmw>(zero, zero, funct_Bz, infra);
+    mw_yee.template initE<degmw>(zero, zero, zero, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, species, WF_parse, &x, &y, &z);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM, VlMa.VD, VlMa.VW, species, wave_function);
     (*(part_gr).mypc[0]).Redistribute();
 
     int spec = 0;
@@ -125,7 +116,7 @@ void main_main ()
             (mass, amrex::ParallelDescriptor::IOProcessorNumber());
 
     // momentum
-    std::array<amrex::Real,vdim> momentum;
+    amrex::GpuArray<amrex::Real,vdim> momentum;
     for (int cmp=0;cmp<vdim;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
                                          [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
@@ -142,7 +133,7 @@ void main_main ()
     }
 
     // kinetic energy
-    std::array<amrex::Real,vdim> kinetic_energy;
+    amrex::GpuArray<amrex::Real,vdim> kinetic_energy;
     for (int cmp=0;cmp<vdim;cmp++) {
         auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
                                          [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
@@ -159,17 +150,17 @@ void main_main ()
     }
 
     amrex::Real rel_mass = 32768;
-    std::array<amrex::Real,3> rel_mom = {584.1995254, -12972.79719, -1805.405324};
-    std::array<amrex::Real,3> rel_kin = {10.41531633, 5135.909025, 99.47169141};
+    amrex::GpuArray<amrex::Real,3> rel_mom = {584.1995254, -12972.79719, -1805.405324};
+    amrex::GpuArray<amrex::Real,3> rel_kin = {10.41531633, 5135.909025, 99.47169141};
 
     bool passed = true;
-    gempic_assert(&passed, rel_mass, mass);
-    gempic_assert(&passed, rel_mom[0], momentum[0]);
-    gempic_assert(&passed, rel_mom[1], momentum[1]);
-    gempic_assert(&passed, rel_mom[2], momentum[2]);
-    gempic_assert(&passed, rel_kin[0], kinetic_energy[0]);
-    gempic_assert(&passed, rel_kin[1], kinetic_energy[1]);
-    gempic_assert(&passed, rel_kin[2], kinetic_energy[2]);
+    gempic_assert(passed, rel_mass, mass);
+    gempic_assert(passed, rel_mom[0], momentum[0]);
+    gempic_assert(passed, rel_mom[1], momentum[1]);
+    gempic_assert(passed, rel_mom[2], momentum[2]);
+    gempic_assert(passed, rel_kin[0], kinetic_energy[0]);
+    gempic_assert(passed, rel_kin[1], kinetic_energy[1]);
+    gempic_assert(passed, rel_kin[2], kinetic_energy[2]);
 
     AllPrintToFile("test_particle_groups.tmp") << std::endl;
     AllPrintToFile("test_particle_groups.tmp") << passed << std::endl;
@@ -202,8 +193,6 @@ void main_main ()
         break;
 
     }
-
-    te_free(WF_parse);
 }
 
 int main(int argc, char* argv[])

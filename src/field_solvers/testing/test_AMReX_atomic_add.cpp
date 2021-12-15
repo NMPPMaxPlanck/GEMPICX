@@ -1,6 +1,5 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
@@ -8,7 +7,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_assertion.H>
 
@@ -21,16 +20,16 @@ using namespace Sampling;
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(8,10,12)};
-    vlasov_maxwell<vdim, numspec> VlMa;
+    amrex::IntVect n_cell = {AMREX_D_DECL(8,10,12)};
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.set_params("add_test", n_cell, {1}, 10, 12, 12, 12, {AMREX_D_DECL(1, 1, 1)}, {AMREX_D_DECL(8, 10, 12)});
     VlMa.set_computed_params();
     CompDom::computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
-    const std::array<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
-    const std::array<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
-    std::array<amrex::Real, 3> x = {0.2, 0.2, 0.2};
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    const amrex::GpuArray<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
+    const amrex::GpuArray<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
+    amrex::GpuArray<amrex::Real, 3> x = {0.2, 0.2, 0.2};
     init_one_particle_cellwise<vdim>(dx, plo, &(*(part_gr).mypc[0]), x);
 
     //------------------------------------------------------------------------------
@@ -45,7 +44,7 @@ void main_main ()
 
         amrex::Array4<amrex::Real> rhoarr = rho[pti].array();
 
-        amrex::Gpu::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
+        amrex::HostDevice::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
 
     }
     rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
@@ -58,7 +57,7 @@ void main_main ()
 
 
     bool passed = true;
-    gempic_assert(&passed, testval, *readval);
+    gempic_assert(passed, testval, *readval);
     amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << std::endl;
     amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << passed << std::endl;
 

@@ -1,4 +1,4 @@
-add_subdirectory(parameters)
+#add_subdirectory(parameters)
 add_subdirectory(diagnostics)
 add_subdirectory(profiling)
 add_subdirectory(checkpointing)

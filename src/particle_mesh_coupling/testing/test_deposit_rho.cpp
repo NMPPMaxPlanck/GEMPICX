@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -12,7 +10,7 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -23,24 +21,32 @@ using namespace Particles;
 using namespace Sampling;
 using namespace Utils;
 
+// wave function
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+{
+    amrex::Real val = 1.0;
+    return val;
+}
+
+// wave function
+AMREX_GPU_HOST_DEVICE amrex::Real funct_rho_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1.0;
+    return val;
+}
+
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
     //------------------------------------------------------------------------------
     // Initialize Function
-    double x, y, z;
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(0.5,0.5,0.5)};
     amrex::Real k = 0.5;
-    int err;
-    std::string WF = "1.0";
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
-    int varcount = 4;
-    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(8,8,8)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(8,8,8)};
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
     std::array<std::vector<amrex::Real>, vdim> VD{};
@@ -60,35 +66,34 @@ void main_main ()
         VW[2].push_back(1.0);
     }
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
-                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, WF);
+                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, " ");
     VlMa.set_computed_params();
     VlMa.VM = VM;
     VlMa.VD = VD;
     VlMa.VW = VW;
 
     computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
     //------------------------------------------------------------------------------
     // Initialize fields and particles
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, species, WF_parse, &x, &y, &z);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM, VlMa.VD, VlMa.VW, species, wave_function);
 
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho
     // will be overwritten in next paragraph
-    std::array<std::string, 2> fields = {WF, WF};
-    mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
+    mw_yee.template init_rho_phi<2>(funct_rho_phi, funct_rho_phi, infra);
 
     mw_yee.phi.mult(-1.0);
 
@@ -100,24 +105,22 @@ void main_main ()
     for (int spec=0;spec<numspec;spec++) {
         (*(part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
         for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-            amrex::Box tilebox;
-            amrex::FArrayBox local_rho;
-
-            tilebox = pti.tilebox();
-            tilebox.grow((mw_yee).Nghost);
-            const amrex::Box tb = amrex::convert(tilebox, amrex::IntVect::TheUnitVector());
-
-            local_rho.resize(tb,1); // second arg: number of comps
-            local_rho.setVal(0.0);
 
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();
 
-            amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+            amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
             for (int pp=0;pp<np;pp++) {
-                gempic_deposit_rho<amrex::Particle<vdim+1>,vdim, degx, degy, degz>(particles[pp], (part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+
+                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
+                    pos[comp] = particles[pp].pos(comp);
+                }
+                amrex::Real weight = particles[pp].rdata(vdim);
+                splines_at_particles<degx,degy,degz> spline;
+                spline.init_particles(pos , infra.plo, infra.dxi);
+                gempic_deposit_rho_C3<degx, degy, degz>(spline, weight*(part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM], rhoarr);
             }
-            ((mw_yee).rho)[pti].atomicAdd(local_rho,tb,tb,0,0,1);
         }
     }
 
@@ -132,12 +135,10 @@ void main_main ()
     AllPrintToFile("test_deposit_rho.tmp") << std::endl;
     amrex::Real error = gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2);
     bool passed = true;
-    gempic_assert_err(&passed, gempic_norm(&mw_yee.rho, infra, 2), error);
+    gempic_assert_err(passed, gempic_norm(&mw_yee.rho, infra, 2), error);
     AllPrintToFile("test_deposit_rho.tmp") << passed << std::endl;
 
     AllPrintToFile("test_deposit_rho_additional.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
-
-    te_free(WF_parse);
 
 }
 

@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -9,7 +7,7 @@
 #include <GEMPIC_checkpoint.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -19,6 +17,15 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+{
+    return 0.0;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    return 0.0;
+}
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
@@ -26,19 +33,16 @@ void main_main ()
     // ------------PARAMETERS--------------------------------------------------------
 
     // initialize parameters
-    std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(4,4,4)};
+    amrex::IntVect n_cell_vector = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 2;
-    std::array<int,GEMPIC_SPACEDIM> is_periodic_vector = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {2,2,2};
+    amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect max_grid_size = {2,2,2};
     amrex::Real dt = 0.1;
-    std::array<amrex::Real, numspec> charge = {-1.0};
-    std::array<amrex::Real, numspec> mass = {1.0};
+    amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
+    amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     amrex::Real k = 1.25;
-    std::string WF = "0.0";
-    std::string phi = "0.0";
-    std::string rho = "0.0";
     amrex::Real tolerance_particles = 1.e-10;
 
     std::array<std::vector<amrex::Real>, vdim> VM{};
@@ -57,41 +61,33 @@ void main_main ()
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2]));
     amrex::IntVect is_periodic(AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2]));
 
-    // functions
-    double x, y, z;
-    int err;
-    te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}, {"kvar", &k}};
-    int varcount = 4;
-    te_expr *WF_parse = te_compile(WF.c_str(), read_vars, varcount, &err);
-
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("checkpoint_ctest", n_cell_vector, n_part_per_cell, n_steps, 10, 10,
                     10, is_periodic_vector, max_grid_size, dt, charge, mass, k,
-                    WF, "0", "0", "0", phi, 1, 0, tolerance_particles);
+                    " ", "0", "0", "0", " ", 1, 0, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure
     computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::array<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<2>(fields, VlMa.k, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
+    mw_yee.template init_rho_phi<2>(zero, zero, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
 
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VM, VD, VW, species);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VM, VD, VW, species, wave_function);
 
     //------------------------------------------------------------------------------
     // test:
@@ -114,8 +110,6 @@ void main_main ()
     bool passed = (std::abs(old_val-read_val)<1e-12) && (std::abs(old_val-new_val)>1e-1);
     amrex::AllPrintToFile("test_checkpoint.tmp") << "" << std::endl;
     amrex::AllPrintToFile("test_checkpoint.tmp") << passed << std::endl;
-
-    te_free(WF_parse);
 
 }
 

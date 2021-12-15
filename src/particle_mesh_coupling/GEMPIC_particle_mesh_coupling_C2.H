@@ -3,6 +3,7 @@
 
 #include <cmath>
 
+#include <AMReX_Array.H>
 #include <AMReX_FArrayBox.H>
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
@@ -16,10 +17,11 @@ template<int deg>
 class spline1d_at_particles
 {
 public :
-    std::vector<amrex::Real> primitive;
+    amrex::GpuArray<amrex::Real,deg> primitive;
+    amrex::GpuArray<amrex::Real,deg+1> spline;
     int box;
 
-    void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  void init_position(amrex::Real position,
             amrex::Real plo,
                    amrex::Real dxi)
     {
@@ -47,40 +49,109 @@ public :
                 xint = 1. - xint;
             }
         primitive = spline_eval_primitive<deg-1> (xint);
+        spline = spline_eval<deg> (xint);
     }
 
 private :
 
+template<int degree>
+AMREX_GPU_HOST_DEVICE  amrex::GpuArray<amrex::Real,degree+1> spline_eval (amrex::Real x)  {
+    amrex::GpuArray<amrex::Real,degree+1> s;
+    switch (degree) {
+    case 0:
+        s[0] = 1;
+        break;
+    case 1:
+        s[0] = x;
+        s[1] = 1-x;
+        break;
+    case 2:
+        s[0] = pow(x,2)/2.;
+        s[1] = 1./2.+x-pow(x,2);
+        s[2] = 1./2.-x+pow(x,2)/2.;
+        break;
+    case 3:
+        s[0] = pow(x,3)/6.;
+        s[1] = 1./6.*(1.+3.*x+3.*pow(x,2)-3.*pow(x,3));
+        s[2] = 1./6.*(4.-6.*pow(x,2)+3.*pow(x,3));
+        s[3] = 1./6.*pow((1.-x),3);
+        break;
+    case 4:
+        s[0] = pow(x,4)/24.;
+        s[1] = ((((-x+1.)*4.*x+6.)*x+4.)*x+1.)/24.;
+        s[2] = ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.;
+        s[3] = ((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24.;
+        s[4] = pow(1.-x,4)/24.;
+        break;
+    case 5:
+        s[0] =   pow(x,5)/120. ;
+        s[1] = (((((-x+1.)*x+2.)*x+2.)*x+1.)*5.*x+1.)/120.;
+        s[2] = (((((x-2.)*x-2.)*x+2.)*x+5.)*10.*x+26.)/120.;
+        s[3] = (((-x+3.)*x*x-6.)*x*10.*x+66.)/120.;
+        s[4] = (((((x-4.)*x+4.)*x+4.)*x-10.)*5.*x+26.)/120.;
+        s[5] = (((((-x+5.)*x-10.)*x+10.)*x-5.)*x+1.)/120.;
+        break;
+    case 6:
+        s[0] =   pow(x,6)/720. ;
+        s[1] = -pow(x,6)/120. + pow(x,5)/120. + pow(x,4)/48. + pow(x,3)/36. + pow(x,2)/48. + x/120. + 1./720.;
+        s[2] = pow(x,6)/48. - pow(x,5)/24. - pow(x,4)/16. + pow(x,3)/36. + 3.*pow(x,2)/16. + 5.*x/24. + 19./240.;
+        s[3] = -pow(x,6)/36. + pow(x,5)/12. + pow(x,4)/24. - 2.*pow(x,3)/9. - 5.*pow(x,2)/24. + 1.*x/3. + 151./360.;
+        s[4] = pow(x,6)/48. - pow(x,5)/12. + pow(x,4)/24. + 2.*pow(x,3)/9. - 5.*pow(x,2)/24. - x/3. + 151./360.;
+        s[5] = -pow(x,6)/120. + pow(x,5)/24. - pow(x,4)/16. - pow(x,3)/36. + 3.*pow(x,2)/16. - 5.*x/24. + 19./240.;
+        s[6] = pow(x,6)/720. - pow(x,5)/120. + pow(x,4)/48. - pow(x,3)/36. + pow(x,2)/48. - x/120. + 1./720.;
+        break;
+    }
+    return(s);
+}
+
     template<int degree>
-    std::vector<amrex::Real> spline_eval_primitive (amrex::Real x)  {
-        std::vector<amrex::Real> s;
+AMREX_GPU_HOST_DEVICE  amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
+        amrex::GpuArray<amrex::Real,degree+1> s;
         switch (degree) {
+        case -1:
+            s[0] = 1;
+            break;
         case 0:
-            s = {x};
+            s[0] = x;
             break;
         case 1:
-            s = {pow(x,2)/2., 1.-pow(x-1.,2)/2.};
+            s[0] = pow(x,2)/2.;
+            s[1] = 1.-pow(x-1.,2)/2.;
             break;
         case 2:
-            s = {pow(x,3)/6., (((-2.*x+3)*x+3.)*x+1.)/6., pow(x-1.,3)/6.+1.};
+            s[0] = pow(x,3)/6.;
+            s[1] = (((-2.*x+3)*x+3.)*x+1.)/6.;
+            s[2] = pow(x-1.,3)/6.+1.;
             break;
         case 3:
-            s = {pow(x,4)/24.,  -pow(x,4)/8.+pow(x,3)/6.+pow(x,2)/4.+x/6.+1./24., pow(x,4)/8.-pow(x,3)/3.+x*2./3.+0.5, -pow((1.-x),4)/24.+1.};
+            s[0] = pow(x,4)/24.;
+            s[1] = -pow(x,4)/8.+pow(x,3)/6.+pow(x,2)/4.+x/6.+1./24.;
+            s[2] = pow(x,4)/8.-pow(x,3)/3.+x*2./3.+0.5;
+            s[3] = -pow((1.-x),4)/24.+1.;
             break;
         case 4:
-            s = {  pow(x,5)/120. ,  (((((-4.*x+5.)*x+10.)*x+10.)*x+5.)*x+1.)/120., (((((6.*x-15.)*x-10.)*x+30.)*x+55.)*x+27.)/120.  ,(((((-4.*x+15.)*x-10.)*x-30.)*x+55.)*x+93.)/120.   ,  -pow(1.-x,5)/120.+1. };
+            s[0] =   pow(x,5)/120. ;
+            s[1] = (((((-4.*x+5.)*x+10.)*x+10.)*x+5.)*x+1.)/120.;
+            s[2] = (((((6.*x-15.)*x-10.)*x+30.)*x+55.)*x+27.)/120.;
+            s[3] = (((((-4.*x+15.)*x-10.)*x-30.)*x+55.)*x+93.)/120.  ;
+            s[4] = -pow(1.-x,5)/120.+1.;
             break;
         case 5:
-            s = {  pow(x,6)/720. , ((((((-5.*x+6.)*x+15.)*x+20.)*x+15.)*x+6.)*x+1.)/720., ((((((10.*x-24.)*x-30.)*x+40.)*x+150.)*x+156.)*x+58.)/720., ((((-10.*x+36.)*x*x-120.)*x*x+396.)*x+360.)/720., ((((((5.*x-24.)*x+30.)*x+40.)*x-150.)*x+156.)*x+662.)/720., ((((((-x+6.)*x-15.)*x+20.)*x-15.)*x+6.)*x+719.)/720.};
+            s[0] =   pow(x,6)/720. ;
+            s[1] = ((((((-5.*x+6.)*x+15.)*x+20.)*x+15.)*x+6.)*x+1.)/720.;
+            s[2] = ((((((10.*x-24.)*x-30.)*x+40.)*x+150.)*x+156.)*x+58.)/720.;
+            s[3] = ((((-10.*x+36.)*x*x-120.)*x*x+396.)*x+360.)/720.;
+            s[4] = ((((((5.*x-24.)*x+30.)*x+40.)*x-150.)*x+156.)*x+662.)/720.;
+            s[5] = ((((((-x+6.)*x-15.)*x+20.)*x-15.)*x+6.)*x+719.)/720.;
             break;
         case 6:
-            s = {pow(x,7)/5040.,
-                -pow(x,7)/840. + pow(x,6)/720. + pow(x,5)/240. + pow(x,4)/144. + pow(x,3)/144. + pow(x,2)/240. + x/720. + 1./5040.,
-                 pow(x,7)/336. - pow(x,6)/144. - pow(x,5)/80. + pow(x,4)/144. + pow(x,3)/16. + 5.*pow(x,2)/48. + 19.*x/240. + 121./5040.,
-                -pow(x,7)/252. + pow(x,6)/72. + pow(x,5)/120. - pow(x,4)/18. - 5.*pow(x,3)/72. + pow(x,2)/6. + 151.*x/360. + 82./315.,
-                pow(x,7)/336. - pow(x,6)/72. + pow(x,5)/120. + pow(x,4)/18. - 5.*pow(x,3)/72. - pow(x,2)/6. + 151.*x/360. + 233./315.,
-                -pow(x,7)/840. + pow(x,6)/144. - pow(x,5)/80. - pow(x,4)/144. + pow(x,3)/16. - 5.*pow(x,2)/48. + 19.*x/240. + 691./5040.,
-                pow(x,7)/5040. - pow(x,6)/720. + pow(x,5)/240. - pow(x,4)/144. + pow(x,3)/144. - pow(x,2)/240. + x/720. + 811./5040.};
+            s[0] = pow(x,7)/5040.;
+            s[1] = -pow(x,7)/840. + pow(x,6)/720. + pow(x,5)/240. + pow(x,4)/144. + pow(x,3)/144. + pow(x,2)/240. + x/720. + 1./5040.;
+            s[2] =  pow(x,7)/336. - pow(x,6)/144. - pow(x,5)/80. + pow(x,4)/144. + pow(x,3)/16. + 5.*pow(x,2)/48. + 19.*x/240. + 121./5040.;
+            s[3] = -pow(x,7)/252. + pow(x,6)/72. + pow(x,5)/120. - pow(x,4)/18. - 5.*pow(x,3)/72. + pow(x,2)/6. + 151.*x/360. + 82./315.;
+            s[4] =  pow(x,7)/336. - pow(x,6)/72. + pow(x,5)/120. + pow(x,4)/18. - 5.*pow(x,3)/72. - pow(x,2)/6. + 151.*x/360. + 233./315.;
+            s[5] = -pow(x,7)/840. + pow(x,6)/144. - pow(x,5)/80. - pow(x,4)/144. + pow(x,3)/16. - 5.*pow(x,2)/48. + 19.*x/240. + 691./5040.;
+            s[6] = pow(x,7)/5040. - pow(x,6)/720. + pow(x,5)/240. - pow(x,4)/144. + pow(x,3)/144. - pow(x,2)/240. + x/720. + 811./5040.;
             break;
         }
         return(s);
@@ -93,16 +164,16 @@ template<int degx,int degy,int degz>
 class splines_at_particles
 {
 public :
-        std::array<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_cell;
-        std::array<std::vector<amrex::Real>,GEMPIC_SPACEDIM> spline_node;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz)>,GEMPIC_SPACEDIM> spline_cell;
+        amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz)+1>,GEMPIC_SPACEDIM> spline_node;
 
-        std::array<int, GEMPIC_SPACEDIM> box;
+        amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
 
         // Default constructor
         //splines_at_particles();
 
         template<int dim, int deg>
-        void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  void init_position(amrex::Real position,
                            amrex::Real plo,
                            amrex::Real dxi)
         {
@@ -130,14 +201,14 @@ public :
                     xint = 1. - xint;
                 }
 
-            spline_cell[dim] = spline_eval<deg-1> (xint);
-            spline_node[dim] = spline_eval<deg> (xint);
+            spline_cell[dim] = spline_eval<deg-1, std::max(std::max(degx, degy), degz)> (xint);
+            spline_node[dim] = spline_eval<deg, std::max(std::max(degx, degy), degz)+1> (xint);
 
         }
 
-        void init_particles(std::array<amrex::Real,GEMPIC_SPACEDIM> position,
-                            std::array<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                            std::array<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
+ AMREX_GPU_HOST_DEVICE  void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
+                            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {
             init_position<0,degx>(position[0],plo[0],dxi[0]);
 #if (GEMPIC_SPACEDIM>1)
@@ -149,36 +220,51 @@ public :
         }
 
 private :
-    template<int degree>
-    std::vector<amrex::Real> spline_eval (amrex::Real x)  {
-            std::vector<amrex::Real> s;
+    template<int degree,int length>
+AMREX_GPU_HOST_DEVICE  amrex::GpuArray<amrex::Real, length> spline_eval (amrex::Real x)  {
+            amrex::GpuArray<amrex::Real, length> s;
             switch (degree) {
             case 0:
-                s = {1.};
+                s[0] = 1.;
                 break;
             case 1:
-                s = {x, 1.-x};
+                s[0] = x;
+                s[1] = 1.-x;
                 break;
             case 2:
-                s = {pow(x,2)/2., (1.-x)*x+0.5, pow(x-1,2)/2.};
+                s[0] = pow(x,2)/2.;
+                s[1] = (1.-x)*x+0.5;
+                s[2] = pow(x-1,2)/2.;
                 break;
             case 3:
-                s = { pow(x,3)/6., (((-x+1)*x+1.)*3.*x+1.)/6. , ((3.*x-6.)*x*x+4.)/6., pow((1.-x),3)/6. };
+                s[0] = pow(x,3)/6.;
+                s[1] = (((-x+1)*x+1.)*3.*x+1.)/6. ;
+                s[2] = ((3.*x-6.)*x*x+4.)/6.;
+                s[3] = pow((1.-x),3)/6.;
                 break;
               case 4:
-                s = {pow(x,4)/24., ((((-x+1.)*4.*x+6.)*x+4.)*x+1.)/24., ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.,((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24. , pow(1.-x,4)/24. };
+                s[0] = pow(x,4)/24.;
+                s[1] = ((((-x+1.)*4.*x+6.)*x+4.)*x+1.)/24.;
+                s[2] = ((((6.*x-12.)*x-6.)*x+12.)*x+11.)/24.;
+                s[3] = ((((-4.*x+12.)*x-6.)*x-12.)*x+11.)/24. ;
+                s[4] = pow(1.-x,4)/24.;
                 break;
             case 5:
-                s = {pow(x,5)/120., (((((-x+1.)*x+2.)*x+2.)*x+1.)*5.*x+1.)/120., (((((x-2.)*x-2.)*x+2.)*x+5.)*10.*x+26.)/120., (((-x+3.)*x*x-6.)*x*10.*x+66.)/120., (((((x-4.)*x+4.)*x+4.)*x-10.)*5.*x+26.)/120., (((((-x+5.)*x-10.)*x+10.)*x-5.)*x+1.)/120. };
+                s[0] = pow(x,5)/120.;
+                s[1] = (((((-x+1.)*x+2.)*x+2.)*x+1.)*5.*x+1.)/120.;
+                s[2] = (((((x-2.)*x-2.)*x+2.)*x+5.)*10.*x+26.)/120.;
+                s[3] = (((-x+3.)*x*x-6.)*x*10.*x+66.)/120.;
+                s[4] = (((((x-4.)*x+4.)*x+4.)*x-10.)*5.*x+26.)/120.;
+                s[5] = (((((-x+5.)*x-10.)*x+10.)*x-5.)*x+1.)/120.;
                 break;
             case 6:
-                s = {pow(x,6)/720.,
-                    -pow(x,6)/120. + pow(x,5)/120. + pow(x,4)/48. + pow(x,3)/36. + pow(x,2)/48. + x/120. + 1./720.,
-                    pow(x,6)/48. - pow(x,5)/24. - pow(x,4)/16. + pow(x,3)/36. + 3.*pow(x,2)/16. + 5.*x/24. + 19./240.,
-                    -pow(x,6)/36. + pow(x,5)/12. + pow(x,4)/24. - 2.*pow(x,3)/9. - 5.*pow(x,2)/24. + 1.*x/3. + 151./360.,
-                    pow(x,6)/48. - pow(x,5)/12. + pow(x,4)/24. + 2.*pow(x,3)/9. - 5.*pow(x,2)/24. - x/3. + 151./360.,
-                    -pow(x,6)/120. + pow(x,5)/24. - pow(x,4)/16. - pow(x,3)/36. + 3.*pow(x,2)/16. - 5.*x/24. + 19./240.,
-                    pow(x,6)/720. - pow(x,5)/120. + pow(x,4)/48. - pow(x,3)/36. + pow(x,2)/48. - x/120. + 1./720.};
+                s[0] = pow(x,6)/720.;
+                s[1] = -pow(x,6)/120. + pow(x,5)/120. + pow(x,4)/48. + pow(x,3)/36. + pow(x,2)/48. + x/120. + 1./720.;
+                s[2] = pow(x,6)/48. - pow(x,5)/24. - pow(x,4)/16. + pow(x,3)/36. + 3.*pow(x,2)/16. + 5.*x/24. + 19./240.;
+                s[3] = -pow(x,6)/36. + pow(x,5)/12. + pow(x,4)/24. - 2.*pow(x,3)/9. - 5.*pow(x,2)/24. + 1.*x/3. + 151./360.;
+                s[4] = pow(x,6)/48. - pow(x,5)/12. + pow(x,4)/24. + 2.*pow(x,3)/9. - 5.*pow(x,2)/24. - x/3. + 151./360.;
+                s[5] = -pow(x,6)/120. + pow(x,5)/24. - pow(x,4)/16. - pow(x,3)/36. + 3.*pow(x,2)/16. - 5.*x/24. + 19./240.;
+                s[6] = pow(x,6)/720. - pow(x,5)/120. + pow(x,4)/48. - pow(x,3)/36. + pow(x,2)/48. - x/120. + 1./720.;
                 break;
             }
             return(s);
@@ -188,10 +274,10 @@ private :
 };
 
 template<int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
-                                              std::array<amrex::Array4<amrex::Real>,vdim> eArray)
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
+                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>const& eArray)
 {
-    std::array<amrex::Real,vdim> fields;
+    amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
         fields[comp] = 0.;
     }
@@ -205,7 +291,7 @@ std::array<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,deg
 #endif
           {
             for (int ii = 0; ii <= degx; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
                     double s_coeff = spline.spline_cell[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
@@ -252,10 +338,10 @@ std::array<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,deg
 
 #if GEMPIC_SPACEDIM == 3
 template<int vdim, int degx, int degy, int degz>
-std::array<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,degz> &spline,
-                                              std::array<amrex::Array4<amrex::Real>,vdim> eArray)
+amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,degz> &spline,
+                                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& eArray)
 {
-    std::array<amrex::Real,vdim> fields;
+    amrex::GpuArray<amrex::Real,vdim> fields;
     for (int comp = 0; comp < vdim; comp++) {
         fields[comp] = 0.;
     }
@@ -263,7 +349,7 @@ std::array<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,deg
     for (int kk = 0; kk <= degz; ++kk) {
         for (int jj = 0; jj <= degy; ++jj) {
             for (int ii = 0; ii <= degx; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 if ( ii < degx ) {
                     double s_coeff = spline.spline_node[0][ii]
                             *spline.spline_cell[1][jj]
@@ -293,7 +379,7 @@ std::array<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,degy,deg
 #endif
 
 template <int degx, int degy, int degz>
-void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
+AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
                                 amrex::Real weight,
                             amrex::Array4<amrex::Real> const& rho)
 {
@@ -308,7 +394,7 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
 #endif
           {
             for (int ii = 0; ii <= degx; ++ii) {
-                std::array<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(spline.box[0]+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 double s_coeff = spline.spline_node[0][ii]
         #if(GEMPIC_SPACEDIM > 1)
                         * spline.spline_node[1][jj]
@@ -318,9 +404,9 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
         #endif
                         ;
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::Gpu::Atomic::Add(&rho(cell_index[0], 0, 0, 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff*weight);
 #else
-                amrex::Gpu::Atomic::Add(&rho(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight);
+        amrex::HostDevice::Atomic::Add(rho.ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0), s_coeff*weight);
 #endif
             }
         }
@@ -328,15 +414,16 @@ void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
 }
 
 
-template<typename S, int vdim, int degp, int degp1, int degp2, int pdim>
-void accumulate_j_update_v_C2(S const& spline,
+template<typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
+AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(S const& spline,
                               spline1d_at_particles<degp> const& spline_new,
                               spline1d_at_particles<degp> const& spline_old,
                               amrex::Real weight,
                               const amrex::Real* dx,
-                              std::array<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1> bArray,
-                              std::array<amrex::Array4<amrex::Real>,vdim> jArray,
-                              std::array<amrex::Real, 2> &fields   )
+                              amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
+                              amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>const& jArray,
+                              amrex::GpuArray<amrex::Real, 2> &fields,
+                              amrex::GpuArray<amrex::Real, plength> *primitive)
 {
     int pdim1 = (pdim+1)%3;
     int pdim2 = (pdim+2)%3;
@@ -348,26 +435,28 @@ void accumulate_j_update_v_C2(S const& spline,
     if (spline_new.box<spline_old.box)
       box_start = spline_new.box;
 
-    std::vector<amrex::Real> primitive(local_size+degp);
+    for (unsigned int j=0;j<local_size+degp;j++)
+        (*primitive)[j] = 0.0;
+
     if ( spline_old.box < spline_new.box ) {
             for (unsigned int j=0;j<degp;j++)
-              primitive[j] = spline_old.primitive[j]*dx[pdim];
+              (*primitive)[j] = spline_old.primitive[j]*dx[pdim];
             for (unsigned int j=degp;j<local_size;j++)
-              primitive[j] = dx[pdim];
+              (*primitive)[j] = dx[pdim];
 
             for (unsigned int j =0;j<degp; j++) {
-                primitive[local_size-degp+j] -= spline_new.primitive[j]*dx[pdim];
+                (*primitive)[local_size-degp+j] -= spline_new.primitive[j]*dx[pdim];
               }
           }
         else {
             for(unsigned int j=degp;j<local_size;j++) {
-                primitive[j] = -dx[pdim];
+                (*primitive)[j] = -dx[pdim];
               }
             for (unsigned int j=0;j<degp;j++) {
-                primitive[j] = -spline_new.primitive[j]*dx[pdim];
+                (*primitive)[j] = -spline_new.primitive[j]*dx[pdim];
               }
             for (unsigned int j =0;j<degp; j++) {
-                primitive[local_size-degp+j] += spline_old.primitive[j]*dx[pdim];
+                (*primitive)[local_size-degp+j] += spline_old.primitive[j]*dx[pdim];
               }
           }
 
@@ -378,25 +467,25 @@ void accumulate_j_update_v_C2(S const& spline,
           {
             for (int ii = 0; ii <= local_size; ++ii)
               {
-                std::array<int,GEMPIC_SPACEDIM> cell_index;
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index;
                 if ( pdim == 0 )
                   cell_index = {AMREX_D_DECL(box_start+ii, spline.box[1]+jj, spline.box[2]+kk)};
                 else if (pdim == 1 )
                   cell_index = {AMREX_D_DECL( spline.box[0]+kk, box_start+ii, spline.box[2]+jj)};
                 else if (pdim == 2)
                   cell_index = {AMREX_D_DECL( spline.box[0]+jj, spline.box[1]+kk, box_start+ii)};
-                double s_coeff = primitive[ii]
+                double s_coeff = (*primitive)[ii]
                         *spline.spline_node[pdim1][jj]
                         *spline.spline_node[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::Gpu::Atomic::Add(&(jArray[pdim])(cell_index[0], 0, 0 , 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0 , 0), s_coeff*weight);
 #else
-                amrex::Gpu::Atomic::Add(&(jArray[pdim])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight);
+                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]) , 0), s_coeff*weight);
 #endif
 
                     if ( jj < degp1 )
                       {
-                        double s_coeff = primitive[ii]
+                        double s_coeff = (*primitive)[ii]
                               *spline.spline_cell[pdim1][jj]
                               *spline.spline_node[pdim2][kk];
 
@@ -407,7 +496,7 @@ void accumulate_j_update_v_C2(S const& spline,
 #endif
                           }
                   if ( kk < degp2 ){
-                      double s_coeff = primitive[ii]
+                      double s_coeff = (*primitive)[ii]
                               *spline.spline_node[pdim1][jj]
                               *spline.spline_cell[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)

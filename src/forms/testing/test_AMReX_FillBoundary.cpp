@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_MFIter.H>
 #include <AMReX_ParmParse.H>
@@ -44,7 +42,7 @@ void main_main ()
     amrex::IndexType Index_A(amrex::IntVect{AMREX_D_DECL(1,0,0)});
     int Nghost = 1;
     amrex::MultiFab TestMF(convert(grid, Index_A),distriMap,1,Nghost);
-    TestMF.setVal(0.0,0);
+    TestMF.setVal(0.0);
     TestMF.FillBoundary(geom.periodicity());
 
     //-----------------------------------------------------------------------------
@@ -73,9 +71,9 @@ void main_main ()
     }
 
     bool passed = true;
-    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 4932) < 1e-12);
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 4932) < 1e-6);
     TestMF.FillBoundary(geom.periodicity());
-    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-12);
+    passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-6);
 
     amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << std::endl;
     amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << passed << std::endl;

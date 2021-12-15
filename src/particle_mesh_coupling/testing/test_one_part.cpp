@@ -1,5 +1,3 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_Print.H>
 #include <AMReX_PlotFileUtil.H>
@@ -16,7 +14,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -30,6 +28,25 @@ using namespace Profiling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
+AMREX_GPU_HOST_DEVICE amrex::Real cosine(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 1e-3 * std::cos(1.25 * x);
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+{
+    amrex::Real val = 0.0;
+    return val;
+}
+
+AMREX_GPU_HOST_DEVICE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+{
+    amrex::Real val = 2.0 * std::cos(0.5 * x);
+    return val;
+}
+
+
 template< int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main (bool ctest)
 {
@@ -39,24 +56,24 @@ void main_main (bool ctest)
 
     // initialize parameters
     std::string sim_name = "One_Particle";
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(4,4,4)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 1;
     int freq_x = 2;
     int freq_v = 2;
     int freq_slice = 1;
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> max_grid_size = {4,4,4};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+    amrex::IntVect max_grid_size = {4,4,4};
     amrex::Real dt = 0.02;
-    std::array<amrex::Real, numspec> charge = {-1.0};
-    std::array<amrex::Real, numspec> mass = {1.0};
+    amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
+    amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     amrex::Real k = 1.25;
     std::string WF = "1.0";
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvarx * x)";
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_B[0] = Bx;
     if (int(vdim/2.5)*2+1 > 1) {
         fields_B[1] = By;
@@ -69,42 +86,27 @@ void main_main (bool ctest)
     bool time_staggered = false;
     amrex::Real tolerance_particles = 1.e-10;
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    for (int j=0; j<vdim; j++) {
-        VM[j].push_back(0.0);
-        VW[j].push_back(1.0);
-    }
-    VD[0].push_back(0.02/sqrt(2));
-    VD[1].push_back(sqrt(12)*VD[0][0]);
-    VD[2].push_back(VD[1][0]);
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
 
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v,
                     freq_slice, is_periodic, max_grid_size, dt, charge, mass, k,
                     WF, Bx, By, Bz, phi, 1, propagator, tolerance_particles);
     VlMa.set_computed_params();
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
 
     // infrastructure
     computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
     // maxwell_yee
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
-    std::array<std::string, 2> fields = {rho, phi};
-    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
+    mw_yee.template init_rho_phi<degmw>(zero, func_phi, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -112,7 +114,7 @@ void main_main (bool ctest)
     for(amrex::MFIter mfi=(*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
         if(mfi.index() == 0) {
             amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-            std::array<amrex::Real,vdim> velocity;
+            amrex::GpuArray<amrex::Real,vdim> velocity;
             for (int comp = 0; comp < vdim; comp++) {
                 velocity[comp] = 0.1;
             }
@@ -126,7 +128,7 @@ void main_main (bool ctest)
     // solve:
     amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name, vol);
-    loop_preparation<vdim,numspec,degx,degy,degz,degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, fields_B);
+    loop_preparation<vdim,numspec,degx,degy,degz,degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, zero, zero, cosine);
     std::ofstream ofs("PIC.output", std::ofstream::out);
     amrex::Print(ofs) << endl;
     switch (propagator) {

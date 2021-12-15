@@ -7,6 +7,8 @@ AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
 echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
 
+cp $SOURCE_DIRECTORY/third_party/AMReX_MLNodeLap_Gempic_3D_K.H $AMREX_DIRECTORY/Src/LinearSolvers/MLMG/AMReX_MLNodeLap_3D_K.H
+
 source /etc/profile.d/modules.sh
 module purge
 if [ x"$CLUSTER" == x"COBRA"  ]; then
@@ -37,5 +39,5 @@ make -j 10 install
 cd ..
 mkdir -p gempic
 cd gempic
-cmake  -D AMReX_ROOT=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc  -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+cmake  -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D CMAKE_C_COMPILER=mpiicc -D CMAKE_CXX_COMPILER=mpiicpc  -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 make VERBOSE=1 -j 10

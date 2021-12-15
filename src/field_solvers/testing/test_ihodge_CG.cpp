@@ -13,8 +13,6 @@
                           -\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z) \end{pmatrix}
 ------------------------------------------------------------------------------*/
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
@@ -23,7 +21,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_assertion.H>
 
 using namespace std;
@@ -31,12 +29,44 @@ using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
 
+#define IHODGE_CG_ZERO 0
+#define IHODGE_CG_E0 1
+#define IHODGE_CG_E1 2
+#define IHODGE_CG_E2 3
+#define IHODGE_CG_B0 4
+#define IHODGE_CG_B2 5
+
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+{
+  switch(funcSelect){
+  case IHODGE_CG_E0 :
+    return std::cos(x) ;
+    break;
+  case IHODGE_CG_E1 :
+    return -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case IHODGE_CG_E2 :
+    return std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case IHODGE_CG_B0 :
+    return std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case IHODGE_CG_B2 :
+    return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
+    break;
+  case IHODGE_CG_ZERO:
+    return 0.0;
+    break;
+  }
+  return 0.0;
+
+}
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {  //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-    std::array<std::string, vdim> fields_E;
-    std::array<std::string, int(vdim/2.5)*2+1> fields_B;
+   /* amrex::GpuArray<std::string, vdim> fields_E;
+    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
     fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
     fields_E[0] = "cos(x)";
     fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
@@ -44,32 +74,46 @@ void main_main ()
     fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
     fields_B[1] = "0.0";
     fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+    */
 
     const int degree = 4;
 
+    double twopi = 4 * asin(1.0); // 2.0*3.14159265359;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1,1,1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    std::array<int,GEMPIC_SPACEDIM> mx_grid = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
+   // std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
 
-    vlasov_maxwell<vdim, numspec> VlMa;
-    VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
-                    mx_grid, 0.01, {1.0}, {1.0}, 0.5);
-    VlMa.set_computed_params();
+    amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
+    amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/0.5,twopi/0.5,twopi/0.5)};
+    amrex::RealBox real_box;
+    real_box.setLo(boxLo);
+    real_box.setHi(boxHi);
+
 
     CompDom::computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(n_cell, mx_grid, is_periodic, real_box);
 
     //------------------------------------------------------------------------------
     // Solve
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
-    mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
+    std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
+    int Nghost = *(std::max_element(degs.begin(), degs.end()));
+    maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
+
+    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
+    funcSelectB[0] = IHODGE_CG_B0;
+    funcSelectB[1] = IHODGE_CG_ZERO;
+    funcSelectB[2] = IHODGE_CG_B2;
+    mw_yee.template initB<degree>( infra , funcSelectB );
+
+    amrex::GpuArray<int, vdim> funcSelectE;
+    funcSelectE[0] = IHODGE_CG_E0;
+    funcSelectE[1] = IHODGE_CG_E1;
+    funcSelectE[2] = IHODGE_CG_E2;
+    mw_yee.template initE<degree>( infra , funcSelectE );
 
     mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
 
@@ -93,7 +137,7 @@ void main_main ()
         amrex::Real err_norm = Utils::gempic_norm(&(*(mw_yee.E_sol_Array[dim])), infra, 2);
         amrex::AllPrintToFile("test_ihodge_CG_additional.tmp") << "For component " << dim << " the error is: " << err_norm << std::endl;
         amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
-        gempic_assert_err(&passed, E_norm, err_norm*err_norm);
+        gempic_assert_err(passed, E_norm, err_norm*err_norm);
     }
     amrex::AllPrintToFile("test_ihodge_CG.tmp") << std::endl;
     amrex::AllPrintToFile("test_ihodge_CG.tmp") << passed << std::endl;

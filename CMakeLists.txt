@@ -15,20 +15,18 @@ if (USE_CUDA)
   find_package(CUDA QUIET REQUIRED)
 endif()
 
-find_package(MPI REQUIRED CXX)
+if (USE_OMP)
+  find_package(OpenMP REQUIRED)
+  if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  endif()
+endif()
 
-message("AMReX Dir is ${AMReX_ROOT}")
+find_package(MPI REQUIRED)
 
-# Find the AMReX library
-find_package( AMReX REQUIRED HINTS ${AMReX_ROOT}/lib/cmake/AMReX )
-# This is an old version to link with amrex (gfortran and intel versions, respectively
-#set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;gfortran )
-#set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;ifcore )
-include_directories( ${AMReX_ROOT}/include )
-#message("AMReX_LIBRARIES ${AMReX_LIBRARIES}")
-#message("AMReX Dir is ${AMReX_DIR} ${AMReX_ROOT}")
-#set( AMREX ON CACHE BOOL "AMREX found." )
-
+message("*****MPI path ${MPI_CUDA_HEADER_DIR}, ${MPI_CXX_HEADER_DIR}")
 # Set compiler flags
 
 message("####### ${CMAKE_CXX_COMPILER_ID}")
@@ -44,24 +42,56 @@ ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")
   #set (CMAKE_CXX_FLAGS_RELEASE "-g -O3 -xHOST")
   set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
   message ("Found Intel compiler " ${CMAKE_CXX_COMPILER})
+ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+  # Clang 
+  set (CMAKE_CXX_FLAGS "")
+  set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3 -mavx2  -march=native")
+  set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
+  message ("Found AppleClang compiler " ${CMAKE_CXX_COMPILER})  
 ELSE()
   set (CMAKE_CXX_FLAGS "")
   set (CMAKE_CXX_FLAGS_RELEASE "")
-  set (CMAKE_CXX_FLAGS_DEBUG   "")
+  set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
   message("Unknown compiler")
 ENDIF()
 
+IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*")  )
 IF (USE_CUDA)
-  set (CMAKE_CUDA_FLAGS "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
-  set (CMAKE_CUDA_FLAGS_RELEASE "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
-  set (CMAKE_CUDA_FLAGS_DEBUG   "--expt-extended-lambda --expt-relaxed-constexpr -I$CUDA_HOME/include -L$CUDA_HOME/lib64 -lcurand")
+	set (CMAKE_CUDA_FLAGS "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=mpiicpc -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
+  set (CMAKE_CUDA_FLAGS_RELEASE "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=mpiicpc -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand -arch sm_80")
+  set (CMAKE_CUDA_FLAGS_DEBUG   "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=mpiicpc -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand -arch sm_80")
+add_definitions(-DGEMPIC_GPU)
 ENDIF()
+endif()
+
+IF (($ENV{HOST} MATCHES "daint*") )
+IF (USE_CUDA)
+  set (CMAKE_CUDA_FLAGS "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand  -arch sm_60")
+  set (CMAKE_CUDA_FLAGS_RELEASE "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand -arch sm_60")
+  set (CMAKE_CUDA_FLAGS_DEBUG   "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand  -arch sm_60")
+  add_definitions(-DGEMPIC_GPU)
+ENDIF()
+endif()
+
+message("AMReX Dir is ${AMReX_DIR}")
+
+# Find the AMReX library
+find_package( AMReX REQUIRED HINTS ${AMReX_DIR}/lib/cmake/AMReX )
+# This is an old version to link with amrex (gfortran and intel versions, respectively
+#set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;gfortran )
+#set( AMReX_LIBRARIES ${AMReX_ROOT}/lib/libamrex.a;ifcore )
+include_directories( ${AMReX_DIR}/include )
+#message("AMReX_LIBRARIES ${AMReX_LIBRARIES}")
+#message("AMReX Dir is ${AMReX_DIR} ${AMReX_ROOT}")
+#set( AMREX ON CACHE BOOL "AMREX found." )
+
+#set (CMAKE_CUDAA_FLAGS_RELEASE AMReX::Flags_CXX)
 
 # Enable ctests
 enable_testing()
 # This defines how the ctests are run
 message ("HOST is $ENV{HOST}" )
-IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*"))
+IF (($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*") OR ($ENV{HOST} MATCHES "daint*") )
   include(cmake/cobra_ctest.cmake)
 ELSE()
   include(cmake/define_ctest.cmake)
@@ -113,6 +143,8 @@ include_directories("${CMAKE_SOURCE_DIR}/third_party/tinyexpr")
 include_directories("${CMAKE_SOURCE_DIR}/src/io/checkpointing")
 include_directories("${CMAKE_SOURCE_DIR}/src/particle")
 include_directories("${CMAKE_SOURCE_DIR}/src/io/profiling")
+include_directories("${CMAKE_SOURCE_DIR}/src/io/parameters")
+include_directories("${CMAKE_SOURCE_DIR}/src/simulations")
 include_directories("${CMAKE_SOURCE_DIR}/src/time_loop")
 include_directories("${CMAKE_SOURCE_DIR}")
 

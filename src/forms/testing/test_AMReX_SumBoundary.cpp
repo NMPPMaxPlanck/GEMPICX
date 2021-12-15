@@ -1,6 +1,5 @@
-#include <tinyexpr.h>
-
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_MFIter.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particle.H>
@@ -54,9 +53,9 @@ void main_main ()
     amrex::MultiFab TestMF(convert(grid, Index_A),distriMap,1,Nghost);
     TestMF.setVal(0.0,0);
     TestMF.FillBoundary(geom.periodicity());
-    std::array<amrex::Real,GEMPIC_SPACEDIM> plo;
-    std::array<amrex::Real,GEMPIC_SPACEDIM> dx;
-    std::array<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> plo;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> dx;
+    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi;
     dxi[GEMPIC_SPACEDIM] = 1.;
     for (int cc=0;cc<3;cc++){
         plo[cc] = geom.ProbLo()[cc];
@@ -67,7 +66,12 @@ void main_main ()
     // Particles
     amrex::Real charge = -1.0;
     amrex::ParticleContainer<vdim+1, 0, 0, 0> mypc(geom, distriMap, grid);
-    mypc.do_tiling = true;
+#if GEMPIC_GPU
+        mypc.do_tiling = false;
+#else
+        mypc.do_tiling = true;
+#endif
+
 #if (GEMPIC_SPACEDIM >1)
     mypc.tile_size = {AMREX_D_DECL(max_grid_size,max_grid_size,max_grid_size)};
 #else
@@ -80,26 +84,23 @@ void main_main ()
     // Deposit charge
     // Deposit charges:
     for (amrex::ParIter<vdim+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
-        amrex::Box tilebox;
-        amrex::FArrayBox local_rho;
-
-        tilebox = pti.tilebox();
-        tilebox.grow(Nghost);
-        const amrex::Box tb = amrex::convert(tilebox, Index_A);
-
-        local_rho.resize(tb,1); // second arg: number of comps
-        local_rho.setVal(0.0);
 
         auto& particles = pti.GetArrayOfStructs();
         const long np  = pti.numParticles();
 
-        amrex::Array4<amrex::Real> const& rhoarr = local_rho.array();
+        amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
         for (int pp=0;pp<np;pp++) {
-            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp], charge, dxi, plo, rhoarr,Index_A);
-        }
-        TestMF[pti].atomicAdd(local_rho,tb,tb,0,0,1);
-    }
+            splines_at_particles<degx,degy,degz> spline;
 
+            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
+            for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
+                pos[comp] = particles[pp].pos(comp);
+            }
+            spline.init_particles(pos , plo, dxi);
+            amrex::Real weight = particles[pp].rdata(vdim);
+            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(spline, dxi[GEMPIC_SPACEDIM]*weight*charge, rhoarr, Index_A);
+        }
+    }
     amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
         amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << TestMF[mfi] << std::endl;
@@ -115,7 +116,7 @@ void main_main ()
         amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp").SetPrecision(20) << TestMF[mfi] << std::endl;
     }
 
-    bool passed = (std::abs(TestMF.norm1(0,Nghost) - 5) < 1e-12);
+    bool passed = (std::abs(TestMF.norm1(0,Nghost) - 7.8) < 1e-12);
     amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << std::endl;
     amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << passed << std::endl;
 

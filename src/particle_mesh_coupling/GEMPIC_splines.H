@@ -26,15 +26,15 @@ class splines
 public:
 
     // parameters for splines
-    std::array<bool,GEMPIC_SPACEDIM> centered_evaluation;
-    std::array<bool,GEMPIC_SPACEDIM> integral_evaluation;
+    amrex::GpuArray<bool,GEMPIC_SPACEDIM> centered_evaluation;
+    amrex::GpuArray<bool,GEMPIC_SPACEDIM> integral_evaluation;
 
     // The default constructor.
     splines ();
 
     // Explicit const
-    splines (std::array<bool,GEMPIC_SPACEDIM> cent_eval,
-             std::array<bool,GEMPIC_SPACEDIM> int_eval){
+    splines (amrex::GpuArray<bool,GEMPIC_SPACEDIM> cent_eval,
+             amrex::GpuArray<bool,GEMPIC_SPACEDIM> int_eval){
 
         centered_evaluation = cent_eval;
         integral_evaluation = int_eval;

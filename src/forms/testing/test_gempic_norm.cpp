@@ -21,9 +21,9 @@
 ------------------------------------------------------------------------------*/
 
 #include <cmath>
-#include <tinyexpr.h>
 
 #include <AMReX.H>
+#include <AMReX_Array.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
@@ -32,7 +32,7 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_vlasov_maxwell.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -43,7 +43,7 @@ using namespace Utils;
 
 //------------------------------------------------------------------------------
 // function
-double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){return(a*x[0]
+AMREX_GPU_HOST_DEVICE amrex::Real func(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
         #if (GEMPIC_SPACEDIM > 0)
             +b*x[1]
         #endif
@@ -55,43 +55,25 @@ double f(std::array<double,GEMPIC_SPACEDIM> x, double a, double b, double c){ret
 template<int vdim, int numspec>
 void main_main ()
 {
-    double C = 2.;
-    double a = 1.;
-    double b = 1.;
-    double c = 1.;
+    amrex::Real C = 2.;
+    amrex::Real a = 1.;
+    amrex::Real b = 1.;
+    amrex::Real c = 1.;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    std::array<int,GEMPIC_SPACEDIM> is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(128, 128, 128)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(128, 128, 128)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    VM[0].push_back(0.0);
-    VD[0].push_back(1.0);
-    VW[0].push_back(1.0);
-    if (vdim > 1) {
-        VM[1].push_back(0.0);
-        VD[1].push_back(1.0);
-        VW[1].push_back(1.0);
-    }
-    if (vdim > 2) {
-        VM[2].push_back(0.0);
-        VD[2].push_back(1.0);
-        VW[2].push_back(1.0);
-    }
-
-    vlasov_maxwell<vdim, numspec> VlMa;
+    gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {64,64,64});
     VlMa.set_computed_params();
 
     computational_domain infra;
-    VlMa.initialize_infrastructure(&infra);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
 
-    maxwell_yee<vdim> mw_yee(VlMa, infra);
+    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     // Constant case
     mw_yee.rho.setVal(C, 0);
@@ -102,38 +84,27 @@ void main_main ()
     AllPrintToFile("test_gempic_norm_additional.tmp") << endl;
 
     bool passed = true;
-    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 0));
-    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 1));
-    gempic_assert(&passed, C, gempic_norm(&mw_yee.rho, infra, 2));
+    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 0));
+    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 1));
+    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 2));
 
 
     // Linear case
-    std::array<double,GEMPIC_SPACEDIM> x;
     for ( amrex::MFIter mfi(mw_yee.rho); mfi.isValid(); ++mfi ){
 
         const amrex::Box& bx = mfi.validbox();
-        amrex::IntVect lo = {bx.smallEnd()};
-        amrex::IntVect hi = {bx.bigEnd()};
-#if (GEMPIC_SPACEDIM > 2)
-        for(int k=lo[2]; k<=hi[2]; k++){
-            x[2] = infra.geom.ProbLo()[2] + ((double)k)*infra.dx[2];
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-            for(int j=lo[1]; j<=hi[1]; j++){
-                x[1] = infra.geom.ProbLo()[1] + ((double)j)*infra.dx[1];
-#endif
-                for(int l=lo[0]; l<=hi[0]; l++){
-                    x[0] = infra.geom.ProbLo()[0] + ((double)l)*infra.dx[0];
-                    // the box for these values:
-                    amrex::Box cc(amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect{AMREX_D_DECL(l,j,k)}, amrex::IntVect::TheNodeVector());
-                    (mw_yee.rho)[mfi].setVal(f(x,a,b,c), cc, 0, 1);
-                }
-#if (GEMPIC_SPACEDIM > 1)
-            }
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        }
-#endif
+
+	amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = infra.plo;
+	amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = infra.dx;
+        amrex::Array4<amrex::Real> const& rho_arr = mw_yee.rho[mfi].array();
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+        {
+            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x;
+            x[0] = plo[0] + ((amrex::Real)i)*dx[0];
+            x[1] = plo[1] + ((amrex::Real)j)*dx[1];
+            x[2] = plo[2] + ((amrex::Real)k)*dx[2];
+            rho_arr(i,j,k) = func(x,a,b,c);
+        });
     }
     AllPrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << endl;
 #if(GEMPIC_SPACEDIM == 1)
@@ -164,12 +135,11 @@ void main_main ()
     AllPrintToFile("test_gempic_norm_additional.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
     AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 
-    gempic_assert(&passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
-    gempic_assert(&passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
-    gempic_assert(&passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
+    gempic_assert(passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
+    gempic_assert(passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
+    gempic_assert(passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
 
 #endif
-
     AllPrintToFile("test_gempic_norm.tmp") << endl;
     AllPrintToFile("test_gempic_norm.tmp") << passed << endl;
 
