@@ -45,11 +45,12 @@ where the 2-norm has been applied to all the fields. If the simulation is run fo
 
 Project branches
 =====================
-branch           | description
--------------------------------------------------------------
-master           | current main version of the code  
-poisson_Epara    | implemention of new Epara field solver  
-ctest_random_gen | adapting random sampling  
-live_code        | added code from the live coding sessions, not relevant to production, can be removed when all participants agree  
-gpu_cuda_loop    | replacing ParallelFor loops with cuda loops  
-poisson_order    | attempt at implementing an amrex-type solver that is edge/face centered  
+
+|branch            | description |
+|------------------|--------------------------------------------|
+| `master`           | current main version of the code |
+| `poisson_Epara`    | implemention of new Epara field solver |  
+| `ctest_random_gen` | adapting random sampling |
+| `live_code`        | added code from the live coding sessions, not relevant to production, can be removed when all participants agree |
+| `gpu_cuda_loop`    | replacing ParallelFor loops with cuda loops |
+| `poisson_order`    | attempt at implementing an amrex-type solver that is edge/face centered |
