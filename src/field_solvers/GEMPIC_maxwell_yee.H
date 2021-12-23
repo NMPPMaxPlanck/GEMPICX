@@ -55,6 +55,7 @@ template<int edim=GEMPIC_SPACEDIM, int bdim=GEMPIC_SPACEDIM>
 class maxwell_yee
 {
 public:
+    // typedef amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > e_form
 
     int nsteps; /** number of simulation steps */
     amrex::Real dt; /** stepsize*/
