@@ -46,7 +46,7 @@ public:
     // parameters from main input file
     std::string sim_name = "simulation";
     amrex::IntVect n_cell;
-    amrex::GpuArray<int, numspec> n_part_per_cell = {100};
+    std::array<int, numspec> n_part_per_cell = {100};
     int n_steps = 10;
     int freq_x = 1000;
     int freq_v = 1000;
