@@ -4,8 +4,15 @@
  * @brief Tests GEMPIC_sampler.H
  * @version 0.1
  * @date 2021-12-30
- * @details GEMPIC_sampler.H samples functions of the type (for vdim=3) !!! Formula only for 1 Gaussian 
- * @f$f(x,v)= n_0(x) \left( \frac{vWeight[0]}{(2\pi v_{th})^{3/2}}\exp{(v_0-u_0)^2(2v_{th,0})}\exp{(v_1-u_1)^2(2v_{th,1})} \exp{(v_2-u_2)^2(2v_{th,2})} @f$ 
+ * @details GEMPIC_sampler.H samples functions of the type (for vdim=3) !!! Formula only for 1 species @n 
+ * @f[f(x,v)= n_0(x) \left( 
+ * \prod_{j=1}^{vdim}\frac{w_j}{\sqrt{2\pi v_{th,j}}}\exp(-\frac{(v_j-u_j)^2}{2v_{th,j}} 
+ * \right) @f] @n
+ * Analytical solution: @n
+ * @f[\int f dx\,dv = \int n_0\, dx, \quad
+ *  \int f v_j dx\,dv = u_j \int n_0\, dx, \quad 
+ *  \int f (v_1^2+v_2^2+v_3^2) dx\,dv = \sum_{j=1}^{vdim} (u_j^2+v_{th,j}^2) \int n_0\, dx
+ * @f]
  * @copyright Copyright (c) 2021
  * 
  */
@@ -117,7 +124,7 @@ void main_main ()
 
     std::array<std::vector<amrex::Real>, vdim> vMean{};
     std::array<std::vector<amrex::Real>, vdim> vThermal{}; 
-    std::array<std::vector<amrex::Real>, vdim> vWeight{};  // ???? relative weight of Gaussian? Why 3 components
+    std::array<std::vector<amrex::Real>, vdim> vWeight{}; 
     amrex::GpuArray<amrex::Real,vdim+2> vMoment;
 
     // only 1 Gaussian
@@ -128,9 +135,10 @@ void main_main ()
     }
 
     gpParam.set_params("sampler_ctest", num_cells, n_part_per_cell);
-    gpParam.set_computed_params();
-    computational_domain domain;
+    double twopi = 4 * asin(1.0);
+    gpParam.k = {twopi, twopi, twopi};
     gpParam.real_box = amrex::RealBox(AMREX_D_DECL(0.0, 0.0, 0.0),AMREX_D_DECL(1.0, 1.0, 1.0));
+    computational_domain domain;
     domain.initialize_computational_domain(gpParam.n_cell, gpParam.max_grid_size, gpParam.is_periodic, gpParam.real_box);
     amrex::Print() << "domain " << *gpParam.real_box.lo() << " " << *gpParam.real_box.hi() << "\n";
 
@@ -142,8 +150,7 @@ void main_main ()
     particle_groups<vdim, numspec> part_gr_full(gpParam.charge, gpParam.mass, domain);
     init_particles_full_domain<vdim,numspec>(domain, part_gr_full,n_part_per_cell, vMean, vThermal, vWeight, species, wave_function);
 
-    //std::string wave_function = "kvarx*x + kvary*y + kvarz*z"; 
-    std::string wave_function_string = "1";
+    std::string wave_function_string = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)"; // n_0
     particle_groups<vdim, numspec> part_gr_full_str(gpParam.charge, gpParam.mass, domain);
     init_particles_full_domain<vdim,numspec>(domain, part_gr_full_str,n_part_per_cell, gpParam.k, wave_function_string, vMean, vThermal, vWeight, species);
  
@@ -156,6 +163,15 @@ void main_main ()
     }
 
     amrex::AllPrintToFile("test_sampler.tmp") << "\n"; 
+    // Print analytical solution
+    amrex::AllPrintToFile("test_sampler.tmp") << "1"; 
+    amrex::Real mom2 = 0;
+    for (int i=0; i < vdim; i++) {
+        amrex::AllPrintToFile("test_sampler.tmp") << " " << vMean[i][0];  
+        mom2 +=  std::pow(vThermal[i][0],2) + std::pow(vMean[i][0],2);
+    }
+    amrex::AllPrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
+    // Print computed solutions
     print_vMoments<vdim,numspec>(part_gr_cell, species);    
     print_vMoments<vdim,numspec>(part_gr_full, species);
     print_vMoments<vdim,numspec>(part_gr_full_str, species);
@@ -166,7 +182,6 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc,argv);
 
     if (amrex::ParallelDescriptor::MyProc()==0) remove("test_sampler.tmp.0");
-    //if (amrex::ParallelDescriptor::MyProc()==0) amrex::FileSystem::Remove("rm test_sampler.output");
 
     const int vdim = 3;
     const int numspec = 1;

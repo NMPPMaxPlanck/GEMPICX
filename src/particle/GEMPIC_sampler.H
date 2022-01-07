@@ -186,6 +186,7 @@ void init_particles_full_domain(computational_domain infra,
     amrex::Real weight;
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
+    bool check_rnd = false;
     int npart = 0;
     int num_gauss = Vmean[0].size(); // same size for all v-dims. Superposition of Gauss distributions 
 
@@ -207,7 +208,7 @@ void init_particles_full_domain(computational_domain infra,
         std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 10); // different from above
         //std::normal_distribution<> norm01(0,1);
         std::uniform_real_distribution<> unif(0.0,1.0);
-        std::uniform_real_distribution<> unifv(0.0, 1.0); //ES
+        std::uniform_real_distribution<> unifv(0.0, 1.0);
 
         auto& particles = (*ppg.mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -276,9 +277,11 @@ void init_particles_full_domain(computational_domain infra,
                                 ;
                         ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                         // Check random number
-                        npart++; // ES test
-                        if (npart <10 ) amrex::Print() << npart << " " << x << " "<< y << " " << z << " " << velocity[0] << " " << velocity[1] 
-                        << " " << velocity[2] << " " << weight << "\n";
+                        if (check_rnd) {
+                            npart++;
+                            if (npart <10 ) amrex::Print() << npart << " " << x << " "<< y << " " << z << " " << velocity[0] << " " << velocity[1] 
+                            << " " << velocity[2] << " " << weight << "\n";
+                        }
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
@@ -310,7 +313,6 @@ void init_particles_full_domain(computational_domain infra,
     amrex::Real weight;
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
-    int npart = 0;
     int num_gauss = Vmean[0].size();
 
     // cumulative sum of vel_weights
@@ -397,10 +399,6 @@ void init_particles_full_domain(computational_domain infra,
         #endif
                                 ;
                         ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
-                        // Check random number
-                        npart++; // ES test
-                        if (npart <10 ) amrex::Print() << npart << " " << x << " "<< y << " " << z << " " << velocity[0] << " " << velocity[1] 
-                        << " " << velocity[2] << " " << weight << "\n";
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
