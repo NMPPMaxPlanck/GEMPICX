@@ -21,6 +21,9 @@ cmake -D AMReX_ROOT=~/Documents/Codes/amrex/installdir -D CMAKE_C_COMPILER=mpicc
 4.) Build the library  
 make
 
+5.) Generate Doxygen documentation (if desired)
+make doxygen
+
 Changing dimension
 =====================
 cd ~build/amrex1D  
