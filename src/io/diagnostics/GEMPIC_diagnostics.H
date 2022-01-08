@@ -158,7 +158,8 @@ public:
                 {
                     auto m  = p.rdata(vdim);
                     auto vel = p.rdata(cmp);
-                    return (m*std::abs(vel));
+                  #  return (m*std::abs(vel));
+                  return (m*vel);
                 });
 
 
