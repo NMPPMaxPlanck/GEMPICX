@@ -59,9 +59,9 @@ void init_particles_cellwise(computational_domain infra,
     }
 
     // (0,1)-normally distributed random number generator:
-    srand(rSeed);
+    //srand(rSeed);
     std::mt19937 gen(rSeed);
-    std::mt19937 genv(rSeed);
+    std::mt19937 genv(rSeed+17);
     //std::normal_distribution<> norm01(0,1);
     std::uniform_real_distribution<> unif(0.0, 1.0);
     std::uniform_real_distribution<> unifv(0.0, 1.0);
@@ -80,7 +80,7 @@ void init_particles_cellwise(computational_domain infra,
         amrex::Real gauss_choice[vdim];
         std::array<amrex::Real,vdim> gauss_idx;
         for(int i=0;i<vdim;i++){
-            gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX)); // uniform in [0, 1]
+            gauss_choice[i] = unif(gen); // uniform in [0, 1]
             gauss_idx[i] = 0;
         }
 
@@ -206,7 +206,7 @@ void init_particles_full_domain(computational_domain infra,
 
         srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         std::mt19937 gen(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
-        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 10); // different from above
+        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 17); // different from above
         //std::normal_distribution<> norm01(0,1);
         std::uniform_real_distribution<> unif(0.0,1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
@@ -331,7 +331,7 @@ void init_particles_full_domain(computational_domain infra,
 
         srand(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
         std::mt19937 gen(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000);
-        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 10);
+        std::mt19937 genv(rSeed+lo[0]+lo[1]*10+lo[2]*100+species*1000 + 17);
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0,1.0);
 
