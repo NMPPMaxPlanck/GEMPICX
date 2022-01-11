@@ -195,10 +195,11 @@ void init_particles_full_domain(computational_domain infra,
     for(int i=0;i<vdim;i++) {
         vel_cum[i].resize(num_gauss);
         std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+        assert(vel_cum[i][num_gauss-1] == 1); // sum of weights should be 1
     }
 
     //MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi= (*ppg.mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
+    for (amrex::MFIter mfi= (ppg.mypc[species])->MakeMFIter(0); mfi.isValid(); ++mfi ){
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
@@ -210,7 +211,7 @@ void init_particles_full_domain(computational_domain infra,
         std::uniform_real_distribution<> unif(0.0,1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
-        auto& particles = (*ppg.mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+        auto& particles = (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]; // only level 0
 
 #if (GEMPIC_SPACEDIM > 2)
         for(int k=lo[2]; k<=hi[2]; k++){

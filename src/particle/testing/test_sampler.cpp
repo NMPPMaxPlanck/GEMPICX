@@ -120,18 +120,23 @@ void main_main ()
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     amrex::IntVect num_cells = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1000};
-    int species = 0; // all particles are same species for now
+    int species = 0; // only one species
 
     std::array<std::vector<amrex::Real>, vdim> vMean{};
     std::array<std::vector<amrex::Real>, vdim> vThermal{}; 
     std::array<std::vector<amrex::Real>, vdim> vWeight{}; 
     amrex::GpuArray<amrex::Real,vdim+2> vMoment;
 
-    // only 1 Gaussian
+    int num_gaussian = 2; // velocity distribution is sum of 2 Gaussians
     for (int i = 0; i < vdim; i++) {
+        // first Gaussian
         vMean[i].push_back(0.0);
         vThermal[i].push_back(2.0);
-        vWeight[i].push_back(1.0);
+        vWeight[i].push_back(0.75);
+        // second Gaussians
+        vMean[i].push_back(2.0);
+        vThermal[i].push_back(1.0);
+        vWeight[i].push_back(0.25);
     }
 
     gpParam.set_params("sampler_ctest", num_cells, n_part_per_cell);
@@ -167,8 +172,12 @@ void main_main ()
     amrex::AllPrintToFile("test_sampler.tmp") << "1"; 
     amrex::Real mom2 = 0;
     for (int i=0; i < vdim; i++) {
-        amrex::AllPrintToFile("test_sampler.tmp") << " " << vMean[i][0];  
-        mom2 +=  std::pow(vThermal[i][0],2) + std::pow(vMean[i][0],2);
+        amrex::Real mom1 = 0;
+        for (int j=0; j<num_gaussian; j++) {
+            mom1 += vWeight[i][j]*vMean[i][j];
+            mom2 +=  vWeight[i][j] * (std::pow(vThermal[i][j],2) + std::pow(vMean[i][j],2));
+        }
+        amrex::AllPrintToFile("test_sampler.tmp") << " " << mom1;  
     }
     amrex::AllPrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
     // Print computed solutions
