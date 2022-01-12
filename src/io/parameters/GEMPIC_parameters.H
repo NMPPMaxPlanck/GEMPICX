@@ -46,7 +46,7 @@ public:
     // parameters from main input file
     std::string sim_name = "simulation";
     amrex::IntVect n_cell;
-    amrex::GpuArray<int, numspec> n_part_per_cell = {100};
+    std::array<int, numspec> n_part_per_cell = {100};
     int n_steps = 10;
     int freq_x = 1000;
     int freq_v = 1000;
@@ -148,6 +148,22 @@ public:
         pp.query("epref_ep0", epref_ep0);
         pp.query("curlB_scaling",curlB_scaling);
         pp.query("energy_b_scaling", energy_b_scaling);
+
+        pp.query("WF",WF);
+        for (int spec=0; spec<numspec; spec++) {
+            std::array<amrex::Real, 3> vm, vd, vw;
+            std::string vms = "velocity_mean_"+std::to_string(spec);
+            pp.query(vms.c_str(),vm);
+            std::string vds = "velocity_deviation_"+std::to_string(spec);
+            pp.query(vds.c_str(),vd);
+            std::string vws = "velocity_weight_"+std::to_string(spec);
+            pp.query(vws.c_str(),vw);
+            for (int j = 0; j < vdim; j++){
+                VM[j].push_back(vm[j]);
+                VD[j].push_back(vd[j]);
+                VW[j].push_back(vw[j]);
+            }
+        }
 
         set_prop_related();
     }

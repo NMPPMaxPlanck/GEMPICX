@@ -2,9 +2,9 @@ MACRO( _CTEST_FILE_CMP _test )
 
 if (EXISTS  ${_test}.input )
   message("Input file ${_test}")
-  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     COMMAND mpirun -np 4 ${_test} ${_test}.input
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp && mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output.tmp
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
@@ -13,9 +13,11 @@ if (EXISTS  ${_test}.input )
     )
 else()
   message("No input file ${_test}")
-  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+  #ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     COMMAND mpirun -np 4 ${_test}
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp && mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+    # COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp && mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
@@ -28,7 +30,7 @@ else()
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff
     COMMAND
     if (${TEST_DIFF} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output
-        ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+      ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
         > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff) \; then
     : \;
     else
@@ -41,8 +43,9 @@ else()
     cat ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff.failed \;
     false \;
     fi
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output
-    ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output 
+    ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+    #${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
     )
   # add the target for this output file to the dependencies of this test
   ADD_CUSTOM_TARGET(${_test}.diff
