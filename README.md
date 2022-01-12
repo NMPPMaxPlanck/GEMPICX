@@ -21,6 +21,9 @@ cmake -D AMReX_ROOT=~/Documents/Codes/amrex/installdir -D CMAKE_C_COMPILER=mpicc
 4.) Build the library  
 make
 
+5.) Generate Doxygen documentation (if desired)  
+make doxygen
+
 Changing dimension
 =====================
 cd ~build/amrex1D  
@@ -42,3 +45,15 @@ Output of simulation
 The executable simulations/valsov\_maxwell/vlasov\_maxwell generates output. This information is written into a file called simulation\_name\_tmp.output every 5 steps in case the simulation is interrupted. Each row contains the following information for one step:  
 time | Ex | Ey | Ez | Bx | By | Bz | kinetic energy | momentumx | momentumy | momentumz| gauss error  
 where the 2-norm has been applied to all the fields. If the simulation is run for dimensions other than 3d3v, then the corresponding components are not part of the output.
+
+Project branches
+=====================
+
+|branch            | description |
+|------------------|--------------------------------------------|
+| `master`           | current main version of the code |
+| `poisson_Epara`    | implemention of new Epara field solver |  
+| `ctest_random_gen` | adapting random sampling |
+| `live_code`        | added code from the live coding sessions, not relevant to production, can be removed when all participants agree |
+| `gpu_cuda_loop`    | replacing ParallelFor loops with cuda loops |
+| `poisson_order`    | attempt at implementing an amrex-type solver that is edge/face centered |

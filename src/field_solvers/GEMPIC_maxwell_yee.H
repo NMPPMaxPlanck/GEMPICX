@@ -56,6 +56,7 @@ template<int edim=GEMPIC_SPACEDIM, int bdim=GEMPIC_SPACEDIM>
 class maxwell_yee
 {
 public:
+    // typedef amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > e_form
 
     int nsteps; /** number of simulation steps */
     amrex::Real dt; /** stepsize*/
@@ -844,7 +845,7 @@ template<int degree>
                         vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+1,j,k)-vecIn_1(i,j,k))/ifr.dx[0]);
                     }
                     else if ((edim == 2) & (GEMPIC_SPACEDIM == 2)){
-                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/ifr.dx[0] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/ifr.dx[0]);
+                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/ifr.dx[1] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/ifr.dx[0]);
                     }
                     else if ((edim == 3) & (GEMPIC_SPACEDIM == 2)) {
                         if (i==2) {

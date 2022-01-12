@@ -42,8 +42,8 @@ ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")
   #set (CMAKE_CXX_FLAGS_RELEASE "-g -O3 -xHOST")
   set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
   message ("Found Intel compiler " ${CMAKE_CXX_COMPILER})
-ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  # gcc
+ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "*Clang")
+  # Clang 
   set (CMAKE_CXX_FLAGS "")
   set (CMAKE_CXX_FLAGS_RELEASE "-g -funroll-all-loops -O3 -mavx2  -march=native")
   set (CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -Wall")
