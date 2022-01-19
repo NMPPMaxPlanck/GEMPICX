@@ -28,19 +28,19 @@ using namespace Profiling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real cosine(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real cosine(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 1e-3 * std::cos(1.25 * x);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
 {
     amrex::Real val = 0.0;
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 2.0 * std::cos(0.5 * x);
     return val;

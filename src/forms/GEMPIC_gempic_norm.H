@@ -23,7 +23,8 @@ namespace Utils {
 
 amrex::Real gempic_norm(amrex::MultiFab *MultiF, computational_domain ifr, int p){
     //TODOrefine
-    amrex::Real result;
+    assert(p<=2);
+    amrex::Real result = 0.0;
     if (p==0) {
         result = (*MultiF).norm0();
     } else if (p==1) {
@@ -31,6 +32,7 @@ amrex::Real gempic_norm(amrex::MultiFab *MultiF, computational_domain ifr, int p
     } else if (p==2) {
         result = (*MultiF).norm2(0, ifr.geom.periodicity());
     }
+      
     if (p > 0) {
         result *= ((p==2) ? (1.0/sqrt(ifr.n_cell[0])) : (1.0/ifr.n_cell[0]))
         #if(GEMPIC_SPACEDIM > 1)

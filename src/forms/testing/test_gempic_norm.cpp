@@ -43,7 +43,7 @@ using namespace Utils;
 
 //------------------------------------------------------------------------------
 // function
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real func(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
+AMREX_GPU_HOST_DEVICE amrex::Real func(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> x, amrex::Real a, amrex::Real b, amrex::Real c){return(a*x[0]
         #if (GEMPIC_SPACEDIM > 0)
             +b*x[1]
         #endif

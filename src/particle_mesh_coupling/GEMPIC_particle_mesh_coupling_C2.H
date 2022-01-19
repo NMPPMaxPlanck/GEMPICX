@@ -21,7 +21,7 @@ public :
     amrex::GpuArray<amrex::Real,deg+1> spline;
     int box;
 
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  void init_position(amrex::Real position,
             amrex::Real plo,
                    amrex::Real dxi)
     {
@@ -55,7 +55,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE void init_position(amrex::Real position,
 private :
 
 template<int degree>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE             amrex::GpuArray<amrex::Real,degree+1> spline_eval (amrex::Real x)  {
+AMREX_GPU_HOST_DEVICE  amrex::GpuArray<amrex::Real,degree+1> spline_eval (amrex::Real x)  {
     amrex::GpuArray<amrex::Real,degree+1> s;
     switch (degree) {
     case 0:
@@ -105,7 +105,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE             amrex::GpuArray<amrex::Real,d
 }
 
     template<int degree>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE             amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
+AMREX_GPU_HOST_DEVICE  amrex::GpuArray<amrex::Real,degree+1> spline_eval_primitive (amrex::Real x)  {
         amrex::GpuArray<amrex::Real,degree+1> s;
         switch (degree) {
         case -1:
@@ -173,7 +173,7 @@ public :
         //splines_at_particles();
 
         template<int dim, int deg>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE           void init_position(amrex::Real position,
+AMREX_GPU_HOST_DEVICE  void init_position(amrex::Real position,
                            amrex::Real plo,
                            amrex::Real dxi)
         {
@@ -206,7 +206,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE           void init_position(amrex::Real 
 
         }
 
- AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE                  void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
+ AMREX_GPU_HOST_DEVICE  void init_particles(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>& position,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
                             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> const& dxi)
         {
@@ -221,7 +221,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE           void init_position(amrex::Real 
 
 private :
     template<int degree,int length>
-AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE       amrex::GpuArray<amrex::Real, length> spline_eval (amrex::Real x)  {
+AMREX_GPU_HOST_DEVICE  amrex::GpuArray<amrex::Real, length> spline_eval (amrex::Real x)  {
             amrex::GpuArray<amrex::Real, length> s;
             switch (degree) {
             case 0:
@@ -274,7 +274,7 @@ AMREX_GPU_HOST_DEVICE  AMREX_NO_INLINE       amrex::GpuArray<amrex::Real, length
 };
 
 template<int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(splines_at_particles<degx,degy,degz> &spline,
                                               amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>const& eArray)
 {
     amrex::GpuArray<amrex::Real,vdim> fields;
@@ -379,7 +379,7 @@ amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(splines_at_particles<degx,deg
 #endif
 
 template <int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
+AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3 ( splines_at_particles<degx, degy, degz> &spline,
                                 amrex::Real weight,
                             amrex::Array4<amrex::Real> const& rho)
 {
@@ -435,7 +435,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(S const& spline,
     if (spline_new.box<spline_old.box)
       box_start = spline_new.box;
 
-    for (unsigned int j=0;j<local_size+degp;j++)
+    for (unsigned int j=0;j<plength;j++)
         (*primitive)[j] = 0.0;
 
     if ( spline_old.box < spline_new.box ) {

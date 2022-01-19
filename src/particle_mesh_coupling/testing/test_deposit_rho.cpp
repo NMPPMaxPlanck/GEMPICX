@@ -22,14 +22,14 @@ using namespace Sampling;
 using namespace Utils;
 
 // wave function
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
 {
     amrex::Real val = 1.0;
     return val;
 }
 
 // wave function
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real funct_rho_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real funct_rho_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 1.0;
     return val;

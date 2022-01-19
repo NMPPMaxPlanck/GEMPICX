@@ -34,7 +34,7 @@ cd ..
 #export CXX=g++
 
 cmake $GEMPIC_BASE \
-      -D AMReX_ROOT=$BUILD_DIR/amrex/installdir \
+      -D AMReX_DIR=$BUILD_DIR/amrex/installdir \
       -D CMAKE_C_COMPILER=mpicc \
       -D CMAKE_CXX_COMPILER=mpicxx \
       -D CMAKE_CXX_FLAGS="-std=c++11" \

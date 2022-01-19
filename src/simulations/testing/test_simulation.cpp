@@ -1,80 +1,66 @@
+
+
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
-#include <AMReX_Particles.H>
+#include <AMReX_ParallelDescriptor.H>
 
 #include <GEMPIC_Config.H>
-#include <GEMPIC_loop_preparation.H>
-#include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_particle_positions.H>
-#include <GEMPIC_profiling.H>
-#include <GEMPIC_sampler.H>
-#include <GEMPIC_time_loop_hs_zigzag_C2.H>
-#include <GEMPIC_parameters.H>
-#include <GEMPIC_particle_groups.H>
 
-//#include <cudaProfiler.h>
-//#include <nvToolsExt.h>
-
-using namespace std;
-using namespace amrex;
-using namespace Gempic;
-
-using namespace Diagnostics_Output;
-using namespace Field_solvers;
-using namespace Particles;
-using namespace Profiling;
-using namespace Sampling;
-using namespace Time_Loop;
-using namespace Vlasov_Maxwell;
+#include <GEMPIC_vlasov_maxwell.H>
 
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO 0
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION 1
+#define VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ 2
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
 {
     switch(funcSelect){
     case VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION :
       return 1.0 ;//+ 0.5 * std::cos(0.5 * x);
     case VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO :
       return 0.0 ;
+    case VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ:
+        return 1e-4*cos(t*x); // using t here as kx
     }
     return 0.0;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
-{
-    amrex::Real val = 1.0 ;//+ 0.5 * std::cos(0.5 * x);
-    return val;
-}
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
+AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real , amrex::Real )
 {
     amrex::Real val = 0.0;
     return val;
 }
 
-
-template<int vdim, int numspec, int degx, int degy, int degz, int degmw>
-void main_main ()
+template <int degx, int degy, int degz, int degmw, int vdim, bool electromagnetic, bool output>
+void vlasov_maxwell_run(std::string test_name, int propagator)
 {
-    const int strang_order = 2;
-    bool ctest = true;
-    gempic_parameters<vdim, numspec> VlMa;
-    VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_simulation",
+    std::string test_name_tmp = test_name + ".tmp.0";
+    std::string test_name_end = test_name + ".output";
 
-            {12,8,8});//{40,40,40}); // Number of cells:
-    VlMa.n_part_per_cell = {2000};//{20};
-    VlMa.n_steps = 10;
+    if (amrex::ParallelDescriptor::MyProc()==0) remove(test_name_tmp.c_str());
 
-    VlMa.propagator = 3;
-    VlMa.set_prop_related();
+    amrex::GpuArray<int, 2> funcSelectRho;
+    funcSelectRho[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelectRho[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    amrex::GpuArray<int, 3> funcSelectB;
+    funcSelectB[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
+    funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ;
 
-    VlMa.n_steps = 5;
-    VlMa.set_computed_params();
+    // Output for GEMPIC_SPACEDIM=3
+    //vlasov_maxwell_test<3, 1, 6, 5, 4, 4, 2, true>(3, test_name);
+    vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw, electromagnetic, output> sim;
+    sim.params.init_Nghost(degx,degy,degz);
+    sim.params.set_params(test_name, {20,20,20});
+    sim.params.propagator = propagator;
+    sim.params.strang_order = 2;
+    sim.params.set_prop_related();
+    sim.params.n_steps = 5;
+    sim.params.dt = 0.01;
+    sim.params.n_part_per_cell = {2000};
+    sim.params.set_computed_params();
+    sim.params.freq_slice = 1e6;
+    sim.ctest = true;
 
     std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
     for (int j=0; j<vdim; j++) {
@@ -84,65 +70,20 @@ void main_main ()
     VD[0].push_back(0.02/sqrt(2));
     VD[1].push_back(sqrt(12)*VD[0][0]);
     VD[2].push_back(VD[1][0]);
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
-
-    // ------------------------------------------------------------------------------
-    // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
-
-    // infrastructure
-    computational_domain infra;
-    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-
-    // maxwell_yee
-    maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
-    amrex::GpuArray<int, 2> funcSelect;
-    funcSelect[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    funcSelect[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    mw_yee.template init_rho_phi<degmw>(infra, funcSelect);
-
-    // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
-
-    amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
-    diagnostics<vdim, numspec,degx,degy,degz,degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
-
-    const bool output = false;
-    //------------------------------------------------------------------------------
-    // initialize particles & loop preparation:
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM, VlMa.VD, VlMa.VW, 0, wave_function);
-
-    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
-    funcSelectB[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, output>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, funcSelectB);
-
-  //  cuProfilerStart();
-  //  nvtxRangePush("time_loop");
-    //------------------------------------------------------------------------------
-    // timeloop
-    time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true,
-            false, // bool to activate profiling
-            output>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_zigzag_C2", strang_order);
-  //  nvtxRangePop();
-  //  cuProfilerStop();
-
+    sim.params.VM = VM;
+    sim.params.VD = VD;
+    sim.params.VW = VW;
+    sim.initialize_gempic_structures(funcSelectRho, funcSelectB);
+    sim.run_time_loop();
+    if (amrex::ParallelDescriptor::MyProc()==0) std::rename(test_name_tmp.c_str(), test_name_end.c_str());
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
+    std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
 
-    if (ParallelDescriptor::MyProc()==0) remove("test_vlasov_maxwell_hs_zigzag_C2.tmp.0");
+    vlasov_maxwell_run<2,2,2,2,3,true,false> (test_name, 3);
 
-    // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 1, 2, 2, 2, 2>();
-
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_vlasov_maxwell_hs_zigzag_C2.tmp.0", "test_vlasov_maxwell_hs_zigzag_C2.output");
     amrex::Finalize();
 }
-
-
-

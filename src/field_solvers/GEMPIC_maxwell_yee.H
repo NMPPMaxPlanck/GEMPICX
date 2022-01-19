@@ -19,6 +19,7 @@
 #include <AMReX_MLEBNodeFDLaplacian.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_ParmParse.H>
+#include <AMReX_Parser.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
@@ -55,6 +56,7 @@ template<int edim=GEMPIC_SPACEDIM, int bdim=GEMPIC_SPACEDIM>
 class maxwell_yee
 {
 public:
+    // typedef amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > e_form
 
     int nsteps; /** number of simulation steps */
     amrex::Real dt; /** stepsize*/
@@ -251,8 +253,7 @@ public:
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
                      amrex::MultiFab *MultiF
-                     ) {
-        double t_eval = t;
+                    ) {
         double kx = k[0];
         double ky = k[1];
         double kz = k[2];
@@ -289,10 +290,17 @@ public:
                 for (int j=lo[1];j<=hi[1];++j)
                     for (int i=lo[0];i<=hi[0];++i)
                 {
-                double x_eval, y_eval, z_eval;
+                double x_eval, y_eval, z_eval; 
+                double t_eval = t;
                 int err;
-                te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
-                te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
+                //te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
+                //te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
+                amrex::Parser parser(function_string);
+                parser.setConstant("kvarx", kx);
+                parser.setConstant("kvary", ky);
+                parser.setConstant("kvarz", kz);
+                parser.registerVariables({"x","y","z","t"});
+                auto parser_eval = parser.compile<4>();
 
                 amrex::GpuArray<amrex::Real, degree-1> x;
                 amrex::Real x_midpoint;
@@ -319,25 +327,29 @@ public:
                             x_eval = x[xd];
                             y_eval = y[yd];
                             z_eval = z[zd];
-                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(te_eval(function_parse));
+                            //val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(te_eval(function_parse));
+                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(parser_eval(x_eval,y_eval,z_eval,t_eval));
                         }
                     }
                 }
                 proj_arr(i,j,k) = val;
-                te_free(function_parse);
+                //te_free(function_parse);
             }//);
         }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
     template<int degree>
-    void projection ( amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                     amrex::Real t,
-                     computational_domain ifr,
-                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
-                     amrex::IndexType IndexVect,
-                     amrex::MultiFab *MultiF
-                     ) {
+    void projection ( //amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                    amrex::Parser parser,
+                    amrex::Real t,
+                    computational_domain ifr,
+                    amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
+                    amrex::IndexType IndexVect,
+                    amrex::MultiFab *MultiF
+                    ) {
+
+        auto function_to_project = parser.compile<4>();  // function with four arguments
 
         std::vector<amrex::Real> stencil;
         switch (degree) {
@@ -351,59 +363,147 @@ public:
             stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
             break;
         default: amrex::Print() << "degree not implemented" << std::endl;
-
         }
 
-
         int x_len[GEMPIC_SPACEDIM];
-        for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
-        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
-            const amrex::Box& bx = mfi.tilebox();
-            amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
-            //ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+        for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+            x_len[i] = (integrate[i] ? (degree - 1) : 1);
+        for (amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box &bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const &proj_arr = (*MultiF)[mfi].array();
+            // ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
-            for (int k=lo[2];k<=hi[2];++k)
-                for (int j=lo[1];j<=hi[1];++j)
-                    for (int i=lo[0];i<=hi[0];++i)
+            for (int k = lo[2]; k <= hi[2]; ++k)
             {
-                double x_eval, y_eval, z_eval;
-
-                amrex::GpuArray<amrex::Real, degree-1> x;
-                amrex::Real x_midpoint;
-                amrex::GpuArray<amrex::Real, degree-1> y;
-                amrex::Real y_midpoint;
-                amrex::GpuArray<amrex::Real, degree-1> z;
-                amrex::Real z_midpoint;
-
-                z_midpoint = ifr.plo[2] + ((double)k+0.5-0.5*(IndexVect)[2])*ifr.dx[2];
-                for (int d = 0; d<x_len[2]; d++) z[d] = z_midpoint + (d-((x_len[2]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[2]+1)/2.0-1);
-
-                y_midpoint = ifr.plo[1] + ((double)j+0.5-0.5*(IndexVect)[1])*ifr.dx[1];
-                for (int d = 0; d<x_len[1]; d++) y[d] = y_midpoint + (d-((x_len[1]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[1]+1)/2.0-1);
-
-                x_midpoint = ifr.plo[0] + ((double)i+0.5-0.5*(IndexVect)[0])*ifr.dx[0];
-                for (int d = 0; d<x_len[0]; d++) x[d] = x_midpoint + (d-((x_len[0]+1)/2.0-1))*ifr.dx[0]/pow(2.0,(x_len[0]+1)/2.0-1);
-
-                amrex::Real val = 0.0;
-                for (int zd = 0; zd<x_len[2];zd++)
+                for (int j = lo[1]; j <= hi[1]; ++j)
                 {
-                    for (int yd =0; yd<x_len[1]; yd++)
+                    for (int i = lo[0]; i <= hi[0]; ++i)
                     {
-                        for (int xd =0; xd<x_len[0]; xd++) {
-                            x_eval = x[xd];
-                            y_eval = y[yd];
-                            z_eval = z[zd];
-                            val+= (integrate[0]?stencil[xd]:1)*(integrate[1]?stencil[yd]:1)*(integrate[2]?stencil[zd]:1)*(function_to_project(x_eval, y_eval, z_eval,  t));
+                        double x_eval, y_eval, z_eval;
+
+                        amrex::GpuArray<amrex::Real, degree - 1> x;
+                        amrex::Real x_midpoint;
+                        amrex::GpuArray<amrex::Real, degree - 1> y;
+                        amrex::Real y_midpoint;
+                        amrex::GpuArray<amrex::Real, degree - 1> z;
+                        amrex::Real z_midpoint;
+
+                        z_midpoint = ifr.plo[2] + ((double)k + 0.5 - 0.5 * (IndexVect)[2]) * ifr.dx[2];
+                        for (int d = 0; d < x_len[2]; d++)
+                            z[d] = z_midpoint + (d - ((x_len[2] + 1) / 2.0 - 1)) * ifr.dx[0] / pow(2.0, (x_len[2] + 1) / 2.0 - 1);
+
+                        y_midpoint = ifr.plo[1] + ((double)j + 0.5 - 0.5 * (IndexVect)[1]) * ifr.dx[1];
+                        for (int d = 0; d < x_len[1]; d++)
+                            y[d] = y_midpoint + (d - ((x_len[1] + 1) / 2.0 - 1)) * ifr.dx[0] / pow(2.0, (x_len[1] + 1) / 2.0 - 1);
+
+                        x_midpoint = ifr.plo[0] + ((double)i + 0.5 - 0.5 * (IndexVect)[0]) * ifr.dx[0];
+                        for (int d = 0; d < x_len[0]; d++)
+                            x[d] = x_midpoint + (d - ((x_len[0] + 1) / 2.0 - 1)) * ifr.dx[0] / pow(2.0, (x_len[0] + 1) / 2.0 - 1);
+
+                        amrex::Real val = 0.0;
+                        for (int zd = 0; zd < x_len[2]; zd++)
+                        {
+                            for (int yd = 0; yd < x_len[1]; yd++)
+                            {
+                                for (int xd = 0; xd < x_len[0]; xd++)
+                                {
+                                    x_eval = x[xd];
+                                    y_eval = y[yd];
+                                    z_eval = z[zd];
+                                    val += (integrate[0] ? stencil[xd] : 1) * (integrate[1] ? stencil[yd] : 1) * (integrate[2] ? stencil[zd] : 1) * (function_to_project(x_eval, y_eval, z_eval, t));
+                                }
+                            }
                         }
-                    }
+                        proj_arr(i, j, k) = val;
+                    } //);
                 }
-                proj_arr(i,j,k) = val;
-            }//);
-	}
+            }
+        }
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
+template<int degree>
+    void projection (amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+                     amrex::Real t,
+                     computational_domain ifr,
+                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
+                     amrex::IndexType IndexVect,
+                     amrex::MultiFab *MultiF
+                    ) {
+        std::vector<amrex::Real> stencil;
+        switch (degree) {
+        case 2:
+            stencil = {1.0};
+            break;
+        case 4:
+            stencil = {1.0/6.0, 4.0/6.0, 1.0/6.0};
+            break;
+        case 6:
+            stencil = {1.0/12.0, 4.0/12.0, 2.0/12.0, 4.0/12.0, 1.0/12.0};
+            break;
+        default: amrex::Print() << "degree not implemented" << std::endl;
+        }
+
+        int x_len[GEMPIC_SPACEDIM];
+        for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+            x_len[i] = (integrate[i] ? (degree - 1) : 1);
+        for (amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box &bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const &proj_arr = (*MultiF)[mfi].array();
+            // ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
+            amrex::IntVect lo = {bx.smallEnd()};
+            amrex::IntVect hi = {bx.bigEnd()};
+            for (int k = lo[2]; k <= hi[2]; ++k)
+            {
+                for (int j = lo[1]; j <= hi[1]; ++j)
+                {
+                    for (int i = lo[0]; i <= hi[0]; ++i)
+                    {
+                        double x_eval, y_eval, z_eval;
+
+                        amrex::GpuArray<amrex::Real, degree - 1> x;
+                        amrex::Real x_midpoint;
+                        amrex::GpuArray<amrex::Real, degree - 1> y;
+                        amrex::Real y_midpoint;
+                        amrex::GpuArray<amrex::Real, degree - 1> z;
+                        amrex::Real z_midpoint;
+
+                        z_midpoint = ifr.plo[2] + ((double)k + 0.5 - 0.5 * (IndexVect)[2]) * ifr.dx[2];
+                        for (int d = 0; d < x_len[2]; d++)
+                            z[d] = z_midpoint + (d - ((x_len[2] + 1) / 2.0 - 1)) * ifr.dx[0] / pow(2.0, (x_len[2] + 1) / 2.0 - 1);
+
+                        y_midpoint = ifr.plo[1] + ((double)j + 0.5 - 0.5 * (IndexVect)[1]) * ifr.dx[1];
+                        for (int d = 0; d < x_len[1]; d++)
+                            y[d] = y_midpoint + (d - ((x_len[1] + 1) / 2.0 - 1)) * ifr.dx[0] / pow(2.0, (x_len[1] + 1) / 2.0 - 1);
+
+                        x_midpoint = ifr.plo[0] + ((double)i + 0.5 - 0.5 * (IndexVect)[0]) * ifr.dx[0];
+                        for (int d = 0; d < x_len[0]; d++)
+                            x[d] = x_midpoint + (d - ((x_len[0] + 1) / 2.0 - 1)) * ifr.dx[0] / pow(2.0, (x_len[0] + 1) / 2.0 - 1);
+
+                        amrex::Real val = 0.0;
+                        for (int zd = 0; zd < x_len[2]; zd++)
+                        {
+                            for (int yd = 0; yd < x_len[1]; yd++)
+                            {
+                                for (int xd = 0; xd < x_len[0]; xd++)
+                                {
+                                    x_eval = x[xd];
+                                    y_eval = y[yd];
+                                    z_eval = z[zd];
+                                    val += (integrate[0] ? stencil[xd] : 1) * (integrate[1] ? stencil[yd] : 1) * (integrate[2] ? stencil[zd] : 1) * (function_to_project(x_eval, y_eval, z_eval, t));
+                                }
+                            }
+                        }
+                        proj_arr(i, j, k) = val;
+                    } //);
+                }
+            }
+        }
+        (*MultiF).FillBoundary(ifr.geom.periodicity());
+    }
 
     template<int degree>
     void projection (amrex::Real t,
@@ -746,7 +846,7 @@ public:
                         vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i+1,j,k)-vecIn_1(i,j,k))/ifr.dx[0]);
                     }
                     else if ((edim == 2) & (GEMPIC_SPACEDIM == 2)){
-                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/ifr.dx[0] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/ifr.dx[0]);
+                        vecOut(i,j,k) = vecOut(i,j,k) - dt_step*((vecIn_1(i,j+1,k)-vecIn_1(i,j,k))/ifr.dx[1] - (vecIn_2(i+1,j,k)-vecIn_2(i,j,k))/ifr.dx[0]);
                     }
                     else if ((edim == 3) & (GEMPIC_SPACEDIM == 2)) {
                         if (i==2) {
@@ -1468,11 +1568,16 @@ public:
         std::string phi_str = "4 * 0.5 * cos(0.5 * x)";
         std::string rho_str = "0.0";
 
-        te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-        int varcount = 3;
-        te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars, varcount, &err);
-        te_expr *phi_parse = te_compile(phi_str.c_str(), read_vars, varcount, &err);
-        init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
+        //te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
+        //int varcount = 3;
+        //te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars, varcount, &err);
+        //te_expr *phi_parse = te_compile(phi_str.c_str(), read_vars, varcount, &err);
+        amrex::Parser rho_parse(rho_str);
+        rho_parse.registerVariables({"x","y","z"});
+        amrex::Parser phi_parse(phi_str);
+        phi_parse.registerVariables({"x","y","z"});
+        //init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
+        init_rho_phi(ifr, phi_parse, rho_parse);
 
         // Deposit charges in rho:
 
@@ -1544,11 +1649,16 @@ public:
         std::string phi_str = "4 * 0.5 * cos(0.5 * x)";
         std::string rho_str = "0.0";
 
-        te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-        int varcount = 3;
-        te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars, varcount, &err);
-        te_expr *phi_parse = te_compile(phi_str.c_str(), read_vars, varcount, &err);
-        init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
+        // te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
+        // int varcount = 3;
+        // te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars, varcount, &err);
+        // te_expr *phi_parse = te_compile(phi_str.c_str(), read_vars, varcount, &err);
+        amrex::Parser rho_parse(rho_str);
+        rho_parse.registerVariables({"x","y","z"});
+        amrex::Parser phi_parse(phi_str);
+        phi_parse.registerVariables({"x","y","z"});
+        //init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
+        init_rho_phi(ifr, phi_parse, rho_parse);
 
         // Deposit charges in rho:
 
