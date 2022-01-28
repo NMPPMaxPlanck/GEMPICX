@@ -1445,6 +1445,26 @@ template<int degree>
 
         phi.setVal(0.0); // initialise phi
         phi.FillBoundary(ifr.geom.periodicity());
+
+        // Substract the constant part
+        amrex::Real nm1 = 0.0;
+        int counter = 0;
+        for (amrex::MFIter mfi(rho,true); mfi.isValid(); ++mfi) {
+            amrex::Box const& bx = mfi.growntilebox(0);
+            auto const& a = rho.const_array(mfi);
+            amrex::Array4<int const> const& mfab = nodal_Mask->const_array(mfi);
+            AMREX_LOOP_3D(bx, i, j, k,
+            {
+              if (mfab(i,j,k)){
+                nm1 += a(i,j,k,0);
+                                  counter++;
+                              }
+            });
+        }
+        amrex::ParallelAllReduce::Sum(nm1, amrex::ParallelContext::CommunicatorSub());
+        amrex::ParallelAllReduce::Sum(counter, amrex::ParallelContext::CommunicatorSub());
+        rho.plus(-nm1/((double)counter),Nghost);
+
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
 
 #endif
