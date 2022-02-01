@@ -121,7 +121,7 @@ public :
                 }
             } else {
                 for (int spec=0; spec<numspec; spec++) {
-                    params.read_particle_spec(spec);
+                    // params.read_particle_spec(spec); Does not work with AMReX parser
                     init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.k, params.WF, params.VM, params.VD, params.VW, spec);
                 }
             }
