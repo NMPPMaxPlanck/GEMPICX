@@ -48,7 +48,6 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     sim.params.init_Nghost(degx,degy,degz);
     sim.params.set_params(test_name, {12,8,8});
     sim.params.propagator = propagator;
-    sim.params.set_prop_related();
     sim.params.n_steps = 5;
     sim.params.set_computed_params();
     sim.ctest = true;
