@@ -1,0 +1,58 @@
+# General setting
+sim_name = "Two_Stream"
+
+# Grid parameters
+n_cell_vector = 24 8 8
+max_grid_size_vector = 4 4 4
+domain_lo = 0.0 0.25 0.75 # low end of computational domain (3D)
+domain_hi = 1.5 2.5 3.5 # high end of computational domain (3D)
+is_periodic_vector = 0 1 1 # 1 -> periodic, 0 -> else
+# wave vector
+k= 0.2 0.3 0.4 # 1.25 for Weibel, 0.5 for Landau
+
+# Time parameters
+n_steps = 50000
+dt = 0.1
+propagator = 0 # 0 - Boris-FD, 1 - HS-FEM, 3 - HS
+# Tolerances for iterative solver (if needed by the chosen propagator)
+tolerance_particles = 1.e-10
+
+# Particle parameters
+species0.n_part_per_cell = 100 
+species0.charge = -1.0
+species0.mass = 1.0
+species1.charge = 1.0
+species1.n_part_per_cell = 100 
+
+# Gaussian parameters
+species0.num_gaussian = 2
+species0.vMean_g0 = 0 0 0
+species0.vThermal_g0 = 1.0 1.0 1.0
+species0.vWeight_g0 = 0.75 0.75 0.75
+species0.vMean_g1 = -2.4 0 0
+species0.vThermal_g1 = 1.0 1.0 1.0
+species0.vWeight_g1 = 0.25 0.25 0.25
+
+species1.num_gaussian = 1
+species1.vMean_g0 = 2.4 0 0
+species1.vThermal_g0 = 1.0 1.0 1.0
+species1.vWeight_g0 = 0.5 0.5 0.5
+
+# Diagnostics
+freq_x = 100001 
+freq_v = 100001 
+freq_slice = 100001
+
+# Function parameters
+WF = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"
+Bx = "0.0"
+By = "0.0"
+Bz = "0.0"
+phi = "4 * 0.5 * cos(0.5 * x)"
+
+# Restart parameters
+restart = 0
+checkpoint_file = "Checkpoint/Weibel_2"
+curr_step = 100
+
+
