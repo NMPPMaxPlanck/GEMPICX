@@ -11,23 +11,26 @@ CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:="Release"}
 
 GEMPIC_BASE=`readlink -f ..`
 
+git submodule init
+git submodule update
+
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 # now download amrex
-git clone https://github.com/AMReX-Codes/amrex.git
+#git clone https://github.com/AMReX-Codes/amrex.git
 
 # ---- 3D ----
 cp $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee_3D.output $GEMPIC_BASE/src/field_solvers/testing/test_maxwell_yee.expected_output
 
 
 # install amrex
-rm -rf build_amrex
-mkdir build_amrex
-cd build_amrex
-cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $BUILD_DIR/amrex
-make install
-cd ..
+#rm -rf build_amrex
+#mkdir build_amrex
+#cd build_amrex
+#cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $BUILD_DIR/amrex
+#make install
+#cd ..
 
 #export CC=gcc
 #export CXX=g++
