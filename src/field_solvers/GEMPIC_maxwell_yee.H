@@ -15,7 +15,8 @@
 #include <AMReX_MFIter.H>
 #include <AMReX_MLMG.H>
 //#include <third_party/AMReX_MLNodeLap_3D_K.H>
-#include <AMReX_MLNodeLaplacian.H>
+//#include <AMReX_MLEBNodeFDLaplacian.H>
+#include <AMReX_MLEBNodeFDLaplacian.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Parser.H>
@@ -26,7 +27,6 @@
 
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_computational_domain.H>
-#include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
@@ -88,7 +88,8 @@ private:
 
     int Ncomp; /** Number of components for each MultiFab. Is 1 because the different field components are differently staggered */
     amrex::Real time;
-    amrex::MultiFab sigma; //for Poisson
+    //amrex::MultiFab sigma; //for Poisson
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> sigma = {-1.,-1.,-1.};
 
 public:
 
@@ -169,8 +170,8 @@ public:
         rho_gauss_law.define(nba        , ifr.distriMap, 1, Nghost);
         phi_init.define(nba        , ifr.distriMap, 1, Nghost);
         // sigma is cell-centered (default, so no need to pass IndexVector)
-        sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
-        sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
+        //sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
+        //sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
 
         nsteps = nsteps_in;
 
@@ -1423,7 +1424,8 @@ template<int degree>
 
         amrex::LPInfo lp_info;
         lp_info.setMaxCoarseningLevel(max_coarsening_level);
-        amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}, lp_info); // linear operator class
+        //amrex::MLNodeLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}, lp_info); // linear operator class
+        amrex::MLEBNodeFDLaplacian linop({ifr.geom}, {ifr.grid}, {ifr.distriMap}, lp_info);//, {}); // linear operator class
 
         linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for lower ends
                            amrex::LinOpBCType::Periodic,
@@ -1431,7 +1433,7 @@ template<int degree>
         {AMREX_D_DECL(amrex::LinOpBCType::Periodic, // for higher ends
          amrex::LinOpBCType::Periodic,
          amrex::LinOpBCType::Periodic)});
-        linop.setSigma(0, sigma); // first argument: level-nr
+        linop.setSigma(sigma); // first argument: level-nr
 
         amrex::MLMG mlmg(linop); // solver class
         mlmg.setMaxIter(max_iter);
@@ -1443,6 +1445,26 @@ template<int degree>
 
         phi.setVal(0.0); // initialise phi
         phi.FillBoundary(ifr.geom.periodicity());
+
+        // Substract the constant part
+        amrex::Real nm1 = 0.0;
+        int counter = 0;
+        for (amrex::MFIter mfi(rho,true); mfi.isValid(); ++mfi) {
+            amrex::Box const& bx = mfi.growntilebox(0);
+            auto const& a = rho.const_array(mfi);
+            amrex::Array4<int const> const& mfab = nodal_Mask->const_array(mfi);
+            AMREX_LOOP_3D(bx, i, j, k,
+            {
+              if (mfab(i,j,k)){
+                nm1 += a(i,j,k,0);
+                                  counter++;
+                              }
+            });
+        }
+        amrex::ParallelAllReduce::Sum(nm1, amrex::ParallelContext::CommunicatorSub());
+        amrex::ParallelAllReduce::Sum(counter, amrex::ParallelContext::CommunicatorSub());
+        rho.plus(-nm1/((double)counter),Nghost);
+
         mlmg.solve({&phi}, {&rho}, reltol, 0.0);
 
 #endif
