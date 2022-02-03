@@ -21,6 +21,9 @@ void test_read()
     gempic_parameters<vdim, numspec> params;
     params.read_pp_params();
 
+    // Print empty line
+    amrex::AllPrintToFile("test_parser.tmp") << "\n";
+
     // Print data members in gempic_parameters
     amrex::AllPrintToFile("test_parser.tmp") << params.sim_name << "\n";
     amrex::AllPrintToFile("test_parser.tmp") << params.real_box << "\n";

@@ -39,7 +39,6 @@ namespace Gempic
         class gempic_parameters
         {
         public:
-            // compile time parameters
             int Nghost;
 
             // parameters from main input file
@@ -68,10 +67,13 @@ namespace Gempic
             amrex::GpuArray<amrex::Real, numspec> charge = {-1};
             amrex::GpuArray<amrex::Real, numspec> mass = {1};
             // Initial velocity distribution (sum of gaussians)
-            amrex::GpuArray<amrex::Real, numspec> num_gaussians;
+            amrex::Vector<int> num_gaussians = {1};
             std::vector<std::vector<std::vector<amrex::Real>>> VM{}; // species, gaussian, vdim
             std::vector<std::vector<std::vector<amrex::Real>>> VD{};
             std::vector<std::vector<std::vector<amrex::Real>>> VW{};
+            // std::array<std::vector<std::vector<amrex::Real>>, vdim> VM{};
+            // std::array<std::vector<std::vector<amrex::Real>>, vdim> VD{};
+            // std::array<std::vector<std::vector<amrex::Real>>, vdim> VW{};
 
             std::string WF = "1.0"; // particle density
             amrex::Parser WFparse;
@@ -205,6 +207,7 @@ namespace Gempic
                 pp.query("energy_b_scaling", energy_b_scaling);
 
                 // set dependent parameters
+                set_prop_related();
                 set_computed_params();
             }
 
@@ -226,13 +229,18 @@ namespace Gempic
                             std::string BY = "0.0",
                             std::string BZ = "1e-3 * cos(kvarx * x)",
                             std::string PHI = "4 * 0.5 * cos(0.5 * x)",
-                            amrex::GpuArray<int, numspec> NG = {1},
+                            amrex::Vector<int> NG = {1},
+                            // amrex::GpuArray<int, numspec> NG = {1},
+                            // int NG = 1,
                             int PROP = 0,
                             amrex::Real TOL_P = 1.e-10,
                             int MAX_C = 30,
                             int RST = 0,
                             std::string CF = "",
-                            int CD = 0)
+                            int CD = 0,
+                            std::vector<std::vector<std::vector<amrex::Real>>> VM_in = {{{0.0, 0.0, 0.0}}},
+                            std::vector<std::vector<std::vector<amrex::Real>>> VD_in = {{{0.01414213562, 0.04898979486, 0.04898979486}}},
+                            std::vector<std::vector<std::vector<amrex::Real>>> VW_in = {{{1.0, 1.0, 1.0}}})
             {
                 sim_name = sm;
                 n_cell = n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
@@ -257,14 +265,17 @@ namespace Gempic
                 Bz = BZ;
                 phi = PHI;
                 for (int i = 0; i < numspec; i++)
-                    num_gaussians[i] = NG[i];
+                    num_gaussians.push_back(NG[i]);
                 propagator = PROP;
                 tolerance_particles = TOL_P;
                 restart = RST;
                 checkpoint_file = CF;
                 curr_step = CD;
+                VM = VM_in;
+                VD = VD_in;
+                VW = VW_in;
 
-                set_computed_params();
+                set_prop_related();
             }
 
             void set_params_Weibel()
@@ -297,34 +308,17 @@ namespace Gempic
                 VM = {{{0.0, 0.0, 0.0}}};
                 VD = {{{0.01414213562, 0.04898979486, 0.04898979486}}};
                 VW = {{{1.0, 1.0, 1.0}}};
+                // for (int i = 0; i < vdim; i++)
+                // {
+                //     VM[i] = {{0.0}};
+                //     VW[i] = {{1.0}};
+                // }
+                // VD[0] = {{0.01414213562}};
+                // VD[1] = {{0.04898979486}};
+                // VD[2] = {{0.04898979486}};
             }
 
-            // void set_prop_related()
-            // {
-            //     switch (propagator)
-            //     {
-            //     case 0:
-            //         time_staggered = true;
-            //         break;
-            //     case 1:
-            //         time_staggered = false;
-            //         Nghost += 3;
-            //         break;
-            //     case 2:
-            //         time_staggered = false;
-            //         Nghost += 3;
-            //         break;
-            //     case 3:
-            //         time_staggered = false;
-            //         Nghost += 3;
-            //         break;
-            //     default:
-            //         break;
-            //     }
-            // }
-
-            void
-            set_computed_params()
+            void set_prop_related()
             {
                 switch (propagator)
                 {
@@ -346,7 +340,11 @@ namespace Gempic
                 default:
                     break;
                 }
+            }
 
+            void
+            set_computed_params()
+            {
                 nPartCellTot = 0;
                 for (int spec = 0; spec < numspec; spec++)
                 {

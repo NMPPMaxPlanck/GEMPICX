@@ -48,17 +48,13 @@ void main_main()
     // std::array<std::vector<amrex::Real>, vdim> VM{};
     // std::array<std::vector<amrex::Real>, vdim> VD{};
     // std::array<std::vector<amrex::Real>, vdim> VW{};
+    // std::vector<std::vector<amrex::Real>> VM = {{0.0}, {0.0}, {0.0}};
+    // std::vector<std::vector<amrex::Real>> VD = {{0.014142135623730949}, {0.04898979485566356}, {0.04898979485566356}};
+    // std::vector<std::vector<amrex::Real>> VW = {{1.0}, {1.0}, {1.0}};
 
-    // for (int j=0; j<vdim; j++) {
-    //     VM[j].push_back(0.0);
-    //     VW[j].push_back(1.0);
-    // }
-    // VD[0].push_back(0.02/sqrt(2));
-    // VD[1].push_back(sqrt(12)*VD[0][0]);
-    // VD[2].push_back(VD[1][0]);
-    std::vector<std::vector<std::vector<amrex::Real>>> VM = {{{0.0, 0.0, 0.0}}};
-    std::vector<std::vector<std::vector<amrex::Real>>> VD = {{{0.01414213562, 0.04898979486, 0.04898979486}}};
-    std::vector<std::vector<std::vector<amrex::Real>>> VW = {{{1.0, 1.0, 1.0}}};
+    std::vector<std::vector<amrex::Real>> VM = {{0.0, 0.0, 0.0}};
+    std::vector<std::vector<amrex::Real>> VD = {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}};
+    std::vector<std::vector<amrex::Real>> VW = {{1.0, 1.0, 1.0}};
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0], n_cell_vector[1], n_cell_vector[2]));
@@ -71,7 +67,7 @@ void main_main()
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("checkpoint_ctest", n_cell_vector, n_part_per_cell, n_steps, 10, 10,
                     10, is_periodic_vector, max_grid_size, dt, charge, mass, k,
-                    " ", "0", "0", "0", " ", {1}, 0, tolerance_particles);
+                    "0", "0", "0", "0", "0", {1}, 0, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure

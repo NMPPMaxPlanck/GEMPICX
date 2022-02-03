@@ -73,7 +73,7 @@ public :
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
-        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM, params.VD, params.VW, 0, wave_function);
+        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM[0], params.VD[0], params.VW[0], 0, wave_function);
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
 
@@ -122,7 +122,7 @@ public :
             } else {
                 for (int spec=0; spec<numspec; spec++) {
                     // params.read_particle_spec(spec); Does not work with AMReX parser
-                    init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.k, params.WF, params.VM, params.VD, params.VW, spec);
+                    init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.k, params.WF, params.VM[spec], params.VD[spec], params.VW[spec], spec);
                 }
             }
 

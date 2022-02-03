@@ -128,9 +128,15 @@ void main_main ()
     amrex::GpuArray<amrex::Real,vdim+2> vMoment;
 
     int num_gaussian = 2; // velocity distribution is sum of 2 Gaussians
-    vMean = {{0.0,0.0,0.0},{1.0,1.0,1.0}};
+    vMean = {{0.0,0.0,0.0},{2.0,2.0,2.0}};
     vThermal = {{2.0,2.0,2.0},{1.0,1.0,1.0}};
     vWeight = {{0.75,0.75,0.75},{0.25,0.25,0.25}};
+
+    // int num_gaussian = 1; // velocity distribution is sum of 2 Gaussians
+    // vMean = {{0.0,0.0,0.0}};
+    // vThermal = {{2.0,2.0,2.0}};
+    // vWeight = {{1.0,1.0,1.0}};
+
     // for (int i = 0; i < vdim; i++) {
     //     // first Gaussian
     //     vMean[i].push_back(0.0);
@@ -177,8 +183,8 @@ void main_main ()
     for (int i=0; i < vdim; i++) {
         amrex::Real mom1 = 0;
         for (int j=0; j<num_gaussian; j++) {
-            mom1 += vWeight[i][j]*vMean[i][j];
-            mom2 +=  vWeight[i][j] * (std::pow(vThermal[i][j],2) + std::pow(vMean[i][j],2));
+            mom1 += vWeight[j][i]*vMean[j][i];
+            mom2 += vWeight[j][i] * (std::pow(vThermal[j][i],2) + std::pow(vMean[j][i],2));
         }
         amrex::AllPrintToFile("test_sampler.tmp") << " " << mom1;  
     }
