@@ -13,10 +13,8 @@ if (EXISTS  ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
     )
 else()
   message("No input file ${_test}")
-  #ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     COMMAND mpirun -np 4 ${_test}
-    # COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp && mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.tmp ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
     COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
@@ -45,7 +43,6 @@ else()
     fi
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output 
     ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    #${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
     )
   # add the target for this output file to the dependencies of this test
   ADD_CUSTOM_TARGET(${_test}.diff
