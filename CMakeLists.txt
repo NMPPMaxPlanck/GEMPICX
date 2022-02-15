@@ -24,7 +24,7 @@ if (USE_OMP)
   endif()
 endif()
 
-find_package(MPI REQUIRED)
+find_package(MPI REQUIRED CXX)
 
 message("*****MPI path ${MPI_CUDA_HEADER_DIR}, ${MPI_CXX_HEADER_DIR}")
 # Set compiler flags
