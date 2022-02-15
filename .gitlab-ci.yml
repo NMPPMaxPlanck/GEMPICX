@@ -10,6 +10,8 @@ ubuntu2004_openmpi_3D:
     - docker
     
 image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
+variables:
+  GIT_SUBMODULE_STRATEGY: 'recursive'
 
 stages:
   - build
@@ -34,21 +36,20 @@ build-gcc-gpu:
   stage: build
   tags:
     - gpu 
-    - kako
   script:
     - cd scripts
-    - ./compile_mpcdf.sh
+    - ./compile_gpu_raven-gcc.sh
   artifacts:
     paths:
       - build
     expire_in: 1 hour
     when: always
 
+# if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 
 test-gcc-gpu:
   stage: test
   tags:
     - gpu 
-    - kako
   script:
     - module purge
     - module load gcc/10
