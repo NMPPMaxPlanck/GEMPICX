@@ -10,6 +10,8 @@ ubuntu2004_openmpi_3D:
     - docker
     
 image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
+variables:
+  GIT_SUBMODULE_STRATEGY: 'recursive'
 
 stages:
   - build
