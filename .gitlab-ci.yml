@@ -34,7 +34,6 @@ build-gcc-gpu:
   stage: build
   tags:
     - gpu 
-    - kako
   script:
     - cd scripts
     - ./compile_mpcdf.sh
@@ -44,11 +43,11 @@ build-gcc-gpu:
     expire_in: 1 hour
     when: always
 
+# if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 
 test-gcc-gpu:
   stage: test
   tags:
     - gpu 
-    - kako
   script:
     - module purge
     - module load gcc/10
