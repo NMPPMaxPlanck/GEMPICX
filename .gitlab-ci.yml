@@ -48,6 +48,7 @@ test-gcc-gpu:
   stage: test
   tags:
     - gpu 
+    - kako
   script:
     - module purge
     - module load gcc/10
