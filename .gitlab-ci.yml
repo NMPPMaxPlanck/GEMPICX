@@ -10,55 +10,20 @@ ubuntu2004_openmpi_3D:
     - docker
     
 image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
-variables:
-  GIT_SUBMODULE_STRATEGY: 'recursive'
-
-stages:
-  - build
-  - test
-
-#build-intel:
-#  stage: build
-#  tags:
-    #- local
-#    - docker
-#    - avx2
-#  script:
-#    - mkdir -p ./build
-#    - configure/mpcdf-intel.sh
-#  artifacts:
-#    paths:
-#      - build/bsl6d_intel_cpu
-#    expire_in: 1 hour
-#    when: always
 
 build-gcc-gpu:
-  stage: build
   tags:
     - gpu 
   script:
     - cd scripts
     - ./compile_gpu_raven-gcc.sh
-  artifacts:
-    paths:
-      - build
-    expire_in: 1 hour
-    when: always
-
-# if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 
-test-gcc-gpu:
-  stage: test
-  tags:
-    - gpu 
-  script:
     - module purge
     - module load gcc/10
     - module load cuda/11.2
     - module load cmake/3.22
     - module load openmpi
-    - cd build/gempic
+    - cd ../build/gempic
     - ctest --output-on-failure
     - exit
-  needs:
-    - job: build-gcc-gpu
-      artifacts: true
+
+# if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 
