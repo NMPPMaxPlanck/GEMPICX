@@ -1,7 +1,7 @@
 source /etc/profile.d/modules.sh
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
-AMREX_DIRECTORY=`pwd`/../../amrex
+AMREX_DIRECTORY=~/Codes/amrex
 AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
 
 echo $SOURCE_DIRECTORY
