@@ -12,6 +12,7 @@ module load gcc/10
 module load cmake/3.22
 module load cuda/11.2
 module load openmpi
+module load numdiff/5.9
 
 export AMREX_CUDA_ARCH=Ampere
 
