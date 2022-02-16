@@ -186,8 +186,7 @@ void init_particles_full_domain(computational_domain infra,
     double kx = k_vec[0];
     double ky = k_vec[1];
     double kz = k_vec[2];
-    int err;
-
+    
     amrex::Parser parser(wave_function);
     parser.setConstant("kvarx", kx);
     parser.setConstant("kvary", ky);
