@@ -117,7 +117,6 @@ void main_main ()
     //------------------------------------------------------------------------------
     gempic_parameters<vdim, numspec> gpParam;
     //gpParam.init_Nghost(1, 1, 1);
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     amrex::IntVect num_cells = {AMREX_D_DECL(4,4,4)};
     std::array<int, numspec> n_part_per_cell = {1000};
     int species = 0; // only one species
@@ -125,7 +124,6 @@ void main_main ()
     std::array<std::vector<amrex::Real>, vdim> vMean{};
     std::array<std::vector<amrex::Real>, vdim> vThermal{}; 
     std::array<std::vector<amrex::Real>, vdim> vWeight{}; 
-    amrex::GpuArray<amrex::Real,vdim+2> vMoment;
 
     int num_gaussian = 2; // velocity distribution is sum of 2 Gaussians
     for (int i = 0; i < vdim; i++) {
