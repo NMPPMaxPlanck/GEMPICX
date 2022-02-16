@@ -1,8 +1,6 @@
 #ifndef MAXWELL_YEE_H_
 #define MAXWELL_YEE_H_
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -257,7 +255,6 @@ public:
         double kx = k[0];
         double ky = k[1];
         double kz = k[2];
-        int varcount = 7;
 
         std::vector<amrex::Real> stencil;
         switch (degree) {
@@ -292,9 +289,6 @@ public:
                 {
                 double x_eval, y_eval, z_eval; 
                 double t_eval = t;
-                int err;
-                //te_variable read_vars[7] = {{"x", &x_eval}, {"y", &y_eval}, {"z", &z_eval}, {"t", &t_eval}, {"kvarx", &kx}, {"kvary", &ky}, {"kvarz", &kz}};
-                //te_expr *function_parse = te_compile(function_string.c_str(), read_vars, varcount, &err);
                 amrex::Parser parser(function_string);
                 parser.setConstant("kvarx", kx);
                 parser.setConstant("kvary", ky);
@@ -1756,7 +1750,7 @@ template<int degree>
     }
 
      /**
-     * Compute norm of errors of E and B field from function with exact solution (without tinyexpr)
+     * Compute norm of errors of E and B field from function with exact solution
      */
     template<int degree>
     amrex::GpuArray<amrex::Real,edim+bdim> computeError(amrex::Real (*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
@@ -1795,7 +1789,7 @@ template<int degree>
 
 
     /**
-     * Compute norm of errors of E and B field from function with exact solution (without tinyexpr)
+     * Compute norm of errors of E and B field from function with exact solution
      */
     template<int degree>
     amrex::GpuArray<amrex::Real,edim+bdim> computeError(bool bool_B,

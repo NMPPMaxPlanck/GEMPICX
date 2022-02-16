@@ -1,8 +1,6 @@
 #ifndef LOOP_PREPARATION_H_
 #define LOOP_PREPARATION_H_
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>

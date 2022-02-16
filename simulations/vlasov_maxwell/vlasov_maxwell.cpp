@@ -18,7 +18,6 @@ int main(int argc, char* argv[])
 
     vlasov_maxwell_simulation<3,1,2,2,2,2> vlasovMaxwell;
     vlasovMaxwell.initialize_vlasov_maxwell_from_file();
-    vlasovMaxwell.initialize_gempic_structures_tinyexpr();
     vlasovMaxwell.run_time_loop();
 
 #endif

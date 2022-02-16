@@ -1,8 +1,6 @@
 #ifndef VLASOV_MAXWELL_H_
 #define VLASOV_MAXWELL_H_
 
-#include <tinyexpr.h>
-
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
