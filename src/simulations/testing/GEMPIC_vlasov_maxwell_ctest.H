@@ -52,20 +52,9 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     sim.params.set_computed_params();
     sim.ctest = true;
 
-    // std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
-    // for (int j=0; j<vdim; j++) {
-    //     VM[j].push_back(0.0);
-    //     VW[j].push_back(1.0);
-    // }
-    // VD[0].push_back(0.02/sqrt(2));
-    // VD[1].push_back(sqrt(12)*VD[0][0]);
-    // // VD[2].push_back(VD[1][0]);
-    // sim.params.VM = VM;
-    // sim.params.VD = VD;
-    // sim.params.VW = VW;
     sim.params.VM = {{{0.0,0.0,0.0}}};
-    sim.params.VD =  {{{0.01414213562, 0.04898979486, 0.04898979486}}};
-    sim.params.VW = {{{1.0,1.0,1.0}}};
+    sim.params.VD =  {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
+    sim.params.VW = {{1.0}};
     sim.initialize_gempic_structures(funcSelectRho, funcSelectB);
     sim.run_time_loop();
     if (amrex::ParallelDescriptor::MyProc()==0) std::rename(test_name_tmp.c_str(), test_name_end.c_str());

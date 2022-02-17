@@ -62,14 +62,10 @@ void main_main ()
     VlMa.n_steps = 10;
     VlMa.set_computed_params();
 
-    std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
-    for (int j=0; j<vdim; j++) {
-        VM[j].push_back(0.0);
-        VW[j].push_back(1.0);
-    }
-    VD[0].push_back(0.02/sqrt(2));
-    VD[1].push_back(sqrt(12)*VD[0][0]);
-    VD[2].push_back(VD[1][0]);
+  // Weibel parameters
+    std::vector<std::vector<std::vector<amrex::Real>>> VM {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> VD {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
+    std::vector<std::vector<amrex::Real>> VW {{1.0}};
     VlMa.VM = VM;
     VlMa.VD = VD;
     VlMa.VW = VW;

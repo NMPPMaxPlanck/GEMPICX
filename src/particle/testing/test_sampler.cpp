@@ -123,28 +123,12 @@ void main_main ()
 
     std::vector<std::vector<amrex::Real>> vMean{};
     std::vector<std::vector<amrex::Real>> vThermal{}; 
-    std::vector<std::vector<amrex::Real>> vWeight{}; 
+    std::vector<amrex::Real> vWeight{}; 
 
     int num_gaussian = 2; // velocity distribution is sum of 2 Gaussians
     vMean = {{0.0,0.0,0.0},{2.0,2.0,2.0}};
     vThermal = {{2.0,2.0,2.0},{1.0,1.0,1.0}};
-    vWeight = {{0.75,0.75,0.75},{0.25,0.25,0.25}};
-
-    // int num_gaussian = 1; // velocity distribution is sum of 2 Gaussians
-    // vMean = {{0.0,0.0,0.0}};
-    // vThermal = {{2.0,2.0,2.0}};
-    // vWeight = {{1.0,1.0,1.0}};
-
-    // for (int i = 0; i < vdim; i++) {
-    //     // first Gaussian
-    //     vMean[i].push_back(0.0);
-    //     vThermal[i].push_back(2.0);
-    //     vWeight[i].push_back(0.75);
-    //     // second Gaussian
-    //     vMean[i].push_back(2.0);
-    //     vThermal[i].push_back(1.0);
-    //     vWeight[i].push_back(0.25);
-    // }
+    vWeight = {0.75,0.25};
 
     gpParam.set_params("sampler_ctest", num_cells, n_part_per_cell);
     double twopi = 4 * asin(1.0);
@@ -181,8 +165,8 @@ void main_main ()
     for (int i=0; i < vdim; i++) {
         amrex::Real mom1 = 0;
         for (int j=0; j<num_gaussian; j++) {
-            mom1 += vWeight[j][i]*vMean[j][i];
-            mom2 += vWeight[j][i] * (std::pow(vThermal[j][i],2) + std::pow(vMean[j][i],2));
+            mom1 += vWeight[j]*vMean[j][i];
+            mom2 += vWeight[j] * (std::pow(vThermal[j][i],2) + std::pow(vMean[j][i],2));
         }
         amrex::AllPrintToFile("test_sampler.tmp") << " " << mom1;  
     }

@@ -45,8 +45,8 @@ void test_read(std::ofstream& outputFile)
             {
                 amrex::Print(outputFile) << params.VM[i][j][k] << "\n";
                 amrex::Print(outputFile) << params.VD[i][j][k] << "\n";
-                amrex::Print(outputFile) << params.VW[i][j][k] << "\n";
             }
+            amrex::Print(outputFile) << params.VW[i][j] << "\n";
         }
     }
     amrex::Print(outputFile) << params.WF << "\n";

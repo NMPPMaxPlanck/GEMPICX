@@ -90,27 +90,15 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     // FIRST SPECIES
-    // std::array<std::vector<amrex::Real>, vdim> VM{}, VD{}, VW{};
-    // for (int j=0; j<vdim; j++) {
-    //     VM[j].push_back(0.0);
-    //     VD[j].push_back(1.0);
-    //     VW[j].push_back(1.0);
-    // }
     std::vector<std::vector<amrex::Real>> VM = {{0.0, 0.0, 0.0}};
     std::vector<std::vector<amrex::Real>> VD = {{1.0, 1.0, 1.0}};
-    std::vector<std::vector<amrex::Real>> VW = {{1.0, 1.0, 1.0}};
+    std::vector<amrex::Real> VW = {1.0};
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VM, VD, VW, 0);
 
     // SECOND SPECIES
-    // std::array<std::vector<amrex::Real>, vdim> VM2{}, VD2{}, VW2{};
-    // for (int j=0; j<vdim; j++) {
-    //     VM2[j].push_back(0.0);
-    //     VD2[j].push_back(0.00070710678118654751);
-    //     VW2[j].push_back(1.0);
-    // }
     VM = {{0.0, 0.0, 0.0}};
-    VD = {{{0.00070710678118654751,0.00070710678118654751,0.00070710678118654751}}};
-    VW = {{1.0, 1.0, 1.0}};
+    VD = {{0.00070710678118654751,0.00070710678118654751,0.00070710678118654751}};
+    VW = {1.0};
     VlMa.WF = "1.0 + 0.2 * cos(kvarx * x)";
     init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, VlMa.WF, VM, VD, VW, 1);
 

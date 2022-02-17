@@ -14,7 +14,7 @@ num_gaussians = 1
 
 # Gaussian parameters
 velocity_mean_0 = 0.0 0.0
-velocity_deviation_0 = 0.01414213562 0.04898979486
+velocity_deviation_0 = 0.014142135623730949 0.04898979485566356
 velocity_weight_0 = 1.0 1.0
 
 # wave vector

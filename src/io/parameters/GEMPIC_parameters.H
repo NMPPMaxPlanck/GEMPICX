@@ -70,10 +70,7 @@ namespace Gempic
             amrex::Vector<int> num_gaussians = {1};
             std::vector<std::vector<std::vector<amrex::Real>>> VM{}; // species, gaussian, vdim
             std::vector<std::vector<std::vector<amrex::Real>>> VD{};
-            std::vector<std::vector<std::vector<amrex::Real>>> VW{};
-            // std::array<std::vector<std::vector<amrex::Real>>, vdim> VM{};
-            // std::array<std::vector<std::vector<amrex::Real>>, vdim> VD{};
-            // std::array<std::vector<std::vector<amrex::Real>>, vdim> VW{};
+            std::vector<std::vector<amrex::Real>> VW{};
 
             std::string WF = "1.0"; // particle density
             amrex::Parser WFparse;
@@ -157,7 +154,8 @@ namespace Gempic
 
                 for (int spec = 0; spec < numspec; spec++)
                 {
-                    std::vector<std::vector<amrex::Real>> vvm, vvt, vvw;
+                    std::vector<std::vector<amrex::Real>> vvm, vvt;
+                    std::vector<amrex::Real> vvw;
                     std::string specString = "species" + std::to_string(spec);
                     amrex::ParmParse ppSpec(specString);
                     ppSpec.query("n_part_per_cell", n_part_per_cell[spec]);
@@ -166,7 +164,8 @@ namespace Gempic
                     ppSpec.query("num_gaussian", num_gaussians[spec]);
                     for (int ng = 0; ng < num_gaussians[spec]; ng++)
                     {
-                        std::vector<amrex::Real> vm, vt, vw;
+                        std::vector<amrex::Real> vm, vt;
+                        amrex::Real vw;
                         std::string vmString = "vMean_g" + std::to_string(ng);
                         ppSpec.queryarr(vmString.c_str(), vm);
                         vvm.push_back(vm);
@@ -174,7 +173,7 @@ namespace Gempic
                         ppSpec.queryarr(vtString.c_str(), vt);
                         vvt.push_back(vt);
                         std::string vwString = "vWeight_g" + std::to_string(ng);
-                        ppSpec.queryarr(vwString.c_str(), vw);
+                        ppSpec.query(vwString.c_str(), vw);
                         vvw.push_back(vw);
                     }
                     VM.push_back(vvm);
@@ -239,8 +238,8 @@ namespace Gempic
                             std::string CF = "",
                             int CD = 0,
                             std::vector<std::vector<std::vector<amrex::Real>>> VM_in = {{{0.0, 0.0, 0.0}}},
-                            std::vector<std::vector<std::vector<amrex::Real>>> VD_in = {{{0.01414213562, 0.04898979486, 0.04898979486}}},
-                            std::vector<std::vector<std::vector<amrex::Real>>> VW_in = {{{1.0, 1.0, 1.0}}})
+                            std::vector<std::vector<std::vector<amrex::Real>>> VD_in = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
+                            std::vector<std::vector<amrex::Real>> VW_in = {{1.0}})
             {
                 sim_name = sm;
                 n_cell = n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
@@ -306,16 +305,8 @@ namespace Gempic
                 curr_step = 0;
                 num_gaussians[0] = 1;
                 VM = {{{0.0, 0.0, 0.0}}};
-                VD = {{{0.01414213562, 0.04898979486, 0.04898979486}}};
-                VW = {{{1.0, 1.0, 1.0}}};
-                // for (int i = 0; i < vdim; i++)
-                // {
-                //     VM[i] = {{0.0}};
-                //     VW[i] = {{1.0}};
-                // }
-                // VD[0] = {{0.01414213562}};
-                // VD[1] = {{0.04898979486}};
-                // VD[2] = {{0.04898979486}};
+                VD = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
+                VW = {{1.0}};
             }
 
             void set_prop_related()

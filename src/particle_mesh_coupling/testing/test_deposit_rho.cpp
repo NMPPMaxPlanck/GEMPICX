@@ -48,27 +48,10 @@ void main_main ()
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(8,8,8)};
 
-    // std::array<std::vector<amrex::Real>, vdim> VM{};
-    // std::array<std::vector<amrex::Real>, vdim> VD{};
-    // std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    // VM[0].push_back(0.0);
-    // VD[0].push_back(1.0);
-    // VW[0].push_back(1.0);
-    // if (vdim > 1) {
-    //     VM[1].push_back(0.0);
-    //     VD[1].push_back(1.0);
-    //     VW[1].push_back(1.0);
-    // }
-    // if (vdim > 2) {
-    //     VM[2].push_back(0.0);
-    //     VD[2].push_back(1.0);
-    //     VW[2].push_back(1.0);
-    // }
-    std::vector<std::vector<std::vector<amrex::Real>>> VM {{{0,0,0}}};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> VD {{{1,1,1}}};
-    std::vector<std::vector<std::vector<amrex::Real>>> VW {{{1,1,1}}};
-
+    // Weibel parameters
+    std::vector<std::vector<std::vector<amrex::Real>>> VM {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> VD {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
+    std::vector<std::vector<amrex::Real>> VW {{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);

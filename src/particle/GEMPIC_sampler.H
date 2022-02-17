@@ -30,7 +30,7 @@ void init_particles_cellwise(computational_domain infra,
                              std::array<int, numspec> n_part_per_cell,
                              std::vector<std::vector<amrex::Real>> Vmean,
                              std::vector<std::vector<amrex::Real>> Vdev,
-                             std::vector<std::vector<amrex::Real>> Vweight,
+                             std::vector<amrex::Real> Vweight,
                              int species,
                              amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                              int rSeed = 925){
@@ -49,7 +49,6 @@ void init_particles_cellwise(computational_domain infra,
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
 
-    //int num_gauss = Vmean[0].size();
     int num_gauss = Vmean.size();
 
     // cumulative sum of vel_weights
@@ -58,21 +57,23 @@ void init_particles_cellwise(computational_domain infra,
     //     vel_cum[i].resize(num_gauss);
     //     std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
     // }
-    std::vector<amrex::Real> zeroVec(vdim,0); 
-    std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
-    for (int i = 0; i < vdim; i++)
-    {
-        for (int j = 0; j < num_gauss; j++)
-        {
-            // vel_cum[i].resize(num_gauss);
-            // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
-            vel_cum[j][i] = Vweight[j][i];
-            for (int k = 0; k < j; k++)
-            {
-                vel_cum[j][i] += Vweight[k][i];
-            }
-        }
-    }
+    //std::vector<amrex::Real> zeroVec(vdim,0); 
+    // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
+    std::vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+    // for (int i = 0; i < vdim; i++)
+    // {
+    //     for (int j = 0; j < num_gauss; j++)
+    //     {
+    //         // vel_cum[i].resize(num_gauss);
+    //         // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    //         vel_cum[j][i] = Vweight[j][i];
+    //         for (int k = 0; k < j; k++)
+    //         {
+    //             vel_cum[j][i] += Vweight[k][i];
+    //         }
+    //     }
+    // }
     
 
     // (0,1)-normally distributed random number generator:
@@ -103,7 +104,7 @@ void init_particles_cellwise(computational_domain infra,
 
         for(int i=0;i<vdim;i++){
             for (int gg=1;gg<num_gauss;gg++){
-                if ((vel_cum[gg-1][i]-gauss_choice[i] < 0) & (vel_cum[gg][i]-gauss_choice[i] >= 0)){
+                if ((vel_cum[gg-1]-gauss_choice[i] < 0) & (vel_cum[gg]-gauss_choice[i] >= 0)){
                     gauss_idx[i] = gg;
                 }
             }
@@ -178,7 +179,7 @@ void init_particles_full_domain(computational_domain infra,
                                 std::string wave_function,
                                 std::vector<std::vector<amrex::Real>> Vmean,
                                 std::vector<std::vector<amrex::Real>> Vdev,
-                                std::vector<std::vector<amrex::Real>> Vweight,
+                                std::vector<amrex::Real> Vweight,
                                 int species,
                                 int rSeed = 925){
 
@@ -205,22 +206,24 @@ void init_particles_full_domain(computational_domain infra,
     int num_gauss = Vmean.size(); // same size for all v-dims. Superposition of Gauss distributions 
 
     // cumulative sum of vel_weights
-    std::vector<amrex::Real> zeroVec(vdim,0); 
-    std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
-    //amrex::Print() << "vel_cum " << vel_cum << "\n";
-    for (int i = 0; i < vdim; i++)
-    {
-        for (int j = 0; j < num_gauss; j++)
-        {
-            // vel_cum[i].resize(num_gauss);
-            // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
-            vel_cum[j][i] = Vweight[j][i];
-            for (int k = 0; k < j; k++)
-            {
-                vel_cum[j][i] += Vweight[k][i];
-            }
-        }
-    }
+    std::vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+    // std::vector<amrex::Real> zeroVec(vdim,0); 
+    // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
+    // //amrex::Print() << "vel_cum " << vel_cum << "\n";
+    // for (int i = 0; i < vdim; i++)
+    // {
+    //     for (int j = 0; j < num_gauss; j++)
+    //     {
+    //         // vel_cum[i].resize(num_gauss);
+    //         // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    //         vel_cum[j][i] = Vweight[j][i];
+    //         for (int k = 0; k < j; k++)
+    //         {
+    //             vel_cum[j][i] += Vweight[k][i];
+    //         }
+    //     }
+    // }
 
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi= (ppg.mypc[species])->MakeMFIter(0); mfi.isValid(); ++mfi ){
@@ -263,7 +266,7 @@ void init_particles_full_domain(computational_domain infra,
                         }
                         for(int i=0;i<vdim;i++){
                             for (int gg=1;gg<num_gauss;gg++) {
-                                if ((vel_cum[gg-1][i]-gauss_choice[i] < 0) & (vel_cum[gg][i]-gauss_choice[i] >= 0)){
+                                if ((vel_cum[gg-1]-gauss_choice[i] < 0) & (vel_cum[gg]-gauss_choice[i] >= 0)){
                                     gauss_idx[i] = gg;
                                 }
                             }
@@ -325,7 +328,7 @@ void init_particles_full_domain(computational_domain infra,
                                 std::array<int, numspec> n_part_per_cell,
                                 std::vector<std::vector<amrex::Real>> Vmean,
                                 std::vector<std::vector<amrex::Real>> Vdev,
-                                std::vector<std::vector<amrex::Real>> Vweight,
+                                std::vector<amrex::Real> Vweight,
                                 int species,
                                 amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                                 int rSeed = 925){
@@ -342,26 +345,29 @@ void init_particles_full_domain(computational_domain infra,
 int num_gauss = Vmean.size();
 
     // cumulative sum of vel_weights
+    std::vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+
     // amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
     // for(int i=0;i<vdim;i++) {
     //     vel_cum[i].resize(num_gauss);
     //     std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
     // }
-    std::vector<amrex::Real> zeroVec(vdim,0); 
-    std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
-    for (int i = 0; i < vdim; i++)
-    {
-        for (int j = 0; j < num_gauss; j++)
-        {
-            // vel_cum[i].resize(num_gauss);
-            // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
-            vel_cum[j][i] = Vweight[j][i];
-            for (int k = 0; k < j; k++)
-            {
-                vel_cum[j][i] += Vweight[k][i];
-            }
-        }
-    }
+    // std::vector<amrex::Real> zeroVec(vdim,0); 
+    // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
+    // for (int i = 0; i < vdim; i++)
+    // {
+    //     for (int j = 0; j < num_gauss; j++)
+    //     {
+    //         // vel_cum[i].resize(num_gauss);
+    //         // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    //         vel_cum[j][i] = Vweight[j][i];
+    //         for (int k = 0; k < j; k++)
+    //         {
+    //             vel_cum[j][i] += Vweight[k][i];
+    //         }
+    //     }
+    // }
 
    //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi= (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
@@ -403,7 +409,7 @@ int num_gauss = Vmean.size();
                         }
                         for(int i=0;i<vdim;i++){
                             for (int gg=1;gg<num_gauss;gg++){
-                                if ((vel_cum[gg-1][i]-gauss_choice[i] < 0) & (vel_cum[gg][i]-gauss_choice[i] >= 0)){
+                                if ((vel_cum[gg-1]-gauss_choice[i] < 0) & (vel_cum[gg]-gauss_choice[i] >= 0)){
                                     gauss_idx[i] = gg;
                                 }
                             }

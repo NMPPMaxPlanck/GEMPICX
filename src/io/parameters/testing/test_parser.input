@@ -28,16 +28,15 @@ species1.n_part_per_cell = 100
 species0.num_gaussian = 2
 species0.vMean_g0 = 0 0 0
 species0.vThermal_g0 = 1.0 1.0 1.0
-species0.vWeight_g0 = 0.75 0.75 0.75
+species0.vWeight_g0 = 0.75
 species0.vMean_g1 = -2.4 0 0
 species0.vThermal_g1 = 1.0 1.0 1.0
-species0.vWeight_g1 = 0.25 0.25 0.25
+species0.vWeight_g1 = 0.25
 
 species1.num_gaussian = 1
 species1.vMean_g0 = 2.4 0 0
 species1.vThermal_g0 = 1.0 1.0 1.0
-species1.vWeight_g0 = 0.5 0.5 0.5
-
+species1.vWeight_g0 = 1.0
 # Diagnostics
 freq_x = 100001 
 freq_v = 100001 

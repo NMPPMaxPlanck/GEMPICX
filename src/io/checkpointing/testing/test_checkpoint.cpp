@@ -45,16 +45,9 @@ void main_main()
     amrex::Real k = 1.25;
     amrex::Real tolerance_particles = 1.e-10;
 
-    // std::array<std::vector<amrex::Real>, vdim> VM{};
-    // std::array<std::vector<amrex::Real>, vdim> VD{};
-    // std::array<std::vector<amrex::Real>, vdim> VW{};
-    // std::vector<std::vector<amrex::Real>> VM = {{0.0}, {0.0}, {0.0}};
-    // std::vector<std::vector<amrex::Real>> VD = {{0.014142135623730949}, {0.04898979485566356}, {0.04898979485566356}};
-    // std::vector<std::vector<amrex::Real>> VW = {{1.0}, {1.0}, {1.0}};
-
     std::vector<std::vector<amrex::Real>> VM = {{0.0, 0.0, 0.0}};
-    std::vector<std::vector<amrex::Real>> VD = {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}};
-    std::vector<std::vector<amrex::Real>> VW = {{1.0, 1.0, 1.0}};
+    std::vector<std::vector<amrex::Real>> VD = {{0.0141421356237309493730949, 0.04898979485566356, 0.04898979485566356}};
+    std::vector<amrex::Real> VW = {1.0};
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0], n_cell_vector[1], n_cell_vector[2]));
