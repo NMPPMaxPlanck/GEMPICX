@@ -22,6 +22,7 @@ build-gcc-gpu:
     - module load cuda/11.2
     - module load cmake/3.22
     - module load openmpi
+    - module load numdiff/5.9
     - cd ../build/gempic
     - ctest --output-on-failure
     - exit
