@@ -1,8 +1,8 @@
-//#include <AMReX.H>
+#include <AMReX.H>
 #include <AMReX_Array.H>
-//#include <AMReX_ParmParse.H>
+#include <AMReX_ParmParse.H>
 #include <AMReX_Parser.H>
-//#include <AMReX_Print.H>
+#include <AMReX_Print.H>
 
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_Config.H>
