@@ -88,6 +88,14 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // test:
+    // Initialize fields
+    for (size_t i = 0; i < vdim; i++)
+    {
+        (*(mw_yee).J_Array[i]).setVal(0.0, 0);
+        (*(mw_yee).E_Array[i]).setVal(0.0, 0);
+        (*(mw_yee).B_Array[i]).setVal(0.0, 0);  
+    }
+     
 
     (*(mw_yee).J_Array[0]).setVal(1.0, 0);
     amrex::Real old_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
