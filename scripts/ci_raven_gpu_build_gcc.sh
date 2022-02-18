@@ -27,8 +27,6 @@ cd "$BUILD_DIR"
 
 export AMREX_CUDA_ARCH=Ampere
 
-popd
-
 
 mkdir -p gempic
 pushd gempic
