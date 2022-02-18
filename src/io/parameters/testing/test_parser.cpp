@@ -30,7 +30,8 @@ void test_read(std::ofstream& outputFile)
     amrex::Print(outputFile) << params.is_periodic << "\n";
     amrex::Print(outputFile) << params.n_cell << "\n";
     for (int i = 0; i < GEMPIC_SPACEDIM; i++)
-        amrex::Print(outputFile) << params.k[i] << "\n";
+        amrex::Print(outputFile) << params.k[i] << " ";
+    amrex::Print(outputFile) << "\n";
     amrex::Print(outputFile) << params.n_steps << "\n";
     amrex::Print(outputFile) << params.dt << "\n";
     amrex::Print(outputFile) << params.propagator << "\n";
@@ -43,13 +44,20 @@ void test_read(std::ofstream& outputFile)
             amrex::Print(outputFile) << "species " << i << " gaussian " << j << "\n";
             for (int k = 0; k < vdim; k++)
             {
-                amrex::Print(outputFile) << params.VM[i][j][k] << "\n";
-                amrex::Print(outputFile) << params.VD[i][j][k] << "\n";
+                amrex::Print(outputFile) << params.VM[i][j][k] << " ";
             }
+            amrex::Print(outputFile) << "\n";
+            for (int k = 0; k < vdim; k++)
+            {
+                amrex::Print(outputFile) << params.VD[i][j][k] << " ";
+            }
+            amrex::Print(outputFile) << "\n";
             amrex::Print(outputFile) << params.VW[i][j] << "\n";
         }
     }
     amrex::Print(outputFile) << params.WF << "\n";
+
+    // test parser
     amrex::Real xlo = params.real_box.lo()[0];
     amrex::Real xhi = params.real_box.hi()[0];
     amrex::Real dx = (xhi - xlo) / params.n_cell[0];
@@ -75,7 +83,8 @@ void test_read(std::ofstream& outputFile)
             }
         }
     }
-    amrex::Print(outputFile) << "parser error " << maxerr << "\n";
+    amrex::Print(outputFile) << "parser error \n";
+    amrex::Print(outputFile) << maxerr << "\n";
 }
 
 int main(int argc, char *argv[])
