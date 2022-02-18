@@ -26,9 +26,6 @@ export TMPDIR=$JOB_SHMTMPDIR
 # because the ctests seem to require this for some reason
 export BUILD_DIR=$(pwd)/../build
 
-# empty the log file
-truncate --size=0 ci_job.out
-
 # CI phase 1 -- build
 time -p ./ci_raven_gpu_build_gcc.sh
 
