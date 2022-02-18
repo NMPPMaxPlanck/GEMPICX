@@ -16,6 +16,6 @@ build-gcc-gpu:
     - gpu 
   script:
     - cd scripts
-    - sbatch --wait ci_raven_gpu_jobscript.sh && cat ci_job.out 
+    - sbatch --wait ci_raven_gpu_jobscript.sh && cat ci_job.out || cat ci_job.out
 
 # if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 

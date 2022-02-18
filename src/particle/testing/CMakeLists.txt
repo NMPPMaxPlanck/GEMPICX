@@ -6,7 +6,7 @@ endif()
 
 #message( ${AMReX_DIR} )
 #message( " ######")
-target_link_libraries( test_sampler  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran  )
+target_link_libraries( test_sampler  AMReX::amrex AMReX::Flags_CXX  )
 
 ######## Ctest
 

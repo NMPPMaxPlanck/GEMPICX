@@ -69,6 +69,9 @@ IF (USE_CUDA)
     set (CMAKE_CUDA_FLAGS_RELEASE "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand -arch sm_60")
     set (CMAKE_CUDA_FLAGS_DEBUG   "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=CC -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand  -arch sm_60")
   ENDIF()
+
+  find_package(CUDAToolkit REQUIRED)
+  set (CMAKE_CUDA_FLAGS "-lcusparse -lcurand" )
 ENDIF()
 
 message("AMReX Dir is ${AMReX_DIR}")
