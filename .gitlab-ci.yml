@@ -16,15 +16,6 @@ build-gcc-gpu:
     - gpu 
   script:
     - cd scripts
-    - ./compile_gpu_raven-gcc.sh
-    - module purge
-    - module load gcc/10
-    - module load cuda/11.2
-    - module load cmake/3.22
-    - module load openmpi
-    - module load numdiff/5.9
-    - cd ../build/gempic
-    - ctest --output-on-failure
-    - exit
+    - sbatch --wait ci_raven_gpu_jobscript.sh && cat ci_job.out 
 
 # if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 
