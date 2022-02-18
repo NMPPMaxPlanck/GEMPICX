@@ -1,6 +1,6 @@
 MACRO( _CTEST_FILE_CMP _test )
 
-if (EXISTS  ${_test}.input )
+if (EXISTS   ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
   message("Input file ${_test}")
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     COMMAND srun -n 4 -p interactive ./${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
