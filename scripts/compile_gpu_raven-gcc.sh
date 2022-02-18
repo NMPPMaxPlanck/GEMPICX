@@ -1,7 +1,7 @@
 source /etc/profile.d/modules.sh
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
-AMREX_DIRECTORY=~/Codes/amrex
+AMREX_DIRECTORY=`pwd`/../../amrex
 AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
 
 echo $SOURCE_DIRECTORY
@@ -16,7 +16,7 @@ module load numdiff/5.9
 
 export AMREX_CUDA_ARCH=Ampere
 
-BUILD_DIR=../build
+BUILD_DIR=~/gempic_gpu_obj
 
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
