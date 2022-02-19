@@ -72,9 +72,9 @@ namespace Gempic
             std::vector<std::vector<std::vector<amrex::Real>>> VD{};
             std::vector<std::vector<amrex::Real>> VW{};
 
-            std::string WF = "1.0"; // particle density
-            amrex::Parser WFparse;
-            amrex::ParserExecutor<3> WFeval;
+            amrex::GpuArray<std::string, numspec> WF = {"1.0"}; // particle density
+            amrex::GpuArray<amrex::Parser, numspec> WFparse;
+            amrex::GpuArray<amrex::ParserExecutor<3>, numspec> WFeval;
 
             std::string Bx = "0.0";
             amrex::Parser BxParse;
@@ -150,7 +150,6 @@ namespace Gempic
                 pp.query("time_staggered", dt);
 
                 // particle data
-                pp.query("WF", WF); // initial density
 
                 for (int spec = 0; spec < numspec; spec++)
                 {
@@ -161,19 +160,20 @@ namespace Gempic
                     ppSpec.query("n_part_per_cell", n_part_per_cell[spec]);
                     ppSpec.query("charge", charge[spec]);
                     ppSpec.query("mass", mass[spec]);
-                    ppSpec.query("num_gaussian", num_gaussians[spec]);
+                    ppSpec.query("WF", WF[spec]); // initial density
+                    ppSpec.query("num_gaussians", num_gaussians[spec]);
                     for (int ng = 0; ng < num_gaussians[spec]; ng++)
                     {
                         std::vector<amrex::Real> vm, vt;
                         amrex::Real vw;
                         std::string vmString = "vMean_g" + std::to_string(ng);
-                        ppSpec.queryarr(vmString.c_str(), vm);
+                        ppSpec.getarr(vmString.c_str(), vm);
                         vvm.push_back(vm);
                         std::string vtString = "vThermal_g" + std::to_string(ng);
-                        ppSpec.queryarr(vtString.c_str(), vt);
+                        ppSpec.getarr(vtString.c_str(), vt);
                         vvt.push_back(vt);
                         std::string vwString = "vWeight_g" + std::to_string(ng);
-                        ppSpec.query(vwString.c_str(), vw);
+                        ppSpec.get(vwString.c_str(), vw);
                         vvw.push_back(vw);
                     }
                     VM.push_back(vvm);
@@ -293,7 +293,7 @@ namespace Gempic
                 charge[0] = -1.0;
                 mass[0] = 1.0;
                 k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
-                WF = "1.0";
+                WF[0] = "1.0";
                 Bx = "0.0";
                 By = "0.0";
                 Bz = "1e-3 * cos(kvarx * x)";
@@ -342,7 +342,7 @@ namespace Gempic
                     nPartCellTot += n_part_per_cell[spec];
                 }
 
-                // In periodic directions domain is[0, 2pi / k]
+                // In periodic directions domain is [0, 2pi / k]
                 for (int i = 0; i < GEMPIC_SPACEDIM; i++)
                 {
                     if (is_periodic[i] == 1)
@@ -360,12 +360,15 @@ namespace Gempic
 
                 // Parsers
                 // --------
-                WFparse = amrex::Parser(WF);
-                WFparse.setConstant("kvarx", k[0]);
-                WFparse.setConstant("kvary", k[1]);
-                WFparse.setConstant("kvarz", k[2]);
-                WFparse.registerVariables({"x", "y", "z"});
-                WFeval = WFparse.compile<3>(); // 3 because there are three variables.
+                for (size_t i = 0; i < numspec; i++)
+                {
+                    WFparse[i] = amrex::Parser(WF[i]);
+                    WFparse[i].setConstant("kvarx", k[0]);
+                    WFparse[i].setConstant("kvary", k[1]);
+                    WFparse[i].setConstant("kvarz", k[2]);
+                    WFparse[i].registerVariables({"x", "y", "z"});
+                    WFeval[i] = WFparse[i].template compile<3>(); // 3 because there are three variables.
+                }
 
                 // initial fields
                 BxParse = amrex::Parser(Bx);

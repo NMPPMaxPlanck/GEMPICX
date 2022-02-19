@@ -55,7 +55,7 @@ void test_read(std::ofstream& outputFile)
             amrex::Print(outputFile) << params.VW[i][j] << "\n";
         }
     }
-    amrex::Print(outputFile) << params.WF << "\n";
+    amrex::Print(outputFile) << params.WF[0] << "\n";
 
     // test parser
     amrex::Real xlo = params.real_box.lo()[0];
@@ -78,7 +78,7 @@ void test_read(std::ofstream& outputFile)
             for (int k = 0; k < params.n_cell[2]; k++)
             {
                 z = zlo + k * dx;
-                maxloc = std::abs(params.WFeval(x, y, z) - (1.0 + cos(params.k[0] * x) + sin(params.k[1] * y) + cos(2 * params.k[2] * z)));
+                maxloc = std::abs(params.WFeval[0](x, y, z) - (1.0 + cos(params.k[0] * x) + sin(params.k[1] * y) + cos(2 * params.k[2] * z)));
                 maxerr = std::max(maxerr, maxloc);
             }
         }
