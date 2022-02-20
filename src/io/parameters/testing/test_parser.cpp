@@ -39,6 +39,7 @@ void test_read(std::ofstream& outputFile)
     // particle initialisation
     for (int i = 0; i < numspec; i++)
     {
+        amrex::Print(outputFile) << params.WF[i] << "\n";
         for (int j = 0; j < params.num_gaussians[i]; j++)
         {
             amrex::Print(outputFile) << "species " << i << " gaussian " << j << "\n";
@@ -55,7 +56,6 @@ void test_read(std::ofstream& outputFile)
             amrex::Print(outputFile) << params.VW[i][j] << "\n";
         }
     }
-    amrex::Print(outputFile) << params.WF[0] << "\n";
 
     // test parser
     amrex::Real xlo = params.real_box.lo()[0];

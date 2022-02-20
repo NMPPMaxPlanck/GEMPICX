@@ -60,7 +60,7 @@ void main_main()
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("checkpoint_ctest", n_cell_vector, n_part_per_cell, n_steps, 10, 10,
                     10, is_periodic_vector, max_grid_size, dt, charge, mass, k,
-                    "0", "0", "0", "0", "0", {1}, 0, tolerance_particles);
+                    {"0"}, "0", "0", "0", "0", {1}, 0, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure

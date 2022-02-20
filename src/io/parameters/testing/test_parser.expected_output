@@ -6,6 +6,7 @@ Two_Stream
 50000
 0.1
 0
+1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)
 species 0 gaussian 0
 0 0 0 
 1 1 1 
@@ -14,10 +15,10 @@ species 0 gaussian 1
 -2.4 0 0 
 1 1 1 
 0.25
+1.0 +  0.2*cos(kvarx * x)
 species 1 gaussian 0
 2.4 0 0 
 1 1 1 
 1
-1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)
 parser error 
 0

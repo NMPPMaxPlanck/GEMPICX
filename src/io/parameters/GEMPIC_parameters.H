@@ -72,7 +72,7 @@ namespace Gempic
             std::vector<std::vector<std::vector<amrex::Real>>> VD{};
             std::vector<std::vector<amrex::Real>> VW{};
 
-            amrex::GpuArray<std::string, numspec> WF = {"1.0"}; // particle density
+            amrex::GpuArray<std::string, numspec> WF; // particle density
             amrex::GpuArray<amrex::Parser, numspec> WFparse;
             amrex::GpuArray<amrex::ParserExecutor<3>, numspec> WFeval;
 
@@ -223,7 +223,7 @@ namespace Gempic
                             amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
                             amrex::GpuArray<amrex::Real, numspec> M = {1.0},
                             amrex::Real K = 1.25,
-                            std::string wf = "1.0",
+                            amrex::GpuArray<std::string, numspec> wf = {"1.0"},
                             std::string BX = "0.0",
                             std::string BY = "0.0",
                             std::string BZ = "1e-3 * cos(kvarx * x)",
@@ -254,11 +254,12 @@ namespace Gempic
                 max_grid_size = max_grid_size_vector; // amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
                 dt = DT;
                 for (int i = 0; i < numspec; i++)
+                {
                     charge[i] = C[i];
-                for (int i = 0; i < numspec; i++)
                     mass[i] = M[i];
+                    WF[i] = wf[i];
+                }
                 k = {K, K, K};
-                WF = wf;
                 Bx = BX;
                 By = BY;
                 Bz = BZ;
@@ -449,7 +450,6 @@ namespace Gempic
                 (*(*part_gr).mypc[0]).Redistribute();
             }
         };
-
     }
 }
 
