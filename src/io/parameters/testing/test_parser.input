@@ -21,8 +21,9 @@ tolerance_particles = 1.e-10
 species0.n_part_per_cell = 100 
 species0.charge = -1.0
 species0.mass = 1.0
-species1.charge = 1.0
 species1.n_part_per_cell = 100 
+species1.charge = 1.0
+species1.mass = 1.0
 
 # Gaussian parameters
 species0.WF = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"

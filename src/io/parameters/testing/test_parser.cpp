@@ -56,7 +56,6 @@ void test_read(std::ofstream& outputFile)
             amrex::Print(outputFile) << params.VW[i][j] << "\n";
         }
     }
-
     // test parser
     amrex::Real xlo = params.real_box.lo()[0];
     amrex::Real xhi = params.real_box.hi()[0];
