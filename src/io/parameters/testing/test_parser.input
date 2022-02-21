@@ -25,7 +25,8 @@ species1.charge = 1.0
 species1.n_part_per_cell = 100 
 
 # Gaussian parameters
-species0.num_gaussian = 2
+species0.WF = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"
+species0.num_gaussians = 2
 species0.vMean_g0 = 0 0 0
 species0.vThermal_g0 = 1.0 1.0 1.0
 species0.vWeight_g0 = 0.75
@@ -33,7 +34,8 @@ species0.vMean_g1 = -2.4 0 0
 species0.vThermal_g1 = 1.0 1.0 1.0
 species0.vWeight_g1 = 0.25
 
-species1.num_gaussian = 1
+species1.WF = "1.0 +  0.2*cos(kvarx * x)"
+species1.num_gaussians = 1
 species1.vMean_g0 = 2.4 0 0
 species1.vThermal_g0 = 1.0 1.0 1.0
 species1.vWeight_g0 = 1.0
@@ -43,7 +45,6 @@ freq_v = 100001
 freq_slice = 100001
 
 # Function parameters
-WF = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"
 Bx = "0.0"
 By = "0.0"
 Bz = "0.0"

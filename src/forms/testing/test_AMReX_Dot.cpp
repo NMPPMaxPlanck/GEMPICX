@@ -51,7 +51,7 @@ void main_main ()
         VlMa.sim_name = "Landau";
         VlMa.n_part_per_cell = {10000};
         VlMa.k = {0.5,0.5,0.5};
-        VlMa.WF = "1.0 + 0.5 * cos(kvarx * x)";
+        VlMa.WF[0] = "1.0 + 0.5 * cos(kvarx * x)";
         VlMa.Bz = "0.0";
     }
     VlMa.n_steps = 10;
