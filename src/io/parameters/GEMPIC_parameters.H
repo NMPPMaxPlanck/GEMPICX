@@ -367,9 +367,8 @@ public:
                std::vector<std::vector<amrex::Real>> VW_in = {{1.0}})
     {
         sim_name = sm;
-        n_cell = n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-        for (int i = 0; i < GEMPIC_SPACEDIM; i++)
-            n_part_per_cell[i] = n_part_per_cell_in[i];
+        n_cell = n_cell_vector;//amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
+        for (int i=0; i<numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
         freq_x = FX;
         freq_v = FV;
