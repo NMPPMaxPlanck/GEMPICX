@@ -234,7 +234,6 @@ public:
                 if (!ppSpec.queryarr(vmString.c_str(), vm))
                 {
                     parseErrorMessage(specString + "." + vmString);
-                    amrex::Print() << "Cannot find " + specString + "." + vmString + " input! Default will be used\n";
                 }
                 vvm.push_back(vm);
                 std::string vtString = "vThermal_g" + std::to_string(ng);
@@ -268,11 +267,11 @@ public:
         {
             parseErrorMessage("Bz");
         }
-        if (!pp.query("phi", phi)) // initial density
+        if (!pp.query("phi", phi)) 
         {
             parseErrorMessage("phi");
         }
-        if (!pp.query("rho", rho)) // initial density
+        if (!pp.query("rho", rho)) 
         {
             parseErrorMessage("rho");
         }
@@ -425,7 +424,7 @@ public:
         By = "0.0";
         Bz = "1e-3 * cos(kvarx * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
-        propagator = 0;
+        propagator = 3;
         tolerance_particles = 1.e-10;
         restart = 0;
         checkpoint_file = "";
