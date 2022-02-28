@@ -48,28 +48,15 @@ void main_main ()
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(8,8,8)};
 
-    std::array<std::vector<amrex::Real>, vdim> VM{};
-    std::array<std::vector<amrex::Real>, vdim> VD{};
-    std::array<std::vector<amrex::Real>, vdim> VW{};
-
-    VM[0].push_back(0.0);
-    VD[0].push_back(1.0);
-    VW[0].push_back(1.0);
-    if (vdim > 1) {
-        VM[1].push_back(0.0);
-        VD[1].push_back(1.0);
-        VW[1].push_back(1.0);
-    }
-    if (vdim > 2) {
-        VM[2].push_back(0.0);
-        VD[2].push_back(1.0);
-        VW[2].push_back(1.0);
-    }
+    // Weibel parameters
+    std::vector<std::vector<std::vector<amrex::Real>>> VM {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> VD {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
+    std::vector<std::vector<amrex::Real>> VW {{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
-                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, " ");
+                    is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, {"0"});
     VlMa.set_computed_params();
     VlMa.VM = VM;
     VlMa.VD = VD;
@@ -88,7 +75,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM, VlMa.VD, VlMa.VW, species, wave_function);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM[species], VlMa.VD[species], VlMa.VW[species], species, wave_function);
 
     //------------------------------------------------------------------------------
     // initialize rho and phi, phi will solve the analytically exact solution, rho

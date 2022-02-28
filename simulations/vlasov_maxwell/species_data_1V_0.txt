@@ -2,6 +2,6 @@
 # velocity mean
 0.0
 # velocity deviation
-0.01414213562
+0.014142135623730949
 # velocity weight
 1.0

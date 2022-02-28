@@ -1,10 +1,10 @@
 MACRO( _CTEST_FILE_CMP _test )
 
-if (EXISTS  ${_test}.input )
+if (EXISTS   ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
   message("Input file ${_test}")
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    COMMAND srun -n 4 -p interactive ./${_test} ${_test}.input
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output.tmp
+    COMMAND srun -n 4 -p interactive ./${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
+    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp

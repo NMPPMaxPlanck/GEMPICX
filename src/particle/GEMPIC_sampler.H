@@ -28,9 +28,9 @@ template<int vdim, int numspec>
 void init_particles_cellwise(computational_domain infra,
                              particle_groups<vdim, numspec> &ppg,
                              std::array<int, numspec> n_part_per_cell,
-                             std::array<std::vector<amrex::Real>, vdim> Vmean,
-                             std::array<std::vector<amrex::Real>, vdim> Vdev,
-                             std::array<std::vector<amrex::Real>, vdim> Vweight,
+                             std::vector<std::vector<amrex::Real>> Vmean,
+                             std::vector<std::vector<amrex::Real>> Vdev,
+                             std::vector<amrex::Real> Vweight,
                              int species,
                              amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                              int rSeed = 925){
@@ -49,14 +49,32 @@ void init_particles_cellwise(computational_domain infra,
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
 
-    int num_gauss = Vmean[0].size();
+    int num_gauss = Vmean.size();
 
     // cumulative sum of vel_weights
-    amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
-    for(int i=0;i<vdim;i++) {
-        vel_cum[i].resize(num_gauss);
-        std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
-    }
+    // amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
+    // for(int i=0;i<vdim;i++) {
+    //     vel_cum[i].resize(num_gauss);
+    //     std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    // }
+    //std::vector<amrex::Real> zeroVec(vdim,0); 
+    // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
+    std::vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+    // for (int i = 0; i < vdim; i++)
+    // {
+    //     for (int j = 0; j < num_gauss; j++)
+    //     {
+    //         // vel_cum[i].resize(num_gauss);
+    //         // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    //         vel_cum[j][i] = Vweight[j][i];
+    //         for (int k = 0; k < j; k++)
+    //         {
+    //             vel_cum[j][i] += Vweight[k][i];
+    //         }
+    //     }
+    // }
+    
 
     // (0,1)-normally distributed random number generator:
     //srand(rSeed);
@@ -86,7 +104,7 @@ void init_particles_cellwise(computational_domain infra,
 
         for(int i=0;i<vdim;i++){
             for (int gg=1;gg<num_gauss;gg++){
-                if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){
+                if ((vel_cum[gg-1]-gauss_choice[i] < 0) & (vel_cum[gg]-gauss_choice[i] >= 0)){
                     gauss_idx[i] = gg;
                 }
             }
@@ -100,7 +118,7 @@ void init_particles_cellwise(computational_domain infra,
             while (u1 < epsilon); // make sure epsilon large enough to take log
             // first value from Box-Muller algorithm
             z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
-            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];                          
+            velocity[cc] = Vdev[gauss_idx[cc]][cc] * z0 + Vmean[gauss_idx[cc]][cc];                          
         }
 
         //Adding particle from the model cell to all cells
@@ -157,11 +175,11 @@ template<int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra,
                                 particle_groups<vdim, numspec> &ppg,
                                 std::array<int, numspec> n_part_per_cell,
-                                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> k_vec,
+                                amrex::Vector<amrex::Real> k_vec,
                                 std::string wave_function,
-                                std::array<std::vector<amrex::Real>, vdim> Vmean,
-                                std::array<std::vector<amrex::Real>, vdim> Vdev,
-                                std::array<std::vector<amrex::Real>, vdim> Vweight,
+                                std::vector<std::vector<amrex::Real>> Vmean,
+                                std::vector<std::vector<amrex::Real>> Vdev,
+                                std::vector<amrex::Real> Vweight,
                                 int species,
                                 int rSeed = 925){
 
@@ -185,15 +203,27 @@ void init_particles_full_domain(computational_domain infra,
     amrex::Real u1, u2, z0;
     bool check_rnd = false;
     int npart = 0;
-    int num_gauss = Vmean[0].size(); // same size for all v-dims. Superposition of Gauss distributions 
+    int num_gauss = Vmean.size(); // same size for all v-dims. Superposition of Gauss distributions 
 
     // cumulative sum of vel_weights
-    amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
-    for(int i=0;i<vdim;i++) {
-        vel_cum[i].resize(num_gauss);
-        std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
-        assert(vel_cum[i][num_gauss-1] == 1); // sum of weights should be 1
-    }
+    std::vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+    // std::vector<amrex::Real> zeroVec(vdim,0); 
+    // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
+    // //amrex::Print() << "vel_cum " << vel_cum << "\n";
+    // for (int i = 0; i < vdim; i++)
+    // {
+    //     for (int j = 0; j < num_gauss; j++)
+    //     {
+    //         // vel_cum[i].resize(num_gauss);
+    //         // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    //         vel_cum[j][i] = Vweight[j][i];
+    //         for (int k = 0; k < j; k++)
+    //         {
+    //             vel_cum[j][i] += Vweight[k][i];
+    //         }
+    //     }
+    // }
 
     //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi= (ppg.mypc[species])->MakeMFIter(0); mfi.isValid(); ++mfi ){
@@ -236,7 +266,7 @@ void init_particles_full_domain(computational_domain infra,
                         }
                         for(int i=0;i<vdim;i++){
                             for (int gg=1;gg<num_gauss;gg++) {
-                                if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){
+                                if ((vel_cum[gg-1]-gauss_choice[i] < 0) & (vel_cum[gg]-gauss_choice[i] >= 0)){
                                     gauss_idx[i] = gg;
                                 }
                             }
@@ -249,7 +279,7 @@ void init_particles_full_domain(computational_domain infra,
                             while (u1 < epsilon); // make sure epsilon large enough to take log
                             // first value from Box-Muller algorithm
                             z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
-                            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];
+                            velocity[cc] = Vdev[gauss_idx[cc]][cc] * z0 + Vmean[gauss_idx[cc]][cc];
                             //velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
                         }
 #if (GEMPIC_SPACEDIM > 2)
@@ -296,9 +326,9 @@ template<int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra,
                                 particle_groups<vdim, numspec> &ppg,
                                 std::array<int, numspec> n_part_per_cell,
-                                std::array<std::vector<amrex::Real>, vdim> Vmean,
-                                std::array<std::vector<amrex::Real>, vdim> Vdev,
-                                std::array<std::vector<amrex::Real>, vdim> Vweight,
+                                std::vector<std::vector<amrex::Real>> Vmean,
+                                std::vector<std::vector<amrex::Real>> Vdev,
+                                std::vector<amrex::Real> Vweight,
                                 int species,
                                 amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                                 int rSeed = 925){
@@ -311,14 +341,33 @@ void init_particles_full_domain(computational_domain infra,
     amrex::Real weight;
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
-    int num_gauss = Vmean[0].size();
+    //int num_gauss = Vmean[0].size();
+int num_gauss = Vmean.size();
 
     // cumulative sum of vel_weights
-    amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
-    for(int i=0;i<vdim;i++) {
-        vel_cum[i].resize(num_gauss);
-        std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
-    }
+    std::vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+
+    // amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
+    // for(int i=0;i<vdim;i++) {
+    //     vel_cum[i].resize(num_gauss);
+    //     std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    // }
+    // std::vector<amrex::Real> zeroVec(vdim,0); 
+    // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
+    // for (int i = 0; i < vdim; i++)
+    // {
+    //     for (int j = 0; j < num_gauss; j++)
+    //     {
+    //         // vel_cum[i].resize(num_gauss);
+    //         // std::partial_sum(Vweight[i].begin(), Vweight[i].end(), vel_cum[i].begin());
+    //         vel_cum[j][i] = Vweight[j][i];
+    //         for (int k = 0; k < j; k++)
+    //         {
+    //             vel_cum[j][i] += Vweight[k][i];
+    //         }
+    //     }
+    // }
 
    //MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi= (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
@@ -360,7 +409,7 @@ void init_particles_full_domain(computational_domain infra,
                         }
                         for(int i=0;i<vdim;i++){
                             for (int gg=1;gg<num_gauss;gg++){
-                                if ((vel_cum[i][gg-1]-gauss_choice[i] < 0) & (vel_cum[i][gg]-gauss_choice[i] >= 0)){
+                                if ((vel_cum[gg-1]-gauss_choice[i] < 0) & (vel_cum[gg]-gauss_choice[i] >= 0)){
                                     gauss_idx[i] = gg;
                                 }
                             }
@@ -373,7 +422,7 @@ void init_particles_full_domain(computational_domain infra,
                             while (u1 < epsilon); // make sure epsilon large enough to take log
                             // first value from Box-Muller algorithm
                             z0  = sqrt(-2.0 * log(u1)) * cos(2* M_PI * u2);
-                            velocity[cc] = Vdev[cc][gauss_idx[cc]] * z0 + Vmean[cc][gauss_idx[cc]];   
+                            velocity[cc] = Vdev[gauss_idx[cc]][cc] * z0 + Vmean[gauss_idx[cc]][cc];   
                             // velocity[cc] = Vdev[cc][gauss_idx[cc]]*norm01(genv)+Vmean[cc][gauss_idx[cc]]; 
                         }
 #if (GEMPIC_SPACEDIM > 2)

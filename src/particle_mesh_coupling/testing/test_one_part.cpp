@@ -69,7 +69,7 @@ void main_main (bool ctest)
     amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
     //std::array<amrex::Real,GEMPIC_SPACEDIM> k = {AMREX_D_DECL(1.25,1.25,1.25)};
     amrex::Real k = 1.25;
-    std::string WF = "1.0";
+    amrex::GpuArray<std::string, numspec> WF = {"1.0"};
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvarx * x)";
@@ -94,7 +94,7 @@ void main_main (bool ctest)
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v,
                     freq_slice, is_periodic, max_grid_size, dt, charge, mass, k,
-                    WF, Bx, By, Bz, phi, 1, propagator, tolerance_particles);
+                    WF, Bx, By, Bz, phi, {1}, propagator, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure
