@@ -4,6 +4,9 @@ set -e
 
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
+AMREX_DIRECTORY=`pwd`/../third_party/amrex
+AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
+
 
 echo $SOURCE_DIRECTORY
 
@@ -24,14 +27,22 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+mkdir -p amrex
+pushd amrex
 
 export AMREX_CUDA_ARCH=Ampere
+cmake -D AMReX_GPU_BACKEND=CUDA -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $AMREX_DIRECTORY
+#make clean
+make -j 16 #VERBOSE=1
+make install
+
+popd
 
 
 mkdir -p gempic
 pushd gempic
 
-cmake -D USE_CUDA=ON -D CMAKE_CUDA_ARCHITECTURES=80 -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
+cmake -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CMAKE_CUDA_ARCHITECTURES=80 -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 #make clean
 make -j 16 #VERBOSE=1
 
