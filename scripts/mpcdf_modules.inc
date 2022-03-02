@@ -1,3 +1,4 @@
+source /etc/profile
 module purge
 if [ x"$CLUSTER" == x"COBRA"  ]; then
 module load intel/19.1.1
@@ -11,3 +12,4 @@ module load mkl/2021.2
 fi
 module load cmake/3.18
 module load gcc
+module list

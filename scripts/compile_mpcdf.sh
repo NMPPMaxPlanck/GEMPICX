@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
 AMREX_DIRECTORY=`pwd`/../../amrex
