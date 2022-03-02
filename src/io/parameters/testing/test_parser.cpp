@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
 
-    std::ofstream outputFile("test_parser.output", std::ofstream::out);
     {
+        std::ofstream outputFile("test_parser.output", std::ofstream::out);
         test_Weibel<3, 1>(outputFile);
         test_read<3, 2>(outputFile);
+        outputFile.close();
     }
-    outputFile.close();
 
     amrex::Finalize();
 }

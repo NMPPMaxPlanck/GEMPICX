@@ -32,7 +32,7 @@ using namespace Utils;
 
 void parseErrorMessage(std::string name)
 {
-    amrex::Print() << "Cannot find " + name + " input!!!\n";
+    amrex::Print() << "Cannot find " + name + " input! Default value will be used\n";
 }
 template <int vdim, int numspec>
 class gempic_parameters
