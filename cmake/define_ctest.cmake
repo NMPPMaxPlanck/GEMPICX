@@ -4,8 +4,7 @@ if (EXISTS  ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
   message("Input file ${_test}")
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     COMMAND mpirun -np 4 ${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.0 > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
