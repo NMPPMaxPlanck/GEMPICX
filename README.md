@@ -56,3 +56,17 @@ Project branches
 | `live_code`        | added code from the live coding sessions, not relevant to production, can be removed when all participants agree |
 | `gpu_cuda_loop`    | replacing ParallelFor loops with cuda loops |
 | `poisson_order`    | attempt at implementing an amrex-type solver that is edge/face centered |
+
+Dependencies
+=====================
+
+- CMake
+- Doxygen
+- Graphviz ([for graphical visualization of objects](http://www.graphviz.org/))
+- Sphinx
+- Breathe ([for bridging between Sphinx and Doxygen documentation systems](https://breathe.readthedocs.io/en/latest/))
+
+Documentation
+=====================
+[Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
+
