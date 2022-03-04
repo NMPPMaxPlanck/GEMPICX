@@ -1,3 +1,19 @@
+Weibel
+(RealBox 0 5.02655 0 5.02655 0 5.02655 )
+(1,1,1)
+(24,8,8)
+1.25 1.25 1.25 
+10
+0.02
+3
+1
+1.0
+species 0 gaussian 0
+0 0 0 
+0.0141421 0.0489898 0.0489898 
+1
+parser error 
+3
 Two_Stream
 (RealBox 0 1.5 0 20.944 0 15.708 )
 (0,1,1)
@@ -6,6 +22,7 @@ Two_Stream
 50000
 0.1
 0
+2
 1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)
 species 0 gaussian 0
 0 0 0 
@@ -15,6 +32,7 @@ species 0 gaussian 1
 -2.4 0 0 
 1 1 1 
 0.25
+1
 1.0 +  0.2*cos(kvarx * x)
 species 1 gaussian 0
 2.4 0 0 

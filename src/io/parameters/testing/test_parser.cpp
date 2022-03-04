@@ -9,51 +9,74 @@
 #include <GEMPIC_parameters.H>
 
 template <int vdim, int numspec>
-void test_Weibel(std::ofstream& outputFile)
+void test_Weibel()
 {
-    gempic_parameters<vdim, numspec> params;
-    params.set_params_Weibel();
+    gempic_parameters<vdim, numspec> WeibelParams;
+    WeibelParams.set_params_Weibel();
+    print_param(WeibelParams);
 }
 
 template <int vdim, int numspec>
-void test_read(std::ofstream& outputFile)
+void test_read()
 {
     gempic_parameters<vdim, numspec> params;
     params.read_pp_params();
+    print_param(params);
+}
 
-    // Print empty line
-    amrex::Print(outputFile) << "\n";
-
+template <int vdim, int numspec>
+void print_param(gempic_parameters<vdim, numspec> params)
+{
     // Print data members in gempic_parameters
-    amrex::Print(outputFile) << params.sim_name << "\n";
-    amrex::Print(outputFile) << params.real_box << "\n";
-    amrex::Print(outputFile) << params.is_periodic << "\n";
-    amrex::Print(outputFile) << params.n_cell << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.sim_name << "\n";
+    amrex::Print() << params.sim_name << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.real_box << "\n";
+    amrex::Print() << params.real_box << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.is_periodic << "\n";
+    amrex::Print() << params.is_periodic << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.n_cell << "\n";
+    amrex::Print() << params.n_cell << "\n";
     for (int i = 0; i < GEMPIC_SPACEDIM; i++)
-        amrex::Print(outputFile) << params.k[i] << " ";
-    amrex::Print(outputFile) << "\n";
-    amrex::Print(outputFile) << params.n_steps << "\n";
-    amrex::Print(outputFile) << params.dt << "\n";
-    amrex::Print(outputFile) << params.propagator << "\n";
+    {
+        amrex::PrintToFile("test_parser.output", 0) << params.k[i] << " ";
+        amrex::Print() << params.k[i] << " ";
+    }
+    amrex::PrintToFile("test_parser.output", 0) << "\n";
+    amrex::Print() << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.n_steps << "\n";
+    amrex::Print() << params.n_steps << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.dt << "\n";
+    amrex::Print() << params.dt << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << params.propagator << "\n";
+    amrex::Print() << params.propagator << "\n";
 
     // particle initialisation
     for (int i = 0; i < numspec; i++)
     {
-        amrex::Print(outputFile) << params.WF[i] << "\n";
+        amrex::PrintToFile("test_parser.output", 0) << params.num_gaussians[i] << "\n";
+        amrex::Print() << params.num_gaussians[i] << "\n";
+        amrex::PrintToFile("test_parser.output", 0) << params.WF[i] << "\n";
+        amrex::Print() << params.WF[i] << "\n";
         for (int j = 0; j < params.num_gaussians[i]; j++)
         {
-            amrex::Print(outputFile) << "species " << i << " gaussian " << j << "\n";
+            amrex::PrintToFile("test_parser.output", 0) << "species " << i << " gaussian " << j << "\n";
+            amrex::Print() << "species " << i << " gaussian " << j << "\n";
             for (int k = 0; k < vdim; k++)
             {
-                amrex::Print(outputFile) << params.VM[i][j][k] << " ";
+                amrex::PrintToFile("test_parser.output", 0) << params.VM[i][j][k] << " ";
+                amrex::Print() << params.VM[i][j][k] << " ";
             }
-            amrex::Print(outputFile) << "\n";
+            amrex::PrintToFile("test_parser.output", 0) << "\n"; 
+            amrex::Print() << "\n"; 
             for (int k = 0; k < vdim; k++)
             {
-                amrex::Print(outputFile) << params.VD[i][j][k] << " ";
+                amrex::PrintToFile("test_parser.output", 0) << params.VD[i][j][k] << " ";
+                amrex::Print() << params.VD[i][j][k] << " ";
             }
-            amrex::Print(outputFile) << "\n";
-            amrex::Print(outputFile) << params.VW[i][j] << "\n";
+            amrex::PrintToFile("test_parser.output", 0) << "\n";
+            amrex::Print() << "\n";
+            amrex::PrintToFile("test_parser.output", 0) << params.VW[i][j] << "\n";
+            amrex::Print() << params.VW[i][j] << "\n";
         }
     }
     // test parser
@@ -82,8 +105,8 @@ void test_read(std::ofstream& outputFile)
             }
         }
     }
-    amrex::Print(outputFile) << "parser error \n";
-    amrex::Print(outputFile) << maxerr << "\n";
+    amrex::PrintToFile("test_parser.output", 0) << "parser error \n";
+    amrex::PrintToFile("test_parser.output", 0) << maxerr << "\n";
 }
 
 int main(int argc, char *argv[])
@@ -91,10 +114,20 @@ int main(int argc, char *argv[])
     amrex::Initialize(argc, argv);
 
     {
-        std::ofstream outputFile("test_parser.output", std::ofstream::out);
-        test_Weibel<3, 1>(outputFile);
-        test_read<3, 2>(outputFile);
-        outputFile.close();
+        if (amrex::ParallelDescriptor::MyProc()==0) 
+        {
+            remove("test_parser.output.0");
+        }
+        // Print empty line
+        amrex::PrintToFile("test_parser.output", 0) << "\n";
+
+        const int vdim = 3;
+        const int numSpecWeibel = 1;
+        const int numSpecRead = 2;
+        test_Weibel<vdim, numSpecWeibel>();
+        amrex::Print() << "test_Weibel completed\n";
+        test_read<vdim, numSpecRead>();
+        amrex::Print() << "test_read completed\n";
     }
 
     amrex::Finalize();

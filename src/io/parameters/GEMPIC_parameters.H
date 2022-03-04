@@ -66,7 +66,7 @@ public:
     amrex::GpuArray<amrex::Real, numspec> charge = {-1};
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
     // Initial velocity distribution (sum of gaussians)
-    std::vector<int> num_gaussians = {0};
+    amrex::GpuArray<int, numspec> num_gaussians = {0};
     std::vector<std::vector<std::vector<amrex::Real>>> VM{}; // species, gaussian, vdim
     std::vector<std::vector<std::vector<amrex::Real>>> VD{};
     std::vector<std::vector<amrex::Real>> VW{};
@@ -192,10 +192,6 @@ public:
         if (!pp.query("strang_order", strang_order))
         {
             parseErrorMessage("strang_order");
-        }
-        if (!pp.query("time_staggered", dt))
-        {
-            parseErrorMessage("time_staggered");
         }
 
         // particle data
@@ -353,8 +349,8 @@ public:
                std::string BY = "0.0",
                std::string BZ = "1e-3 * cos(kvarx * x)",
                std::string PHI = "4 * 0.5 * cos(0.5 * x)",
-               std::vector<int> NG = {1},
-               // amrex::GpuArray<int, numspec> NG = {1},
+               //std::vector<int> NG = {1},
+               amrex::GpuArray<int, numspec> NG = {1},
                // int NG = 1,
                int PROP = 0,
                amrex::Real TOL_P = 1.e-10,
@@ -389,7 +385,7 @@ public:
         Bz = BZ;
         phi = PHI;
         for (int i = 0; i < numspec; i++)
-            num_gaussians.push_back(NG[i]);
+            num_gaussians[i] = NG[i];
         propagator = PROP;
         tolerance_particles = TOL_P;
         restart = RST;
@@ -399,7 +395,9 @@ public:
         VD = VD_in;
         VW = VW_in;
 
+        // set dependent parameters
         set_prop_related();
+        set_computed_params();
     }
 
     void set_params_Weibel()
@@ -432,6 +430,9 @@ public:
         VM = {{{0.0, 0.0, 0.0}}};
         VD = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
         VW = {{1.0}};
+        // set dependent parameters
+        set_prop_related();
+        set_computed_params();
     }
 
     void set_prop_related()
