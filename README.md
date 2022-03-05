@@ -6,6 +6,18 @@ Installing with scripts
 =====================
 The library can be compiled with scripts available in the folder scripts. The available scripts are for supermuc, the mpcdf cluster and a desktop pc. Note that you might need to change the script for your desktop pc.
 
+Compiling and running on MPCDF machines
+=======================================
+- go into gempic/scripts directory
+### On CPU
+- type ./compile_mpcdf.sh
+- a directory gempic_obj has been generated in your home directory. It contains all the tests and simulations.
+- An example batch script run_mpcdf.sh has been created in gempic_obj. Copy it to your run directory and adapt as needed
+### On Raven GPU
+- type ./compile_gpu_raven-gcc.sh
+- a directory gempic_gpu_obj has been generated in your home directory. It contains all the tests and simulations.
+- Use run_gpu_mpcdf-gcc.sh from script directory. Copy it to your run directory and adapt as needed
+
 Installing manually
 =====================
 
