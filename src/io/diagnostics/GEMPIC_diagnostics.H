@@ -238,38 +238,38 @@ public:
     void ctest_output(std::string simulation_name, int t_step){
         switch (vdim) {
         case 1:
-            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0];
+            amrex::PrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0];
             break;
         case 2:
-            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1];
+            amrex::PrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1];
             break;
         case 3:
-            amrex::AllPrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1] << " " << Efield_energy[t_step][2];
+            amrex::PrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1] << " " << Efield_energy[t_step][2];
             break;
         }
         switch (vdim) {
         case 1: // no break, so that case 1 and 2 are handled the same way
         case 2:
-            amrex::AllPrintToFile(simulation_name) << " " << Bfield_energy[t_step][0];
+            amrex::PrintToFile(simulation_name) << " " << Bfield_energy[t_step][0];
             break;
         case 3:
-            amrex::AllPrintToFile(simulation_name) << " " << Bfield_energy[t_step][0] << " " << Bfield_energy[t_step][1] << " " << Bfield_energy[t_step][2];
+            amrex::PrintToFile(simulation_name) << " " << Bfield_energy[t_step][0] << " " << Bfield_energy[t_step][1] << " " << Bfield_energy[t_step][2];
             break;
         }
-        amrex::AllPrintToFile(simulation_name) << " " << kin[t_step] << " ";
+        amrex::PrintToFile(simulation_name) << " " << kin[t_step] << " ";
         switch (vdim) {
         case 1:
-            amrex::AllPrintToFile(simulation_name) << mom[t_step][0];
+            amrex::PrintToFile(simulation_name) << mom[t_step][0];
             break;
         case 2:
-            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1];
+            amrex::PrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1];
             break;
         case 3:
-            amrex::AllPrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
+            amrex::PrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
             break;
         }
-        amrex::AllPrintToFile(simulation_name) << " " << gauss_error[t_step];
-        amrex::AllPrintToFile(simulation_name) << std::endl;
+        amrex::PrintToFile(simulation_name) << " " << gauss_error[t_step];
+        amrex::PrintToFile(simulation_name) << std::endl;
     }
 
 #if (GEMPIC_SPACEDIM==3)

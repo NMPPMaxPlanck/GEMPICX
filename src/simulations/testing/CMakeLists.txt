@@ -9,6 +9,7 @@ add_executable ( test_vlasov_maxwell_hs_all test_vlasov_maxwell_hs_all.cpp )
 #add_executable ( test_vlasov_maxwell_hs_all_lower test_vlasov_maxwell_hs_all_lower.cpp )
 add_executable ( test_vlasov_maxwell_hs_zigzag_C2 test_vlasov_maxwell_hs_zigzag_C2.cpp )
 add_executable ( test_simulation test_simulation.cpp )
+add_executable ( test_vlasov_maxwell_input test_vlasov_maxwell_input.cpp )
 
 if (USE_CUDA) 
 	setup_target_for_cuda_compilation( test_vlasov_maxwell_by )       
@@ -20,6 +21,7 @@ if (USE_CUDA)
 	#setup_target_for_cuda_compilation( test_vlasov_maxwell_hs_all_lower )
 	setup_target_for_cuda_compilation( test_vlasov_maxwell_hs_zigzag_C2 )
 	setup_target_for_cuda_compilation( test_simulation )
+	setup_target_for_cuda_compilation( test_vlasov_maxwell_input )
 endif()
 
 target_link_libraries( test_vlasov_maxwell_by gempic_poisson AMReX::amrex AMReX::Flags_CXX  )
@@ -31,6 +33,7 @@ target_link_libraries( test_vlasov_maxwell_hs_all gempic_poisson AMReX::amrex AM
 #target_link_libraries( test_vlasov_maxwell_hs_all_lower gempic_poisson AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_vlasov_maxwell_hs_zigzag_C2 gempic_poisson AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_simulation gempic_poisson AMReX::amrex AMReX::Flags_CXX )
+target_link_libraries( test_vlasov_maxwell_input gempic_poisson AMReX::amrex AMReX::Flags_CXX  )
 
 
 ######## Ctest
