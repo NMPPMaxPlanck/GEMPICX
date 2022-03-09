@@ -73,23 +73,23 @@ public:
 
     amrex::GpuArray<std::string, numspec> WF = {"0"}; // particle density
     amrex::GpuArray<amrex::Parser, numspec> WFparse;
-    amrex::GpuArray<amrex::ParserExecutor<3>, numspec> WFeval;
+    amrex::GpuArray<amrex::ParserExecutor<4>, numspec> WFeval;
 
     std::string Bx = "0.0";
     amrex::Parser BxParse;
-    amrex::ParserExecutor<3> BxEval;
+    amrex::ParserExecutor<4> BxEval;
     std::string By = "0.0";
     amrex::Parser ByParse;
-    amrex::ParserExecutor<3> ByEval;
+    amrex::ParserExecutor<4> ByEval;
     std::string Bz = "0.0";
     amrex::Parser BzParse;
-    amrex::ParserExecutor<3> BzEval;
+    amrex::ParserExecutor<4> BzEval;
     std::string phi = "0.0";
     amrex::Parser phiParse;
-    amrex::ParserExecutor<3> phiEval;
+    amrex::ParserExecutor<4> phiEval;
     std::string rho = "0.0";
     amrex::Parser rhoParse;
-    amrex::ParserExecutor<3> rhoEval;
+    amrex::ParserExecutor<4> rhoEval;
 
     // code data
     amrex::Real tolerance_particles = 1e-10;
@@ -99,9 +99,9 @@ public:
     int curr_step = 0;
 
     // Diagnostics
-    int freq_x = 1000; //
-    int freq_v = 1000;
-    int freq_slice = 1000; // time evolution
+    int freq_x = 10000; //
+    int freq_v = 10000;
+    int freq_slice = 10000; // time evolution
 
     // Scaling parameters
     amrex::Real curlB_scaling = 1.;
@@ -263,11 +263,11 @@ public:
         {
             parseErrorMessage("Bz");
         }
-        if (!pp.query("phi", phi)) 
+        if (!pp.query("phi", phi))
         {
             parseErrorMessage("phi");
         }
-        if (!pp.query("rho", rho)) 
+        if (!pp.query("rho", rho))
         {
             parseErrorMessage("rho");
         }
@@ -322,11 +322,10 @@ public:
             parseErrorMessage("energy_b_scaling");
         }
 
-        amrex::Print()<< "------------------------------------\n";
-        amrex::Print()<< "Input file parameters have been read\n";
-        amrex::Print()<< "------------------------------------\n";
+        amrex::Print() << "------------------------------------\n";
+        amrex::Print() << "Input file parameters have been read\n";
+        amrex::Print() << "------------------------------------\n";
         // set dependent parameters
-        set_prop_related();
         set_computed_params();
     }
 
@@ -349,7 +348,7 @@ public:
                std::string BY = "0.0",
                std::string BZ = "1e-3 * cos(kvarx * x)",
                std::string PHI = "4 * 0.5 * cos(0.5 * x)",
-               //std::vector<int> NG = {1},
+               // std::vector<int> NG = {1},
                amrex::GpuArray<int, numspec> NG = {1},
                // int NG = 1,
                int PROP = 0,
@@ -363,8 +362,9 @@ public:
                std::vector<std::vector<amrex::Real>> VW_in = {{1.0}})
     {
         sim_name = sm;
-        n_cell = n_cell_vector;//amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-        for (int i=0; i<numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
+        n_cell = n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
+        for (int i = 0; i < numspec; i++)
+            n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
         freq_x = FX;
         freq_v = FV;
@@ -396,47 +396,46 @@ public:
         VW = VW_in;
 
         // set dependent parameters
-        set_prop_related();
         set_computed_params();
     }
 
-    void set_params_Weibel()
+    void set_params_Weibel(std::string sim_name_in = "Weibel",
+                           int propagatorIn = 3,
+                           int nStepsIn = 10,
+                           amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
+                           std::array<int, numspec> nPartPerCellIn = {100},
+                           amrex::Real dtIn = 0.02,
+                           int freqSliceIn = 100)
     {
-        sim_name = "Weibel";
+        sim_name = sim_name_in;
+        propagator = propagatorIn;
+        n_steps = nStepsIn;
+        n_cell = nCellIn;
+        dt = dtIn;
+        freq_slice = freqSliceIn;
         assert(numspec == 1); // Only electrons
-        n_cell = {AMREX_D_DECL(24, 8, 8)};
-        n_part_per_cell[0] = 100;
-        n_steps = 10;
-        freq_x = 12;
-        freq_v = 12;
-        freq_slice = 12;
-        is_periodic = {AMREX_D_DECL(1, 1, 1)};   // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-        max_grid_size = {AMREX_D_DECL(4, 4, 4)}; // amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
-        dt = 0.02;
+        n_part_per_cell[0] = nPartPerCellIn[0];
         charge[0] = -1.0;
         mass[0] = 1.0;
-        k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
         WF[0] = "1.0";
         Bx = "0.0";
         By = "0.0";
         Bz = "1e-3 * cos(kvarx * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
-        propagator = 3;
-        tolerance_particles = 1.e-10;
-        restart = 0;
-        checkpoint_file = "";
-        curr_step = 0;
+        is_periodic = {AMREX_D_DECL(1, 1, 1)};
+        max_grid_size = {AMREX_D_DECL(4, 4, 4)};
+        k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
         num_gaussians[0] = 1;
         VM = {{{0.0, 0.0, 0.0}}};
         VD = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
         VW = {{1.0}};
         // set dependent parameters
-        set_prop_related();
         set_computed_params();
     }
 
-    void set_prop_related()
+    void set_computed_params()
     {
+        // set time_stagered and Nghost depending on propagator
         switch (propagator)
         {
         case 0:
@@ -457,11 +456,7 @@ public:
         default:
             break;
         }
-    }
-
-    void
-    set_computed_params()
-    {
+        // set nPartCellTot
         nPartCellTot = 0;
         for (int spec = 0; spec < numspec; spec++)
         {
@@ -492,8 +487,8 @@ public:
             WFparse[i].setConstant("kvarx", k[0]);
             WFparse[i].setConstant("kvary", k[1]);
             WFparse[i].setConstant("kvarz", k[2]);
-            WFparse[i].registerVariables({"x", "y", "z"});
-            WFeval[i] = WFparse[i].template compile<3>(); // 3 because there are three variables.
+            WFparse[i].registerVariables({"x", "y", "z", "t"});
+            WFeval[i] = WFparse[i].template compile<4>(); // 3 because there are three variables.
         }
 
         // initial fields
@@ -501,36 +496,36 @@ public:
         BxParse.setConstant("kvarx", k[0]);
         BxParse.setConstant("kvary", k[1]);
         BxParse.setConstant("kvarz", k[2]);
-        BxParse.registerVariables({"x", "y", "z"});
-        BxEval = BxParse.compile<3>();
+        BxParse.registerVariables({"x", "y", "z", "t"});
+        BxEval = BxParse.compile<4>();
 
         ByParse = amrex::Parser(By);
         ByParse.setConstant("kvarx", k[0]);
         ByParse.setConstant("kvary", k[1]);
         ByParse.setConstant("kvarz", k[2]);
-        ByParse.registerVariables({"x", "y", "z"});
-        ByEval = BzParse.compile<3>();
+        ByParse.registerVariables({"x", "y", "z", "t"});
+        ByEval = ByParse.compile<4>();
 
         BzParse = amrex::Parser(Bz);
         BzParse.setConstant("kvarx", k[0]);
         BzParse.setConstant("kvary", k[1]);
         BzParse.setConstant("kvarz", k[2]);
-        BzParse.registerVariables({"x", "y", "z"});
-        BzEval = BzParse.compile<3>();
+        BzParse.registerVariables({"x", "y", "z", "t"});
+        BzEval = BzParse.compile<4>();
 
         phiParse = amrex::Parser(phi);
         phiParse.setConstant("kvarx", k[0]);
         phiParse.setConstant("kvary", k[1]);
         phiParse.setConstant("kvarz", k[2]);
-        phiParse.registerVariables({"x", "y", "z"});
-        phiEval = phiParse.compile<3>();
+        phiParse.registerVariables({"x", "y", "z", "t"});
+        phiEval = phiParse.compile<4>();
 
         rhoParse = amrex::Parser(rho);
         rhoParse.setConstant("kvarx", k[0]);
         rhoParse.setConstant("kvary", k[1]);
         rhoParse.setConstant("kvarz", k[2]);
-        rhoParse.registerVariables({"x", "y", "z"});
-        rhoEval = rhoParse.compile<3>();
+        rhoParse.registerVariables({"x", "y", "z", "t"});
+        rhoEval = rhoParse.compile<4>();
     }
 
     void init_particles_from_file(particle_groups<vdim, numspec> *part_gr,

@@ -56,7 +56,7 @@ public :
          // ------------PARAMETERS--------------------------------------------------------
          params.init_Nghost(degx, degy, degz);
          params.read_pp_params();
-         params.set_computed_params();
+         initialize_gempic_structures();
      }
 
     void initialize_gempic_structures(amrex::GpuArray<int, 2> funcSelectRho, amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB)
@@ -73,7 +73,23 @@ public :
         init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM[0], params.VD[0], params.VW[0], 0, wave_function);
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
+    }
 
+    void initialize_gempic_structures()
+    {
+        domain.initialize_computational_domain(params.n_cell, params.max_grid_size, params.is_periodic, params.real_box);
+        mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
+        mw_yee.template init_rho_phi<degvm>(domain, params.rhoEval, params.phiEval);
+        // particles
+        part_gr.reinit(params.charge, params.mass, domain);
+        amrex::Real vol = (domain.geom.ProbHi(0)-domain.geom.ProbLo(0))*(domain.geom.ProbHi(1)-domain.geom.ProbLo(1))*(domain.geom.ProbHi(2)-domain.geom.ProbLo(2));
+        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
+        //------------------------------------------------------------------------------
+        // initialize particles & loop preparation:
+        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM[0], params.VD[0], params.VW[0], 0, wave_function);
+
+        loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(params, domain, &mw_yee, &part_gr, &diagn,
+                                                                         params.time_staggered, params.BxEval, params.ByEval, params.BzEval);
     }
 
     void run_time_loop()

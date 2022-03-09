@@ -1,3 +1,4 @@
+source /etc/profile
 module purge
 if [ x"$CLUSTER" == x"COBRA"  ]; then
 module load intel/19.1.1

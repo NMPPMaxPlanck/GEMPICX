@@ -42,20 +42,17 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
 
-    // Output for GEMPIC_SPACEDIM=3
-    //vlasov_maxwell_test<3, 1, 6, 5, 4, 4, 2, true>(3, test_name);
     vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw> sim;
     sim.params.init_Nghost(degx,degy,degz);
-    sim.params.set_params(test_name, {12,8,8});
-    sim.params.propagator = propagator;
-    sim.params.n_steps = 5;
-    sim.params.set_computed_params();
+
+    const int nSteps = 5;
+    amrex::IntVect nCell = {12,8,8};
+    sim.params.set_params_Weibel(test_name, propagator, nSteps, nCell);
+
     sim.ctest = true;
 
-    sim.params.VM = {{{0.0,0.0,0.0}}};
-    sim.params.VD =  {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
-    sim.params.VW = {{1.0}};
-    sim.initialize_gempic_structures(funcSelectRho, funcSelectB);
+    //sim.initialize_gempic_structures(funcSelectRho, funcSelectB);
+    sim.initialize_gempic_structures(); // uses AMReX parser for initial functions
     sim.run_time_loop();
     if (amrex::ParallelDescriptor::MyProc()==0) std::rename(test_name_tmp.c_str(), test_name_end.c_str());
 }

@@ -214,6 +214,24 @@ void loop_preparation (gempic_parameters<vdim, numspec> VM,
     loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 
+template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
+void loop_preparation(gempic_parameters<vdim, numspec> VM,
+                      computational_domain infra,
+                      maxwell_yee<vdim> *mw_yee,
+                      particle_groups<vdim, numspec> *part_gr,
+                      diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
+                      bool time_staggered,
+                      amrex::ParserExecutor<4> BxEval,
+                      amrex::ParserExecutor<4> ByEval,
+                      amrex::ParserExecutor<4> BzEval)
+{
+    loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, output>(VM, infra, mw_yee, part_gr);
+
+    // initial B_field
+    (*mw_yee).template initB<degmw>(BxEval, ByEval, BzEval, infra);
+
+    loop_staggering<vdim, numspec, degx, degy, degz, degmw, output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+}
 }
 }
 
