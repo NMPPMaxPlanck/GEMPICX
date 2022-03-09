@@ -43,3 +43,7 @@ mkdir -p gempic
 cd gempic
 cmake  -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 make VERBOSE=1 -j 10
+
+# generate run script in BUILD_DIR
+rm -f $BUILD_DIR/run_mpcdf.sh
+cat $SOURCE_DIRECTORY/scripts/slurm_mpcdf.inc $SOURCE_DIRECTORY/scripts/mpcdf_modules.inc $SOURCE_DIRECTORY/scripts/srun.inc > $BUILD_DIR/run_mpcdf.sh

@@ -1,5 +1,5 @@
 # General setting
-sim_name = "Two_Stream"
+sim_name = "test_parser"
 
 # Grid parameters
 n_cell_vector = 24 8 8
@@ -51,9 +51,9 @@ freq_v = 100001
 freq_slice = 100001
 
 # Function parameters
-Bx = "0.0"
-By = "0.0"
-Bz = "0.0"
+Bx = "sin (kvarx * x + kvary * y + kvarz * z - t)"
+By = "cos (kvarx * x + kvary * y + kvarz * z - t)"
+Bz = "1e-3 * cos(kvarx * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
 rho = "1 + 0.1 * cos(0.5 * x)"
 

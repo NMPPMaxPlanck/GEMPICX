@@ -333,17 +333,16 @@ public:
         (*MultiF).FillBoundary(ifr.geom.periodicity());
     }
 
-    template<int degree>
-    void projection ( //amrex::Real (*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                    amrex::Parser parser,
+    template <int degree>
+    void projection(amrex::ParserExecutor<4> parserEval,
                     amrex::Real t,
                     computational_domain ifr,
                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                     amrex::IndexType IndexVect,
-                    amrex::MultiFab *MultiF
-                    ) {
+                    amrex::MultiFab *MultiF)
+    {
 
-        auto function_to_project = parser.compile<4>();  // function with four arguments
+        //auto function_to_project = parser.compile<4>();  // function with four arguments
 
         std::vector<amrex::Real> stencil;
         switch (degree) {
@@ -406,7 +405,7 @@ public:
                                     x_eval = x[xd];
                                     y_eval = y[yd];
                                     z_eval = z[zd];
-                                    val += (integrate[0] ? stencil[xd] : 1) * (integrate[1] ? stencil[yd] : 1) * (integrate[2] ? stencil[zd] : 1) * (function_to_project(x_eval, y_eval, z_eval, t));
+                                    val += (integrate[0] ? stencil[xd] : 1) * (integrate[1] ? stencil[yd] : 1) * (integrate[2] ? stencil[zd] : 1) * parserEval(x_eval, y_eval, z_eval, t);
                                 }
                             }
                         }
@@ -623,7 +622,7 @@ template<int degree>
         }
     };
 
-        /**
+    /**
      * Initialize B field for time t=0 with a given array of functions.
      */
     template <int degree>
@@ -640,6 +639,22 @@ template<int degree>
         projection<degree>(function_to_project_2, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
     }
 
+    /**
+     * Initialize B field for time t=0 with a given array of functions.
+     */
+    template <int degree>
+    void initB(amrex::ParserExecutor<4> BxEval,
+               amrex::ParserExecutor<4> ByEval,
+               amrex::ParserExecutor<4> BzEval,
+               computational_domain ifr)
+    {
+        double half_dt = dt / 2.0; // for leap frog initialization
+
+        // B_field
+        projection<degree>(BxEval, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
+        projection<degree>(ByEval, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
+        projection<degree>(BzEval, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+    }
 
     /**
      * Initialize B field for time t=0 with a given array of functions.
@@ -979,6 +994,15 @@ template<int degree>
         projection<degree>(function_to_project_rho, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
         // phi
         projection<degree>(function_to_project_phi, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+    }
+
+    template <int degree>
+    void init_rho_phi (computational_domain ifr, amrex::ParserExecutor<4> rhoEval, amrex::ParserExecutor<4> phiEval)
+    {
+        // rho
+        projection<degree>(rhoEval, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        // phi
+        projection<degree>(phiEval, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
     }
 
 
