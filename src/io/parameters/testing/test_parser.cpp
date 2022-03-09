@@ -132,10 +132,6 @@ int main(int argc, char *argv[])
     amrex::Initialize(argc, argv);
 
     {
-        if (amrex::ParallelDescriptor::MyProc()==0) 
-        {
-            remove("test_parser.output.0");
-        }
         // Print empty line
         amrex::PrintToFile("test_parser.output", 0) << "\n";
 
@@ -146,6 +142,11 @@ int main(int argc, char *argv[])
         amrex::Print() << "test_Weibel completed\n";
         test_read<vdim, numSpecRead>();
         amrex::Print() << "test_read completed\n";
+
+        if (amrex::ParallelDescriptor::MyProc()==0) 
+        {
+            std::rename("test_parser.output.0","test_parser.output");
+        }
     }
 
     amrex::Finalize();
