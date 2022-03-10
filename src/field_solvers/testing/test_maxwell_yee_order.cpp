@@ -203,10 +203,10 @@ void main_main()
     for (int n = 1; n <= mw_yee.nsteps; n++)
     {
         std::cout << "step: " << n << std::endl;
-        mw_yee.template hodge_full<degree>(infra, &(mw_yee.B_Array), &(mw_yee.HB_Array), false);
-        mw_yee.advance_E(infra, VlMa.dt, true, false, &(mw_yee.HB_Array), &(mw_yee.E_Array));
-        mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
-        mw_yee.advance_B(infra, VlMa.dt, &(mw_yee.HE_Array), &(mw_yee.B_Array));
+        mw_yee.template hodge_full<degree>(infra, (mw_yee.B_Array), (mw_yee.HB_Array), false);
+        mw_yee.advance_E(infra, VlMa.dt, true, false, (mw_yee.HB_Array), (mw_yee.E_Array));
+        mw_yee.template hodge_full<degree>(infra, (mw_yee.E_Array), (mw_yee.HE_Array), true);
+        mw_yee.advance_B(infra, VlMa.dt, (mw_yee.HE_Array), (mw_yee.B_Array));
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, true, infra);
 

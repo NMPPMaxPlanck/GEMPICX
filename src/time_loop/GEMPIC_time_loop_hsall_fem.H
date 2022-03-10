@@ -51,13 +51,13 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
         // Operator H_B for dt/2
         if ( electromagnetic ) {
-            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->template hodge_full<degmw>(infra, (mw_yee->B_Array), (mw_yee->HB_Array), false);
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, (mw_yee->HB_Array), (mw_yee->E_Array));
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
-            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+            mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), (mw_yee->HE_Array), true);
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, (mw_yee->HE_Array), (mw_yee->B_Array));
           }
 
         //--------------------------------------------------------------------------
@@ -305,7 +305,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
         abort();*/
 
         // advance E from j (field part of H_p)
-        mw_yee->advance_E(infra, 1.0, false, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+        mw_yee->advance_E(infra, 1.0, false, true, (mw_yee->HB_Array), (mw_yee->E_Array));
 
         // Second particle loop for particle part from H_E
         for (int spec=0;spec<numspec;spec++) {
@@ -349,12 +349,12 @@ void time_loop_hsall_fem_step (computational_domain infra,
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
         if ( electromagnetic ) {
-            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+            mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), (mw_yee->HE_Array), true);
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, (mw_yee->HE_Array), (mw_yee->B_Array));
 
           // Operator H_B for dt/2
-            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+            mw_yee->template hodge_full<degmw>(infra, (mw_yee->B_Array), (mw_yee->HB_Array), false);
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, (mw_yee->HB_Array), (mw_yee->E_Array));
         }
 
 }

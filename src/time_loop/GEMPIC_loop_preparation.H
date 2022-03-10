@@ -103,8 +103,8 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
      (*mw_yee).solve_poisson(infra, 1e-11, VM.max_coarsening_level);
     if (degmw > 2)
       {
-        (*mw_yee).template solve_poisson_CG<degmw>(&(mw_yee->rho), &(mw_yee->phi), &kx, &ky, &kz, infra, 2, 1e-11, 100);
-        (*mw_yee).template D_from_phi<degmw>(&(mw_yee->phi), &(mw_yee->E_Array), &kx, &ky, &kz, infra);
+        (*mw_yee).template solve_poisson_CG<degmw>((mw_yee->rho), (mw_yee->phi), kx, ky, kz, infra, 2, 1e-11, 100);
+        (*mw_yee).template D_from_phi<degmw>((mw_yee->phi), &(mw_yee->E_Array), kx, ky, kz, infra);
       }
 
 }
@@ -121,8 +121,8 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
         amrex::Print() << "ATTENTION: method is time staggered" << std::endl;
         //------------------------------------------------------------------------------
         //approximate e^1/2
-        mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
-        (*mw_yee).advance_E(infra, 0.5*(*mw_yee).dt, true, true, &(mw_yee->HB_Array), &(mw_yee->E_Array));
+        mw_yee->template hodge_full<degmw>(infra, (mw_yee->B_Array), (mw_yee->HB_Array), false);
+        (*mw_yee).advance_E(infra, 0.5*(*mw_yee).dt, true, true, (mw_yee->HB_Array), (mw_yee->E_Array));
         //------------------------------------------------------------------------------
         //approximate x^1/2
         for (int spec=0;spec<numspec;spec++) {
