@@ -26,6 +26,9 @@ export TMPDIR=$JOB_SHMTMPDIR
 # because the ctests seem to require this for some reason
 export BUILD_DIR=$(pwd)/../build
 
+# set number of OMP threads (4 processes \times 4 threads in use during tests)
+export OMP_NUM_THREADS=4
+
 # CI phase 1 -- build
 time -p ./ci_raven_gpu_build_gcc.sh
 
