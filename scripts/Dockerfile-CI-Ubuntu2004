@@ -1,0 +1,29 @@
+# Ubuntu 20.04 image with GNU compilers, HDF5, and MPI, Python, Sphinx, and Doxygen
+
+FROM ubuntu:20.04
+
+MAINTAINER Klaus Reuter <khr@mpcdf.mpg.de>
+
+ENV DEBIAN_FRONTEND="noninteractive"
+ENV TZ="Europe/Berlin"
+
+# OpenMPI settings to make it work within a Docker container
+ENV OMPI_ALLOW_RUN_AS_ROOT=1
+ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+ENV OMPI_MCA_mca_base_component_show_load_errors=0
+ENV OMPI_MCA_btl_base_warn_component_unused=0
+ENV OMPI_MCA_btl_vader_single_copy_mechanism=none
+ENV OMPI_MCA_plm_rsh_agent=/bin/true
+
+RUN apt-get update &&\
+    apt-get install -y build-essential g++ gfortran zlib1g-dev \
+        libopenmpi-dev libhdf5-openmpi-dev libhdf5-dev \
+        libfftw3-dev libopenblas-dev \
+        openmpi-bin python3 python3-pip doxygen numdiff git cmake &&\
+    apt-get clean &&\
+    rm -rf /var/lib/apt/lists/* &&\
+    rm -rf /usr/share/man /usr/share/info
+
+RUN pip3 install --no-cache-dir sphinx &&\
+    pip3 install --no-cache-dir sphinx_rtd_theme &&\
+    pip3 install --no-cache-dir breathe

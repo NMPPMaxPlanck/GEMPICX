@@ -1,37 +1,146 @@
-ubuntu2004_openmpi_3D:
-  image: gitlab-registry.mpcdf.mpg.de/khr/docker/gempic/ubuntu2004
+variables:
+  UBUNTU_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  UBUNTU_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:ubuntu2004_latest
+
+
+stages:
+  - build-docker
+  - deploy-docker
+  - test
+  - deploy
+
+
+# Build and test based on an Ubuntu 20.04 image (CPU only)
+build-test_ubuntu2004:
+  image: $UBUNTU_RELEASE_IMAGE
+  tags:
+    - cloud
+  stage: test
+  # only:
+    # - DISABLE
+  variables:
+    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
     - cd scripts
     - bash gempic3D_ci.sh
-  tags:
-    - avx2
-    - docker
-    
 
-build-gcc-gpu:
+
+# Build and test based on the MPCDF 'module-image' (CPU only, CentOS7, environment modules)
+build-test_mpcdf_modules_cloud_cpu:
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
   tags:
-    - gpu 
+    - cloud
+  stage: test
+  # only:
+    # - DISABLE
+  variables:
+    OMP_NUM_THREADS: 1
+  script:
+    - mkdir build
+    - export BUILD_DIR=`readlink -f ./build`
+    - cd scripts
+    - source ci_raven_gpu_build_gcc.inc
+    - bash gempic3D_ci.sh
+
+
+# Build and test based on the MPCDF 'module-image' (GPU, CentOS7, environment modules)
+build-test_mpcdf_modules_cloud_gpu:
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
+  tags:
+    - cloud-gpu
+  stage: test
+  # only:
+  #  - DISABLE
+  variables:
+    MAKE_NPROCS: 4
+    OMP_NUM_THREADS: 1
+  script:
+    - nvidia-cuda-mps-control -d
+    - cd scripts
+    - export BUILD_DIR=$(pwd)/../build
+    - bash ci_raven_gpu_build_gcc.sh
+    - bash ci_raven_gpu_ctest.sh
+    - echo quit | nvidia-cuda-mps-control
+
+
+# Build and test directly on the Raven HPC system (A100 GPU, SLES15, environment modules, Slurm)
+build-gcc-gpu:
+  stage: test
+  only:
+    - DISABLE
+  tags:
+    - gpu
   script:
     - cd scripts
     - ./ci_raven_gpu_launcher.sh
 
+
+# Create and publish documentation pages (Ubuntu 20.04)
 pages:
-  image: gitlab-registry.mpcdf.mpg.de/khr/docker/gempic/ubuntu2004
+  image: $UBUNTU_RELEASE_IMAGE
+  tags:
+    - cloud
   stage: deploy
-  before_script:
-    - apt-get -y update
-    - apt-get -y install python3-pip
-    - apt-get -y install doxygen
-    - pip3 install -U sphinx
-    - pip3 install sphinx_rtd_theme
-    - pip3 install breathe
+  only:
+    - master
   script:
-    - cd doc/sphinx ; make html
+    - cd doc/sphinx
+    - make html
     - mv _build/html/ ../../public/
   artifacts:
     paths:
       - public
-# if runner offline: login to raven and type tmux; ./bin/gitlab-runner run; ctrl B D 
+
+
+# --- BELOW
+# CI jobs to build and tag the Docker CI image on MPCDF GitLab,
+# edit 'scripts/Dockerfile-CI-Ubuntu2004' to trigger a rebuild,
+# it should not be necessary to modify the jobs themselves ...
+# ---
+
+build-ubuntu-ci-image:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: build-docker
+  tags:
+    - cloud
+  only:
+    refs:
+      - master
+    changes:
+      #- .gitlab-ci.yml
+      - scripts/Dockerfile-CI-Ubuntu2004
+  script:
+    - mkdir -p /kaniko/.docker
+    - >-
+      echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+        >/kaniko/.docker/config.json
+    - >-
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/scripts/Dockerfile-CI-Ubuntu2004 \
+        --destination $UBUNTU_TEST_IMAGE --reproducible -v debug
+
+deploy-ubuntu-ci-image:
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image/podman:latest
+  stage: deploy-docker
+  tags:
+    - cloud
+  only:
+    refs:
+      - master
+    changes:
+      #- .gitlab-ci.yml
+      - scripts/Dockerfile-CI-Ubuntu2004
+  variables:
+    BUILDAH_FORMAT: docker
+    BUILDAH_ISOLATION: chroot
+    STORAGE_DRIVER: vfs
+  script:
+    - podman login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - podman pull $UBUNTU_TEST_IMAGE
+    - podman tag  $UBUNTU_TEST_IMAGE $UBUNTU_RELEASE_IMAGE
+    - podman push $UBUNTU_RELEASE_IMAGE

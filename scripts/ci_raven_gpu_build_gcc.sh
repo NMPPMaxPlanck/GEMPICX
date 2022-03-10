@@ -15,6 +15,8 @@ source ci_raven_gpu_build_gcc.inc
 export CC=`which gcc`
 export CXX=`which g++`
 
+MAKE_NPROCS="${MAKE_NPROCS:-16}"
+
 git submodule init
 git submodule update
 
@@ -33,7 +35,7 @@ pushd amrex
 export AMREX_CUDA_ARCH=Ampere
 cmake -D AMReX_GPU_BACKEND=CUDA -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $AMREX_DIRECTORY
 #make clean
-make -j 16 #VERBOSE=1
+make -j $MAKE_NPROCS #VERBOSE=1
 make install
 
 popd
@@ -44,6 +46,6 @@ pushd gempic
 
 cmake -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CMAKE_CUDA_ARCHITECTURES=80 -D CMAKE_BUILD_TYPE=Release $SOURCE_DIRECTORY
 #make clean
-make -j 16 #VERBOSE=1
+make -j $MAKE_NPROCS #VERBOSE=1
 
 popd
