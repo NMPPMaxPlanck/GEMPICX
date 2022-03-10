@@ -7,4 +7,5 @@ module load openmpi/4
 module load cuda/11.2
 module load cmake/3.22
 module load numdiff/5.9
+module load git
 module list

@@ -1,11 +1,16 @@
 #!/bin/bash
 
+#set -x
+set -e
+
 # ---
 # Build gempic on Ubuntu
 # ---
 
 # build in /tmp
 BUILD_DIR=${BUILD_DIR:=/tmp/gempic_obj}
+# processors used for parallel build
+MAKE_NPROCS="${MAKE_NPROCS:-4}"
 # define the CMAKE build type
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:="Release"}
 
@@ -42,7 +47,7 @@ cmake $GEMPIC_BASE \
       -D CMAKE_CXX_FLAGS="-std=c++11" \
       -D CMAKE_FC_COMPILER=mpif95
 
-make -j 4
+make -j $MAKE_NPROCS
 
 cp $GEMPIC_BASE/simulations/vlasov_maxwell/species_data_3V_0.txt simulations/vlasov_maxwell/
 
