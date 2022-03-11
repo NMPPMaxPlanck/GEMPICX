@@ -117,7 +117,8 @@ void print_param(gempic_parameters<vdim, numspec> params)
                 }
                 else if (params.sim_name == "Weibel")
                 {
-                    maxloc = std::abs(params.WFeval[0](x, y, z, 0) - 1.0);
+                    amrex::Real t0 = 0.0;
+                    maxloc = std::abs(params.WFeval[0](x, y, z, t0) - 1.0);
                     maxerr = std::max(maxerr, maxloc);
                 }
             }
