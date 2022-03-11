@@ -67,13 +67,13 @@ public:
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
     // Initial velocity distribution (sum of gaussians)
     amrex::GpuArray<int, numspec> num_gaussians = {0};
-    std::vector<std::vector<std::vector<amrex::Real>>> VM{}; // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> VD{};
-    std::vector<std::vector<amrex::Real>> VW{};
+    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{}; // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> vThermal{};
+    std::vector<std::vector<amrex::Real>> vWeight{};
 
-    amrex::GpuArray<std::string, numspec> WF = {"0"}; // particle density
-    amrex::GpuArray<amrex::Parser, numspec> WFparse;
-    amrex::GpuArray<amrex::ParserExecutor<4>, numspec> WFeval;
+    amrex::GpuArray<std::string, numspec> density = {"0"}; // particle density
+    amrex::GpuArray<amrex::Parser, numspec> densityParse;
+    amrex::GpuArray<amrex::ParserExecutor<4>, numspec> densityEval;
 
     std::string Bx = "0.0";
     amrex::Parser BxParse;
@@ -214,9 +214,9 @@ public:
             {
                 parseErrorMessage(specString + ".mass");
             }
-            if (!ppSpec.query("WF", WF[spec])) // initial density
+            if (!ppSpec.query("density", density[spec])) // initial density
             {
-                parseErrorMessage(specString + ".WF");
+                parseErrorMessage(specString + ".density");
             }
             if (!ppSpec.query("num_gaussians", num_gaussians[spec]))
             {
@@ -245,9 +245,9 @@ public:
                 }
                 vvw.push_back(vw);
             }
-            VM.push_back(vvm);
-            VD.push_back(vvt);
-            VW.push_back(vvw);
+            meanVelocity.push_back(vvm);
+            vThermal.push_back(vvt);
+            vWeight.push_back(vvw);
         }
 
         // initial fields
@@ -357,9 +357,9 @@ public:
                int RST = 0,
                std::string CF = "",
                int CD = 0,
-               std::vector<std::vector<std::vector<amrex::Real>>> VM_in = {{{0.0, 0.0, 0.0}}},
-               std::vector<std::vector<std::vector<amrex::Real>>> VD_in = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
-               std::vector<std::vector<amrex::Real>> VW_in = {{1.0}})
+               std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
+               std::vector<std::vector<std::vector<amrex::Real>>> vThermal_in = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
+               std::vector<std::vector<amrex::Real>> vWeight_in = {{1.0}})
     {
         sim_name = sm;
         n_cell = n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
@@ -377,7 +377,7 @@ public:
         {
             charge[i] = C[i];
             mass[i] = M[i];
-            WF[i] = wf[i];
+            density[i] = wf[i];
         }
         k = {K, K, K};
         Bx = BX;
@@ -391,9 +391,9 @@ public:
         restart = RST;
         checkpoint_file = CF;
         curr_step = CD;
-        VM = VM_in;
-        VD = VD_in;
-        VW = VW_in;
+        meanVelocity = meanVelocity_in;
+        vThermal = vThermal_in;
+        vWeight = vWeight_in;
 
         // set dependent parameters
         set_computed_params();
@@ -417,7 +417,7 @@ public:
         n_part_per_cell[0] = nPartPerCellIn[0];
         charge[0] = -1.0;
         mass[0] = 1.0;
-        WF[0] = "1.0";
+        density[0] = "1.0";
         Bx = "0.0";
         By = "0.0";
         Bz = "1e-3 * cos(kvarx * x)";
@@ -426,9 +426,9 @@ public:
         max_grid_size = {AMREX_D_DECL(4, 4, 4)};
         k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
         num_gaussians[0] = 1;
-        VM = {{{0.0, 0.0, 0.0}}};
-        VD = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
-        VW = {{1.0}};
+        meanVelocity = {{{0.0, 0.0, 0.0}}};
+        vThermal = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
+        vWeight = {{1.0}};
         // set dependent parameters
         set_computed_params();
     }
@@ -483,12 +483,12 @@ public:
         // --------
         for (size_t i = 0; i < numspec; i++)
         {
-            WFparse[i] = amrex::Parser(WF[i]);
-            WFparse[i].setConstant("kvarx", k[0]);
-            WFparse[i].setConstant("kvary", k[1]);
-            WFparse[i].setConstant("kvarz", k[2]);
-            WFparse[i].registerVariables({"x", "y", "z", "t"});
-            WFeval[i] = WFparse[i].template compile<4>(); // 3 because there are three variables.
+            densityParse[i] = amrex::Parser(density[i]);
+            densityParse[i].setConstant("kvarx", k[0]);
+            densityParse[i].setConstant("kvary", k[1]);
+            densityParse[i].setConstant("kvarz", k[2]);
+            densityParse[i].registerVariables({"x", "y", "z", "t"});
+            densityEval[i] = densityParse[i].template compile<4>(); // 3 because there are three variables.
         }
 
         // initial fields

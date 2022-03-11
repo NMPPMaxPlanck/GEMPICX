@@ -54,19 +54,19 @@ void main_main ()
         VlMa.sim_name = "Landau";
         VlMa.n_part_per_cell = {10000};
         VlMa.k = {0.5,0.5,0.5};
-        VlMa.WF = "1.0 + 0.5 * cos(kvarx * x)";
+        VlMa.density = "1.0 + 0.5 * cos(kvarx * x)";
         VlMa.Bz = "0.0";
     }
     VlMa.n_steps = 10;
     VlMa.set_computed_params();
 
   // Weibel parameters
-    std::vector<std::vector<std::vector<amrex::Real>>> VM {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> VD {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
-    std::vector<std::vector<amrex::Real>> VW {{1.0}};
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
+    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> vThermal {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
+    std::vector<std::vector<amrex::Real>> vWeight {{1.0}};
+    VlMa.meanVelocity = meanVelocity;
+    VlMa.vThermal = vThermal;
+    VlMa.vWeight = vWeight;
 
     // ------------------------------------------------------------------------------
     // ------------INITIALIZE GEMPIC-STRUCTURES--------------------------------------
@@ -87,7 +87,7 @@ void main_main ()
     diagnostics<vdim, numspec,degx,degy,degz,degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
-    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.VM, VlMa.VD, VlMa.VW, 0);
+    init_particles_full_domain<vdim,numspec>(infra, part_gr, VlMa, VlMa.meanVelocity, VlMa.vThermal, VlMa.vWeight, 0);
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, false>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
     //------------------------------------------------------------------------------

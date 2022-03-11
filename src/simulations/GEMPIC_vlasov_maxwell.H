@@ -70,7 +70,7 @@ public :
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
-        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM[0], params.VD[0], params.VW[0], 0, wave_function);
+        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0], params.vWeight[0], 0, wave_function);
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
     }
@@ -86,7 +86,7 @@ public :
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
-        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.VM[0], params.VD[0], params.VW[0], 0, wave_function);
+        init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0], params.vWeight[0], 0, wave_function);
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(params, domain, &mw_yee, &part_gr, &diagn,
                                                                          params.time_staggered, params.BxEval, params.ByEval, params.BzEval);

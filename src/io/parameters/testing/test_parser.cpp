@@ -55,28 +55,28 @@ void print_param(gempic_parameters<vdim, numspec> params)
     {
         amrex::PrintToFile("test_parser.output", 0) << params.num_gaussians[i] << "\n";
         amrex::Print() << params.num_gaussians[i] << "\n";
-        amrex::PrintToFile("test_parser.output", 0) << params.WF[i] << "\n";
-        amrex::Print() << params.WF[i] << "\n";
+        amrex::PrintToFile("test_parser.output", 0) << params.density[i] << "\n";
+        amrex::Print() << params.density[i] << "\n";
         for (int j = 0; j < params.num_gaussians[i]; j++)
         {
             amrex::PrintToFile("test_parser.output", 0) << "species " << i << " gaussian " << j << "\n";
             amrex::Print() << "species " << i << " gaussian " << j << "\n";
             for (int k = 0; k < vdim; k++)
             {
-                amrex::PrintToFile("test_parser.output", 0) << params.VM[i][j][k] << " ";
-                amrex::Print() << params.VM[i][j][k] << " ";
+                amrex::PrintToFile("test_parser.output", 0) << params.meanVelocity[i][j][k] << " ";
+                amrex::Print() << params.meanVelocity[i][j][k] << " ";
             }
             amrex::PrintToFile("test_parser.output", 0) << "\n"; 
             amrex::Print() << "\n"; 
             for (int k = 0; k < vdim; k++)
             {
-                amrex::PrintToFile("test_parser.output", 0) << params.VD[i][j][k] << " ";
-                amrex::Print() << params.VD[i][j][k] << " ";
+                amrex::PrintToFile("test_parser.output", 0) << params.vThermal[i][j][k] << " ";
+                amrex::Print() << params.vThermal[i][j][k] << " ";
             }
             amrex::PrintToFile("test_parser.output", 0) << "\n";
             amrex::Print() << "\n";
-            amrex::PrintToFile("test_parser.output", 0) << params.VW[i][j] << "\n";
-            amrex::Print() << params.VW[i][j] << "\n";
+            amrex::PrintToFile("test_parser.output", 0) << params.vWeight[i][j] << "\n";
+            amrex::Print() << params.vWeight[i][j] << "\n";
         }
     }
     // test parser
@@ -102,7 +102,7 @@ void print_param(gempic_parameters<vdim, numspec> params)
                 z = zlo + k * dx;
                 if (params.sim_name == "test_parser")
                 {
-                maxloc = std::abs(params.WFeval[0](x, y, z, t) - (1.0 + cos(params.k[0] * x) + sin(params.k[1] * y) + cos(2 * params.k[2] * z)));
+                maxloc = std::abs(params.densityEval[0](x, y, z, t) - (1.0 + cos(params.k[0] * x) + sin(params.k[1] * y) + cos(2 * params.k[2] * z)));
                 maxerr = std::max(maxerr, maxloc);
                 maxloc = std::abs(params.BxEval(x, y, z, t) - sin(params.k[0] * x + params.k[1] * y +  params.k[2] * z - t));
                 maxerr = std::max(maxerr, maxloc);
@@ -118,7 +118,7 @@ void print_param(gempic_parameters<vdim, numspec> params)
                 else if (params.sim_name == "Weibel")
                 {
                     amrex::Real t0 = 0.0;
-                    maxloc = std::abs(params.WFeval[0](x, y, z, t0) - 1.0);
+                    maxloc = std::abs(params.densityEval[0](x, y, z, t0) - 1.0);
                     maxerr = std::max(maxerr, maxloc);
                 }
             }
