@@ -1466,8 +1466,8 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> push_v_efield(amrex::Gp
      * Push the position and the velocity (only the vxB part) in a nonlinear iteration
      */
 template <int vdim, int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos,
-                                                                   amrex::GpuArray<amrex::Real, vdim> vel,
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_v_bfield(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> oldX,
+                                                                   amrex::GpuArray<amrex::Real, vdim> oldV,
                                                               amrex::Real dt,
                                                               amrex::Real chargemass, //charge/mass
                                                               amrex::GpuArray<amrex::Array4<amrex::Real>,int(vdim/2.5)*2+1>const& bArray,
@@ -1476,12 +1476,6 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_
                                                                                                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> phi,
                                                                                                          amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+1> dxi,
                                                               splines_at_particles<degx,degy,degz> &spline){
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> oldX;
-    for (unsigned int d=0;d<GEMPIC_SPACEDIM; ++d)
-        oldX[d]= pos[d];
-    amrex::GpuArray<amrex::Real, vdim> oldV;
-    for (unsigned int d=0;d<vdim;++d)
-        oldV[d] = vel[d];
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newX = oldX;
     amrex::GpuArray<amrex::Real, vdim> newV = oldV;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> newXiter;
@@ -1506,7 +1500,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_
         for (unsigned int d=0; d<GEMPIC_SPACEDIM; ++d)
         {
             if (d<vdim)
-                xMean[d] = mod_dom(0.5*(newX[d]+oldX[d]),phi[d],plo[d]);
+                xMean[d] = 0.5*(newX[d]+oldX[d]);
         }
         // evaluate B at xMean
         spline.init_particles(xMean , plo, dxi);
@@ -1516,9 +1510,9 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM+vdim> push_x_
             newV[0] = oldV[0] + dt*chargemass*( 0.5*(oldV[1]+newViter[1])*Bp[0]);
             newV[1] = oldV[1] + dt*chargemass*( 0.5*(oldV[0]+newViter[0])*Bp[0]);
         } else if (vdim == 3) {
-            newV[0] = vel[0] + dt*chargemass*(0.5*(oldV[1]+newViter[1])*Bp[2]-0.5*(oldV[2]+newViter[2])*Bp[1]);
-            newV[1] = vel[1] + dt*chargemass*(0.5*(oldV[2]+newViter[2])*Bp[0]-0.5*(oldV[0]+newViter[0])*Bp[2]);
-            newV[2] = vel[2] + dt*chargemass*(0.5*(oldV[0]+newViter[0])*Bp[1]-0.5*(oldV[1]+newViter[1])*Bp[0]);
+            newV[0] = oldV[0] + dt*chargemass*(0.5*(oldV[1]+newViter[1])*Bp[2]-0.5*(oldV[2]+newViter[2])*Bp[1]);
+            newV[1] = oldV[1] + dt*chargemass*(0.5*(oldV[2]+newViter[2])*Bp[0]-0.5*(oldV[0]+newViter[0])*Bp[2]);
+            newV[2] = oldV[2] + dt*chargemass*(0.5*(oldV[0]+newViter[0])*Bp[1]-0.5*(oldV[1]+newViter[1])*Bp[0]);
         }
         diff = 0.0;
         for (unsigned d=0;d<GEMPIC_SPACEDIM;++d)
