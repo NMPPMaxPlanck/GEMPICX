@@ -22,7 +22,7 @@ species0.vMean_g0 = 0 0 0
 species0.vThermal_g0 = 0.014142135623730949 0.04898979485566356 0.04898979485566356
 species0.vWeight_g0 = 1
 
-WF = "1.0 + 0.0 * cos(kvarx * x)"   # (string) function: initial particle density
+density = "1.0 + 0.0 * cos(kvarx * x)"   # (string) function: initial particle density
 
 # Simulation parameters
 n_steps = 100000    # (integer) number of simulation steps

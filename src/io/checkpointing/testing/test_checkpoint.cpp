@@ -45,9 +45,9 @@ void main_main()
     amrex::Real k = 1.25;
     amrex::Real tolerance_particles = 1.e-10;
 
-    std::vector<std::vector<amrex::Real>> VM = {{0.0, 0.0, 0.0}};
-    std::vector<std::vector<amrex::Real>> VD = {{0.0141421356237309493730949, 0.04898979485566356, 0.04898979485566356}};
-    std::vector<amrex::Real> VW = {1.0};
+    std::vector<std::vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
+    std::vector<std::vector<amrex::Real>> vThermal = {{0.0141421356237309493730949, 0.04898979485566356, 0.04898979485566356}};
+    std::vector<amrex::Real> vWeight = {1.0};
 
     // initialize amrex data structures from parameters
     amrex::IntVect n_cell(AMREX_D_DECL(n_cell_vector[0], n_cell_vector[1], n_cell_vector[2]));
@@ -77,7 +77,7 @@ void main_main()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VM, VD, VW, species, wave_function);
+    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, meanVelocity, vThermal, vWeight, species, wave_function);
 
     //------------------------------------------------------------------------------
     // test:

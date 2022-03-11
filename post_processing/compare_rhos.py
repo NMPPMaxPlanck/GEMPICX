@@ -59,7 +59,7 @@ freq_v = 100001
 freq_slice = 100001 
 
 # Function parameters
-WF = "1.0 + 0.0 * cos(kvarx * x)"
+density = "1.0 + 0.0 * cos(kvarx * x)"
 Bx = "0.0"
 By = "0.0"
 Bz = "1e-3 * cos(kvarx * x)"

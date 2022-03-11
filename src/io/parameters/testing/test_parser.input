@@ -30,7 +30,7 @@ species1.charge = 1.0
 species1.mass = 1.0
 
 # Gaussian parameters
-species0.WF = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"
+species0.density = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"
 species0.num_gaussians = 2
 species0.vMean_g0 = 0 0 0
 species0.vThermal_g0 = 1.0 1.0 1.0
@@ -39,7 +39,7 @@ species0.vMean_g1 = -2.4 0 0
 species0.vThermal_g1 = 1.0 1.0 1.0
 species0.vWeight_g1 = 0.25
 
-species1.WF = "1.0 +  0.2*cos(kvarx * x)"
+species1.density = "1.0 +  0.2*cos(kvarx * x)"
 species1.num_gaussians = 1
 species1.vMean_g0 = 2.4 0 0
 species1.vThermal_g0 = 1.0 1.0 1.0

@@ -10,7 +10,7 @@ is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 species0.n_part_per_cell = 100 # number of particles per cell
 species0.charge = -1.0 # vector (one entry per species)
 species0.mass = 1.0 # vector (one entry per species)
-species0.WF = "1.0 + 0.0 * cos(kvarx * x)"
+species0.density = "1.0 + 0.0 * cos(kvarx * x)"
 species0.num_gaussians = 1
 
 # Gaussian parameters
