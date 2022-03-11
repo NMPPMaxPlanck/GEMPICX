@@ -58,13 +58,13 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
           profiling_timers->counter_fields -= MPI_Wtime();
         // Operator H_B for dt/2
         if ( electromagnetic ) {
-            mw_yee->template hodge_full<degmw>(infra, (mw_yee->B_Array), (mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, (mw_yee->HB_Array), (mw_yee->E_Array));
+            mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, mw_yee->HB_Array, mw_yee->E_Array);
 
         //--------------------------------------------------------------------------
         // Operator H_E for dt/2 (field part)
-            mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), (mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, (mw_yee->HE_Array), (mw_yee->B_Array));
+            mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), mw_yee->HE_Array, true);
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, mw_yee->HE_Array, mw_yee->B_Array);
           }
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields += MPI_Wtime();
@@ -333,8 +333,8 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields -= MPI_Wtime();
         // advance E from j (field part of H_p)
-        mw_yee->advance_E(infra, 1.0, false, true, (mw_yee->HB_Array), (mw_yee->E_Array));      
-        mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), (mw_yee->HE_Array), true);
+        mw_yee->advance_E(infra, 1.0, false, true, mw_yee->HB_Array, mw_yee->E_Array);      
+        mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields += MPI_Wtime();
 
@@ -395,11 +395,11 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
           profiling_timers->counter_fields -= MPI_Wtime();
         if ( electromagnetic ) {
             //mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
-            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, (mw_yee->HE_Array), (mw_yee->B_Array));
+            mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, mw_yee->HE_Array, mw_yee->B_Array);
 
           // Operator H_B for dt/2
-            mw_yee->template hodge_full<degmw>(infra, (mw_yee->B_Array), (mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, (mw_yee->HB_Array), (mw_yee->E_Array));
+            mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
+            mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, mw_yee->HB_Array, mw_yee->E_Array);
         }
         if (profiling_timers->profiling && profiling_count)
           profiling_timers->counter_fields += MPI_Wtime();

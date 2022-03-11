@@ -100,8 +100,8 @@ void main_main ()
         mw_yee.template projection<2>(0.0,
                                       infra,
                                       {false, false, false},
-                                      *(mw_yee.E_Index[comp]),
-                                      (*mw_yee.Alfven_Tensor[comp]),
+                                      *mw_yee.E_Index[comp],
+                                      *mw_yee.Alfven_Tensor[comp],
                                       AMPERE_FARADAY_OMEGA);
     }
 
@@ -128,14 +128,14 @@ void main_main ()
         //------------------------------------------------------------------------------
         // Ampere
 
-        mw_yee.template hodge_full<degree>(infra, (mw_yee.B_Array), (mw_yee.HB_Array), false); // we apply the hodge to B (you can ignore this, when degree=2, this is the identity)
-        mw_yee.advance_E(infra, VlMa.dt, true, false, (mw_yee.HB_Array), (mw_yee.Alfven_Tensor), (mw_yee.E_Array)); // we apply curl to B and set E = E+dt*curl(B)
+        mw_yee.template hodge_full<degree>(infra, mw_yee.B_Array, mw_yee.HB_Array, false); // we apply the hodge to B (you can ignore this, when degree=2, this is the identity)
+        mw_yee.advance_E(infra, VlMa.dt, true, false, mw_yee.HB_Array, mw_yee.Alfven_Tensor, mw_yee.E_Array); // we apply curl to B and set E = E+dt*curl(B)
         // you can find the function advance_E in src/field_solvers/GEMPIC_maxwell_yee.H line 480 (you can ignore lines 513-548, they are for other cases)
 
         //------------------------------------------------------------------------------
         // Faraday
-        mw_yee.template hodge_full<degree>(infra, (mw_yee.E_Array), (mw_yee.HE_Array), true); // we apply the hodge to E (you can ignore this, when degree=2, this is the identity)
-        mw_yee.advance_B(infra, VlMa.dt, (mw_yee.HE_Array), (mw_yee.B_Array)); // we apply curl to E and set B = B+dt*curl(E)
+        mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true); // we apply the hodge to E (you can ignore this, when degree=2, this is the identity)
+        mw_yee.advance_B(infra, VlMa.dt, mw_yee.HE_Array, mw_yee.B_Array); // we apply curl to E and set B = B+dt*curl(E)
         // you can find the function advance_B in src/field_solvers/GEMPIC_maxwell_yee.H line 574 (you can ignore lines 605-637, they are for other cases)
 
         //------------------------------------------------------------------------------
