@@ -147,7 +147,7 @@ void init_particles_cellwise(computational_domain infra,
                         amrex::Real x = position[0] + x_c;
 
                         //TODOrefine
-                        //const double result = WF_eval(WF_parse);
+                        //const double result = densityEval(density_parse);
                         amrex::Real result = wave_function(x,y,z);
                         weight = result/n_part_per_cell[species]*infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
@@ -193,7 +193,7 @@ void init_particles_full_domain(computational_domain infra,
     parser.setConstant("kvary", ky);
     parser.setConstant("kvarz", kz);
     parser.registerVariables({"x","y","z"});
-    auto WF_eval = parser.compile<3>();  // 3 because there are three variables.
+    auto densityEval = parser.compile<3>();  // 3 because there are three variables.
   
     amrex::Real x_c,y_c,z_c; // cell-corner coordinates
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position;
@@ -293,8 +293,8 @@ void init_particles_full_domain(computational_domain infra,
                         x_c = infra.geom.ProbLo()[0] + (double)l*infra.dx[0];
                         x = position[0] + x_c;
 
-                        // parser // const double result = WF_eval(WF_parse);
-                        const double factor = WF_eval(x,y,z);
+                        // parser // const double result = densityEval(density_parse);
+                        const double factor = densityEval(x,y,z);
                         weight = (factor/n_part_per_cell[species]) * infra.dx[0]
         #if (GEMPIC_SPACEDIM > 1)
                                 *infra.dx[1]
@@ -319,7 +319,6 @@ void init_particles_full_domain(computational_domain infra,
 #endif
         }
     }
-    //parser te_free(WF_parse);
 }
 
 template<int vdim, int numspec>

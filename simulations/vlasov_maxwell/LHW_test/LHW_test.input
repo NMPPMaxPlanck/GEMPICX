@@ -29,7 +29,7 @@ freq_v = 1
 freq_slice = 1 
 
 # Function parameters
-WF = "1.0 + 0.10 * cos( kvarx * x + kvarz * z)"
+density = "1.0 + 0.10 * cos( kvarx * x + kvarz * z)"
 Bx = "0.0"
 By = "0.0"
 Bz = "1.1893"

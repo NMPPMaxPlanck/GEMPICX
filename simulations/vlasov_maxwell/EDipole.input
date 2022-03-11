@@ -23,7 +23,7 @@ freq_v = 100001
 freq_slice = 100001 
 
 # Function parameters
-WF = "1.0"
+density = "1.0"
 Bx = "0.0"
 By = "0.0"
 Bz = "0.0"

@@ -58,18 +58,18 @@ void main_main ()
     amrex::IntVect max_grid_size = {2,2,2};
 
   // Weibel parameters
-    std::vector<std::vector<std::vector<amrex::Real>>> VM {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> VD {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
-    std::vector<std::vector<amrex::Real>> VW {{1.0}};
+    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity {{{0.0,0.0,0.0}}};  // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> vThermal {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};;
+    std::vector<std::vector<amrex::Real>> vWeight {{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2,
                     is_periodic, max_grid_size, 0.01, {1.0}, {1.0}, 1.25, {"0"});
     VlMa.set_computed_params();
-    VlMa.VM = VM;
-    VlMa.VD = VD;
-    VlMa.VW = VW;
+    VlMa.meanVelocity = meanVelocity;
+    VlMa.vThermal = vThermal;
+    VlMa.vWeight = vWeight;
 
     // infrastructure
     computational_domain infra;
@@ -87,7 +87,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
-    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.VM[species], VlMa.VD[species], VlMa.VW[species], species, wave_function);
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.meanVelocity[species], VlMa.vThermal[species], VlMa.vWeight[species], species, wave_function);
     (*(part_gr).mypc[0]).Redistribute();
 
     int spec = 0;

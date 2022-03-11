@@ -34,7 +34,7 @@ namespace Time_Loop {
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
+void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr) {
@@ -100,7 +100,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
     kz.setVal(1.0, 0);
     kz.FillBoundary(infra.geom.periodicity());
 
-     (*mw_yee).solve_poisson(infra, 1e-11, VM.max_coarsening_level);
+     (*mw_yee).solve_poisson(infra, 1e-11, meanVelocity.max_coarsening_level);
     if (degmw > 2)
       {
         (*mw_yee).template solve_poisson_CG<degmw>(&(mw_yee->rho), &(mw_yee->phi), &kx, &ky, &kz, infra, 2, 1e-11, 100);
@@ -110,7 +110,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
 }
 
     template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-    void loop_staggering (gempic_parameters<vdim, numspec> VM,
+    void loop_staggering (gempic_parameters<vdim, numspec> meanVelocity,
                            computational_domain infra,
                            maxwell_yee<vdim> *mw_yee,
                            particle_groups<vdim, numspec> *part_gr,
@@ -159,7 +159,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> VM,
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (gempic_parameters<vdim, numspec> VM,
+void loop_preparation (gempic_parameters<vdim, numspec> meanVelocity,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -167,18 +167,18 @@ void loop_preparation (gempic_parameters<vdim, numspec> VM,
                        bool time_staggered,
                        amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B) {
 
-    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
+    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(meanVelocity, infra, mw_yee, part_gr);
 
     // initial B_field
-    (*mw_yee).template initB<degmw>(fields_B, VM.k, infra);
+    (*mw_yee).template initB<degmw>(fields_B, meanVelocity.k, infra);
 
-    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 
 
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (gempic_parameters<vdim, numspec> VM,
+void loop_preparation (gempic_parameters<vdim, numspec> meanVelocity,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -188,16 +188,16 @@ void loop_preparation (gempic_parameters<vdim, numspec> VM,
                        amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                        amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)) {
 
-    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
+    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(meanVelocity, infra, mw_yee, part_gr);
 
     // initial B_field
     (*mw_yee).template initB<degmw>(function_to_project_0,function_to_project_1, function_to_project_2, infra);
 
-    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation (gempic_parameters<vdim, numspec> VM,
+void loop_preparation (gempic_parameters<vdim, numspec> meanVelocity,
                        computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                        particle_groups<vdim, numspec> *part_gr,
@@ -206,16 +206,16 @@ void loop_preparation (gempic_parameters<vdim, numspec> VM,
                        amrex::GpuArray<int,int(vdim/2.5)*2+1> funcSelect
                        ) {
 
-    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr);
+    loop_preparation_init<vdim, numspec,degx,degy,degz,degmw,output>(meanVelocity, infra, mw_yee, part_gr);
 
     // initial B_field
     (*mw_yee).template initB<degmw>(infra, funcSelect);
 
-    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+    loop_staggering<vdim, numspec,degx,degy,degz,degmw,output>(meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation(gempic_parameters<vdim, numspec> VM,
+void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity,
                       computational_domain infra,
                       maxwell_yee<vdim> *mw_yee,
                       particle_groups<vdim, numspec> *part_gr,
@@ -225,12 +225,12 @@ void loop_preparation(gempic_parameters<vdim, numspec> VM,
                       amrex::ParserExecutor<4> ByEval,
                       amrex::ParserExecutor<4> BzEval)
 {
-    loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, output>(VM, infra, mw_yee, part_gr);
+    loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, output>(meanVelocity, infra, mw_yee, part_gr);
 
     // initial B_field
     (*mw_yee).template initB<degmw>(BxEval, ByEval, BzEval, infra);
 
-    loop_staggering<vdim, numspec, degx, degy, degz, degmw, output>(VM, infra, mw_yee, part_gr, diagn, time_staggered);
+    loop_staggering<vdim, numspec, degx, degy, degz, degmw, output>(meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
 }
 }
 }

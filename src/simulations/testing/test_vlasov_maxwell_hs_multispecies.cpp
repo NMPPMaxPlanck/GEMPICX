@@ -50,7 +50,7 @@ void main_main()
                     {-1.0, 1.0},               // charge
                     {1.0, 200.0},              // mass
                     0.6283185,                 // k
-                    {"1.0"},                   // WF (overwritten later)
+                    {"1.0"},                   // density (overwritten later)
                     "0.0",                     // Bx
                     "0.0",                     // By
                     "0.0",                     // Bz
@@ -92,18 +92,18 @@ void main_main()
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     // FIRST SPECIES
-    std::vector<std::vector<amrex::Real>> VM = {{0.0, 0.0, 0.0}};
-    std::vector<std::vector<amrex::Real>> VD = {{1.0, 1.0, 1.0}};
-    std::vector<amrex::Real> VW = {1.0};
-    std::string WF = "1.0";
-    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, WF, VM, VD, VW, 0);
+    std::vector<std::vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
+    std::vector<std::vector<amrex::Real>> vThermal = {{1.0, 1.0, 1.0}};
+    std::vector<amrex::Real> vWeight = {1.0};
+    std::string density = "1.0";
+    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, density, meanVelocity, vThermal, vWeight, 0);
 
     // SECOND SPECIES
-    VM = {{0.0, 0.0, 0.0}};
-    VD = {{0.00070710678118654751, 0.00070710678118654751, 0.00070710678118654751}};
-    VW = {1.0};
-    WF = "1.0 + 0.2 * cos(kvarx * x)";
-    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, WF, VM, VD, VW, 1);
+    meanVelocity = {{0.0, 0.0, 0.0}};
+    vThermal = {{0.00070710678118654751, 0.00070710678118654751, 0.00070710678118654751}};
+    vWeight = {1.0};
+    density = "1.0 + 0.2 * cos(kvarx * x)";
+    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, density, meanVelocity, vThermal, vWeight, 1);
 
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
 
