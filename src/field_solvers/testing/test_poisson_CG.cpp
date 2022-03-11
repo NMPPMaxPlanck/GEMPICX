@@ -94,10 +94,10 @@ void main_main ()
     // Poisson solver
 
     amrex::MultiFab rho_copy(mw_yee.rho, amrex::make_alias, 0, 1);
-    mw_yee.template solve_poisson_CG<degree>(&mw_yee.rho, &mw_yee.phi, &kx, &ky, &kz, infra, 2, 5.e-11,300);
+    mw_yee.template solve_poisson_CG<degree>(mw_yee.rho, mw_yee.phi, kx, ky, kz, infra, 2, 5.e-11,300);
 
     // Poisson operator
-    mw_yee.template poisson_operator<degree>(&mw_yee.phi, &mw_yee.rho, &kx, &ky, &kz, infra, 0, 1e-16, 100);
+    mw_yee.template poisson_operator<degree>(mw_yee.phi, mw_yee.rho, kx, ky, kz, infra, 0, 1e-16, 100);
 
     amrex::AllPrintToFile("test_poisson_CG_additional.tmp") << std::endl;
     // comparing poisson(ipoisson(rho)) to rho

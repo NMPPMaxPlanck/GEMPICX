@@ -39,7 +39,7 @@ void main_main ()
 
     // apply init function from header
     amrex::Real value = 2.0;
-    init_const(&mf_in, value);
+    init_const(mf_in, value);
 
     // set value with AMReX
     mf_out.setVal(2.0);

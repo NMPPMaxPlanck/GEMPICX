@@ -115,7 +115,7 @@ void main_main ()
     funcSelectE[2] = IHODGE_CG_E2;
     mw_yee.template initE<degree>( infra , funcSelectE );
 
-    mw_yee.template hodge_full<degree>(infra, &(mw_yee.E_Array), &(mw_yee.HE_Array), true);
+    mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
 
     for (int dim = 0; dim < vdim; dim++) {
         amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]),infra.distriMap,1,mw_yee.Nghost);
@@ -125,7 +125,7 @@ void main_main ()
         (mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
         (mw_yee.E_sol_Array[dim])->FillBoundary(infra.geom.periodicity());
 
-        mw_yee.template solve_hodge_CG<degree>(&(*mw_yee.HE_Array[dim]), &(*mw_yee.E_sol_Array[dim]), &k, infra, dim, 2, 1.e-16);
+        mw_yee.template solve_hodge_CG<degree>(*mw_yee.HE_Array[dim], *mw_yee.E_sol_Array[dim], k, infra, dim, 2, 1.e-16);
 
     }
 

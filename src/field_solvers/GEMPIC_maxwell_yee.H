@@ -182,10 +182,10 @@ public:
 
         for (int comp=0; comp<edim; comp++) {
             E_Masks[comp].reset(new amrex::iMultiFab (convert(ifr.grid, *E_Index[comp]),ifr.distriMap,1,Nghost));
-            (*(E_Masks[comp])).setVal(0.0);
-            (*(E_Masks[comp])).FillBoundary(ifr.geom.periodicity());
+            (*E_Masks[comp]).setVal(0.0);
+            (*E_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
-            for ( amrex::MFIter mfi((*(E_Masks[comp]))); mfi.isValid(); ++mfi ) {
+            for ( amrex::MFIter mfi(*E_Masks[comp]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
                 amrex::IntVect hi = {bx.bigEnd()};
 
@@ -204,8 +204,8 @@ public:
 
         for (int comp=0; comp<bdim; comp++) {
             B_Masks[comp].reset(new amrex::iMultiFab (convert(ifr.grid, *B_Index[comp]),ifr.distriMap,1,Nghost));
-            (*(B_Masks[comp])).setVal(0.0);
-            (*(B_Masks[comp])).FillBoundary(ifr.geom.periodicity());
+            (*B_Masks[comp]).setVal(0.0);
+            (*B_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
             for ( amrex::MFIter mfi((*(B_Masks[comp]))); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
@@ -250,7 +250,7 @@ public:
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
-                     amrex::MultiFab *MultiF
+                     amrex::MultiFab& MultiF
                     ) {
         double kx = k[0];
         double ky = k[1];
@@ -275,11 +275,11 @@ public:
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
 
-        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
+        for ( amrex::MFIter mfi(MultiF); mfi.isValid(); ++mfi ){
 
             const amrex::Box& bx = mfi.tilebox();
 
-            amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
+            amrex::Array4<amrex::Real> const& proj_arr = MultiF[mfi].array();
             //ParallelFor(bx, [=] (int i, int j, int k) {
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -330,7 +330,7 @@ public:
                 //te_free(function_parse);
             }//);
         }
-        (*MultiF).FillBoundary(ifr.geom.periodicity());
+        MultiF.FillBoundary(ifr.geom.periodicity());
     }
 
     template <int degree>
@@ -339,7 +339,7 @@ public:
                     computational_domain ifr,
                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                     amrex::IndexType IndexVect,
-                    amrex::MultiFab *MultiF)
+                    amrex::MultiFab& MultiF)
     {
 
         //auto function_to_project = parser.compile<4>();  // function with four arguments
@@ -361,10 +361,10 @@ public:
         int x_len[GEMPIC_SPACEDIM];
         for (int i = 0; i < GEMPIC_SPACEDIM; i++)
             x_len[i] = (integrate[i] ? (degree - 1) : 1);
-        for (amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(MultiF); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.tilebox();
-            amrex::Array4<amrex::Real> const &proj_arr = (*MultiF)[mfi].array();
+            amrex::Array4<amrex::Real> const &proj_arr = MultiF[mfi].array();
             // ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -414,7 +414,7 @@ public:
                 }
             }
         }
-        (*MultiF).FillBoundary(ifr.geom.periodicity());
+        MultiF.FillBoundary(ifr.geom.periodicity());
     }
 
 template<int degree>
@@ -423,7 +423,7 @@ template<int degree>
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
-                     amrex::MultiFab *MultiF
+                     amrex::MultiFab& MultiF
                     ) {
         std::vector<amrex::Real> stencil;
         switch (degree) {
@@ -442,10 +442,10 @@ template<int degree>
         int x_len[GEMPIC_SPACEDIM];
         for (int i = 0; i < GEMPIC_SPACEDIM; i++)
             x_len[i] = (integrate[i] ? (degree - 1) : 1);
-        for (amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(MultiF); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.tilebox();
-            amrex::Array4<amrex::Real> const &proj_arr = (*MultiF)[mfi].array();
+            amrex::Array4<amrex::Real> const &proj_arr = MultiF[mfi].array();
             // ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -495,7 +495,7 @@ template<int degree>
                 }
             }
         }
-        (*MultiF).FillBoundary(ifr.geom.periodicity());
+        MultiF.FillBoundary(ifr.geom.periodicity());
     }
 
     template<int degree>
@@ -503,7 +503,7 @@ template<int degree>
                      computational_domain ifr,
                      amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate,
                      amrex::IndexType IndexVect,
-                     amrex::MultiFab *MultiF,
+                     amrex::MultiFab& MultiF,
                      int funcSelect
                      ) {
 
@@ -524,9 +524,9 @@ template<int degree>
 
         int x_len[GEMPIC_SPACEDIM];
         for (int i=0;i<GEMPIC_SPACEDIM;i++) x_len[i] = (integrate[i]?(degree-1):1);
-        for ( amrex::MFIter mfi(*MultiF); mfi.isValid(); ++mfi ){
+        for ( amrex::MFIter mfi(MultiF); mfi.isValid(); ++mfi ){
             const amrex::Box& bx = mfi.tilebox();
-            amrex::Array4<amrex::Real> const& proj_arr = (*MultiF)[mfi].array();
+            amrex::Array4<amrex::Real> const& proj_arr = MultiF[mfi].array();
             //ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -571,7 +571,7 @@ template<int degree>
                 proj_arr(i,j,k) = val;
             }//);
 	}
-        (*MultiF).FillBoundary(ifr.geom.periodicity());
+        MultiF.FillBoundary(ifr.geom.periodicity());
     }
 
 
@@ -596,9 +596,9 @@ template<int degree>
                  amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
                  computational_domain ifr){
 
-        projection<degree>(function_to_project_0, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], &(*E_Array[0]));
-        projection<degree>(function_to_project_1, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], &(*E_Array[1]));
-        projection<degree>(function_to_project_2, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], &(*E_Array[2]));
+        projection<degree>(function_to_project_0, 0.0, ifr, {AMREX_D_DECL(false, true, true)}, *E_Index[0], (*E_Array[0]));
+        projection<degree>(function_to_project_1, 0.0, ifr, {AMREX_D_DECL(true, false, true)}, *E_Index[1], (*E_Array[1]));
+        projection<degree>(function_to_project_2, 0.0, ifr, {AMREX_D_DECL(true, true, false)}, *E_Index[2], (*E_Array[2]));
     }
 
     /**
@@ -608,7 +608,7 @@ template<int degree>
     void initE ( computational_domain ifr , amrex::GpuArray<int,edim> funcSelect ){
 
         for(int i=0;i<edim;i++)
-          projection<degree>( 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]), funcSelect[i]);
+          projection<degree>( 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], *E_Array[i], funcSelect[i]);
     };
 
     /**
@@ -618,7 +618,7 @@ template<int degree>
     void initE (amrex::GpuArray<std::string, edim> fields, amrex::Vector<amrex::Real> k,computational_domain ifr) {
         // E_field
         for (int i = 0; i<edim; i++) {
-            projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_Array[i]));
+            projection<degree>(fields[i], k, 0.0, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], *E_Array[i]);
         }
     };
 
@@ -634,9 +634,9 @@ template<int degree>
         double half_dt = dt/2.0; // for leap frog initialization
 
         // B_field
-        projection<degree>(function_to_project_0, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
-        projection<degree>(function_to_project_1, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
-        projection<degree>(function_to_project_2, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+        projection<degree>(function_to_project_0, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], *B_Array[0]);
+        projection<degree>(function_to_project_1, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], *B_Array[1]);
+        projection<degree>(function_to_project_2, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], *B_Array[2]);
     }
 
     /**
@@ -651,9 +651,9 @@ template<int degree>
         double half_dt = dt / 2.0; // for leap frog initialization
 
         // B_field
-        projection<degree>(BxEval, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], &(*B_Array[0]));
-        projection<degree>(ByEval, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], &(*B_Array[1]));
-        projection<degree>(BzEval, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], &(*B_Array[2]));
+        projection<degree>(BxEval, half_dt, ifr, {AMREX_D_DECL(false, true, true)}, *B_Index[0], *B_Array[0]);
+        projection<degree>(ByEval, half_dt, ifr, {AMREX_D_DECL(true, false, true)}, *B_Index[1], *B_Array[1]);
+        projection<degree>(BzEval, half_dt, ifr, {AMREX_D_DECL(true, true, false)}, *B_Index[2], *B_Array[2]);
     }
 
     /**
@@ -665,7 +665,7 @@ template<int degree>
 
         // B_field
         for(int i=0;i<bdim;i++)
-          projection<degree>( half_dt, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_Array[i]), funcSelect[i] );
+          projection<degree>( half_dt, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], *B_Array[i], funcSelect[i] );
     }
 
     /**
@@ -678,7 +678,7 @@ template<int degree>
 
         // B_field
         for (int i = 0; i<bdim; i++) {
-            projection<degree>(fields[i], k, half_dt, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_Array[i]));
+            projection<degree>(fields[i], k, half_dt, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], *B_Array[i]);
         }
     }
 
@@ -711,8 +711,8 @@ template<int degree>
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
     void advance_E (computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, bdim > *MultiInput,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *MultiOutput){
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, bdim >& MultiInput,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& MultiOutput){
 
         // make copies for GPU
         amrex::Real dt_step_cp = dt_step;
@@ -723,13 +723,13 @@ template<int degree>
 //#ifdef AMREX_USE_OMP
 //#pragma omp parallel if (Gpu::notInLaunchRegion())
 //#endif
-            for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
+            for (amrex::MFIter mfi(*MultiOutput[d]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
 
-                amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%edim])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%edim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_1 = (*MultiInput[(d+2)%edim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_2 = (*MultiInput[(d+1)%edim])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecJ = (*J_Array[d])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput[d])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     if((edim < 3) & (GEMPIC_SPACEDIM == 1)){
@@ -764,7 +764,7 @@ template<int degree>
                     }
                 });
             }
-            (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
+            (*MultiOutput[d]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
@@ -772,22 +772,22 @@ template<int degree>
      * Advance E by a time step of length @p dt_step with a Yee scheme
      */
     void advance_E (computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, bdim > *MultiInput,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *MultiAlfvenTensor,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *MultiOutput){
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, bdim >& MultiInput,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& MultiAlfvenTensor,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& MultiOutput){
 
         for (int d=0; d<edim; d++) {
 //#ifdef AMREX_USE_OMP
 //#pragma omp parallel if (Gpu::notInLaunchRegion())
 //#endif
-            for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
+            for (amrex::MFIter mfi(*MultiOutput[d]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
 
-                amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%edim])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%edim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_1 = (*MultiInput[(d+2)%edim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_2 = (*MultiInput[(d+1)%edim])[mfi].array();
                 amrex::Array4<amrex::Real> const& vecJ = (*J_Array[d])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecAT = (*(*MultiAlfvenTensor)[d])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecAT = (*MultiAlfvenTensor[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput[d])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     if((edim < 3) & (GEMPIC_SPACEDIM == 1)){
@@ -822,7 +822,7 @@ template<int degree>
                     }
                 });
             }
-            (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
+            (*MultiOutput[d]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
@@ -831,8 +831,8 @@ template<int degree>
      * Advance B by a time step of length @p dt_step with a Yee scheme
      */
     void advance_B (computational_domain ifr, amrex::Real dt_step,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *MultiInput,
-                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, bdim > *MultiOutput){
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& MultiInput,
+                    amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, bdim >& MultiOutput){
 
         amrex::Real dt_step_cp = dt_step;
 
@@ -841,12 +841,12 @@ template<int degree>
 //#ifdef AMREX_USE_OMP
 //#pragma omp parallel if (Gpu::notInLaunchRegion())
 //#endif
-            for (amrex::MFIter mfi(*(*MultiOutput)[d]); mfi.isValid(); ++mfi ) {
+            for (amrex::MFIter mfi(*MultiOutput[d]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.tilebox();
 
-                amrex::Array4<amrex::Real> const& vecIn_1 = (*(*MultiInput)[(d+2)%bdim])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecIn_2 = (*(*MultiInput)[(d+1)%bdim])[mfi].array();
-                amrex::Array4<amrex::Real> const& vecOut = (*(*MultiOutput)[d])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_1 = (*MultiInput[(d+2)%bdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecIn_2 = (*MultiInput[(d+1)%bdim])[mfi].array();
+                amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput[d])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
                     if (edim == 1){}
@@ -871,31 +871,31 @@ template<int degree>
                     }
                 });
             }
-            (*(*MultiOutput)[d]).FillBoundary(ifr.geom.periodicity());
+            (*MultiOutput[d]).FillBoundary(ifr.geom.periodicity());
         }
     }
 
 #if (GEMPIC_SPACEDIM ==3)
     template<int degree>
-    void hodge_full (computational_domain ifr, amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *MultiInput,
-                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *MultiOutput, bool is_E) {
+    void hodge_full (computational_domain ifr, amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& MultiInput,
+                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& MultiOutput, bool is_E) {
         for (int field=0; field<edim; field++) {
 
             amrex::MultiFab tmp(convert(ifr.grid, (is_E?*E_Index[field]:*B_Index[field])),ifr.distriMap,Ncomp,Nghost);
 
-            hodge<degree,0>(ifr, (field==0?0:1), &(*(*MultiInput)[field]), &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
+            hodge<degree,0>(ifr, (field==0?0:1), (*MultiInput[field]), (*(MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #if (GEMPIC_SPACEDIM > 1)
-            hodge<degree,1>(ifr, (field==1?0:1), &(*(*MultiOutput)[field]), &tmp, (is_E?*E_Index[field]:*B_Index[field]));
+            hodge<degree,1>(ifr, (field==1?0:1), (*MultiOutput[field]), tmp, (is_E?*E_Index[field]:*B_Index[field]));
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-            hodge<degree,2>(ifr, (field==2?0:1), &tmp, &(*(*MultiOutput)[field]), (is_E?*E_Index[field]:*B_Index[field]));
+            hodge<degree,2>(ifr, (field==2?0:1), tmp, (*MultiOutput[field]), (is_E?*E_Index[field]:*B_Index[field]));
 #endif
         }
     }
 #endif
 
     template <int degree, int dimension>
-    void hodge (computational_domain ifr, int start_from, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+    void hodge (computational_domain ifr, int start_from, amrex::MultiFab& MultiInput, amrex::MultiFab& MultiOutput,
                 amrex::IndexType IndexVect){
 
         amrex::GpuArray<amrex::Real, degree-1> stencil;
@@ -942,11 +942,11 @@ template<int degree>
             break;
         }
 
-        for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
+        for (amrex::MFIter mfi(MultiOutput); mfi.isValid(); ++mfi ) {
             const amrex::Box& bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real> const& vecIn = (*MultiInput)[mfi].array();
-            amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput)[mfi].array();
+            amrex::Array4<amrex::Real> const& vecIn = MultiInput[mfi].array();
+            amrex::Array4<amrex::Real> const& vecOut = MultiOutput[mfi].array();
             ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
 
@@ -961,7 +961,7 @@ template<int degree>
 
             // next mfi
         }
-        (*MultiOutput).FillBoundary(ifr.geom.periodicity());
+        MultiOutput.FillBoundary(ifr.geom.periodicity());
     }
 
 
@@ -980,9 +980,9 @@ template<int degree>
     void init_rho_phi (amrex::GpuArray<std::string, 2> fields, amrex::Vector<amrex::Real> k,computational_domain ifr){
 
         // rho
-        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), (rho));
         // phi
-        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), (phi));
     }
 
     template <int degree>
@@ -991,18 +991,18 @@ template<int degree>
                        computational_domain ifr){
 
         // rho
-        projection<degree>(function_to_project_rho, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        projection<degree>(function_to_project_rho, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), rho);
         // phi
-        projection<degree>(function_to_project_phi, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+        projection<degree>(function_to_project_phi, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), phi);
     }
 
     template <int degree>
     void init_rho_phi (computational_domain ifr, amrex::ParserExecutor<4> rhoEval, amrex::ParserExecutor<4> phiEval)
     {
         // rho
-        projection<degree>(rhoEval, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(rho));
+        projection<degree>(rhoEval, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), rho);
         // phi
-        projection<degree>(phiEval, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), &(phi));
+        projection<degree>(phiEval, 0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()), phi);
     }
 
 
@@ -1010,20 +1010,20 @@ template<int degree>
     void init_rho_phi (computational_domain ifr, amrex::GpuArray<int,2> funcSelect){
 
         // rho
-        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()) , &(rho), funcSelect[0]);
+        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()) , rho, funcSelect[0]);
         // phi
-        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()) , &(phi), funcSelect[1]);
+        projection<degree>(0.0, ifr, {AMREX_D_DECL(true, true, true)}, amrex::IndexType(amrex::IntVect::TheNodeVector()) , phi, funcSelect[1]);
     }
 
     template <int stencil_length>
-    void matrix_mult (computational_domain ifr, amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab *MultiInput, amrex::MultiFab *MultiOutput,
+    void matrix_mult (computational_domain ifr, amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil, amrex::MultiFab& MultiInput, amrex::MultiFab& MultiOutput,
                       amrex::IndexType IndexVect){
 
-        for (amrex::MFIter mfi(*MultiOutput); mfi.isValid(); ++mfi ) {
+        for (amrex::MFIter mfi(MultiOutput); mfi.isValid(); ++mfi ) {
             const amrex::Box& bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real> const& vecIn = (*MultiInput)[mfi].array();
-            amrex::Array4<amrex::Real> const& vecOut = (*MultiOutput)[mfi].array();
+            amrex::Array4<amrex::Real> const& vecIn = MultiInput[mfi].array();
+            amrex::Array4<amrex::Real> const& vecOut = MultiOutput[mfi].array();
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
@@ -1037,12 +1037,12 @@ template<int degree>
                 vecOut(i,j,k) = val;
             });
         }
-        (*MultiOutput).FillBoundary(ifr.geom.periodicity());
+        MultiOutput.FillBoundary(ifr.geom.periodicity());
     }
 
     template <int stencil_length, int dimension>
     void solve_stencil_CG(amrex::GpuArray<amrex::GpuArray<amrex::Real, stencil_length>, GEMPIC_SPACEDIM> stencil,
-                          amrex::MultiFab *b, amrex::MultiFab *x, computational_domain ifr, amrex::IndexType IndexVect,
+                          amrex::MultiFab& b, amrex::MultiFab& x, computational_domain ifr, amrex::IndexType IndexVect,
                           int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100){
         if(verbose > 0) {
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
@@ -1060,7 +1060,7 @@ template<int degree>
         matrix_mult<stencil_length>(ifr, stencil, x, &r, IndexVect);
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
-        r.plus(*b, 0, 1, Nghost);
+        r.plus(b, 0, 1, Nghost);
         r.FillBoundary(ifr.geom.periodicity());
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
@@ -1080,8 +1080,8 @@ template<int degree>
 
             // x = x + alpha*d
             d.mult(alpha, 0, 1, Nghost);
-            x->plus(d, 0, 1, Nghost);
-            x->FillBoundary(ifr.geom.periodicity());
+            x.plus(d, 0, 1, Nghost);
+            x.FillBoundary(ifr.geom.periodicity());
             d.mult(1.0/alpha, 0, 1, Nghost);
 
             // r = r - alpha*z
@@ -1116,7 +1116,7 @@ template<int degree>
     }
 
     template<int degree>
-    void solve_hodge_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *k, computational_domain ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
+    void solve_hodge_CG(amrex::MultiFab& b, amrex::MultiFab& x, amrex::MultiFab& k, computational_domain ifr, int dimension, int verbose = 0, amrex::Real reltol = 1.e-11,
                         int maxsteps = 100){
         if(verbose > 0) {
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
@@ -1132,17 +1132,17 @@ template<int degree>
         amrex::Real alpha, beta, rr, kern_factor;
 
         // r = A*x
-        hodge<degree,0>(ifr, (dimension==0?0:1), x, &r, *E_Index[dimension]);
-        hodge<degree,1>(ifr, (dimension==1?0:1), &r, &tmp, *E_Index[dimension]);
-        hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &r, *E_Index[dimension]);
-        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
-        amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
+        hodge<degree,0>(ifr, (dimension==0?0:1), x, r, *E_Index[dimension]);
+        hodge<degree,1>(ifr, (dimension==1?0:1), r, tmp, *E_Index[dimension]);
+        hodge<degree,2>(ifr, (dimension==2?0:1), tmp, r, *E_Index[dimension]);
+        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, 1, 0);
+        amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
         k_scaled.mult(kern_factor, 0, 1, Nghost);
         r.plus(k_scaled, 0, 1, Nghost);
 
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
-        r.plus(*b, 0, 1, Nghost);
+        r.plus(b, 0, 1, Nghost);
         r.FillBoundary(ifr.geom.periodicity());
         // d = r
         amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
@@ -1158,12 +1158,12 @@ template<int degree>
 
 
             // z = A*d
-            hodge<degree,0>(ifr, (dimension==0?0:1), &d, &z, *E_Index[dimension]);
-            hodge<degree,1>(ifr, (dimension==1?0:1), &z, &tmp, *E_Index[dimension]);
-            hodge<degree,2>(ifr, (dimension==2?0:1), &tmp, &z, *E_Index[dimension]);
+            hodge<degree,0>(ifr, (dimension==0?0:1), d, z, *E_Index[dimension]);
+            hodge<degree,1>(ifr, (dimension==1?0:1), z, tmp, *E_Index[dimension]);
+            hodge<degree,2>(ifr, (dimension==2?0:1), tmp, z, *E_Index[dimension]);
 
-            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, z, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], *k, 0, *k, 0, 1, 0);
-            amrex::MultiFab::Copy(k_scaled,*k, 0, 0, 1, Nghost);
+            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, z, 0, 1, 0)/amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, 1, 0);
+            amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
             k_scaled.mult(kern_factor, 0, 1, Nghost);
             z.plus(k_scaled, 0, 1, Nghost);
             z.FillBoundary(ifr.geom.periodicity());
@@ -1174,8 +1174,8 @@ template<int degree>
             // x = x + alpha*d
             amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
             k_scaled.mult(alpha, 0, 1, Nghost);
-            x->plus(k_scaled, 0, 1, Nghost);
-            x->FillBoundary(ifr.geom.periodicity());
+            x.plus(k_scaled, 0, 1, Nghost);
+            x.FillBoundary(ifr.geom.periodicity());
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
@@ -1200,8 +1200,8 @@ template<int degree>
     }
 
     template <int degree>
-    void poisson_operator (amrex::MultiFab *MultiIn, amrex::MultiFab *MultiOut, amrex::MultiFab *kx,
-                           amrex::MultiFab *ky, amrex::MultiFab *kz, computational_domain ifr, int verbose = 0,
+    void poisson_operator (amrex::MultiFab& MultiIn, amrex::MultiFab& MultiOut, amrex::MultiFab& kx,
+                           amrex::MultiFab& ky, amrex::MultiFab& kz, computational_domain ifr, int verbose = 0,
                            amrex::Real reltol = 1.e-11, int maxsteps = 100) {
 
         int dimension = 0;
@@ -1236,27 +1236,27 @@ template<int degree>
         HDrho_z.FillBoundary(ifr.geom.periodicity());
 
         // 1) Apply D
-        matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, &Drho_x, *E_Index[0]);
+        matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, Drho_x, *E_Index[0]);
         Drho_x.FillBoundary(ifr.geom.periodicity());
-        matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, &Drho_y, *E_Index[1]);
+        matrix_mult<stencil_length>(ifr, stencil_y, MultiIn, Drho_y, *E_Index[1]);
         Drho_y.FillBoundary(ifr.geom.periodicity());
-        matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, &Drho_z, *E_Index[2]);
+        matrix_mult<stencil_length>(ifr, stencil_z, MultiIn, Drho_z, *E_Index[2]);
         Drho_y.FillBoundary(ifr.geom.periodicity());
 
         // 2) Apply hodge
         // to x comp
         amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
-        solve_hodge_CG<degree>(&Drho_x, &HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
+        solve_hodge_CG<degree>(Drho_x, HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
 
         // to y comp
         dimension = 1;
         amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
-        solve_hodge_CG<degree>(&Drho_y, &HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
+        solve_hodge_CG<degree>(Drho_y, HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
 
         // to z comp
         dimension = 2;
         amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
-        solve_hodge_CG<degree>(&Drho_z, &HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
+        solve_hodge_CG<degree>(Drho_z, HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
 
         // 3) Apply D^T
 
@@ -1272,20 +1272,20 @@ template<int degree>
         stencil_z[1] = {0.0, 0.0, 0.0};
         stencil_z[2] = {0.0, 1.0/ifr.dx[2], -1.0/ifr.dx[2]};
 
-        matrix_mult<3>(ifr, stencil_x, &HDrho_x, &Drho_x, *E_Index[0]);
-        matrix_mult<3>(ifr, stencil_y, &HDrho_y, &Drho_y, *E_Index[1]);
-        matrix_mult<3>(ifr, stencil_z, &HDrho_z, &Drho_z, *E_Index[2]);
+        matrix_mult<3>(ifr, stencil_x, HDrho_x, Drho_x, *E_Index[0]);
+        matrix_mult<3>(ifr, stencil_y, HDrho_y, Drho_y, *E_Index[1]);
+        matrix_mult<3>(ifr, stencil_z, HDrho_z, Drho_z, *E_Index[2]);
 
 
-        amrex::MultiFab::Copy(*MultiOut, Drho_x, 0, 0, 1, 0);
-        MultiOut->plus(Drho_y, 0, 1, 0);
-        MultiOut->plus(Drho_z, 0, 1, 0);
+        amrex::MultiFab::Copy(MultiOut, Drho_x, 0, 0, 1, 0);
+        MultiOut.plus(Drho_y, 0, 1, 0);
+        MultiOut.plus(Drho_z, 0, 1, 0);
 
-        MultiOut->FillBoundary(ifr.geom.periodicity());
+        MultiOut.FillBoundary(ifr.geom.periodicity());
     }
 
     template<int degree>
-    void solve_poisson_CG(amrex::MultiFab *b, amrex::MultiFab *x, amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,
+    void solve_poisson_CG(amrex::MultiFab& b, amrex::MultiFab& x, amrex::MultiFab& kx, amrex::MultiFab& ky, amrex::MultiFab& kz,
                           computational_domain ifr, int verbose = 0, amrex::Real reltol = 1.e-11,
                           int maxsteps = 100){
         if(verbose > 0) {
@@ -1307,14 +1307,14 @@ template<int degree>
         amrex::Real alpha, beta, rr;
 
         // subtract kernel from x0:
-        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, *b, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
+        kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, b, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
         amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
         k_scaled.mult(kern_factor, 0, 1, Nghost);
-        b->minus(k_scaled, 0, 1, Nghost);
-        b->FillBoundary(ifr.geom.periodicity());
+        b.minus(k_scaled, 0, 1, Nghost);
+        b.FillBoundary(ifr.geom.periodicity());
 
         // r = A*x
-        poisson_operator<degree> (x, &r, kx, ky, kz, ifr, verbose, reltol, maxsteps);
+        poisson_operator<degree> (x, r, kx, ky, kz, ifr, verbose, reltol, maxsteps);
         kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, r, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
         amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
         k_scaled.mult(kern_factor, 0, 1, Nghost);
@@ -1323,7 +1323,7 @@ template<int degree>
 
         // r = b-A*x
         r.mult(-1.0, 0, 1, Nghost);
-        r.plus(*b, 0, 1, Nghost);
+        r.plus(b, 0, 1, Nghost);
         r.FillBoundary(ifr.geom.periodicity());
 
         // d = r
@@ -1339,7 +1339,7 @@ template<int degree>
             if (sqrt(rr)*ifr.dx[0]*ifr.dx[1]*ifr.dx[2] < reltol) break;
 
             // z = A*d
-            poisson_operator<degree> (&d, &z, kx, ky, kz, ifr, verbose, reltol, maxsteps);
+            poisson_operator<degree> (d, z, kx, ky, kz, ifr, verbose, reltol, maxsteps);
             kern_factor = amrex::MultiFab::Dot(*nodal_Mask, k, 0, d, 0, 1, 0)/amrex::MultiFab::Dot(*nodal_Mask, k, 0, k, 0, 1, 0);
             amrex::MultiFab::Copy(k_scaled,k, 0, 0, 1, Nghost);
             k_scaled.mult(kern_factor, 0, 1, Nghost);
@@ -1352,8 +1352,8 @@ template<int degree>
             // x = x + alpha*d
             amrex::MultiFab::Copy(k_scaled,d, 0, 0, 1, Nghost);
             k_scaled.mult(alpha, 0, 1, Nghost);
-            x->plus(k_scaled, 0, 1, Nghost);
-            x->FillBoundary(ifr.geom.periodicity());
+            x.plus(k_scaled, 0, 1, Nghost);
+            x.FillBoundary(ifr.geom.periodicity());
 
             // r = r - alpha*z
             z.mult(alpha, 0, 1, Nghost);
@@ -1376,13 +1376,13 @@ template<int degree>
             amrex::Print() << "----------------------------------------------------------------" << std::endl;
         }
 
-        x->mult(epref_ep0, 0, 1, Nghost);
-        x->FillBoundary(ifr.geom.periodicity());
+        x.mult(epref_ep0, 0, 1, Nghost);
+        x.FillBoundary(ifr.geom.periodicity());
     }
 
     template<int degree>
-    void D_from_phi(amrex::MultiFab *phi_mf, amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > *D,
-                    amrex::MultiFab *kx, amrex::MultiFab *ky, amrex::MultiFab *kz,computational_domain ifr, int verbose = 0,
+    void D_from_phi(amrex::MultiFab& phi_mf, amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim >& D,
+                    amrex::MultiFab& kx, amrex::MultiFab& ky, amrex::MultiFab& kz,computational_domain ifr, int verbose = 0,
                     amrex::Real reltol = 1.e-11, int maxsteps = 100) {
 
         amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim > tmp;
@@ -1398,7 +1398,7 @@ template<int degree>
             for (amrex::MFIter mfi(*tmp[comp]); mfi.isValid(); ++mfi ) {
                 const amrex::Box& bx = mfi.validbox();
 
-                amrex::Array4<amrex::Real> const& phi_arr = (*phi_mf)[mfi].array();
+                amrex::Array4<amrex::Real> const& phi_arr = phi_mf[mfi].array();
                 amrex::Array4<amrex::Real> const& tmp_arr = (*tmp[comp])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
@@ -1413,16 +1413,16 @@ template<int degree>
         // H⁻¹-operator
         // to x comp
         int dimension = 0;
-        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
-        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), kx, ifr, dimension, verbose, reltol, maxsteps);
+        amrex::MultiFab::Copy(*D[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>((*tmp[dimension]), (*D[dimension]), kx, ifr, dimension, verbose, reltol, maxsteps);
         // to x comp
         dimension = 1;
-        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
-        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), ky, ifr, dimension, verbose, reltol, maxsteps);
+        amrex::MultiFab::Copy(*D[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>((*tmp[dimension]), (*D[dimension]), ky, ifr, dimension, verbose, reltol, maxsteps);
         // to x comp
         dimension = 2;
-        amrex::MultiFab::Copy(*(*D)[dimension], *tmp[dimension], 0, 0, 1, Nghost);
-        solve_hodge_CG<degree>(&(*tmp[dimension]), &(*(*D)[dimension]), kz, ifr, dimension, verbose, reltol, maxsteps);
+        amrex::MultiFab::Copy(*D[dimension], *tmp[dimension], 0, 0, 1, Nghost);
+        solve_hodge_CG<degree>((*tmp[dimension]), (*D[dimension]), kz, ifr, dimension, verbose, reltol, maxsteps);
 
     }
 
@@ -1528,7 +1528,7 @@ template<int degree>
             });
 
         }
-        (rho_gauss_law).FillBoundary(ifr.geom.periodicity());
+        rho_gauss_law.FillBoundary(ifr.geom.periodicity());
 
     }
 
@@ -1851,13 +1851,13 @@ private:
 
         // E-field
         for (int i=0; i<edim; i++) {
-            projection<degree>(fields_E[i], k, time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_sol_Array[i]));
+            projection<degree>(fields_E[i], k, time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], (*E_sol_Array[i]));
         }
 
         if (bool_B){
             // B-field
             for (int i=0; i<bdim; i++) {
-                projection<degree>(fields_B[i], k, btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_sol_Array[i]));
+                projection<degree>(fields_B[i], k, btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], (*B_sol_Array[i]));
             }
         }
     }
@@ -1874,15 +1874,15 @@ private:
         amrex::Real btime = time + dt/2.0;
 
         // E-field
-        projection<degree>(function_to_project_E0, time, ifr, {false, true, true}, *E_Index[0], &(*E_sol_Array[0]));
-        projection<degree>(function_to_project_E1, time, ifr, {true, false, true}, *E_Index[1], &(*E_sol_Array[1]));
-        projection<degree>(function_to_project_E2, time, ifr, {true, true, false}, *E_Index[2], &(*E_sol_Array[2]));
+        projection<degree>(function_to_project_E0, time, ifr, {false, true, true}, *E_Index[0], *E_sol_Array[0]);
+        projection<degree>(function_to_project_E1, time, ifr, {true, false, true}, *E_Index[1], *E_sol_Array[1]);
+        projection<degree>(function_to_project_E2, time, ifr, {true, true, false}, *E_Index[2], *E_sol_Array[2]);
 
         if (bool_B){
             // B-field
-            projection<degree>(function_to_project_B0, btime, ifr, {false, true, true}, *B_Index[0], &(*B_sol_Array[0]));
-            projection<degree>(function_to_project_B1, btime, ifr, {true, false, true}, *B_Index[1], &(*B_sol_Array[1]));
-            projection<degree>(function_to_project_B2, btime, ifr, {true, true, false}, *B_Index[2], &(*B_sol_Array[2]));
+            projection<degree>(function_to_project_B0, btime, ifr, {false, true, true}, *B_Index[0], *B_sol_Array[0]);
+            projection<degree>(function_to_project_B1, btime, ifr, {true, false, true}, *B_Index[1], *B_sol_Array[1]);
+            projection<degree>(function_to_project_B2, btime, ifr, {true, true, false}, *B_Index[2], *B_sol_Array[2]);
         }
     }
 
@@ -1897,14 +1897,14 @@ private:
 
         // E-field
         for (int i=0; i<edim; i++)
-          projection<degree>(time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], &(*E_sol_Array[i]), funcSelectE[i]);
+          projection<degree>(time, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *E_Index[i], *E_sol_Array[i], funcSelectE[i]);
         
 
         if (bool_B){
             
             // B-field
             for (int i=0; i<bdim; i++) {
-              projection<degree>(btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], &(*B_sol_Array[i]),funcSelectB[i]);
+              projection<degree>(btime, ifr, {AMREX_D_DECL(i!=0, i!=1, i!=2)}, *B_Index[i], *B_sol_Array[i],funcSelectB[i]);
             }
 
         }

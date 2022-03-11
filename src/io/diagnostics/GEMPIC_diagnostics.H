@@ -104,7 +104,7 @@ public:
         gauss_error.push_back(0.);
 
         // E and B field
-        mw_yee->template hodge_full<degree>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array), true);
+        mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
         for(int cc=0;cc<vdim;cc++){
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]), 0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
             val *= infra.dx[0]/infra.Length[0]
@@ -118,7 +118,7 @@ public:
             Efield_energy[step][cc] = mw_yee->epref_ep0*val;
         }
 
-        mw_yee->template hodge_full<degree>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array), false);
+        mw_yee->template hodge_full<degree>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
         for(int cc=0;cc<int(vdim/2.5)*2+1;cc++){
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]), 0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
             val *= infra.dx[0]/infra.Length[0]
