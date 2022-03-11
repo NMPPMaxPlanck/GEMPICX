@@ -26,7 +26,7 @@ void init_const (amrex::MultiFab& MultiF, amrex::Real constant) {
 
             const amrex::Box& bx = mfi.tilebox();
 
-            amrex::Array4<amrex::Real> const& init_arr = (MultiF)[mfi].array();
+            amrex::Array4<amrex::Real> const& init_arr = MultiF[mfi].array();
             ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
                 init_arr(i,j,k) = constant;

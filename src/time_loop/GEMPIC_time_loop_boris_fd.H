@@ -47,8 +47,8 @@ void time_loop_boris_fd_step (computational_domain infra,
         if ( electromagnetic ){
           //--------------------------------------------------------------------------
           // update B
-          mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), (mw_yee->HE_Array), true);
-          mw_yee->advance_B(infra, mw_yee->dt*coeff, (mw_yee->HE_Array), (mw_yee->B_Array));
+          mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
+          mw_yee->advance_B(infra, mw_yee->dt*coeff, mw_yee->HE_Array, mw_yee->B_Array);
         }
         if (profiling_timers->profiling)
           profiling_timers->counter_fields += MPI_Wtime();
@@ -215,13 +215,13 @@ void time_loop_boris_fd_step (computational_domain infra,
           profiling_timers->counter_fields -= MPI_Wtime();
         if (electromagnetic){
           // advance E
-            mw_yee->template hodge_full<degmw>(infra, (mw_yee->B_Array), (mw_yee->HB_Array), false);
-            mw_yee->advance_E(infra, mw_yee->dt*coeff, true, true, (mw_yee->HB_Array), (mw_yee->E_Array));
+            mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
+            mw_yee->advance_E(infra, mw_yee->dt*coeff, true, true, mw_yee->HB_Array, mw_yee->E_Array);
           }
         else
           {
             // advance E from j
-            mw_yee->advance_E(infra, mw_yee->dt*coeff, false, true, (mw_yee->HB_Array), (mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt*coeff, false, true, mw_yee->HB_Array, mw_yee->E_Array);
           }
         if (profiling_timers->profiling)
           profiling_timers->counter_fields += MPI_Wtime();
