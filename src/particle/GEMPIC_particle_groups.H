@@ -45,6 +45,9 @@ public:
     amrex::GpuArray<amrex::Real, numspec> charge;
     amrex::GpuArray<amrex::Real, numspec> mass;
     amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>>, numspec> mypc;
+    //amrex::Real charge;
+    //amrex::Real mass;
+    //std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>> mypc;
 
     // The default constructor.
     /**
@@ -59,6 +62,7 @@ public:
      */
     particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
                      amrex::GpuArray<amrex::Real, numspec> mass_in,
+    //particle_groups (amrex::Real charge_in, amrex::Real mass_in,
                      computational_domain ifr){
 
         charge = charge_in;
@@ -67,21 +71,27 @@ public:
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
             mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+        //    mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
 	    (*mypc[i]).do_tiling = false;
+        //*mypc.do_tiling = false;
 #else
 	    (*mypc[i]).do_tiling = true;
+        //*mypc.do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
             (*mypc[i]).tile_size = ifr.max_grid_size;
+            //*mypc.tile_size = ifr.max_grid_size;
 #else
             (*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
+            //*mypc.tile_size[0] = ifr.max_grid_size[0];
 #endif
         }
     }
 
     void reinit (amrex::GpuArray<amrex::Real, numspec> charge_in,
                      amrex::GpuArray<amrex::Real, numspec> mass_in,
+    //void reinit (amrex::Real charge_in, amrex::Real mass_in,
                      computational_domain ifr){
 
         charge = charge_in;
@@ -90,15 +100,21 @@ public:
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
             mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+
+        //    mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
         (*mypc[i]).do_tiling = false;
+        //*mypc.do_tiling = false;
 #else
         (*mypc[i]).do_tiling = true;
+        //*mypc.do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
             (*mypc[i]).tile_size = ifr.max_grid_size;
+            //*mypc.tile_size = ifr.max_grid_size;
 #else
             (*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
+            //*mypc.tile_size[0] = ifr.max_grid_size[0];
 #endif
         }
     }
@@ -110,7 +126,7 @@ public:
     void add_particle(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                       amrex::GpuArray<amrex::Real,vdim> velocity,
                       amrex::Real weight,
-                      amrex::ParticleTile<vdim+n_data, 0, 0, 0>& particles){
+                      amrex::ParticleTile<vdim+n_data, 0, 0, 0>& particles){ //Array of Structures
 
         using ParticleType = amrex::Particle<vdim+n_data, 0>; // Particle template
 
@@ -122,13 +138,22 @@ public:
         for (int cc=0; cc<GEMPIC_SPACEDIM; cc++) {
             p.pos(cc) = position[cc];
         }
+        
+        // Creating attributes for Structure of Arrays container
+        //amrex::GpuArray<amrex::Real,vdim+1> particleAttributes{};
 
         for (int cc=0; cc<vdim; cc++) {
-            p.rdata(cc) = velocity[cc];
+            //p.rdata(cc) = velocity[cc];
+            //particleAttributes[cc] = velocity[cc];
+            particles.push_back_real(cc,velocity[cc]);
         }
-        p.rdata(vdim) = weight; //weight
+        //p.rdata(vdim) = weight; //weight
+        //particleAttributes[vdim] = weight; //weight
+        particles.push_back_real(vdim,weight);
 
-        (particles).push_back(p);
+        particles.push_back(p);
+        //particles.push_back_real(particleAttributes);
+        // if this works, we can try passing velocity and weight separately and avoid creating temp array
     }
 
 };

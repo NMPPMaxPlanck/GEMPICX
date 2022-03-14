@@ -106,7 +106,7 @@ public :
                 time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 3:
-                time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false, output>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic, true, output>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
            // case 4:
            //     ls_rungekutta<3> rk_prop();
