@@ -48,6 +48,7 @@ public:
     int freq_slice;
     std::string sim_name;
     amrex::Real domain_volume;
+    bool ctest;
 
     // The default constructor.
     /**
@@ -60,18 +61,18 @@ public:
      * Explicit constructor: object can be initialized by passing the parameters: number of time steps @p n_t, the frequency with which to output positins @p fx and velocities @p fv,
      * the frequency with which to generate slices and the name of the simulation @p sim_name.
      */
-    diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
-        initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol);
+    diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol,  bool ctest = false){
+        initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol, ctest);
     }
 
 
-    void reinit(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
-        initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol);
+    void reinit(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol, bool ctest = false){
+        initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol, ctest);
     }
 
 
     void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                         particle_groups<vdim, numspec> *part_gr, std::string filename, bool ctest){
+                         particle_groups<vdim, numspec> *part_gr, std::string simulation_name, bool ctest){
         if (profiling_timers->profiling)
           profiling_timers->counter_diagnostics -= MPI_Wtime();
         // save norms for diagnostics
@@ -79,13 +80,13 @@ public:
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            save_all_to_textfile(mw_yee->dt, filename, t_step+1);
+            save_all_to_textfile(mw_yee->dt, simulation_name, t_step+1);
         }
         if (profiling_timers->profiling)
           profiling_timers->counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
-        if (ctest) ctest_output(filename, t_step);
+        if (ctest) ctest_output(simulation_name, t_step);
     }
 
     // save position and velocities
@@ -185,11 +186,13 @@ public:
      * This function writes the data from all steps so far (at time @p dt) into an output file PIC_save.output or a file of alternative name if @p filename is passed. If only a
      * subset of the data should be saved, the argument @p partial, setting the last index to be saved, should be passed.
      */
-    void save_all_to_textfile(amrex::Real dt, std::string filename = "vlasov_maxwell_save.output", int partial = 0){
+    void save_all_to_textfile(amrex::Real dt, std::string simulation_name, int partial = 0){
         if (partial == 0){
             partial = n_time;
         }
-        std::ofstream ofsfun(filename, std::ofstream::out);
+        if (amrex::ParallelDescriptor::IOProcessor()) // only IOProcessor prints
+        {
+        std::ofstream ofsfun(simulation_name+".tmp", std::ofstream::out);
         amrex::Real init_tot_energy = 0.5*(Efield_energy[0][0]+Efield_energy[0][1]+Efield_energy[0][2]+Bfield_energy[0][0]+Bfield_energy[0][1]+Bfield_energy[0][2])+kin[0]/domain_volume;
         amrex::Print(ofsfun).SetPrecision(20) << "# time   E-energy-components   B-energy-components   kinetic-energy   momentum-components gauss-error total-energy energy-error" << std::endl;
         for (int step=0;step<=partial;step++){
@@ -233,43 +236,45 @@ public:
                                     << " " << tot_energy << " " << abs(tot_energy-init_tot_energy) << std::endl;
         }
         ofsfun.close();
+        }
     }
 
     void ctest_output(std::string simulation_name, int t_step){
+        std::string filename = simulation_name + ".output";
         switch (vdim) {
         case 1:
-            amrex::PrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0];
+            amrex::PrintToFile(filename) << t_step << " " << Efield_energy[t_step][0];
             break;
         case 2:
-            amrex::PrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1];
+            amrex::PrintToFile(filename) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1];
             break;
         case 3:
-            amrex::PrintToFile(simulation_name) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1] << " " << Efield_energy[t_step][2];
+            amrex::PrintToFile(filename) << t_step << " " << Efield_energy[t_step][0] << " " << Efield_energy[t_step][1] << " " << Efield_energy[t_step][2];
             break;
         }
         switch (vdim) {
         case 1: // no break, so that case 1 and 2 are handled the same way
         case 2:
-            amrex::PrintToFile(simulation_name) << " " << Bfield_energy[t_step][0];
+            amrex::PrintToFile(filename) << " " << Bfield_energy[t_step][0];
             break;
         case 3:
-            amrex::PrintToFile(simulation_name) << " " << Bfield_energy[t_step][0] << " " << Bfield_energy[t_step][1] << " " << Bfield_energy[t_step][2];
+            amrex::PrintToFile(filename) << " " << Bfield_energy[t_step][0] << " " << Bfield_energy[t_step][1] << " " << Bfield_energy[t_step][2];
             break;
         }
-        amrex::PrintToFile(simulation_name) << " " << kin[t_step] << " ";
+        amrex::PrintToFile(filename) << " " << kin[t_step] << " ";
         switch (vdim) {
         case 1:
-            amrex::PrintToFile(simulation_name) << mom[t_step][0];
+            amrex::PrintToFile(filename) << mom[t_step][0];
             break;
         case 2:
-            amrex::PrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1];
+            amrex::PrintToFile(filename) << mom[t_step][0] << " " << mom[t_step][1];
             break;
         case 3:
-            amrex::PrintToFile(simulation_name) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
+            amrex::PrintToFile(filename) << mom[t_step][0] << " " << mom[t_step][1] << " " << mom[t_step][2];
             break;
         }
-        amrex::PrintToFile(simulation_name) << " " << gauss_error[t_step];
-        amrex::PrintToFile(simulation_name) << std::endl;
+        amrex::PrintToFile(filename) << " " << gauss_error[t_step];
+        amrex::PrintToFile(filename) << std::endl;
     }
 
 #if (GEMPIC_SPACEDIM==3)
@@ -320,7 +325,7 @@ public:
 
 private :
 
-void initialize_diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol){
+void initialize_diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol, bool ctest){
     n_time = n_t;
     freq_x = fx;
     freq_v = fv;
@@ -333,6 +338,8 @@ void initialize_diagnostics (int n_t, int fx, int fv, int fs, std::string sim_n,
     mom.reserve(n_time);
     kin.reserve(n_time);
     gauss_error.reserve(n_time);
+
+    if (ctest) amrex::PrintToFile(sim_name + ".output") << "\n";
 }
 };
 

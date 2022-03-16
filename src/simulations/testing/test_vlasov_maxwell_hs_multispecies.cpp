@@ -37,7 +37,7 @@ void main_main()
     bool ctest = true;
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("ctest_Ion_Acoustic_Wave", // sim_name
+    VlMa.set_params("test_vlasov_maxwell_hs_multispecies", // sim_name
                     {AMREX_D_DECL(16, 2, 2)},  // n_cell_vector
                     {4000, 4000},              // n_part_per_cell
                     10,                        // n_steps
@@ -87,7 +87,7 @@ void main_main()
     particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
     amrex::Real vol = (infra.geom.ProbHi(0) - infra.geom.ProbLo(0)) * (infra.geom.ProbHi(1) - infra.geom.ProbLo(1)) * (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
-    diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
+    diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol, ctest);
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
@@ -118,13 +118,13 @@ void main_main()
         time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, true>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies", strang_order);
         break;
     }
+    if (ParallelDescriptor::MyProc() == 0)
+        std::rename("test_vlasov_maxwell_hs_multispecies.output.0", "test_vlasov_maxwell_hs_multispecies.output");
 }
 
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
-    if (ParallelDescriptor::MyProc() == 0)
-        remove("test_vlasov_maxwell_hs_multispecies.tmp.0");
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
@@ -132,10 +132,15 @@ int main(int argc, char *argv[])
     GEMPIC_SPACEDIM=1, GEMPIC_SPACEDIM=2, GEMPIC_SPACEDIM=3 */
 
     // Output for GEMPIC_SPACEDIM=3
-    main_main<3, 2, 3, 1, 2, 2, 3>(); // hs_zigzag
 
-    if (ParallelDescriptor::MyProc() == 0)
-        std::rename("test_vlasov_maxwell_hs_multispecies.tmp.0", "test_vlasov_maxwell_hs_multispecies.output");
+    const int vdim = 3;
+    const int numspec = 2;
+    const int degx = 3; 
+    const int degy = 1; 
+    const int degz = 2;
+    const int degmw = 2; 
+    const int propagator = 3; 
+    main_main<3, 2, 3, 1, 2, 2, 3>(); // hs_zigzag
 
     amrex::Finalize();
 }

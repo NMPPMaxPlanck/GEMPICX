@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
      if (amrex::ParallelDescriptor::MyProc()==0) 
         {
-            std::rename("test_vlasov_maxwell_input.tmp.0","test_vlasov_maxwell_input.output");
+            std::rename("test_vlasov_maxwell_input.output.0","test_vlasov_maxwell_input.output");
         }
 
 #endif

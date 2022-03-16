@@ -77,11 +77,11 @@ void main_main ()
 
     // Constant case
     mw_yee.rho.setVal(C, 0);
-    AllPrintToFile("test_gempic_norm_additional.tmp") << endl << "Constant case: " << endl;
-    AllPrintToFile("test_gempic_norm_additional.tmp") << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
-    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - C) << endl;
-    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 2) - C) << endl;
-    AllPrintToFile("test_gempic_norm_additional.tmp") << endl;
+    PrintToFile("test_gempic_norm_additional.tmp") << endl << "Constant case: " << endl;
+    PrintToFile("test_gempic_norm_additional.tmp") << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
+    PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - C) << endl;
+    PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 2) - C) << endl;
+    PrintToFile("test_gempic_norm_additional.tmp") << endl;
 
     bool passed = true;
     gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 0));
@@ -106,42 +106,42 @@ void main_main ()
             rho_arr(i,j,k) = func(x,a,b,c);
         });
     }
-    AllPrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << endl;
+    PrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << endl;
 #if(GEMPIC_SPACEDIM == 1)
-    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - a*infra.Length[0]) << endl;
+    PrintToFile("test_gempic_norm.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - a*infra.Length[0]) << endl;
     double Lx = infra.Length[0];
     double norm1 = 1./2.*Lx*a;
     double norm2 = sqrt(1./3.*pow(Lx,2.)*pow(a,2.));
-    AllPrintToFile("test_gempic_norm.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
-    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(3) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
+    PrintToFile("test_gempic_norm.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    PrintToFile("test_gempic_norm.tmp").SetPrecision(3) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 #endif
 #if (GEMPIC_SPACEDIM == 2)
-    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1])) << endl;
+    PrintToFile("test_gempic_norm.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1])) << endl;
     double Lx = infra.Length[0];
     double Ly = infra.Length[1];
     double norm1 = 1./2.*(a*Lx + b*Ly);
     double norm2 = sqrt(1./6.*(2.*pow(a,2.)*pow(Lx,2.) + 3.*a*b*Lx*Ly + 2.*pow(b,2.)*pow(Ly,2.)));
-    AllPrintToFile("test_gempic_norm.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
-    AllPrintToFile("test_gempic_norm.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
+    PrintToFile("test_gempic_norm.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    PrintToFile("test_gempic_norm.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 #endif
 #if (GEMPIC_SPACEDIM == 3)
-    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
+    PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5) << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a*infra.Length[0] + b*infra.Length[1] + c*infra.Length[2])) << endl;
     amrex::Real Lx = infra.Length[0];
     amrex::Real Ly = infra.Length[1];
     amrex::Real Lz = infra.Length[2];
     amrex::Real norm0 = a*Lx + b*Ly + c*Lz;
     amrex::Real norm1 = 1./2.*(a*Lx + b*Ly + c*Lz);
     amrex::Real norm2 = sqrt(1./6.*(2.*pow(a,2.)*pow(Lx,2.) + 3.*a*c*Lx*Lz + 3.*b*c*Ly*Lz + 3.*a*b*Lx*Ly + 2.*pow(b,2.)*pow(Ly,2.) + 2.*pow(c,2.)*pow(Lz,2.)));
-    AllPrintToFile("test_gempic_norm_additional.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
-    AllPrintToFile("test_gempic_norm_additional.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
+    PrintToFile("test_gempic_norm_additional.tmp") << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+    PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(1) << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2)*1000) << endl;
 
     gempic_assert(passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
     gempic_assert(passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
     gempic_assert(passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
 
 #endif
-    AllPrintToFile("test_gempic_norm.tmp") << endl;
-    AllPrintToFile("test_gempic_norm.tmp") << passed << endl;
+    PrintToFile("test_gempic_norm.tmp") << endl;
+    PrintToFile("test_gempic_norm.tmp") << passed << endl;
 
 
 }

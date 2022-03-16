@@ -95,14 +95,14 @@ void main_main ()
         }
     }
 
-    amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << "Norm of mask:" << TestMF.norm1(0, geom.periodicity(), false) << std::endl;
-    amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_NormMasks_additional.tmp") << "Norm of mask:" << TestMF.norm1(0, geom.periodicity(), false) << std::endl;
+    amrex::PrintToFile("test_AMReX_NormMasks_additional.tmp") << std::endl;
 
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_NormMasks_additional.tmp") << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_NormMasks_additional.tmp") << TestMF[mfi] << std::endl;
     }
-    amrex::AllPrintToFile("test_AMReX_NormMasks.tmp") << std::endl;
-    amrex::AllPrintToFile("test_AMReX_NormMasks.tmp") << (std::abs(TestMF.norm1(0, geom.periodicity(), false)-83333332.5) < 1e-12) << std::endl;
+    amrex::PrintToFile("test_AMReX_NormMasks.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_NormMasks.tmp") << (std::abs(TestMF.norm1(0, geom.periodicity(), false)-83333332.5) < 1e-12) << std::endl;
 
 
 }

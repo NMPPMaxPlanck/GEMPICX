@@ -423,9 +423,6 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
     bool profiling_count = false;
     timers profiling_timers(true);
 
-    if (output)
-        amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
-
     if (profiling_timers.profiling)
         // profiling_timers.counter_all -= MPI_Wtime();
     for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
@@ -446,7 +443,7 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
         }
 
         if (output)
-            diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
+            diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name, ctest);
         profiling_count = true;
         if (energy_experiment) {
             amrex::Real end_energy = 0.5*(diagn->Efield_energy[t_step][0] + diagn->Efield_energy[t_step][1] + diagn->Efield_energy[t_step][2]
@@ -464,7 +461,7 @@ void time_loop_hs_zigzag_C2 (computational_domain infra,
                      << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
       }
     if (output)
-        diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
+        diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
 
 }
 

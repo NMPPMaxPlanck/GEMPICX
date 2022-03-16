@@ -108,8 +108,8 @@ void main_main ()
 #endif
         }
     }
-    amrex::AllPrintToFile("test_initialize.tmp") << "" << std::endl;
-    amrex::AllPrintToFile("test_initialize.tmp") << 1 << std::endl;
+    amrex::PrintToFile("test_initialize.tmp") << "" << std::endl;
+    amrex::PrintToFile("test_initialize.tmp") << 1 << std::endl;
 }
 
 int main(int argc, char* argv[])

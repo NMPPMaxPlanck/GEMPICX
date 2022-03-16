@@ -104,11 +104,11 @@ void print_vMoments(const particle_groups<vdim, numspec> & part_gr, const int sp
     amrex::ParallelDescriptor::ReduceRealSum(vMoment_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
     vMoment[vdim+1] = vMoment_tmp;   
     
-    amrex::AllPrintToFile("test_sampler.tmp") << vMoment[0]; 
+    amrex::PrintToFile("test_sampler.tmp") << vMoment[0]; 
     for (int i=0; i < vdim; i++) {
-        amrex::AllPrintToFile("test_sampler.tmp") << " " <<vMoment[i+1];  
+        amrex::PrintToFile("test_sampler.tmp") << " " <<vMoment[i+1];  
     }
-    amrex::AllPrintToFile("test_sampler.tmp") << " " << vMoment[vdim+1] << "\n";
+    amrex::PrintToFile("test_sampler.tmp") << " " << vMoment[vdim+1] << "\n";
 }
 
 template<int vdim, int numspec>
@@ -158,9 +158,9 @@ void main_main ()
         print_particles<vdim,numspec>(part_gr_full_str, species);
     }
 
-    amrex::AllPrintToFile("test_sampler.tmp") << "\n"; 
+    amrex::PrintToFile("test_sampler.tmp") << "\n"; 
     // Print analytical solution
-    amrex::AllPrintToFile("test_sampler.tmp") << "1"; 
+    amrex::PrintToFile("test_sampler.tmp") << "1"; 
     amrex::Real mom2 = 0;
     for (int i=0; i < vdim; i++) {
         amrex::Real mom1 = 0;
@@ -168,9 +168,9 @@ void main_main ()
             mom1 += vWeight[j]*vMean[j][i];
             mom2 += vWeight[j] * (std::pow(vThermal[j][i],2) + std::pow(vMean[j][i],2));
         }
-        amrex::AllPrintToFile("test_sampler.tmp") << " " << mom1;  
+        amrex::PrintToFile("test_sampler.tmp") << " " << mom1;  
     }
-    amrex::AllPrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
+    amrex::PrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
     // Print computed solutions
     print_vMoments<vdim,numspec>(part_gr_cell, species);    
     print_vMoments<vdim,numspec>(part_gr_full, species);

@@ -72,7 +72,7 @@ void main_main ()
     }
 
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_OverrideSync_additional.tmp") << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_OverrideSync_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
     //-----------------------------------------------------------------------------
@@ -99,12 +99,12 @@ void main_main ()
     std::cout << TestMF.norm1(0,Nghost) << std::endl;
     passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 40938) < 1e-12);
 
-    amrex::AllPrintToFile("test_AMReX_OverrideSync.tmp") << std::endl;
-    amrex::AllPrintToFile("test_AMReX_OverrideSync.tmp") << passed << std::endl;
+    amrex::PrintToFile("test_AMReX_OverrideSync.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_OverrideSync.tmp") << passed << std::endl;
 
-    amrex::AllPrintToFile("test_AMReX_OverrideSync_additional.tmp") << "OVERRIDESYNC" << std::endl;
+    amrex::PrintToFile("test_AMReX_OverrideSync_additional.tmp") << "OVERRIDESYNC" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_OverrideSync_additional.tmp") << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_OverrideSync_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
 

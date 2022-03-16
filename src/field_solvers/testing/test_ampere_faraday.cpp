@@ -74,8 +74,7 @@ void main_main ()
     amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);
-    VlMa.set_computed_params();
+    VlMa.set_params("test_ampere_faraday", n_cell, {1}, numstep, 100000, 100000, 100000, is_periodic, {AMREX_D_DECL(4,4,4)}, dt, {-1.0}, {1.0}, 1.0);
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
@@ -112,11 +111,11 @@ void main_main ()
 
     std::cout <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
-    AllPrintToFile("test_ampere_faraday.tmp") << endl;
-    AllPrintToFile("test_ampere_faraday.tmp") << "Maxwell" << endl;
-    AllPrintToFile("test_ampere_faraday.tmp") << "step " << 0 << endl;
-    AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-    amrex::AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+    PrintToFile("test_ampere_faraday.output") << endl;
+    PrintToFile("test_ampere_faraday.output") << "Maxwell" << endl;
+    PrintToFile("test_ampere_faraday.output") << "step " << 0 << endl;
+    PrintToFile("test_ampere_faraday.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+    amrex::PrintToFile("test_ampere_faraday.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
 
     particle_groups<vdim, 1> part_gr(VlMa.charge, VlMa.mass, infra);
     //------------------------------------------------------------------------------
@@ -142,9 +141,9 @@ void main_main ()
         // This generates error output once more: comparing current E and B to the analytical solution -- you can ignore the code
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
-        AllPrintToFile("test_ampere_faraday.tmp") << "step " << n << endl;
-        AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-        amrex::AllPrintToFile("test_ampere_faraday.tmp").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+        PrintToFile("test_ampere_faraday.output") << "step " << n << endl;
+        PrintToFile("test_ampere_faraday.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        amrex::PrintToFile("test_ampere_faraday.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
 
         //Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", n);
     }
@@ -152,8 +151,7 @@ void main_main ()
 
 int main(int argc, char* argv[])
 {
-    amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) remove("test_ampere_faraday.tmp.0");
+amrex::Initialize(argc,argv);
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -164,7 +162,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_ampere_faraday.tmp.0", "test_ampere_faraday.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_ampere_faraday.output.0", "test_ampere_faraday.output");
     amrex::Finalize();
 }
 
