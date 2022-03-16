@@ -56,11 +56,12 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
     // Deposit charges:
     for (int spec=0;spec<numspec;spec++) {
         (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
 		amrex::Real charge = (*part_gr).charge[spec];
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();
+            auto& particle_attributes = pti.GetStructOfArrays();
 
             amrex::Array4<amrex::Real> const& rhoarr = (*mw_yee).rho[pti].array();
             amrex::ParallelFor(np,[=] AMREX_GPU_DEVICE (long pp )
@@ -73,7 +74,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
                   position[d] = particles[pp].pos(d);
                 spline.init_particles( position, infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                              charge*infra.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(vdim),
+                                              charge*infra.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(vdim)[pp],
                                               rhoarr);
               });
         }
@@ -126,10 +127,12 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
         //------------------------------------------------------------------------------
         //approximate x^1/2
         for (int spec=0;spec<numspec;spec++) {
-            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
-                amrex::Particle<vdim+1,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]); // get particles
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+                amrex::Particle<0,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]); // get particles
 
                 const long np  = pti.numParticles();
+                auto particle_attributes = &pti.GetStructOfArrays();
+
                 const amrex::Real dt = (*mw_yee).dt;
                 amrex::ParallelFor(np,[=] AMREX_GPU_DEVICE (long pp){
 
@@ -139,7 +142,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
                     }
                     amrex::GpuArray<amrex::Real,vdim> vel;
                     for (int comp = 0; comp < vdim; comp++) {
-                        vel[comp] = particles[pp].rdata(comp);
+                        vel[comp] = particle_attributes->GetRealData(comp)[pp];
                     }
 
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<vdim>(infra.plo, infra.phi, pos, vel, 0.5*dt);

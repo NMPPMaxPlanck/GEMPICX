@@ -65,7 +65,7 @@ void main_main ()
     }
     // Particles
     amrex::Real charge = -1.0;
-    amrex::ParticleContainer<vdim+1, 0, 0, 0> mypc(geom, distriMap, grid);
+    amrex::ParticleContainer<0, 0, vdim+1, 0> mypc(geom, distriMap, grid);
 #if GEMPIC_GPU
         mypc.do_tiling = false;
 #else
@@ -83,10 +83,11 @@ void main_main ()
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
-    for (amrex::ParIter<vdim+1,0,0,0> pti(mypc, 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<0,0,vdim+1,0> pti(mypc, 0); pti.isValid(); ++pti) {
 
         auto& particles = pti.GetArrayOfStructs();
         const long np  = pti.numParticles();
+        auto& particle_attributes = pti.GetStructOfArrays();
 
         amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
         for (int pp=0;pp<np;pp++) {
@@ -97,7 +98,7 @@ void main_main ()
                 pos[comp] = particles[pp].pos(comp);
             }
             spline.init_particles(pos , plo, dxi);
-            amrex::Real weight = particles[pp].rdata(vdim);
+            amrex::Real weight = particle_attributes.GetRealData(vdim)[pp];
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(spline, dxi[GEMPIC_SPACEDIM]*weight*charge, rhoarr, Index_A);
         }
     }

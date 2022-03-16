@@ -47,9 +47,10 @@ AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, am
 template<int vdim, int numspec>
 void print_particles(const particle_groups<vdim, numspec> & part_gr, const int species) {
     std::ofstream ofs("particles.out", std::ofstream::out);
-        for (amrex::ParIter<vdim+1,0,0,0> pti(*part_gr.mypc[species], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*part_gr.mypc[species], 0); pti.isValid(); ++pti) {
             auto& particles = pti.GetArrayOfStructs(); // get particles
             const long np  = pti.numParticles();
+            auto& particle_attributes = pti.GetStructOfArrays();
             amrex::Print(ofs) << "number of particles " << np << "\n"; 
             for (int pp=0; pp < np; pp++){
                 amrex::Print(ofs) << pp << " "; 
@@ -57,8 +58,8 @@ void print_particles(const particle_groups<vdim, numspec> & part_gr, const int s
                     amrex::Print(ofs) << particles[pp].pos(i) << " ";
                 }
                 for (int i=0; i <= vdim; i++){
-                    amrex::Print(ofs) << particles[pp].rdata(i) << " ";
-                } // rdata[vdim] is the particle weight
+                    amrex::Print(ofs) << particle_attributes.GetRealData(i)[pp] << " ";
+                } // particle_attributes(vdim) is the particle weight
                 amrex::Print(ofs) << "\n";
             }
         }

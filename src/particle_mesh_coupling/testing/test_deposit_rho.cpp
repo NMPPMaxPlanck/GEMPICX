@@ -91,9 +91,10 @@ void main_main ()
 
     for (int spec=0;spec<numspec;spec++) {
         (*(part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
             auto& particles = pti.GetArrayOfStructs();
+            auto& particle_attributes = pti.GetStructOfArrays();
             const long np  = pti.numParticles();
 
             amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
@@ -103,7 +104,8 @@ void main_main ()
                 for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
                     pos[comp] = particles[pp].pos(comp);
                 }
-                amrex::Real weight = particles[pp].rdata(vdim);
+                //amrex::Real weight = particles[pp].rdata(vdim);
+                amrex::Real weight = particle_attributes.GetRealData(vdim)[pp];
                 splines_at_particles<degx,degy,degz> spline;
                 spline.init_particles(pos , infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz>(spline, weight*(part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM], rhoarr);

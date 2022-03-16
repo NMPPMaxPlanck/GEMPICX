@@ -124,7 +124,7 @@ void init_particles_cellwise(computational_domain infra,
         //Adding particle from the model cell to all cells
         for(amrex::MFIter mfi=(*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
 
-            amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<0, 0, vdim+1, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -459,7 +459,7 @@ int num_gauss = Vmean.size();
 template <int vdim>
 void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dx,
                                 amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                amrex::ParticleContainer<3+1, 0, 0, 0> *mypc,
+                                amrex::ParticleContainer<0, 0, vdim+1, 0> *mypc,
                                 amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position){
     amrex::Real x,y,z;
     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> shifted_position;
@@ -479,7 +479,8 @@ void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> con
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+        //using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
+        using ParticleType = amrex::Particle<0, 0>; // Particle template
         auto& particles = (*mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -509,15 +510,19 @@ void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> con
                     p.pos(2) = shifted_position[2];
 #endif
 
-                    p.rdata(0) = velocity[0];
+                    //p.rdata(0) = velocity[0];
+                    particles.push_back_real(0,velocity[0]);
                     if (vdim > 1) {
-                        p.rdata(1) = velocity[1];
+                        //p.rdata(1) = velocity[1];
+                        particles.push_back_real(1,velocity[1]);
                     }
                     if (vdim > 2) {
-                        p.rdata(2) = velocity[2];
+                        //p.rdata(2) = velocity[2];
+                        particles.push_back_real(2,velocity[2]);
                     }
 
-                    p.rdata(vdim) = 1.0/64.0; //weight
+                    //p.rdata(vdim) = 1.0/64.0; //weight
+                    particles.push_back_real(vdim,1.0/64.0);//weight
 
                     (particles).push_back(p);
 

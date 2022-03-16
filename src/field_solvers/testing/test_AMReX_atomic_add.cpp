@@ -40,7 +40,7 @@ void main_main ()
     rho.setVal(0.0);
 
     amrex::Real testval = 2.3;
-    for (amrex::ParIter<vdim+1,0,0,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
 
         amrex::Array4<amrex::Real> rhoarr = rho[pti].array();
 

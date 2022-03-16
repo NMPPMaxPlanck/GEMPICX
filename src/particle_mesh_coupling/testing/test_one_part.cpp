@@ -113,12 +113,12 @@ void main_main (bool ctest)
     int species = 0;
     for(amrex::MFIter mfi=(*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
         if(mfi.index() == 0) {
-            amrex::ParticleTile<vdim+1, 0, 0, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<0, 0, vdim+1, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             amrex::GpuArray<amrex::Real,vdim> velocity;
             for (int comp = 0; comp < vdim; comp++) {
                 velocity[comp] = 0.1;
             }
-            (part_gr).add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
+            part_gr.add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
         }
     }
 

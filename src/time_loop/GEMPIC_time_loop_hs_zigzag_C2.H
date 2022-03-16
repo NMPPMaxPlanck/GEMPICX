@@ -88,10 +88,11 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
             amrex::Real charge = (*part_gr).charge[spec];
 
-            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
-                amrex::Particle<vdim+1,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]); // get particles
+                amrex::Particle<0,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]); // get particles
                 const long np  = pti.numParticles();
+                auto particle_attributes = &pti.GetStructOfArrays();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
@@ -133,16 +134,21 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> vel;
                     for (int comp = 0; comp < vdim; comp++) {
-                        vel[comp] = particles[pp].rdata(comp);
+                        //vel[comp] = particles[pp].rdata(comp);
+                        vel[comp] = particle_attributes->GetRealData(comp)[pp];
                     }
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, dt*0.5*coeff, chargemass, efield);
                     for (int vd=0;vd<vdim; vd++)
-                        (particles[pp].rdata(vd)) = newPosE[vd];
-
-                    amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
+                        //(particles[pp].rdata(vd)) = newPosE[vd];
+                        particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+                    
+                    //amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
+                    amrex::Real weight = charge*particle_attributes->GetRealData(vdim)[pp]*infra.dxi[GEMPIC_SPACEDIM];
 
                     for (unsigned int d=0;d<vdim;++d)
-                      vel[d] = particles[pp].rdata(d);
+                      //vel[d] = particles[pp].rdata(d);
+                      vel[d] = particle_attributes->GetRealData(d)[pp];
+
                     amrex::GpuArray<amrex::Real, 2> bfields;
                     // push x1
                     amrex::Real x1_new = pos[0] +  dt*0.5*coeff*vel[0];
@@ -298,7 +304,8 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                         particles[pp].pos(xd) = pos[xd];
                     //std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                     for (int vd=0;vd<vdim; vd++)
-                        (particles[pp].rdata(vd)) = vel[vd];
+                        //(particles[pp].rdata(vd)) = vel[vd];
+                        particle_attributes->GetRealData(vd)[pp] = vel[vd];
                     //std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
 //exit(0);
                 }
@@ -344,12 +351,13 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
              profiling_timers->counter_deposition -= MPI_Wtime();
             amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
 
-            for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
-                amrex::Particle<vdim+1,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]);
+                amrex::Particle<0,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]);
 		//amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
-
+                auto particle_attributes = &pti.GetStructOfArrays();
+               
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
 
                 for (int cc=0;cc < vdim;cc++) {
@@ -373,12 +381,14 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real,vdim> vel;
                     for (int comp = 0; comp < vdim; comp++) {
-                        vel[comp] = particles[pp].rdata(comp);
+                        //vel[comp] = particles[pp].rdata(comp);
+                         vel[comp] = particle_attributes->GetRealData(comp)[pp];
                     }
             amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, dt*0.5*coeff, chargemass, efield);
 		   for (int vd=0;vd<vdim; vd++)
-			   (particles[pp].rdata(vd)) = newPosE[vd];
-                });
+			   //(particles[pp].rdata(vd)) = newPosE[vd];
+         particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+            });
             }
             if (profiling_timers->profiling && profiling_count)
              profiling_timers->counter_deposition += MPI_Wtime();

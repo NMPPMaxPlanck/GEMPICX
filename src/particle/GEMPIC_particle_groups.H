@@ -44,7 +44,7 @@ public:
     // array of ParticleContainers (one container per species)
     amrex::GpuArray<amrex::Real, numspec> charge;
     amrex::GpuArray<amrex::Real, numspec> mass;
-    amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>>, numspec> mypc;
+    amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>>, numspec> mypc;
     //amrex::Real charge;
     //amrex::Real mass;
     //std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>> mypc;
@@ -70,7 +70,7 @@ public:
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
-            mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
         //    mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
 	    (*mypc[i]).do_tiling = false;
@@ -99,7 +99,7 @@ public:
 
         // set infrastructure for each species
         for (int i=0;i<mypc.size();i++) {
-            mypc[i].reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 
         //    mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
@@ -126,9 +126,10 @@ public:
     void add_particle(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position,
                       amrex::GpuArray<amrex::Real,vdim> velocity,
                       amrex::Real weight,
-                      amrex::ParticleTile<vdim+n_data, 0, 0, 0>& particles){ //Array of Structures
+                      amrex::ParticleTile<0, 0, vdim+n_data, 0>& particles){ //Array of Structures
 
-        using ParticleType = amrex::Particle<vdim+n_data, 0>; // Particle template
+        //using ParticleType = amrex::Particle<vdim+n_data, 0>; // Particle template
+        using ParticleType = amrex::Particle<0, 0>; // Particle template
 
         // new particle:
         ParticleType p;

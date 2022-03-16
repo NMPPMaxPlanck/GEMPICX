@@ -66,6 +66,7 @@ void time_loop_particles (computational_domain infra,
 
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
+                auto& particle_attributes = pti.GetStructOfArrays();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
@@ -86,8 +87,8 @@ void time_loop_particles (computational_domain infra,
                     spline.init_particles(pos, infra.plo, infra.dxi);
 
                     amrex::GpuArray<amrex::Real, vdim> particle_vel;
-                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
-                    amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
+                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particle_attributes.GetRealData(comp)[pp];
+                    amrex::Real charge_weight_dxi_coeff = spec_charge*particle_attributes.GetRealData(vdim)[pp]*infra.dxi[GEMPIC_SPACEDIM]*0.5;
 
                     amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
                                                                                                                                                           particle_vel,
@@ -115,6 +116,7 @@ void time_loop_particles (computational_domain infra,
             for (amrex::ParIter<vdim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
+                auto& particle_attributes = pti.GetStructOfArrays();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
@@ -132,8 +134,8 @@ void time_loop_particles (computational_domain infra,
                     spline.init_particles(pos, infra.plo, infra.dxi);
 
                     amrex::GpuArray<amrex::Real, vdim> particle_vel;
-                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particles[pp].rdata(comp);
-                    amrex::Real charge_weight_dxi_coeff = spec_charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM]*0.5;
+                    for (int comp = 0; comp < vdim; comp++) particle_vel[comp] = particle_attributes.GetRealData(comp)[pp];
+                    amrex::Real charge_weight_dxi_coeff = spec_charge*particle_attributes.GetRealData(vdim)[pp]*infra.dxi[GEMPIC_SPACEDIM]*0.5;
 
                     amrex::GpuArray<amrex::Real, vdim+int(vdim/2.5)*2+1> field_interp = gempic_deposit_J_and_interpolate<amrex::Particle<vdim+1>,vdim,degx,degy,degz> (charge_weight_dxi_coeff,
                                                                                                                                                           particle_vel,

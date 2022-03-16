@@ -1545,10 +1545,11 @@ template<int degree>
         rho.FillBoundary(ifr.geom.periodicity());
         for (int spec=0;spec<numspec;spec++) {
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-            for (amrex::ParIter<edim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<0,0,edim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
+                auto& particle_attributes = pti.GetStructOfArrays();
 
                 amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
 
@@ -1559,7 +1560,7 @@ template<int degree>
                         position[d] = particles[pp].pos(d);
                     spline.init_particles( position, ifr.plo, ifr.dxi);
                     gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                                              (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(edim),
+                                                              (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(edim)[pp],
                                                               rhoarr);
                 }
             }
@@ -1627,6 +1628,7 @@ template<int degree>
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
+                auto& particle_attributes = pti.GetStructOfArrays();
 
                 amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
                 for (int pp=0;pp<np;pp++) {
@@ -1634,7 +1636,7 @@ template<int degree>
                     for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
                         pos[comp] = particles[pp].pos(comp);
                     }
-                    amrex::Real weight = particles[pp].rdata(edim);
+                    amrex::Real weight = particle_attributes.GetRealData(edim)[pp];
 
                     splines_at_particles<degx,degy,degz> spline;
                     spline.init_particles(pos , ifr.plo, ifr.dxi);
@@ -1708,6 +1710,7 @@ template<int degree>
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
+                auto& particle_attributes = pti.GetStructOfArrays();
 
                 amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
                 for (int pp=0;pp<np;pp++) {
@@ -1717,7 +1720,7 @@ template<int degree>
                         position[d] = particles[pp].pos(d);
                     spline.init_particles( position, ifr.plo, ifr.dxi);
                     gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                                              (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particles[pp].rdata(edim),
+                                                              (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(edim)[pp],
                                                               rhoarr);
                 }
             }
