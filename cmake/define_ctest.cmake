@@ -28,7 +28,7 @@ else()
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff
     COMMAND
     if (${TEST_DIFF} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output
-      ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+        ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
         > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff) \; then
     : \;
     else
@@ -41,7 +41,7 @@ else()
     cat ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff.failed \;
     false \;
     fi
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output 
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output
     ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     )
   # add the target for this output file to the dependencies of this test

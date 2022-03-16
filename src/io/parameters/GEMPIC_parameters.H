@@ -488,7 +488,7 @@ public:
             densityParse[i].setConstant("kvary", k[1]);
             densityParse[i].setConstant("kvarz", k[2]);
             densityParse[i].registerVariables({"x", "y", "z", "t"});
-            densityEval[i] = densityParse[i].template compile<4>(); // 3 because there are three variables.
+            densityEval[i] = densityParse[i].template compile<4>(); // 4 because there are three variables.
         }
 
         // initial fields

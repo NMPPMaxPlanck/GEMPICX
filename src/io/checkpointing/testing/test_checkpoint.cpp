@@ -100,14 +100,14 @@ void main_main()
     Gempic_ReadCheckpointFile(&mw_yee, &part_gr, &infra, "test_checkpoint", 0); // last 2 args: field, step
     amrex::Real read_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
 
-    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "" << std::endl;
-    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is written out: " << old_val << std::endl;
-    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm the MF has after changing it: " << new_val << std::endl;
-    amrex::AllPrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is read in: " << read_val << std::endl;
+    amrex::PrintToFile("test_checkpoint_additional.tmp") << "" << std::endl;
+    amrex::PrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is written out: " << old_val << std::endl;
+    amrex::PrintToFile("test_checkpoint_additional.tmp") << "Norm the MF has after changing it: " << new_val << std::endl;
+    amrex::PrintToFile("test_checkpoint_additional.tmp") << "Norm of MF that is read in: " << read_val << std::endl;
 
     bool passed = (std::abs(old_val - read_val) < 1e-12) && (std::abs(old_val - new_val) > 1e-1);
-    amrex::AllPrintToFile("test_checkpoint.tmp") << "" << std::endl;
-    amrex::AllPrintToFile("test_checkpoint.tmp") << passed << std::endl;
+    amrex::PrintToFile("test_checkpoint.tmp") << "" << std::endl;
+    amrex::PrintToFile("test_checkpoint.tmp") << passed << std::endl;
 }
 
 int main(int argc, char *argv[])

@@ -22,7 +22,7 @@ void main_main ()
 {
     amrex::IntVect n_cell = {AMREX_D_DECL(8,10,12)};
     gempic_parameters<vdim, numspec> VlMa;
-    VlMa.set_params("add_test", n_cell, {1}, 10, 12, 12, 12, {AMREX_D_DECL(1, 1, 1)}, {AMREX_D_DECL(8, 10, 12)});
+    VlMa.set_params("test_AMReX_atomic_add", n_cell, {1}, 10, 12, 12, 12, {AMREX_D_DECL(1, 1, 1)}, {AMREX_D_DECL(8, 10, 12)});
     VlMa.set_computed_params();
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
@@ -50,24 +50,17 @@ void main_main ()
     rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
 
     amrex::Real readval[1];
+    amrex::PrintToFile("test_AMReX_atomic_add.output") << "\n";
     for ( amrex::MFIter mfi(rho); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_atomic_add_additional.tmp") << rho[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_atomic_add.output") << rho[mfi] << std::endl;
         rho[mfi].getVal(readval,amrex::IntVect{5,6,7},0,1);
     }
-
-
-    bool passed = true;
-    gempic_assert(passed, testval, *readval);
-    amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << std::endl;
-    amrex::AllPrintToFile("test_AMReX_atomic_add.tmp") << passed << std::endl;
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) std::remove("test_AMReX_atomic_add.tmp.0");
-    if (ParallelDescriptor::MyProc()==0) std::remove("test_AMReX_atomic_add_additional.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -78,8 +71,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_atomic_add.tmp.0", "test_AMReX_atomic_add.output");
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_atomic_add_additional.tmp.0", "test_AMReX_atomic_add_additional.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_AMReX_atomic_add.output.0", "test_AMReX_atomic_add.output");
     amrex::Finalize();
 }
 

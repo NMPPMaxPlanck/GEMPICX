@@ -5,7 +5,7 @@ if (EXISTS  ${_test}.input )
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     #COMMAND srun --nodes=1 --ntasks-per-node=1 --cpus-per-task=17 --time=00:05:00 --constraint="gpu" --gres=gpu:a100:1 --nvmps ./${_test} ${_test}.input
     COMMAND mpirun -np 1 ./${_test} ${_test}.input
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output.tmp
+    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp

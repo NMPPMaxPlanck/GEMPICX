@@ -29,10 +29,10 @@ AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real , amrex::Real , amrex::Real ,
 template <int degx, int degy, int degz, int degmw, int vdim>
 void vlasov_maxwell_ctest(std::string test_name, int propagator)
 {
-    std::string test_name_tmp = test_name + ".tmp.0";
+    std::string test_name_tmp = test_name + ".output.0";
     std::string test_name_end = test_name + ".output";
 
-    if (amrex::ParallelDescriptor::MyProc()==0) remove(test_name_tmp.c_str());
+    // if (amrex::ParallelDescriptor::MyProc()==0) remove(test_name_tmp.c_str());
 
     amrex::GpuArray<int, 2> funcSelectRho;
     funcSelectRho[0] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;

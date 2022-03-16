@@ -149,34 +149,34 @@ void main_main ()
     gempic_assert(passed, rel_kin[1], kinetic_energy[1]);
     gempic_assert(passed, rel_kin[2], kinetic_energy[2]);
 
-    AllPrintToFile("test_particle_groups.tmp") << std::endl;
-    AllPrintToFile("test_particle_groups.tmp") << passed << std::endl;
+    PrintToFile("test_particle_groups.tmp") << std::endl;
+    PrintToFile("test_particle_groups.tmp") << passed << std::endl;
 
-    AllPrintToFile("test_particle_groups_additional.tmp") << std::endl;
-    AllPrintToFile("test_particle_groups_additional.tmp") << "mass: " << mass << std::endl;
-    AllPrintToFile("test_particle_groups_additional.tmp") << "momentum: " ;
+    PrintToFile("test_particle_groups_additional.tmp") << std::endl;
+    PrintToFile("test_particle_groups_additional.tmp") << "mass: " << mass << std::endl;
+    PrintToFile("test_particle_groups_additional.tmp") << "momentum: " ;
     switch (vdim) {
     case 1:
-        AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << std::endl;
+        PrintToFile("test_particle_groups_additional.tmp") << momentum[0] << std::endl;
         break;
     case 2:
-        AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << std::endl;
+        PrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << std::endl;
         break;
     case 3:
-        AllPrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
+        PrintToFile("test_particle_groups_additional.tmp") << momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
         break;
 
     }
-    AllPrintToFile("test_particle_groups_additional.tmp") << "kinetic energy: " ;
+    PrintToFile("test_particle_groups_additional.tmp") << "kinetic energy: " ;
     switch (vdim) {
     case 1:
-        AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << std::endl;
+        PrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << std::endl;
         break;
     case 2:
-        AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
+        PrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << std::endl;
         break;
     case 3:
-        AllPrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
+        PrintToFile("test_particle_groups_additional.tmp") << kinetic_energy[0] << " " << kinetic_energy[1] << " " << kinetic_energy[2] << std::endl;
         break;
 
     }

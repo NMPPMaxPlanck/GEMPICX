@@ -229,8 +229,6 @@ void time_loop_hs_fem (computational_domain infra,
 
     timers profiling_timers(false);
 
-    amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
-
     for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
 
         switch (strang_order) {
@@ -247,11 +245,11 @@ void time_loop_hs_fem (computational_domain infra,
             break;
         }
 
-        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
+        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name, ctest);
 
     }
 
-    diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
+    diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
 
 }
 }

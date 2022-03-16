@@ -101,9 +101,9 @@ void main_main ()
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(spline, dxi[GEMPIC_SPACEDIM]*weight*charge, rhoarr, Index_A);
         }
     }
-    amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
     //-----------------------------------------------------------------------------
@@ -111,14 +111,14 @@ void main_main ()
 
     TestMF.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, geom.periodicity());
 
-    amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp") << "SUMBOUNDARY" << std::endl;
+    amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << "SUMBOUNDARY" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_SumBoundary_additional.tmp").SetPrecision(20) << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp").SetPrecision(20) << TestMF[mfi] << std::endl;
     }
 
     bool passed = (std::abs(TestMF.norm1(0,Nghost) - 7.8) < 1e-12);
-    amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << std::endl;
-    amrex::AllPrintToFile("test_AMReX_SumBoundary.tmp") << passed << std::endl;
+    amrex::PrintToFile("test_AMReX_SumBoundary.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_SumBoundary.tmp") << passed << std::endl;
 
 }
 

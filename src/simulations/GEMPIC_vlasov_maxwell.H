@@ -67,7 +67,7 @@ public :
         // particles
         part_gr.reinit(params.charge, params.mass, domain);
         amrex::Real vol = (domain.geom.ProbHi(0)-domain.geom.ProbLo(0))*(domain.geom.ProbHi(1)-domain.geom.ProbLo(1))*(domain.geom.ProbHi(2)-domain.geom.ProbLo(2));
-        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
+        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol, ctest);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
         init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0], params.vWeight[0], 0, wave_function);
@@ -83,7 +83,7 @@ public :
         // particles
         part_gr.reinit(params.charge, params.mass, domain);
         amrex::Real vol = (domain.geom.ProbHi(0)-domain.geom.ProbLo(0))*(domain.geom.ProbHi(1)-domain.geom.ProbLo(1))*(domain.geom.ProbHi(2)-domain.geom.ProbLo(2));
-        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol);
+        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol, ctest);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
         init_particles_full_domain<vdim,numspec>(domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0], params.vWeight[0], 0, wave_function);

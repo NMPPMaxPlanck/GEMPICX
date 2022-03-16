@@ -154,7 +154,7 @@ void time_loop_boris_fd_step (computational_domain infra,
           MPI_Allreduce(&parts_per_cpu, &max_per_cpu, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD);
           MPI_Allreduce(&parts_per_cpu, &min_per_cpu, 1, MPI_LONG, MPI_MIN, MPI_COMM_WORLD);
 
-          amrex::AllPrintToFile("particles") << t_step << " " << max_per_cpu << " " << min_per_cpu << " " << parts_per_cpu << std::endl;
+          amrex::PrintToFile("particles") << t_step << " " << max_per_cpu << " " << min_per_cpu << " " << parts_per_cpu << std::endl;
         }*/
 
 
@@ -241,8 +241,6 @@ void time_loop_boris_fd (computational_domain infra,
 
     timers profiling_timers(true);
 
-    amrex::AllPrintToFile(simulation_name+".tmp") << std::endl;
-
     if (profiling_timers.profiling)
         profiling_timers.counter_all -= MPI_Wtime();
     for (int t_step=0;t_step<mw_yee->nsteps;t_step++) {
@@ -261,7 +259,7 @@ void time_loop_boris_fd (computational_domain infra,
             break;
         }
 
-        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name+".tmp", ctest);
+        diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name, ctest);
 
     }
 
@@ -271,7 +269,7 @@ void time_loop_boris_fd (computational_domain infra,
                      << ", field solver time: " << profiling_timers.counter_fields << ", sum boundary j time: " << profiling_timers.counter_jboundary
                      << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
       }
-    diagn->save_all_to_textfile(mw_yee->dt, simulation_name+".tmp");
+    diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
 }
 }
 }
