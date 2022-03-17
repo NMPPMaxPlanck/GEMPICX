@@ -2,7 +2,7 @@
 
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
-AMREX_DIRECTORY=`pwd`/../../amrex
+AMREX_DIRECTORY=`pwd`/../third_party/amrex
 AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
 
 echo $SOURCE_DIRECTORY
@@ -25,6 +25,9 @@ echo $CC
 echo $CXX
 echo $MPICXX
 echo
+
+git submodule init
+git submodule update
 
 BUILD_DIR=$HOME/gempic_obj
 
