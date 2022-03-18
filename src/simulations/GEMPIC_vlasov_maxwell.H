@@ -97,7 +97,7 @@ public :
         auto start = std::chrono::high_resolution_clock::now();
         switch (params.propagator) {
             case 0:
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, true>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 1:
                 time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
