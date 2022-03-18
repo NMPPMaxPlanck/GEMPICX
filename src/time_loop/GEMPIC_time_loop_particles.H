@@ -168,14 +168,14 @@ void time_loop_particles (computational_domain infra,
 
         // save temporary results every n steps
         if ((t_step+1)%5 == 0) {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output", t_step+1);
+            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name, t_step+1);
         }
         amrex::Print() << "finished step " << t_step+1 << std::endl;
 
         if (ctest) diagn->ctest_output(simulation_name, t_step);
     } // end time loop
 
-    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name+"_tmp.output");
+    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name);
 }
 }
 }

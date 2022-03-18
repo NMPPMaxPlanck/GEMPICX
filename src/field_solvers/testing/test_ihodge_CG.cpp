@@ -129,25 +129,21 @@ void main_main ()
 
     }
 
-    amrex::AllPrintToFile("test_ihodge_CG_additional.tmp") << std::endl;
+    amrex::PrintToFile("test_ihodge_CG.output") << std::endl;
     // comparing ihodge(hoge(E)) to E
     bool passed = true;
     for (int dim = 0; dim < vdim; dim++) {
         (mw_yee.E_sol_Array[dim])->minus(*(mw_yee.E_Array[dim]), 0, 1, 0);
         amrex::Real err_norm = Utils::gempic_norm(&(*(mw_yee.E_sol_Array[dim])), infra, 2);
-        amrex::AllPrintToFile("test_ihodge_CG_additional.tmp") << "For component " << dim << " the error is: " << err_norm << std::endl;
+        amrex::PrintToFile("test_ihodge_CG.output") << "For component " << dim << " the error is: " << err_norm << std::endl;
         amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
         gempic_assert_err(passed, E_norm, err_norm*err_norm);
     }
-    amrex::AllPrintToFile("test_ihodge_CG.tmp") << std::endl;
-    amrex::AllPrintToFile("test_ihodge_CG.tmp") << passed << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) remove("test_ihodge_CG.tmp.0");
-    if (ParallelDescriptor::MyProc()==0) remove("test_ihodge_CG_additional.tmp.0");
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -158,8 +154,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_ihodge_CG.tmp.0", "test_ihodge_CG.output");
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_ihodge_CG_additional.tmp.0", "test_ihodge_CG_additional.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_ihodge_CG.output.0", "test_ihodge_CG.output");
     amrex::Finalize();
 }
 

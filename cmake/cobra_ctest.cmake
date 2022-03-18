@@ -1,10 +1,10 @@
 MACRO( _CTEST_FILE_CMP _test )
 
-if (EXISTS   ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
+if (EXISTS  ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
   message("Input file ${_test}")
   ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     COMMAND srun -n 4 -p interactive ./${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output.0 > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     # lines if it should pipe the console output (if unit test has print instead of writing into a file)
     # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
     # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
@@ -80,12 +80,15 @@ MARK_AS_ADVANCED(DIFF_EXECUTABLE NUMDIFF_EXECUTABLE)
 
 IF("${TEST_DIFF}" STREQUAL "")
   IF(NOT NUMDIFF_EXECUTABLE MATCHES "-NOTFOUND")
-    SET(TEST_DIFF ${NUMDIFF_EXECUTABLE} -a 1e-4 -r 1e-8 -s ' \\t\\n:,')
+    SET(TEST_DIFF ${NUMDIFF_EXECUTABLE} -a 1e-5 -r 1e-8 -s ' \\t\\n:,')
     IF(DIFF_EXECUTABLE MATCHES "-NOTFOUND")
       SET(DIFF_EXECUTABLE ${NUMDIFF_EXECUTABLE})
     ENDIF()
   ELSEIF(NOT DIFF_EXECUTABLE MATCHES "-NOTFOUND")
     SET(TEST_DIFF ${DIFF_EXECUTABLE})
+    MESSAGE(
+      "######### Could not find numdiff. This will cause a number of ctests to fail. \n"
+      )
   ELSE()
     MESSAGE(FATAL_ERROR
       "Could not find diff or numdiff. One of those are required for running the tests.\n"

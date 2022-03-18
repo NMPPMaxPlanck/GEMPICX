@@ -55,9 +55,8 @@ void main_main ()
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("deposit_rho_ctest", n_cell, {1000}, 0, 2, 2, 2,
+    VlMa.set_params("test_deposit_rho", n_cell, {1000}, 0, 2, 2, 2,
                     is_periodic, {4,4,4}, 0.02, {-1.0}, {1.0}, k, {"0"});
-    VlMa.set_computed_params();
     VlMa.meanVelocity = meanVelocity;
     VlMa.vThermal = vThermal;
     VlMa.vWeight = vWeight;
@@ -120,23 +119,18 @@ void main_main ()
     // Compute difference and store in phi:
     (mw_yee.phi).minus(mw_yee.rho, 0, 1, 0);
 
-    //std::ofstream ofs("test_deposit_rho.output", std::ofstream::out);
-    AllPrintToFile("test_deposit_rho.tmp") << std::endl;
     amrex::Real error = gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2);
     bool passed = true;
     gempic_assert_err(passed, gempic_norm(&mw_yee.rho, infra, 2), error);
-    AllPrintToFile("test_deposit_rho.tmp") << passed << std::endl;
-
-    AllPrintToFile("test_deposit_rho_additional.tmp") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+   
+    PrintToFile("test_deposit_rho.output") << "\n";
+    PrintToFile("test_deposit_rho.output") << "Norm of error: " << gempic_norm(&(mw_yee.phi), infra, 2)*gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) remove("test_deposit_rho.tmp.0");
-    if (ParallelDescriptor::MyProc()==0) remove("test_deposit_rho_additional.tmp.0");
-
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1, false>();
@@ -147,8 +141,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_deposit_rho.tmp.0", "test_deposit_rho.output");
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_deposit_rho_additional.tmp.0", "test_deposit_rho_additional.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_deposit_rho.output.0", "test_deposit_rho.output");
 
 
     amrex::Finalize();

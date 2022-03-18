@@ -65,9 +65,9 @@ void main_main ()
         });
     }
 
-    amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_FillBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_FillBoundary_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
     bool passed = true;
@@ -75,12 +75,12 @@ void main_main ()
     TestMF.FillBoundary(geom.periodicity());
     passed = passed && (std::abs(TestMF.norm1(0,Nghost) - 26304) < 1e-6);
 
-    amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << std::endl;
-    amrex::AllPrintToFile("test_AMReX_FillBoundary.tmp") << passed << std::endl;
+    amrex::PrintToFile("test_AMReX_FillBoundary.tmp") << std::endl;
+    amrex::PrintToFile("test_AMReX_FillBoundary.tmp") << passed << std::endl;
 
-    amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << "FILLBOUNDARY" << std::endl;
+    amrex::PrintToFile("test_AMReX_FillBoundary_additional.tmp") << "FILLBOUNDARY" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi ) {
-        amrex::AllPrintToFile("test_AMReX_FillBoundary_additional.tmp") << TestMF[mfi] << std::endl;
+        amrex::PrintToFile("test_AMReX_FillBoundary_additional.tmp") << TestMF[mfi] << std::endl;
     }
 
 }

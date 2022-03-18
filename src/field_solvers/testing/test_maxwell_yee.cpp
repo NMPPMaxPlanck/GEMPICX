@@ -70,7 +70,6 @@ AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
 {
-    bool passed = true;
     //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
     amrex::GpuArray<std::string, vdim> fields_E;
@@ -125,7 +124,7 @@ void main_main ()
 
     const int degree = 2;
     int bdim = int(vdim/2.5)*2+1;
-    std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
+    amrex::Print() << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
 
     //------------------------------------------------------------------------------
     amrex::GpuArray<Real,vdim+int(vdim/2.5)*2+1> E_B_error; //array for storing errors
@@ -138,9 +137,8 @@ void main_main ()
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
+    VlMa.set_params("test_maxwell_yee", n_cell, {1}, 5, 10, 10, 10, is_periodic,
     {32, 32, 32}, 0.01, {1.0}, {1.0}, 0.5);
-    VlMa.set_computed_params();
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
@@ -151,8 +149,8 @@ void main_main ()
 
 
     for (int i=0; i<vdim; i++) {
-        (*(mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
-        (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee.J_Array[i] -> setVal(0.0, 0); // value and component
+        mw_yee.J_Array[i] -> FillBoundary(infra.geom.periodicity());
     }
 
     amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
@@ -167,41 +165,28 @@ void main_main ()
     mw_yee.template initE<degree>(infra, funcSelectE);
 
 
-    std::cout <<  "step: " << 0 << std::endl;
+    amrex::Print() <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
-
-    AllPrintToFile("test_maxwell_yee.tmp") << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << 0 << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
+   
+    PrintToFile("test_maxwell_yee.output") << endl;
+    PrintToFile("test_maxwell_yee.output") << "Maxwell" << endl;
+    PrintToFile("test_maxwell_yee.output") << "step " << 0 << endl;
+    PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+    PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
 
 
     for (int n=1;n<=mw_yee.nsteps;n++){
-        std::cout << "step: " << n << std::endl;
+        amrex::Print() << "step: " << n << std::endl;
         mw_yee.template hodge_full<degree>(infra, mw_yee.B_Array, mw_yee.HB_Array, false);
         mw_yee.advance_E(infra, VlMa.dt, true, true, mw_yee.HB_Array, mw_yee.E_Array);
         mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
         mw_yee.advance_B(infra, VlMa.dt, mw_yee.HE_Array, mw_yee.B_Array);
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
 
-
-        AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << n << endl;
-        AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-        AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
+        PrintToFile("test_maxwell_yee.output") << "step " << n << endl;
+        PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
 
 
     }
@@ -211,8 +196,8 @@ void main_main ()
     maxwell_yee<vdim> mw_yee_2(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     for (int i=0; i<vdim; i++) {
-        (*(mw_yee_2).J_Array[i]).setVal(0.0, 0); // value and component
-        (*(mw_yee_2).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee_2.J_Array[i] -> setVal(0.0, 0); // value and component
+        mw_yee_2.J_Array[i] -> FillBoundary(infra.geom.periodicity());
     }
 
     funcSelectB[0] = MAXWELL_YEE_B0;
@@ -224,24 +209,18 @@ void main_main ()
     funcSelectE[2] = MAXWELL_YEE_E2;
     mw_yee_2.template initE<degree>(infra, funcSelectE);
 
-    std::cout <<  "step: " << 0 << std::endl;
+    amrex::Print() <<  "step: " << 0 << std::endl;
     E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
-
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << "Maxwell" << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << 0 << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
+ 
+    PrintToFile("test_maxwell_yee.output") << endl;
+    PrintToFile("test_maxwell_yee.output") << "Maxwell" << endl;
+    PrintToFile("test_maxwell_yee.output") << "step " << 0 << endl;
+    PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+    PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
 
 
     for (int n=1;n<=mw_yee_2.nsteps;n++){
-        std::cout << "step: " << n << std::endl;
+        amrex::Print() << "step: " << n << std::endl;
         mw_yee_2.advance_time();
         mw_yee_2.template hodge_full<degree>(infra, mw_yee_2.B_Array, mw_yee_2.HB_Array, false);
         mw_yee_2.advance_E(infra, mw_yee_2.dt, true, false, mw_yee_2.HB_Array, mw_yee_2.E_Array);
@@ -250,17 +229,9 @@ void main_main ()
         mw_yee_2.advance_B(infra, mw_yee_2.dt, mw_yee_2.HE_Array, mw_yee_2.B_Array);
         E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[0]), infra, 2), E_B_error[3]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[1]), infra, 2), E_B_error[4]);
-        gempic_assert_err(passed, gempic_norm(&(*mw_yee.B_Array[2]), infra, 2), E_B_error[5]);
-
-
-        AllPrintToFile("test_maxwell_yee_additional.tmp") << "step " << n << endl;
-        AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-        amrex::AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
+        PrintToFile("test_maxwell_yee.output") << "step " << n << endl;
+        PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+        PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Bx error: " << E_B_error[3] << " |By error: " << E_B_error[4] << " |Bz error: " << E_B_error[5] << std::endl;
 
     }
 
@@ -279,40 +250,32 @@ void main_main ()
     funcSelectB[1]=MAXWELL_YEE_ZERO;
     funcSelectB[2]=MAXWELL_YEE_B2;
     E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[0]), infra, 2), E_B_error[0]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[1]), infra, 2), E_B_error[1]);
-    gempic_assert_err(passed, gempic_norm(&(*mw_yee.E_Array[2]), infra, 2), E_B_error[2]);
-
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << "Poisson" << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
+   
+    PrintToFile("test_maxwell_yee.output") << endl;
+    PrintToFile("test_maxwell_yee.output") << "Poisson" << endl;
+    PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
 
 
 
     //------------------------------------------------------------------------------
     // Rho from E
 
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << endl;
-    AllPrintToFile("test_maxwell_yee_additional.tmp") << "rho_from_E" << endl;
+    PrintToFile("test_maxwell_yee.output") << endl;
+    PrintToFile("test_maxwell_yee.output") << "rho_from_E" << endl;
 
     mw_yee.rho_from_E(infra); // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
     amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2);
-    gempic_assert_err(passed, gempic_norm(&(mw_yee.rho), infra, 2), rho_norm*rho_norm);
-
-    AllPrintToFile("test_maxwell_yee_additional.tmp").SetPrecision(5) << "rho Error: " << rho_norm*rho_norm << std::endl;
-
-    AllPrintToFile("test_maxwell_yee.tmp") << passed << std::endl;
+   
+    PrintToFile("test_maxwell_yee.output").SetPrecision(5) << "rho Error: " << rho_norm*rho_norm << std::endl;
 
 }
 
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) remove("test_maxwell_yee.tmp.0");
-    if (ParallelDescriptor::MyProc()==0) remove("test_maxwell_yee_additional.tmp.0");
 
-
+const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1, false>();
     main_main<2, 1, 1, 1, 1, false>();
@@ -320,11 +283,11 @@ int main(int argc, char* argv[])
     main_main<2, 1, 1, 1, 1, false>();
     main_main<3, 1, 1, 1, 1, false>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee.tmp.0", "test_maxwell_yee.output");
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee_additional.tmp.0", "test_maxwell_yee_additional.output");
-
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_maxwell_yee.output.0", "test_maxwell_yee.output");
+    amrex::Print() << "IOProcessorNumber " << ParallelDescriptor::IOProcessorNumber() << std::endl;
+ 
     amrex::Finalize();
 }
 

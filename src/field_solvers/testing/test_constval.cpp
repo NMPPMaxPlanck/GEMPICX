@@ -47,11 +47,11 @@ void main_main ()
     // compare results
     mf_out.minus(mf_in, 0, 1, 0);
     amrex::Real norm_diff = mf_out.norm2();
-    amrex::AllPrintToFile("test_constval.tmp") << std::endl;
+    amrex::PrintToFile("test_constval.tmp") << std::endl;
     if (norm_diff < 1e-12){
-    	amrex::AllPrintToFile("test_constval.tmp") << 1 << std::endl;
+    	amrex::PrintToFile("test_constval.tmp") << 1 << std::endl;
     } else {
-    	amrex::AllPrintToFile("test_constval.tmp") << 0 << std::endl;
+    	amrex::PrintToFile("test_constval.tmp") << 0 << std::endl;
     }
 
 }

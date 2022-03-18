@@ -32,11 +32,11 @@ void main_main ()
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> x = {AMREX_D_DECL(0.25, 0.25, 0.25)};
     int ind = spl.compute_cell_index (cell_index, dimension, x[0], cent_eval[0]);
 
-    amrex::AllPrintToFile("test_splines_additional.tmp") << std::endl;
-    amrex::AllPrintToFile("test_splines_additional.tmp") << ind << std::endl;
+    amrex::PrintToFile("test_splines_additional.tmp") << std::endl;
+    amrex::PrintToFile("test_splines_additional.tmp") << ind << std::endl;
 
-    amrex::AllPrintToFile("test_splines.tmp") << std::endl;
-    amrex::AllPrintToFile("test_splines.tmp") << (std::abs(ind-0)<1e-12) << std::endl;
+    amrex::PrintToFile("test_splines.tmp") << std::endl;
+    amrex::PrintToFile("test_splines.tmp") << (std::abs(ind-0)<1e-12) << std::endl;
 
 }
 

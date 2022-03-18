@@ -129,8 +129,8 @@ void main_main (bool ctest)
     amrex::Real vol = (infra.geom.ProbHi(0)-infra.geom.ProbLo(0))*(infra.geom.ProbHi(1)-infra.geom.ProbLo(1))*(infra.geom.ProbHi(2)-infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz,degmw> diagn(mw_yee.nsteps, freq_x, freq_v, freq_slice, sim_name, vol);
     loop_preparation<vdim,numspec,degx,degy,degz,degmw, true>(VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, zero, zero, cosine);
-    std::ofstream ofs("PIC.output", std::ofstream::out);
-    amrex::Print(ofs) << endl;
+
+    amrex::PrintToFile("test_one_part.output") << endl;
     switch (propagator) {
     case 0:
         time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(infra, &mw_yee, &part_gr, &diagn, ctest, "test_one_part", strang_order);
@@ -149,7 +149,6 @@ void main_main (bool ctest)
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    if (ParallelDescriptor::MyProc()==0) remove("test_one_part.tmp.0");
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the expected_output file contains all outputs.
     For each dimension, apart from running the main_main for the dimension, the output for the other dimensions needs to be
@@ -159,57 +158,57 @@ int main(int argc, char* argv[])
 #if (GEMPIC_SPACEDIM == 1)
 
     // Output for GEMPIC_SPACEDIM=1 vdim=2
-    AllPrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
     main_main<2, 1, 1, 1, 1>(argc==1);
 
     // Output for GEMPIC_SPACEDIM=2 vdim=2
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
     // Output for GEMPIC_SPACEDIM=2 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 
 #elif (GEMPIC_SPACEDIM == 2)
 
     // Output for GEMPIC_SPACEDIM=1 vdim=2
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=2 vdim=2
-    AllPrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
     main_main<2, 1, 1, 1, 1>(argc==1);
     // Output for GEMPIC_SPACEDIM=2 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
     main_main<3, 1, 1, 1, 1>(argc==1);
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.tmp") << std::endl;
+    PrintToFile("test_one_part.tmp") << "0 0.000268783 0.00017768 0.000204417 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 #elif (GEMPIC_SPACEDIM == 3)
 
     // Output for GEMPIC_SPACEDIM=1 vdim=2
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.output") << std::endl;
+    PrintToFile("test_one_part.output") << "0 0.581609 0 0 0.51 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=2 vdim=2
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.output") << std::endl;
+    PrintToFile("test_one_part.output") << "0 0.00430711 0.0028235 0 0.51 0.1 0.1" << std::endl;
     // Output for GEMPIC_SPACEDIM=2 vdim=3
-    AllPrintToFile("test_one_part.tmp") << std::endl;
-    AllPrintToFile("test_one_part.tmp") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
+    PrintToFile("test_one_part.output") << std::endl;
+    PrintToFile("test_one_part.output") << "0 0.00430711 0.0028235 0 0 0 5e-07 0.015 0.1 0.1 0.1" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
-    //AllPrintToFile("test_one_part.tmp") << std::endl;
+    //PrintToFile("test_one_part.output") << std::endl;
     main_main<3, 1, 1, 1, 1, 2, 0>(argc==1);
     main_main<3, 1, 3, 2, 1, 4, 1>(argc==1);
     main_main<3, 1, 2, 4, 2, 4, 3>(argc==1);
 #endif
 
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.tmp.0", "test_one_part.output");
+    if (ParallelDescriptor::MyProc()==0) std::rename("test_one_part.output.0", "test_one_part.output");
     amrex::Finalize();
 }
 
