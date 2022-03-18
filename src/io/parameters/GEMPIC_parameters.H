@@ -537,7 +537,7 @@ public:
             if (mfi.index() == 0)
             {
                 // using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
-                amrex::ParticleTile<vdim + 1, 0, 0, 0> &particles = (*(*part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+                amrex::ParticleTile<0, 0, vdim + 1, 0> &particles = (*(*part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
                 std::string line;
                 std::ifstream myfile(filename);

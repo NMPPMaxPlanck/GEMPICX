@@ -110,7 +110,10 @@ void time_loop_hsall_fem_step (computational_domain infra,
                         vel[comp] = particle_attributes.GetRealData(comp)[pp];
                     }
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, (*mw_yee).dt*0.5*coeff, chargemass, efield);
-                    std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    //std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    for (int comp = 0; comp < vdim; comp++) {
+                        particle_attributes.GetRealData(comp)[pp] = newPosE[comp] ;
+                    }
 
                     amrex::Real weight = charge*particle_attributes.GetRealData(vdim)[pp]*infra.dxi[GEMPIC_SPACEDIM];
 
@@ -286,8 +289,11 @@ void time_loop_hsall_fem_step (computational_domain infra,
 #endif
 
 }
-                    std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
-                    std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+1)]);
+                    //std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    for (int comp = 0; comp < vdim; comp++) {
+                        particle_attributes.GetRealData(comp)[pp] = vel[comp] ;
+                    }
 
                 }
             }
@@ -343,7 +349,10 @@ void time_loop_hsall_fem_step (computational_domain infra,
                         vel[comp] = particle_attributes.GetRealData(comp)[pp];
                     }
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, (*mw_yee).dt*0.5*coeff, chargemass, efield);
-                    std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    //std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    for (int comp = 0; comp < vdim; comp++) {
+                        particle_attributes.GetRealData(comp)[pp] = newPosE[comp] ;
+                    }
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
