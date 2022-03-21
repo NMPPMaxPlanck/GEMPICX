@@ -147,7 +147,9 @@ void time_loop_hs_fem_step (computational_domain infra,
                                                     infra.dxi,
                                                     infra.plo,
                                                     jA);
-                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+1)]);
+                    //std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+1)]);
+                    for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
+                        particles[pp].pos(xd) = pos[xd];
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
