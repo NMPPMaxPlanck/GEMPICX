@@ -45,7 +45,7 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
-    amrex::IntVect nCell = {12, 8, 8};
+    amrex::IntVect nCell = {AMREX_D_DECL(12, 8, 8)};
     sim.params.set_params_Weibel(test_name, propagator, nSteps, nCell);
 
     sim.ctest = true;

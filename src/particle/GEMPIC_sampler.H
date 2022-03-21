@@ -135,6 +135,7 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
+            amrex::Real z = 0;
 #if (GEMPIC_SPACEDIM > 2)
             for (int k = lo[2]; k <= hi[2]; k++)
             {

@@ -52,21 +52,26 @@ void main_main()
 
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(32, 32, 32)};
-    amrex::IntVect max_grid_size = {2, 2, 2};
+    amrex::IntVect max_grid_size = {AMREX_D_DECL(2, 2, 2)};
 
     // Weibel parameters
     std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
         {{0.0, 0.0, 0.0}}};  // species, gaussian, vdim
     std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
         {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
-    ;
+    if (vdim == 2)
+    {
+        std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+            {{0.0, 0.0}}};  // species, gaussian, vdim
+        std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+            {{0.014142135623730949, 0.04898979485566356}}};
+    }
     std::vector<std::vector<amrex::Real>> vWeight{{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2, is_periodic, max_grid_size, 0.01,
                     {1.0}, {1.0}, 1.25, {"0"});
-    VlMa.set_computed_params();
     VlMa.meanVelocity = meanVelocity;
     VlMa.vThermal = vThermal;
     VlMa.vWeight = vWeight;
@@ -98,7 +103,8 @@ void main_main()
     // compute mass, momentum and kinetic energy
     auto mass = amrex::ReduceSum(
         *(part_gr).mypc[spec],
-        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
+        {
             auto m = p.rdata(vdim);
             return (m);
         });
@@ -110,7 +116,8 @@ void main_main()
     {
         auto mom_tmp = amrex::ReduceSum(
             *(part_gr).mypc[spec],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
+            {
                 auto m = p.rdata(vdim);
                 auto vel = p.rdata(cmp);
                 return (m * vel);
@@ -128,7 +135,8 @@ void main_main()
     {
         auto mom_tmp = amrex::ReduceSum(
             *(part_gr).mypc[spec],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
+            {
                 auto m = p.rdata(vdim);
                 auto vel = p.rdata(cmp);
                 return (m * vel * vel);
@@ -197,7 +205,8 @@ int main(int argc, char *argv[])
     if (ParallelDescriptor::MyProc() == 0) remove("test_particle_groups.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_particle_groups_additional.tmp.0");
 
-    main_main<3, 1>();
+    const int vdim = 3, numspec = 1;
+    main_main<vdim, numspec>();
 
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_particle_groups.tmp.0", "test_particle_groups.output");

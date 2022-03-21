@@ -54,12 +54,20 @@ void main_main()
     std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
         {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
     ;
+    if (vdim == 2)
+    {
+        std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+            {{0.0, 0.0}}};  // species, gaussian, vdim
+        std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+            {{0.014142135623730949, 0.04898979485566356}}};
+        ;
+    }
     std::vector<std::vector<amrex::Real>> vWeight{{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_deposit_rho", n_cell, {1000}, 0, 2, 2, 2, is_periodic, {4, 4, 4}, 0.02,
-                    {-1.0}, {1.0}, k, {"0"});
+    VlMa.set_params("test_deposit_rho", n_cell, {1000}, 0, 2, 2, 2, is_periodic,
+                    {AMREX_D_DECL(4, 4, 4)}, 0.02, {-1.0}, {1.0}, k, {"0"});
 
     VlMa.meanVelocity = meanVelocity;
     VlMa.vThermal = vThermal;
@@ -142,14 +150,20 @@ int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
 
+    const int numspec = 1, degx = 1, degy = 1, degz = 1;
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1, false>();
-    main_main<2, 1, 1, 1, 1, false>();
+    const int vdim1 = 1;
+    main_main<vdim1, numspec, degx, degy, degz>();
+    const int vdim2 = 2;
+    main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<2, 1, 1, 1, 1, false>();
-    main_main<3, 1, 1, 1, 1, false>();
+    const int vdim2 = 2;
+    main_main<vdim2, numspec, degx, degy, degz>();
+    const int vdim3 = 3;
+    main_main<vdim3, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>();
+    const int vdim = 3;
+    main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_deposit_rho.output.0", "test_deposit_rho.output");

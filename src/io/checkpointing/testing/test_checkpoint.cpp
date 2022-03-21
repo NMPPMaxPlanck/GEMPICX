@@ -36,7 +36,7 @@ void main_main()
     std::array<int, numspec> n_part_per_cell = {1};
     int n_steps = 2;
     amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect max_grid_size = {2, 2, 2};
+    amrex::IntVect max_grid_size = {AMREX_D_DECL(2, 2, 2)};
     amrex::Real dt = 0.1;
     amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
     amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
@@ -47,6 +47,12 @@ void main_main()
     std::vector<std::vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
     std::vector<std::vector<amrex::Real>> vThermal = {
         {0.0141421356237309493730949, 0.04898979485566356, 0.04898979485566356}};
+    if (vdim == 2)
+    {
+        std::vector<std::vector<amrex::Real>> meanVelocity = {{0.0, 0.0}};
+        std::vector<std::vector<amrex::Real>> vThermal = {
+            {0.0141421356237309493730949, 0.04898979485566356}};
+    }
     std::vector<amrex::Real> vWeight = {1.0};
 
     // initialize amrex data structures from parameters

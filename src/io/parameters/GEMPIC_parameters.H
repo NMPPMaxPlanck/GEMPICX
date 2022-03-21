@@ -44,13 +44,13 @@ public:
     std::string sim_name = "simulation";
     // grid
     amrex::RealBox real_box;
-    std::vector<amrex::Real> domain_lo = {0.0, 0.0, 0.0};
-    std::vector<amrex::Real> domain_hi = {1.0, 1.0, 1.0};
-    amrex::IntVect is_periodic = {1, 1, 1};
-    amrex::IntVect n_cell = {8, 8, 8};
-    amrex::IntVect max_grid_size = {4, 4, 4};  // for parallelisation
+    std::vector<amrex::Real> domain_lo = {AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::vector<amrex::Real> domain_hi = {AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
+    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)}; // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
-    amrex::Vector<amrex::Real> k = {1.25, 1.25, 1.25};
+    amrex::Vector<amrex::Real> k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
     amrex::Real kx, ky, kz;
 
     // time discretisation
@@ -125,9 +125,9 @@ public:
     {
         // Local variables
         amrex::ParmParse pp;
-        std::array<int, GEMPIC_SPACEDIM> is_periodic_vector = {1, 1, 1};
-        std::array<int, GEMPIC_SPACEDIM> max_grid_size_vector = {4, 4, 4};
-        std::array<int, GEMPIC_SPACEDIM> n_cell_vector = {10, 10, 10};
+        std::array<int, GEMPIC_SPACEDIM> is_periodic_vector {AMREX_D_DECL(1, 1, 1)};
+        std::array<int, GEMPIC_SPACEDIM> max_grid_size_vector {AMREX_D_DECL(4, 4, 4)};
+        std::array<int, GEMPIC_SPACEDIM> n_cell_vector {AMREX_D_DECL(10, 10, 10)};
 
         if (!pp.query("sim_name", sim_name))
         {

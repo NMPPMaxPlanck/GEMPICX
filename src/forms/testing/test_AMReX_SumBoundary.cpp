@@ -115,7 +115,7 @@ void main_main()
     //-----------------------------------------------------------------------------
     // SumBoundary
 
-    TestMF.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, geom.periodicity());
+    TestMF.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)}, geom.periodicity());
 
     amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << "SUMBOUNDARY" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi)

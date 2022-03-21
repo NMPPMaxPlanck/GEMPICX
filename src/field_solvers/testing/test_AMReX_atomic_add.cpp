@@ -47,14 +47,14 @@ void main_main()
 
         amrex::HostDevice::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
     }
-    rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
+    rho.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)}, infra.geom.periodicity());
 
     amrex::Real readval[1];
     amrex::PrintToFile("test_AMReX_atomic_add.output") << "\n";
     for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi)
     {
         amrex::PrintToFile("test_AMReX_atomic_add.output") << rho[mfi] << std::endl;
-        rho[mfi].getVal(readval, amrex::IntVect{5, 6, 7}, 0, 1);
+        rho[mfi].getVal(readval,amrex::IntVect{AMREX_D_DECL(5,6,7)},0,1);
     }
 }
 

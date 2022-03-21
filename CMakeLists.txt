@@ -81,7 +81,7 @@ message("AMReX Dir is ${AMReX_DIR}")
 # Find the AMReX library
 find_package( AMReX  HINTS ${AMReX_DIR}/lib/cmake/AMReX )
 if (NOT AMReX_FOUND)
-  set( AMReX_SPACEDIM 3 )
+#  set( AMReX_SPACEDIM 3 )
   set( AMReX_PARTICLES ON )
   if ( USE_CUDA )
     set( AMReX_GPU_BACKEND CUDA )

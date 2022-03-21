@@ -311,7 +311,6 @@ int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
 
-    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1, false>();
     main_main<2, 1, 1, 1, 1, false>();
@@ -319,6 +318,7 @@ int main(int argc, char *argv[])
     main_main<2, 1, 1, 1, 1, false>();
     main_main<3, 1, 1, 1, 1, false>();
 #elif (GEMPIC_SPACEDIM == 3)
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
