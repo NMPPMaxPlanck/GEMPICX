@@ -102,7 +102,9 @@ void time_loop_particles (computational_domain infra,
                     newPos[0] = 0.0;
                     newPos[0] = 0.0;
                     newPos[0] = pow(-1.0,spec)*d*Omega*cos(Omega*mw_yee->dt);
-                    std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    //std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
+                        particles[pp].pos(xd) = pos[xd];
                 }
             }
             (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
