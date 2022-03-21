@@ -114,71 +114,56 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
             // loop over particles: add contribution of old particle position to J and push
 
             amrex::Real dt = (*mw_yee).dt;
-            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
-                // for ( int pp=0; pp<np;pp++){
-
-                splines_at_particles<degx, degy, degz> spline;
-                spline1d_at_particles<degx> spline_new_x;
-                spline1d_at_particles<degx> spline_old_x;
-                spline1d_at_particles<degy> spline_new_y;
-                spline1d_at_particles<degy> spline_old_y;
-                spline1d_at_particles<degz> spline_new_z;
-                spline1d_at_particles<degz> spline_old_z;
-                // Read out particle position
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = particles[pp].pos(d);
-                // evaluate the spline
-                spline.init_particles(pos, infra.plo, infra.dxi);
-                // evaluate the electric field
-                amrex::GpuArray<amrex::Real, vdim> efield =
-                    evaluate_efield<vdim, degx, degy, degz>(spline, eA);
-
-                // push v with the electric field
-                amrex::GpuArray<amrex::Real, vdim> vel;
-                for (int comp = 0; comp < vdim; comp++)
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
                 {
-                    vel[comp] = particles[pp].rdata(comp);
-                }
-                amrex::GpuArray<amrex::Real, vdim> newPosE =
-                    push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass, efield);
-                for (int vd = 0; vd < vdim; vd++) (particles[pp].rdata(vd)) = newPosE[vd];
+                    // for ( int pp=0; pp<np;pp++){
 
-                amrex::Real weight =
-                    charge * particles[pp].rdata(vdim) * infra.dxi[GEMPIC_SPACEDIM];
+                    splines_at_particles<degx, degy, degz> spline;
+                    spline1d_at_particles<degx> spline_new_x;
+                    spline1d_at_particles<degx> spline_old_x;
+                    spline1d_at_particles<degy> spline_new_y;
+                    spline1d_at_particles<degy> spline_old_y;
+                    spline1d_at_particles<degz> spline_new_z;
+                    spline1d_at_particles<degz> spline_old_z;
+                    // Read out particle position
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        pos[d] = particles[pp].pos(d);
+                    // evaluate the spline
+                    spline.init_particles(pos, infra.plo, infra.dxi);
+                    // evaluate the electric field
+                    amrex::GpuArray<amrex::Real, vdim> efield =
+                        evaluate_efield<vdim, degx, degy, degz>(spline, eA);
 
-                for (unsigned int d = 0; d < vdim; ++d) vel[d] = particles[pp].rdata(d);
-                amrex::GpuArray<amrex::Real, 2> bfields;
-                // push x1
-                amrex::Real x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
-                spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
-                spline_old_x.init_position(pos[0], infra.plo[0], infra.dxi[0]);
-                spline.template init_position<0, degx>(x1_new, infra.plo[0], infra.dxi[0]);
+                    // push v with the electric field
+                    amrex::GpuArray<amrex::Real, vdim> vel;
+                    for (int comp = 0; comp < vdim; comp++)
+                    {
+                        vel[comp] = particles[pp].rdata(comp);
+                    }
+                    amrex::GpuArray<amrex::Real, vdim> newPosE =
+                        push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass, efield);
+                    for (int vd = 0; vd < vdim; vd++) (particles[pp].rdata(vd)) = newPosE[vd];
 
-                amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> primitive;
-                accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degx, degy,
-                                         degz, 0, std::max(degx, std::max(degy, degz)) + 4>(
-                    spline, spline_new_x, spline_old_x, weight, infra.geom.CellSize(), bA, jA,
-                    bfields, &primitive);
+                    amrex::Real weight =
+                        charge * particles[pp].rdata(vdim) * infra.dxi[GEMPIC_SPACEDIM];
 
-                // Push v2 and v3
-                if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
-                if (vdim > 2) vel[2] = vel[2] + chargemass * bfields[1];
-                pos[0] = x1_new;
+                    for (unsigned int d = 0; d < vdim; ++d) vel[d] = particles[pp].rdata(d);
+                    amrex::GpuArray<amrex::Real, 2> bfields;
+                    // push x1
+                    amrex::Real x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
+                    spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
+                    spline_old_x.init_position(pos[0], infra.plo[0], infra.dxi[0]);
+                    spline.template init_position<0, degx>(x1_new, infra.plo[0], infra.dxi[0]);
 
-                if (vdim > 1)
-                {
-#if GEMPIC_SPACEDIM > 1
-                    // push x2
-                    amrex::Real x2_new = pos[1] + dt * 0.5 * coeff * vel[1];
-
-                    spline_new_y.init_position(x2_new, infra.plo[1], infra.dxi[1]);
-                    spline_old_y.init_position(pos[1], infra.plo[1], infra.dxi[1]);
-                    spline.template init_position<1, degy>(x2_new, infra.plo[1], infra.dxi[1]);
-
-                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degy,
-                                             degz, degx, 1,
+                    amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4>
+                        primitive;
+                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degx,
+                                             degy, degz, 0,
                                              std::max(degx, std::max(degy, degz)) + 4>(
-                        spline, spline_new_y, spline_old_y, weight, infra.geom.CellSize(), bA, jA,
+                        spline, spline_new_x, spline_old_x, weight, infra.geom.CellSize(), bA, jA,
                         bfields, &primitive);
 
                     // Push v2 and v3
@@ -188,6 +173,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
 
                     if (vdim > 1)
                     {
+#if GEMPIC_SPACEDIM > 1
                         // push x2
                         amrex::Real x2_new = pos[1] + dt * 0.5 * coeff * vel[1];
 
@@ -205,6 +191,15 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                         vel[0] = vel[0] + chargemass * bfields[1];
                         if (vdim > 2) vel[2] = vel[2] - chargemass * bfields[0];
                         pos[1] = x2_new;
+#else
+                        amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> bfield =
+                            evaluate_fem_bfield<vdim, degx, degy, degz>(pos, infra.dxi, infra.plo,
+                                                                        bA);
+                        gempic_deposit_rho<degx, degy, degz>(spline, weight * vel[1] * dt * coeff,
+                                                             jA[1]);
+                        // Push v2 and v3
+                        vel[0] = vel[0] + chargemass * bfields[0] * vel[1] * dt * coeff;
+#endif
                     }
                     if (vdim > 2)
                     {
@@ -298,188 +293,184 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
         (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute += MPI_Wtime();
-        }
-
-        // add values from ghost cells and periodic boundary
-        if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_jboundary -= MPI_Wtime();
-        Gempic_SumBoundary(mw_yee, &infra);  // Sums Boundary of J and Overwrites overlap
-        for (int i = 0; i < vdim; i++)
-        {
-            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
-        }
-        if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_jboundary += MPI_Wtime();
-        /*amrex::Vector<std::string> varnames = { "J_x"};
-        amrex::Real timeo = t_step*(*mw_yee).dt*coeff;
-        WriteSingleLevelPlotfile("current_C2", *(*mw_yee).J_Array[0], varnames,
-        infra.geom, timeo, 0);
-        //abort();*/
-
-        if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_fields -= MPI_Wtime();
-        // advance E from j (field part of H_p)
-        mw_yee->advance_E(infra, 1.0, false, true, mw_yee->HB_Array, mw_yee->E_Array);
-        mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
-        if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_fields += MPI_Wtime();
-
-        // Second particle loop for particle part from H_E
-        for (int spec = 0; spec < numspec; spec++)
-        {
-            if (profiling_timers->profiling && profiling_count)
-                profiling_timers->counter_deposition -= MPI_Wtime();
-            amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
-
-            for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
-                 ++pti)
-            {
-                amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles =
-                    &(pti.GetArrayOfStructs()[0]);
-                // amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT particles =
-                // pti.GetArrayOfStructs(); // get particles
-                const long np = pti.numParticles();
-
-                amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-
-                for (int cc = 0; cc < vdim; cc++)
-                {
-                    eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
-                }
-
-                amrex::Real dt = (*mw_yee).dt;
-                // loop over particles: add contribution of old particle position to J and push
-                amrex::ParallelFor(np,
-                                   [=] AMREX_GPU_DEVICE(long pp)
-                                   {
-                                       amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                       for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                                           pos[d] = particles[pp].pos(d);
-
-                                       splines_at_particles<degx, degy, degz> splines;
-                                       // evaluate the spline
-                                       splines.init_particles(pos, infra.plo, infra.dxi);
-                                       // evaluate the electric field
-                                       amrex::GpuArray<amrex::Real, vdim> efield =
-                                           evaluate_efield<vdim, degx, degy, degz>(splines, eA);
-                                       // push v with the electric field
-                                       amrex::GpuArray<amrex::Real, vdim> vel;
-                                       for (int comp = 0; comp < vdim; comp++)
-                                       {
-                                           vel[comp] = particles[pp].rdata(comp);
-                                       }
-                                       amrex::GpuArray<amrex::Real, vdim> newPosE =
-                                           push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass,
-                                                               efield);
-                                       for (int vd = 0; vd < vdim; vd++)
-                                           (particles[pp].rdata(vd)) = newPosE[vd];
-                                   });
-            }
-            if (profiling_timers->profiling && profiling_count)
-                profiling_timers->counter_deposition += MPI_Wtime();
-            if (profiling_timers->profiling && profiling_count)
-                profiling_timers->counter_redistribute -= MPI_Wtime();
-            (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
-            if (profiling_timers->profiling && profiling_count)
-                profiling_timers->counter_redistribute += MPI_Wtime();
-        }
-
-        //--------------------------------------------------------------------------
-        // Operator H_E for dt/2 (field part)
-        if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_fields -= MPI_Wtime();
-        if (electromagnetic)
-        {
-            // mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array),
-            // true);
-            mw_yee->advance_B(infra, mw_yee->dt * 0.5 * coeff, mw_yee->HE_Array, mw_yee->B_Array);
-
-            // Operator H_B for dt/2
-            mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
-            mw_yee->advance_E(infra, mw_yee->dt * 0.5 * coeff, true, false, mw_yee->HB_Array,
-                              mw_yee->E_Array);
-        }
-        if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_fields += MPI_Wtime();
     }
 
-    template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
-              bool electromagnetic = true, bool profiling = true, bool output = true>
-    void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> * mw_yee,
-                                particle_groups<vdim, numspec> * part_gr,
-                                diagnostics<vdim, numspec, degx, degy, degz, degmw> * diagn,
-                                bool ctest, std::string simulation_name, int strang_order)
+    // add values from ghost cells and periodic boundary
+    if (profiling_timers->profiling && profiling_count)
+        profiling_timers->counter_jboundary -= MPI_Wtime();
+    Gempic_SumBoundary(mw_yee, &infra);  // Sums Boundary of J and Overwrites overlap
+    for (int i = 0; i < vdim; i++)
     {
-        bool energy_experiment = true;
-        amrex::Real init_energy =
-            0.5 * (diagn->Efield_energy[0][0] + diagn->Efield_energy[0][1] +
-                   diagn->Efield_energy[0][2] + diagn->Bfield_energy[0][0] +
-                   diagn->Bfield_energy[0][1] + diagn->Bfield_energy[0][2]) +
-            diagn->kin[0] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
-        if (amrex::ParallelDescriptor::MyProc() == 0) remove("energy_error.out.0");
-        bool profiling_count = false;
-        timers profiling_timers(true);
+        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+    }
+    if (profiling_timers->profiling && profiling_count)
+        profiling_timers->counter_jboundary += MPI_Wtime();
+    /*amrex::Vector<std::string> varnames = { "J_x"};
+    amrex::Real timeo = t_step*(*mw_yee).dt*coeff;
+    WriteSingleLevelPlotfile("current_C2", *(*mw_yee).J_Array[0], varnames,
+    infra.geom, timeo, 0);
+    //abort();*/
 
-        if (profiling_timers.profiling)
-            // profiling_timers.counter_all -= MPI_Wtime();
-            for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
+    if (profiling_timers->profiling && profiling_count)
+        profiling_timers->counter_fields -= MPI_Wtime();
+    // advance E from j (field part of H_p)
+    mw_yee->advance_E(infra, 1.0, false, true, mw_yee->HB_Array, mw_yee->E_Array);
+    mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
+    if (profiling_timers->profiling && profiling_count)
+        profiling_timers->counter_fields += MPI_Wtime();
+
+    // Second particle loop for particle part from H_E
+    for (int spec = 0; spec < numspec; spec++)
+    {
+        if (profiling_timers->profiling && profiling_count)
+            profiling_timers->counter_deposition -= MPI_Wtime();
+        amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
+
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        {
+            amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
+            // amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT
+            // particles = pti.GetArrayOfStructs(); // get particles
+            const long np = pti.numParticles();
+
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
+
+            for (int cc = 0; cc < vdim; cc++)
             {
-                if (profiling_timers.profiling && t_step == 0)
-                    profiling_timers.counter_all -= MPI_Wtime();
-                switch (strang_order)
-                {
-                    case 2:
-                        time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                    electromagnetic, profiling>(
-                            infra, mw_yee, 1.0, part_gr, &profiling_timers, profiling_count);
-                        break;
-                    case 4:
-                        amrex::Real alpha = 1. / (2. - pow(2., 1. / 3.));
-                        amrex::Real beta = 1. - 2. * alpha;
-
-                        time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                    electromagnetic, profiling>(
-                            infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
-                        time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                    electromagnetic, profiling>(
-                            infra, mw_yee, beta, part_gr, &profiling_timers, profiling_count);
-                        time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                    electromagnetic, profiling>(
-                            infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
-                        break;
-                }
-
-                if (output)
-                    diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
-                                           simulation_name, ctest);
-                profiling_count = true;
-                if (energy_experiment)
-                {
-                    amrex::Real end_energy =
-                        0.5 * (diagn->Efield_energy[t_step][0] + diagn->Efield_energy[t_step][1] +
-                               diagn->Efield_energy[t_step][2] + diagn->Bfield_energy[t_step][0] +
-                               diagn->Bfield_energy[t_step][1] + diagn->Bfield_energy[t_step][2]) +
-                        diagn->kin[t_step] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
-
-                    if (amrex::ParallelDescriptor::MyProc() == 0)
-                        amrex::PrintToFile("energy_error.out")
-                            << t_step * mw_yee->dt << " " << std::abs(init_energy - end_energy)
-                            << std::endl;
-                }
+                eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
             }
 
-        if (profiling_timers.profiling)
-        {
-            profiling_timers.counter_all += MPI_Wtime();
-            amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition
-                           << ", redistribute time: " << profiling_timers.counter_redistribute
-                           << ", field solver time: " << profiling_timers.counter_fields
-                           << ", sum boundary j time: " << profiling_timers.counter_jboundary
-                           << ", diagnostics time: " << profiling_timers.counter_diagnostics
-                           << ", total time: " << profiling_timers.counter_all << std::endl;
+            amrex::Real dt = (*mw_yee).dt;
+            // loop over particles: add contribution of old particle position to J and push
+            amrex::ParallelFor(np,
+                               [=] AMREX_GPU_DEVICE(long pp)
+                               {
+                                   amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                                   for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                       pos[d] = particles[pp].pos(d);
+
+                                   splines_at_particles<degx, degy, degz> splines;
+                                   // evaluate the spline
+                                   splines.init_particles(pos, infra.plo, infra.dxi);
+                                   // evaluate the electric field
+                                   amrex::GpuArray<amrex::Real, vdim> efield =
+                                       evaluate_efield<vdim, degx, degy, degz>(splines, eA);
+                                   // push v with the electric field
+                                   amrex::GpuArray<amrex::Real, vdim> vel;
+                                   for (int comp = 0; comp < vdim; comp++)
+                                   {
+                                       vel[comp] = particles[pp].rdata(comp);
+                                   }
+                                   amrex::GpuArray<amrex::Real, vdim> newPosE = push_v_efield<vdim>(
+                                       vel, dt * 0.5 * coeff, chargemass, efield);
+                                   for (int vd = 0; vd < vdim; vd++)
+                                       (particles[pp].rdata(vd)) = newPosE[vd];
+                               });
         }
-        if (output) diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
+        if (profiling_timers->profiling && profiling_count)
+            profiling_timers->counter_deposition += MPI_Wtime();
+        if (profiling_timers->profiling && profiling_count)
+            profiling_timers->counter_redistribute -= MPI_Wtime();
+        (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+        if (profiling_timers->profiling && profiling_count)
+            profiling_timers->counter_redistribute += MPI_Wtime();
     }
+
+    //--------------------------------------------------------------------------
+    // Operator H_E for dt/2 (field part)
+    if (profiling_timers->profiling && profiling_count)
+        profiling_timers->counter_fields -= MPI_Wtime();
+    if (electromagnetic)
+    {
+        // mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array),
+        // &(mw_yee->HE_Array), true);
+        mw_yee->advance_B(infra, mw_yee->dt * 0.5 * coeff, mw_yee->HE_Array, mw_yee->B_Array);
+
+        // Operator H_B for dt/2
+        mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
+        mw_yee->advance_E(infra, mw_yee->dt * 0.5 * coeff, true, false, mw_yee->HB_Array,
+                          mw_yee->E_Array);
+    }
+    if (profiling_timers->profiling && profiling_count)
+        profiling_timers->counter_fields += MPI_Wtime();
+}
+
+template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
+          bool electromagnetic = true, bool profiling = true, bool output = true>
+void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> *mw_yee,
+                            particle_groups<vdim, numspec> *part_gr,
+                            diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool ctest,
+                            std::string simulation_name, int strang_order)
+{
+    bool energy_experiment = true;
+    amrex::Real init_energy = 0.5 * (diagn->Efield_energy[0][0] + diagn->Efield_energy[0][1] +
+                                     diagn->Efield_energy[0][2] + diagn->Bfield_energy[0][0] +
+                                     diagn->Bfield_energy[0][1] + diagn->Bfield_energy[0][2]) +
+                              diagn->kin[0] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
+    if (amrex::ParallelDescriptor::MyProc() == 0) remove("energy_error.out.0");
+    bool profiling_count = false;
+    timers profiling_timers(true);
+
+    if (profiling_timers.profiling)
+        // profiling_timers.counter_all -= MPI_Wtime();
+        for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
+        {
+            if (profiling_timers.profiling && t_step == 0)
+                profiling_timers.counter_all -= MPI_Wtime();
+            switch (strang_order)
+            {
+                case 2:
+                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
+                                                electromagnetic, profiling>(
+                        infra, mw_yee, 1.0, part_gr, &profiling_timers, profiling_count);
+                    break;
+                case 4:
+                    amrex::Real alpha = 1. / (2. - pow(2., 1. / 3.));
+                    amrex::Real beta = 1. - 2. * alpha;
+
+                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
+                                                electromagnetic, profiling>(
+                        infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
+                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
+                                                electromagnetic, profiling>(
+                        infra, mw_yee, beta, part_gr, &profiling_timers, profiling_count);
+                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
+                                                electromagnetic, profiling>(
+                        infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
+                    break;
+            }
+
+            if (output)
+                diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
+                                       simulation_name, ctest);
+            profiling_count = true;
+            if (energy_experiment)
+            {
+                amrex::Real end_energy =
+                    0.5 * (diagn->Efield_energy[t_step][0] + diagn->Efield_energy[t_step][1] +
+                           diagn->Efield_energy[t_step][2] + diagn->Bfield_energy[t_step][0] +
+                           diagn->Bfield_energy[t_step][1] + diagn->Bfield_energy[t_step][2]) +
+                    diagn->kin[t_step] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
+
+                if (amrex::ParallelDescriptor::MyProc() == 0)
+                    amrex::PrintToFile("energy_error.out")
+                        << t_step * mw_yee->dt << " " << std::abs(init_energy - end_energy)
+                        << std::endl;
+            }
+        }
+
+    if (profiling_timers.profiling)
+    {
+        profiling_timers.counter_all += MPI_Wtime();
+        amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition
+                       << ", redistribute time: " << profiling_timers.counter_redistribute
+                       << ", field solver time: " << profiling_timers.counter_fields
+                       << ", sum boundary j time: " << profiling_timers.counter_jboundary
+                       << ", diagnostics time: " << profiling_timers.counter_diagnostics
+                       << ", total time: " << profiling_timers.counter_all << std::endl;
+    }
+    if (output) diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
+}
 
 }  // namespace Time_Loop
 }  // namespace Gempic

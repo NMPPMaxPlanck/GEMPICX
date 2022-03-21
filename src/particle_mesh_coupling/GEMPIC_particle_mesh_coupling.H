@@ -1450,17 +1450,21 @@ gempic_deposit_J_and_interpolate(
                             {
                                 s_coeff *= spline.spline_cell[1][jj];
                             }
-#if (GEMPIC_SPACEDIM > 2) if (cc % 3 == 2)
+#if (GEMPIC_SPACEDIM > 2)
+                            if (cc % 3 == 2)
                             {
                                 s_coeff *= spline.spline_node[2][kk];
                             }
-                            else { s_coeff *= spline.spline_cell[2][kk]; }
+                            else
+                            {
+                                s_coeff *= spline.spline_cell[2][kk];
+                            }
 #endif
                             amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(
                                 spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
 
-#if (GEMPIC_SPACEDIM == 1) fields[cc + vdim] +=
-                            s_coeff *(bArray[cc])(cell_index[0], 0, 0, 0);
+#if (GEMPIC_SPACEDIM == 1)
+                            fields[cc + vdim] += s_coeff * (bArray[cc])(cell_index[0], 0, 0, 0);
 #else
                     fields[cc + vdim] +=
                         s_coeff *
