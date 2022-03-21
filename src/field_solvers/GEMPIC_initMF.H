@@ -18,18 +18,18 @@
 #define INIT_H_
 
 namespace Gempic {
-namespace Field_solvers {
+namespace FieldSolvers {
 
-void init_const (amrex::MultiFab& MultiF, amrex::Real constant) {
+void initConst (amrex::MultiFab& multiF, amrex::Real constant) {
 
-    for ( amrex::MFIter mfi(MultiF); mfi.isValid(); ++mfi ){
+    for ( amrex::MFIter mfi(multiF); mfi.isValid(); ++mfi ){
 
             const amrex::Box& bx = mfi.tilebox();
 
-            amrex::Array4<amrex::Real> const& init_arr = MultiF[mfi].array();
+            amrex::Array4<amrex::Real> const& initArr = multiF[mfi].array();
             ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
             {
-                init_arr(i,j,k) = constant;
+                initArr(i,j,k) = constant;
             });
         }
     }
