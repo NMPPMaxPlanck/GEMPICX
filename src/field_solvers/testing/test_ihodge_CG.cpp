@@ -5,7 +5,8 @@
   E(x,t) =  \begin{pmatrix} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
                           -2\cos(x_1+x_2+x_3 - \sqrt(3) t) \\
                             \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
-  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\ 0 \\ -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
+  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\ 0 \\ -\sqrt{3}
+\cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
 
  For the Poisson equation we use:
  E(x,t) = \begin{pmatrix} -\sin(x)\cos(y)\cos(z)-0.5\sin(2x)cos(2y)cos(2z)\\
@@ -17,12 +18,11 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-
 #include <GEMPIC_Config.H>
-#include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_parameters.H>
 #include <GEMPIC_assertion.H>
+#include <GEMPIC_gempic_norm.H>
+#include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -36,63 +36,62 @@ using namespace Field_solvers;
 #define IHODGE_CG_B0 4
 #define IHODGE_CG_B2 5
 
-AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)
+AMREX_GPU_HOST_DEVICE amrex::Real function_to_project(amrex::Real x, amrex::Real y, amrex::Real z,
+                                                      amrex::Real t, int funcSelect)
 {
-  switch(funcSelect){
-  case IHODGE_CG_E0 :
-    return std::cos(x) ;
-    break;
-  case IHODGE_CG_E1 :
-    return -2.0 * std::cos(x+y+z-std::sqrt(3.0)*t);
-    break;
-  case IHODGE_CG_E2 :
-    return std::cos(x+y+z-std::sqrt(3.0)*t);
-    break;
-  case IHODGE_CG_B0 :
-    return std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
-    break;
-  case IHODGE_CG_B2 :
-    return -std::sqrt(3.)*std::cos(x+y+z-std::sqrt(3.0)*t);
-    break;
-  case IHODGE_CG_ZERO:
+    switch (funcSelect)
+    {
+        case IHODGE_CG_E0:
+            return std::cos(x);
+            break;
+        case IHODGE_CG_E1:
+            return -2.0 * std::cos(x + y + z - std::sqrt(3.0) * t);
+            break;
+        case IHODGE_CG_E2:
+            return std::cos(x + y + z - std::sqrt(3.0) * t);
+            break;
+        case IHODGE_CG_B0:
+            return std::sqrt(3.) * std::cos(x + y + z - std::sqrt(3.0) * t);
+            break;
+        case IHODGE_CG_B2:
+            return -std::sqrt(3.) * std::cos(x + y + z - std::sqrt(3.0) * t);
+            break;
+        case IHODGE_CG_ZERO:
+            return 0.0;
+            break;
+    }
     return 0.0;
-    break;
-  }
-  return 0.0;
-
 }
-template<int vdim, int numspec, int degx, int degy, int degz>
-void main_main ()
+template <int vdim, int numspec, int degx, int degy, int degz>
+void main_main()
 {  //------------------------------------------------------------------------------
     // Analytical solutions -- Maxwell
-   /* amrex::GpuArray<std::string, vdim> fields_E;
-    amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
-    fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
-    fields_E[0] = "cos(x)";
-    fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
-    fields_E[2] = "cos(x+y+z-sqrt(3.0)*t)";
-    fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
-    fields_B[1] = "0.0";
-    fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
-    */
+    /* amrex::GpuArray<std::string, vdim> fields_E;
+     amrex::GpuArray<std::string, int(vdim/2.5)*2+1> fields_B;
+     fields_E[0] = "cos(x+y+z-sqrt(3.0)*t)";
+     fields_E[0] = "cos(x)";
+     fields_E[1] = "-2*cos(x+y+z-sqrt(3.0)*t)";
+     fields_E[2] = "cos(x+y+z-sqrt(3.0)*t)";
+     fields_B[0] = "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+     fields_B[1] = "0.0";
+     fields_B[2] = "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)";
+     */
 
     const int degree = 4;
 
-    double twopi = 4 * asin(1.0); // 2.0*3.14159265359;
+    double twopi = 4 * asin(1.0);  // 2.0*3.14159265359;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1,1,1)};
-   // std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(32,32,32)};
-    amrex::IntVect mx_grid = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
+    // std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
+    amrex::IntVect n_cell = {AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect mx_grid = {AMREX_D_DECL(32, 32, 32)};
 
-
-    amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0,0,0)};
-    amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi/0.5,twopi/0.5,twopi/0.5)};
+    amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0, 0, 0)};
+    amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi / 0.5, twopi / 0.5, twopi / 0.5)};
     amrex::RealBox real_box;
     real_box.setLo(boxLo);
     real_box.setHi(boxHi);
-
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(n_cell, mx_grid, is_periodic, real_box);
@@ -103,47 +102,51 @@ void main_main ()
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
     maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
 
-    amrex::GpuArray<int, int(vdim/2.5)*2+1> funcSelectB;
+    amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB;
     funcSelectB[0] = IHODGE_CG_B0;
     funcSelectB[1] = IHODGE_CG_ZERO;
     funcSelectB[2] = IHODGE_CG_B2;
-    mw_yee.template initB<degree>( infra , funcSelectB );
+    mw_yee.template initB<degree>(infra, funcSelectB);
 
     amrex::GpuArray<int, vdim> funcSelectE;
     funcSelectE[0] = IHODGE_CG_E0;
     funcSelectE[1] = IHODGE_CG_E1;
     funcSelectE[2] = IHODGE_CG_E2;
-    mw_yee.template initE<degree>( infra , funcSelectE );
+    mw_yee.template initE<degree>(infra, funcSelectE);
 
     mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
 
-    for (int dim = 0; dim < vdim; dim++) {
-        amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]),infra.distriMap,1,mw_yee.Nghost);
+    for (int dim = 0; dim < vdim; dim++)
+    {
+        amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]), infra.distriMap, 1,
+                          mw_yee.Nghost);
         k.setVal(-2.0, 0);
         k.FillBoundary(infra.geom.periodicity());
 
         (mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
         (mw_yee.E_sol_Array[dim])->FillBoundary(infra.geom.periodicity());
 
-        mw_yee.template solve_hodge_CG<degree>(*mw_yee.HE_Array[dim], *mw_yee.E_sol_Array[dim], k, infra, dim, 2, 1.e-16);
-
+        mw_yee.template solve_hodge_CG<degree>(*mw_yee.HE_Array[dim], *mw_yee.E_sol_Array[dim], k,
+                                               infra, dim, 2, 1.e-16);
     }
 
     amrex::PrintToFile("test_ihodge_CG.output") << std::endl;
     // comparing ihodge(hoge(E)) to E
     bool passed = true;
-    for (int dim = 0; dim < vdim; dim++) {
+    for (int dim = 0; dim < vdim; dim++)
+    {
         (mw_yee.E_sol_Array[dim])->minus(*(mw_yee.E_Array[dim]), 0, 1, 0);
         amrex::Real err_norm = Utils::gempic_norm(&(*(mw_yee.E_sol_Array[dim])), infra, 2);
-        amrex::PrintToFile("test_ihodge_CG.output") << "For component " << dim << " the error is: " << err_norm << std::endl;
+        amrex::PrintToFile("test_ihodge_CG.output")
+            << "For component " << dim << " the error is: " << err_norm << std::endl;
         amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
-        gempic_assert_err(passed, E_norm, err_norm*err_norm);
+        gempic_assert_err(passed, E_norm, err_norm * err_norm);
     }
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc,argv);
+    amrex::Initialize(argc, argv);
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();
@@ -154,9 +157,7 @@ int main(int argc, char* argv[])
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<3, 1, 1, 1, 1>();
 #endif
-    if (ParallelDescriptor::MyProc()==0) std::rename("test_ihodge_CG.output.0", "test_ihodge_CG.output");
+    if (ParallelDescriptor::MyProc() == 0)
+        std::rename("test_ihodge_CG.output.0", "test_ihodge_CG.output");
     amrex::Finalize();
 }
-
-
-
