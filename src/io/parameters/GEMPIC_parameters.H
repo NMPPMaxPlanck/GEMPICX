@@ -15,16 +15,17 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_ParmParse.H>
+#include <AMReX_Parser.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
-#include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_computational_domain.H>
 #include <GEMPIC_MLNodeLaplacian_FD.H>
-#include <GEMPIC_particle_mesh_coupling.H>
+#include <GEMPIC_computational_domain.H>
+#include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_particle_groups.H>
+#include <GEMPIC_particle_mesh_coupling.H>
 
 using namespace CompDom;
 using namespace Particles;
@@ -34,8 +35,7 @@ void parseErrorMessage(std::string name)
 {
     amrex::Print() << "Cannot find " + name + " input! Default value will be used\n";
 }
-template <int vdim, int numspec>
-class gempic_parameters
+template <int vdim, int numspec> class gempic_parameters
 {
 public:
     int Nghost;
@@ -138,7 +138,8 @@ public:
         {
             parseErrorMessage("is_periodic_vector");
         }
-        is_periodic = amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0], is_periodic_vector[1], is_periodic_vector[2])};
+        is_periodic = amrex::IntVect{
+            AMREX_D_DECL(is_periodic_vector[0], is_periodic_vector[1], is_periodic_vector[2])};
         int allPeriodic = 1;
         int nonePeriodic = 0;
         for (size_t i = 0; i < GEMPIC_SPACEDIM; i++)
@@ -174,7 +175,8 @@ public:
         {
             parseErrorMessage("max_grid_size_vector");
         }
-        max_grid_size = amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0], max_grid_size_vector[1], max_grid_size_vector[2])};
+        max_grid_size = amrex::IntVect{AMREX_D_DECL(
+            max_grid_size_vector[0], max_grid_size_vector[1], max_grid_size_vector[2])};
 
         // time stepping
         if (!pp.query("n_steps", n_steps))
@@ -329,40 +331,31 @@ public:
         set_computed_params();
     }
 
-    void
-    set_params(std::string sm = "Weibel",
-               amrex::IntVect n_cell_vector = {AMREX_D_DECL(24, 8, 8)}, // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
-               std::array<int, numspec> n_part_per_cell_in = {100},
-               int NS = 10,
-               int FX = 12,
-               int FV = 12,
-               int FS = 12,
-               amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
-               amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)},
-               amrex::Real DT = 0.02,
-               amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
-               amrex::GpuArray<amrex::Real, numspec> M = {1.0},
-               amrex::Real K = 1.25,
-               amrex::GpuArray<std::string, numspec> wf = {"1.0"},
-               std::string BX = "0.0",
-               std::string BY = "0.0",
-               std::string BZ = "1e-3 * cos(kvarx * x)",
-               std::string PHI = "4 * 0.5 * cos(0.5 * x)",
-               // std::vector<int> NG = {1},
-               amrex::GpuArray<int, numspec> NG = {1},
-               // int NG = 1,
-               int PROP = 0,
-               amrex::Real TOL_P = 1.e-10,
-               int MAX_C = 30,
-               int RST = 0,
-               std::string CF = "",
-               int CD = 0,
-               std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
-               std::vector<std::vector<std::vector<amrex::Real>>> vThermal_in = {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
-               std::vector<std::vector<amrex::Real>> vWeight_in = {{1.0}})
+    void set_params(
+        std::string sm = "Weibel",
+        amrex::IntVect n_cell_vector = {AMREX_D_DECL(
+            24, 8, 8)}, // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
+        std::array<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
+        int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
+        amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
+        amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
+        amrex::GpuArray<amrex::Real, numspec> M = {1.0}, amrex::Real K = 1.25,
+        amrex::GpuArray<std::string, numspec> wf = {"1.0"}, std::string BX = "0.0",
+        std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)",
+        std::string PHI = "4 * 0.5 * cos(0.5 * x)",
+        // std::vector<int> NG = {1},
+        amrex::GpuArray<int, numspec> NG = {1},
+        // int NG = 1,
+        int PROP = 0, amrex::Real TOL_P = 1.e-10, int MAX_C = 30, int RST = 0, std::string CF = "",
+        int CD = 0,
+        std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
+        std::vector<std::vector<std::vector<amrex::Real>>> vThermal_in =
+            {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
+        std::vector<std::vector<amrex::Real>> vWeight_in = {{1.0}})
     {
         sim_name = sm;
-        n_cell = n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
+        n_cell =
+            n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
         for (int i = 0; i < numspec; i++)
             n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
@@ -370,8 +363,10 @@ public:
         freq_v = FV;
         freq_slice = FS;
         // is_periodic_vector = PER;
-        is_periodic = is_periodic_vector;     // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
-        max_grid_size = max_grid_size_vector; // amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
+        is_periodic =
+            is_periodic_vector; // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
+        max_grid_size =
+            max_grid_size_vector; // amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         dt = DT;
         for (int i = 0; i < numspec; i++)
         {
@@ -399,12 +394,9 @@ public:
         set_computed_params();
     }
 
-    void set_params_Weibel(std::string sim_name_in = "Weibel",
-                           int propagatorIn = 3,
-                           int nStepsIn = 10,
-                           amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
-                           std::array<int, numspec> nPartPerCellIn = {100},
-                           amrex::Real dtIn = 0.02,
+    void set_params_Weibel(std::string sim_name_in = "Weibel", int propagatorIn = 3,
+                           int nStepsIn = 10, amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
+                           std::array<int, numspec> nPartPerCellIn = {100}, amrex::Real dtIn = 0.02,
                            int freqSliceIn = 100)
     {
         sim_name = sim_name_in;
@@ -488,7 +480,8 @@ public:
             densityParse[i].setConstant("kvary", k[1]);
             densityParse[i].setConstant("kvarz", k[2]);
             densityParse[i].registerVariables({"x", "y", "z", "t"});
-            densityEval[i] = densityParse[i].template compile<4>(); // 4 because there are three variables.
+            densityEval[i] =
+                densityParse[i].template compile<4>(); // 4 because there are three variables.
         }
 
         // initial fields
@@ -528,8 +521,7 @@ public:
         rhoEval = rhoParse.compile<4>();
     }
 
-    void init_particles_from_file(particle_groups<vdim, numspec> *part_gr,
-                                  int species,
+    void init_particles_from_file(particle_groups<vdim, numspec> *part_gr, int species,
                                   std::string filename = "particle_input!txt")
     {
         for (amrex::MFIter mfi = (*(*part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi)

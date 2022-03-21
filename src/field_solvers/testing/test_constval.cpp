@@ -10,7 +10,7 @@ using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
-using namespace Field_solvers;
+using namespace FieldSolvers;
 
 template<int vdim, int numspec, int degx, int degy, int degz>
 void main_main ()
@@ -39,7 +39,7 @@ void main_main ()
 
     // apply init function from header
     amrex::Real value = 2.0;
-    init_const(mf_in, value);
+    initConst(mf_in, value);
 
     // set value with AMReX
     mf_out.setVal(2.0);

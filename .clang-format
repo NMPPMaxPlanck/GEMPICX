@@ -1,20 +1,7 @@
 ﻿---
-BasedOnStyle: Google
-AccessModifierOffset: '0'
-AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: 'true'
-AllowAllConstructorInitializersOnNextLine: 'false'
-AllowAllParametersOfDeclarationOnNextLine: 'false'
-AllowShortBlocksOnASingleLine: 'true'
-AllowShortCaseLabelsOnASingleLine: 'true'
-BinPackParameters: 'false'
-BreakBeforeBraces: Attach
-BreakConstructorInitializers: BeforeComma
-BreakInheritanceList: BeforeComma
-ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
-FixNamespaceComments: 'true'
-IncludeBlocks: Preserve
-IndentCaseLabels: 'true'
-IndentPPDirectives: BeforeHash
-IndentWrappedFunctionNames: 'true'
-
+AccessModifierOffset: '-4'
+BreakBeforeBraces: Allman
+BreakConstructorInitializers: AfterColon
+ColumnLimit: 100
+IndentWidth: '4'
+---
