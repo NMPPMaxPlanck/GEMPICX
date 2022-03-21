@@ -41,7 +41,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    particle_groups<vdim> part_gr(VlMa.charge, VlMa.mass, infra);
 
     //set particles for first cell (and copies in remaining cells)
     int Np_cell = 100; //number of particles per cell

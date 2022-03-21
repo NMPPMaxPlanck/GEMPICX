@@ -36,18 +36,19 @@ namespace Particles {
  * Class containing all particle information. The array of particle containers has @p n_species number of particles containers, that is each responsible for one species of particles.
  * For each particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The charge and mass of the particle species are stored in a separate array.
  */
-template <int vdim, int numspec, int n_data=1>
+//template <int vdim, int numspec, int n_data=1>
+template <int vdim, int n_data=1>
 class particle_groups
 {
 public:
 
     // array of ParticleContainers (one container per species)
-    amrex::GpuArray<amrex::Real, numspec> charge;
-    amrex::GpuArray<amrex::Real, numspec> mass;
-    amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>>, numspec> mypc;
-    //amrex::Real charge;
-    //amrex::Real mass;
-    //std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>> mypc;
+    //amrex::GpuArray<amrex::Real, numspec> charge;
+    //amrex::GpuArray<amrex::Real, numspec> mass;
+    //amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>>, numspec> mypc;
+    amrex::Real charge;
+    amrex::Real mass;
+    std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>> mypc;
 
     // The default constructor.
     /**
@@ -60,63 +61,63 @@ public:
      * Explicit Constructor: By passing an object of class vlasov maxwell and infrastructure one can set up the empty particle object. The particles themselves need to be added separately. This
      * can be done one by one (see method add_particle) or with the particle samples in the folder sampler.
      */
-    particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
-                     amrex::GpuArray<amrex::Real, numspec> mass_in,
-    //particle_groups (amrex::Real charge_in, amrex::Real mass_in,
+    //particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
+    //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
+    particle_groups (amrex::Real charge_in, amrex::Real mass_in,
                      computational_domain ifr){
 
         charge = charge_in;
         mass = mass_in;
 
         // set infrastructure for each species
-        for (int i=0;i<mypc.size();i++) {
-            mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
-        //    mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+        //for (int i=0;i<mypc.size();i++) {
+        //    mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
-	    (*mypc[i]).do_tiling = false;
-        //*mypc.do_tiling = false;
+	    //(*mypc[i]).do_tiling = false;
+        *mypc.do_tiling = false;
 #else
-	    (*mypc[i]).do_tiling = true;
-        //*mypc.do_tiling = true;
+	    //(*mypc[i]).do_tiling = true;
+        *mypc.do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
-            (*mypc[i]).tile_size = ifr.max_grid_size;
-            //*mypc.tile_size = ifr.max_grid_size;
+            //(*mypc[i]).tile_size = ifr.max_grid_size;
+            *mypc.tile_size = ifr.max_grid_size;
 #else
-            (*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
-            //*mypc.tile_size[0] = ifr.max_grid_size[0];
+            //(*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
+            *mypc.tile_size[0] = ifr.max_grid_size[0];
 #endif
-        }
+        //}
     }
 
-    void reinit (amrex::GpuArray<amrex::Real, numspec> charge_in,
-                     amrex::GpuArray<amrex::Real, numspec> mass_in,
-    //void reinit (amrex::Real charge_in, amrex::Real mass_in,
+    //void reinit (amrex::GpuArray<amrex::Real, numspec> charge_in,
+    //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
+    void reinit (amrex::Real charge_in, amrex::Real mass_in,
                      computational_domain ifr){
 
         charge = charge_in;
         mass = mass_in;
 
         // set infrastructure for each species
-        for (int i=0;i<mypc.size();i++) {
-            mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+        //for (int i=0;i<mypc.size();i++) {
+        //    mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 
-        //    mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
-        (*mypc[i]).do_tiling = false;
-        //*mypc.do_tiling = false;
+        //(*mypc[i]).do_tiling = false;
+        *mypc.do_tiling = false;
 #else
-        (*mypc[i]).do_tiling = true;
-        //*mypc.do_tiling = true;
+        //(*mypc[i]).do_tiling = true;
+        *mypc.do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
-            (*mypc[i]).tile_size = ifr.max_grid_size;
-            //*mypc.tile_size = ifr.max_grid_size;
+            //(*mypc[i]).tile_size = ifr.max_grid_size;
+            *mypc.tile_size = ifr.max_grid_size;
 #else
-            (*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
-            //*mypc.tile_size[0] = ifr.max_grid_size[0];
+            //(*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
+            *mypc.tile_size[0] = ifr.max_grid_size[0];
 #endif
-        }
+        //}
     }
 
 
