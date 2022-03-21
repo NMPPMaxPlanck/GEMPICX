@@ -290,6 +290,8 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
 }
                     std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+1)]);
+                    //for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
+                    //    particles[pp].pos(xd) = pos[xd];
                     //std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
                     for (int comp = 0; comp < vdim; comp++) {
                         particle_attributes.GetRealData(comp)[pp] = vel[comp] ;
