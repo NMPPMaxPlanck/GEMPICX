@@ -1,4 +1,5 @@
 ﻿---
+BasedOnStyle: Google
 AccessModifierOffset: '-4'
 BreakBeforeBraces: Allman
 BreakConstructorInitializers: AfterColon

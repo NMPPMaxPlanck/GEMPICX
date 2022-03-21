@@ -15,7 +15,6 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 #include <AMReX_Utility.H>
-
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
@@ -24,24 +23,24 @@ using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
 
-namespace Gempic {
-namespace Utils {
-
-template<int vdim>
-void
-Gempic_SumBoundary (maxwell_yee<vdim> *mw_yee, computational_domain *infra)
+namespace Gempic
 {
-    for (int i=0; i<vdim; i++) {
-        (*(*mw_yee).J_Array[i]).SumBoundary(0, 1, {(*mw_yee).Nghost, (*mw_yee).Nghost, (*mw_yee).Nghost}, {0, 0, 0}, infra->geom.periodicity());
+namespace Utils
+{
+template <int vdim>
+void Gempic_SumBoundary(maxwell_yee<vdim> *mw_yee, computational_domain *infra)
+{
+    for (int i = 0; i < vdim; i++)
+    {
+        (*(*mw_yee).J_Array[i])
+            .SumBoundary(0, 1, {(*mw_yee).Nghost, (*mw_yee).Nghost, (*mw_yee).Nghost}, {0, 0, 0},
+                         infra->geom.periodicity());
         (*(*mw_yee).J_Array[i]).OverrideSync((*(*mw_yee).E_Masks[i]), infra->geom.periodicity());
     }
-
-
 }
 
+}  // namespace Utils
 
-}
-
-}
+}  // namespace Gempic
 
 #endif

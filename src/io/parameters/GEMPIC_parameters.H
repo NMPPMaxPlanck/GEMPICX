@@ -20,7 +20,6 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-
 #include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_gempic_norm.H>
@@ -35,7 +34,8 @@ void parseErrorMessage(std::string name)
 {
     amrex::Print() << "Cannot find " + name + " input! Default value will be used\n";
 }
-template <int vdim, int numspec> class gempic_parameters
+template <int vdim, int numspec>
+class gempic_parameters
 {
 public:
     int Nghost;
@@ -48,7 +48,7 @@ public:
     std::vector<amrex::Real> domain_hi = {1.0, 1.0, 1.0};
     amrex::IntVect is_periodic = {1, 1, 1};
     amrex::IntVect n_cell = {8, 8, 8};
-    amrex::IntVect max_grid_size = {4, 4, 4}; // for parallelisation
+    amrex::IntVect max_grid_size = {4, 4, 4};  // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
     amrex::Vector<amrex::Real> k = {1.25, 1.25, 1.25};
     amrex::Real kx, ky, kz;
@@ -67,11 +67,11 @@ public:
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
     // Initial velocity distribution (sum of gaussians)
     amrex::GpuArray<int, numspec> num_gaussians = {0};
-    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{}; // species, gaussian, vdim
+    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{};  // species, gaussian, vdim
     std::vector<std::vector<std::vector<amrex::Real>>> vThermal{};
     std::vector<std::vector<amrex::Real>> vWeight{};
 
-    amrex::GpuArray<std::string, numspec> density = {"0"}; // particle density
+    amrex::GpuArray<std::string, numspec> density = {"0"};  // particle density
     amrex::GpuArray<amrex::Parser, numspec> densityParse;
     amrex::GpuArray<amrex::ParserExecutor<4>, numspec> densityEval;
 
@@ -99,9 +99,9 @@ public:
     int curr_step = 0;
 
     // Diagnostics
-    int freq_x = 10000; //
+    int freq_x = 10000;  //
     int freq_v = 10000;
-    int freq_slice = 10000; // time evolution
+    int freq_slice = 10000;  // time evolution
 
     // Scaling parameters
     amrex::Real curlB_scaling = 1.;
@@ -216,7 +216,7 @@ public:
             {
                 parseErrorMessage(specString + ".mass");
             }
-            if (!ppSpec.query("density", density[spec])) // initial density
+            if (!ppSpec.query("density", density[spec]))  // initial density
             {
                 parseErrorMessage(specString + ".density");
             }
@@ -334,7 +334,8 @@ public:
     void set_params(
         std::string sm = "Weibel",
         amrex::IntVect n_cell_vector = {AMREX_D_DECL(
-            24, 8, 8)}, // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
+            24, 8,
+            8)},  // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
         std::array<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
         int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
         amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
@@ -355,18 +356,17 @@ public:
     {
         sim_name = sm;
         n_cell =
-            n_cell_vector; // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
-        for (int i = 0; i < numspec; i++)
-            n_part_per_cell[i] = n_part_per_cell_in[i];
+            n_cell_vector;  // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
+        for (int i = 0; i < numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
         freq_x = FX;
         freq_v = FV;
         freq_slice = FS;
         // is_periodic_vector = PER;
         is_periodic =
-            is_periodic_vector; // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
+            is_periodic_vector;  // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
         max_grid_size =
-            max_grid_size_vector; // amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
+            max_grid_size_vector;  // amrex::IntVect{AMREX_D_DECL(max_grid_size_vector[0],max_grid_size_vector[1],max_grid_size_vector[2])};
         dt = DT;
         for (int i = 0; i < numspec; i++)
         {
@@ -379,8 +379,7 @@ public:
         By = BY;
         Bz = BZ;
         phi = PHI;
-        for (int i = 0; i < numspec; i++)
-            num_gaussians[i] = NG[i];
+        for (int i = 0; i < numspec; i++) num_gaussians[i] = NG[i];
         propagator = PROP;
         tolerance_particles = TOL_P;
         restart = RST;
@@ -405,7 +404,7 @@ public:
         n_cell = nCellIn;
         dt = dtIn;
         freq_slice = freqSliceIn;
-        assert(numspec == 1); // Only electrons
+        assert(numspec == 1);  // Only electrons
         n_part_per_cell[0] = nPartPerCellIn[0];
         charge[0] = -1.0;
         mass[0] = 1.0;
@@ -430,23 +429,23 @@ public:
         // set time_stagered and Nghost depending on propagator
         switch (propagator)
         {
-        case 0:
-            time_staggered = true;
-            break;
-        case 1:
-            time_staggered = false;
-            Nghost += 3;
-            break;
-        case 2:
-            time_staggered = false;
-            Nghost += 3;
-            break;
-        case 3:
-            time_staggered = false;
-            Nghost += 3;
-            break;
-        default:
-            break;
+            case 0:
+                time_staggered = true;
+                break;
+            case 1:
+                time_staggered = false;
+                Nghost += 3;
+                break;
+            case 2:
+                time_staggered = false;
+                Nghost += 3;
+                break;
+            case 3:
+                time_staggered = false;
+                Nghost += 3;
+                break;
+            default:
+                break;
         }
         // set nPartCellTot
         nPartCellTot = 0;
@@ -481,7 +480,7 @@ public:
             densityParse[i].setConstant("kvarz", k[2]);
             densityParse[i].registerVariables({"x", "y", "z", "t"});
             densityEval[i] =
-                densityParse[i].template compile<4>(); // 4 because there are three variables.
+                densityParse[i].template compile<4>();  // 4 because there are three variables.
         }
 
         // initial fields

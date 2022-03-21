@@ -5,7 +5,8 @@
   E(x,t) =  \begin{pmatrix} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\
                           -2\cos(x_1+x_2+x_3 - \sqrt(3) t) \\
                             \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
-  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\ 0 \\ -\sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
+  B(x,t) = \begin{pmatrix} \sqrt{3} \cos(x_1+x_2+x_3 - \sqrt{3} t) \\ 0 \\ -\sqrt{3}
+\cos(x_1+x_2+x_3 - \sqrt{3} t) \end{pmatrix}
 
  For the Poisson equation we use:
  E(x,t) = \begin{pmatrix} -\sin(x)\cos(y)\cos(z)-0.5\sin(2x)cos(2y)cos(2z)\\
@@ -17,12 +18,11 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-
 #include <GEMPIC_Config.H>
-#include <GEMPIC_maxwell_yee.H>
-#include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_parameters.H>
 #include <GEMPIC_assertion.H>
+#include <GEMPIC_gempic_norm.H>
+#include <GEMPIC_maxwell_yee.H>
+#include <GEMPIC_parameters.H>
 
 using namespace std;
 using namespace amrex;
@@ -31,25 +31,29 @@ using namespace Field_solvers;
 
 //------------------------------------------------------------------------------
 // Solutions
-AMREX_GPU_HOST_DEVICE amrex::Real funct_e1(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real funct_e1(amrex::Real x, amrex::Real y, amrex::Real z,
+                                           amrex::Real t)
 {
     amrex::Real val = -2.0 * std::cos(x + y + z - std::sqrt(3.0) * t);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real funct_e2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real funct_e2(amrex::Real x, amrex::Real y, amrex::Real z,
+                                           amrex::Real t)
 {
     amrex::Real val = std::cos(x + y + z - std::sqrt(3.0) * t);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real funct_b0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real funct_b0(amrex::Real x, amrex::Real y, amrex::Real z,
+                                           amrex::Real t)
 {
     amrex::Real val = std::sqrt(3.) * std::cos(x + y + z - std::sqrt(3.0) * t);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real funct_b2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real funct_b2(amrex::Real x, amrex::Real y, amrex::Real z,
+                                           amrex::Real t)
 {
     amrex::Real val = -std::sqrt(3.) * std::cos(x + y + z - std::sqrt(3.0) * t);
     return val;
@@ -61,31 +65,38 @@ AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real, amrex::Real, amrex::Real, am
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::Real z,
+                                           amrex::Real t)
 {
-    amrex::Real val = std::cos(x) - std::cos(x) * std::cos(y) * std::cos(z) - 1.0 / 4.0 * std::cos(2 * x) * std::cos(2 * y) * std::cos(2 * z);
+    amrex::Real val = std::cos(x) - std::cos(x) * std::cos(y) * std::cos(z) -
+                      1.0 / 4.0 * std::cos(2 * x) * std::cos(2 * y) * std::cos(2 * z);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real func_rho(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real func_rho(amrex::Real x, amrex::Real y, amrex::Real z,
+                                           amrex::Real t)
 {
-    amrex::Real val = -3.0 * (std::cos(x) * std::cos(y) * std::cos(z) + std::cos(2 * x) * std::cos(2 * y) * std::cos(2 * z));
+    amrex::Real val = -3.0 * (std::cos(x) * std::cos(y) * std::cos(z) +
+                              std::cos(2 * x) * std::cos(2 * y) * std::cos(2 * z));
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real func_e0(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real func_e0(amrex::Real x, amrex::Real y, amrex::Real z,
+                                          amrex::Real t)
 {
     amrex::Real val = -sin(x) * cos(y) * cos(z) - 0.5 * sin(2 * x) * cos(2 * y) * cos(2 * z);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real func_e1(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real func_e1(amrex::Real x, amrex::Real y, amrex::Real z,
+                                          amrex::Real t)
 {
     amrex::Real val = -cos(x) * sin(y) * cos(z) - 0.5 * cos(2 * x) * sin(2 * y) * cos(2 * z);
     return val;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::Real func_e2(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real func_e2(amrex::Real x, amrex::Real y, amrex::Real z,
+                                          amrex::Real t)
 {
     amrex::Real val = -cos(x) * cos(y) * sin(z) - 0.5 * cos(2 * x) * cos(2 * y) * sin(2 * z);
     return val;
@@ -138,10 +149,11 @@ void main_main()
     const int degree = 4;
 
     int bdim = int(vdim / 2.5) * 2 + 1;
-    std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim << std::endl;
+    std::cout << "x DIM: " << GEMPIC_SPACEDIM << ", v&E DIM: " << vdim << ", B DIM: " << bdim
+              << std::endl;
 
     //------------------------------------------------------------------------------
-    amrex::GpuArray<Real, vdim + int(vdim / 2.5) * 2 + 1> E_B_error; // array for storing errors
+    amrex::GpuArray<Real, vdim + int(vdim / 2.5) * 2 + 1> E_B_error;  // array for storing errors
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
@@ -151,13 +163,14 @@ void main_main()
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.Nghost++;
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic,
-                    {32,32,32}, 0.01, {1.0}, {1.0}, 0.5);
+    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic, {32, 32, 32},
+                    0.01, {1.0}, {1.0}, 0.5);
     VlMa.dt = 0.01;
     VlMa.set_computed_params();
 
     CompDom::computational_domain infra;
-    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic,
+                                          VlMa.real_box);
 
     //------------------------------------------------------------------------------
     // Solve
@@ -165,7 +178,7 @@ void main_main()
 
     for (int i = 0; i < vdim; i++)
     {
-        (*(mw_yee).J_Array[i]).setVal(0.0, 0); // value and component
+        (*(mw_yee).J_Array[i]).setVal(0.0, 0);  // value and component
         (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
     }
 
@@ -173,31 +186,39 @@ void main_main()
     mw_yee.template initE<degree>(funct_e2, funct_e1, funct_e2, infra);
 
     std::cout << "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, true, infra);
+    E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero,
+                                                     funct_b2, true, infra);
     PrintToFile("test_maxwell_yee_order.output") << endl;
     PrintToFile("test_maxwell_yee_order.output") << "Maxwell" << endl;
     PrintToFile("test_maxwell_yee_order.output") << "step " << 0 << endl;
     switch (vdim)
     {
-    case 1:
-        PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
-        break;
-    case 2:
-        PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
-        break;
-    case 3:
-        PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-        break;
+        case 1:
+            PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                << "Ex error: " << E_B_error[0] << std::endl;
+            break;
+        case 2:
+            PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+            break;
+        case 3:
+            PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
+                << " |Ez error: " << E_B_error[2] << std::endl;
+            break;
     }
 
     switch (bdim)
     {
-    case 1:
-        amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
-        break;
-    case 3:
-        amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1] << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
-        break;
+        case 1:
+            amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                << "Bx error: " << E_B_error[vdim] << std::endl;
+            break;
+        case 3:
+            amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1]
+                << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
+            break;
     }
 
     for (int n = 1; n <= mw_yee.nsteps; n++)
@@ -208,30 +229,38 @@ void main_main()
         mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
         mw_yee.advance_B(infra, VlMa.dt, mw_yee.HE_Array, mw_yee.B_Array);
         mw_yee.advance_time();
-        E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero, funct_b2, true, infra);
+        E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0,
+                                                         zero, funct_b2, true, infra);
 
         PrintToFile("test_maxwell_yee_order.output") << "step " << n << endl;
         switch (vdim)
         {
-        case 1:
-            PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Ex error: " << E_B_error[0] << std::endl;
-            break;
-        case 2:
-            PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
-            break;
-        case 3:
-            PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
-            break;
+            case 1:
+                PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                    << "Ex error: " << E_B_error[0] << std::endl;
+                break;
+            case 2:
+                PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                    << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << std::endl;
+                break;
+            case 3:
+                PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                    << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
+                    << " |Ez error: " << E_B_error[2] << std::endl;
+                break;
         }
 
         switch (bdim)
         {
-        case 1:
-            amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << std::endl;
-            break;
-        case 3:
-            amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1] << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
-            break;
+            case 1:
+                amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                    << "Bx error: " << E_B_error[vdim] << std::endl;
+                break;
+            case 3:
+                amrex::PrintToFile("test_maxwell_yee_order.output").SetPrecision(20)
+                    << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1]
+                    << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
+                break;
         }
     }
     bool passed = true;
@@ -241,8 +270,7 @@ void main_main()
     gempic_assert_err(passed, 1, E_B_error[3]);
     gempic_assert_err(passed, 1, E_B_error[4]);
     gempic_assert_err(passed, 1, E_B_error[5]);
-
-  }
+}
 
 int main(int argc, char *argv[])
 {
