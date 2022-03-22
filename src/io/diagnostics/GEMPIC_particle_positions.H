@@ -116,52 +116,55 @@ void Gempic_WritePlotFile(particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim>
     }
 
     // warpx_job_info -------------------------------------------------------------
-    std::string FullPathJobInfoFile = plotfilename;
-    FullPathJobInfoFile += "/warpx_job_info";
-    std::ofstream jobInfoFile(FullPathJobInfoFile);
-    amrex::Print(jobInfoFile) << "geometry.is_periodic = " << (*infra).is_periodic[0]
+    if (amrex::ParallelDescriptor::IOProcessor()) {
+      std::string FullPathJobInfoFile = plotfilename;
+      FullPathJobInfoFile += "/warpx_job_info";
+      std::ofstream jobInfoFile(FullPathJobInfoFile);
+      amrex::Print(jobInfoFile)
+          << "geometry.is_periodic = " << (*infra).is_periodic[0]
 #if GEMPIC_SPACEDIM > 1
-                              << " " << (*infra).is_periodic[1]
+          << " " << (*infra).is_periodic[1]
 #endif
 #if GEMPIC_SPACEDIM > 2
-                              << " " << (*infra).is_periodic[2]
+          << " " << (*infra).is_periodic[2]
 #endif
-                              << std::endl;
-    jobInfoFile.close();
+          << std::endl;
+      jobInfoFile.close();
 
-    // WarpXHeader -------------------------------------------------------------
-    std::string FullPathHeaderFile = plotfilename;
-    FullPathHeaderFile += "/WarpXHeader";
-    std::ofstream headerFile(FullPathHeaderFile);
-    headerFile << "Checkpoint version: 1" << std::endl;
-    headerFile << "1" << std::endl;                                      // num_levels
-    headerFile << "0" << std::endl;                                      // i_step
-    headerFile << "1" << std::endl;                                      // numsubsteps
-    headerFile << time << std::endl;                                     // t_new
-    headerFile << time - (*mw_yee).dt << std::endl;                      // t_old
-    headerFile << (*mw_yee).dt << std::endl;                             // dt
-    headerFile << std::numeric_limits<amrex::Real>::max() << std::endl;  // moving_window_x
-    headerFile << "1" << std::endl;                                      // is_synchronised
+      // WarpXHeader
+      // -------------------------------------------------------------
+      std::string FullPathHeaderFile = plotfilename;
+      FullPathHeaderFile += "/WarpXHeader";
+      std::ofstream headerFile(FullPathHeaderFile);
+      headerFile << "Checkpoint version: 1" << std::endl;
+      headerFile << "1" << std::endl;                  // num_levels
+      headerFile << "0" << std::endl;                  // i_step
+      headerFile << "1" << std::endl;                  // numsubsteps
+      headerFile << time << std::endl;                 // t_new
+      headerFile << time - (*mw_yee).dt << std::endl;  // t_old
+      headerFile << (*mw_yee).dt << std::endl;         // dt
+      headerFile << std::numeric_limits<amrex::Real>::max()
+                 << std::endl;         // moving_window_x
+      headerFile << "1" << std::endl;  // is_synchronised
 
-    for (int i = 0; i < GEMPIC_SPACEDIM; ++i)
-    {
+      for (int i = 0; i < GEMPIC_SPACEDIM; ++i) {
         headerFile << (*infra).geom.ProbLo(i) << " ";  // domain_low
-    }
-    headerFile << std::endl;
+      }
+      headerFile << std::endl;
 
-    for (int i = 0; i < GEMPIC_SPACEDIM; ++i)
-    {
+      for (int i = 0; i < GEMPIC_SPACEDIM; ++i) {
         headerFile << (*infra).geom.ProbHi(i) << " ";  // domain_high
+      }
+      headerFile << std::endl;
+
+      (*infra).grid.writeOn(headerFile);
+      headerFile << '\n';
+
+      amrex::Print(headerFile) << (*ppg).charge[species] << std::endl;  // charge
+      headerFile.close();
+
+      amrex::VisMF::SetHeaderVersion(current_version);
     }
-    headerFile << std::endl;
-
-    (*infra).grid.writeOn(headerFile);
-    headerFile << '\n';
-
-    amrex::Print(headerFile) << (*ppg).charge[species] << std::endl;  // charge
-    headerFile.close();
-
-    amrex::VisMF::SetHeaderVersion(current_version);
 }
 
 template <int vdim, int numspec>

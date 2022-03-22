@@ -270,8 +270,6 @@ void time_loop_hs_fem(computational_domain infra, maxwell_yee<vdim> *mw_yee,
         diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name,
                                ctest);
     }
-
-    diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
 }
 }  // namespace Time_Loop
 }  // namespace Gempic

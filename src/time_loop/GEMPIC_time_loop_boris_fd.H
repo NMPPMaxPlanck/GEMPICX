@@ -265,17 +265,12 @@ void time_loop_boris_fd(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                                ctest);
     }
 
-    if (profiling_timers.profiling)
-    {
-        profiling_timers.counter_all += MPI_Wtime();
-        amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition
-                       << ", redistribute time: " << profiling_timers.counter_redistribute
-                       << ", field solver time: " << profiling_timers.counter_fields
-                       << ", sum boundary j time: " << profiling_timers.counter_jboundary
-                       << ", diagnostics time: " << profiling_timers.counter_diagnostics
-                       << ", total time: " << profiling_timers.counter_all << std::endl;
-    }
-    diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
+    if (profiling_timers.profiling){
+      profiling_timers.counter_all += MPI_Wtime();
+      amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition << ", redistribute time: " << profiling_timers.counter_redistribute
+                     << ", field solver time: " << profiling_timers.counter_fields << ", sum boundary j time: " << profiling_timers.counter_jboundary
+                     << ", diagnostics time: " << profiling_timers.counter_diagnostics << ", total time: " << profiling_timers.counter_all << std::endl;
+      }
 }
 }  // namespace Time_Loop
 }  // namespace Gempic
