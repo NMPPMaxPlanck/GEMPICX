@@ -39,7 +39,7 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degree>
 class diagnostics
 {
 public:
-    int n_time;  // number of timesteps
+    int nSteps;  // number of timesteps
     std::vector<amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1>> Bfield_energy;
     std::vector<amrex::GpuArray<amrex::Real, vdim>> Efield_energy, mom;
     std::vector<amrex::Real> kin;
@@ -47,6 +47,7 @@ public:
     int freq_x;
     int freq_v;
     int freq_slice;
+    int freq_save = 5;
     std::string sim_name;
     amrex::Real domain_volume;
     bool ctest;
@@ -83,10 +84,10 @@ public:
         // save norms for diagnostics
         save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
-        // save temporary results every n steps
-        if ((t_step + 1) % 5 == 0)
+        // save temporary results every freq_save steps
+        if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
         {
-            save_all_to_textfile(mw_yee->dt, simulation_name, t_step + 1);
+            save_time_history(mw_yee->dt, simulation_name, t_step + 1);
         }
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step + 1 << std::endl;
@@ -151,7 +152,8 @@ public:
         {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
                 *(*part_gr).mypc[spec],
-                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
+                {
                     auto m = p.rdata(vdim);
                     auto vel = pow(std::abs(p.rdata(0)), 2) + pow(std::abs(p.rdata(1)), 2) +
                                pow(std::abs(p.rdata(2)), 2);
@@ -165,14 +167,14 @@ public:
             kin[step] += 0.5 * kin_tmp;
             for (int cmp = 0; cmp < vdim; cmp++)
             {
-                auto mom_tmp =
-                    amrex::ReduceSum(*(*part_gr).mypc[spec],
-                                     [=] AMREX_GPU_HOST_DEVICE(
-                                         const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
-                                         auto m = p.rdata(vdim);
-                                         auto vel = p.rdata(cmp);
-                                         return (m * vel);
-                                     });
+                auto mom_tmp = amrex::ReduceSum(
+                    *(*part_gr).mypc[spec],
+                    [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
+                    {
+                        auto m = p.rdata(vdim);
+                        auto vel = p.rdata(cmp);
+                        return (m * vel);
+                    });
 
                 // reduced sum over mpi ranks
                 amrex::ParallelDescriptor::ReduceRealSum(
@@ -196,29 +198,20 @@ public:
     }
 
     /**
-     * This function writes the data from all steps so far (at time @p dt) into an output file
-     * PIC_save.output or a file of alternative name if @p filename is passed. If only a subset of
-     * the data should be saved, the argument @p partial, setting the last index to be saved, should
-     * be passed.
+     * This function writes the time history data from the last freq_save steps so far (at time @p
+     * dt) into an output file simulation.txt.
      */
-    void save_all_to_textfile(amrex::Real dt, std::string simulation_name, int partial = 0)
+    void save_time_history(amrex::Real dt, std::string simulation_name, int t_step)
     {
-        if (partial == 0)
-        {
-            partial = n_time;
-        }
         if (amrex::ParallelDescriptor::IOProcessor())  // only IOProcessor prints
         {
-            std::ofstream ofsfun(simulation_name + ".tmp", std::ofstream::out);
+            std::ofstream ofsfun(simulation_name + ".txt", std::ofstream::out | std::ofstream::app);
             amrex::Real init_tot_energy =
                 0.5 * (Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
                        Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2]) +
                 kin[0] / domain_volume;
-            amrex::Print(ofsfun).SetPrecision(20)
-                << "# time   E-energy-components   B-energy-components   kinetic-energy   "
-                   "momentum-components gauss-error total-energy energy-error"
-                << std::endl;
-            for (int step = 0; step <= partial; step++)
+
+            for (int step = freq_save * ((t_step - 1) / freq_save); step <= t_step; step++)
             {
                 amrex::Real tot_energy = 0.5 * (Efield_energy[step][0] + Efield_energy[step][1] +
                                                 Efield_energy[step][2] + Bfield_energy[step][0] +
@@ -378,18 +371,30 @@ private:
     void initialize_diagnostics(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol,
                                 bool ctest)
     {
-        n_time = n_t;
+        nSteps = n_t;
         freq_x = fx;
         freq_v = fv;
         freq_slice = fs;
         sim_name = sim_n;
         domain_volume = vol;
 
-        Bfield_energy.reserve(n_time);
-        Efield_energy.reserve(n_time);
-        mom.reserve(n_time);
-        kin.reserve(n_time);
-        gauss_error.reserve(n_time);
+        Bfield_energy.reserve(nSteps);
+        Efield_energy.reserve(nSteps);
+        mom.reserve(nSteps);
+        kin.reserve(nSteps);
+        gauss_error.reserve(nSteps);
+
+        // Open time history file
+        if (amrex::ParallelDescriptor::IOProcessor())
+        {
+            std::ofstream ofsfun(sim_name + ".txt", std::ofstream::out);
+            amrex::Print(ofsfun).SetPrecision(20)
+                << "# time   E-energy-components   B-energy-components   "
+                   "kinetic-energy   momentum-components gauss-error total-energy "
+                   "energy-error"
+                << std::endl;
+            ofsfun.close();
+        }
 
         if (ctest) amrex::PrintToFile(sim_name + ".output") << "\n";
     }

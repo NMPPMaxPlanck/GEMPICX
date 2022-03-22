@@ -381,7 +381,6 @@ void time_loop_hsall_fem(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                                ctest);
     }
 
-    diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
 }
 
 }  // namespace Time_Loop

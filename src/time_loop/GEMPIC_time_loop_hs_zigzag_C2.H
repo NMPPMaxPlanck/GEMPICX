@@ -411,53 +411,51 @@ void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> *mw_ye
     bool profiling_count = false;
     timers profiling_timers(true);
 
-    if (profiling_timers.profiling)
-        // profiling_timers.counter_all -= MPI_Wtime();
-        for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
+    // if (profiling_timers.profiling) profiling_timers.counter_all -= MPI_Wtime();
+    for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
+    {
+        if (profiling_timers.profiling && t_step == 0) profiling_timers.counter_all -= MPI_Wtime();
+        switch (strang_order)
         {
-            if (profiling_timers.profiling && t_step == 0)
-                profiling_timers.counter_all -= MPI_Wtime();
-            switch (strang_order)
-            {
-                case 2:
-                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                electromagnetic, profiling>(
-                        infra, mw_yee, 1.0, part_gr, &profiling_timers, profiling_count);
-                    break;
-                case 4:
-                    amrex::Real alpha = 1. / (2. - pow(2., 1. / 3.));
-                    amrex::Real beta = 1. - 2. * alpha;
+            case 2:
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
+                                            profiling>(infra, mw_yee, 1.0, part_gr,
+                                                       &profiling_timers, profiling_count);
+                break;
+            case 4:
+                amrex::Real alpha = 1. / (2. - pow(2., 1. / 3.));
+                amrex::Real beta = 1. - 2. * alpha;
 
-                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                electromagnetic, profiling>(
-                        infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
-                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                electromagnetic, profiling>(
-                        infra, mw_yee, beta, part_gr, &profiling_timers, profiling_count);
-                    time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw,
-                                                electromagnetic, profiling>(
-                        infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
-                    break;
-            }
-
-            if (output)
-                diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
-                                       simulation_name, ctest);
-            profiling_count = true;
-            if (energy_experiment)
-            {
-                amrex::Real end_energy =
-                    0.5 * (diagn->Efield_energy[t_step][0] + diagn->Efield_energy[t_step][1] +
-                           diagn->Efield_energy[t_step][2] + diagn->Bfield_energy[t_step][0] +
-                           diagn->Bfield_energy[t_step][1] + diagn->Bfield_energy[t_step][2]) +
-                    diagn->kin[t_step] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
-
-                if (amrex::ParallelDescriptor::MyProc() == 0)
-                    amrex::PrintToFile("energy_error.out")
-                        << t_step * mw_yee->dt << " " << std::abs(init_energy - end_energy)
-                        << std::endl;
-            }
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
+                                            profiling>(infra, mw_yee, alpha, part_gr,
+                                                       &profiling_timers, profiling_count);
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
+                                            profiling>(infra, mw_yee, beta, part_gr,
+                                                       &profiling_timers, profiling_count);
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
+                                            profiling>(infra, mw_yee, alpha, part_gr,
+                                                       &profiling_timers, profiling_count);
+                break;
         }
+
+        if (output)
+            diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
+                                   simulation_name, ctest);
+        profiling_count = true;
+        if (energy_experiment)
+        {
+            amrex::Real end_energy =
+                0.5 * (diagn->Efield_energy[t_step][0] + diagn->Efield_energy[t_step][1] +
+                       diagn->Efield_energy[t_step][2] + diagn->Bfield_energy[t_step][0] +
+                       diagn->Bfield_energy[t_step][1] + diagn->Bfield_energy[t_step][2]) +
+                diagn->kin[t_step] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
+
+            if (amrex::ParallelDescriptor::MyProc() == 0)
+                amrex::PrintToFile("energy_error.out")
+                    << t_step * mw_yee->dt << " " << std::abs(init_energy - end_energy)
+                    << std::endl;
+        }
+    }
 
     if (profiling_timers.profiling)
     {
@@ -469,9 +467,18 @@ void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> *mw_ye
                        << ", diagnostics time: " << profiling_timers.counter_diagnostics
                        << ", total time: " << profiling_timers.counter_all << std::endl;
     }
-    if (output) diagn->save_all_to_textfile(mw_yee->dt, simulation_name);
-}
 
+    if (profiling_timers.profiling)
+    {
+        profiling_timers.counter_all += MPI_Wtime();
+        amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition
+                       << ", redistribute time: " << profiling_timers.counter_redistribute
+                       << ", field solver time: " << profiling_timers.counter_fields
+                       << ", sum boundary j time: " << profiling_timers.counter_jboundary
+                       << ", diagnostics time: " << profiling_timers.counter_diagnostics
+                       << ", total time: " << profiling_timers.counter_all << std::endl;
+    }
+}
 }  // namespace Time_Loop
 }  // namespace Gempic
 
