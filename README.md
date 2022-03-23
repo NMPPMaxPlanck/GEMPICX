@@ -78,6 +78,12 @@ Dependencies
 - Sphinx
 - Breathe ([for bridging between Sphinx and Doxygen documentation systems](https://breathe.readthedocs.io/en/latest/))
 
+Formatting
+=====================
+The format of the code (identation, spacing, etc.) follows the WarpX conventions, which are automatically done by `clang-format`. To format your code before committing run:
+
+`source scripts/sanitize_code.sh`
+
 Documentation
 =====================
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
