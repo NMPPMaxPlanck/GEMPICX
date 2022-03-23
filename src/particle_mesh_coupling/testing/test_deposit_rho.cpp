@@ -68,12 +68,15 @@ void main_main ()
     // Initialize fields and particles
     maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
-    // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    int species = 0; // all particles are same species for now
 
+    // particles
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     //------------------------------------------------------------------------------
     // initialize particles:
-    int species = 0; // all particles are same species for now
     init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.meanVelocity[species], VlMa.vThermal[species], VlMa.vWeight[species], species, wave_function);
 
     //------------------------------------------------------------------------------
@@ -89,8 +92,8 @@ void main_main ()
     (mw_yee).rho.FillBoundary(infra.geom.periodicity());
 
     for (int spec=0;spec<numspec;spec++) {
-        (*(part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+        (*(part_gr[spec]).mypc).Redistribute(); // assign particles to the tile they are in
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr[spec]).mypc, 0); pti.isValid(); ++pti) {
 
             auto& particles = pti.GetArrayOfStructs();
             auto& particle_attributes = pti.GetStructOfArrays();
@@ -107,7 +110,7 @@ void main_main ()
                 amrex::Real weight = particle_attributes.GetRealData(vdim)[pp];
                 splines_at_particles<degx,degy,degz> spline;
                 spline.init_particles(pos , infra.plo, infra.dxi);
-                gempic_deposit_rho_C3<degx, degy, degz>(spline, weight*(part_gr).charge[spec]*infra.dxi[GEMPIC_SPACEDIM], rhoarr);
+                gempic_deposit_rho_C3<degx, degy, degz>(spline, weight*(part_gr[spec]).charge*infra.dxi[GEMPIC_SPACEDIM], rhoarr);
             }
         }
     }

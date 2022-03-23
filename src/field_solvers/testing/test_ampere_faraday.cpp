@@ -117,7 +117,10 @@ void main_main ()
     PrintToFile("test_ampere_faraday.output").SetPrecision(5) << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] << " |Ez error: " << E_B_error[2] << std::endl;
     amrex::PrintToFile("test_ampere_faraday.output").SetPrecision(5) << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] << " |Bz error: " << E_B_error[vdim+2] << std::endl;
 
-    particle_groups<vdim, 1> part_gr(VlMa.charge, VlMa.mass, infra);
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     //------------------------------------------------------------------------------
     // time loop
     //Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", 0);

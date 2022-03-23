@@ -48,7 +48,7 @@ public:
     //amrex::GpuArray<std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>>, numspec> mypc;
     amrex::Real charge;
     amrex::Real mass;
-    std::unique_ptr<amrex::ParticleContainer<vdim+n_data, 0, 0, 0>> mypc;
+    std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>> mypc;
 
     // The default constructor.
     /**
@@ -72,20 +72,20 @@ public:
         // set infrastructure for each species
         //for (int i=0;i<mypc.size();i++) {
         //    mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
-            mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc.reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
 	    //(*mypc[i]).do_tiling = false;
         *mypc.do_tiling = false;
 #else
 	    //(*mypc[i]).do_tiling = true;
-        *mypc.do_tiling = true;
+        (*mypc).do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
             //(*mypc[i]).tile_size = ifr.max_grid_size;
-            *mypc.tile_size = ifr.max_grid_size;
+            (*mypc).tile_size = ifr.max_grid_size;
 #else
             //(*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
-            *mypc.tile_size[0] = ifr.max_grid_size[0];
+            (*mypc).tile_size[0] = ifr.max_grid_size[0];
 #endif
         //}
     }
@@ -102,20 +102,20 @@ public:
         //for (int i=0;i<mypc.size();i++) {
         //    mypc[i].reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 
-            mypc.reset(new amrex::ParticleContainer<vdim+n_data, 0, 0, 0> (ifr.geom, ifr.distriMap, ifr.grid));
+            mypc.reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
         //(*mypc[i]).do_tiling = false;
-        *mypc.do_tiling = false;
+        (*mypc).do_tiling = false;
 #else
         //(*mypc[i]).do_tiling = true;
-        *mypc.do_tiling = true;
+        (*mypc).do_tiling = true;
 #endif
 # if (GEMPIC_SPACEDIM > 1)
             //(*mypc[i]).tile_size = ifr.max_grid_size;
-            *mypc.tile_size = ifr.max_grid_size;
+            (*mypc).tile_size = ifr.max_grid_size;
 #else
             //(*mypc[i]).tile_size[0] = ifr.max_grid_size[0];
-            *mypc.tile_size[0] = ifr.max_grid_size[0];
+            (*mypc).tile_size[0] = ifr.max_grid_size[0];
 #endif
         //}
     }

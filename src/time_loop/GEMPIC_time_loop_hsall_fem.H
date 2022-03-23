@@ -44,7 +44,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool el
 void time_loop_hsall_fem_step (computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
                           amrex::Real coeff,
-                       particle_groups<vdim, numspec> *part_gr,
+                       amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr,
                        timers *profiling_timers) {
 
         (*mw_yee).advance_time(coeff);
@@ -70,10 +70,10 @@ void time_loop_hsall_fem_step (computational_domain infra,
         }
 
         for (int spec=0;spec<numspec;spec++) {
-            amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
-            amrex::Real charge = (*part_gr).charge[spec];
+            amrex::Real chargemass = (*part_gr)[spec].charge/(*part_gr)[spec].mass;
+            amrex::Real charge = (*part_gr)[spec].charge;
 
-            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
@@ -299,7 +299,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
                 }
             }
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            (*(*part_gr)[spec].mypc).Redistribute(); // assign particles to the tile they are in
         }
 
 
@@ -319,9 +319,9 @@ void time_loop_hsall_fem_step (computational_domain infra,
 
         // Second particle loop for particle part from H_E
         for (int spec=0;spec<numspec;spec++) {
-            amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
+            amrex::Real chargemass = (*part_gr)[spec].charge/(*part_gr)[spec].mass;
 
-            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
@@ -357,7 +357,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
                     }
                 }
             }
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            (*(*part_gr)[spec].mypc).Redistribute(); // assign particles to the tile they are in
         }
 
         //--------------------------------------------------------------------------
@@ -376,7 +376,7 @@ void time_loop_hsall_fem_step (computational_domain infra,
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
 void time_loop_hsall_fem (computational_domain infra,
                        maxwell_yee<vdim> *mw_yee,
-                       particle_groups<vdim, numspec> *part_gr,
+                       amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr,
                        diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                        bool ctest,
                        std::string simulation_name,

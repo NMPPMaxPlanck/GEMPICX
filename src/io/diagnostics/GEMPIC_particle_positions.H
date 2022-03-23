@@ -28,7 +28,7 @@ namespace Diagnostics_Output {
 
 template<int vdim, int numspec>
 void
-Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, computational_domain *infra, const std::string& plot_file, const int step, const std::string& name = "electrons",
+Gempic_WritePlotFile (amrex::GpuArray<particle_groups<vdim>, numspec>& ppg, maxwell_yee<vdim> *mw_yee, computational_domain *infra, const std::string& plot_file, const int step, const std::string& name = "electrons",
                       int species = 0)
 {
     //TODO: other dims
@@ -84,15 +84,15 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
     if(vdim ==1) {
         const amrex::Vector<int>& write_real_comp = {1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
-        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
     } else if (vdim ==2) {
         const amrex::Vector<int>& write_real_comp = {1,1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
-        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
     } else if (vdim ==3) {
         const amrex::Vector<int>& write_real_comp = {1,1,1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
     }
 
     // warpx_job_info -------------------------------------------------------------
@@ -136,7 +136,7 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
     (*infra).grid.writeOn(headerFile);
     headerFile << '\n';
 
-    amrex::Print(headerFile) << (*ppg).charge[species] << std::endl; //charge
+    amrex::Print(headerFile) << ppg[species].charge << std::endl; //charge
     headerFile.close();
 
     amrex::VisMF::SetHeaderVersion(current_version);
@@ -145,7 +145,7 @@ Gempic_WritePlotFile (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw
 
 template<int vdim, int numspec>
 void
-Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<vdim> *mw_yee, computational_domain *infra, const std::string& plot_file, const int step)
+Gempic_WritePlotFile_rho_phi (amrex::GpuArray<particle_groups<vdim>, numspec>& ppg, maxwell_yee<vdim> *mw_yee, computational_domain *infra, const std::string& plot_file, const int step)
 {
     //TODO: other dims
 
@@ -173,15 +173,15 @@ Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<v
     if(vdim ==1) {
         const amrex::Vector<int>& write_real_comp = {1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
-        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
     } else if (vdim ==2) {
         const amrex::Vector<int>& write_real_comp = {1,1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
-        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
     } else if (vdim ==3) {
         const amrex::Vector<int>& write_real_comp = {1,1,1,1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-        (*(*ppg).mypc[species]).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
     }
 
     // warpx_job_info -------------------------------------------------------------
@@ -225,7 +225,7 @@ Gempic_WritePlotFile_rho_phi (particle_groups<vdim, numspec> *ppg, maxwell_yee<v
     (*infra).grid.writeOn(headerFile);
     headerFile << '\n';
 
-    amrex::Print(headerFile) << (*ppg).charge[species] << std::endl; //charge
+    amrex::Print(headerFile) << ppg[species].charge << std::endl; //charge
     headerFile.close();
 
     amrex::VisMF::SetHeaderVersion(current_version);

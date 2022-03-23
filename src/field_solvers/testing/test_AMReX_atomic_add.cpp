@@ -26,11 +26,16 @@ void main_main ()
     VlMa.set_computed_params();
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
+    
     const amrex::GpuArray<amrex::Real, 3>& dx = {0.6283, 0.5026, 0.4188};
     const amrex::GpuArray<amrex::Real, 3>& plo = {0.0, 0.0, 0.0};
     amrex::GpuArray<amrex::Real, 3> x = {0.2, 0.2, 0.2};
-    init_one_particle_cellwise<vdim>(dx, plo, &(*(part_gr).mypc[0]), x);
+    init_one_particle_cellwise<vdim>(dx, plo, &(*part_gr[0].mypc), x);
 
     //------------------------------------------------------------------------------
     amrex::MultiFab rho; // for Poisson
@@ -40,7 +45,7 @@ void main_main ()
     rho.setVal(0.0);
 
     amrex::Real testval = 2.3;
-    for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr).mypc[0], 0); pti.isValid(); ++pti) {
+    for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr[0].mypc), 0); pti.isValid(); ++pti) {
 
         amrex::Array4<amrex::Real> rhoarr = rho[pti].array();
 

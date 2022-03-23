@@ -26,7 +26,7 @@ namespace Sampling {
 
 template<int vdim, int numspec>
 void init_particles_cellwise(computational_domain infra,
-                             particle_groups<vdim, numspec> &ppg,
+                             amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
                              std::array<int, numspec> n_part_per_cell,
                              std::vector<std::vector<amrex::Real>> Vmean,
                              std::vector<std::vector<amrex::Real>> Vdev,
@@ -122,9 +122,9 @@ void init_particles_cellwise(computational_domain infra,
         }
 
         //Adding particle from the model cell to all cells
-        for(amrex::MFIter mfi=(*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
+        for(amrex::MFIter mfi=(*(ppg[species]).mypc).MakeMFIter(0); mfi.isValid(); ++mfi) {
 
-            amrex::ParticleTile<0, 0, vdim+1, 0>& particles = (*(ppg).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<0, 0, vdim+1, 0>& particles = (*(ppg[species]).mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -159,7 +159,7 @@ void init_particles_cellwise(computational_domain infra,
                                 ;
 
 
-                        (ppg).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        (ppg[species]).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
@@ -173,7 +173,7 @@ void init_particles_cellwise(computational_domain infra,
 
 template<int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra,
-                                particle_groups<vdim, numspec> &ppg,
+                                amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
                                 std::array<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Real> k_vec,
                                 std::string wave_function,
@@ -226,7 +226,7 @@ void init_particles_full_domain(computational_domain infra,
     // }
 
     //MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi= (ppg.mypc[species])->MakeMFIter(0); mfi.isValid(); ++mfi ){
+    for (amrex::MFIter mfi= (ppg[species].mypc)->MakeMFIter(0); mfi.isValid(); ++mfi ){
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
@@ -238,7 +238,7 @@ void init_particles_full_domain(computational_domain infra,
         std::uniform_real_distribution<> unif(0.0,1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
-        auto& particles = (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]; // only level 0
+        auto& particles = (ppg[species].mypc)->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]; // only level 0
 
 #if (GEMPIC_SPACEDIM > 2)
         for(int k=lo[2]; k<=hi[2]; k++){
@@ -303,7 +303,7 @@ void init_particles_full_domain(computational_domain infra,
                                 *infra.dx[2]
         #endif
                                 ;
-                        ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        ppg[species].add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                         // Check random number
                         if (check_rnd) {
                             npart++;
@@ -323,7 +323,7 @@ void init_particles_full_domain(computational_domain infra,
 
 template<int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra,
-                                particle_groups<vdim, numspec> &ppg,
+                                amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
                                 std::array<int, numspec> n_part_per_cell,
                                 std::vector<std::vector<amrex::Real>> Vmean,
                                 std::vector<std::vector<amrex::Real>> Vdev,
@@ -369,7 +369,7 @@ int num_gauss = Vmean.size();
     // }
 
    //MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi= (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi ){
+    for (amrex::MFIter mfi= (*(ppg[species]).mypc).MakeMFIter(0); mfi.isValid(); ++mfi ){
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
@@ -380,7 +380,7 @@ int num_gauss = Vmean.size();
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0,1.0);
 
-        auto& particles = (*ppg.mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+        auto& particles = (*ppg[species].mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
         for(int k=lo[2]; k<=hi[2]; k++){
@@ -444,7 +444,7 @@ int num_gauss = Vmean.size();
                                 *infra.dx[2]
         #endif
                                 ;
-                        ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        ppg[species].add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }

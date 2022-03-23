@@ -106,19 +106,21 @@ void main_main (bool ctest)
     mw_yee.template init_rho_phi<degmw>(zero, func_phi, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
-
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0;
-    for(amrex::MFIter mfi=(*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi) {
+    for(amrex::MFIter mfi=(*(part_gr[species]).mypc).MakeMFIter(0); mfi.isValid(); ++mfi) {
         if(mfi.index() == 0) {
-            amrex::ParticleTile<0, 0, vdim+1, 0>& particles = (*(part_gr).mypc[species]).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<0, 0, vdim+1, 0>& particles = (*(part_gr[species]).mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             amrex::GpuArray<amrex::Real,vdim> velocity;
             for (int comp = 0; comp < vdim; comp++) {
                 velocity[comp] = 0.1;
             }
-            part_gr.add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
+            part_gr[species].add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
         }
     }
 

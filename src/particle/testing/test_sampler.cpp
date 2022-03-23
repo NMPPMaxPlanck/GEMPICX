@@ -45,9 +45,9 @@ AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, am
 }
 
 template<int vdim, int numspec>
-void print_particles(const particle_groups<vdim, numspec> & part_gr, const int species) {
+void print_particles(const amrex::GpuArray<particle_groups<vdim>, numspec>& part_gr, const int species) {
     std::ofstream ofs("particles.out", std::ofstream::out);
-        for (amrex::ParIter<0,0,vdim+1,0> pti(*part_gr.mypc[species], 0); pti.isValid(); ++pti) {
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*part_gr[species].mypc, 0); pti.isValid(); ++pti) {
             auto& particles = pti.GetArrayOfStructs(); // get particles
             const long np  = pti.numParticles();
             auto& particle_attributes = pti.GetStructOfArrays();
@@ -67,12 +67,12 @@ void print_particles(const particle_groups<vdim, numspec> & part_gr, const int s
 }
 
 template <int vdim, int numspec>
-void print_vMoments(const particle_groups<vdim, numspec> & part_gr, const int species) {
+void print_vMoments(const amrex::GpuArray<particle_groups<vdim>, numspec> & part_gr, const int species) {
     // compute the first three moments of f(x,v), only one species 
     amrex::GpuArray<amrex::Real,vdim+2> vMoment;
     amrex::Real vMoment_tmp;
     // 1) \int f(x,v) dx dv
-    vMoment_tmp =  amrex::ReduceSum( *part_gr.mypc[species],
+    vMoment_tmp =  amrex::ReduceSum( *part_gr[species].mypc,
                             [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real {
                 auto w  = p.rdata(vdim); // particle weight
                 return (w);
@@ -84,7 +84,7 @@ void print_vMoments(const particle_groups<vdim, numspec> & part_gr, const int sp
     // 2) \int v f(x,v) dx dv
     for (int cmp=0;cmp<vdim;cmp++) {
         // reduce sum over one MPI rank
-        vMoment_tmp = amrex::ReduceSum( *part_gr.mypc[0],
+        vMoment_tmp = amrex::ReduceSum( *part_gr[0].mypc,
                             [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real {
                 auto w  = p.rdata(vdim); // particle weight
                 auto vel = p.rdata(cmp); // velocity component
@@ -95,7 +95,7 @@ void print_vMoments(const particle_groups<vdim, numspec> & part_gr, const int sp
         vMoment[cmp+1] = vMoment_tmp;
     }
     // 3) \int v^2 f(x,v) dx dv
-    vMoment_tmp =  amrex::ReduceSum( *part_gr.mypc[0],
+    vMoment_tmp =  amrex::ReduceSum( *part_gr[0].mypc,
                             [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real {
                 auto w  = p.rdata(vdim); // particle weight
                 auto v2 = std::pow(p.rdata(0),2)+std::pow(p.rdata(1),2)+std::pow(p.rdata(2),2);
@@ -141,16 +141,26 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
-    particle_groups<vdim, numspec> part_gr_cell(gpParam.charge, gpParam.mass, domain);
-    init_particles_cellwise<vdim, numspec>(domain, part_gr_cell,n_part_per_cell, vMean, vThermal, vWeight, species, wave_function);
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr_cell;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr_cell[spec] = particle_groups<vdim>(gpParam.charge[spec], gpParam.mass[spec], domain);
+    }
+    init_particles_cellwise<vdim, numspec>(domain, part_gr_cell, n_part_per_cell, vMean, vThermal, vWeight, species, wave_function);
 
-    particle_groups<vdim, numspec> part_gr_full(gpParam.charge, gpParam.mass, domain);
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr_full;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr_full[spec] = particle_groups<vdim>(gpParam.charge[spec], gpParam.mass[spec], domain);
+    }
     init_particles_full_domain<vdim,numspec>(domain, part_gr_full,n_part_per_cell, vMean, vThermal, vWeight, species, wave_function);
 
     std::string wave_function_string = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)"; // n_0
-    particle_groups<vdim, numspec> part_gr_full_str(gpParam.charge, gpParam.mass, domain);
+    
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr_full_str;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr_full_str[spec] = particle_groups<vdim>(gpParam.charge[spec], gpParam.mass[spec], domain);
+    }
     init_particles_full_domain<vdim,numspec>(domain, part_gr_full_str,n_part_per_cell, gpParam.k, wave_function_string, vMean, vThermal, vWeight, species);
- 
+
     // Print particles data
     bool printPart = false;
     if (printPart) {
