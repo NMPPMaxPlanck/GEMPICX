@@ -75,7 +75,7 @@ public:
             mypc.reset(new amrex::ParticleContainer<0, 0, vdim+n_data, 0> (ifr.geom, ifr.distriMap, ifr.grid));
 #if GEMPIC_GPU
 	    //(*mypc[i]).do_tiling = false;
-        *mypc.do_tiling = false;
+       	(*mypc).do_tiling = false;
 #else
 	    //(*mypc[i]).do_tiling = true;
         (*mypc).do_tiling = true;
