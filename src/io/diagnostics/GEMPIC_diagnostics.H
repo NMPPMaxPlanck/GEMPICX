@@ -72,7 +72,7 @@ public:
 
 
     void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                         particle_groups<vdim, numspec> *part_gr, std::string simulation_name, bool ctest){
+                         amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr, std::string simulation_name, bool ctest){
         if (profiling_timers->profiling)
           profiling_timers->counter_diagnostics -= MPI_Wtime();
         // save norms for diagnostics
@@ -96,7 +96,7 @@ public:
     void save_step_data(int step,
                         computational_domain infra,
                         maxwell_yee<vdim> *mw_yee,
-                        particle_groups<vdim, numspec> *part_gr){
+                        amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr){
 
         Bfield_energy.push_back({0., 0., 0.});
         Efield_energy.push_back({0., 0., 0.});
@@ -139,7 +139,7 @@ public:
             mom[step][cmp] = 0.0;
         }
         for (int spec=0;spec<numspec;spec++){ // TODO: multispecies
-            auto kin_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
+            auto kin_tmp = amrex::ReduceSum( *(*part_gr)[spec].mypc,
                                              [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
             {
                 auto m  = p.rdata(vdim);
@@ -154,7 +154,7 @@ public:
 
             kin[step] += 0.5*kin_tmp;
             for (int cmp=0;cmp<vdim;cmp++) {
-                auto mom_tmp = amrex::ReduceSum( *(*part_gr).mypc[spec],
+                auto mom_tmp = amrex::ReduceSum( *(*part_gr)[spec].mypc,
                                                  [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
                 {
                     auto m  = p.rdata(vdim);
@@ -171,13 +171,13 @@ public:
                 mom[step][cmp] += mom_tmp;
             }
         }
-        gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
+        gauss_error[step] = (*mw_yee).template compute_gauss_error<numspec,degx,degy,degz>(infra, *part_gr);
 
         // save Plot and Checkpoint-files
         //if ((step == 0) || ((step+1)%freq_slice == 0)) {
         if ((step+1)%freq_slice == 0) {
-           Gempic_WriteCheckpointFile(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
-           Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step+1);
+           Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, *part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
+           Gempic_WritePlotFile<vdim, numspec>(*part_gr, mw_yee, &infra, sim_name, step+1);
         }
 
     }

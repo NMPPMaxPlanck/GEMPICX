@@ -84,8 +84,11 @@ void main_main()
     mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
-
+    //particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     amrex::Real vol = (infra.geom.ProbHi(0) - infra.geom.ProbLo(0)) * (infra.geom.ProbHi(1) - infra.geom.ProbLo(1)) * (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol, ctest);
 

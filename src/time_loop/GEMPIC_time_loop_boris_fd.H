@@ -37,7 +37,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool el
 void time_loop_boris_fd_step (computational_domain infra,
                          maxwell_yee<vdim> *mw_yee,
                          amrex::Real coeff,
-                         particle_groups<vdim,numspec> *part_gr,
+                         amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr,
                          timers *profiling_timers) {
 
         (*mw_yee).advance_time(coeff);
@@ -66,12 +66,12 @@ void time_loop_boris_fd_step (computational_domain infra,
         if (profiling_timers->profiling)
           profiling_timers->counter_jboundary += MPI_Wtime();
         for (int spec=0;spec<numspec;spec++) {
-            amrex::Real spec_charge = (*part_gr).charge[spec];
+            amrex::Real spec_charge = (*part_gr)[spec].charge;
             if (profiling_timers->profiling)
               profiling_timers->counter_deposition -= MPI_Wtime();
-            amrex::Real chargemass = (*part_gr).charge[spec]/(*part_gr).mass[spec];
+            amrex::Real chargemass = (*part_gr)[spec].charge/(*part_gr)[spec].mass;
 
-            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti) {
 
                 amrex::Particle<0,0>*  AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]); // get particles
                 const long np  = pti.numParticles();
@@ -141,7 +141,7 @@ void time_loop_boris_fd_step (computational_domain infra,
              profiling_timers->counter_deposition += MPI_Wtime();
             if (profiling_timers->profiling)
               profiling_timers->counter_redistribute -= MPI_Wtime();
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            (*(*part_gr)[spec].mypc).Redistribute(); // assign particles to the tile they are in
             if (profiling_timers->profiling)
               profiling_timers->counter_redistribute += MPI_Wtime();
         }
@@ -170,8 +170,8 @@ void time_loop_boris_fd_step (computational_domain infra,
         if (profiling_timers->profiling)
           profiling_timers->counter_deposition -= MPI_Wtime();
         for (int spec=0;spec<numspec;spec++) {
-            amrex::Real spec_charge = (*part_gr).charge[spec];
-            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            amrex::Real spec_charge = (*part_gr)[spec].charge;
+            for (amrex::ParIter<0,0,vdim+1,0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti) {
                 amrex::Particle<0,0>*  AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
                 const long np  = pti.numParticles();
                 auto particle_attributes = &pti.GetStructOfArrays();
@@ -243,7 +243,7 @@ void time_loop_boris_fd_step (computational_domain infra,
 template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true, bool profiling=true>
 void time_loop_boris_fd (computational_domain infra,
                          maxwell_yee<vdim> *mw_yee,
-                         particle_groups<vdim,numspec> *part_gr,
+                         amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr,
                          diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn,
                          bool ctest,
                          std::string simulation_name,

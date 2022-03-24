@@ -82,18 +82,20 @@ void main_main ()
     mw_yee.template initE<degmw>(zero, zero, zero, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
-
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0; // all particles are same species for now
     init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.meanVelocity[species], VlMa.vThermal[species], VlMa.vWeight[species], species, wave_function);
-    (*(part_gr).mypc[0]).Redistribute();
+    (*(part_gr[0]).mypc).Redistribute();
 
     int spec = 0;
 
     // compute mass, momentum and kinetic energy
-    auto mass = amrex::ReduceSum( *(part_gr).mypc[spec],
+    auto mass = amrex::ReduceSum( *(part_gr[spec]).mypc,
                                   [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
     {
         auto m  = p.rdata(vdim);
@@ -105,7 +107,7 @@ void main_main ()
     // momentum
     amrex::GpuArray<amrex::Real,vdim> momentum;
     for (int cmp=0;cmp<vdim;cmp++) {
-        auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
+        auto mom_tmp = amrex::ReduceSum( *(part_gr[spec]).mypc,
                                          [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
         {
             auto m  = p.rdata(vdim);
@@ -122,7 +124,7 @@ void main_main ()
     // kinetic energy
     amrex::GpuArray<amrex::Real,vdim> kinetic_energy;
     for (int cmp=0;cmp<vdim;cmp++) {
-        auto mom_tmp = amrex::ReduceSum( *(part_gr).mypc[spec],
+        auto mom_tmp = amrex::ReduceSum( *(part_gr[spec]).mypc,
                                          [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
         {
             auto m  = p.rdata(vdim);

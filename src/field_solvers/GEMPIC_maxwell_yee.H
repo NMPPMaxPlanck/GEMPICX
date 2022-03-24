@@ -1536,7 +1536,7 @@ template<int degree>
      * Compute rho for a given rho (for diagnostics: Gauss law)
      */
     template<int numspec, int degx, int degy, int degz>
-    amrex::Real compute_gauss_error(computational_domain ifr, Particles::particle_groups<edim, numspec> *part_gr){
+    amrex::Real compute_gauss_error(computational_domain ifr, amrex::GpuArray<particle_groups<edim>, numspec>& part_gr){
 
         rho_from_E(ifr); // fills rho_gauss_law
 
@@ -1544,8 +1544,8 @@ template<int degree>
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
         for (int spec=0;spec<numspec;spec++) {
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-            for (amrex::ParIter<0,0,edim+1,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            (*part_gr[spec].mypc).Redistribute(); // assign particles to the tile they are in
+            for (amrex::ParIter<0,0,edim+1,0> pti(*part_gr[spec].mypc, 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
@@ -1560,7 +1560,7 @@ template<int degree>
                         position[d] = particles[pp].pos(d);
                     spline.init_particles( position, ifr.plo, ifr.dxi);
                     gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                                              (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(edim)[pp],
+                                                              part_gr[spec].charge*ifr.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(edim)[pp],
                                                               rhoarr);
                 }
             }
@@ -1595,7 +1595,7 @@ template<int degree>
      * Compute E for rho from particles (for diagnostics: Gauss law)
      */
     template<int numspec, int degx, int degy, int degz>
-    amrex::Real compute_gauss_error_E(computational_domain ifr, Particles::particle_groups<edim, numspec> *part_gr){
+    amrex::Real compute_gauss_error_E(computational_domain ifr, amrex::GpuArray<particle_groups<edim>, numspec>& part_gr){
 
         (*E_sol_Array[0]).Copy(*E_sol_Array[0], *E_Array[0],0,0,1,Nghost);
         (*E_sol_Array[1]).Copy(*E_sol_Array[1], *E_Array[1],0,0,1,Nghost);
@@ -1623,8 +1623,8 @@ template<int degree>
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
         for (int spec=0;spec<numspec;spec++) {
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-            for (amrex::ParIter<edim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            for (amrex::ParIter<edim+1,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
@@ -1671,7 +1671,7 @@ template<int degree>
     }
 
     template<int numspec, int degx, int degy, int degz, int degree>
-    amrex::Real compute_gauss_error_hodge(computational_domain ifr, Particles::particle_groups<edim, numspec> *part_gr){
+    amrex::Real compute_gauss_error_hodge(computational_domain ifr, amrex::GpuArray<particle_groups<edim>, numspec>& part_gr){
 
         amrex::MultiFab kx(convert(ifr.grid, *E_Index[0]),ifr.distriMap,1,Nghost);
         kx.setVal(1.0, 0);
@@ -1705,8 +1705,8 @@ template<int degree>
         rho.setVal(0.0);
         rho.FillBoundary(ifr.geom.periodicity());
         for (int spec=0;spec<numspec;spec++) {
-            (*(*part_gr).mypc[spec]).Redistribute(); // assign particles to the tile they are in
-            for (amrex::ParIter<edim+1,0,0,0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti) {
+            (*part_gr.mypc[spec]).Redistribute(); // assign particles to the tile they are in
+            for (amrex::ParIter<edim+1,0,0,0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti) {
 
                 auto& particles = pti.GetArrayOfStructs();
                 const long np  = pti.numParticles();
@@ -1720,7 +1720,7 @@ template<int degree>
                         position[d] = particles[pp].pos(d);
                     spline.init_particles( position, ifr.plo, ifr.dxi);
                     gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                                              (*part_gr).charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(edim)[pp],
+                                                              part_gr.charge[spec]*ifr.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(edim)[pp],
                                                               rhoarr);
                 }
             }

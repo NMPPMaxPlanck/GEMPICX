@@ -44,7 +44,7 @@ public :
     gempic_parameters<vdim, numspec> params;
     computational_domain domain;
     maxwell_yee<vdim, int(vdim/2.5)*2+1> mw_yee;
-    particle_groups<vdim, numspec> part_gr;
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
     diagnostics<vdim, numspec,degx,degy,degz,degvm> diagn;
     bool readinfile = false;
     bool ctest = false;
@@ -65,7 +65,7 @@ public :
         mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
         mw_yee.template init_rho_phi<degvm>(domain, funcSelectRho);
         // particles
-        part_gr.reinit(params.charge, params.mass, domain);
+        part_gr[0].reinit(params.charge[0], params.mass[0], domain);
         amrex::Real vol = (domain.geom.ProbHi(0)-domain.geom.ProbLo(0))*(domain.geom.ProbHi(1)-domain.geom.ProbLo(1))*(domain.geom.ProbHi(2)-domain.geom.ProbLo(2));
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol, ctest);
         //------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ public :
         mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
         mw_yee.template init_rho_phi<degvm>(domain, params.rhoEval, params.phiEval);
         // particles
-        part_gr.reinit(params.charge, params.mass, domain);
+        part_gr[0].reinit(params.charge[0], params.mass[0], domain);
         amrex::Real vol = (domain.geom.ProbHi(0)-domain.geom.ProbLo(0))*(domain.geom.ProbHi(1)-domain.geom.ProbLo(1))*(domain.geom.ProbHi(2)-domain.geom.ProbLo(2));
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice, params.sim_name, vol, ctest);
         //------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ public :
         amrex::Print()  << "execution lasted: " <<  duration.count() << " s" << std::endl;
         switch (params.propagator) {
           case 100:
-            Gempic_WritePlotFile(&part_gr, &mw_yee, &domain, "Edipole", 10);
+            Gempic_WritePlotFile<vdim, numspec>(part_gr, &mw_yee, &domain, "Edipole", 10);
             break;
           default:
             break;
