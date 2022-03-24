@@ -93,6 +93,10 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                 amrex::Particle<0,0>*  AMREX_RESTRICT particles= &(pti.GetArrayOfStructs()[0]); // get particles
                 const long np  = pti.numParticles();
                 auto particle_attributes = &pti.GetStructOfArrays();
+                amrex::ParticleReal* const AMREX_RESTRICT part_weight = particle_attributes->GetRealData(vdim).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velx = particle_attributes->GetRealData(0).data();
+                amrex::ParticleReal* const AMREX_RESTRICT vely = particle_attributes->GetRealData(1).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velz = particle_attributes->GetRealData(2).data();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
@@ -132,22 +136,25 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(spline,  eA);
 
                     // push v with the electric field
-                    amrex::GpuArray<amrex::Real,vdim> vel;
-                    for (int comp = 0; comp < vdim; comp++) {
-                        //vel[comp] = particles[pp].rdata(comp);
-                        vel[comp] = particle_attributes->GetRealData(comp)[pp];
-                    }
+                    amrex::GpuArray<amrex::Real,vdim> vel{velx[pp],vely[pp],velz[pp]};
                     amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, dt*0.5*coeff, chargemass, efield);
-                    for (int vd=0;vd<vdim; vd++)
-                        //(particles[pp].rdata(vd)) = newPosE[vd];
-                        particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+                    
+                    //for (int vd=0;vd<vdim; vd++)
+                    //    //(particles[pp].rdata(vd)) = newPosE[vd];
+                    //    particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+                    velx[pp] = newPosE[0];
+                    vely[pp] = newPosE[1];
+                    velz[pp] = newPosE[2];
                     
                     //amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
-                    amrex::Real weight = charge*particle_attributes->GetRealData(vdim)[pp]*infra.dxi[GEMPIC_SPACEDIM];
+                    amrex::Real weight = charge*part_weight[pp]*infra.dxi[GEMPIC_SPACEDIM];
 
-                    for (unsigned int d=0;d<vdim;++d)
+                    //for (unsigned int d=0;d<vdim;++d)
                       //vel[d] = particles[pp].rdata(d);
-                      vel[d] = particle_attributes->GetRealData(d)[pp];
+                    //  vel[d] = particle_attributes->GetRealData(d)[pp];
+                    vel[0] = velx[pp];
+                    vel[1] = vely[pp];
+                    vel[2] = velz[pp];
 
                     amrex::GpuArray<amrex::Real, 2> bfields;
                     // push x1
@@ -303,10 +310,11 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
                         particles[pp].pos(xd) = pos[xd];
                     //std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
-                    for (int vd=0;vd<vdim; vd++)
-                        //(particles[pp].rdata(vd)) = vel[vd];
-                        particle_attributes->GetRealData(vd)[pp] = vel[vd];
-                    //std::copy(vel.begin(),vel.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    //for (int vd=0;vd<vdim; vd++)
+                    //    particle_attributes->GetRealData(vd)[pp] = vel[vd];
+                    velx[pp] = vel[0];
+                    vely[pp] = vel[1];
+                    velz[pp] = vel[2];
 //exit(0);
                 }
             );
@@ -357,6 +365,10 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
 		//amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT particles = pti.GetArrayOfStructs(); // get particles
                 const long np  = pti.numParticles();
                 auto particle_attributes = &pti.GetStructOfArrays();
+                //amrex::ParticleReal* const AMREX_RESTRICT weight = particle_attributes->GetRealData(vdim).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velx = particle_attributes->GetRealData(0).data();
+                amrex::ParticleReal* const AMREX_RESTRICT vely = particle_attributes->GetRealData(1).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velz = particle_attributes->GetRealData(2).data();
                
                 amrex::GpuArray<amrex::Array4<amrex::Real>,vdim> eA;
 
@@ -379,15 +391,17 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra,
                     // evaluate the electric field
                     amrex::GpuArray<amrex::Real, vdim> efield = evaluate_efield<vdim,degx,degy,degz>(splines,  eA);
                     // push v with the electric field
-                    amrex::GpuArray<amrex::Real,vdim> vel;
-                    for (int comp = 0; comp < vdim; comp++) {
-                        //vel[comp] = particles[pp].rdata(comp);
-                         vel[comp] = particle_attributes->GetRealData(comp)[pp];
-                    }
+                    amrex::GpuArray<amrex::Real,vdim> vel{velx[pp],vely[pp],velz[pp]};
+                    //for (int comp = 0; comp < vdim; comp++) {
+                    //    //vel[comp] = particles[pp].rdata(comp);
+                    //     vel[comp] = particle_attributes->GetRealData(comp)[pp];
+                    //}
             amrex::GpuArray<amrex::Real,vdim> newPosE = push_v_efield<vdim>(vel, dt*0.5*coeff, chargemass, efield);
-		   for (int vd=0;vd<vdim; vd++)
-			   //(particles[pp].rdata(vd)) = newPosE[vd];
-         particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+		   //for (int vd=0;vd<vdim; vd++)
+         //particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+                    velx[pp] = newPosE[0];
+                    vely[pp] = newPosE[1];
+                    velz[pp] = newPosE[2];
             });
             }
             if (profiling_timers->profiling && profiling_count)

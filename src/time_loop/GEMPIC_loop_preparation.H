@@ -62,6 +62,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
             auto& particles = pti.GetArrayOfStructs();
             const long np  = pti.numParticles();
             auto& particle_attributes = pti.GetStructOfArrays();
+            amrex::ParticleReal* const AMREX_RESTRICT weight = particle_attributes.GetRealData(vdim).data();
 
             amrex::Array4<amrex::Real> const& rhoarr = (*mw_yee).rho[pti].array();
             amrex::ParallelFor(np,[=] AMREX_GPU_DEVICE (long pp )
@@ -74,7 +75,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
                   position[d] = particles[pp].pos(d);
                 spline.init_particles( position, infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz> ( spline,
-                                              charge*infra.dxi[GEMPIC_SPACEDIM]*particle_attributes.GetRealData(vdim)[pp],
+                                              charge*infra.dxi[GEMPIC_SPACEDIM]*weight[pp],
                                               rhoarr);
               });
         }
@@ -132,6 +133,10 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
 
                 const long np  = pti.numParticles();
                 auto particle_attributes = &pti.GetStructOfArrays();
+                //amrex::ParticleReal* const AMREX_RESTRICT weight = particle_attributes->GetRealData(vdim).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velx = particle_attributes->GetRealData(0).data();
+                amrex::ParticleReal* const AMREX_RESTRICT vely = particle_attributes->GetRealData(1).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velz = particle_attributes->GetRealData(2).data();
 
                 const amrex::Real dt = (*mw_yee).dt;
                 amrex::ParallelFor(np,[=] AMREX_GPU_DEVICE (long pp){
@@ -140,10 +145,7 @@ void loop_preparation_init (gempic_parameters<vdim, numspec> meanVelocity,
                     for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) {
                         pos[comp] = particles[pp].pos(comp);
                     }
-                    amrex::GpuArray<amrex::Real,vdim> vel;
-                    for (int comp = 0; comp < vdim; comp++) {
-                        vel[comp] = particle_attributes->GetRealData(comp)[pp];
-                    }
+                    amrex::GpuArray<amrex::Real,vdim> vel{velx[pp],vely[pp],velz[pp]};
 
                     amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = push_particle_pos<vdim>(infra.plo, infra.phi, pos, vel, 0.5*dt);
                     for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
