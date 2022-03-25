@@ -275,12 +275,13 @@ void main_main()
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    const int vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<2, 1, 1, 1, 1>();
+    main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_maxwell_yee_order.output.0", "test_maxwell_yee_order.output");

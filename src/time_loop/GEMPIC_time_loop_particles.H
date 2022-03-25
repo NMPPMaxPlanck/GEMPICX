@@ -35,7 +35,7 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
 void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                          particle_groups<vdim, numspec> *part_gr,
                          diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool ctest,
-                         std::string simulation_name, std::ofstream *ofs)
+                         std::string simulation_name)
 {
     for (int t_step = 0; t_step < (*mw_yee).nsteps; t_step++)
     {
@@ -45,9 +45,9 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
         {
             //--------------------------------------------------------------------------
             // update B
-            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array), &(mw_yee->HE_Array),
+            mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array,
                                                true);
-            mw_yee->advance_B(infra, mw_yee->dt, &(mw_yee->HE_Array), &(mw_yee->B_Array));
+            mw_yee->advance_B(infra, mw_yee->dt, mw_yee->HE_Array, mw_yee->B_Array);
         }
 
         //--------------------------------------------------------------------------
@@ -169,16 +169,16 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
         if (electromagnetic)
         {
             // advance E
-            mw_yee->template hodge_full<degmw>(infra, &(mw_yee->B_Array), &(mw_yee->HB_Array),
+            mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array,
                                                false);
-            mw_yee->advance_E(infra, mw_yee->dt, true, true, &(mw_yee->HB_Array),
-                              &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt, true, true, mw_yee->HB_Array,
+                              mw_yee->E_Array);
         }
         else
         {
             // advance E from j
-            mw_yee->advance_E(infra, mw_yee->dt, false, true, &(mw_yee->HB_Array),
-                              &(mw_yee->E_Array));
+            mw_yee->advance_E(infra, mw_yee->dt, false, true, mw_yee->HB_Array,
+                              mw_yee->E_Array);
         }
 
         // save norms for diagnostics
