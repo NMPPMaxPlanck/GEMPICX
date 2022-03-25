@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     const int degz = 2;
     const int degmw = 2;
     const int propagator = 3;
-    main_main<3, 2, 3, 1, 2, 2, 3>();  // hs_zigzag
+    main_main<vdim, numspec, degx, degy, degz, degmw, propagator>();  // hs_zigzag
 
     amrex::Finalize();
 }

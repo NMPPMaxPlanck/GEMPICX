@@ -60,9 +60,10 @@ void main_main()
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_constval.tmp.0");
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim, numspec, degx, degy, degz>();
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_constval.tmp.0", "test_constval.output");
 

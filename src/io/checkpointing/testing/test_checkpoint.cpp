@@ -99,15 +99,15 @@ void main_main()
     }
 
     (*(mw_yee).J_Array[0]).setVal(1.0, 0);
-    amrex::Real old_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
+    amrex::Real old_val = gempic_norm((*(mw_yee).J_Array[0]), infra, 0);
     Gempic_WriteCheckpointFile(&mw_yee, &part_gr, &infra, "test_checkpoint", 0, 20);
 
     (*(mw_yee).J_Array[0]).setVal(2.0, 0);
-    amrex::Real new_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
+    amrex::Real new_val = gempic_norm((*(mw_yee).J_Array[0]), infra, 0);
 
     Gempic_ReadCheckpointFile(&mw_yee, &part_gr, &infra, "test_checkpoint",
                               0);  // last 2 args: field, step
-    amrex::Real read_val = gempic_norm(&(*(mw_yee).J_Array[0]), infra, 0);
+    amrex::Real read_val = gempic_norm((*(mw_yee).J_Array[0]), infra, 0);
 
     amrex::PrintToFile("test_checkpoint_additional.tmp") << "" << std::endl;
     amrex::PrintToFile("test_checkpoint_additional.tmp")

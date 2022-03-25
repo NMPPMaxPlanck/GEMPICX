@@ -136,14 +136,14 @@ void main_main()
     // Compute difference and store in phi:
     (mw_yee.phi).minus(mw_yee.rho, 0, 1, 0);
 
-    amrex::Real error = gempic_norm(&(mw_yee.phi), infra, 2) * gempic_norm(&(mw_yee.phi), infra, 2);
+    amrex::Real error = gempic_norm(mw_yee.phi, infra, 2) * gempic_norm(mw_yee.phi, infra, 2);
     bool passed = true;
-    gempic_assert_err(passed, gempic_norm(&mw_yee.rho, infra, 2), error);
+    gempic_assert_err(passed, gempic_norm(mw_yee.rho, infra, 2), error);
 
     PrintToFile("test_deposit_rho.output") << "\n";
     PrintToFile("test_deposit_rho.output")
         << "Norm of error: "
-        << gempic_norm(&(mw_yee.phi), infra, 2) * gempic_norm(&(mw_yee.phi), infra, 2) << std::endl;
+        << gempic_norm(mw_yee.phi, infra, 2) * gempic_norm(mw_yee.phi, infra, 2) << std::endl;
 }
 
 int main(int argc, char *argv[])

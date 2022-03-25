@@ -69,7 +69,9 @@ void main_main()
     amrex::IntVect n_cell = {AMREX_D_DECL(128, 128, 128)};
 
     gempic_parameters<vdim, numspec> VlMa;
-    VlMa.init_Nghost(1, 1, 1);
+    
+    const int Nghostx=1, Nghosty=1, Nghostz=1;
+    VlMa.init_Nghost(Nghostx, Nghosty, Nghostz);
     VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {64, 64, 64});
     VlMa.set_computed_params();
 
@@ -83,17 +85,17 @@ void main_main()
     mw_yee.rho.setVal(C, 0);
     PrintToFile("test_gempic_norm_additional.tmp") << endl << "Constant case: " << endl;
     PrintToFile("test_gempic_norm_additional.tmp")
-        << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - C) << endl;
+        << "0-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 0) - C) << endl;
     PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5)
-        << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - C) << endl;
+        << "1-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 1) - C) << endl;
     PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5)
-        << "2-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 2) - C) << endl;
+        << "2-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 2) - C) << endl;
     PrintToFile("test_gempic_norm_additional.tmp") << endl;
 
     bool passed = true;
-    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 0));
-    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 1));
-    gempic_assert(passed, C, gempic_norm(&mw_yee.rho, infra, 2));
+    gempic_assert(passed, C, gempic_norm(mw_yee.rho, infra, 0));
+    gempic_assert(passed, C, gempic_norm(mw_yee.rho, infra, 1));
+    gempic_assert(passed, C, gempic_norm(mw_yee.rho, infra, 2));
 
     // Linear case
     for (amrex::MFIter mfi(mw_yee.rho); mfi.isValid(); ++mfi)
@@ -145,7 +147,7 @@ void main_main()
 #if (GEMPIC_SPACEDIM == 3)
     PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(5)
         << "0-norm error: "
-        << fabs(gempic_norm(&mw_yee.rho, infra, 0) -
+        << fabs(gempic_norm(mw_yee.rho, infra, 0) -
                 (a * infra.Length[0] + b * infra.Length[1] + c * infra.Length[2]))
         << endl;
     amrex::Real Lx = infra.Length[0];
@@ -158,14 +160,14 @@ void main_main()
                               3. * b * c * Ly * Lz + 3. * a * b * Lx * Ly +
                               2. * pow(b, 2.) * pow(Ly, 2.) + 2. * pow(c, 2.) * pow(Lz, 2.)));
     PrintToFile("test_gempic_norm_additional.tmp")
-        << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+        << "1-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 1) - norm1) << endl;
     PrintToFile("test_gempic_norm_additional.tmp").SetPrecision(1)
-        << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2) * 1000)
+        << "2-norm error: " << floor(fabs(gempic_norm(mw_yee.rho, infra, 2) - norm2) * 1000)
         << endl;
 
-    gempic_assert(passed, norm0, gempic_norm(&mw_yee.rho, infra, 0));
-    gempic_assert(passed, norm1, gempic_norm(&mw_yee.rho, infra, 1));
-    gempic_assert(passed, norm2, gempic_norm(&mw_yee.rho, infra, 2));
+    gempic_assert(passed, norm0, gempic_norm(mw_yee.rho, infra, 0));
+    gempic_assert(passed, norm1, gempic_norm(mw_yee.rho, infra, 1));
+    gempic_assert(passed, norm2, gempic_norm(mw_yee.rho, infra, 2));
 
 #endif
     PrintToFile("test_gempic_norm.tmp") << endl;

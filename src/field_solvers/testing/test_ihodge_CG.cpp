@@ -100,7 +100,9 @@ void main_main()
     // Solve
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
-    maxwell_yee<vdim> mw_yee(infra, 0.01, 5, Nghost, 1.0, 1.0, 1.0);
+    
+    const int dt=0.01, Nsteps=5;
+    maxwell_yee<vdim> mw_yee(infra, dt, Nsteps, Nghost);
 
     amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB;
     funcSelectB[0] = IHODGE_CG_B0;
@@ -120,7 +122,8 @@ void main_main()
     {
         amrex::MultiFab k(convert(infra.grid, *mw_yee.E_Index[dim]), infra.distriMap, 1,
                           mw_yee.Nghost);
-        k.setVal(-2.0, 0);
+        
+        k.setVal(-2.0, Nghost);
         k.FillBoundary(infra.geom.periodicity());
 
         (mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
@@ -136,10 +139,10 @@ void main_main()
     for (int dim = 0; dim < vdim; dim++)
     {
         (mw_yee.E_sol_Array[dim])->minus(*(mw_yee.E_Array[dim]), 0, 1, 0);
-        amrex::Real err_norm = Utils::gempic_norm(&(*(mw_yee.E_sol_Array[dim])), infra, 2);
+        amrex::Real err_norm = Utils::gempic_norm(*(mw_yee.E_sol_Array[dim]), infra, 2);
         amrex::PrintToFile("test_ihodge_CG.output")
             << "For component " << dim << " the error is: " << err_norm << std::endl;
-        amrex::Real E_norm = Utils::gempic_norm(&(*(mw_yee.E_Array[dim])), infra, 2);
+        amrex::Real E_norm = Utils::gempic_norm(*(mw_yee.E_Array[dim]), infra, 2);
         gempic_assert_err(passed, E_norm, err_norm * err_norm);
     }
 }
@@ -147,15 +150,16 @@ void main_main()
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    const int vdim1=1, vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1>();
-    main_main<2, 1, 1, 1, 1>();
+    main_main<vdim1, numspec, degx, degy, degz>();
+    main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<2, 1, 1, 1, 1>();
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim2, numspec, degx, degy, degz>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_ihodge_CG.output.0", "test_ihodge_CG.output");

@@ -1223,16 +1223,22 @@ bArray, amrex::Real coefficient = 1., bool field_int = false)
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
     std::vector<amrex::Real> sx_node = spl.spline_eval_vec (spl.shifted_x(xint, degx, false), degx);
-    std::vector<amrex::Real> sx_cell_1 = spl.spline_eval_vec (spl.shifted_x(xint, degx-1, true),
-degx-1); amrex::GpuArray<std::vector<amrex::Real>,2> sx_1 = {sx_cell_1, sx_node}; #if
-(GEMPIC_SPACEDIM > 1) amrex::Real ly = (pos[1]-plo[1])*dxi[1]; int j = std::floor(ly); amrex::Real
-yint = ly - j; std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy,
-false), degy); std::vector<amrex::Real> sy_cell_1 = spl.spline_eval_vec (spl.shifted_x(yint, degy-1,
-true), degy-1); amrex::GpuArray<std::vector<amrex::Real>,2> sy_1 = {sy_cell_1, sy_node}; #endif #if
-(GEMPIC_SPACEDIM > 2) amrex::Real lz = (pos[2]-plo[2])*dxi[2]; int k = std::floor(lz); amrex::Real
-zint = lz - k; std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz,
-false), degz); std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, degz-1,
-true), degz-1); amrex::GpuArray<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node}; #endif
+    std::vector<amrex::Real> sx_cell_1 = spl.spline_eval_vec (spl.shifted_x(xint, degx-1, true), degx-1); 
+    amrex::GpuArray<std::vector<amrex::Real>,2> sx_1 = {sx_cell_1, sx_node}; 
+#if(GEMPIC_SPACEDIM > 1) 
+amrex::Real ly = (pos[1]-plo[1])*dxi[1]; 
+int j = std::floor(ly); 
+amrex::Real yint = ly - j; 
+std::vector<amrex::Real> sy_node = spl.spline_eval_vec (spl.shifted_x(yint, degy, false), degy); 
+std::vector<amrex::Real> sy_cell_1 = spl.spline_eval_vec (spl.shifted_x(yint, degy-1,true), degy-1); 
+amrex::GpuArray<std::vector<amrex::Real>,2> sy_1 = {sy_cell_1, sy_node}; 
+#endif 
+#if(GEMPIC_SPACEDIM > 2) 
+amrex::Real lz = (pos[2]-plo[2])*dxi[2]; int k = std::floor(lz); 
+amrex::Real zint = lz - k; std::vector<amrex::Real> sz_node = spl.spline_eval_vec (spl.shifted_x(zint, degz, false), degz); 
+std::vector<amrex::Real> sz_cell_1 = spl.spline_eval_vec (spl.shifted_x(zint, degz-1, true), degz-1); 
+amrex::GpuArray<std::vector<amrex::Real>,2> sz_1 = {sz_cell_1, sz_node}; 
+#endif
     amrex::Real particle_coeff = dxi[GEMPIC_SPACEDIM]*charge*coefficient*weight;
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -1272,14 +1278,16 @@ degz-(cc%3==2?1:0), cc%3==2?true:false))};
 s_coeff*particle_coeff*p.rdata(cc)); #else
 
                 amrex::HostDevice::Atomic::Add(jArray[cc].ptr(AMREX_D_DECL(cell_index[0],
-cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*vel[cc]); #endif
+cell_index[1], cell_index[2]), 0), s_coeff*particle_coeff*vel[cc]); 
+#endif
 
                         if (field_int) {
 #if (GEMPIC_SPACEDIM == 1)
                 fields[cc] += s_coeff*(eArray[cc])(cell_index[0], 0, 0, 0);
 #else
                 fields[cc] += s_coeff*(eArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1],
-cell_index[2]), 0); #endif
+cell_index[2]), 0); 
+#endif
                         }
                     }
                 }
@@ -1314,7 +1322,8 @@ degz-(cc%3==2?0:1), cc%3==2?false:true))};
 #else
 
                 fields[cc+vdim] += s_coeff*(bArray[cc])(AMREX_D_DECL(cell_index[0], cell_index[1],
-cell_index[2]), 0); #endif
+cell_index[2]), 0); 
+#endif
                         }
                     }
                 }

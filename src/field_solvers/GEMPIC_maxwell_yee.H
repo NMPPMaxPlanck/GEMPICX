@@ -179,10 +179,10 @@ public:
         // for Poisson:
         // node centered BA:
         const amrex::BoxArray &nba = amrex::convert(ifr.grid, amrex::IntVect::TheNodeVector());
-        phi.define(nba, ifr.distriMap, 1, Nghost);  // box, distriMap, nVar, nGrow
-        rho.define(nba, ifr.distriMap, 1, Nghost);
-        rho_gauss_law.define(nba, ifr.distriMap, 1, Nghost);
-        phi_init.define(nba, ifr.distriMap, 1, Nghost);
+        phi.define(nba, ifr.distriMap, Ncomp, Nghost);  // box, distriMap, nVar, nGrow
+        rho.define(nba, ifr.distriMap, Ncomp, Nghost);
+        rho_gauss_law.define(nba, ifr.distriMap, Ncomp, Nghost);
+        phi_init.define(nba, ifr.distriMap, Ncomp, Nghost);
         // sigma is cell-centered (default, so no need to pass IndexVector)
         // sigma   .define(ifr.grid, ifr.distriMap, 1, 0);
         // sigma.setVal(-1.0); // sigma is the identity (lapl = nabla dot ID nabla)
@@ -199,7 +199,7 @@ public:
         for (int comp = 0; comp < edim; comp++)
         {
             E_Masks[comp].reset(
-                new amrex::iMultiFab(convert(ifr.grid, *E_Index[comp]), ifr.distriMap, 1, Nghost));
+                new amrex::iMultiFab(convert(ifr.grid, *E_Index[comp]), ifr.distriMap, Ncomp, Nghost));
             (*E_Masks[comp]).setVal(0.0);
             (*E_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
@@ -225,7 +225,7 @@ public:
         for (int comp = 0; comp < bdim; comp++)
         {
             B_Masks[comp].reset(
-                new amrex::iMultiFab(convert(ifr.grid, *B_Index[comp]), ifr.distriMap, 1, Nghost));
+                new amrex::iMultiFab(convert(ifr.grid, *B_Index[comp]), ifr.distriMap, Ncomp, Nghost));
             (*B_Masks[comp]).setVal(0.0);
             (*B_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
@@ -249,7 +249,7 @@ public:
         }
 
         nodal_Mask.reset(new amrex::iMultiFab(convert(ifr.grid, amrex::IntVect::TheNodeVector()),
-                                              ifr.distriMap, 1, Nghost));
+                                              ifr.distriMap, Ncomp, Nghost));
         (*nodal_Mask).setVal(0.0);
         (*nodal_Mask).FillBoundary(ifr.geom.periodicity());
 
@@ -1462,24 +1462,24 @@ public:
         hodge<degree, 0>(ifr, (dimension == 0 ? 0 : 1), x, r, *E_Index[dimension]);
         hodge<degree, 1>(ifr, (dimension == 1 ? 0 : 1), r, tmp, *E_Index[dimension]);
         hodge<degree, 2>(ifr, (dimension == 2 ? 0 : 1), tmp, r, *E_Index[dimension]);
-        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, r, 0, 1, 0) /
-                      amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, 1, 0);
-        amrex::MultiFab::Copy(k_scaled, k, 0, 0, 1, Nghost);
-        k_scaled.mult(kern_factor, 0, 1, Nghost);
-        r.plus(k_scaled, 0, 1, Nghost);
+        kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, r, 0, Ncomp, Nghost) /
+                      amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, Ncomp, Nghost);
+        amrex::MultiFab::Copy(k_scaled, k, 0, 0, Ncomp, Nghost);
+        k_scaled.mult(kern_factor, 0, Ncomp, Nghost);
+        r.plus(k_scaled, 0, Ncomp, Nghost);
 
         // r = b-A*x
-        r.mult(-1.0, 0, 1, Nghost);
-        r.plus(b, 0, 1, Nghost);
+        r.mult(-1.0, 0, Ncomp, Nghost);
+        r.plus(b, 0, Ncomp, Nghost);
         r.FillBoundary(ifr.geom.periodicity());
         // d = r
-        amrex::MultiFab::Copy(d, r, 0, 0, 1, Nghost);
+        amrex::MultiFab::Copy(d, r, 0, 0, Ncomp, Nghost);
 
         int step = 0;
         for (step = 0; step < maxsteps; step++)
         {
             // rr
-            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0);
+            rr = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, Ncomp, Nghost);
             if (verbose > 1)
             {
                 amrex::Print() << "step: " << step
@@ -1493,33 +1493,33 @@ public:
             hodge<degree, 1>(ifr, (dimension == 1 ? 0 : 1), z, tmp, *E_Index[dimension]);
             hodge<degree, 2>(ifr, (dimension == 2 ? 0 : 1), tmp, z, *E_Index[dimension]);
 
-            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, z, 0, 1, 0) /
-                          amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, 1, 0);
-            amrex::MultiFab::Copy(k_scaled, k, 0, 0, 1, Nghost);
-            k_scaled.mult(kern_factor, 0, 1, Nghost);
-            z.plus(k_scaled, 0, 1, Nghost);
+            kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, z, 0, Ncomp, Nghost) /
+                          amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, Ncomp, Nghost);
+            amrex::MultiFab::Copy(k_scaled, k, 0, 0, Ncomp, Nghost);
+            k_scaled.mult(kern_factor, 0, Ncomp, Nghost);
+            z.plus(k_scaled, 0, Ncomp, Nghost);
             z.FillBoundary(ifr.geom.periodicity());
 
             // alpha = <r,r>/<d,z>
-            alpha = rr / amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, 1, 0);
+            alpha = rr / amrex::MultiFab::Dot(*E_Masks[dimension], d, 0, z, 0, Ncomp, Nghost);
 
             // x = x + alpha*d
-            amrex::MultiFab::Copy(k_scaled, d, 0, 0, 1, Nghost);
-            k_scaled.mult(alpha, 0, 1, Nghost);
-            x.plus(k_scaled, 0, 1, Nghost);
+            amrex::MultiFab::Copy(k_scaled, d, 0, 0, Ncomp, Nghost);
+            k_scaled.mult(alpha, 0, Ncomp, Nghost);
+            x.plus(k_scaled, 0, Ncomp, Nghost);
             x.FillBoundary(ifr.geom.periodicity());
 
             // r = r - alpha*z
-            z.mult(alpha, 0, 1, Nghost);
-            r.minus(z, 0, 1, Nghost);
+            z.mult(alpha, 0, Ncomp, Nghost);
+            r.minus(z, 0, Ncomp, Nghost);
             r.FillBoundary(ifr.geom.periodicity());
 
             // beta = <r,r>/rr (rr is old residuum scalar-prod)
-            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, 1, 0) / rr;
+            beta = amrex::MultiFab::Dot(*E_Masks[dimension], r, 0, r, 0, Ncomp, Nghost) / rr;
 
             // d = r + beta*d
-            d.mult(beta, 0, 1, Nghost);
-            d.plus(r, 0, 1, Nghost);
+            d.mult(beta, 0, Ncomp, Nghost);
+            d.plus(r, 0, Ncomp, Nghost);
             d.FillBoundary(ifr.geom.periodicity());
         }
 
@@ -1580,17 +1580,17 @@ public:
 
         // 2) Apply hodge
         // to x comp
-        amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, 1, Nghost);
+        amrex::MultiFab::Copy(HDrho_x, Drho_x, 0, 0, Ncomp, Nghost);
         solve_hodge_CG<degree>(Drho_x, HDrho_x, kx, ifr, dimension, 0, reltol, maxsteps);
 
         // to y comp
         dimension = 1;
-        amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, 1, Nghost);
+        amrex::MultiFab::Copy(HDrho_y, Drho_y, 0, 0, Ncomp, Nghost);
         solve_hodge_CG<degree>(Drho_y, HDrho_y, ky, ifr, dimension, 0, reltol, maxsteps);
 
         // to z comp
         dimension = 2;
-        amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, 1, Nghost);
+        amrex::MultiFab::Copy(HDrho_z, Drho_z, 0, 0, Ncomp, Nghost);
         solve_hodge_CG<degree>(Drho_z, HDrho_z, kz, ifr, dimension, 0, reltol, maxsteps);
 
         // 3) Apply D^T
@@ -1972,7 +1972,7 @@ public:
         rho_gauss_law.FillBoundary(ifr.geom.periodicity());
 
         rho_gauss_law.minus(rho, 0, 1, 0);
-        amrex::Real rho_norm = gempic_norm(&(rho_gauss_law), ifr, 2);
+        amrex::Real rho_norm = gempic_norm(rho_gauss_law, ifr, 2);
         return (rho_norm * rho_norm);
     }
 
@@ -2201,7 +2201,7 @@ public:
         for (int i = 0; i < edim; i++)
         {
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
-            amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+            amrex::Real norm_tmp = gempic_norm(*E_sol_Array[i], ifr, 2);
             E_B_error[i] = norm_tmp * norm_tmp;
         }
         if (bool_B)
@@ -2209,7 +2209,7 @@ public:
             for (int i = 0; i < bdim; i++)
             {
                 (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
-                amrex::Real norm_tmp = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                amrex::Real norm_tmp = gempic_norm(*B_sol_Array[i], ifr, 2);
                 E_B_error[i + edim] = norm_tmp * norm_tmp;
             }
         }
@@ -2231,7 +2231,7 @@ public:
         for (int i = 0; i < edim; i++)
         {
             (*E_sol_Array[i]).minus(*E_Array[i], 0, 1, 0);
-            amrex::Real norm_tmp = gempic_norm(&(*E_sol_Array[i]), ifr, 2);
+            amrex::Real norm_tmp = gempic_norm(*E_sol_Array[i], ifr, 2);
             E_B_error[i] = norm_tmp * norm_tmp;
         }
         if (bool_B)
@@ -2239,7 +2239,7 @@ public:
             for (int i = 0; i < bdim; i++)
             {
                 (*B_sol_Array[i]).minus(*B_Array[i], 0, 1, 0);
-                amrex::Real norm_tmp = gempic_norm(&(*B_sol_Array[i]), ifr, 2);
+                amrex::Real norm_tmp = gempic_norm(*B_sol_Array[i], ifr, 2);
                 E_B_error[i + edim] = norm_tmp * norm_tmp;
             }
         }
