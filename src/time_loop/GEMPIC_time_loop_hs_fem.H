@@ -62,8 +62,8 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        (*(*mw_yee).J_Array[i]).setVal(0.0, 0);  // value and component
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->setVal(0.0, 0);  // value and component
+        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
     }
 
     for (int spec = 0; spec < numspec; spec++)
@@ -112,7 +112,7 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
                     vel[comp] = particles[pp].rdata(comp);
                 }
                 amrex::GpuArray<amrex::Real, vdim> newPosE =
-                    push_v_efield<vdim>(vel, (*mw_yee).dt * 0.5 * coeff, chargemass, efield);
+                    push_v_efield<vdim>(vel, mw_yee->dt * 0.5 * coeff, chargemass, efield);
                 std::copy(newPosE.begin(), newPosE.end(),
                           &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2) + GEMPIC_SPACEDIM]);
 
@@ -128,7 +128,7 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
                 spline.init_particles(pos, infra.plo, infra.dxi);
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos =
                     push_x_v_bfield<vdim, degx, degy, degz>(
-                        pos, vel, (*mw_yee).dt * coeff, chargemass, bA, infra.tolerance_particle,
+                        pos, vel, mw_yee->dt * coeff, chargemass, bA, infra.tolerance_particle,
                         infra.plo, infra.phi, infra.dxi, spline);
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
@@ -164,7 +164,7 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
     Gempic_SumBoundary(mw_yee, &infra);  // Sums Boundary of J and Overwrites overlap
     for (int i = 0; i < vdim; i++)
     {
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
     }
 
     /*amrex::Vector<std::string> varnames = { "J_x"};

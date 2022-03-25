@@ -100,7 +100,7 @@ void main_main()
     mw_yee.template initB<degree>(infra, funcSelectB);
     for (int comp = 0; comp < 3; comp++)
     {
-        mw_yee.template projection<2>(0.0, infra, {false, false, false}, *mw_yee.E_Index[comp],
+        mw_yee.template projection<degree>(0.0, infra, {false, false, false}, *mw_yee.E_Index[comp],
                                       *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
     }
 
@@ -120,7 +120,7 @@ void main_main()
         << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1]
         << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
 
-    particle_groups<vdim, 1> part_gr(VlMa.charge, VlMa.mass, infra);
+    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
     //------------------------------------------------------------------------------
     // time loop
     // Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", 0);
@@ -169,15 +169,16 @@ void main_main()
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    const int vdim1=1, vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1>();
-    main_main<2, 1, 1, 1, 1>();
+    main_main<vdim1, numspec, degx, degy, degz>();
+    main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<2, 1, 1, 1, 1>();
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim2, numspec, degx, degy, degz>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 3)
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_ampere_faraday.output.0", "test_ampere_faraday.output");

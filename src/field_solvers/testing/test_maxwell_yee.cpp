@@ -301,7 +301,7 @@ void main_main()
 
     mw_yee.rho_from_E(infra);  // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);
-    amrex::Real rho_norm = Utils::gempic_norm(&(mw_yee.rho_gauss_law), infra, 2);
+    amrex::Real rho_norm = Utils::gempic_norm(mw_yee.rho_gauss_law, infra, 2);
 
     PrintToFile("test_maxwell_yee.output").SetPrecision(5)
         << "rho Error: " << rho_norm * rho_norm << std::endl;
@@ -310,15 +310,15 @@ void main_main()
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    const int vdim1=1, vdim2=2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<1, 1, 1, 1, 1, false>();
-    main_main<2, 1, 1, 1, 1, false>();
+    main_main<vdim1, numspec, degx, degy, degz, false>();
+    main_main<vdim2, numspec, degx, degy, degz, false>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<2, 1, 1, 1, 1, false>();
-    main_main<3, 1, 1, 1, 1, false>();
+    main_main<vdim2, numspec, degx, degy, degz, false>();
+    main_main<vdim, numspec, degx, degy, degz, false>();
 #elif (GEMPIC_SPACEDIM == 3)
-    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)

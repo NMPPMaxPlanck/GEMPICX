@@ -46,7 +46,8 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ;
 
-    vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw, electromagnetic, output> sim;
+    const int numspec=1;
+    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, electromagnetic, output> sim;
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
@@ -65,8 +66,9 @@ int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
     std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
-
-    vlasov_maxwell_run<2, 2, 2, 2, 3, true, false>(test_name, 3);
+    const int degx=2, degy=2, degz=2, degmw=2, vdim=3;
+    const bool electromagnetic=true, output=false;
+    vlasov_maxwell_run<degx, degy, degz, degmw, vdim, electromagnetic, output>(test_name, 3);
 
     amrex::Finalize();
 }

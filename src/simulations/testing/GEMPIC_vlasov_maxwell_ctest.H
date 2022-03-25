@@ -41,7 +41,8 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
 
-    vlasov_maxwell_simulation<3, 1, degx, degy, degz, degmw> sim;
+    const int numspec=1;
+    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw> sim;
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
