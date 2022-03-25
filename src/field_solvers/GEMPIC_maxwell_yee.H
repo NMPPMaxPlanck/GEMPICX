@@ -90,14 +90,6 @@ public:
     amrex::Real curlB_scaling = 1.;
     amrex::Real energy_b_scaling = 1.;
 
-private:
-    int Ncomp; /** Number of components for each MultiFab. Is 1 because the different field
-                  components are differently staggered */
-    amrex::Real time;
-    // amrex::MultiFab sigma; //for Poisson
-    amrex::Array<amrex::Real, GEMPIC_SPACEDIM> sigma = {AMREX_D_DECL(-1., -1., -1.)};
-
-public:
     // The default constructor.
     /**
      * Default Constructor.
@@ -2255,6 +2247,14 @@ public:
     }
 
 private:
+
+    int Ncomp; /** Number of components for each MultiFab. Is 1 because the different field
+                  components are differently staggered */
+    amrex::Real time;
+    // amrex::MultiFab sigma; //for Poisson
+    amrex::Array<amrex::Real, GEMPIC_SPACEDIM> sigma = {AMREX_D_DECL(-1., -1., -1.)};
+
+
     template <int degree>
     void exactSolution(amrex::GpuArray<std::string, edim> fields_E,
                        amrex::GpuArray<std::string, bdim> fields_B, amrex::Vector<amrex::Real> k,
