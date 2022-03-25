@@ -4,7 +4,7 @@ if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_checkpoint )
 endif()
 
-target_link_libraries( test_checkpoint gempic_poisson AMReX::amrex AMReX::Flags_CXX  )
+target_link_libraries( test_checkpoint  AMReX::amrex AMReX::Flags_CXX  )
 
 
 ######## Ctest
