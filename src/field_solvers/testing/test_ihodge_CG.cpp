@@ -101,7 +101,8 @@ void main_main()
     std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
     int Nghost = *(std::max_element(degs.begin(), degs.end()));
     
-    const int dt=0.01, Nsteps=5;
+    const int Nsteps=5;
+    const amrex::Real dt = 0.01;
     maxwell_yee<vdim> mw_yee(infra, dt, Nsteps, Nghost);
 
     amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB;
