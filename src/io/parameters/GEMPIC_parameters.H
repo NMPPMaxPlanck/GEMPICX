@@ -519,49 +519,6 @@ public:
         rhoParse.registerVariables({"x", "y", "z", "t"});
         rhoEval = rhoParse.compile<4>();
     }
-
-    void init_particles_from_file(particle_groups<vdim, numspec> *part_gr, int species,
-                                  std::string filename = "particle_input!txt")
-    {
-        for (amrex::MFIter mfi = (*(*part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi)
-        {
-            if (mfi.index() == 0)
-            {
-                // using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
-                amrex::ParticleTile<vdim + 1, 0, 0, 0> &particles =
-                    (*(*part_gr).mypc[species])
-                        .GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-
-                std::string line;
-                std::ifstream myfile(filename);
-                if (myfile.is_open())
-                {
-                    while (getline(myfile, line))
-                    {
-                        std::vector<std::string> readVal;
-                        std::istringstream iss(line);
-                        for (std::string line; iss >> line;)
-                        {
-                            readVal.push_back(line);
-                        }
-
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-                        amrex::GpuArray<amrex::Real, vdim> velocity;
-                        amrex::Real weight = stod(readVal[GEMPIC_SPACEDIM + vdim]);
-                        for (int comp = 0; comp < vdim; comp++)
-                        {
-                            position[comp] = stod(readVal[comp]);
-                            velocity[comp] = stod(readVal[GEMPIC_SPACEDIM + comp]);
-                        }
-                        (*part_gr).add_particle(position, velocity, weight, particles);
-                    }
-                }
-                else
-                    std::cout << "Unable to open particle input " << species << std::endl;
-            }
-        }
-        (*(*part_gr).mypc[0]).Redistribute();
-    }
 };
 
 #endif
