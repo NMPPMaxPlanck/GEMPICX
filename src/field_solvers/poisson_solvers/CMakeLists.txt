@@ -1,5 +1,0 @@
-# add_library(  STATIC GEMPIC_MLNodeLaplacian_FD.cpp )
-# if (USE_CUDA)
-# 	setup_target_for_cuda_compilation (  )
-# endif()
-# target_link_libraries (  AMReX::amrex AMReX::Flags_CXX ) 
