@@ -72,7 +72,7 @@ void main_main()
     
     const int Nghostx=1, Nghosty=1, Nghostz=1;
     VlMa.init_Nghost(Nghostx, Nghosty, Nghostz);
-    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {64, 64, 64});
+    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {AMREX_D_DECL(64, 64, 64)});
     VlMa.set_computed_params();
 
     computational_domain infra;
