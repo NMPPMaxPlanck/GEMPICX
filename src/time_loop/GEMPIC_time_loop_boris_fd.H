@@ -39,7 +39,7 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
                              amrex::Real coeff, particle_groups<vdim, numspec> *part_gr,
                              timers *profiling_timers)
 {
-    (*mw_yee).advance_time(coeff);
+    mw_yee->advance_time(coeff);
 
     if (profiling_timers->profiling) profiling_timers->counter_fields -= MPI_Wtime();
     if (electromagnetic)
@@ -58,17 +58,17 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        (*(*mw_yee).J_Array[i]).setVal(0.0, 0);  // value and component
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->setVal(0.0, 0);  // value and component
+        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
     }
     if (profiling_timers->profiling) profiling_timers->counter_jboundary += MPI_Wtime();
     for (int spec = 0; spec < numspec; spec++)
     {
-        amrex::Real spec_charge = (*part_gr).charge[spec];
+        amrex::Real spec_charge = part_gr->charge[spec];
         if (profiling_timers->profiling) profiling_timers->counter_deposition -= MPI_Wtime();
-        amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
+        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
 
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles =
                 &(pti.GetArrayOfStructs()[0]);  // get particles
@@ -88,7 +88,7 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
                 bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
             }
 
-            amrex::Real time_step = (*mw_yee).dt;
+            amrex::Real time_step = mw_yee->dt;
 
             // loop over particles: add contribution of old particle position to J and push
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
@@ -137,7 +137,7 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
         }
         if (profiling_timers->profiling) profiling_timers->counter_deposition += MPI_Wtime();
         if (profiling_timers->profiling) profiling_timers->counter_redistribute -= MPI_Wtime();
-        (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+        part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
         if (profiling_timers->profiling) profiling_timers->counter_redistribute += MPI_Wtime();
     }
 
@@ -165,8 +165,8 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
     if (profiling_timers->profiling) profiling_timers->counter_deposition -= MPI_Wtime();
     for (int spec = 0; spec < numspec; spec++)
     {
-        amrex::Real spec_charge = (*part_gr).charge[spec];
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        amrex::Real spec_charge = part_gr->charge[spec];
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
             const long np = pti.numParticles();
@@ -177,7 +177,7 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
 
             for (int cc = 0; cc < vdim; cc++)
             {
-                jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
+                jA[cc] = (*(mw_yee->J_Array)[cc])[pti].array();
             }
 
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
@@ -208,7 +208,7 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
 
     for (int i = 0; i < vdim; i++)
     {
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
     }
     if (profiling_timers->profiling) profiling_timers->counter_jboundary += MPI_Wtime();
 

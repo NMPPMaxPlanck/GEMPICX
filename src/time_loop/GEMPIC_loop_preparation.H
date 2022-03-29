@@ -36,8 +36,8 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
 {
     // initial rho by: deposition of particle charge
     // Set rho to 0
-    (*mw_yee).rho.setVal(0.0, 0);  // value and component
-    (*mw_yee).rho.FillBoundary(infra.geom.periodicity());
+    mw_yee->rho.setVal(0.0, 0);  // value and component
+    mw_yee->rho.FillBoundary(infra.geom.periodicity());
 
     // Set J and E to 0: This is important in order not to have uninitialized arrays when calling
     // diagnostics
@@ -56,7 +56,7 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
         (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
         for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = (*part_gr).charge[spec];
+            amrex::Real charge = part_gr->charge[spec];
             auto &particles = pti.GetArrayOfStructs();
             const long np = pti.numParticles();
 
@@ -80,7 +80,7 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
     // assign particles to tiles they are in TODO: do I need this?
     for (int spec = 0; spec < numspec; spec++)
     {
-        (*(*part_gr).mypc[spec]).Redistribute();
+        part_gr->mypc[spec]->Redistribute();
     }
 
     // add values from ghost cells and periodic boundary
@@ -103,7 +103,7 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
     kz.setVal(1.0, 0);
     kz.FillBoundary(infra.geom.periodicity());
 
-    (*mw_yee).solve_poisson(infra, 1e-11, meanVelocity.max_coarsening_level);
+    mw_yee->solve_poisson(infra, 1e-11, meanVelocity.max_coarsening_level);
     if (degmw > 2)
     {
         mw_yee->template solve_poisson_CG<degmw>(mw_yee->rho, mw_yee->phi, kx, ky, kz, infra, 2,
@@ -155,7 +155,7 @@ void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computationa
                     for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = newPos[xd];
                 });
             }
-            (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+            part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
         }
     }
 

@@ -11,7 +11,6 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
@@ -49,24 +48,25 @@ void main_main()
     amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
 
     // Weibel parameters
-    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{
         {{0.0, 0.0, 0.0}}};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{
         {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
     ;
     if (vdim == 2)
     {
-        std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{
             {{0.0, 0.0}}};  // species, gaussian, vdim
-        std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{
             {{0.014142135623730949, 0.04898979485566356}}};
         ;
     }
-    std::vector<std::vector<amrex::Real>> vWeight{{1.0}};
+    amrex::Vector<amrex::Vector<amrex::Real>> vWeight{{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_deposit_rho", n_cell, {1000}, 0, 2, 2, 2, is_periodic,
+    const int NS=0, FX=2, FV=2, FS=2;
+    VlMa.set_params("test_deposit_rho", n_cell, {1000}, NS, FX, FV, FS, is_periodic,
                     {AMREX_D_DECL(4, 4, 4)}, 0.02, {-1.0}, {1.0}, k, {"0"});
 
     VlMa.meanVelocity = meanVelocity;
@@ -100,13 +100,13 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Deposit charges:
-    (mw_yee).rho.setVal(0.0, 0);  // value and component
-    (mw_yee).rho.FillBoundary(infra.geom.periodicity());
+    mw_yee.rho.setVal(0.0, 0);  // value and component
+    mw_yee.rho.FillBoundary(infra.geom.periodicity());
 
     for (int spec = 0; spec < numspec; spec++)
     {
-        (*(part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        part_gr.mypc[spec]->Redistribute();  // assign particles to the tile they are in
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr.mypc[spec], 0); pti.isValid(); ++pti)
         {
             auto &particles = pti.GetArrayOfStructs();
             const long np = pti.numParticles();
@@ -128,13 +128,13 @@ void main_main()
         }
     }
 
-    (mw_yee).rho.SumBoundary(0, 1, {(mw_yee).Nghost, (mw_yee).Nghost, (mw_yee).Nghost}, {0, 0, 0},
+    mw_yee.rho.SumBoundary(0, 1, {mw_yee.Nghost, mw_yee.Nghost, mw_yee.Nghost}, {0, 0, 0},
                              infra.geom.periodicity());
-    (mw_yee).rho.FillBoundary(infra.geom.periodicity());
+    mw_yee.rho.FillBoundary(infra.geom.periodicity());
 
     //------------------------------------------------------------------------------
     // Compute difference and store in phi:
-    (mw_yee.phi).minus(mw_yee.rho, 0, 1, 0);
+    mw_yee.phi.minus(mw_yee.rho, 0, 1, 0);
 
     amrex::Real error = gempic_norm(mw_yee.phi, infra, 2) * gempic_norm(mw_yee.phi, infra, 2);
     bool passed = true;

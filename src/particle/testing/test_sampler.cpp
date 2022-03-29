@@ -133,12 +133,12 @@ void main_main()
     gempic_parameters<vdim, numspec> gpParam;
     // gpParam.init_Nghost(1, 1, 1);
     amrex::IntVect num_cells = {AMREX_D_DECL(4, 4, 4)};
-    std::array<int, numspec> n_part_per_cell = {1000};
+    amrex::Array<int, numspec> n_part_per_cell = {1000};
     int species = 0;  // only one species
 
-    std::vector<std::vector<amrex::Real>> vMean{};
-    std::vector<std::vector<amrex::Real>> vThermal{};
-    std::vector<amrex::Real> vWeight{};
+    amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
+    amrex::Vector<amrex::Vector<amrex::Real>> vThermal{};
+    amrex::Vector<amrex::Real> vWeight{};
 
     int num_gaussian = 2;  // velocity distribution is sum of 2 Gaussians
     vMean = {{0.0, 0.0, 0.0}, {2.0, 2.0, 2.0}};

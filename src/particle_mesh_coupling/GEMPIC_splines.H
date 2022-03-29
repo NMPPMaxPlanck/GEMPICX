@@ -39,9 +39,9 @@ public:
         integral_evaluation = int_eval;
     }
 
-    std::vector<amrex::Real> spline_eval_vec(amrex::Real x, int degree)
+    amrex::Vector<amrex::Real> spline_eval_vec(amrex::Real x, int degree)
     {
-        std::vector<amrex::Real> s;
+        amrex::Vector<amrex::Real> s;
         switch (degree)
         {
             case 0:
@@ -91,9 +91,9 @@ public:
     }
 
     template <int degree>
-    std::vector<amrex::Real> spline_eval_prim_vec(amrex::Real x)
+    amrex::Vector<amrex::Real> spline_eval_prim_vec(amrex::Real x)
     {
-        std::vector<amrex::Real> s;
+        amrex::Vector<amrex::Real> s;
         switch (degree)
         {
             case 0:
@@ -124,9 +124,9 @@ public:
     }
 
     template <int degree>
-    std::vector<amrex::Real> spline_eval_vec_back(amrex::Real x)
+    amrex::Vector<amrex::Real> spline_eval_vec_back(amrex::Real x)
     {
-        std::vector<amrex::Real> s;
+        amrex::Vector<amrex::Real> s;
         switch (degree)
         {
             case 0:
