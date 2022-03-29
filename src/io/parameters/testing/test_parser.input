@@ -54,6 +54,9 @@ freq_slice = 100001
 Bx = "sin (kvarx * x + kvary * y + kvarz * z - t)"
 By = "cos (kvarx * x + kvary * y + kvarz * z - t)"
 Bz = "1e-3 * cos(kvarx * x)"
+Ex = "sin (kvarx * x + kvary * y + kvarz * z - t)"
+Ey = "cos (kvarx * x + kvary * y + kvarz * z - t)"
+Ez = "1e-3 * cos(kvarx * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
 rho = "1 + 0.1 * cos(0.5 * x)"
 

@@ -466,7 +466,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     spline1d_at_particles<degp> const &spline_old, amrex::Real weight, const amrex::Real *dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
-    amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength> *primitive)
+    amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength>& primitive)
 {
     int pdim1 = (pdim + 1) % 3;
     int pdim2 = (pdim + 2) % 3;
@@ -477,32 +477,32 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     int box_start = spline_old.box;
     if (spline_new.box < spline_old.box) box_start = spline_new.box;
 
-    for (unsigned int j = 0; j < plength; j++) (*primitive)[j] = 0.0;
+    for (unsigned int j = 0; j < plength; j++) primitive[j] = 0.0;
 
     if (spline_old.box < spline_new.box)
     {
         for (unsigned int j = 0; j < degp; j++)
-            (*primitive)[j] = spline_old.primitive[j] * dx[pdim];
-        for (unsigned int j = degp; j < local_size; j++) (*primitive)[j] = dx[pdim];
+            primitive[j] = spline_old.primitive[j] * dx[pdim];
+        for (unsigned int j = degp; j < local_size; j++) primitive[j] = dx[pdim];
 
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[local_size - degp + j] -= spline_new.primitive[j] * dx[pdim];
+            primitive[local_size - degp + j] -= spline_new.primitive[j] * dx[pdim];
         }
     }
     else
     {
         for (unsigned int j = degp; j < local_size; j++)
         {
-            (*primitive)[j] = -dx[pdim];
+            primitive[j] = -dx[pdim];
         }
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[j] = -spline_new.primitive[j] * dx[pdim];
+            primitive[j] = -spline_new.primitive[j] * dx[pdim];
         }
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[local_size - degp + j] += spline_old.primitive[j] * dx[pdim];
+            primitive[local_size - degp + j] += spline_old.primitive[j] * dx[pdim];
         }
     }
 
@@ -522,7 +522,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
                 else if (pdim == 2)
                     cell_index = {
                         AMREX_D_DECL(spline.box[0] + jj, spline.box[1] + kk, box_start + ii)};
-                double s_coeff = (*primitive)[ii] * spline.spline_node[pdim1][jj] *
+                double s_coeff = primitive[ii] * spline.spline_node[pdim1][jj] *
                                  spline.spline_node[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0, 0),
@@ -535,7 +535,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
 
                 if (jj < degp1)
                 {
-                    double s_coeff = (*primitive)[ii] * spline.spline_cell[pdim1][jj] *
+                    double s_coeff = primitive[ii] * spline.spline_cell[pdim1][jj] *
                                      spline.spline_node[pdim2][kk];
 
 #if (GEMPIC_SPACEDIM == 1)
@@ -548,7 +548,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
                 }
                 if (kk < degp2)
                 {
-                    double s_coeff = (*primitive)[ii] * spline.spline_node[pdim1][jj] *
+                    double s_coeff = primitive[ii] * spline.spline_node[pdim1][jj] *
                                      spline.spline_cell[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
                     fields[1] += s_coeff * (bArray[pdim1])(cell_index[0], 0, 0, 0);

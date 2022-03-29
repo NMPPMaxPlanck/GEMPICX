@@ -71,6 +71,9 @@ void main_main(bool ctest)
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvarx * x)";
+    std::string Ex = "0.0";
+    std::string Ey = "0.0";
+    std::string Ez = "1e-3 * cos(kvarx * x)";
     amrex::GpuArray<std::string, int(vdim / 2.5) * 2 + 1> fields_B;
     fields_B[0] = Bx;
     if (int(vdim / 2.5) * 2 + 1 > 1)
@@ -92,8 +95,8 @@ void main_main(bool ctest)
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v, freq_slice,
-                    is_periodic, max_grid_size, dt, charge, mass, k, density, Bx, By, Bz, phi, {1},
-                    propagator, tolerance_particles);
+                    is_periodic, max_grid_size, dt, charge, mass, k, density, Bx, By, Bz, Ex, Ey, Ez,
+                     phi, {1}, propagator, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure
@@ -116,14 +119,14 @@ void main_main(bool ctest)
         if (mfi.index() == 0)
         {
             amrex::ParticleTile<vdim + 1, 0, 0, 0> &particles =
-                (*(part_gr).mypc[species])
+                (*part_gr.mypc[species])
                     .GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             amrex::GpuArray<amrex::Real, vdim> velocity;
             for (int comp = 0; comp < vdim; comp++)
             {
                 velocity[comp] = 0.1;
             }
-            (part_gr).add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
+            part_gr.add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0, particles);
         }
     }
 
@@ -161,6 +164,7 @@ void main_main(bool ctest)
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    const int vdim=3, numspec=1, degx=1, degy=1, degz=1, degmw=2, propagator=0;
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the
     expected_output file contains all outputs. For each dimension, apart from running the main_main
@@ -173,7 +177,8 @@ int main(int argc, char *argv[])
 
     // Output for GEMPIC_SPACEDIM=1 vdim=2
     PrintToFile("test_one_part.tmp") << std::endl;
-    main_main<2, 1, 1, 1, 1>(argc == 1);
+    const int vdim2=2;
+    main_main<vdim2, numspec, degx, degy, degz>(argc == 1); //degmw, propagator missing
 
     // Output for GEMPIC_SPACEDIM=2 vdim=2
     PrintToFile("test_one_part.tmp") << std::endl;
@@ -196,10 +201,10 @@ int main(int argc, char *argv[])
 
     // Output for GEMPIC_SPACEDIM=2 vdim=2
     PrintToFile("test_one_part.tmp") << std::endl;
-    main_main<2, 1, 1, 1, 1>(argc == 1);
+    main_main<vdim2, numspec, degx, degy, degz>(argc == 1); //degmw, propagator missing
     // Output for GEMPIC_SPACEDIM=2 vdim=3
     PrintToFile("test_one_part.tmp") << std::endl;
-    main_main<3, 1, 1, 1, 1>(argc == 1);
+    main_main<vdim, numspec, degx, degy, degz>(argc == 1); //degmw, propagator missing
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
     PrintToFile("test_one_part.tmp") << std::endl;
@@ -221,9 +226,11 @@ int main(int argc, char *argv[])
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
     // PrintToFile("test_one_part.output") << std::endl;
-    main_main<3, 1, 1, 1, 1, 2, 0>(argc == 1);
-    main_main<3, 1, 3, 2, 1, 4, 1>(argc == 1);
-    main_main<3, 1, 2, 4, 2, 4, 3>(argc == 1);
+    main_main<vdim, numspec, degx, degy, degz, degmw, propagator>(argc == 1);
+    const int degx2=3, degy2=2, degmw2=4, propagator2=1;
+    main_main<vdim, numspec, degx2, degy2, degz, degmw2, propagator2>(argc == 1);
+    const int degx3=2, degy3=4, degz3=2, propagator3=3;
+    main_main<vdim, numspec, degx3, degy3, degz3, degmw2, propagator3>(argc == 1);
 #endif
 
     if (ParallelDescriptor::MyProc() == 0)

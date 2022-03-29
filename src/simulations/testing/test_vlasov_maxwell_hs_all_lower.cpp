@@ -14,7 +14,6 @@
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
@@ -69,12 +68,12 @@ void main_main()
     VlMa.set_computed_params();
 
     // Weibel parameters
-    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{
         {{0.0, 0.0, 0.0}}};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{
         {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
     ;
-    std::vector<std::vector<amrex::Real>> vWeight{{1.0}};
+    amrex::Vector<amrex::Vector<amrex::Real>> vWeight{{1.0}};
     VlMa.meanVelocity = meanVelocity;
     VlMa.vThermal = vThermal;
     VlMa.vWeight = vWeight;
@@ -116,7 +115,7 @@ void main_main()
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
-
+    const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output
     file contains all outputs. For each dimension, apart from running the main_main for the
     dimension, the output for the other dimensions needs to be outputted, so that the comparison to
@@ -124,8 +123,9 @@ int main(int argc, char *argv[])
     GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=3 */
 
 #if (GEMPIC_SPACEDIM == 1)
+    const int vdim2=2;
     // Output for GEMPIC_SPACEDIM=1 vdim=2
-    main_main<2, 1, 1, 1, 1>();
+    main_main<vdim2, numspec, degx, degy, degz>();
 
     // Output for GEMPIC_SPACEDIM=2 vdim=3
     PrintToFile("test_vlasov_maxwell_hs_all_lower.tmp") << std::endl;
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
         << "0 0.594233 0 5e-07 0.00623372 0.0609654 0.185672" << std::endl;
 
     // Output for GEMPIC_SPACEDIM=2 vdim=3
-    main_main<3, 1, 1, 1, 1>();
+    main_main<vdim, numspec, degx, degy, degz>();
 
 #elif (GEMPIC_SPACEDIM == 3)
 

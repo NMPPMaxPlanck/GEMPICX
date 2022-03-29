@@ -12,7 +12,6 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
@@ -55,22 +54,24 @@ void main_main()
     amrex::IntVect max_grid_size = {AMREX_D_DECL(2, 2, 2)};
 
     // Weibel parameters
-    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{
         {{0.0, 0.0, 0.0}}};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{
         {{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}};
     if (vdim == 2)
     {
-        std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{
             {{0.0, 0.0}}};  // species, gaussian, vdim
-        std::vector<std::vector<std::vector<amrex::Real>>> vThermal{
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{
             {{0.014142135623730949, 0.04898979485566356}}};
     }
-    std::vector<std::vector<amrex::Real>> vWeight{{1.0}};
+    amrex::Vector<amrex::Vector<amrex::Real>> vWeight{{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
-    VlMa.init_Nghost(1, 1, 1);
-    VlMa.set_params("part_gr_ctest", n_cell, {1}, 0, 2, 2, 2, is_periodic, max_grid_size, 0.01,
+    const int Nghost=1;
+    VlMa.init_Nghost(Nghost, Nghost, Nghost);
+    const int NS = 0, FX = 2, FV = 2, FS = 2;
+    VlMa.set_params("part_gr_ctest", n_cell, {1}, NS, FX, FV, FS, is_periodic, max_grid_size, 0.01,
                     {1.0}, {1.0}, 1.25, {"0"});
     VlMa.meanVelocity = meanVelocity;
     VlMa.vThermal = vThermal;
@@ -96,13 +97,13 @@ void main_main()
     init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell,
                                            VlMa.meanVelocity[species], VlMa.vThermal[species],
                                            VlMa.vWeight[species], species, wave_function);
-    (*(part_gr).mypc[0]).Redistribute();
+    part_gr.mypc[0]->Redistribute();
 
     int spec = 0;
 
     // compute mass, momentum and kinetic energy
     auto mass = amrex::ReduceSum(
-        *(part_gr).mypc[spec],
+        *part_gr.mypc[spec],
         [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
         {
             auto m = p.rdata(vdim);
@@ -115,7 +116,7 @@ void main_main()
     for (int cmp = 0; cmp < vdim; cmp++)
     {
         auto mom_tmp = amrex::ReduceSum(
-            *(part_gr).mypc[spec],
+            *part_gr.mypc[spec],
             [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
             {
                 auto m = p.rdata(vdim);
@@ -134,7 +135,7 @@ void main_main()
     for (int cmp = 0; cmp < vdim; cmp++)
     {
         auto mom_tmp = amrex::ReduceSum(
-            *(part_gr).mypc[spec],
+            *part_gr.mypc[spec],
             [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
             {
                 auto m = p.rdata(vdim);
