@@ -16,7 +16,6 @@
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
@@ -94,9 +93,9 @@ void main_main()
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     // FIRST SPECIES
-    std::vector<std::vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
-    std::vector<std::vector<amrex::Real>> vThermal = {{1.0, 1.0, 1.0}};
-    std::vector<amrex::Real> vWeight = {1.0};
+    amrex::Vector<amrex::Vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
+    amrex::Vector<amrex::Vector<amrex::Real>> vThermal = {{1.0, 1.0, 1.0}};
+    amrex::Vector<amrex::Real> vWeight = {1.0};
     std::string density = "1.0";
     init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, density,
                                               meanVelocity, vThermal, vWeight, 0);

@@ -160,8 +160,8 @@ void Gempic_WriteCheckpointFile(maxwell_yee<vdim> *mw_yee, particle_groups<vdim,
     {
         for (int spec = 0; spec < numspec; spec++)
         {
-            (*(*part_gr).mypc[spec])
-                .Checkpoint("test_dir", "electrons", true, {"vx", "vy", "vz", "weight"}, {});
+            part_gr->mypc[spec]
+                ->Checkpoint("test_dir", "electrons", true, {"vx", "vy", "vz", "weight"}, {});
         }
     }
 }
@@ -265,14 +265,14 @@ void Gempic_ReadCheckpointFile(maxwell_yee<field_dim> *mw_yee,
     Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 7, step);
     Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 8, step);
 
-    (*mw_yee).FillBD(*infra);
+    mw_yee->FillBD(*infra);
 
     // Particles
     if (particles)
     {
         for (int spec = 0; spec < numspec; spec++)
         {
-            (*(*part_gr).mypc[spec]).Restart("test_dir", "electrons", true);
+            part_gr->mypc[spec]->Restart("test_dir", "electrons", true);
         }
     }
 }

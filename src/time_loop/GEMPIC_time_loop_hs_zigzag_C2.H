@@ -51,7 +51,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
 {
     // Initialize the counters for timing the various parts of the algorithm
 
-    (*mw_yee).advance_time(coeff);
+    mw_yee->advance_time(coeff);
 
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_fields -= MPI_Wtime();
@@ -78,8 +78,8 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        (*(*mw_yee).J_Array[i]).setVal(0.0, 0);  // value and component
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->setVal(0.0, 0);  // value and component
+        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
     }
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary += MPI_Wtime();
@@ -88,10 +88,10 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
     {
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_deposition -= MPI_Wtime();
-        amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
-        amrex::Real charge = (*part_gr).charge[spec];
+        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
+        amrex::Real charge = part_gr->charge[spec];
 
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles =
                 &(pti.GetArrayOfStructs()[0]);  // get particles
@@ -103,17 +103,17 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
 
             for (int cc = 0; cc < vdim; cc++)
             {
-                jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
-                eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
+                jA[cc] = (*(mw_yee->J_Array)[cc])[pti].array();
+                eA[cc] = (*(mw_yee->HE_Array)[cc])[pti].array();
             }
             for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
             {
-                bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
+                bA[cc] = (*(mw_yee->B_Array)[cc])[pti].array();
             }
 
             // loop over particles: add contribution of old particle position to J and push
 
-            amrex::Real dt = (*mw_yee).dt;
+            amrex::Real dt = mw_yee->dt;
             amrex::ParallelFor(
                 np,
                 [=] AMREX_GPU_DEVICE(long pp)
@@ -164,7 +164,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                              degy, degz, 0,
                                              std::max(degx, std::max(degy, degz)) + 4>(
                         spline, spline_new_x, spline_old_x, weight, infra.geom.CellSize(), bA, jA,
-                        bfields, &primitive);
+                        bfields, primitive);
 
                     // Push v2 and v3
                     if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
@@ -185,7 +185,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                                  degz, degx, 1,
                                                  std::max(degx, std::max(degy, degz)) + 4>(
                             spline, spline_new_y, spline_old_y, weight, infra.geom.CellSize(), bA,
-                            jA, bfields, &primitive);
+                            jA, bfields, primitive);
 
                         // Push v2 and v3
                         vel[0] = vel[0] + chargemass * bfields[1];
@@ -215,7 +215,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                                  degx, degy, 2,
                                                  std::max(degx, std::max(degy, degz)) + 4>(
                             spline, spline_new_z, spline_old_z, weight, infra.geom.CellSize(), bA,
-                            jA, bfields, &primitive);
+                            jA, bfields, primitive);
                         // Push v2 and v3
                         vel[0] = vel[0] - chargemass * bfields[0];
                         vel[1] = vel[1] + chargemass * bfields[1];
@@ -245,7 +245,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                                  degz, degx, 1,
                                                  std::max(degx, std::max(degy, degz)) + 4>(
                             spline, spline_new_y, spline_old_y, weight, infra.geom.CellSize(), bA,
-                            jA, bfields, &primitive);
+                            jA, bfields, primitive);
 
                         // Push v2 and v3
                         vel[0] = vel[0] + chargemass * bfields[1];
@@ -272,7 +272,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                              degy, degz, 0,
                                              std::max(degx, std::max(degy, degz)) + 4>(
                         spline, spline_new_x, spline_old_x, weight, infra.geom.CellSize(), bA, jA,
-                        bfields, &primitive);
+                        bfields, primitive);
 
                     // Push v2 and v3
                     if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
@@ -290,7 +290,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
             profiling_timers->counter_deposition += MPI_Wtime();
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute -= MPI_Wtime();
-        (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+        part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute += MPI_Wtime();
     }
@@ -301,7 +301,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
     Gempic_SumBoundary(mw_yee, &infra);  // Sums Boundary of J and Overwrites overlap
     for (int i = 0; i < vdim; i++)
     {
-        (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        (*(mw_yee->J_Array)[i]).FillBoundary(infra.geom.periodicity());
     }
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary += MPI_Wtime();
@@ -324,9 +324,9 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
     {
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_deposition -= MPI_Wtime();
-        amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
+        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
 
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
             // amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT
@@ -337,10 +337,10 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
 
             for (int cc = 0; cc < vdim; cc++)
             {
-                eA[cc] = (*(*mw_yee).HE_Array[cc])[pti].array();
+                eA[cc] = (*(mw_yee->HE_Array)[cc])[pti].array();
             }
 
-            amrex::Real dt = (*mw_yee).dt;
+            amrex::Real dt = mw_yee->dt;
             // loop over particles: add contribution of old particle position to J and push
             amrex::ParallelFor(np,
                                [=] AMREX_GPU_DEVICE(long pp)
