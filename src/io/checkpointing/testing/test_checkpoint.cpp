@@ -67,7 +67,7 @@ void main_main()
     const int FX = 10, FV = 10, FS = 10;
     VlMa.set_params("checkpoint_ctest", n_cell_vector, n_part_per_cell, n_steps, FX, FV, FS,
                     is_periodic_vector, max_grid_size, dt, charge, mass, k, {"0"}, "0", "0", "0",
-                    "0", {1}, 0, tolerance_particles);
+                    "0", "0", "0", "0", {1}, 0, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure

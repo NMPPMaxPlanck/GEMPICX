@@ -71,6 +71,9 @@ void main_main(bool ctest)
     std::string Bx = "0.0";
     std::string By = "0.0";
     std::string Bz = "1e-3 * cos(kvarx * x)";
+    std::string Ex = "0.0";
+    std::string Ey = "0.0";
+    std::string Ez = "1e-3 * cos(kvarx * x)";
     amrex::GpuArray<std::string, int(vdim / 2.5) * 2 + 1> fields_B;
     fields_B[0] = Bx;
     if (int(vdim / 2.5) * 2 + 1 > 1)
@@ -92,8 +95,8 @@ void main_main(bool ctest)
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v, freq_slice,
-                    is_periodic, max_grid_size, dt, charge, mass, k, density, Bx, By, Bz, phi, {1},
-                    propagator, tolerance_particles);
+                    is_periodic, max_grid_size, dt, charge, mass, k, density, Bx, By, Bz, Ex, Ey, Ez,
+                     phi, {1}, propagator, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure

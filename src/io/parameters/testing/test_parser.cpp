@@ -114,6 +114,14 @@ void print_param(gempic_parameters<vdim, numspec> params)
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.BzEval(x, y, z, t) - 1e-3 * cos(params.k[0] * x));
                     maxerr = std::max(maxerr, maxloc);
+                    maxloc = std::abs(params.ExEval(x, y, z, t) -
+                                      sin(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
+                    maxerr = std::max(maxerr, maxloc);
+                    maxloc = std::abs(params.EyEval(x, y, z, t) -
+                                      cos(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
+                    maxerr = std::max(maxerr, maxloc);
+                    maxloc = std::abs(params.EzEval(x, y, z, t) - 1e-3 * cos(params.k[0] * x));
+                    maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.phiEval(x, y, z, t) - 4 * 0.5 * cos(0.5 * x));
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.rhoEval(x, y, z, t) - (1 + 0.1 * cos(0.5 * x)));

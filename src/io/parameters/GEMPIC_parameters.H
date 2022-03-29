@@ -84,6 +84,15 @@ public:
     std::string Bz = "0.0";
     amrex::Parser BzParse;
     amrex::ParserExecutor<4> BzEval;
+    std::string Ex = "0.0";
+    amrex::Parser ExParse;
+    amrex::ParserExecutor<4> ExEval;
+    std::string Ey = "0.0";
+    amrex::Parser EyParse;
+    amrex::ParserExecutor<4> EyEval;
+    std::string Ez = "0.0";
+    amrex::Parser EzParse;
+    amrex::ParserExecutor<4> EzEval;
     std::string phi = "0.0";
     amrex::Parser phiParse;
     amrex::ParserExecutor<4> phiEval;
@@ -265,6 +274,18 @@ public:
         {
             parseErrorMessage("Bz");
         }
+        if (!pp.query("Ex", Ex))
+        {
+            parseErrorMessage("Ex");
+        }
+        if (!pp.query("Ey", Ey))
+        {
+            parseErrorMessage("Ey");
+        }
+        if (!pp.query("Ez", Ez))
+        {
+            parseErrorMessage("Ez");
+        }
         if (!pp.query("phi", phi))
         {
             parseErrorMessage("phi");
@@ -343,6 +364,8 @@ public:
         amrex::GpuArray<amrex::Real, numspec> M = {1.0}, amrex::Real K = 1.25,
         amrex::GpuArray<std::string, numspec> wf = {"1.0"}, std::string BX = "0.0",
         std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)",
+        std::string EX = "0.0",
+        std::string EY = "0.0", std::string EZ = "1e-3 * cos(kvarx * x)",
         std::string PHI = "4 * 0.5 * cos(0.5 * x)",
         // std::vector<int> NG = {1},
         amrex::GpuArray<int, numspec> NG = {1},
@@ -378,6 +401,9 @@ public:
         Bx = BX;
         By = BY;
         Bz = BZ;
+        Ex = EX;
+        Ey = EY;
+        Ez = EZ;
         phi = PHI;
         for (int i = 0; i < numspec; i++) num_gaussians[i] = NG[i];
         propagator = PROP;
@@ -412,6 +438,9 @@ public:
         Bx = "0.0";
         By = "0.0";
         Bz = "1e-3 * cos(kvarx * x)";
+        Ex = "0.0";
+        Ey = "0.0";
+        Ez = "1e-3 * cos(kvarx * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
         is_periodic = {AMREX_D_DECL(1, 1, 1)};
         max_grid_size = {AMREX_D_DECL(4, 4, 4)};
@@ -504,6 +533,27 @@ public:
         BzParse.setConstant("kvarz", k[2]);
         BzParse.registerVariables({"x", "y", "z", "t"});
         BzEval = BzParse.compile<4>();
+
+        ExParse = amrex::Parser(Ex);
+        ExParse.setConstant("kvarx", k[0]);
+        ExParse.setConstant("kvary", k[1]);
+        ExParse.setConstant("kvarz", k[2]);
+        ExParse.registerVariables({"x", "y", "z", "t"});
+        ExEval = ExParse.compile<4>();
+
+        EyParse = amrex::Parser(Ey);
+        EyParse.setConstant("kvarx", k[0]);
+        EyParse.setConstant("kvary", k[1]);
+        EyParse.setConstant("kvarz", k[2]);
+        EyParse.registerVariables({"x", "y", "z", "t"});
+        EyEval = EyParse.compile<4>();
+
+        EzParse = amrex::Parser(Ez);
+        EzParse.setConstant("kvarx", k[0]);
+        EzParse.setConstant("kvary", k[1]);
+        EzParse.setConstant("kvarz", k[2]);
+        EzParse.registerVariables({"x", "y", "z", "t"});
+        EzEval = EzParse.compile<4>();
 
         phiParse = amrex::Parser(phi);
         phiParse.setConstant("kvarx", k[0]);

@@ -50,6 +50,9 @@ void main_main()
                     {"1.0"},                                // density (overwritten later)
                     "0.0",                                  // Bx
                     "0.0",                                  // By
+                    "0.0",                                // density (overwritten later)
+                    "0.0",                                  // Bx
+                    "0.0",                                  // By
                     "0.0",                                  // Bz
                     "4 * 0.5 * cos(0.5 * x)",               // phi
                     {1},                                    // num_gaussians
