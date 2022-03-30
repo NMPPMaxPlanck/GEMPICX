@@ -20,7 +20,7 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-#include <GEMPIC_MLNodeLaplacian_FD.H>
+//#include <GEMPIC_MLNodeLaplacian_FD.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_particle_groups.H>

@@ -198,8 +198,8 @@ public:
 
         for (int comp = 0; comp < edim; comp++)
         {
-            E_Masks[comp].reset(
-                new amrex::iMultiFab(convert(ifr.grid, *E_Index[comp]), ifr.distriMap, Ncomp, Nghost));
+            E_Masks[comp].reset(new amrex::iMultiFab(convert(ifr.grid, *E_Index[comp]),
+                                                     ifr.distriMap, Ncomp, Nghost));
             (*E_Masks[comp]).setVal(0.0);
             (*E_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
@@ -224,8 +224,8 @@ public:
 
         for (int comp = 0; comp < bdim; comp++)
         {
-            B_Masks[comp].reset(
-                new amrex::iMultiFab(convert(ifr.grid, *B_Index[comp]), ifr.distriMap, Ncomp, Nghost));
+            B_Masks[comp].reset(new amrex::iMultiFab(convert(ifr.grid, *B_Index[comp]),
+                                                     ifr.distriMap, Ncomp, Nghost));
             (*B_Masks[comp]).setVal(0.0);
             (*B_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
@@ -472,7 +472,9 @@ public:
                                 }
                             }
                             proj_arr(i, j, k) = val;
+#if (GEMPIC_SPACEDIM > 2)                            
                         }  //);
+#endif
                     }
                 }
             }
@@ -2247,13 +2249,11 @@ public:
     }
 
 private:
-
     int Ncomp; /** Number of components for each MultiFab. Is 1 because the different field
                   components are differently staggered */
     amrex::Real time;
     // amrex::MultiFab sigma; //for Poisson
     amrex::Array<amrex::Real, GEMPIC_SPACEDIM> sigma = {AMREX_D_DECL(-1., -1., -1.)};
-
 
     template <int degree>
     void exactSolution(amrex::GpuArray<std::string, edim> fields_E,

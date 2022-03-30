@@ -21,7 +21,7 @@ target_link_libraries( test_AMReX_NormMasks AMReX::amrex AMReX::Flags_CXX  )
 target_link_libraries( test_initialize AMReX::amrex AMReX::Flags_CXX  )
 target_link_libraries( test_splines AMReX::amrex AMReX::Flags_CXX  )
 target_link_libraries( test_deposit_rho AMReX::amrex AMReX::Flags_CXX  )
-target_link_libraries( test_one_part gempic_poisson AMReX::amrex AMReX::Flags_CXX )
+target_link_libraries( test_one_part  AMReX::amrex AMReX::Flags_CXX )
 
 
 ######## Ctest

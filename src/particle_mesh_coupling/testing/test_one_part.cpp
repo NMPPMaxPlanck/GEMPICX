@@ -61,7 +61,7 @@ void main_main(bool ctest)
     int freq_v = 2;
     int freq_slice = 1;
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect max_grid_size = {4, 4, 4};
+    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};
     amrex::Real dt = 0.02;
     amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
     amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     comparison to the expected_output (which contains all dimensions) works The order of the outputs
     is: GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=2, GEMPIC_SPACEDIM=2 vdim=3,
     GEMPIC_SPACEDIM=3 vdim=3 */
-
+ 
 #if (GEMPIC_SPACEDIM == 1)
 
     // Output for GEMPIC_SPACEDIM=1 vdim=2

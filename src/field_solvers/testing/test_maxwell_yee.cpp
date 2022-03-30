@@ -159,7 +159,7 @@ void main_main()
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_maxwell_yee", n_cell, {1}, 5, 10, 10, 10, is_periodic, {32, 32, 32}, 0.01,
+    VlMa.set_params("test_maxwell_yee", n_cell, {1}, 5, 10, 10, 10, is_periodic, {AMREX_D_DECL(32, 32, 32)}, 0.01,
                     {1.0}, {1.0}, 0.5);
 
     CompDom::computational_domain infra;
@@ -313,11 +313,11 @@ int main(int argc, char *argv[])
     const int vdim1=1, vdim2=2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 
 #if (GEMPIC_SPACEDIM == 1)
-    main_main<vdim1, numspec, degx, degy, degz, false>();
-    main_main<vdim2, numspec, degx, degy, degz, false>();
+    main_main<vdim1, numspec, degx, degy, degz>();
+    main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
-    main_main<vdim2, numspec, degx, degy, degz, false>();
-    main_main<vdim, numspec, degx, degy, degz, false>();
+    main_main<vdim2, numspec, degx, degy, degz>();
+    main_main<vdim, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 3)
     main_main<vdim, numspec, degx, degy, degz>();
 #endif
