@@ -88,7 +88,7 @@ void main_main()
             amrex::IntVect hi = {bx.bigEnd()};
 
             auto &particles =
-                (*(part_gr).mypc[species])
+                (*part_gr.mypc[species])
                     .GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)

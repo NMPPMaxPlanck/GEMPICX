@@ -409,7 +409,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &plo,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
-    amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength> *primitive)
+    amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength>& primitive)
 {
     int pdim1 = (pdim + 1) % 3;
     int pdim2 = (pdim + 2) % 3;
@@ -434,7 +434,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
     int box_start = box[pdim];
     if (box_new < box[pdim]) box_start = box_new;
 
-    for (unsigned int j = 0; j < plength; j++) (*primitive)[j] = 0.0;
+    for (unsigned int j = 0; j < plength; j++) primitive[j] = 0.0;
     // 2a. Evaluate the spline for the dimensions other than pdim (happens before fct call now)
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
@@ -442,30 +442,30 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
     {
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[local_size - degp + j] = (1.0 - spline_new.primitive[j]) * dx[pdim];
+            primitive[local_size - degp + j] = (1.0 - spline_new.primitive[j]) * dx[pdim];
         }
         for (unsigned int j = 0; j < local_size - degp; j++)
         {
-            (*primitive)[j] = dx[pdim];
+            primitive[j] = dx[pdim];
         }
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[j] -= (1.0 - spline_old.primitive[j]) * dx[pdim];
+            primitive[j] -= (1.0 - spline_old.primitive[j]) * dx[pdim];
         }
     }
     else
     {
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[local_size - degp + j] = -(1.0 - spline_old.primitive[j]) * dx[pdim];
+            primitive[local_size - degp + j] = -(1.0 - spline_old.primitive[j]) * dx[pdim];
         }
         for (unsigned int j = 0; j < local_size - degp; j++)
         {
-            (*primitive)[j] = -dx[pdim];
+            primitive[j] = -dx[pdim];
         }
         for (unsigned int j = 0; j < degp; j++)
         {
-            (*primitive)[j] += (1.0 - spline_new.primitive[j]) * dx[pdim];
+            primitive[j] += (1.0 - spline_new.primitive[j]) * dx[pdim];
         }
     }
 
@@ -483,7 +483,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
                 else if (pdim == 2)
                     cell_index = {AMREX_D_DECL(box[0] + jj, box[1] + kk, box_start + ii)};
                 double s_coeff =
-                    (*primitive)[ii] * spline_y_node.spline[jj] * spline_z_node.spline[kk];
+                    primitive[ii] * spline_y_node.spline[jj] * spline_z_node.spline[kk];
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0, 0),
                                                s_coeff * charge);
@@ -495,7 +495,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
                 if (jj < degp1)
                 {
                     double s_coeff =
-                        (*primitive)[ii] * spline_y_cell.spline[jj] * spline_z_node.spline[kk];
+                        primitive[ii] * spline_y_cell.spline[jj] * spline_z_node.spline[kk];
 
 #if (GEMPIC_SPACEDIM == 1)
                     fields[0] += s_coeff * (bArray[pdim2])(cell_index[0], 0, 0, 0);
@@ -508,7 +508,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
                 if (kk < degp2)
                 {
                     double s_coeff =
-                        (*primitive)[ii] * spline_y_node.spline[jj] * spline_z_cell.spline[kk];
+                        primitive[ii] * spline_y_node.spline[jj] * spline_z_cell.spline[kk];
 #if (GEMPIC_SPACEDIM == 1)
                     fields[1] += s_coeff * (bArray[pdim1])(cell_index[0], 0, 0, 0);
 #else
@@ -1931,24 +1931,24 @@ evaluate_grad_mod_bfield(
     amrex::Real lx = (position[0] - plo[0]) * dxi[0];
     int i = std::floor(lx);
     amrex::Real xint = lx - i;
-    std::vector<amrex::Real> sx_cell =
+    amrex::Vector<amrex::Real> sx_cell =
         spl.spline_eval_vec(spl.shifted_x(xint, degx - 1, true), degx - 1);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec(spl.shifted_x(xint, degx, false), degx);
+    amrex::Vector<amrex::Real> sx_node = spl.spline_eval_vec(spl.shifted_x(xint, degx, false), degx);
 #if (GEMPIC_SPACEDIM > 1)
     amrex::Real ly = (position[1] - plo[1]) * dxi[1];
     int j = std::floor(ly);
     amrex::Real yint = ly - j;
-    std::vector<amrex::Real> sy_cell =
+    amrex::Vector<amrex::Real> sy_cell =
         spl.spline_eval_vec(spl.shifted_x(yint, degy - 1, true), degy - 1);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec(spl.shifted_x(yint, degy, false), degy);
+    amrex::Vector<amrex::Real> sy_node = spl.spline_eval_vec(spl.shifted_x(yint, degy, false), degy);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
     amrex::Real lz = (position[2] - plo[2]) * dxi[2];
     int k = std::floor(lz);
     amrex::Real zint = lz - k;
-    std::vector<amrex::Real> sz_cell =
+    amrex::Vector<amrex::Real> sz_cell =
         spl.spline_eval_vec(spl.shifted_x(zint, degz - 1, true), degz - 1);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec(spl.shifted_x(zint, degz, false), degz);
+    amrex::Vector<amrex::Real> sz_node = spl.spline_eval_vec(spl.shifted_x(zint, degz, false), degz);
 #endif
 
     // First B_0

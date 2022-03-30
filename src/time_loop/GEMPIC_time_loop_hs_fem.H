@@ -41,7 +41,7 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
 void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee, amrex::Real coeff,
                            particle_groups<vdim, numspec> *part_gr, timers *profiling_timers)
 {
-    (*mw_yee).advance_time(coeff);
+    mw_yee->advance_time(coeff);
 
     if (electromagnetic)
     {
@@ -68,10 +68,10 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
 
     for (int spec = 0; spec < numspec; spec++)
     {
-        amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
-        amrex::Real charge = (*part_gr).charge[spec];
+        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
+        amrex::Real charge = part_gr->charge[spec];
 
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
         {
             auto &particles = pti.GetArrayOfStructs();  // get particles
             const long np = pti.numParticles();
@@ -82,12 +82,12 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
 
             for (int cc = 0; cc < vdim; cc++)
             {
-                jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
-                eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
+                jA[cc] = (*(mw_yee->J_Array)[cc])[pti].array();
+                eA[cc] = (*(mw_yee->E_Array)[cc])[pti].array();
             }
             for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
             {
-                bA[cc] = (*(*mw_yee).B_Array[cc])[pti].array();
+                bA[cc] = (*(mw_yee->B_Array)[cc])[pti].array();
             }
 
             // loop over particles: add contribution of old particle position to J and push
@@ -157,7 +157,7 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
                           &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2)]);
             }
         }
-        (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+        part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
     }
 
     // add values from ghost cells and periodic boundary
@@ -179,9 +179,9 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
     // Second particle loop for particle part from H_E
     for (int spec = 0; spec < numspec; spec++)
     {
-        amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
+        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
 
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
         {
             auto &particles = pti.GetArrayOfStructs();  // get particles
             const long np = pti.numParticles();
@@ -190,7 +190,7 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
 
             for (int cc = 0; cc < vdim; cc++)
             {
-                eA[cc] = (*(*mw_yee).E_Array[cc])[pti].array();
+                eA[cc] = (*(mw_yee->E_Array)[cc])[pti].array();
             }
 
             // loop over particles: add contribution of old particle position to J and push
@@ -215,12 +215,12 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
                     vel[comp] = particles[pp].rdata(comp);
                 }
                 amrex::GpuArray<amrex::Real, vdim> newPosE =
-                    push_v_efield<vdim>(vel, (*mw_yee).dt * 0.5 * coeff, chargemass, efield);
+                    push_v_efield<vdim>(vel, mw_yee->dt * 0.5 * coeff, chargemass, efield);
                 std::copy(newPosE.begin(), newPosE.end(),
                           &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2) + GEMPIC_SPACEDIM]);
             }
         }
-        (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+        part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
     }
 
     if (electromagnetic)

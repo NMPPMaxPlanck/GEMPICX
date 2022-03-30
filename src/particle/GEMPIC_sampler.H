@@ -26,10 +26,10 @@ namespace Sampling
 {
 template <int vdim, int numspec>
 void init_particles_cellwise(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                             std::array<int, numspec> n_part_per_cell,
-                             std::vector<std::vector<amrex::Real>> Vmean,
-                             std::vector<std::vector<amrex::Real>> Vdev,
-                             std::vector<amrex::Real> Vweight, int species,
+                             amrex::Array<int, numspec> n_part_per_cell,
+                             amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
+                             amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
+                             amrex::Vector<amrex::Real> Vweight, int species,
                              amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                              int rSeed = 925)
 {
@@ -59,7 +59,7 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
     // }
     // std::vector<amrex::Real> zeroVec(vdim,0);
     // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
-    std::vector<amrex::Real> vel_cum(num_gauss);
+    amrex::Vector<amrex::Real> vel_cum(num_gauss);
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
     // for (int i = 0; i < vdim; i++)
     // {
@@ -95,7 +95,7 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
 #endif
 
         amrex::Real gauss_choice[vdim];
-        std::array<amrex::Real, vdim> gauss_idx;
+        amrex::Array<amrex::Real, vdim> gauss_idx;
         for (int i = 0; i < vdim; i++)
         {
             gauss_choice[i] = unif(gen);  // uniform in [0, 1]
@@ -168,7 +168,7 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
 #endif
                             ;
 
-                        (ppg).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
@@ -182,11 +182,11 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
 
 template <int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                                std::array<int, numspec> n_part_per_cell,
+                                amrex::Array<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Real> k_vec, std::string wave_function,
-                                std::vector<std::vector<amrex::Real>> Vmean,
-                                std::vector<std::vector<amrex::Real>> Vdev,
-                                std::vector<amrex::Real> Vweight, int species, int rSeed = 925)
+                                amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
+                                amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
+                                amrex::Vector<amrex::Real> Vweight, int species, int rSeed = 925)
 {
     double x, y, z;
     double kx = k_vec[0];
@@ -211,7 +211,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
     int num_gauss = Vmean.size();  // same size for all v-dims. Superposition of Gauss distributions
 
     // cumulative sum of vel_weights
-    std::vector<amrex::Real> vel_cum(num_gauss);
+    amrex::Vector<amrex::Real> vel_cum(num_gauss);
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
     // std::vector<amrex::Real> zeroVec(vdim,0);
     // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
@@ -346,10 +346,10 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
 
 template <int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                                std::array<int, numspec> n_part_per_cell,
-                                std::vector<std::vector<amrex::Real>> Vmean,
-                                std::vector<std::vector<amrex::Real>> Vdev,
-                                std::vector<amrex::Real> Vweight, int species,
+                                amrex::Array<int, numspec> n_part_per_cell,
+                                amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
+                                amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
+                                amrex::Vector<amrex::Real> Vweight, int species,
                                 amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                                 int rSeed = 925)
 {
@@ -365,7 +365,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
     int num_gauss = Vmean.size();
 
     // cumulative sum of vel_weights
-    std::vector<amrex::Real> vel_cum(num_gauss);
+    amrex::Vector<amrex::Real> vel_cum(num_gauss);
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
     // amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;

@@ -40,10 +40,10 @@ class diagnostics
 {
 public:
     int nSteps;  // number of timesteps
-    std::vector<amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1>> Bfield_energy;
-    std::vector<amrex::GpuArray<amrex::Real, vdim>> Efield_energy, mom;
-    std::vector<amrex::Real> kin;
-    std::vector<amrex::Real> gauss_error;
+    amrex::Vector<amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1>> Bfield_energy;
+    amrex::Vector<amrex::GpuArray<amrex::Real, vdim>> Efield_energy, mom;
+    amrex::Vector<amrex::Real> kin;
+    amrex::Vector<amrex::Real> gauss_error;
     int freq_x;
     int freq_v;
     int freq_slice;
@@ -151,7 +151,7 @@ public:
         for (int spec = 0; spec < numspec; spec++)
         {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
-                *(*part_gr).mypc[spec],
+                *part_gr->mypc[spec],
                 [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
                 {
                     auto m = p.rdata(vdim);
@@ -168,7 +168,7 @@ public:
             for (int cmp = 0; cmp < vdim; cmp++)
             {
                 auto mom_tmp = amrex::ReduceSum(
-                    *(*part_gr).mypc[spec],
+                    *part_gr->mypc[spec],
                     [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
                     {
                         auto m = p.rdata(vdim);
@@ -185,7 +185,7 @@ public:
             }
         }
         gauss_error[step] =
-            (*mw_yee).template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
+            mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
 
         // save Plot and Checkpoint-files
         // if ((step == 0) || ((step+1)%freq_slice == 0)) {
@@ -317,9 +317,9 @@ public:
     }
 
 #if (GEMPIC_SPACEDIM == 3)
-    void cross_product(amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputE,
-                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiInputB,
-                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> *MultiOutput,
+    void cross_product(amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3>& MultiInputE,
+                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3>& MultiInputB,
+                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3>& MultiOutput,
                        computational_domain infra)
     {
         amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()), infra.distriMap,
@@ -337,21 +337,21 @@ public:
 
         std::cout << "before copy" << std::endl;
         // "E"
-        EyBz.Copy(EyBz, *((*MultiInputE)[1]), 0, 0, 1, 0);
-        EzBy.Copy(EzBy, *((*MultiInputE)[2]), 0, 0, 1, 0);
-        EzBx.Copy(EzBx, *((*MultiInputE)[2]), 0, 0, 1, 0);
-        ExBz.Copy(ExBz, *((*MultiInputE)[0]), 0, 0, 1, 0);
-        ExBy.Copy(ExBy, *((*MultiInputE)[0]), 0, 0, 1, 0);
-        EyBx.Copy(EyBx, *((*MultiInputE)[1]), 0, 0, 1, 0);
+        EyBz.Copy(EyBz, *(MultiInputE[1]), 0, 0, 1, 0);
+        EzBy.Copy(EzBy, *(MultiInputE[2]), 0, 0, 1, 0);
+        EzBx.Copy(EzBx, *(MultiInputE[2]), 0, 0, 1, 0);
+        ExBz.Copy(ExBz, *(MultiInputE[0]), 0, 0, 1, 0);
+        ExBy.Copy(ExBy, *(MultiInputE[0]), 0, 0, 1, 0);
+        EyBx.Copy(EyBx, *(MultiInputE[1]), 0, 0, 1, 0);
 
         std::cout << "before multiply" << std::endl;
         // "EB"
-        EyBz.Multiply(EyBz, *((*MultiInputB)[2]), 0, 0, 1, 0);
-        EzBy.Multiply(EzBy, *((*MultiInputB)[1]), 0, 0, 1, 0);
-        EzBx.Multiply(EzBx, *((*MultiInputB)[0]), 0, 0, 1, 0);
-        ExBz.Multiply(ExBz, *((*MultiInputB)[2]), 0, 0, 1, 0);
-        ExBy.Multiply(ExBy, *((*MultiInputB)[1]), 0, 0, 1, 0);
-        EyBx.Multiply(EyBx, *((*MultiInputB)[0]), 0, 0, 1, 0);
+        EyBz.Multiply(EyBz, *(MultiInputB[2]), 0, 0, 1, 0);
+        EzBy.Multiply(EzBy, *(MultiInputB[1]), 0, 0, 1, 0);
+        EzBx.Multiply(EzBx, *(MultiInputB[0]), 0, 0, 1, 0);
+        ExBz.Multiply(ExBz, *(MultiInputB[2]), 0, 0, 1, 0);
+        ExBy.Multiply(ExBy, *(MultiInputB[1]), 0, 0, 1, 0);
+        EyBx.Multiply(EyBx, *(MultiInputB[0]), 0, 0, 1, 0);
 
         std::cout << "before minus" << std::endl;
         // "EB - EB"
@@ -361,9 +361,9 @@ public:
 
         std::cout << "before final copy" << std::endl;
         // Copy into out MF
-        (*((*MultiOutput)[0])).Copy(*((*MultiOutput)[0]), EyBz, 0, 0, 1, 0);
-        (*((*MultiOutput)[1])).Copy(*((*MultiOutput)[1]), EzBx, 0, 0, 1, 0);
-        (*((*MultiOutput)[2])).Copy(*((*MultiOutput)[2]), ExBy, 0, 0, 1, 0);
+        (*MultiOutput[0]).Copy(*MultiOutput[0], EyBz, 0, 0, 1, 0);
+        (*MultiOutput[1]).Copy(*MultiOutput[1], EzBx, 0, 0, 1, 0);
+        (*MultiOutput[2]).Copy(*MultiOutput[2], ExBy, 0, 0, 1, 0);
     }
 #endif
 

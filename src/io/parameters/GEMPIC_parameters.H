@@ -44,8 +44,8 @@ public:
     std::string sim_name = "simulation";
     // grid
     amrex::RealBox real_box;
-    std::vector<amrex::Real> domain_lo = {AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::vector<amrex::Real> domain_hi = {AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::Vector<amrex::Real> domain_lo = {AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Vector<amrex::Real> domain_hi = {AMREX_D_DECL(1.0, 1.0, 1.0)};
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
     amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)}; // for parallelisation
@@ -62,14 +62,14 @@ public:
 
     // particles (for each species)
     int nPartCellTot;
-    std::array<int, numspec> n_part_per_cell = {100};
+    amrex::Array<int, numspec> n_part_per_cell = {100};
     amrex::GpuArray<amrex::Real, numspec> charge = {-1};
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
     // Initial velocity distribution (sum of gaussians)
     amrex::GpuArray<int, numspec> num_gaussians = {0};
-    std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity{};  // species, gaussian, vdim
-    std::vector<std::vector<std::vector<amrex::Real>>> vThermal{};
-    std::vector<std::vector<amrex::Real>> vWeight{};
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{};  // species, gaussian, vdim
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{};
+    amrex::Vector<amrex::Vector<amrex::Real>> vWeight{};
 
     amrex::GpuArray<std::string, numspec> density = {"0"};  // particle density
     amrex::GpuArray<amrex::Parser, numspec> densityParse;
@@ -84,6 +84,15 @@ public:
     std::string Bz = "0.0";
     amrex::Parser BzParse;
     amrex::ParserExecutor<4> BzEval;
+    std::string Ex = "0.0";
+    amrex::Parser ExParse;
+    amrex::ParserExecutor<4> ExEval;
+    std::string Ey = "0.0";
+    amrex::Parser EyParse;
+    amrex::ParserExecutor<4> EyEval;
+    std::string Ez = "0.0";
+    amrex::Parser EzParse;
+    amrex::ParserExecutor<4> EzEval;
     std::string phi = "0.0";
     amrex::Parser phiParse;
     amrex::ParserExecutor<4> phiEval;
@@ -116,7 +125,7 @@ public:
 
     void init_Nghost(int degx, int degy, int degz)
     {
-        std::array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
+        amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
         int maxdeg = *(std::max_element(degs.begin(), degs.end()));
         Nghost = maxdeg;
     }
@@ -125,9 +134,9 @@ public:
     {
         // Local variables
         amrex::ParmParse pp;
-        std::array<int, GEMPIC_SPACEDIM> is_periodic_vector {AMREX_D_DECL(1, 1, 1)};
-        std::array<int, GEMPIC_SPACEDIM> max_grid_size_vector {AMREX_D_DECL(4, 4, 4)};
-        std::array<int, GEMPIC_SPACEDIM> n_cell_vector {AMREX_D_DECL(10, 10, 10)};
+        amrex::Array<int, GEMPIC_SPACEDIM> is_periodic_vector {AMREX_D_DECL(1, 1, 1)};
+        amrex::Array<int, GEMPIC_SPACEDIM> max_grid_size_vector {AMREX_D_DECL(4, 4, 4)};
+        amrex::Array<int, GEMPIC_SPACEDIM> n_cell_vector {AMREX_D_DECL(10, 10, 10)};
 
         if (!pp.query("sim_name", sim_name))
         {
@@ -200,8 +209,8 @@ public:
 
         for (int spec = 0; spec < numspec; spec++)
         {
-            std::vector<std::vector<amrex::Real>> vvm, vvt;
-            std::vector<amrex::Real> vvw;
+            amrex::Vector<amrex::Vector<amrex::Real>> vvm, vvt;
+            amrex::Vector<amrex::Real> vvw;
             std::string specString = "species" + std::to_string(spec);
             amrex::ParmParse ppSpec(specString);
             if (!ppSpec.query("n_part_per_cell", n_part_per_cell[spec]))
@@ -226,7 +235,7 @@ public:
             }
             for (int ng = 0; ng < num_gaussians[spec]; ng++)
             {
-                std::vector<amrex::Real> vm, vt;
+                amrex::Vector<amrex::Real> vm, vt;
                 amrex::Real vw;
                 std::string vmString = "vMean_g" + std::to_string(ng);
                 if (!ppSpec.queryarr(vmString.c_str(), vm))
@@ -264,6 +273,18 @@ public:
         if (!pp.query("Bz", Bz))
         {
             parseErrorMessage("Bz");
+        }
+        if (!pp.query("Ex", Ex))
+        {
+            parseErrorMessage("Ex");
+        }
+        if (!pp.query("Ey", Ey))
+        {
+            parseErrorMessage("Ey");
+        }
+        if (!pp.query("Ez", Ez))
+        {
+            parseErrorMessage("Ez");
         }
         if (!pp.query("phi", phi))
         {
@@ -336,23 +357,25 @@ public:
         amrex::IntVect n_cell_vector = {AMREX_D_DECL(
             24, 8,
             8)},  // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
-        std::array<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
+        amrex::Array<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
         int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
         amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
         amrex::GpuArray<amrex::Real, numspec> M = {1.0}, amrex::Real K = 1.25,
         amrex::GpuArray<std::string, numspec> wf = {"1.0"}, std::string BX = "0.0",
         std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)",
+        std::string EX = "0.0",
+        std::string EY = "0.0", std::string EZ = "1e-3 * cos(kvarx * x)",
         std::string PHI = "4 * 0.5 * cos(0.5 * x)",
         // std::vector<int> NG = {1},
         amrex::GpuArray<int, numspec> NG = {1},
         // int NG = 1,
         int PROP = 0, amrex::Real TOL_P = 1.e-10, int MAX_C = 30, int RST = 0, std::string CF = "",
         int CD = 0,
-        std::vector<std::vector<std::vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
-        std::vector<std::vector<std::vector<amrex::Real>>> vThermal_in =
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal_in =
             {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
-        std::vector<std::vector<amrex::Real>> vWeight_in = {{1.0}})
+        amrex::Vector<amrex::Vector<amrex::Real>> vWeight_in = {{1.0}})
     {
         sim_name = sm;
         n_cell =
@@ -378,6 +401,9 @@ public:
         Bx = BX;
         By = BY;
         Bz = BZ;
+        Ex = EX;
+        Ey = EY;
+        Ez = EZ;
         phi = PHI;
         for (int i = 0; i < numspec; i++) num_gaussians[i] = NG[i];
         propagator = PROP;
@@ -395,7 +421,7 @@ public:
 
     void set_params_Weibel(std::string sim_name_in = "Weibel", int propagatorIn = 3,
                            int nStepsIn = 10, amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
-                           std::array<int, numspec> nPartPerCellIn = {100}, amrex::Real dtIn = 0.02,
+                           amrex::Array<int, numspec> nPartPerCellIn = {100}, amrex::Real dtIn = 0.02,
                            int freqSliceIn = 100)
     {
         sim_name = sim_name_in;
@@ -412,6 +438,9 @@ public:
         Bx = "0.0";
         By = "0.0";
         Bz = "1e-3 * cos(kvarx * x)";
+        Ex = "0.0";
+        Ey = "0.0";
+        Ez = "1e-3 * cos(kvarx * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
         is_periodic = {AMREX_D_DECL(1, 1, 1)};
         max_grid_size = {AMREX_D_DECL(4, 4, 4)};
@@ -504,6 +533,27 @@ public:
         BzParse.setConstant("kvarz", k[2]);
         BzParse.registerVariables({"x", "y", "z", "t"});
         BzEval = BzParse.compile<4>();
+
+        ExParse = amrex::Parser(Ex);
+        ExParse.setConstant("kvarx", k[0]);
+        ExParse.setConstant("kvary", k[1]);
+        ExParse.setConstant("kvarz", k[2]);
+        ExParse.registerVariables({"x", "y", "z", "t"});
+        ExEval = ExParse.compile<4>();
+
+        EyParse = amrex::Parser(Ey);
+        EyParse.setConstant("kvarx", k[0]);
+        EyParse.setConstant("kvary", k[1]);
+        EyParse.setConstant("kvarz", k[2]);
+        EyParse.registerVariables({"x", "y", "z", "t"});
+        EyEval = EyParse.compile<4>();
+
+        EzParse = amrex::Parser(Ez);
+        EzParse.setConstant("kvarx", k[0]);
+        EzParse.setConstant("kvary", k[1]);
+        EzParse.setConstant("kvarz", k[2]);
+        EzParse.registerVariables({"x", "y", "z", "t"});
+        EzEval = EzParse.compile<4>();
 
         phiParse = amrex::Parser(phi);
         phiParse.setConstant("kvarx", k[0]);
