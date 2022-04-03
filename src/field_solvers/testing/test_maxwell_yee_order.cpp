@@ -24,7 +24,6 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
@@ -188,9 +187,9 @@ void main_main()
     std::cout << "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0, zero,
                                                      funct_b2, true, infra);
-    PrintToFile("test_maxwell_yee_order.output") << endl;
-    PrintToFile("test_maxwell_yee_order.output") << "Maxwell" << endl;
-    PrintToFile("test_maxwell_yee_order.output") << "step " << 0 << endl;
+    PrintToFile("test_maxwell_yee_order.output") << std::endl;
+    PrintToFile("test_maxwell_yee_order.output") << "Maxwell" << std::endl;
+    PrintToFile("test_maxwell_yee_order.output") << "step " << 0 << std::endl;
     switch (vdim)
     {
         case 1:
@@ -232,7 +231,7 @@ void main_main()
         E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0,
                                                          zero, funct_b2, true, infra);
 
-        PrintToFile("test_maxwell_yee_order.output") << "step " << n << endl;
+        PrintToFile("test_maxwell_yee_order.output") << "step " << n << std::endl;
         switch (vdim)
         {
             case 1:

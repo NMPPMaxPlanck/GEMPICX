@@ -20,7 +20,6 @@
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_positions.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
@@ -110,9 +109,9 @@ void main_main()
 
     std::cout << "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-    PrintToFile("test_ampere_faraday.output") << endl;
-    PrintToFile("test_ampere_faraday.output") << "Maxwell" << endl;
-    PrintToFile("test_ampere_faraday.output") << "step " << 0 << endl;
+    PrintToFile("test_ampere_faraday.output") << std::endl;
+    PrintToFile("test_ampere_faraday.output") << "Maxwell" << std::endl;
+    PrintToFile("test_ampere_faraday.output") << "step " << 0 << std::endl;
     PrintToFile("test_ampere_faraday.output").SetPrecision(5)
         << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
         << " |Ez error: " << E_B_error[2] << std::endl;
@@ -154,7 +153,7 @@ void main_main()
         // solution -- you can ignore the code
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
-        PrintToFile("test_ampere_faraday.output") << "step " << n << endl;
+        PrintToFile("test_ampere_faraday.output") << "step " << n << std::endl;
         PrintToFile("test_ampere_faraday.output").SetPrecision(5)
             << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
             << " |Ez error: " << E_B_error[2] << std::endl;

@@ -9,7 +9,6 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_splines.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 

@@ -14,7 +14,6 @@
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 
@@ -142,7 +141,7 @@ void main_main(bool ctest)
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(
         VlMa, infra, &mw_yee, &part_gr, &diagn, time_staggered, zero, zero, cosine);
 
-    amrex::PrintToFile("test_one_part.output") << endl;
+    amrex::PrintToFile("test_one_part.output") << std::endl;
     switch (propagator)
     {
         case 0:

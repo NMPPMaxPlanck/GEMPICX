@@ -24,7 +24,6 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
@@ -190,9 +189,9 @@ void main_main()
     amrex::Print() << "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-    PrintToFile("test_maxwell_yee.output") << endl;
-    PrintToFile("test_maxwell_yee.output") << "Maxwell" << endl;
-    PrintToFile("test_maxwell_yee.output") << "step " << 0 << endl;
+    PrintToFile("test_maxwell_yee.output") << std::endl;
+    PrintToFile("test_maxwell_yee.output") << "Maxwell" << std::endl;
+    PrintToFile("test_maxwell_yee.output") << "step " << 0 << std::endl;
     PrintToFile("test_maxwell_yee.output").SetPrecision(5)
         << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
         << " |Ez error: " << E_B_error[2] << std::endl;
@@ -210,7 +209,7 @@ void main_main()
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-        PrintToFile("test_maxwell_yee.output") << "step " << n << endl;
+        PrintToFile("test_maxwell_yee.output") << "step " << n << std::endl;
         PrintToFile("test_maxwell_yee.output").SetPrecision(5)
             << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
             << " |Ez error: " << E_B_error[2] << std::endl;
@@ -241,9 +240,9 @@ void main_main()
     amrex::Print() << "step: " << 0 << std::endl;
     E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-    PrintToFile("test_maxwell_yee.output") << endl;
-    PrintToFile("test_maxwell_yee.output") << "Maxwell" << endl;
-    PrintToFile("test_maxwell_yee.output") << "step " << 0 << endl;
+    PrintToFile("test_maxwell_yee.output") << std::endl;
+    PrintToFile("test_maxwell_yee.output") << "Maxwell" << std::endl;
+    PrintToFile("test_maxwell_yee.output") << "step " << 0 << std::endl;
     PrintToFile("test_maxwell_yee.output").SetPrecision(5)
         << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
         << " |Ez error: " << E_B_error[2] << std::endl;
@@ -262,7 +261,7 @@ void main_main()
         mw_yee_2.advance_B(infra, mw_yee_2.dt, mw_yee_2.HE_Array, mw_yee_2.B_Array);
         E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
 
-        PrintToFile("test_maxwell_yee.output") << "step " << n << endl;
+        PrintToFile("test_maxwell_yee.output") << "step " << n << std::endl;
         PrintToFile("test_maxwell_yee.output").SetPrecision(5)
             << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
             << " |Ez error: " << E_B_error[2] << std::endl;
@@ -287,8 +286,8 @@ void main_main()
     funcSelectB[2] = MAXWELL_YEE_B2;
     E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
 
-    PrintToFile("test_maxwell_yee.output") << endl;
-    PrintToFile("test_maxwell_yee.output") << "Poisson" << endl;
+    PrintToFile("test_maxwell_yee.output") << std::endl;
+    PrintToFile("test_maxwell_yee.output") << "Poisson" << std::endl;
     PrintToFile("test_maxwell_yee.output").SetPrecision(5)
         << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
         << " |Ez error: " << E_B_error[2] << std::endl;
@@ -296,8 +295,8 @@ void main_main()
     //------------------------------------------------------------------------------
     // Rho from E
 
-    PrintToFile("test_maxwell_yee.output") << endl;
-    PrintToFile("test_maxwell_yee.output") << "rho_from_E" << endl;
+    PrintToFile("test_maxwell_yee.output") << std::endl;
+    PrintToFile("test_maxwell_yee.output") << "rho_from_E" << std::endl;
 
     mw_yee.rho_from_E(infra);  // fills rho_gauss_law
     mw_yee.rho_gauss_law.minus(mw_yee.rho, 0, 1, 0);

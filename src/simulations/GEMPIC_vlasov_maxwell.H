@@ -131,8 +131,8 @@ public:
                 //     ls_rungekutta<3> rk_prop();
                 //     rk_prop.time_loop(domain, &mw_yee, &art_gr);
             case 100:
-                 //time_loop_particles<vdim, numspec, degx, degy, degz, degvm,
-                 //electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name);
+                 time_loop_particles<vdim, numspec, degx, degy, degz, degvm,
+                 electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name);
                 break;
             default:
                 break;

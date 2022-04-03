@@ -24,7 +24,6 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;

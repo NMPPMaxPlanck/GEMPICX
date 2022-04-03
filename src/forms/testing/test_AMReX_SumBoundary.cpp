@@ -9,7 +9,6 @@
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_sampler.H>
 
-using namespace std;
 using namespace amrex;
 
 template <int vdim, int degx, int degy, int degz>

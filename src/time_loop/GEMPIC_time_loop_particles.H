@@ -37,9 +37,9 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                          diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool ctest,
                          std::string simulation_name)
 {
-    for (int t_step = 0; t_step < (*mw_yee).nsteps; t_step++)
+    for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
     {
-        (*mw_yee).advance_time();
+        mw_yee->advance_time();
 
         if (electromagnetic)
         {
@@ -56,16 +56,16 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
         // set J to 0 before we start depositing values from current particles
         for (int i = 0; i < vdim; i++)
         {
-            (*(*mw_yee).J_Array[i]).setVal(0.0, 0);  // value and component
-            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+            (mw_yee->J_Array)[i]->setVal(0.0, 0);  // value and component
+            (mw_yee->J_Array)[i]->FillBoundary(infra.geom.periodicity());
         }
 
         for (int spec = 0; spec < numspec; spec++)
         {
-            amrex::Real spec_charge = (*part_gr).charge[spec];
-            amrex::Real chargemass = (*part_gr).charge[spec] / (*part_gr).mass[spec];
+            amrex::Real spec_charge = part_gr->charge[spec];
+            amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
 
-            for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
+            for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid();
                  ++pti)
             {
                 auto &particles = pti.GetArrayOfStructs();  // get particles
@@ -77,7 +77,7 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
 
                 for (int cc = 0; cc < vdim; cc++)
                 {
-                    jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
+                    jA[cc] = (*(mw_yee->J_Array)[cc])[pti].array();
                 }
 
                 // loop over particles: add contribution of old particle position to J
@@ -97,8 +97,7 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                         spec_charge * particles[pp].rdata(vdim) * infra.dxi[GEMPIC_SPACEDIM] * 0.5;
 
                     amrex::GpuArray<amrex::Real, vdim + int(vdim / 2.5) * 2 + 1> field_interp =
-                        gempic_deposit_J_and_interpolate<amrex::Particle<vdim + 1>, vdim, degx,
-                                                         degy, degz>(
+                        gempic_deposit_J_and_interpolate<vdim, degx, degy, degz>(
                             charge_weight_dxi_coeff, particle_vel, spline, jA, eA, bA, false);
                     amrex::Real d = 1.0;
                     amrex::Real Omega = 1.0;
@@ -113,7 +112,7 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                               &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2)]);
                 }
             }
-            (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
+            part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
         }
 
         //--------------------------------------------------------------------------
@@ -121,8 +120,8 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
 
         for (int spec = 0; spec < numspec; spec++)
         {
-            amrex::Real spec_charge = (*part_gr).charge[spec];
-            for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
+            amrex::Real spec_charge = part_gr->charge[spec];
+            for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid();
                  ++pti)
             {
                 auto &particles = pti.GetArrayOfStructs();
@@ -134,7 +133,7 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
 
                 for (int cc = 0; cc < vdim; cc++)
                 {
-                    jA[cc] = (*(*mw_yee).J_Array[cc])[pti].array();
+                    jA[cc] = (*(mw_yee->J_Array)[cc])[pti].array();
                 }
 
                 for (int pp = 0; pp < np; pp++)
@@ -152,8 +151,7 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
                         spec_charge * particles[pp].rdata(vdim) * infra.dxi[GEMPIC_SPACEDIM] * 0.5;
 
                     amrex::GpuArray<amrex::Real, vdim + int(vdim / 2.5) * 2 + 1> field_interp =
-                        gempic_deposit_J_and_interpolate<amrex::Particle<vdim + 1>, vdim, degx,
-                                                         degy, degz>(
+                        gempic_deposit_J_and_interpolate<vdim, degx, degy, degz>(
                             charge_weight_dxi_coeff, particle_vel, spline, jA, eA, bA, false);
                 }
             }
@@ -163,7 +161,7 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
 
         for (int i = 0; i < vdim; i++)
         {
-            (*(*mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+            (mw_yee->J_Array)[i]->FillBoundary(infra.geom.periodicity());
         }
 
         if (electromagnetic)
@@ -182,19 +180,19 @@ void time_loop_particles(computational_domain infra, maxwell_yee<vdim> *mw_yee,
         }
 
         // save norms for diagnostics
-        (*diagn).save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        diagn->save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
         // save temporary results every n steps
         if ((t_step + 1) % 5 == 0)
         {
-            (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name, t_step + 1);
+            diagn->save_time_history(mw_yee->dt, simulation_name, t_step + 1);
         }
         amrex::Print() << "finished step " << t_step + 1 << std::endl;
 
         if (ctest) diagn->ctest_output(simulation_name, t_step);
     }  // end time loop
 
-    (*diagn).save_all_to_textfile((*mw_yee).dt, simulation_name);
+    diagn->save_time_history(mw_yee->dt, simulation_name, 0); //time step as 0 to satisfy arguments needed by function 
 }
 }  // namespace Time_Loop
 }  // namespace Gempic

@@ -5,7 +5,6 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_initMF.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 

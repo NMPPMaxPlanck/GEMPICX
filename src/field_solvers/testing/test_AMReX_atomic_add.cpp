@@ -10,7 +10,6 @@
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_sampler.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 using namespace Field_solvers;
