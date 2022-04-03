@@ -8,7 +8,6 @@
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 

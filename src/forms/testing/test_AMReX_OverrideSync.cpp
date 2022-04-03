@@ -4,7 +4,6 @@
 #include <AMReX_Print.H>
 #include <AMReX_iMultiFab.H>
 
-using namespace std;
 using namespace amrex;
 
 void main_main()

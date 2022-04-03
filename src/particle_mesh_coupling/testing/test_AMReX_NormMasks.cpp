@@ -10,7 +10,6 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_sampler.H>
 
-using namespace std;
 using namespace amrex;
 using namespace Gempic;
 

@@ -4,7 +4,6 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
-using namespace std;
 using namespace amrex;
 
 void main_main()
