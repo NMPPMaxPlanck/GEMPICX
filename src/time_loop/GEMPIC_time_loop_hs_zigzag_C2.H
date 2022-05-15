@@ -467,17 +467,6 @@ void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> *mw_ye
                        << ", diagnostics time: " << profiling_timers.counter_diagnostics
                        << ", total time: " << profiling_timers.counter_all << std::endl;
     }
-
-    if (profiling_timers.profiling)
-    {
-        profiling_timers.counter_all += MPI_Wtime();
-        amrex::Print() << "Deposition time: " << profiling_timers.counter_deposition
-                       << ", redistribute time: " << profiling_timers.counter_redistribute
-                       << ", field solver time: " << profiling_timers.counter_fields
-                       << ", sum boundary j time: " << profiling_timers.counter_jboundary
-                       << ", diagnostics time: " << profiling_timers.counter_diagnostics
-                       << ", total time: " << profiling_timers.counter_all << std::endl;
-    }
 }
 }  // namespace Time_Loop
 }  // namespace Gempic
