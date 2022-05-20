@@ -44,6 +44,7 @@ public:
     amrex::Vector<amrex::GpuArray<amrex::Real, vdim>> Efield_energy, mom;
     amrex::Vector<amrex::Real> kin;
     amrex::Vector<amrex::Real> gauss_error;
+    amrex::Real init_tot_energy;
     int freq_x;
     int freq_v;
     int freq_slice;
@@ -85,6 +86,10 @@ public:
         save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
         // save temporary results every freq_save steps
+        if (t_step == 0)
+        {
+            save_time_history(mw_yee->dt, simulation_name, t_step);
+        }
         if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
         {
             save_time_history(mw_yee->dt, simulation_name, t_step + 1);
@@ -152,20 +157,21 @@ public:
         for (int spec=0;spec<numspec;spec++)
         { // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
-                *(*part_gr)[spec].mypc, [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
-            {
-                auto m  = p.rdata(vdim);
-                auto vel = pow(std::abs(p.rdata(0)),2)+pow(std::abs(p.rdata(1)),2)+pow(std::abs(p.rdata(2)),2);
-                return (m*vel);
-            });
-
+                *(*part_gr)[spec].mypc,
+                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+                    auto m = p.rdata(vdim);
+                    auto vel = pow(std::abs(p.rdata(0)), 2) + pow(std::abs(p.rdata(1)), 2) +
+                               pow(std::abs(p.rdata(2)), 2);
+                    return (m * vel);
+                });
 
             // reduced sum over mpi ranks
             amrex::ParallelDescriptor::ReduceRealSum
                     (kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
-            kin[step] += 0.5*kin_tmp;
-            for (int cmp=0;cmp<vdim;cmp++) {
+            kin[step] += 0.5 * kin_tmp;
+            for (int cmp = 0; cmp < vdim; cmp++) 
+            {
                 auto mom_tmp = amrex::ReduceSum( 
                     *(*part_gr)[spec].mypc, [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
                     {
@@ -199,15 +205,23 @@ public:
      */
     void save_time_history(amrex::Real dt, std::string simulation_name, int t_step)
     {
+        int firstStep = freq_save * ((t_step - 1) / freq_save) + 1;
+        int lastStep = t_step;
+
         if (amrex::ParallelDescriptor::IOProcessor())  // only IOProcessor prints
         {
             std::ofstream ofsfun(simulation_name + ".txt", std::ofstream::out | std::ofstream::app);
-            amrex::Real init_tot_energy =
-                0.5 * (Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
-                       Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2]) +
-                kin[0] / domain_volume;
+            if (t_step == 0)
+            {
+                init_tot_energy =
+                    0.5 * (Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
+                           Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2]) +
+                    kin[0] / domain_volume;
+                firstStep = 0;
+                lastStep = 0;
+            }
 
-            for (int step = freq_save * ((t_step - 1) / freq_save); step <= t_step; step++)
+            for (int step = firstStep; step <= lastStep; step++)
             {
                 amrex::Real tot_energy = 0.5 * (Efield_energy[step][0] + Efield_energy[step][1] +
                                                 Efield_energy[step][2] + Bfield_energy[step][0] +
@@ -313,9 +327,9 @@ public:
     }
 
 #if (GEMPIC_SPACEDIM == 3)
-    void cross_product(amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3>& MultiInputE,
-                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3>& MultiInputB,
-                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3>& MultiOutput,
+    void cross_product(amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> &MultiInputE,
+                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> &MultiInputB,
+                       amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> &MultiOutput,
                        computational_domain infra)
     {
         amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()), infra.distriMap,
