@@ -20,21 +20,15 @@ Compiling and running on MPCDF machines
 
 Installing manually
 =====================
+- needed software: C++ compiler, MPI, cmake 
 
-Install AMReX first enabeling particles (for each dimension):  
-0.) cd build/amrex3D  
-1.) cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON ~/Documents/Codes/amrex/  
-2.) make install  
-3.) Run a cmake configuration that specifies the directory where AMReX is installed and the directory where the gempic code is located  
+1.) git clone  
+2.) git submodule init; git submodule update  
+3.) cd gempic; mkdir build; cd build  
+4.) cmake ..   
+5.) make 
 
-cmake -D AMReX_ROOT=~/Documents/Codes/amrex/installdir -D CMAKE_C_COMPILER=mpicc -D CMAKE_CXX_COMPILER=mpicxx ~/Documents/Codes/gempic
-
-
-4.) Build the library  
-make
-
-5.) Generate Doxygen documentation (if desired)  
-make doxygen
+Main executable vlasov_maxwell is in build/simulation/vlasov_maxwell  
 
 Changing dimension
 =====================
@@ -77,6 +71,12 @@ Dependencies
 - Graphviz ([for graphical visualization of objects](http://www.graphviz.org/))
 - Sphinx
 - Breathe ([for bridging between Sphinx and Doxygen documentation systems](https://breathe.readthedocs.io/en/latest/))
+
+Formatting
+=====================
+The format of the code (identation, spacing, etc.) follows the WarpX conventions, which are automatically done by `clang-format`. To format your code before committing run:
+
+`source scripts/sanitize_code.sh`
 
 Documentation
 =====================

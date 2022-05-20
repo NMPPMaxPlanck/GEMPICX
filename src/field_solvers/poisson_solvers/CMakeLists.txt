@@ -1,5 +1,0 @@
-add_library( gempic_poisson STATIC GEMPIC_MLNodeLaplacian_FD.cpp )
-if (USE_CUDA)
-	setup_target_for_cuda_compilation ( gempic_poisson )
-endif()
-target_link_libraries ( gempic_poisson AMReX::amrex AMReX::Flags_CXX ) 

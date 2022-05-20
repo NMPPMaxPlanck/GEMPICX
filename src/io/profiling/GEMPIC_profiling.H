@@ -4,9 +4,10 @@
 #include <AMReX.H>
 #include <AMReX_REAL.H>
 
-namespace Gempic {
-namespace Profiling {
-
+namespace Gempic
+{
+namespace Profiling
+{
 /**
  * Class responsible contains all timers for profiling the code
  */
@@ -26,13 +27,14 @@ public:
     /**
      * Default Constructor.
      */
-    timers ();
+    timers();
 
     // Explicit const
     /**
      * Explicit constructor.
      */
-    timers (bool prof){
+    timers(bool prof)
+    {
         profiling = prof;
         counter_deposition = 0.;
         counter_redistribute = 0.;
@@ -41,9 +43,8 @@ public:
         counter_diagnostics = 0.;
         counter_all = 0.;
     }
-
 };
-}
-}
+}  // namespace Profiling
+}  // namespace Gempic
 
 #endif

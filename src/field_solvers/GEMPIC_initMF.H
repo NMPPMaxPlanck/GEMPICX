@@ -17,26 +17,22 @@
 #ifndef INIT_H_
 #define INIT_H_
 
-namespace Gempic {
-namespace FieldSolvers {
+namespace Gempic
+{
+namespace FieldSolvers
+{
+void initConst(amrex::MultiFab& multiF, amrex::Real constant)
+{
+    for (amrex::MFIter mfi(multiF); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
 
-void initConst (amrex::MultiFab& multiF, amrex::Real constant) {
-
-    for ( amrex::MFIter mfi(multiF); mfi.isValid(); ++mfi ){
-
-            const amrex::Box& bx = mfi.tilebox();
-
-            amrex::Array4<amrex::Real> const& initArr = multiF[mfi].array();
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k)
-            {
-                initArr(i,j,k) = constant;
-            });
-        }
+        amrex::Array4<amrex::Real> const& initArr = multiF[mfi].array();
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) { initArr(i, j, k) = constant; });
     }
-
-
 }
-}
+
+}  // namespace FieldSolvers
+}  // namespace Gempic
 
 #endif
-
