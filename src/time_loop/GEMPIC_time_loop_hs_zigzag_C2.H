@@ -330,7 +330,7 @@ void time_loop_hs_zigzag_C2_step (computational_domain infra, maxwell_yee<vdim> 
     //abort();*/
 
         if (profiling_timers->profiling && profiling_count)
-            profiling_timers->counter_fields += MPI_Wtime();
+            profiling_timers->counter_fields -= MPI_Wtime();
         // advance E from j (field part of H_p)
         mw_yee->advance_E(infra, 1.0, false, true, mw_yee->HB_Array, mw_yee->E_Array);
         mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
