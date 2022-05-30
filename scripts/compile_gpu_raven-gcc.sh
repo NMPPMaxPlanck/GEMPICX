@@ -31,6 +31,8 @@ MAKE_NPROCS="${MAKE_NPROCS:-16}"
 git submodule init
 git submodule update
 
+export GPUS_PER_SOCKET=2
+export GPUS_PER_NODE=4
 export AMREX_CUDA_ARCH=Ampere
 
 BUILD_DIR=~/gempic_gpu_obj
