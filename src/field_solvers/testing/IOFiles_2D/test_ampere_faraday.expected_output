@@ -1,0 +1,10 @@
+Maxwell
+step 0
+Ex error: 0 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 0 |Bz error: 0
+step 1
+Ex error: 1.8654e-08 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 2.0356e-09 |Bz error: 0
+step 2
+Ex error: 7.4549e-08 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 8.1497e-09 |Bz error: 0
