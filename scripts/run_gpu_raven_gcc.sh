@@ -9,15 +9,16 @@
 #
 #SBATCH --nodes=1 # Request 1 (or more) node(s)
 #SBATCH --constraint="gpu"
-#SBATCH --gres=gpu:a100:4
-#SBATCH --cpus-per-task=72 # Launch 72 tasks per node
-#SBATCH --nvmps
+# Launch 4 tasks w/ each 18 cores & 1 GPU per node
+#SBATCH --gres=gpu:4
+#SBATCH --gpus-per-task=1
+#SBATCH --cpus-per-task=18
 #
 #SBATCH --mail-type=end
 #SBATCH --mail-user=sonnen@ipp.mpg.de
 #
 # Wall clock limit:
-#SBATCH --time=24:00:00
+#SBATCH --time=0:10:00
 
 module purge
 module load gcc/11 
