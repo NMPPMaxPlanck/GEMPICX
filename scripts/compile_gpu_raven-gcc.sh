@@ -8,7 +8,7 @@ echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
 
 module purge
-module load gcc/10
+module load gcc/11
 module load cmake/3.22
 module load cuda/11.4
 module load openmpi_gpu/4
@@ -36,6 +36,7 @@ export AMREX_CUDA_ARCH=Ampere
 
 BUILD_DIR=~/gempic_gpu_obj
 
+rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
