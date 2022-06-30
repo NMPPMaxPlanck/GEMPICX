@@ -36,7 +36,9 @@ export AMREX_CUDA_ARCH=Ampere
 
 BUILD_DIR=~/gempic_gpu_obj
 
-rm -rf $BUILD_DIR
+# comment this in if you want to switch modules or compilers, so CMake
+# configures the build again from scratch instead of reusing the previous one
+#rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 

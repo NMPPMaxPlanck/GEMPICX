@@ -57,7 +57,8 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
         for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Real charge = part_gr->charge[spec];
-            auto &particles = pti.GetArrayOfStructs();
+            auto &aos = pti.GetArrayOfStructs();
+            auto* AMREX_RESTRICT particles = aos().dataPtr();
             const long np = pti.numParticles();
 
             amrex::Array4<amrex::Real> const &rhoarr = mw_yee->rho[pti].array();
