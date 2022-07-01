@@ -1,4 +1,5 @@
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
@@ -50,6 +51,8 @@ public:
 
     void initialize_vlasov_maxwell_from_file()
     {
+        BL_PROFILE("vlasov_maxwell_simulation::initialize_vlasov_maxwell_from_file");
+
         // ------------------------------------------------------------------------------
         // ------------PARAMETERS--------------------------------------------------------
         params.init_Nghost(degx, degy, degz);
@@ -60,6 +63,8 @@ public:
     void initialize_gempic_structures(amrex::GpuArray<int, 2> funcSelectRho,
                                       amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB)
     {
+        BL_PROFILE("vlasov_maxwell_simulation::initialize_gempic_structures(args)");
+
         domain.initialize_computational_domain(params.n_cell, params.max_grid_size,
                                                params.is_periodic, params.real_box);
         mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
@@ -83,6 +88,8 @@ public:
 
     void initialize_gempic_structures()
     {
+        BL_PROFILE("vlasov_maxwell_simulation::initialize_gempic_structures");
+
         domain.initialize_computational_domain(params.n_cell, params.max_grid_size,
                                                params.is_periodic, params.real_box);
         mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
@@ -107,6 +114,8 @@ public:
 
     void run_time_loop()
     {
+        BL_PROFILE("vlasov_maxwell_simulation::run_time_loop");
+
         auto start = std::chrono::high_resolution_clock::now();
         switch (params.propagator)
         {
