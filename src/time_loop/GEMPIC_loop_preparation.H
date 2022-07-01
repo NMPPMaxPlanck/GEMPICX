@@ -2,6 +2,7 @@
 #define LOOP_PREPARATION_H_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -34,6 +35,8 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
                            computational_domain infra, maxwell_yee<vdim> *mw_yee,
                            particle_groups<vdim, numspec> *part_gr)
 {
+    BL_PROFILE("Gempic::Time_Loop::loop_preparation_init");
+
     // initial rho by: deposition of particle charge
     // Set rho to 0
     mw_yee->rho.setVal(0.0, 0);  // value and component

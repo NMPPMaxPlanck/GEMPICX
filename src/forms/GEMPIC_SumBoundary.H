@@ -2,6 +2,7 @@
 #ifndef SUMBOUNDARY_H_
 #define SUMBOUNDARY_H_
 
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -30,6 +31,8 @@ namespace Utils
 template <int vdim>
 void Gempic_SumBoundary(maxwell_yee<vdim> *mw_yee, computational_domain *infra)
 {
+    BL_PROFILE("Gempic::Utils::Gempic_SumBoundary");
+
     for (int i = 0; i < vdim; i++)
     {
         (*(*mw_yee).J_Array[i])

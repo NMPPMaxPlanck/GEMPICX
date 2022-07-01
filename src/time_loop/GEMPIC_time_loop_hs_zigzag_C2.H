@@ -2,6 +2,7 @@
 #define TIME_LOOP_HS_ZIGZAG_C2_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -49,6 +50,8 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                  amrex::Real coeff, particle_groups<vdim, numspec> *part_gr,
                                  timers *profiling_timers, bool profiling_count)
 {
+    BL_PROFILE("Gempic::Time_Loop::time_loop_hs_zigzag_C2_step");
+
     // Initialize the counters for timing the various parts of the algorithm
 
     mw_yee->advance_time(coeff);
@@ -403,6 +406,8 @@ void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> *mw_ye
                             diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool ctest,
                             std::string simulation_name, int strang_order)
 {
+    BL_PROFILE("time_loop_hs_zigzag_C2");
+
     bool energy_experiment = true;
     amrex::Real init_energy = 0.5 * (diagn->Efield_energy[0][0] + diagn->Efield_energy[0][1] +
                                      diagn->Efield_energy[0][2] + diagn->Bfield_energy[0][0] +
@@ -415,6 +420,8 @@ void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim> *mw_ye
     // if (profiling_timers.profiling) profiling_timers.counter_all -= MPI_Wtime();
     for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
     {
+        BL_PROFILE("time_loop_hs_zigzag_C2::step");
+
         if (profiling_timers.profiling && t_step == 0) profiling_timers.counter_all -= MPI_Wtime();
         switch (strang_order)
         {

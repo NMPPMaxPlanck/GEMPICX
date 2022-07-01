@@ -2,6 +2,7 @@
 #define MAXWELL_YEE_H_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -1625,6 +1626,8 @@ public:
                           amrex::MultiFab &ky, amrex::MultiFab &kz, computational_domain ifr,
                           int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100)
     {
+        BL_PROFILE("solve_poisson_CG");
+
         if (verbose > 0)
         {
             amrex::Print() << "--------------------------------------------"

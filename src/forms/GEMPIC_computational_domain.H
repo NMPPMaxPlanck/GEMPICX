@@ -3,6 +3,7 @@
 
 #include <AMReX.H>
 #include <AMReX_Array.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -63,6 +64,8 @@ public:
                                          amrex::IntVect is_periodic_in, amrex::RealBox real_box_in,
                                          amrex::Real tolerance_particle_in = 1.e-10)
     {
+        BL_PROFILE("computational_domain::initialize_computational_domain");
+
         // Initialize infrastructure:
 
         n_cell = n_cell_in;
