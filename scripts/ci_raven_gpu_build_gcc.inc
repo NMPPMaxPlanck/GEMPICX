@@ -4,7 +4,9 @@ module purge
 module load gcc/11
 module load cuda/11.4
 module av
-module load openmpi_gpu/4
+# missing module
+#module load openmpi_gpu/4
+module load openmpi/4
 module load cmake/3.22
 module load numdiff/5.9
 module load git
