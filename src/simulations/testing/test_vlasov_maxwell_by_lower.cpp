@@ -107,7 +107,14 @@ void main_main()
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        overwrite_amrex_parser_defaults
+    );
     const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output
     file contains all outputs. For each dimension, apart from running the main_main for the

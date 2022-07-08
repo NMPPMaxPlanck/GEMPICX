@@ -463,7 +463,8 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
 template <typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     S const &spline, spline1d_at_particles<degp> const &spline_new,
-    spline1d_at_particles<degp> const &spline_old, amrex::Real weight, const amrex::Real *dx,
+    spline1d_at_particles<degp> const &spline_old, amrex::Real weight,
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength>& primitive)

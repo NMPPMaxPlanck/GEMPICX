@@ -3,6 +3,7 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -162,7 +163,14 @@ void main_main(bool ctest)
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        overwrite_amrex_parser_defaults
+    );
     const int vdim=3, numspec=1, degx=1, degy=1, degz=1, degmw=2, propagator=0;
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the
