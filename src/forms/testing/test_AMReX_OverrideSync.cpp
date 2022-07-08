@@ -4,6 +4,8 @@
 #include <AMReX_Print.H>
 #include <AMReX_iMultiFab.H>
 
+#include <GEMPIC_amrex_init.H>
+
 using namespace amrex;
 
 void main_main()
@@ -113,7 +115,14 @@ void main_main()
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        Gempic::overwrite_amrex_parser_defaults
+    );
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_OverrideSync.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_OverrideSync_additional.tmp.0");

@@ -25,6 +25,7 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
@@ -175,7 +176,14 @@ void main_main()
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        overwrite_amrex_parser_defaults
+    );
     if (ParallelDescriptor::MyProc() == 0) remove("test_gempic_norm.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_gempic_norm_additional.tmp.0");
 

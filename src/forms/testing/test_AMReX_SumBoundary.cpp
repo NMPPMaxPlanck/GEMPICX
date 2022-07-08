@@ -6,6 +6,7 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_sampler.H>
 
@@ -130,7 +131,14 @@ void main_main()
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        overwrite_amrex_parser_defaults
+    );
     const int vdim=3, degx=1, degy=1, degz=1;
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_SumBoundary.tmp.0");

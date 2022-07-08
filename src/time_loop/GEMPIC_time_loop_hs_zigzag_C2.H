@@ -117,7 +117,9 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
             // loop over particles: add contribution of old particle position to J and push
 
             amrex::Real const dt = mw_yee->dt;
-            auto const dx = infra.geom.CellSize();
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx = {infra.geom.CellSize()[0],
+                                                                      infra.geom.CellSize()[1],
+                                                                      infra.geom.CellSize()[2]};
             amrex::ParallelFor(
                 np,
                 [=] AMREX_GPU_DEVICE(long pp)
@@ -155,7 +157,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                         charge * particles[pp].rdata(vdim) * infra.dxi[GEMPIC_SPACEDIM];
 
                     for (unsigned int d = 0; d < vdim; ++d) vel[d] = particles[pp].rdata(d);
-                    amrex::GpuArray<amrex::Real, 2> bfields;
+                    amrex::GpuArray<amrex::Real, 2> bfields {0.,0.};
                     // push x1
                     amrex::Real x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
                     spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
@@ -190,7 +192,6 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                                  std::max(degx, std::max(degy, degz)) + 4>(
                             spline, spline_new_y, spline_old_y, weight, dx, bA,
                             jA, bfields, primitive);
-
                         // Push v2 and v3
                         vel[0] = vel[0] + chargemass * bfields[1];
                         if (vdim > 2) vel[2] = vel[2] - chargemass * bfields[0];
@@ -220,6 +221,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
                                                  std::max(degx, std::max(degy, degz)) + 4>(
                             spline, spline_new_z, spline_old_z, weight, dx, bA,
                             jA, bfields, primitive);
+
                         // Push v2 and v3
                         vel[0] = vel[0] - chargemass * bfields[0];
                         vel[1] = vel[1] + chargemass * bfields[1];
@@ -309,11 +311,6 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim> *
     }
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary += MPI_Wtime();
-    /*amrex::Vector<std::string> varnames = { "J_x"};
-    amrex::Real timeo = t_step*(*mw_yee).dt*coeff;
-    WriteSingleLevelPlotfile("current_C2", *(*mw_yee).J_Array[0], varnames,
-    infra.geom, timeo, 0);
-    //abort();*/
 
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_fields -= MPI_Wtime();

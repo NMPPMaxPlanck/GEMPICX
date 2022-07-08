@@ -18,6 +18,7 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
@@ -149,7 +150,14 @@ void main_main()
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        overwrite_amrex_parser_defaults
+    );
     const int vdim1=1, vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
 
 #if (GEMPIC_SPACEDIM == 1)
