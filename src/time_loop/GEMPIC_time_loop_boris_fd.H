@@ -40,6 +40,8 @@ void time_loop_boris_fd_step(computational_domain infra, maxwell_yee<vdim> *mw_y
                              amrex::Real coeff, particle_groups<vdim, numspec> *part_gr,
                              timers *profiling_timers)
 {
+    BL_PROFILE("time_loop_boris_fd_step");
+
     mw_yee->advance_time(coeff);
 
     if (profiling_timers->profiling) profiling_timers->counter_fields -= MPI_Wtime();

@@ -2,6 +2,7 @@
 #define DIAGNOSTICS_H_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -81,6 +82,8 @@ public:
                          maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
                          std::string simulation_name, bool ctest)
     {
+        BL_PROFILE("diagnostics::end_of_timestep");
+
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics -= MPI_Wtime();
         // save norms for diagnostics
         save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
@@ -108,6 +111,8 @@ public:
     void save_step_data(int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
                         particle_groups<vdim, numspec> *part_gr)
     {
+        BL_PROFILE("diagnostics::save_step_data");
+
         Bfield_energy.push_back({0., 0., 0.});
         Efield_energy.push_back({0., 0., 0.});
         mom.push_back({0., 0., 0.});
@@ -207,6 +212,8 @@ public:
      */
     void save_time_history(amrex::Real dt, std::string simulation_name, int t_step)
     {
+        BL_PROFILE("diagnostics::save_time_history");
+
         int firstStep = freq_save * ((t_step - 1) / freq_save) + 1;
         int lastStep = t_step;
 
@@ -282,6 +289,8 @@ public:
 
     void ctest_output(std::string simulation_name, int t_step)
     {
+        BL_PROFILE("diagnostics::ctest_output");
+
         std::string filename = simulation_name + ".output";
         switch (vdim)
         {
@@ -334,6 +343,8 @@ public:
                        amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> &MultiOutput,
                        computational_domain infra)
     {
+        BL_PROFILE("diagnostics::cross_product");
+
         amrex::MultiFab EyBz(convert(infra.grid, amrex::IntVect::TheCellVector()), infra.distriMap,
                              0, 0);
         amrex::MultiFab EzBy(convert(infra.grid, amrex::IntVect::TheCellVector()), infra.distriMap,
@@ -383,6 +394,8 @@ private:
     void initialize_diagnostics(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol,
                                 bool ctest)
     {
+        BL_PROFILE("diagnostics::initialize_diagnostics");
+
         nSteps = n_t;
         freq_x = fx;
         freq_v = fv;
