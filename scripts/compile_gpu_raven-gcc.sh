@@ -11,6 +11,7 @@ module purge
 module load gcc/11
 module load cmake/3.22
 module load cuda/11.4
+module load openmpi/4
 module load openmpi_gpu/4
 module load numdiff/5.9
 
