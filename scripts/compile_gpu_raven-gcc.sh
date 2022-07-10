@@ -8,11 +8,11 @@ echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
 
 module purge
-module load gcc/10
+module load gcc/11
 module load cmake/3.22
-module load cuda/11.2
-module load impi/2021.4
-#module load openmpi
+module load cuda/11.4
+module load openmpi/4
+module load openmpi_gpu/4
 module load numdiff/5.9
 
 echo " -- Base GCC compiler C/C++"
@@ -35,13 +35,16 @@ export AMREX_CUDA_ARCH=Ampere
 
 BUILD_DIR=~/gempic_gpu_obj
 
+# comment this in if you want to switch modules or compilers, so CMake
+# configures the build again from scratch instead of reusing the previous one
+#rm -rf $BUILD_DIR
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
 mkdir -p amrex
 cd amrex
 
-cmake -D AMReX_GPU_BACKEND=CUDA -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $AMREX_DIRECTORY
+cmake -D AMReX_GPU_BACKEND=CUDA -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D AMReX_TINY_PROFILE=ON $AMREX_DIRECTORY
 
 make -j $MAKE_NPROCS install
 

@@ -33,7 +33,7 @@ cd $BUILD_DIR
 #rm -rf build_amrex
 #mkdir build_amrex
 #cd build_amrex
-#cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON $BUILD_DIR/amrex
+#cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D AMReX_TINY_PROFILE=ON $BUILD_DIR/amrex
 #make install
 #cd ..
 

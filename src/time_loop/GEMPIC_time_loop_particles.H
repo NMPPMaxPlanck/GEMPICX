@@ -2,6 +2,7 @@
 #define TIME_LOOP_PARTICLES_H_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -38,8 +39,12 @@ void time_loop_particles (computational_domain infra,
                          bool ctest,
                          std::string simulation_name) 
 {
-    for (int t_step=0;t_step<(*mw_yee).nsteps;t_step++) 
+    BL_PROFILE("time_loop_particles");
+
+    for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
     {
+        BL_PROFILE("time_loop_particles::step");
+
         mw_yee->advance_time();
 
         if ( electromagnetic )

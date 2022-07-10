@@ -23,8 +23,8 @@
 
 module purge
 module load gcc/10 
-module load openmpi
-module load cuda/11.2
+module load openmpi_gpu/4
+module load cuda/11.4
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 # Run the program:

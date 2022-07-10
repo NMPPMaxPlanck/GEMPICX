@@ -2,6 +2,7 @@
 #define TIME_LOOP_BORIS_FD_H_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Array.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
@@ -39,6 +40,8 @@ void time_loop_boris_fd_step (computational_domain infra, maxwell_yee<vdim> *mw_
                          amrex::Real coeff, amrex::GpuArray<particle_groups<vdim>, numspec> *part_gr,
                          timers *profiling_timers) 
 {
+    BL_PROFILE("time_loop_boris_fd_step");
+
     mw_yee->advance_time(coeff);
 
     if (profiling_timers->profiling)
@@ -244,12 +247,16 @@ void time_loop_boris_fd (computational_domain infra, maxwell_yee<vdim> *mw_yee,
                          diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn, bool ctest,
                          std::string simulation_name, int strang_order) 
 {
+    BL_PROFILE("time_loop_boris_fd");
+
     timers profiling_timers(true);
 
     if (profiling_timers.profiling) 
         profiling_timers.counter_all -= MPI_Wtime();
     for (int t_step = 0; t_step < mw_yee->nsteps; t_step++)
     {
+        BL_PROFILE("time_loop_boris_fd::step");
+
         switch (strang_order)
         {
             case 2:

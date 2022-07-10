@@ -1,0 +1,91 @@
+Maxwell
+step 0
+Ex error: 0 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 1
+Ex error: 0.00059615 |Ey error: 0.0013442 |Ez error: 0.00044999
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 2
+Ex error: 0.0023845 |Ey error: 0.0053765 |Ez error: 0.0017998
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 3
+Ex error: 0.0053644 |Ey error: 0.012095 |Ez error: 0.0040491
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 4
+Ex error: 0.009535 |Ey error: 0.021499 |Ez error: 0.0071971
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 5
+Ex error: 0.014895 |Ey error: 0.033583 |Ez error: 0.011243
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+
+Maxwell
+step 0
+Ex error: 0 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 1
+Ex error: 0.00059615 |Ey error: 0.0013442 |Ez error: 0.00044999
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 2
+Ex error: 0.0023845 |Ey error: 0.0053765 |Ez error: 0.0017998
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 3
+Ex error: 0.0053644 |Ey error: 0.012095 |Ez error: 0.0040491
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 4
+Ex error: 0.009535 |Ey error: 0.021499 |Ez error: 0.0071971
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+step 5
+Ex error: 0.014895 |Ey error: 0.033583 |Ez error: 0.011243
+Bx error: 0 |By error: 4.6489e-310 |Bz error: 2.1739e-322
+
+Poisson
+Ex error: 0.083119 |Ey error: 0.083119 |Ez error: 0.011243
+
+rho_from_E
+rho Error: 4.3766e-26
+
+Maxwell
+step 0
+Ex error: 0 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 0 |Bz error: 0
+step 1
+Ex error: 6.1452e-09 |Ey error: 0.0013328 |Ez error: 0.00015
+Bx error: -nan |By error: -nan |Bz error: 0.00043593
+step 2
+Ex error: 6.758e-08 |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+step 3
+Ex error: -nan |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+step 4
+Ex error: -nan |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+step 5
+Ex error: -nan |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+
+Maxwell
+step 0
+Ex error: 0 |Ey error: 0 |Ez error: 0
+Bx error: 0 |By error: 0 |Bz error: 0
+step 1
+Ex error: 6.1452e-09 |Ey error: 0.0013328 |Ez error: 0.00015
+Bx error: -nan |By error: -nan |Bz error: 0.00043593
+step 2
+Ex error: 6.758e-08 |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+step 3
+Ex error: -nan |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+step 4
+Ex error: -nan |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+step 5
+Ex error: -nan |Ey error: -nan |Ez error: -nan
+Bx error: -nan |By error: -nan |Bz error: -nan
+
+Poisson
+Ex error: 0.083119 |Ey error: 0.083119 |Ez error: -nan
+
+rho_from_E
+rho Error: 4.3766e-26

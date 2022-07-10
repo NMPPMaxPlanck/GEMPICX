@@ -43,7 +43,7 @@ mkdir -p amrex
 mkdir -p amrex_install
 cd amrex
 
-CXX=CC cmake -D CMAKE_BUILD_TYPE=Release -D AMReX_GPU_BACKEND=CUDA -D AMReX_CUDA_ARCH=Pascal -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_LINKER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D CMAKE_INSTALL_PREFIX=../amrex_install --expt-extended-lambda $AMREX_DIRECTORY
+CXX=CC cmake -D CMAKE_BUILD_TYPE=Release -D AMReX_GPU_BACKEND=CUDA -D AMReX_CUDA_ARCH=Pascal -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D AMReX_TINY_PROFILE=ON -D CUDA_HOST_COMPILER=/opt/cray/pe/craype/2.7.3/bin/CC -D CMAKE_CPP_COMPILER=CC -D CMAKE_LINKER=CC -D CMAKE_CUDA_FLAGS=-ccbin=CC -D CMAKE_INSTALL_PREFIX=../amrex_install --expt-extended-lambda $AMREX_DIRECTORY
 
 make install -j 16
 

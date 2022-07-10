@@ -2,6 +2,7 @@
 
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_vlasov_maxwell.H>
 
@@ -64,7 +65,14 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
 
 int main(int argc, char *argv[])
 {
-    amrex::Initialize(argc, argv);
+    const bool build_parm_parse = true;
+    amrex::Initialize(
+        argc,
+        argv,
+        build_parm_parse,
+        MPI_COMM_WORLD,
+        overwrite_amrex_parser_defaults
+    );
     std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
     const int degx=2, degy=2, degz=2, degmw=2, vdim=3;
     const bool electromagnetic=true, output=false;

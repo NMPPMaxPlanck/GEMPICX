@@ -2,6 +2,7 @@
 #define MAXWELL_YEE_H_
 
 #include <AMReX.H>
+#include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
 #include <AMReX_BoxArray.H>
 #include <AMReX_CoordSys.H>
@@ -1625,6 +1626,8 @@ public:
                           amrex::MultiFab &ky, amrex::MultiFab &kz, computational_domain ifr,
                           int verbose = 0, amrex::Real reltol = 1.e-11, int maxsteps = 100)
     {
+        BL_PROFILE("solve_poisson_CG");
+
         if (verbose > 0)
         {
             amrex::Print() << "--------------------------------------------"
@@ -1866,12 +1869,18 @@ public:
 
         for (int comp = 0; comp < edim; comp++)
         {
+            // This iterates over fabs (boxes with data arrays)
+            // To do for CPU add open mp pragma
             for (amrex::MFIter mfi(*E_Array[comp]); mfi.isValid(); ++mfi)
             {
+
                 const amrex::Box &bx = mfi.validbox();
 
+                // This gets a view of the array inside a fab. Non-owning array representation.
                 amrex::Array4<amrex::Real> const &phi_arr = phi[mfi].array();
                 amrex::Array4<amrex::Real> const &E_arr = (*E_Array[comp])[mfi].array();
+                // This is a actually a function call and one of the arguments is a lambda function which
+                // copies everything that is required from the outer scope
                 ParallelFor(bx,
                             [=] AMREX_GPU_DEVICE(int i, int j, int k)
                             {
