@@ -28,7 +28,7 @@ strang_order = 2
 propagator = 3
 freq_x = 100001 
 freq_v = 100001 
-freq_slice = 100001 
+freq_slice = 10001 
 
 # Function parameters
 Bx = "0.0"

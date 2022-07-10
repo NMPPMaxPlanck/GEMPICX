@@ -85,17 +85,21 @@ public:
         BL_PROFILE("diagnostics::end_of_timestep");
 
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics -= MPI_Wtime();
-        // save norms for diagnostics
-        save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        // Disable all diagnostics by setting freq_slice > 100000
+        if (freq_slice < 100000)
+        {
+            // save norms for diagnostics
+            save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
-        // save temporary results every freq_save steps
-        if (t_step == 0)
-        {
-            save_time_history(mw_yee->dt, simulation_name, t_step);
-        }
-        if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
-        {
-            save_time_history(mw_yee->dt, simulation_name, t_step + 1);
+            // save temporary results every freq_save steps
+            if (t_step == 0)
+            {
+                save_time_history(mw_yee->dt, simulation_name, t_step);
+            }
+            if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
+            {
+                save_time_history(mw_yee->dt, simulation_name, t_step + 1);
+            }
         }
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step + 1 << std::endl;
