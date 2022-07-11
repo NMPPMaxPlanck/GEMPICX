@@ -61,14 +61,15 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
         {
             amrex::Real charge = (*part_gr)[spec].charge;
             const long np = pti.numParticles();
-            const auto particleStruct = pti.GetArrayOfStructs();
+            const auto particles = pti.GetArrayOfStructs()().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+            //const auto particleStruct = pti.GetArrayOfStructs();
             // const auto& particle_attributes = pti.GetStructOfArrays();
             // amrex::ParticleReal *const AMREX_RESTRICT weight =
             //    particle_attributes.GetRealData(vdim).data();
 
             // const amrex::ParticleReal weight = weight_struct.data();
-            const auto particles = particleStruct().data();
+            //const auto particles = particleStruct().data();
             amrex::Array4<amrex::Real> const &rhoarr = mw_yee->rho[pti].array();
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
                 // for (int pp=0;pp<np;pp++) {

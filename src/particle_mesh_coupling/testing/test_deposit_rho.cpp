@@ -2,8 +2,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -66,7 +66,7 @@ void main_main()
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    const int NS=0, FX=2, FV=2, FS=2;
+    const int NS = 0, FX = 2, FV = 2, FS = 2;
     VlMa.set_params("test_deposit_rho", n_cell, {1000}, NS, FX, FV, FS, is_periodic,
                     {AMREX_D_DECL(4, 4, 4)}, 0.02, {-1.0}, {1.0}, k, {"0"});
 
@@ -82,17 +82,18 @@ void main_main()
     // Initialize fields and particles
     maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
-    int species = 0; // all particles are same species for now
+    int species = 0;  // all particles are same species for now
 
     // particles
     amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
-    for (int spec=0;spec<numspec;spec++) {
+    for (int spec = 0; spec < numspec; spec++)
+    {
         part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
     //------------------------------------------------------------------------------
     // initialize particles:
-    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, 
-                                           VlMa.meanVelocity[species], VlMa.vThermal[species], 
+    init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell,
+                                           VlMa.meanVelocity[species], VlMa.vThermal[species],
                                            VlMa.vWeight[species], species, wave_function);
 
     //------------------------------------------------------------------------------
@@ -104,38 +105,37 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Deposit charges:
-    mw_yee.rho.setVal(0.0, 0); // value and component
+    mw_yee.rho.setVal(0.0, 0);  // value and component
     mw_yee.rho.FillBoundary(infra.geom.periodicity());
 
-    for (int spec=0;spec<numspec;spec++) 
+    for (int spec = 0; spec < numspec; spec++)
     {
-        (part_gr[spec]).mypc->Redistribute(); // assign particles to the tile they are in
-        for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr[spec]).mypc, 0); pti.isValid(); ++pti) 
+        (part_gr[spec]).mypc->Redistribute();  // assign particles to the tile they are in
+        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*(part_gr[spec]).mypc, 0); pti.isValid(); ++pti)
         {
-            auto& particles = pti.GetArrayOfStructs();
-            auto& particle_attributes = pti.GetStructOfArrays();
-            const long np  = pti.numParticles();
+            amrex::Real charge = part_gr[spec].charge;
+            const long np = pti.numParticles();
+            const auto particles = pti.GetArrayOfStructs()().data();
+            const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
             amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
-            for (int pp=0;pp<np;pp++) 
+            for (int pp = 0; pp < np; pp++)
             {
-                amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
-                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) 
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
                 {
                     pos[comp] = particles[pp].pos(comp);
                 }
-                //amrex::Real weight = particles[pp].rdata(vdim);
-                amrex::Real weight = particle_attributes.GetRealData(vdim)[pp];
-                splines_at_particles<degx,degy,degz> spline;
-                spline.init_particles(pos , infra.plo, infra.dxi);
+                splines_at_particles<degx, degy, degz> spline;
+                spline.init_particles(pos, infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz>(
-                    spline, weight*part_gr[spec].charge*infra.dxi[GEMPIC_SPACEDIM], rhoarr);
+                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
             }
         }
     }
 
     mw_yee.rho.SumBoundary(0, 1, {mw_yee.Nghost, mw_yee.Nghost, mw_yee.Nghost}, {0, 0, 0},
-                             infra.geom.periodicity());
+                           infra.geom.periodicity());
     mw_yee.rho.FillBoundary(infra.geom.periodicity());
 
     //------------------------------------------------------------------------------
@@ -152,16 +152,11 @@ void main_main()
         << gempic_norm(mw_yee.phi, infra, 2) * gempic_norm(mw_yee.phi, infra, 2) << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
     const int numspec = 1, degx = 1, degy = 1, degz = 1;
 #if (GEMPIC_SPACEDIM == 1)
