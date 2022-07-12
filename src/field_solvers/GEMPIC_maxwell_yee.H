@@ -1938,12 +1938,12 @@ public:
             for (amrex::ParIter<edim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
                  ++pti)
             {
-                auto &particles = pti.GetArrayOfStructs();
+                auto particles = pti.GetArrayOfStructs()().data();
                 const long np = pti.numParticles();
-
+                amrex::Real charge = part_gr->charge[spec];
                 amrex::Array4<amrex::Real> const &rhoarr = rho[pti].array();
 
-                for (int pp = 0; pp < np; pp++)
+                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) 
                 {
                     splines_at_particles<degx, degy, degz> spline;
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
@@ -1951,11 +1951,8 @@ public:
                         position[d] = particles[pp].pos(d);
                     spline.init_particles(position, ifr.plo, ifr.dxi);
                     gempic_deposit_rho_C3<degx, degy, degz>(spline,
-                                                            (*part_gr).charge[spec] *
-                                                                ifr.dxi[GEMPIC_SPACEDIM] *
-                                                                particles[pp].rdata(edim),
-                                                            rhoarr);
-                }
+                        charge * ifr.dxi[GEMPIC_SPACEDIM] * particles[pp].rdata(edim), rhoarr);
+                });
             }
         }
 
