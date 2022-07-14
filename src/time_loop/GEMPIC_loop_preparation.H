@@ -61,7 +61,7 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
         {
             amrex::Real charge = part_gr->charge[spec];
             auto &aos = pti.GetArrayOfStructs();
-            auto* AMREX_RESTRICT particles = aos().dataPtr();
+            auto *AMREX_RESTRICT particles = aos().dataPtr();
             const long np = pti.numParticles();
 
             amrex::Array4<amrex::Real> const &rhoarr = mw_yee->rho[pti].array();
@@ -88,8 +88,8 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
     }
 
     // add values from ghost cells and periodic boundary
-    mw_yee->rho.SumBoundary(0, 1, {mw_yee->Nghost, mw_yee->Nghost, mw_yee->Nghost},
-                              {0, 0, 0}, infra.geom.periodicity());
+    mw_yee->rho.SumBoundary(0, 1, {mw_yee->Nghost, mw_yee->Nghost, mw_yee->Nghost}, {0, 0, 0},
+                            infra.geom.periodicity());
     mw_yee->rho.OverrideSync(*(mw_yee->nodal_Mask), infra.geom.periodicity());
     mw_yee->rho.FillBoundary(infra.geom.periodicity());
 
@@ -111,7 +111,7 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
     if (degmw > 2)
     {
         mw_yee->template solve_poisson_CG<degmw>(mw_yee->rho, mw_yee->phi, kx, ky, kz, infra, 2,
-                                                   1e-11, 100);
+                                                 1e-11, 100);
         mw_yee->template D_from_phi<degmw>(mw_yee->phi, mw_yee->E_Array, kx, ky, kz, infra);
     }
 }
@@ -128,8 +128,7 @@ void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computationa
         //------------------------------------------------------------------------------
         // approximate e^1/2
         mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
-        mw_yee->advance_E(infra, 0.5 * mw_yee->dt, true, true, mw_yee->HB_Array,
-                            mw_yee->E_Array);
+        mw_yee->advance_E(infra, 0.5 * mw_yee->dt, true, true, mw_yee->HB_Array, mw_yee->E_Array);
         //------------------------------------------------------------------------------
         // approximate x^1/2
         for (int spec = 0; spec < numspec; spec++)
@@ -199,7 +198,7 @@ void loop_preparation(
 
     // initial B_field
     mw_yee->template initB<degmw>(function_to_project_0, function_to_project_1,
-                                    function_to_project_2, infra);
+                                  function_to_project_2, infra);
 
     loop_staggering<vdim, numspec, degx, degy, degz, degmw, output>(meanVelocity, infra, mw_yee,
                                                                     part_gr, diagn, time_staggered);
@@ -228,6 +227,7 @@ void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computation
                       bool time_staggered, amrex::ParserExecutor<4> BxEval,
                       amrex::ParserExecutor<4> ByEval, amrex::ParserExecutor<4> BzEval)
 {
+    BL_PROFILE("loop_preparation  (...,parserExec)");
     loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, output>(meanVelocity, infra,
                                                                           mw_yee, part_gr);
 
