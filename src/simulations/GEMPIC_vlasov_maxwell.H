@@ -1,4 +1,5 @@
 #include <AMReX.H>
+#include <AMReX_AmrCore.H>
 #include <AMReX_BLProfiler.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
@@ -84,6 +85,28 @@ public:
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(
             params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
+
+        // Print AMReX grid information and warn about resource usage
+        if (ParallelDescriptor::IOProcessor())
+        {
+            std::cout << "\nGrid Summary: \n";
+            std::cout << "total number of boxes " << domain.grid.size() << "\n";
+            std::cout << "Number of MPI ranks " << ParallelDescriptor::NProcs() << "\n\n";
+            // Print Box List if there are less than 20 boxes
+            if (domain.grid.size() < 20)
+            {
+                std::cout << "Box list " << domain.grid.boxList() << "\n";
+            }
+            if (ParallelDescriptor::NProcs() > domain.grid.size())
+            {
+                std::cout << "WARNING:\n";
+                std::cout << "----------------------------------------------------------- \n";
+                std::cout << "There is not enough work for all MPI ranks. \n";
+                std::cout << "You should have more boxes than MPI ranks. \n";
+                std::cout << "This can be adjusted with the max_grid_size input parameter. \n";
+                std::cout << "----------------------------------------------------------- \n";
+            }
+        }
     }
 
     void initialize_gempic_structures()
@@ -110,6 +133,27 @@ public:
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(
             params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, params.BxEval,
             params.ByEval, params.BzEval);
+
+        // Print AMReX grid information and warn about resource usage
+        if (ParallelDescriptor::IOProcessor())
+        {
+            std::cout << "\nGrid Summary:\n";
+            std::cout << "total number of boxes " << domain.grid.size() << "\n";
+            std::cout << "Number of MPI ranks " << ParallelDescriptor::NProcs() << "\n\n";
+            if (domain.grid.size() < 20)
+            {
+                std::cout << "Box list " << domain.grid.boxList() << "\n";
+            }
+            if (ParallelDescriptor::NProcs() > domain.grid.size())
+            {
+                std::cout << "WARNING:\n";
+                std::cout << "----------------------------------------------------------- \n";
+                std::cout << "There is not enough work for all MPI ranks. \n";
+                std::cout << "You should have more boxes than MPI ranks. \n";
+                std::cout << "This can be adjusted with the max_grid_size input parameter. \n";
+                std::cout << "----------------------------------------------------------- \n";
+            }
+        }
     }
 
     void run_time_loop()
@@ -140,8 +184,8 @@ public:
                 //     ls_rungekutta<3> rk_prop();
                 //     rk_prop.time_loop(domain, &mw_yee, &art_gr);
             case 100:
-                 time_loop_particles<vdim, numspec, degx, degy, degz, degvm,
-                 electromagnetic>(domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name);
+                time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(
+                    domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name);
                 break;
             default:
                 break;
