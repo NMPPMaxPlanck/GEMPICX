@@ -188,6 +188,8 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
                                 amrex::Vector<amrex::Real> Vweight, int species, int rSeed = 925)
 {
+    BL_PROFILE("init_particles_full_domain");
+
     double x, y, z;
     double kx = k_vec[0];
     double ky = k_vec[1];
@@ -353,6 +355,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
                                 amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real),
                                 int rSeed = 925)
 {
+    BL_PROFILE("init_particles_full_domain (..., amrex::Real (*wave_function)");
     double x, y, z;
 
     amrex::Real x_c, y_c, z_c;  // cell-corner coordinates

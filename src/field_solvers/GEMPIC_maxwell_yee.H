@@ -120,6 +120,7 @@ public:
                     int Nghost_in, amrex::Real epref_ep0_in, amrex::Real curlB_scaling_in,
                     amrex::Real energy_b_scaling_in)
     {
+        BL_PROFILE("maxwell_yee::initialize");
         // set index indicating nodal-/cell-centered
         // 0 -> cell-centered | 1 -> node-centered
 
@@ -1272,6 +1273,7 @@ public:
     void init_rho_phi(amrex::GpuArray<std::string, 2> fields, amrex::Vector<amrex::Real> k,
                       computational_domain ifr)
     {
+        BL_PROFILE("maxwell_yee::init_rho_phi (string,...) ");
         // rho
         projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)},
                            amrex::IndexType(amrex::IntVect::TheNodeVector()), (rho));
