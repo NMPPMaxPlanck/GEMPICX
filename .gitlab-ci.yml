@@ -41,7 +41,7 @@ build-test_mpcdf_modules_cloud_cpu:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
     - cd scripts
-    - source ci_raven_gpu_build_gcc.inc
+    - source ci_raven_cpu_build_gcc.inc
     - bash gempic3D_ci.sh
 
 
