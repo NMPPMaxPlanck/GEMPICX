@@ -281,17 +281,23 @@ public:
         parser.registerVariables({"x", "y", "z", "t"});
         auto parser_eval = parser.compile<4>();
 
-        std::vector<amrex::Real> stencil;
+        amrex::GpuArray<amrex::Real, degree - 1> stencil;
         switch (degree)
         {
             case 2:
-                stencil = {1.0};
+                stencil[0] = 1.0;
                 break;
             case 4:
-                stencil = {1.0 / 6.0, 4.0 / 6.0, 1.0 / 6.0};
+                stencil[0] = 1.0 / 6.0;
+                stencil[1] = 4.0 / 6.0; 
+                stencil[2] = 1.0 / 6.0;
                 break;
             case 6:
-                stencil = {1.0 / 12.0, 4.0 / 12.0, 2.0 / 12.0, 4.0 / 12.0, 1.0 / 12.0};
+                stencil[0] = 1.0 / 12.0;
+                stencil[1] = 4.0 / 12.0;
+                stencil[2] = 2.0 / 12.0; 
+                stencil[3] = 4.0 / 12.0; 
+                stencil[4] = 1.0 / 12.0;
                 break;
             default:
                 amrex::Print() << "degree not implemented" << std::endl;
@@ -372,19 +378,23 @@ public:
                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate, amrex::IndexType IndexVect,
                     amrex::MultiFab &MultiF)
     {
-        // auto function_to_project = parser.compile<4>();  // function with four arguments
-
-        std::vector<amrex::Real> stencil;
+        amrex::GpuArray<amrex::Real, degree - 1> stencil;
         switch (degree)
         {
             case 2:
-                stencil = {1.0};
+                stencil[0] = 1.0;
                 break;
             case 4:
-                stencil = {1.0 / 6.0, 4.0 / 6.0, 1.0 / 6.0};
+                stencil[0] = 1.0 / 6.0;
+                stencil[1] = 4.0 / 6.0; 
+                stencil[2] = 1.0 / 6.0;
                 break;
             case 6:
-                stencil = {1.0 / 12.0, 4.0 / 12.0, 2.0 / 12.0, 4.0 / 12.0, 1.0 / 12.0};
+                stencil[0] = 1.0 / 12.0;
+                stencil[1] = 4.0 / 12.0;
+                stencil[2] = 2.0 / 12.0; 
+                stencil[3] = 4.0 / 12.0; 
+                stencil[4] = 1.0 / 12.0;
                 break;
             default:
                 amrex::Print() << "degree not implemented" << std::endl;
@@ -444,12 +454,12 @@ public:
 #if (GEMPIC_SPACEDIM > 2)
                             z_eval = z[zd];
 #endif
-                            val += (integrate[0] ? stencil[xd] : 1) *
+                            val += parserEval(x_eval, y_eval, z_eval, t) *
+                                  (integrate[0] ? stencil[xd] : 1) *
                                    (integrate[1] ? stencil[yd] : 1) *
 #if (GEMPIC_SPACEDIM > 2)
-                                   (integrate[2] ? stencil[zd] : 1) *
+                                   (integrate[2] ? stencil[zd] : 1);
 #endif
-                                   parserEval(x_eval, y_eval, z_eval, t);
                         }
                     }
                     proj_arr(i, j, k) = val;
