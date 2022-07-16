@@ -133,7 +133,7 @@ void main_main()
     gempic_parameters<vdim, numspec> gpParam;
     // gpParam.init_Nghost(1, 1, 1);
     amrex::IntVect num_cells = {AMREX_D_DECL(4, 4, 4)};
-    amrex::Array<int, numspec> n_part_per_cell = {1000};
+    amrex::GpuArray<int, numspec> n_part_per_cell = {1000};
     int species = 0;  // only one species
 
     amrex::Vector<amrex::Vector<amrex::Real>> vMean{};

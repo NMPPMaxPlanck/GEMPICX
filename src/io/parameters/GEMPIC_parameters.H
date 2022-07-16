@@ -62,7 +62,7 @@ public:
 
     // particles (for each species)
     int nPartCellTot;
-    amrex::Array<int, numspec> n_part_per_cell = {100};
+    amrex::GpuArray<int, numspec> n_part_per_cell = {100};
     amrex::GpuArray<amrex::Real, numspec> charge = {-1};
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
     // Initial velocity distribution (sum of gaussians)
@@ -357,7 +357,7 @@ public:
         amrex::IntVect n_cell_vector = {AMREX_D_DECL(
             24, 8,
             8)},  // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
-        amrex::Array<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
+        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
         int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
         amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},

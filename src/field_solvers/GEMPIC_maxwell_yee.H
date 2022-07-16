@@ -375,9 +375,10 @@ public:
 
     template <int degree>
     void projection(amrex::ParserExecutor<4> parserEval, amrex::Real t, computational_domain ifr,
-                    amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate, amrex::IndexType IndexVect,
+                    amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate, amrex::IndexType IndVect,
                     amrex::MultiFab &MultiF)
     {
+        amrex::GpuArray<int, GEMPIC_SPACEDIM> IndexVect {IndVect[0],IndVect[1],IndVect[2]};
         amrex::GpuArray<amrex::Real, degree - 1> stencil;
         switch (degree)
         {
@@ -462,10 +463,10 @@ public:
 #endif
                         }
                     }
-                    proj_arr(i, j, k) = val;
 #if (GEMPIC_SPACEDIM > 2)
                 }
 #endif
+            proj_arr(i, j, k) = val;
             });
         }
         MultiF.FillBoundary(ifr.geom.periodicity());
@@ -1239,18 +1240,18 @@ public:
         advance_B(ifr, dt_step, true, true, &HE_Array, &B_Array);
     }
 
-    template <int degree>
-    void init_rho_phi(amrex::GpuArray<std::string, 2> fields, amrex::Vector<amrex::Real> k,
-                      computational_domain ifr)
-    {
-        BL_PROFILE("maxwell_yee::init_rho_phi (string,...) ");
-        // rho
-        projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)},
-                           amrex::IndexType(amrex::IntVect::TheNodeVector()), (rho));
-        // phi
-        projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)},
-                           amrex::IndexType(amrex::IntVect::TheNodeVector()), (phi));
-    }
+    //template <int degree>
+    // void init_rho_phi(amrex::GpuArray<std::string, 2> fields, amrex::Vector<amrex::Real> k,
+    //                   computational_domain ifr)
+    // {
+    //     BL_PROFILE("maxwell_yee::init_rho_phi (string,...) ");
+    //     // rho
+    //     projection<degree>(fields[0], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)},
+    //                        amrex::IndexType(amrex::IntVect::TheNodeVector()), (rho));
+    //     // phi
+    //     projection<degree>(fields[1], k, 0.0, ifr, {AMREX_D_DECL(true, true, true)},
+    //                        amrex::IndexType(amrex::IntVect::TheNodeVector()), (phi));
+    // }
 
     template <int degree>
     void init_rho_phi(amrex::Real (*function_to_project_rho)(amrex::Real, amrex::Real, amrex::Real,

@@ -55,7 +55,7 @@ void main_main(bool ctest)
     // initialize parameters
     std::string sim_name = "One_Particle";
     amrex::IntVect n_cell = {AMREX_D_DECL(4, 4, 4)};
-    std::array<int, numspec> n_part_per_cell = {1};
+    amrex::GpuArray<int, numspec> n_part_per_cell = {1};
     int n_steps = 1;
     int freq_x = 2;
     int freq_v = 2;

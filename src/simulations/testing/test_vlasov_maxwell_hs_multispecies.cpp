@@ -3,8 +3,8 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_loop_preparation.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
@@ -51,7 +51,7 @@ void main_main()
                     {"1.0"},                                // density (overwritten later)
                     "0.0",                                  // Bx
                     "0.0",                                  // By
-                    "0.0",                                // density (overwritten later)
+                    "0.0",                                  // density (overwritten later)
                     "0.0",                                  // Bx
                     "0.0",                                  // By
                     "0.0",                                  // Bz
@@ -83,8 +83,7 @@ void main_main()
     // maxwell_yee
     maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
     amrex::GpuArray<std::string, 2> fields = {VlMa.rho, VlMa.phi};
-    mw_yee.template init_rho_phi<degmw>(fields, VlMa.k, infra);
-
+    mw_yee.template init_rho_phi<degmw>(infra, VlMa.rhoEval, VlMa.phiEval);
     // particles
     particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
 
@@ -111,9 +110,10 @@ void main_main()
     density = "1.0 + 0.2 * cos(kvarx * x)";
     init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, density,
                                               meanVelocity, vThermal, vWeight, 1);
-
+                                              
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(
-        VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, fields_B);
+            VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, VlMa.BxEval,
+             VlMa.ByEval,  VlMa.BzEval);
 
     //------------------------------------------------------------------------------
     // timeloop
@@ -138,13 +138,8 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output
     file contains all outputs. For each dimension, apart from running the main_main for the
