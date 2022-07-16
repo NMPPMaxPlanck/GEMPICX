@@ -26,7 +26,7 @@ namespace Sampling
 {
 template <int vdim, int numspec>
 void init_particles_cellwise(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                             amrex::Array<int, numspec> n_part_per_cell,
+                             amrex::GpuArray<int, numspec> n_part_per_cell,
                              amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                              amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
                              amrex::Vector<amrex::Real> Vweight, int species,
@@ -182,7 +182,7 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
 
 template <int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                                amrex::Array<int, numspec> n_part_per_cell,
+                                amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Real> k_vec, std::string wave_function,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
@@ -348,7 +348,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
 
 template <int vdim, int numspec>
 void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                                amrex::Array<int, numspec> n_part_per_cell,
+                                amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
                                 amrex::Vector<amrex::Real> Vweight, int species,
