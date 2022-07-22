@@ -137,7 +137,7 @@ public:
         }
         p.rdata(vdim) = weight;  // weight
 
-        (particles).push_back(p);
+        particles.push_back(p);
     }
 };
 }  // namespace Particles

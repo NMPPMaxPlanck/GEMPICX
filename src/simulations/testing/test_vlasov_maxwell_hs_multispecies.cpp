@@ -34,6 +34,9 @@ void main_main()
     const int strang_order = 2;
     bool ctest = true;
     gempic_parameters<vdim, numspec> VlMa;
+    amrex::GpuArray<std::string, numspec> density;
+    density[0] = "1.0"; //first species
+    density[1] = "1.0 + 0.2 * cos(kvarx * x)"; // second species
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_vlasov_maxwell_hs_multispecies",  // sim_name
                     {AMREX_D_DECL(16, 2, 2)},               // n_cell_vector
@@ -48,13 +51,13 @@ void main_main()
                     {-1.0, 1.0},                            // charge
                     {1.0, 200.0},                           // mass
                     0.6283185,                              // k
-                    {"1.0"},                                // density (overwritten later)
-                    "0.0",                                  // Bx
-                    "0.0",                                  // By
-                    "0.0",                                  // density (overwritten later)
+                    density,                                // density 
                     "0.0",                                  // Bx
                     "0.0",                                  // By
                     "0.0",                                  // Bz
+                    "0.0",                                  // Ex
+                    "0.0",                                  // Ey
+                    "0.0",                                  // Ez
                     "4 * 0.5 * cos(0.5 * x)",               // phi
                     {1},                                    // num_gaussians
                     1);                                     // propagator
@@ -99,17 +102,15 @@ void main_main()
     amrex::Vector<amrex::Vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
     amrex::Vector<amrex::Vector<amrex::Real>> vThermal = {{1.0, 1.0, 1.0}};
     amrex::Vector<amrex::Real> vWeight = {1.0};
-    std::string density = "1.0";
-    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, density,
-                                              meanVelocity, vThermal, vWeight, 0);
+    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell,
+                                              meanVelocity, vThermal, vWeight, 0, VlMa.densityEval[0]);
 
     // SECOND SPECIES
     meanVelocity = {{0.0, 0.0, 0.0}};
     vThermal = {{0.00070710678118654751, 0.00070710678118654751, 0.00070710678118654751}};
     vWeight = {1.0};
-    density = "1.0 + 0.2 * cos(kvarx * x)";
-    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, VlMa.k, density,
-                                              meanVelocity, vThermal, vWeight, 1);
+    init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell,
+                                              meanVelocity, vThermal, vWeight, 1, VlMa.densityEval[1]);
                                               
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(
             VlMa, infra, &mw_yee, &part_gr, &diagn, VlMa.time_staggered, VlMa.BxEval,
