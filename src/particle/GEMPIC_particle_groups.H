@@ -157,8 +157,6 @@ public:
         particles.push_back_real(vdim,weight);
 
         particles.push_back(p);
-        //particles.push_back_real(particleAttributes);
-        // if this works, we can try passing velocity and weight separately and avoid creating temp array
     }
 };
 }  // namespace Particles

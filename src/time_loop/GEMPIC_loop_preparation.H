@@ -59,7 +59,9 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
         (*part_gr)[spec].mypc->Redistribute();  // assign particles to the tile they are in
         for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = (*part_gr)[spec].charge;
+            amrex::Real charge = part_gr->charge[spec];
+            auto &aos = pti.GetArrayOfStructs();
+            auto *AMREX_RESTRICT particles = aos().dataPtr();
             const long np = pti.numParticles();
             const auto particles = pti.GetArrayOfStructs()().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
@@ -242,6 +244,7 @@ void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computation
                       bool time_staggered, amrex::ParserExecutor<4> BxEval,
                       amrex::ParserExecutor<4> ByEval, amrex::ParserExecutor<4> BzEval)
 {
+    BL_PROFILE("loop_preparation  (...,parserExec)");
     loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, output>(meanVelocity, infra,
                                                                           mw_yee, part_gr);
 

@@ -39,7 +39,7 @@ using namespace Particles;
 using namespace Sampling;
 
 // wave function
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 1.0;
     return val;
@@ -130,7 +130,7 @@ void main_main()
     gempic_parameters<vdim, numspec> gpParam;
     // gpParam.init_Nghost(1, 1, 1);
     amrex::IntVect num_cells = {AMREX_D_DECL(4, 4, 4)};
-    amrex::Array<int, numspec> n_part_per_cell = {1000};
+    amrex::GpuArray<int, numspec> n_part_per_cell = {1000};
     int species = 0;  // only one species
 
     amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
@@ -143,9 +143,10 @@ void main_main()
     vWeight = {0.75, 0.25};
 
     gpParam.set_params("sampler_ctest", num_cells, n_part_per_cell);
+    gpParam.density[0] = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
     double twopi = 4 * asin(1.0);
     gpParam.k = {twopi, twopi, twopi};
-    gpParam.real_box = amrex::RealBox(AMREX_D_DECL(0.0, 0.0, 0.0), AMREX_D_DECL(1.0, 1.0, 1.0));
+    gpParam.set_computed_params();
     computational_domain domain;
     domain.initialize_computational_domain(gpParam.n_cell, gpParam.max_grid_size,
                                            gpParam.is_periodic, gpParam.real_box);
@@ -167,15 +168,10 @@ void main_main()
     init_particles_full_domain<vdim,numspec>(domain, part_gr_full, n_part_per_cell, vMean, vThermal, 
                                              vWeight, species, wave_function);
 
-    std::string wave_function_string = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)"; // n_0
-    
-    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr_full_str;
-    for (int spec=0;spec<numspec;spec++) 
-    {
-        part_gr_full_str[spec] = particle_groups<vdim>(gpParam.charge[spec], gpParam.mass[spec], domain);
-    }
-    init_particles_full_domain<vdim,numspec>(domain, part_gr_full_str,n_part_per_cell, gpParam.k, 
-                                             wave_function_string, vMean, vThermal, vWeight, species);
+    particle_groups<vdim, numspec> part_gr_full_str(gpParam.charge, gpParam.mass, domain);
+    init_particles_full_domain<vdim, numspec>(domain, part_gr_full_str, n_part_per_cell,
+                                              vMean, vThermal, vWeight,
+                                              species, gpParam.densityEval[species]);
 
     // Print particles data
     bool printPart = false;

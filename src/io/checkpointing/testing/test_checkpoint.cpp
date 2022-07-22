@@ -16,7 +16,7 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     return 0.0;
 }
@@ -33,7 +33,7 @@ void main_main()
 
     // initialize parameters
     amrex::IntVect n_cell_vector = {AMREX_D_DECL(4, 4, 4)};
-    amrex::Array<int, numspec> n_part_per_cell = {1};
+    amrex::GpuArray<int, numspec> n_part_per_cell = {1};
     int n_steps = 2;
     amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect max_grid_size = {AMREX_D_DECL(2, 2, 2)};
