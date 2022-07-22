@@ -6,6 +6,8 @@
 #define GEMPIC_NUMSPEC 1
 #define GEMPIC_ELECTROMAGNETIC true
 
+#define MAXGAUSS 2 // maximum number of velocity gaussians
+
 #define GEMPIC_CTEST_TOL 1e-4
 #define GEMPIC_CTEST_RELTOL 1e-4
 

@@ -31,7 +31,7 @@ using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
 AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y,
-                                                                amrex::Real z)
+                                                                amrex::Real z, amrex::Real t)
 {
     amrex::Real val = 1.0;  //+ 0.5 * std::cos(0.5 * x);
     return val;

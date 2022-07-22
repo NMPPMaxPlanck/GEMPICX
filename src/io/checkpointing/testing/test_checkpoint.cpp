@@ -16,7 +16,7 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
 {
     return 0.0;
 }
