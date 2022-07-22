@@ -13,8 +13,9 @@
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
-#include <AMReX_RealBox.H>
 #include <AMReX_Random.H>
+#include <AMReX_RealBox.H>
+#include <GEMPIC_Config.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_particle_groups.H>
 
@@ -26,13 +27,12 @@ namespace Gempic
 namespace Sampling
 {
 template <int vdim, int numspec>
-void init_particles_cellwise(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-                             amrex::GpuArray<int, numspec> n_part_per_cell,
-                             amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
-                             amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
-                             amrex::Vector<amrex::Real> Vweight, int species,
-                             amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-                             int rSeed = 925)
+void init_particles_cellwise(
+    computational_domain infra, particle_groups<vdim, numspec> &ppg,
+    amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
+    amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
+    amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+    int rSeed = 925)
 {
     amrex::Real x_c
 #if GEMPIC_SPACEDIM > 1
@@ -182,28 +182,19 @@ void init_particles_cellwise(computational_domain infra, particle_groups<vdim, n
 }
 
 template <int vdim, int numspec, typename functionType>
-void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
+void init_particles_full_domain_gpu(computational_domain infra, particle_groups<vdim, numspec> &ppg,
                                 amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
-                                amrex::Vector<amrex::Real> Vweight, int species, 
+                                amrex::Vector<amrex::Real> Vweight, int species,
                                 functionType densityEval,
-                                //amrex::ParserExecutor<4> densityEval,
+                                // amrex::ParserExecutor<4> densityEval,
                                 int rSeed = 925)
 {
     BL_PROFILE("init_particles_full_domain");
 
-    amrex::Real x, y, z;
-    amrex::Real t = 0.0;  // initial time
-
-    amrex::Real x_c, y_c, z_c;  // cell-corner coordinates
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-    amrex::GpuArray<amrex::Real, vdim> velocity;
-    amrex::Real weight;
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
-    amrex::Real u1, u2, z0;
     bool check_rnd = false;
-    int npart = 0;
     int num_gauss = Vmean.size();  // same size for all v-dims. Superposition of Gauss distributions
 
     // cumulative sum of vel_weights
@@ -216,15 +207,187 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
         const amrex::Box &bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> ProbLo = {
+            infra.geom.ProbLo()[0], infra.geom.ProbLo()[1], infra.geom.ProbLo()[2]};
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
+        for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+        {
+            dx[i] = infra.dx[i];
+        }
+        amrex::Array2D<amrex::Real, 0, MAXGAUSS, 0, vdim> VdevGpu, VmeanGpu;
+        // actual number of Gaussians in velocity is smaller than maximum number set in
+        // GEMPIC_Config.H
+        assert(num_gauss < MAXGAUSS);
+        for (int j = 0; j < vdim; j++)
+        {
+            for (int i = 0; i < num_gauss; i++)
+            {
+                VdevGpu(i, j) = Vdev[i][j];
+                VmeanGpu(i, j) = Vmean[i][j];
+            }
+        }
+
+        srand(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
+        // std::mt19937 gen(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
+        // std::mt19937 genv(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000 + 17);
+        // std::uniform_real_distribution<> unif(0.0, 1.0);
+        // std::uniform_real_distribution<> unifv(0.0, 1.0);
+        amrex::RandomEngine gen;
+        amrex::RandomEngine genv;
+        amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
+        amrex::Random(gen);
+        amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000 + 17);
+        amrex::Random(genv);
+
+        auto &particles =
+            (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+        // #if (GEMPIC_SPACEDIM > 2)
+        //         for (int k = lo[2]; k <= hi[2]; k++)
+        //         {
+        // #endif
+        // #if (GEMPIC_SPACEDIM > 1)
+        //             for (int j = lo[1]; j <= hi[1]; j++)
+        //             {
+        // #endif
+        //                 for (int l = lo[0]; l <= hi[0]; l++)
+        ParallelFor(bx, [=](int l, int j, int k) {
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+            amrex::GpuArray<amrex::Real, vdim> velocity;
+            amrex::Real x_c, y_c, z_c;  // cell-corner coordinates
+            amrex::Real x, y, z;
+            amrex::Real t = 0.0;  // initial time
+            amrex::Real weight;
+            int npart = 0;
+            for (int pp = 0; pp < n_part_per_cell[species]; pp++)
+            {
+                for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+                {
+                    // position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
+                    position[i] = amrex::Random(gen) * dx[i];
+                }
+                amrex::Real gauss_choice[vdim];
+                for (int i = 0; i < vdim; i++)
+                {
+                    // gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
+                    gauss_choice[i] = amrex::Random(gen);
+                }
+                amrex::GpuArray<int, vdim> gauss_idx;
+                for (int comp = 0; comp < vdim; comp++)
+                {
+                    gauss_idx[comp] = 0;
+                }
+                for (int i = 0; i < vdim; i++)
+                {
+                    for (int gg = 1; gg < num_gauss; gg++)
+                    {
+                        if ((vel_cum[gg - 1] - gauss_choice[i] < 0) &
+                            (vel_cum[gg] - gauss_choice[i] >= 0))
+                        {
+                            gauss_idx[i] = gg;
+                        }
+                    }
+                }
+                amrex::Real u1, u2, z0;
+                for (int cc = 0; cc < vdim; cc++)
+                {
+                    do
+                    {
+                        u1 = amrex::Random(genv);
+                        u2 = amrex::Random(genv);
+                    } while (u1 < epsilon);  // make sure epsilon large enough to take log
+                    // first value from Box-Muller algorithm
+                    z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
+                    // velocity[cc] = Vdev[gauss_idx[cc]][cc] * z0 + Vmean[gauss_idx[cc]][cc];
+                    velocity[cc] = VdevGpu(gauss_idx[cc], cc) * z0 + VmeanGpu(gauss_idx[cc], cc);
+                }
+#if (GEMPIC_SPACEDIM > 2)
+                z_c = ProbLo[2] + (double)k * dx[2];
+                z = position[2] + z_c;
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                y_c = ProbLo[1] + (double)j * dx[1];
+                y = position[1] + y_c;
+#endif
+                x_c = ProbLo[0] + (double)l * dx[0];
+                x = position[0] + x_c;
+
+                // parser // const double result = densityEval(density_parse);
+                const double factor = densityEval(x, y, z, t);
+                weight = (factor / n_part_per_cell[species]) * dx[0]
+#if (GEMPIC_SPACEDIM > 1)
+                         * dx[1]
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+                         * dx[2]
+#endif
+                    ;
+                    // Doesn't work on GPU as a pushback is called in add_particle.
+                    // The size of the new particle array should be determined before
+                    // calling the parallel for and the index of the new particle in this
+                    // array should be computable separately for each thread
+                    // See Electromagnetic PIC tutorial in AMReX tutorials (InitParticles)
+                ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                // Check random number
+                if (check_rnd)
+                {
+                    npart++;
+                    if (npart < 10)
+                        amrex::Print()
+                            << npart << " " << x << " " << y << " " << z << " " << velocity[0]
+                            << " " << velocity[1] << " " << velocity[2] << " " << weight << "\n";
+                }
+            }
+            // #if (GEMPIC_SPACEDIM > 1)
+            //                 }
+            // #endif
+            // #if (GEMPIC_SPACEDIM > 2)
+            //             }
+            // #endif
+        });
+    }
+}
+
+template <int vdim, int numspec, typename functionType>
+void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
+                                amrex::GpuArray<int, numspec> n_part_per_cell,
+                                amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
+                                amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
+                                amrex::Vector<amrex::Real> Vweight, int species,
+                                functionType densityEval, int rSeed = 925)
+{
+    BL_PROFILE("init_particles_full_domain (..., amrex::Real (*wave_function)");
+    double x, y, z, t=0.0;
+
+    amrex::Real x_c, y_c, z_c;  // cell-corner coordinates
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real, vdim> velocity;
+    amrex::Real weight;
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
+    amrex::Real u1, u2, z0;
+    bool check_rnd = false;
+    int npart = 0;
+    int num_gauss = Vmean.size();
+
+    // cumulative sum of vel_weights
+    amrex::Vector<amrex::Real> vel_cum(num_gauss);
+    std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
+
+    // MFI that adds particle from the model cell to all cells
+    for (amrex::MFIter mfi = (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.validbox();
+        amrex::IntVect lo = {bx.smallEnd()};
+        amrex::IntVect hi = {bx.bigEnd()};
 
         srand(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
         std::mt19937 gen(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
-        std::mt19937 genv(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000 + 17);  
+        std::mt19937 genv(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000 + 17);
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
         auto &particles =
-            (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];  
+            (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(),
+            mfi.LocalTileIndex())];
 #if (GEMPIC_SPACEDIM > 2)
         for (int k = lo[2]; k <= hi[2]; k++)
         {
@@ -239,13 +402,11 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
                     {
                         for (int i = 0; i < GEMPIC_SPACEDIM; i++)
                         {
-                            // position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
                             position[i] = unif(gen) * infra.dx[i];
                         }
                         amrex::Real gauss_choice[vdim];
                         for (int i = 0; i < vdim; i++)
                         {
-                            // gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
                             gauss_choice[i] = unif(gen);
                         }
                         amrex::GpuArray<int, vdim> gauss_idx;
@@ -274,8 +435,6 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
                             // first value from Box-Muller algorithm
                             z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
                             velocity[cc] = Vdev[gauss_idx[cc]][cc] * z0 + Vmean[gauss_idx[cc]][cc];
-                            // velocity[cc] =
-                            // Vdev[cc][gauss_idx[cc]]*norm01(gen)+Vmean[cc][gauss_idx[cc]];
                         }
 #if (GEMPIC_SPACEDIM > 2)
                         z_c = infra.geom.ProbLo()[2] + (double)k * infra.dx[2];
@@ -288,9 +447,8 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
                         x_c = infra.geom.ProbLo()[0] + (double)l * infra.dx[0];
                         x = position[0] + x_c;
 
-                        // parser // const double result = densityEval(density_parse);
                         const double factor = densityEval(x, y, z, t);
-                        weight = (factor / n_part_per_cell[species]) * infra.dx[0]
+                        weight = factor / n_part_per_cell[species] * infra.dx[0]
 #if (GEMPIC_SPACEDIM > 1)
                                  * infra.dx[1]
 #endif
@@ -318,140 +476,6 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
         }
     }
 }
-
-// template <int vdim, int numspec>
-// void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
-//                                 amrex::GpuArray<int, numspec> n_part_per_cell,
-//                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
-//                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
-//                                 amrex::Vector<amrex::Real> Vweight, int species,
-//                                 amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
-//                                 int rSeed = 925)
-// {
-//     BL_PROFILE("init_particles_full_domain (..., amrex::Real (*wave_function)");
-//     double x, y, z, t=0.0;
-
-//     amrex::Real x_c, y_c, z_c;  // cell-corner coordinates
-//     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-//     amrex::GpuArray<amrex::Real, vdim> velocity;
-//     amrex::Real weight;
-//     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
-//     amrex::Real u1, u2, z0;
-//     bool check_rnd = false;
-//     int npart = 0;
-//     int num_gauss = Vmean.size();
-
-//     // cumulative sum of vel_weights
-//     amrex::Vector<amrex::Real> vel_cum(num_gauss);
-//     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
-
-//     // MFI that adds particle from the model cell to all cells
-//     for (amrex::MFIter mfi = (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi)
-//     {
-//         const amrex::Box &bx = mfi.validbox();
-//         amrex::IntVect lo = {bx.smallEnd()};
-//         amrex::IntVect hi = {bx.bigEnd()};
-
-//         srand(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
-//         std::mt19937 gen(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
-//         std::mt19937 genv(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000 + 17);
-//         std::uniform_real_distribution<> unif(0.0, 1.0);
-//         std::uniform_real_distribution<> unifv(0.0, 1.0);
-
-//         auto &particles =
-//             (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-// #if (GEMPIC_SPACEDIM > 2)
-//         for (int k = lo[2]; k <= hi[2]; k++)
-//         {
-// #endif
-// #if (GEMPIC_SPACEDIM > 1)
-//             for (int j = lo[1]; j <= hi[1]; j++)
-//             {
-// #endif
-//                 for (int l = lo[0]; l <= hi[0]; l++)
-//                 {
-//                     for (int pp = 0; pp < n_part_per_cell[species]; pp++)
-//                     {
-//                         for (int i = 0; i < GEMPIC_SPACEDIM; i++)
-//                         {
-//                             // position[i] = ((amrex::Real) std::rand() / (RAND_MAX))*infra.dx[i];
-//                             position[i] = unif(gen) * infra.dx[i];
-//                         }
-//                         amrex::Real gauss_choice[vdim];
-//                         for (int i = 0; i < vdim; i++)
-//                         {
-//                             // gauss_choice[i] = ((amrex::Real) std::rand() / (RAND_MAX));
-//                             gauss_choice[i] = unif(gen);
-//                         }
-//                         amrex::GpuArray<int, vdim> gauss_idx;
-//                         for (int comp = 0; comp < vdim; comp++)
-//                         {
-//                             gauss_idx[comp] = 0;
-//                         }
-//                         for (int i = 0; i < vdim; i++)
-//                         {
-//                             for (int gg = 1; gg < num_gauss; gg++)
-//                             {
-//                                 if ((vel_cum[gg - 1] - gauss_choice[i] < 0) &
-//                                     (vel_cum[gg] - gauss_choice[i] >= 0))
-//                                 {
-//                                     gauss_idx[i] = gg;
-//                                 }
-//                             }
-//                         }
-//                         for (int cc = 0; cc < vdim; cc++)
-//                         {
-//                             do
-//                             {
-//                                 u1 = unifv(genv);
-//                                 u2 = unifv(genv);
-//                             } while (u1 < epsilon);  // make sure epsilon large enough to take log
-//                             // first value from Box-Muller algorithm
-//                             z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
-//                             velocity[cc] = Vdev[gauss_idx[cc]][cc] * z0 + Vmean[gauss_idx[cc]][cc];
-//                             // velocity[cc] =
-//                             // Vdev[cc][gauss_idx[cc]]*norm01(genv)+Vmean[cc][gauss_idx[cc]];
-//                         }
-// #if (GEMPIC_SPACEDIM > 2)
-//                         z_c = infra.geom.ProbLo()[2] + (double)k * infra.dx[2];
-//                         z = position[2] + z_c;
-// #endif
-// #if (GEMPIC_SPACEDIM > 1)
-//                         y_c = infra.geom.ProbLo()[1] + (double)j * infra.dx[1];
-//                         y = position[1] + y_c;
-// #endif
-//                         x_c = infra.geom.ProbLo()[0] + (double)l * infra.dx[0];
-//                         x = position[0] + x_c;
-
-//                         const double factor = wave_function(x, y, z, t);
-//                         weight = factor / n_part_per_cell[species] * infra.dx[0]
-// #if (GEMPIC_SPACEDIM > 1)
-//                                  * infra.dx[1]
-// #endif
-// #if (GEMPIC_SPACEDIM > 2)
-//                                  * infra.dx[2]
-// #endif
-//                             ;
-//                         ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
-//                         // Check random number
-//                         if (check_rnd)
-//                         {
-//                             npart++;
-//                             if (npart < 10)
-//                                 amrex::Print() << npart << " " << x << " " << y << " " << z << " "
-//                                                << velocity[0] << " " << velocity[1] << " "
-//                                                << velocity[2] << " " << weight << "\n";
-//                         }
-//                     }
-// #if (GEMPIC_SPACEDIM > 1)
-//                 }
-// #endif
-// #if (GEMPIC_SPACEDIM > 2)
-//             }
-// #endif
-//         }
-//     }
-// }
 
 template <int vdim>
 void init_one_particle_cellwise(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dx,
