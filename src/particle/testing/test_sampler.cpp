@@ -168,7 +168,10 @@ void main_main()
     init_particles_full_domain<vdim,numspec>(domain, part_gr_full, n_part_per_cell, vMean, vThermal, 
                                              vWeight, species, wave_function);
 
-    particle_groups<vdim, numspec> part_gr_full_str(gpParam.charge, gpParam.mass, domain);
+    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr_full_str;
+    for (int spec=0;spec<numspec;spec++) {
+        part_gr_full_str[spec] = particle_groups<vdim>(gpParam.charge[spec], gpParam.mass[spec], domain);
+    }
     init_particles_full_domain<vdim, numspec>(domain, part_gr_full_str, n_part_per_cell,
                                               vMean, vThermal, vWeight,
                                               species, gpParam.densityEval[species]);

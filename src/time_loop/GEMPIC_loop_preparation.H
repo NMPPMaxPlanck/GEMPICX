@@ -59,9 +59,10 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
         (*part_gr)[spec].mypc->Redistribute();  // assign particles to the tile they are in
         for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = part_gr->charge[spec];
-            auto &aos = pti.GetArrayOfStructs();
-            auto *AMREX_RESTRICT particles = aos().dataPtr();
+            //amrex::Real charge = part_gr->charge[spec];
+            amrex::Real charge = (*part_gr)[spec].charge;
+            //auto &aos = pti.GetArrayOfStructs();
+            //auto *AMREX_RESTRICT particles = aos().dataPtr();
             const long np = pti.numParticles();
             const auto particles = pti.GetArrayOfStructs()().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();

@@ -28,7 +28,7 @@ namespace Sampling
 {
 template <int vdim, int numspec>
 void init_particles_cellwise(
-    computational_domain infra, particle_groups<vdim, numspec> &ppg,
+    computational_domain infra, amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
     amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
     amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
     amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
@@ -181,7 +181,8 @@ void init_particles_cellwise(
 }
 
 template <int vdim, int numspec, typename functionType>
-void init_particles_full_domain_gpu(computational_domain infra, particle_groups<vdim, numspec> &ppg,
+void init_particles_full_domain_gpu(computational_domain infra, 
+amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
                                 amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
@@ -347,7 +348,8 @@ void init_particles_full_domain_gpu(computational_domain infra, particle_groups<
 }
 
 template <int vdim, int numspec, typename functionType>
-void init_particles_full_domain(computational_domain infra, particle_groups<vdim, numspec> &ppg,
+void init_particles_full_domain(computational_domain infra, 
+                                amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
                                 amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
@@ -372,7 +374,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
     // MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi = (*(ppg).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi = (*(ppg[species]).mypc).MakeMFIter(0); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
@@ -385,7 +387,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
         auto &particles =
-            (ppg.mypc[species])->GetParticles(0)[std::make_pair(mfi.index(),
+            (ppg[species].mypc)->GetParticles(0)[std::make_pair(mfi.index(),
             mfi.LocalTileIndex())];
 #if (GEMPIC_SPACEDIM > 2)
         for (int k = lo[2]; k <= hi[2]; k++)
@@ -455,7 +457,7 @@ void init_particles_full_domain(computational_domain infra, particle_groups<vdim
                                  * infra.dx[2]
 #endif
                             ;
-                        ppg.add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        ppg[species].add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                         // Check random number
                         if (check_rnd)
                         {
