@@ -65,6 +65,7 @@ public:
                                       amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB)
     {
         BL_PROFILE("vlasov_maxwell_simulation::initialize_gempic_structures(args)");
+        auto start = std::chrono::high_resolution_clock::now();
 
         domain.initialize_computational_domain(params.n_cell, params.max_grid_size,
                                                params.is_periodic, params.real_box);
@@ -107,11 +108,16 @@ public:
                 std::cout << "----------------------------------------------------------- \n";
             }
         }
+        MPI_Barrier(MPI_COMM_WORLD);
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count() << " s" << std::endl;
     }
 
     void initialize_gempic_structures()
     {
         BL_PROFILE("vlasov_maxwell_simulation::initialize_gempic_structures");
+        auto start = std::chrono::high_resolution_clock::now();
 
         domain.initialize_computational_domain(params.n_cell, params.max_grid_size,
                                                params.is_periodic, params.real_box);
@@ -154,6 +160,10 @@ public:
                 std::cout << "----------------------------------------------------------- \n";
             }
         }
+        MPI_Barrier(MPI_COMM_WORLD);
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count() << " s" << std::endl;
     }
 
     void run_time_loop()
@@ -193,8 +203,8 @@ public:
         MPI_Barrier(MPI_COMM_WORLD);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-        amrex::Print()  << "execution lasted: " <<  duration.count() << " s" << std::endl;
-        switch (params.propagator) 
+        amrex::Print() << "run_time_loop execution lasted: " << duration.count() << " s" << std::endl;
+        switch (params.propagator)
         {
             case 100:
                 Gempic_WritePlotFile<vdim, numspec>(part_gr, &mw_yee, &domain, "Edipole", 10);
