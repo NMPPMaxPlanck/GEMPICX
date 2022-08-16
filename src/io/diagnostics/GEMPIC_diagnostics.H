@@ -78,27 +78,25 @@ public:
         initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol, ctest);
     }
 
-    void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                         amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr, std::string simulation_name, bool ctest)
+    void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra,
+                         maxwell_yee<vdim> *mw_yee,
+                         amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
+                         std::string simulation_name, bool ctest)
     {
         BL_PROFILE("diagnostics::end_of_timestep");
 
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics -= MPI_Wtime();
-        // Disable all diagnostics by setting freq_slice > 100000
-        if (freq_slice < 100000)
-        {
-            // save norms for diagnostics
-            save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        // save norms for diagnostics
+        save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
-            // save temporary results every freq_save steps
-            if (t_step == 0)
-            {
-                save_time_history(mw_yee->dt, simulation_name, t_step);
-            }
-            if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
-            {
-                save_time_history(mw_yee->dt, simulation_name, t_step + 1);
-            }
+        // save temporary results every freq_save steps
+        if (t_step == 0)
+        {
+            save_time_history(mw_yee->dt, simulation_name, t_step);
+        }
+        if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
+        {
+            save_time_history(mw_yee->dt, simulation_name, t_step + 1);
         }
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step + 1 << std::endl;
@@ -111,9 +109,8 @@ public:
      * This function saves all the relevant data for the step in field arrays and saves SlicePlots
      * if needed according to the Slice Plot frequency.
      */
-    void save_step_data(int step,
-                        computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr)
+    void save_step_data(int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
+                        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr)
     {
         BL_PROFILE("diagnostics::save_step_data");
 
@@ -162,8 +159,8 @@ public:
         {
             mom[step][cmp] = 0.0;
         }
-        for (int spec=0;spec<numspec;spec++)
-        { // TODO: multispecies
+        for (int spec = 0; spec < numspec; spec++)
+        {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
                 *part_gr[spec],
                 [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
@@ -174,19 +171,20 @@ public:
                 });
 
             // reduced sum over mpi ranks
-            amrex::ParallelDescriptor::ReduceRealSum
-                    (kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
+            amrex::ParallelDescriptor::ReduceRealSum(
+                kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
             kin[step] += 0.5 * kin_tmp;
-            for (int cmp = 0; cmp < vdim; cmp++) 
+            for (int cmp = 0; cmp < vdim; cmp++)
             {
-                auto mom_tmp = amrex::ReduceSum( 
-                    *part_gr[spec], [=] AMREX_GPU_HOST_DEVICE (const amrex::Particle<vdim+1,0>& p) -> amrex::Real
-                    {
-                        auto m = p.rdata(vdim);
-                        auto vel = p.rdata(cmp);
-                        return (m * vel);
-                    });
+                auto mom_tmp =
+                    amrex::ReduceSum(*part_gr[spec],
+                                     [=] AMREX_GPU_HOST_DEVICE(
+                                         const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+                                         auto m = p.rdata(vdim);
+                                         auto vel = p.rdata(cmp);
+                                         return (m * vel);
+                                     });
 
                 // reduced sum over mpi ranks
                 amrex::ParallelDescriptor::ReduceRealSum(
@@ -196,14 +194,16 @@ public:
                 mom[step][cmp] += mom_tmp;
             }
         }
-        gauss_error[step] = mw_yee->template compute_gauss_error<numspec,degx,degy,degz>(infra, part_gr);
+        gauss_error[step] =
+            mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
 
         // save Plot and Checkpoint-files
-        //if ((step == 0) || ((step+1)%freq_slice == 0)) {
-        if ((step + 1) % freq_slice == 0) 
+        // if ((step == 0) || ((step+1)%freq_slice == 0)) {
+        if ((step + 1) % freq_slice == 0)
         {
-           Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
-           Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, step+1);
+            Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra,
+                                                      "Checkpoint/" + sim_name, step + 1, 20);
+            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, step + 1);
         }
     }
 
