@@ -48,7 +48,7 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
           bool electromagnetic = true, bool profiling = true>
 void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* mw_yee,
                                  amrex::Real coeff,
-                                 amrex::GpuArray<particle_groups<vdim>, numspec>* part_gr,
+                                 amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
                                  timers* profiling_timers, bool profiling_count)
 {
     BL_PROFILE("Gempic::Time_Loop::time_loop_hs_zigzag_C2_step");
@@ -92,23 +92,19 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
     {
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_deposition -= MPI_Wtime();
-        amrex::Real chargemass = (*part_gr)[spec].charge / (*part_gr)[spec].mass;
-        amrex::Real charge = (*part_gr)[spec].charge;
+        amrex::Real chargemass = part_gr[spec]->getCharge() / part_gr[spec]->getMass();
+        amrex::Real charge = part_gr[spec]->getCharge();
 
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Particle<0, 0>* AMREX_RESTRICT particles =
-                &(pti.GetArrayOfStructs()[0]);  // get particles
             const long np = pti.numParticles();
-            auto particle_attributes = &pti.GetStructOfArrays();
-            amrex::ParticleReal* const AMREX_RESTRICT part_weight =
-                particle_attributes->GetRealData(vdim).data();
-            amrex::ParticleReal* const AMREX_RESTRICT velx =
-                particle_attributes->GetRealData(0).data();
-            amrex::ParticleReal* const AMREX_RESTRICT vely =
-                particle_attributes->GetRealData(1).data();
-            amrex::ParticleReal* const AMREX_RESTRICT velz =
-                particle_attributes->GetRealData(2).data();
+            auto& particles = pti.GetArrayOfStructs();
+            auto partData = particles().data();
+            auto& particleAttributes = pti.GetStructOfArrays();
+            auto part_weight = particleAttributes.GetRealData(vdim).data();
+            auto velx = particleAttributes.GetRealData(0).data();
+            auto vely = particleAttributes.GetRealData(1).data();
+            auto velz = particleAttributes.GetRealData(2).data();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
@@ -143,7 +139,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
                 spline1d_at_particles<degz> spline_old_z;
                 // Read out particle position
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = particles[pp].pos(d);
+                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = partData[pp].pos(d);
                 // evaluate the spline
                 spline.init_particles(pos, infra.plo, infra.dxi);
                 // evaluate the electric field
@@ -294,7 +290,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
                     if (vdim > 2) vel[2] = vel[2] + chargemass * bfields[1];
                 pos[0] = x1_new;
 
-                for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
+                for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) partData[pp].pos(xd) = pos[xd];
                 // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                 // for (int vd=0;vd<vdim; vd++)
                 //    particle_attributes->GetRealData(vd)[pp] = vel[vd];
@@ -308,7 +304,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
             profiling_timers->counter_deposition += MPI_Wtime();
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute -= MPI_Wtime();
-        (*part_gr)[spec].mypc->Redistribute();  // assign particles to the tile they are in
+        part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute += MPI_Wtime();
     }
@@ -337,23 +333,18 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
     {
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_deposition -= MPI_Wtime();
-        amrex::Real chargemass = (*part_gr)[spec].charge / (*part_gr)[spec].mass;
+        amrex::Real chargemass = part_gr[spec]->getCharge() / part_gr[spec]->getMass();
 
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*(*part_gr)[spec].mypc, 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Particle<0, 0>* AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
-            // amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT particles =
-            // pti.GetArrayOfStructs(); // get particles
             const long np = pti.numParticles();
-            auto particle_attributes = &pti.GetStructOfArrays();
-            // amrex::ParticleReal* const AMREX_RESTRICT weight =
-            // particle_attributes->GetRealData(vdim).data();
-            amrex::ParticleReal* const AMREX_RESTRICT velx =
-                particle_attributes->GetRealData(0).data();
-            amrex::ParticleReal* const AMREX_RESTRICT vely =
-                particle_attributes->GetRealData(1).data();
-            amrex::ParticleReal* const AMREX_RESTRICT velz =
-                particle_attributes->GetRealData(2).data();
+            auto& particles = pti.GetArrayOfStructs();
+            auto partData = particles().data();
+            auto& particleAttributes = pti.GetStructOfArrays();
+            auto part_weight = particleAttributes.GetRealData(vdim).data();
+            auto velx = particleAttributes.GetRealData(0).data();
+            auto vely = particleAttributes.GetRealData(1).data();
+            auto velz = particleAttributes.GetRealData(2).data();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
 
@@ -365,7 +356,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
             // loop over particles: add contribution of old particle position to J and push
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = particles[pp].pos(d);
+                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = partData[pp].pos(d);
 
                 splines_at_particles<degx, degy, degz> splines;
                 // evaluate the spline
@@ -386,7 +377,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
             profiling_timers->counter_deposition += MPI_Wtime();
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute -= MPI_Wtime();
-        (*part_gr)[spec].mypc->Redistribute();  // assign particles to the tile they are in
+        part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_redistribute += MPI_Wtime();
     }
@@ -412,7 +403,7 @@ void time_loop_hs_zigzag_C2_step(computational_domain infra, maxwell_yee<vdim>* 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
           bool electromagnetic = true, bool profiling = true, bool output = true>
 void time_loop_hs_zigzag_C2(computational_domain infra, maxwell_yee<vdim>* mw_yee,
-                            amrex::GpuArray<particle_groups<vdim>, numspec>* part_gr,
+                            amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
                             diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn, bool ctest,
                             std::string simulation_name, int strang_order)
 {

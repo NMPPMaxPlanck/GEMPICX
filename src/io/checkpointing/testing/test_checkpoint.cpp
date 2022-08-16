@@ -2,8 +2,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_checkpoint.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
@@ -16,7 +16,8 @@ using namespace Field_solvers;
 using namespace Sampling;
 using namespace Utils;
 
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z,
+                                                amrex::Real t)
 {
     return 0.0;
 }
@@ -81,9 +82,11 @@ void main_main()
     mw_yee.template init_rho_phi<2>(zero, zero, infra);
 
     // particles
-    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
-    for (int spec=0;spec<numspec;spec++) {
-        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
+    for (int spec = 0; spec < numspec; spec++)
+    {
+        part_gr[spec] =
+            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
 
     //------------------------------------------------------------------------------
@@ -109,7 +112,8 @@ void main_main()
     mw_yee.J_Array[0]->setVal(2.0, 0);
     amrex::Real new_val = gempic_norm(*mw_yee.J_Array[0], infra, 0);
 
-    Gempic_ReadCheckpointFile<vdim, numspec>(&mw_yee, part_gr, &infra, "test_checkpoint", 0); // last 2 args: field, step
+    Gempic_ReadCheckpointFile<vdim, numspec>(&mw_yee, part_gr, &infra, "test_checkpoint",
+                                             0);  // last 2 args: field, step
     amrex::Real read_val = gempic_norm(*mw_yee.J_Array[0], infra, 0);
 
     amrex::PrintToFile("test_checkpoint_additional.tmp") << "" << std::endl;
@@ -128,18 +132,13 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_checkpoint.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_checkpoint_additional.tmp.0");
 
-    const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim, numspec, degx, degy, degz>();
 
     if (ParallelDescriptor::MyProc() == 0)

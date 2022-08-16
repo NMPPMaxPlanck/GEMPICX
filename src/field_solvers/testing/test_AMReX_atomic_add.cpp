@@ -3,8 +3,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -25,54 +25,52 @@ void main_main()
                     {AMREX_D_DECL(8, 10, 12)});
     VlMa.set_computed_params();
     CompDom::computational_domain infra;
-    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic, VlMa.real_box);
-    
-    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
-    for (int spec=0;spec<numspec;spec++) 
+    infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic,
+                                          VlMa.real_box);
+
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
+    for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+        part_gr[spec] =
+            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
-    
+
     const amrex::GpuArray<amrex::Real, 3>& dx = {AMREX_D_DECL(0.6283, 0.5026, 0.4188)};
     const amrex::GpuArray<amrex::Real, 3>& plo = {AMREX_D_DECL(0.0, 0.0, 0.0)};
     amrex::GpuArray<amrex::Real, 3> x = {AMREX_D_DECL(0.2, 0.2, 0.2)};
-    init_one_particle_cellwise<vdim>(dx, plo, &(*part_gr[0].mypc), x);
+    init_one_particle_cellwise<vdim>(dx, plo, *part_gr[0], x);
 
     //------------------------------------------------------------------------------
     amrex::MultiFab rho;  // for Poisson
-    const amrex::BoxArray &nba = amrex::convert(infra.grid, amrex::IntVect::TheNodeVector());
+    const amrex::BoxArray& nba = amrex::convert(infra.grid, amrex::IntVect::TheNodeVector());
     int Nghost = 1;
     rho.define(nba, infra.distriMap, 1, Nghost);
     rho.setVal(0.0);
 
     amrex::Real testval = 2.3;
-    for (amrex::ParIter<0,0,vdim+1,0> pti(*(part_gr[0].mypc), 0); pti.isValid(); ++pti) 
+    for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[0], 0); pti.isValid(); ++pti)
     {
         amrex::Array4<amrex::Real> rhoarr = rho[pti].array();
 
         amrex::HostDevice::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
     }
-    rho.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)}, infra.geom.periodicity());
+    rho.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)},
+                    infra.geom.periodicity());
 
     amrex::Real readval[1];
     amrex::PrintToFile("test_AMReX_atomic_add.output") << "\n";
     for (amrex::MFIter mfi(rho); mfi.isValid(); ++mfi)
     {
         amrex::PrintToFile("test_AMReX_atomic_add.output") << rho[mfi] << std::endl;
-        rho[mfi].getVal(readval,amrex::IntVect{AMREX_D_DECL(5,6,7)},0,1);
+        rho[mfi].getVal(readval, amrex::IntVect{AMREX_D_DECL(5, 6, 7)}, 0, 1);
     }
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<1, 1, 1, 1, 1>();

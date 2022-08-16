@@ -14,8 +14,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
@@ -101,28 +101,30 @@ void main_main()
     for (int comp = 0; comp < 3; comp++)
     {
         mw_yee.template projection<degree>(0.0, infra, {false, false, false}, *mw_yee.E_Index[comp],
-                                      *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
+                                           *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
     }
 
     //------------------------------------------------------------------------------
     // This generates error output: comparing current E and B to the analytical solution
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
-    std::cout <<  "step: " << 0 << std::endl;
-    E_B_error = mw_yee.template computeError<degree>( true , infra , funcSelectE , funcSelectB );
+    std::cout << "step: " << 0 << std::endl;
+    E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
     PrintToFile("test_ampere_faraday.output") << std::endl;
     PrintToFile("test_ampere_faraday.output") << "Maxwell" << std::endl;
     PrintToFile("test_ampere_faraday.output") << "step " << 0 << std::endl;
-    PrintToFile("test_ampere_faraday.output").SetPrecision(5) 
-        << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1] 
+    PrintToFile("test_ampere_faraday.output").SetPrecision(5)
+        << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]
         << " |Ez error: " << E_B_error[2] << std::endl;
-    amrex::PrintToFile("test_ampere_faraday.output").SetPrecision(5) 
-        << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim+1] 
-        << " |Bz error: " << E_B_error[vdim+2] << std::endl;
+    amrex::PrintToFile("test_ampere_faraday.output").SetPrecision(5)
+        << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1]
+        << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
 
-    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
-    for (int spec=0;spec<numspec;spec++) {
-        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
+    for (int spec = 0; spec < numspec; spec++)
+    {
+        part_gr[spec] =
+            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
     //------------------------------------------------------------------------------
     // time loop
@@ -172,14 +174,9 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim1=1, vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
+    const int vdim1 = 1, vdim2 = 2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<vdim1, numspec, degx, degy, degz>();

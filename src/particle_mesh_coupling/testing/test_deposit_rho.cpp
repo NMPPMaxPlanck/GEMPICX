@@ -21,7 +21,8 @@ using namespace Sampling;
 using namespace Utils;
 
 // wave function
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z,
+                                                amrex::Real t)
 {
     amrex::Real val = 1.0;
     return val;
@@ -85,10 +86,11 @@ void main_main()
     int species = 0;  // all particles are same species for now
 
     // particles
-    amrex::GpuArray<particle_groups<vdim>, numspec> part_gr;
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr[spec] = particle_groups<vdim>(VlMa.charge[spec], VlMa.mass[spec], infra);
+        part_gr[spec] =
+            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -110,12 +112,13 @@ void main_main()
 
     for (int spec = 0; spec < numspec; spec++)
     {
-        (part_gr[spec]).mypc->Redistribute();  // assign particles to the tile they are in
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*(part_gr[spec]).mypc, 0); pti.isValid(); ++pti)
+        part_gr[spec]->Redistribute();  // assign particles to the tile they are in
+        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = part_gr[spec].charge;
+            amrex::Real charge = part_gr[spec]->getCharge();
             const long np = pti.numParticles();
-            const auto particles = pti.GetArrayOfStructs()().data();
+            const auto& particles = pti.GetArrayOfStructs();
+            const auto partData = particles().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
             amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
@@ -124,7 +127,7 @@ void main_main()
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
                 for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
                 {
-                    pos[comp] = particles[pp].pos(comp);
+                    pos[comp] = partData[pp].pos(comp);
                 }
                 splines_at_particles<degx, degy, degz> spline;
                 spline.init_particles(pos, infra.plo, infra.dxi);

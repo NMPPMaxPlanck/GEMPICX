@@ -28,7 +28,7 @@ namespace Sampling
 {
 template <int vdim, int numspec>
 void init_particles_cellwise(
-    computational_domain infra, amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
+    computational_domain infra, amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &ppg,
     amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
     amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
     amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
@@ -127,10 +127,10 @@ void init_particles_cellwise(
         }
 
         //Adding particle from the model cell to all cells
-        for(amrex::MFIter mfi=(*(ppg[species]).mypc).MakeMFIter(0); mfi.isValid(); ++mfi) {
+        for(amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi) {
 
             amrex::ParticleTile<0, 0, vdim+1, 0>& particles = 
-                (*(ppg[species]).mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+                ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
@@ -168,7 +168,7 @@ void init_particles_cellwise(
 #endif
                             ;
 
-                        (ppg[species]).add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        ppg[species]->add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }
@@ -182,7 +182,7 @@ void init_particles_cellwise(
 
 template <int vdim, int numspec, typename functionType>
 void init_particles_full_domain_gpu(computational_domain infra, 
-amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
+amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &ppg,
                                 amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
@@ -202,7 +202,7 @@ amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
     //MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi= (ppg[species].mypc)->MakeMFIter(0); mfi.isValid(); ++mfi )
+    for (amrex::MFIter mfi= ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi )
     {
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
@@ -349,7 +349,7 @@ amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
 
 template <int vdim, int numspec, typename functionType>
 void init_particles_full_domain(computational_domain infra, 
-                                amrex::GpuArray<particle_groups<vdim>, numspec> &ppg,
+                                amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &ppg,
                                 amrex::GpuArray<int, numspec> n_part_per_cell,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
                                 amrex::Vector<amrex::Vector<amrex::Real>> Vdev,
@@ -374,7 +374,7 @@ void init_particles_full_domain(computational_domain infra,
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
     // MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi = (*(ppg[species]).mypc).MakeMFIter(0); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
@@ -387,7 +387,7 @@ void init_particles_full_domain(computational_domain infra,
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
         auto &particles =
-            (ppg[species].mypc)->GetParticles(0)[std::make_pair(mfi.index(),
+            ppg[species]->GetParticles(0)[std::make_pair(mfi.index(),
             mfi.LocalTileIndex())];
 #if (GEMPIC_SPACEDIM > 2)
         for (int k = lo[2]; k <= hi[2]; k++)
@@ -457,7 +457,7 @@ void init_particles_full_domain(computational_domain infra,
                                  * infra.dx[2]
 #endif
                             ;
-                        ppg[species].add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
+                        ppg[species]->add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight, particles);
                         // Check random number
                         if (check_rnd)
                         {
@@ -481,7 +481,7 @@ void init_particles_full_domain(computational_domain infra,
 template <int vdim>
 void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& dx,
                                 amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> const& plo,
-                                amrex::ParticleContainer<0, 0, vdim+1, 0> *mypc,
+                                particle_groups<vdim> & pg,
                                 amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> position)
 {
     amrex::Real x,y,z;
@@ -499,7 +499,7 @@ void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> con
     }
 
     // MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi = (*mypc).MakeMFIter(0); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi = pg.MakeMFIter(0); mfi.isValid(); ++mfi)
     {  // 0 is level
         const amrex::Box &bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
@@ -507,7 +507,7 @@ void init_one_particle_cellwise(amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> con
 
         //using ParticleType = amrex::Particle<vdim+1, 0>; // Particle template
         using ParticleType = amrex::Particle<0, 0>; // Particle template
-        auto& particles = (*mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+        auto& particles = pg.GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
         for (int k = lo[2]; k <= hi[2]; k++)

@@ -82,13 +82,13 @@ void main_main()
         weight = 1.0;
 
         //MFI that adds particle from the modell cell to all cells
-        for ( MFIter mfi= (*(part_gr).mypc).MakeMFIter(0); mfi.isValid(); ++mfi )
+        for ( MFIter mfi = part_gr.MakeMFIter(0); mfi.isValid(); ++mfi )
         {
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
-            auto& particles = (*(part_gr).mypc).GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            auto& particles = part_gr.GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
             for (int k = lo[2]; k <= hi[2]; k++)

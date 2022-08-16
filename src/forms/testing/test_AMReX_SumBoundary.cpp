@@ -11,6 +11,7 @@
 #include <GEMPIC_sampler.H>
 
 using namespace amrex;
+using namespace Particles;
 
 template <int vdim, int degx, int degy, int degz>
 void main_main()
@@ -65,31 +66,22 @@ void main_main()
     }
     // Particles
     amrex::Real charge = -1.0;
-    amrex::ParticleContainer<0, 0, vdim+1, 0> mypc(geom, distriMap, grid);
-#if GEMPIC_GPU
-    mypc.do_tiling = false;
-#else
-    mypc.do_tiling = true;
-#endif
+    particle_groups<vdim> pg(geom, distriMap, grid);
 
-#if (GEMPIC_SPACEDIM > 1)
-    mypc.tile_size = {AMREX_D_DECL(max_grid_size, max_grid_size, max_grid_size)};
-#else
-    mypc.tile_size[0] = max_grid_size;
-#endif
     Gempic::Sampling::init_one_particle_cellwise<vdim>(
-        dx, plo, &mypc, {AMREX_D_DECL(2 * dx[0] / 5.0, 2 * dx[1] / 5.0, 0)});
+        dx, plo, pg, {AMREX_D_DECL(2 * dx[0] / 5.0, 2 * dx[1] / 5.0, 0)});
 
-    mypc.Redistribute();
+    pg.Redistribute();
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
-    for (amrex::ParIter<0,0,vdim+1,0> pti(mypc, 0); pti.isValid(); ++pti) 
+    for (amrex::ParIter<0,0,vdim + 1, 0> pti(pg, 0); pti.isValid(); ++pti) 
     {
-        const auto particles = pti.GetArrayOfStructs()().data();    
+        const auto& particles = pti.GetArrayOfStructs();
+        const auto partData = particles().data();    
         const long np  = pti.numParticles();
-        const auto particle_attributes = pti.GetStructOfArrays();
-const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+        const auto& particle_attributes = pti.GetStructOfArrays();
+        const auto weight = particle_attributes.GetRealData(vdim).data();
 
         amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
@@ -98,7 +90,7 @@ const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
             amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
             for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) 
             {
-                pos[comp] = particles[pp].pos(comp);
+                pos[comp] = partData[pp].pos(comp);
             }
             spline.init_particles(pos , plo, dxi);
             Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(
