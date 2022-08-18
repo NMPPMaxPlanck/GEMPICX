@@ -63,7 +63,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void apply_hp1(
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const& bA,
     amrex::GpuArray<amrex::Real, 2>& vxbFields, amrex::Real weight, amrex::ParticleReal chargemass)
 {
-    BL_PROFILE("Apply H_p1 (particles only)");
     // push x1
     amrex::Real x1_new = pos[0] + dtLoc * vel[0];
     spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
@@ -115,7 +114,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void apply_hp2(
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const& bA,
     amrex::GpuArray<amrex::Real, 2>& vxbFields, amrex::Real weight, amrex::ParticleReal chargemass)
 {
-    BL_PROFILE("Apply H_p2");
 #if GEMPIC_SPACEDIM > 1
     // push x2
     amrex::Real x2_new = pos[1] + dtLoc * vel[1];
