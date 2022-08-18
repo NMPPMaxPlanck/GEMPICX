@@ -232,7 +232,7 @@ void time_loop_hs_zigzag_C2_step(
             {
                 bA[cc] = (*(mw_yee->B_Array)[cc])[pti].array();
             }
-
+            BL_PROFILE_VAR("Apply H_E, update v and apply Hp", heV_hp);
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
                 amrex::GpuArray<amrex::Real, 2> vxbFields{0., 0.};  // only two comp. needed
                 splines_at_particles<degx, degy, degz> spline;
@@ -251,7 +251,7 @@ void time_loop_hs_zigzag_C2_step(
                 amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM];
                 // evaluate the spline at particle position
                 spline.init_particles(pos, infra.plo, infra.dxi);
-                BL_PROFILE_VAR("Apply H_E, update v", heV_1);
+
                 // evaluate the electric field at particle position
                 amrex::GpuArray<amrex::Real, vdim> efield =
                     evaluate_efield<vdim, degx, degy, degz>(spline, eA);
@@ -261,7 +261,6 @@ void time_loop_hs_zigzag_C2_step(
                 vel[0] = newPosE[0];
                 vel[1] = newPosE[1];
                 vel[2] = newPosE[2];
-                BL_PROFILE_VAR_STOP(heV_1);
 
                 apply_hp1<splines_at_particles<degx, degy, degz>, vdim, degx, degy, degz>(
                     infra, dt * 0.5 * coeff, pos, vel, spline, spline_new_x, spline_old_x,
@@ -274,7 +273,6 @@ void time_loop_hs_zigzag_C2_step(
                 }
                 if (vdim > 2)
                 {
-                    BL_PROFILE_VAR("Apply H_p3", hp3);
 #if GEMPIC_SPACEDIM == 3
                     // push x3
                     amrex::Real x3_new = pos[2] + dt * coeff * vel[2];
@@ -302,7 +300,6 @@ void time_loop_hs_zigzag_C2_step(
                         vel[0] = vel[0] - chargemass * vxbFields[1] * vel[2] * dt * coeff;
                         vel[1] = vel[1] + chargemass * vxbFields[0] * vel[2] * dt * coeff;
 #endif
-                    BL_PROFILE_VAR_STOP(hp3);
                 }
 
                 if (vdim > 1)
@@ -321,6 +318,7 @@ void time_loop_hs_zigzag_C2_step(
                 vely[pp] = vel[1];
                 velz[pp] = vel[2];
             });
+            BL_PROFILE_VAR_STOP(heV_hp);
         }
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_deposition += MPI_Wtime();
@@ -380,12 +378,13 @@ void time_loop_hs_zigzag_C2_step(
             }
             amrex::Real dt = mw_yee->dt;
             // loop over particles: add contribution of old particle position to J and push
+            BL_PROFILE_VAR("Apply H_E, update v (second part", heV_2);
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = partData[pp].pos(d);
 
                 splines_at_particles<degx, degy, degz> splines;
-                BL_PROFILE_VAR("Apply H_E, update v (second step)", heV_2);
+
                 // evaluate the spline at particle positions
                 splines.init_particles(pos, infra.plo, infra.dxi);
                 // evaluate the electric field
@@ -398,8 +397,8 @@ void time_loop_hs_zigzag_C2_step(
                 velx[pp] = newPosE[0];
                 vely[pp] = newPosE[1];
                 velz[pp] = newPosE[2];
-                BL_PROFILE_VAR_STOP(heV_2);
             });
+            BL_PROFILE_VAR_STOP(heV_2);
         }
         if (profiling_timers->profiling && profiling_count)
             profiling_timers->counter_deposition += MPI_Wtime();
