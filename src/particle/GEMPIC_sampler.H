@@ -215,7 +215,7 @@ void init_particles_full_domain_gpu(
     }
 
     // cumulative sum of vel_weights
-    amrex::Vector<amrex::Real> vel_cum(num_gauss);
+    amrex::GpuArray<amrex::Real, MAXGAUSS> vel_cum;
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
     // MFI that adds particle from the model cell to all cells
