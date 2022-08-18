@@ -31,25 +31,25 @@ using namespace Profiling;
 /**
  * @brief Updates the particle part of Hp1 in hamiltonian splitting.
  * The E update can be delayed as J is computed and stored
- * 
- * @tparam S 
- * @tparam vdim 
+ *
+ * @tparam S
+ * @tparam vdim
  * @tparam degx Spline degree in x
  * @tparam degy Spline degree in y
  * @tparam degz Spline degree in z
  * @param infra Computational domain
  * @param dtLoc Local time step
- * @param pos 
- * @param vel 
- * @param spline 
- * @param spline_new_x 
- * @param spline_old_x 
- * @param primitive 
- * @param jA 
- * @param bA 
+ * @param pos
+ * @param vel
+ * @param spline
+ * @param spline_new_x
+ * @param spline_old_x
+ * @param primitive
+ * @param jA
+ * @param bA
  * @param vxbFields The two components of  v x B that are needed for this component
- * @param weight 
- * @param chargemass 
+ * @param weight
+ * @param chargemass
  */
 
 template <typename S, int vdim, int degx, int degy, int degz>
@@ -83,26 +83,26 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void apply_hp1(
 /**
  * @brief Updates the particle part of Hp2 in hamiltonian splitting.
  * The E update can be delayed as J is computed and stored
- * 
- * @tparam S 
- * @tparam vdim 
- * @tparam degx 
- * @tparam degy 
- * @tparam degz 
- * @param infra 
- * @param dtLoc 
- * @param pos 
- * @param vel 
- * @param spline 
- * @param spline_new_y 
- * @param spline_old_y 
- * @param primitive 
- * @param jA 
- * @param bA 
- * @param vxbFields 
- * @param weight 
- * @param chargemass 
- * @return AMREX_GPU_HOST_DEVICE 
+ *
+ * @tparam S
+ * @tparam vdim
+ * @tparam degx
+ * @tparam degy
+ * @tparam degz
+ * @param infra
+ * @param dtLoc
+ * @param pos
+ * @param vel
+ * @param spline
+ * @param spline_new_y
+ * @param spline_old_y
+ * @param primitive
+ * @param jA
+ * @param bA
+ * @param vxbFields
+ * @param weight
+ * @param chargemass
+ * @return AMREX_GPU_HOST_DEVICE
  */
 template <typename S, int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void apply_hp2(
@@ -269,8 +269,8 @@ void time_loop_hs_zigzag_C2_step(
                 if (vdim > 1)
                 {
                     apply_hp2<splines_at_particles<degx, degy, degz>, vdim, degx, degy, degz>(
-                    infra, dt * 0.5 * coeff, pos, vel, spline, spline_new_y, spline_old_y,
-                    primitive, jA, bA, vxbFields, weight, chargemass);
+                        infra, dt * 0.5 * coeff, pos, vel, spline, spline_new_y, spline_old_y,
+                        primitive, jA, bA, vxbFields, weight, chargemass);
                 }
                 if (vdim > 2)
                 {
@@ -308,8 +308,8 @@ void time_loop_hs_zigzag_C2_step(
                 if (vdim > 1)
                 {
                     apply_hp2<splines_at_particles<degx, degy, degz>, vdim, degx, degy, degz>(
-                    infra, dt * 0.5 * coeff, pos, vel, spline, spline_new_y, spline_old_y,
-                    primitive, jA, bA, vxbFields, weight, chargemass);
+                        infra, dt * 0.5 * coeff, pos, vel, spline, spline_new_y, spline_old_y,
+                        primitive, jA, bA, vxbFields, weight, chargemass);
                 }
                 apply_hp1<splines_at_particles<degx, degy, degz>, vdim, degx, degy, degz>(
                     infra, dt * 0.5 * coeff, pos, vel, spline, spline_new_x, spline_old_x,
@@ -334,19 +334,23 @@ void time_loop_hs_zigzag_C2_step(
     // add values from ghost cells and periodic boundary
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary -= MPI_Wtime();
+    BL_PROFILE_VAR("Time Loop Boundary synchronization", bsync);
     Gempic_SumBoundary(mw_yee, &infra);  // Sums Boundary of J and Overwrites overlap
     for (int i = 0; i < vdim; i++)
     {
         (*(mw_yee->J_Array)[i]).FillBoundary(infra.geom.periodicity());
     }
+    BL_PROFILE_VAR_STOP(bsync);
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary += MPI_Wtime();
 
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_fields -= MPI_Wtime();
+    BL_PROFILE_VAR("Apply Hp, E part", hpe);
     // advance E from j (field part of H_p)
     mw_yee->advance_E(infra, 1.0, false, true, mw_yee->HB_Array, mw_yee->E_Array);
     mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
+    BL_PROFILE_VAR_STOP(hpe);
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_fields += MPI_Wtime();
 
@@ -381,7 +385,8 @@ void time_loop_hs_zigzag_C2_step(
                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = partData[pp].pos(d);
 
                 splines_at_particles<degx, degy, degz> splines;
-                // evaluate the spline
+                BL_PROFILE_VAR("Apply H_E, update v (second step)", heV_2);
+                // evaluate the spline at particle positions
                 splines.init_particles(pos, infra.plo, infra.dxi);
                 // evaluate the electric field
                 amrex::GpuArray<amrex::Real, vdim> efield =
@@ -393,6 +398,7 @@ void time_loop_hs_zigzag_C2_step(
                 velx[pp] = newPosE[0];
                 vely[pp] = newPosE[1];
                 velz[pp] = newPosE[2];
+                BL_PROFILE_VAR_STOP(heV_2);
             });
         }
         if (profiling_timers->profiling && profiling_count)
@@ -410,15 +416,18 @@ void time_loop_hs_zigzag_C2_step(
         profiling_timers->counter_fields -= MPI_Wtime();
     if (electromagnetic)
     {
+        BL_PROFILE_VAR("Apply H_E, update B (second step)", heB_2);
         // mw_yee->template hodge_full<degmw>(infra, &(mw_yee->E_Array),
         // &(mw_yee->HE_Array), true);
         // WHY NO HODGE ???
         mw_yee->advance_B(infra, mw_yee->dt * 0.5 * coeff, mw_yee->HE_Array, mw_yee->B_Array);
-
+        BL_PROFILE_VAR_STOP(heB_2);
         // Operator H_B for dt/2
+        BL_PROFILE_VAR("Apply H_B, update E (second step)", hb_2);
         mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
         mw_yee->advance_E(infra, mw_yee->dt * 0.5 * coeff, true, false, mw_yee->HB_Array,
                           mw_yee->E_Array);
+        BL_PROFILE_VAR_STOP(hb_2);
     }
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_fields += MPI_Wtime();
