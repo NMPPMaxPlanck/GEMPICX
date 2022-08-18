@@ -149,8 +149,8 @@ void main_main()
     vWeight = {0.75, 0.25};
 
     gpParam.set_params("sampler_ctest", num_cells, n_part_per_cell);
-    //gpParam.density[0] = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
-    gpParam.density[0] = "1";
+    gpParam.density[0] = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
+    //gpParam.density[0] = "1";
     double twopi = 4 * asin(1.0);
     gpParam.k = {twopi, twopi, twopi};
     gpParam.set_computed_params();
@@ -227,7 +227,7 @@ void main_main()
     print_vMoments<vdim, numspec>(part_gr_cell, species);
     print_vMoments<vdim, numspec>(part_gr_full, species);
     print_vMoments<vdim, numspec>(part_gr_full_str, species);
-    print_vMoments<vdim, numspec>(part_gr_full_gpu, species);
+   // print_vMoments<vdim, numspec>(part_gr_full_gpu, species);
 }
 
 int main(int argc, char* argv[])
