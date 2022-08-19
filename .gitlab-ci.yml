@@ -1,6 +1,6 @@
 variables:
   UBUNTU_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-  UBUNTU_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:ubuntu2004_latest
+  UBUNTU_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:ubuntu2204_latest
 
 
 stages:
@@ -11,7 +11,7 @@ stages:
 
 
 # Build and test based on an Ubuntu 20.04 image (CPU only)
-build-test_ubuntu2004:
+build-test_ubuntu2204:
   image: $UBUNTU_RELEASE_IMAGE
   tags:
     - cloud
@@ -96,7 +96,7 @@ pages:
 
 # --- BELOW
 # CI jobs to build and tag the Docker CI image on MPCDF GitLab,
-# edit 'scripts/Dockerfile-CI-Ubuntu2004' to trigger a rebuild,
+# edit 'scripts/Dockerfile-CI-Ubuntu2204' to trigger a rebuild,
 # it should not be necessary to modify the jobs themselves ...
 # ---
 
@@ -110,9 +110,10 @@ build-ubuntu-ci-image:
   only:
     refs:
       - master
+      - upgrade_ci_image_ubuntu_2204
     changes:
       #- .gitlab-ci.yml
-      - scripts/Dockerfile-CI-Ubuntu2004
+      - scripts/Dockerfile-CI-Ubuntu2204
   script:
     - mkdir -p /kaniko/.docker
     - >-
@@ -121,7 +122,7 @@ build-ubuntu-ci-image:
     - >-
       /kaniko/executor \
         --context $CI_PROJECT_DIR \
-        --dockerfile $CI_PROJECT_DIR/scripts/Dockerfile-CI-Ubuntu2004 \
+        --dockerfile $CI_PROJECT_DIR/scripts/Dockerfile-CI-Ubuntu2204 \
         --destination $UBUNTU_TEST_IMAGE --reproducible -v debug
 
 deploy-ubuntu-ci-image:
@@ -132,9 +133,10 @@ deploy-ubuntu-ci-image:
   only:
     refs:
       - master
+      - upgrade_ci_image_ubuntu_2204
     changes:
       #- .gitlab-ci.yml
-      - scripts/Dockerfile-CI-Ubuntu2004
+      - scripts/Dockerfile-CI-Ubuntu2204
   variables:
     BUILDAH_FORMAT: docker
     BUILDAH_ISOLATION: chroot

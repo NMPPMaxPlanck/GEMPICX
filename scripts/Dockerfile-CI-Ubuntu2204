@@ -1,12 +1,11 @@
-# Ubuntu 20.04 image with GNU compilers, HDF5, and MPI, Python, Sphinx, and Doxygen
+# Ubuntu 22.04 image with GNU compilers, HDF5, and MPI, Python, Sphinx, and Doxygen
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 MAINTAINER Klaus Reuter <khr@mpcdf.mpg.de>
 
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV TZ="Europe/Berlin"
-
 # OpenMPI settings to make it work within a Docker container
 ENV OMPI_ALLOW_RUN_AS_ROOT=1
 ENV OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
