@@ -43,17 +43,17 @@ void loop_preparation_init(
     mw_yee->rho.setVal(0.0);
     // Not needed setVal(0.0) set all values including ghost cells to zero
     // mw_yee->rho.setVal(0.0, 0);  // value and component
-    // mw_yee->rho.FillBoundary(infra.geom.periodicity());
+    mw_yee->rho.FillBoundary(infra.geom.periodicity());
 
     // Set J and E to 0: This is important in order not to have uninitialized arrays when calling
     // diagnostics
     for (int dim = 0; dim < vdim; dim++)
     {
         mw_yee->J_Array[dim]->setVal(0.0);
-        //mw_yee->J_Array[dim]->FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[dim]->FillBoundary(infra.geom.periodicity());
 
         mw_yee->E_Array[dim]->setVal(0.0); 
-        // mw_yee->E_Array[dim]->FillBoundary(infra.geom.periodicity());
+        mw_yee->E_Array[dim]->FillBoundary(infra.geom.periodicity());
     }
 
     // Deposit charges:
