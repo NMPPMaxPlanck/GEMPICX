@@ -195,9 +195,10 @@ void main_main()
         part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
                                                                      gpParam.mass[spec], domain);
     }
-    // init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr_full_gpu, n_part_per_cell, vMean,
-    //                                               vThermal, vWeight, species,
-    //                                               gpParam.densityEval[species]);
+    init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr_full_gpu, n_part_per_cell, vMean,
+                                                  vThermal, vWeight, species,
+                                                   wave_function);
+                                                  //gpParam.densityEval[species]);
 
     // Print particles data
     bool printPart = false;
@@ -227,7 +228,7 @@ void main_main()
     print_vMoments<vdim, numspec>(part_gr_cell, species);
     print_vMoments<vdim, numspec>(part_gr_full, species);
     print_vMoments<vdim, numspec>(part_gr_full_str, species);
-   // print_vMoments<vdim, numspec>(part_gr_full_gpu, species);
+    print_vMoments<vdim, numspec>(part_gr_full_gpu, species);
 }
 
 int main(int argc, char* argv[])

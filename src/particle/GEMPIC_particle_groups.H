@@ -82,9 +82,9 @@ public:
         amrex::ParticleContainerBase::do_tiling = true;
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        amrex::ParticleContainerBase::tile_size = ifr.max_grid_size /= 2;
-//         amrex::Print() << "particle tile " << amrex::ParticleContainerBase::tile_size << std::endl;
-//         amrex::Print() << "mfiter_tile_size " << amrex::FabArrayBase::mfiter_tile_size << std::endl;
+        amrex::ParticleContainerBase::tile_size = ifr.max_grid_size; // tiling useless in this case
+        //amrex::Print() << "particle tile " << amrex::ParticleContainerBase::tile_size << std::endl;
+        //amrex::Print() << "mfiter_tile_size " << amrex::FabArrayBase::mfiter_tile_size << std::endl;
 #else
         amrex::ParticleContainerBase::tile_size[0] = ifr.max_grid_size[0];
 #endif
