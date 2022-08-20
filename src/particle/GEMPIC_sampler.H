@@ -249,7 +249,7 @@ void init_particles_full_domain_gpu(
         amrex::RandomEngine gen;
         amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
 
-        ParallelForRNG(bx, [=](int i, int j, int k, amrex::RandomEngine const& gen) noexcept {
+        ParallelForRNG(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k, amrex::RandomEngine const& gen) noexcept {
             int ix = i - lo[0];
             int nx = hi[0] - lo[0] + 1;
 #if (GEMPIC_SPACEDIM > 1)
