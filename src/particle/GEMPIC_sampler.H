@@ -395,15 +395,16 @@ void init_particles_full_domain(
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
     // MFI that adds particle from the model cell to all cells
+    #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
+        amrex::Print() << bx << std::endl;
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
         int nCellsBox =
             AMREX_D_TERM((hi[0] - lo[0] + 1), *(hi[1] - lo[1] + 1), *(hi[2] - lo[2] + 1));
 
-        srand(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
         std::mt19937 gen(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
         std::mt19937 genv(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000 + 17);
         std::uniform_real_distribution<> unif(0.0, 1.0);
@@ -412,7 +413,7 @@ void init_particles_full_domain(
         using myParticleTile = amrex::ParticleTile<0, 0, vdim + 1, 0>;
         myParticleTile& particles =
             ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-            
+
         // Create a temporary particle group on Host to be copied later to particle container
         using PinnedTile = amrex::ParticleTile<0, 0, vdim + 1, 0, amrex::PinnedArenaAllocator>;
         PinnedTile pinned_particles;
@@ -487,10 +488,10 @@ void init_particles_full_domain(
                                  * infra.dx[2]
 #endif
                             ;
-                        //add_particle<myParticleTile, vdim>({AMREX_D_DECL(x, y, z)}, velocity,
+                        // add_particle<myParticleTile, vdim>({AMREX_D_DECL(x, y, z)}, velocity,
                         //                                   weight, particles);
-                        add_particle<PinnedTile, vdim>({AMREX_D_DECL(x, y, z)}, velocity,
-                                                           weight, pinned_particles);
+                        add_particle<PinnedTile, vdim>({AMREX_D_DECL(x, y, z)}, velocity, weight,
+                                                       pinned_particles);
                         // Check random number
                         if (check_rnd)
                         {
