@@ -240,14 +240,16 @@ void init_particles_full_domain_gpu(
         amrex::GpuArray<amrex::ParticleReal*, vdim> velArray;
         for (int i = 0; i < vdim; i++)
         {
-            velArray[i] = particles.GetStructOfArrays().GetRealData(i).data();
+            velArray[i] = particles.GetStructOfArrays().GetRealData(i).data(); //realarray()[i];
+            amrex::Print() << " vel " << particles.GetStructOfArrays().GetRealData(i).size() << std::endl;
+            amrex::Print() << " box " << mfi.tilebox().numPts() << std::endl;
         }
         amrex::ParticleReal* weightArray =
-            particles.GetStructOfArrays().GetRealData(vdim).data();
+            particles.GetStructOfArrays().realarray()[vdim]; //.GetRealData(vdim).data();
         int procID = amrex::ParallelDescriptor::MyProc();
 
-        amrex::RandomEngine gen;
-        amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
+        //amrex::RandomEngine gen;
+        //amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
 
         ParallelForRNG(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k, amrex::RandomEngine const& gen) noexcept {
             int ix = i - lo[0];
@@ -260,7 +262,8 @@ void init_particles_full_domain_gpu(
             int iz = k - lo[2];
             int nz = hi[2] - lo[2] + 1;
 #endif
-            int cellid = (ix * ny + iy) * nz + iz;
+            //int cellid = (ix * ny + iy) * nz + iz;
+            int cellid = (iz * ny + iy) * nx + ix;
 
             int pidx = cellid * n_part_per_cell[species];
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
@@ -340,6 +343,7 @@ void init_particles_full_domain_gpu(
                 velArray[2][pidx] = velocity[2];
                 weightArray[pidx] = weight;
 
+//amrex::Print() << "sampler "<< npart <<" " << pidx << " "<< cellid << std::endl;
                 ++pidx;
             }
         });
@@ -392,7 +396,7 @@ void init_particles_full_domain(
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
 // MFI that adds particle from the model cell to all cells
-#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+//#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
