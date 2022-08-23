@@ -183,19 +183,18 @@ void init_particles_cellwise(
     }
 }
 
-template <int vdim, int numspec, typename functionType>
+template <int vdim, int numspec>
 void init_particles_full_domain_gpu(
     computational_domain infra,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg,
     amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
     amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
-    functionType densityEval, int rSeed = 925)
+    amrex::ParserExecutor<4> densityEval, int rSeed = 925)
 {
     BL_PROFILE("init_particles_full_domain_gpu");
 
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
-    bool check_rnd = false;
-
+ 
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{
         AMREX_D_DECL(infra.geom.ProbLo()[0], infra.geom.ProbLo()[1], infra.geom.ProbLo()[2])};
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{
@@ -343,11 +342,11 @@ void init_particles_full_domain_gpu(
                 velArray[2][pidx] = velocity[2];
                 weightArray[pidx] = weight;
 
-//amrex::Print() << "sampler "<< npart <<" " << pidx << " "<< cellid << std::endl;
                 ++pidx;
             }
         });
     }
+    amrex::Print() << "init_full_domain_gpu OK\n";
 }
 
 /**
