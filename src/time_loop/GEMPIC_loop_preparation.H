@@ -62,12 +62,12 @@ void loop_preparation_init(
     // Deposit charges:
     for (int spec = 0; spec < numspec; spec++)
     {
+        amrex::Real charge = part_gr[spec]->getCharge();
         part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = part_gr[spec]->getCharge();
             const long np = pti.numParticles();
-            const auto particles = pti.GetArrayOfStructs();
+            const& auto particles = pti.GetArrayOfStructs();
             const auto partData = particles().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
