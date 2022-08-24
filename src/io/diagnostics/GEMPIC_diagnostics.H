@@ -32,6 +32,35 @@ namespace Gempic
 namespace Diagnostics_Output
 {
 /**
+ * @brief Compute the dot product of two MultiFabs with a mask
+ *
+ * @param mf1
+ * @param mf2
+ * @param mask
+ * @return amrex::Real
+ */
+amrex::Real computeDotProd(amrex::MultiFab const &mf1, amrex::MultiFab const &mf2,
+                           amrex::iMultiFab const &mask)
+{
+    auto const &data1 = mf1.const_arrays();
+    auto const &data2 = mf2.const_arrays();
+    auto const &mask_ma = mask.const_arrays();
+    return amrex::ParReduce(
+        amrex::TypeList<amrex::ReduceOpSum>{}, amrex::TypeList<amrex::Real>{}, mf1,
+        amrex::IntVect(0),  // zero ghost cells
+        [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::Real {
+            if (mask_ma[box_no](i, j, k))
+            {
+                amrex::Real prod = data1[box_no](i, j, k) * data2[box_no](i, j, k);
+                return prod;
+            }
+            else
+            {
+                return 0.0;
+            }
+        });
+}
+/**
  * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored
  * and written into files. Slice Data of fields can be generated.
  */
@@ -124,8 +153,13 @@ public:
         mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
         for (int cc = 0; cc < vdim; cc++)
         {
-            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]),
-                                                   0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
+            // amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]),
+            // *(mw_yee->E_Array[cc]),
+            //                                        0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
+
+            amrex::Real val = computeDotProd(*(mw_yee->E_Array[cc]), *(mw_yee->HE_Array[cc]),
+                                             *(mw_yee->E_Masks[cc]));
+
             val *= infra.dx[0] / infra.Length[0]
 #if (GEMPIC_SPACEDIM > 1)
                    * infra.dx[1] / infra.Length[1]
@@ -134,14 +168,19 @@ public:
                    * infra.dx[2] / infra.Length[2]
 #endif
                 ;
+            // reduced sum over mpi ranks
+            amrex::ParallelDescriptor::ReduceRealSum(
+                val, amrex::ParallelDescriptor::IOProcessorNumber());
             Efield_energy[step][cc] = mw_yee->epref_ep0 * val;
         }
 
         mw_yee->template hodge_full<degree>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
         for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
         {
-            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]),
-                                                   0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
+            // amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]),
+            //                                        0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
+            amrex::Real val = computeDotProd(*(mw_yee->B_Array[cc]), *(mw_yee->HB_Array[cc]),
+                                             *(mw_yee->B_Masks[cc]));
             val *= infra.dx[0] / infra.Length[0]
 #if (GEMPIC_SPACEDIM > 1)
                    * infra.dx[1] / infra.Length[1]
@@ -150,6 +189,9 @@ public:
                    * infra.dx[2] / infra.Length[2]
 #endif
                 ;
+            // reduced sum over mpi ranks
+            amrex::ParallelDescriptor::ReduceRealSum(
+                val, amrex::ParallelDescriptor::IOProcessorNumber());
             Bfield_energy[step][cc] = mw_yee->energy_b_scaling * val;
         }
 
