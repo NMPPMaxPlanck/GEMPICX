@@ -1,6 +1,8 @@
-######## Empty File
+######## Ctest
+
 FILE(GLOB _tests *.expected_output)
-message("Selecting 1D IO Directory")
+LIST(SORT _tests)
+
 FOREACH(_test ${_tests})
   GET_FILENAME_COMPONENT( _test ${_test} NAME_WE )
 
