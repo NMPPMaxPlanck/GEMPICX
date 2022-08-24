@@ -73,6 +73,16 @@ void print_particles(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, num
     ofs.close();
 }
 
+/**
+ * @brief Compute velocity moments based on particle distribution.
+ * Note that here the concept of SuperParticleType which agregates AoS and SoA in 
+ * Particle<NStructReal+NArrayReal, NStructInt+NArrayInt> is used
+ * 
+ * @tparam vdim 
+ * @tparam numspec 
+ * @param part_gr 
+ * @param species 
+ */
 template <int vdim, int numspec>
 void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
                     const int species)
@@ -189,16 +199,15 @@ void main_main()
                                               vThermal, vWeight, species,
                                               gpParam.densityEval[species]);
 
-    // amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full_gpu;
-    // for (int spec = 0; spec < numspec; spec++)
-    // {
-    //     part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
-    //                                                                  gpParam.mass[spec], domain);
-    // }
-    // init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr_full_gpu, n_part_per_cell, vMean,
-    //                                               vThermal, vWeight, species,
-    //                                                wave_function);
-                                                  //gpParam.densityEval[species]);
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full_gpu;
+    for (int spec = 0; spec < numspec; spec++)
+    {
+        part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
+                                                                     gpParam.mass[spec], domain);
+    }
+    init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr_full_gpu, n_part_per_cell, vMean,
+                                                  vThermal, vWeight, species,
+                                                  gpParam.densityEval[species]);
 
     // Print particles data
     bool printPart = false;

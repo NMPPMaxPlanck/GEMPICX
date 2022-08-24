@@ -194,7 +194,7 @@ void init_particles_full_domain_gpu(
     BL_PROFILE("init_particles_full_domain_gpu");
 
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
- 
+
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{
         AMREX_D_DECL(infra.geom.ProbLo()[0], infra.geom.ProbLo()[1], infra.geom.ProbLo()[2])};
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{
@@ -224,8 +224,8 @@ void init_particles_full_domain_gpu(
         const amrex::Box& bx = mfi.tilebox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
-        int nCellsTile =  (hi[0] - lo[0] + 1) * (hi[1] - lo[1] + 1) * (hi[2] - lo[2] + 1);
-            //AMREX_D_TERM(hi[0] - lo[0] + 1, *(hi[1] - lo[1] + 1), *(hi[2] - lo[2] + 1));
+        int nCellsTile = (hi[0] - lo[0] + 1) * (hi[1] - lo[1] + 1) * (hi[2] - lo[2] + 1);
+        // AMREX_D_TERM(hi[0] - lo[0] + 1, *(hi[1] - lo[1] + 1), *(hi[2] - lo[2] + 1));
         int npart = n_part_per_cell[species] * nCellsTile;
         auto& particles =
             ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
@@ -239,18 +239,16 @@ void init_particles_full_domain_gpu(
         amrex::GpuArray<amrex::ParticleReal*, vdim> velArray;
         for (int i = 0; i < vdim; i++)
         {
-            velArray[i] = particles.GetStructOfArrays().GetRealData(i).data(); //realarray()[i];
-            amrex::Print() << " vel " << particles.GetStructOfArrays().GetRealData(i).size() << std::endl;
-            amrex::Print() << " box " << mfi.tilebox().numPts() << std::endl;
+            velArray[i] = particles.GetStructOfArrays().realarray()[i];
         }
-        amrex::ParticleReal* weightArray =
-            particles.GetStructOfArrays().realarray()[vdim]; //.GetRealData(vdim).data();
+        amrex::ParticleReal* weightArray = particles.GetStructOfArrays().realarray()[vdim];
         int procID = amrex::ParallelDescriptor::MyProc();
 
-        //amrex::RandomEngine gen;
-        //amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
+        // amrex::RandomEngine gen;
+        // amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
 
-        ParallelForRNG(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k, amrex::RandomEngine const& gen) noexcept {
+        ParallelForRNG(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k,
+                                                amrex::RandomEngine const& gen) noexcept {
             int ix = i - lo[0];
             int nx = hi[0] - lo[0] + 1;
 #if (GEMPIC_SPACEDIM > 1)
@@ -261,7 +259,7 @@ void init_particles_full_domain_gpu(
             int iz = k - lo[2];
             int nz = hi[2] - lo[2] + 1;
 #endif
-            //int cellid = (ix * ny + iy) * nz + iz;
+            // int cellid = (ix * ny + iy) * nz + iz;
             int cellid = (iz * ny + iy) * nx + ix;
 
             int pidx = cellid * n_part_per_cell[species];
@@ -331,7 +329,7 @@ void init_particles_full_domain_gpu(
 #endif
                     ;
                 ParticleType& p = pstruct[pidx];
-                p.id() = 0;
+                p.id() = pidx;
                 p.cpu() = procID;
                 p.pos(0) = x;
                 p.pos(1) = y;
@@ -394,8 +392,8 @@ void init_particles_full_domain(
     amrex::Vector<amrex::Real> vel_cum(num_gauss);
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
-// MFI that adds particle from the model cell to all cells
-//#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+    // MFI that adds particle from the model cell to all cells
+    //#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
@@ -479,8 +477,10 @@ void init_particles_full_domain(
                                  * infra.dx[2]
 #endif
                             ;
-                        add_particle<myParticleTile, vdim>({AMREX_D_DECL(x, y, z)}, velocity,
-                                                           weight, particles);
+                         ppg[species]->add_particle({AMREX_D_DECL(x, y, z)}, velocity,
+                                                            weight, particles);
+                        // ppg[species]->add_particle(position, velocity,
+                        //                                    weight, particles);
                         // Check random number
                         if (check_rnd)
                         {

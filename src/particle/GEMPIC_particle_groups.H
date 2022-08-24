@@ -126,41 +126,41 @@ public:
         particles.push_back(p);
     }
 };
-/**
- * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
- * velocity and the weight @p weight to the Particle Tile @p particles.
- */
-template <typename T, int vdim>
-void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
-                  amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight, T& particles)
-{                                                // Array of Structures
-    using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
+// /**
+//  * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
+//  * velocity and the weight @p weight to the Particle Tile @p particles.
+//  */
+// template <typename T, int vdim>
+// void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
+//                   amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight, T& particles)
+// {                                                // Array of Structures
+//     using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
 
-    // new particle:
-    ParticleType p;
-    p.id() = ParticleType::NextID();
-    p.cpu() = amrex::ParallelDescriptor::MyProc();
+//     // new particle:
+//     ParticleType p;
+//     p.id() = ParticleType::NextID();
+//     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-    for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
-    {
-        p.pos(cc) = position[cc];
-    }
+//     for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
+//     {
+//         p.pos(cc) = position[cc];
+//     }
 
-    // Creating attributes for Structure of Arrays container
-    // amrex::GpuArray<amrex::Real,vdim+1> particleAttributes{};
+//     // Creating attributes for Structure of Arrays container
+//     // amrex::GpuArray<amrex::Real,vdim+1> particleAttributes{};
 
-    for (int cc = 0; cc < vdim; cc++)
-    {
-        // p.rdata(cc) = velocity[cc];
-        // particleAttributes[cc] = velocity[cc];
-        particles.push_back_real(cc, velocity[cc]);
-    }
-    // p.rdata(vdim) = weight; //weight
-    // particleAttributes[vdim] = weight; //weight
-    particles.push_back_real(vdim, weight);
+//     for (int cc = 0; cc < vdim; cc++)
+//     {
+//         // p.rdata(cc) = velocity[cc];
+//         // particleAttributes[cc] = velocity[cc];
+//         particles.push_back_real(cc, velocity[cc]);
+//     }
+//     // p.rdata(vdim) = weight; //weight
+//     // particleAttributes[vdim] = weight; //weight
+//     particles.push_back_real(vdim, weight);
 
-    particles.push_back(p);
-}
+//     particles.push_back(p);
+// }
 }  // namespace Particles
 }  // namespace Gempic
 

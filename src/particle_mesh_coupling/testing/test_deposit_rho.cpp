@@ -123,7 +123,7 @@ void main_main()
 
             amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
 
-            //for (int pp = 0; pp < np; pp++)
+            // for (int pp = 0; pp < np; pp++)
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) 
             {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
@@ -135,7 +135,7 @@ void main_main()
                 spline.init_particles(pos, infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz>(
                     spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
-            };
+            });
         }
     }
 

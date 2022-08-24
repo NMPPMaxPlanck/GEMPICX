@@ -67,7 +67,7 @@ void loop_preparation_init(
         for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
             const long np = pti.numParticles();
-            const& auto particles = pti.GetArrayOfStructs();
+            const auto& particles = pti.GetArrayOfStructs();
             const auto partData = particles().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
