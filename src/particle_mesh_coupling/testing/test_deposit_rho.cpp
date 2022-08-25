@@ -107,8 +107,7 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Deposit charges:
-    mw_yee.rho.setVal(0.0, 0);  // value and component
-    mw_yee.rho.FillBoundary(infra.geom.periodicity());
+    mw_yee.rho.setVal(0.0);
 
     for (int spec = 0; spec < numspec; spec++)
     {

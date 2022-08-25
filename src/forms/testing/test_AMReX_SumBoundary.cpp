@@ -51,8 +51,7 @@ void main_main()
     amrex::IndexType Index_A(amrex::IntVect{AMREX_D_DECL(1, 1, 0)});  // nodal | nodal | cell
     int Nghost = 1;
     amrex::MultiFab TestMF(convert(grid, Index_A), distriMap, 1, Nghost);
-    TestMF.setVal(0.0, 0);
-    TestMF.FillBoundary(geom.periodicity());
+    TestMF.setVal(0.0);
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi;

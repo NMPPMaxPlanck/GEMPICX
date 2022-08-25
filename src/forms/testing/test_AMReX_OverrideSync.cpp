@@ -44,13 +44,11 @@ void main_main()
     amrex::IndexType Index_A(amrex::IntVect{AMREX_D_DECL(1, 1, 0)});  // nodal
     int Nghost = 1;
     amrex::MultiFab TestMF(convert(grid, Index_A), distriMap, 1, Nghost);
-    TestMF.setVal(0.0, 0);
-    TestMF.FillBoundary(geom.periodicity());
+    TestMF.setVal(0.0);
 
     // Ownermask
     amrex::iMultiFab Mask(convert(grid, Index_A), distriMap, 1, Nghost);
-    Mask.setVal(0, 0);
-    Mask.FillBoundary(geom.periodicity());
+    Mask.setVal(0);
 
     //-----------------------------------------------------------------------------
     // Fill MultiFab

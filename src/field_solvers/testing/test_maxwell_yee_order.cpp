@@ -178,8 +178,7 @@ void main_main()
 
     for (int i = 0; i < vdim; i++)
     {
-        (*(mw_yee).J_Array[i]).setVal(0.0, 0);  // value and component
-        (*(mw_yee).J_Array[i]).FillBoundary(infra.geom.periodicity());
+        (*(mw_yee).J_Array[i]).setVal(0.0);  // value and component
     }
 
     mw_yee.template initB<degree>(funct_b0, zero, funct_b2, infra);

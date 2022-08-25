@@ -54,7 +54,6 @@ void main_main()
     int Nghost = 1;
     amrex::MultiFab TestMF(convert(grid, Index_A), distriMap, 1, Nghost);
     TestMF.setVal(0.0, 0);
-    TestMF.FillBoundary(geom.periodicity());
 
     //-----------------------------------------------------------------------------
     // Fill MultiFab

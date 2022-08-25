@@ -194,7 +194,6 @@ void time_loop_hs_zigzag_C2_step(
     for (int i = 0; i < vdim; i++)
     {
         mw_yee->J_Array[i]->setVal(0.0,0);
-        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
     }
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary += MPI_Wtime();

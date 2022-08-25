@@ -62,7 +62,6 @@ void time_loop_particles (computational_domain infra,
         for (int i = 0; i < vdim; i++)
         {
             (mw_yee->J_Array)[i]->setVal(0.0, 0);  // value and component
-            (mw_yee->J_Array)[i]->FillBoundary(infra.geom.periodicity());
         }
 
         for (int spec=0;spec<numspec;spec++) {

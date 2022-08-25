@@ -125,10 +125,8 @@ void main_main()
                           mw_yee.Nghost);
         
         k.setVal(-2.0, Nghost);
-        k.FillBoundary(infra.geom.periodicity());
 
-        (mw_yee.E_sol_Array[dim])->setVal(1.0, 0);
-        (mw_yee.E_sol_Array[dim])->FillBoundary(infra.geom.periodicity());
+        (mw_yee.E_sol_Array[dim])->setVal(1.0);
 
         mw_yee.template solve_hodge_CG<degree>(*mw_yee.HE_Array[dim], *mw_yee.E_sol_Array[dim], k,
                                                infra, dim, 2, 1.e-16);

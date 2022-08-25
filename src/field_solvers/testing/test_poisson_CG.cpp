@@ -60,14 +60,11 @@ void main_main()
     maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
     amrex::MultiFab kx(convert(infra.grid, *mw_yee.E_Index[0]), infra.distriMap, 1, mw_yee.Nghost);
-    kx.setVal(1.0, 0);
-    kx.FillBoundary(infra.geom.periodicity());
+    kx.setVal(1.0);
     amrex::MultiFab ky(convert(infra.grid, *mw_yee.E_Index[1]), infra.distriMap, 1, mw_yee.Nghost);
-    ky.setVal(1.0, 0);
-    ky.FillBoundary(infra.geom.periodicity());
+    ky.setVal(1.0);
     amrex::MultiFab kz(convert(infra.grid, *mw_yee.E_Index[2]), infra.distriMap, 1, mw_yee.Nghost);
-    kz.setVal(1.0, 0);
-    kz.FillBoundary(infra.geom.periodicity());
+    kz.setVal(1.0);
 
     amrex::MLNodeLaplacian linop({infra.geom}, {infra.grid},
                                  {infra.distriMap});  // linear operator class
