@@ -1857,6 +1857,7 @@ public:
      */
     void rho_from_E(computational_domain ifr)
     {
+	BL_PROFILE("maxwell_yee::rho_from_E");
         for (amrex::MFIter mfi(rho_gauss_law); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
