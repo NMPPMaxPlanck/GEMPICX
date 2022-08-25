@@ -1866,9 +1866,9 @@ public:
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const &E_arr = {
                 (*E_Array[0])[mfi].array(), (*E_Array[1])[mfi].array(), (*E_Array[2])[mfi].array()};
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                rho_arr(i, j, k) = (E_arr[0](i, j, k) - E_arr[0](i - 1, j, k)) / ifr.dx[0];
-                rho_arr(i, j, k) += (E_arr[1](i, j, k) - E_arr[1](i, j - 1, k)) / ifr.dx[1];
-                rho_arr(i, j, k) += (E_arr[2](i, j, k) - E_arr[2](i, j, k - 1)) / ifr.dx[2];
+                rho_arr(i, j, k) = (E_arr[0](i, j, k) - E_arr[0](i - 1, j, k)) * ifr.dxi[0]
+                    + (E_arr[1](i, j, k) - E_arr[1](i, j - 1, k)) * ifr.dxi[1]
+                    + (E_arr[2](i, j, k) - E_arr[2](i, j, k - 1)) * ifr.dxi[2];
             });
         }
         rho_gauss_law.FillBoundary(ifr.geom.periodicity());
@@ -1921,6 +1921,7 @@ public:
 
         // we cannot use rho.sum(0) because this would count nodal data
         // at edges twice, whereas norm1 doesn't
+        // rho.sum_unique which is available in last AMReX version could be used when this is updated
 
         // 1) make all values positive
         rho.plus(-rho.min(0), 0, 1);
