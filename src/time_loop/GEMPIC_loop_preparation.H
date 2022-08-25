@@ -98,13 +98,13 @@ void loop_preparation_init(
     // initial E by rho
     amrex::MultiFab kx(convert(infra.grid, *mw_yee->E_Index[0]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    kx.setVal(1.0, 0);
+    kx.setVal(1.0);
     amrex::MultiFab ky(convert(infra.grid, *mw_yee->E_Index[1]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    ky.setVal(1.0, 0);
+    ky.setVal(1.0);
     amrex::MultiFab kz(convert(infra.grid, *mw_yee->E_Index[2]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    kz.setVal(1.0, 0);
+    kz.setVal(1.0);
 
     mw_yee->solve_poisson(infra, 1e-11, meanVelocity.max_coarsening_level);
     if (degmw > 2)

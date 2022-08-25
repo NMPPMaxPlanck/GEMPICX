@@ -193,7 +193,7 @@ void time_loop_hs_zigzag_C2_step(
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        mw_yee->J_Array[i]->setVal(0.0,0);
+        mw_yee->J_Array[i]->setVal(0.0);
     }
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_jboundary += MPI_Wtime();
