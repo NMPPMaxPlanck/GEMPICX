@@ -200,11 +200,15 @@ public:
 
         // save Plot and Checkpoint-files
         //if ((step == 0) || ((step+1)%freq_slice == 0)) {
-        if ((step + 1) % freq_slice == 0) 
+        if ((step + 1) % freq_x == 0) 
         {
            Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step+1, 20);
+	}
+	if ((step + 1) % freq_slice == 0)
+        {
            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, step+1);
         }
+
     }
 
     /**
