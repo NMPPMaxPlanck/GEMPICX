@@ -151,14 +151,14 @@ public:
 
         // E and B field
         mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
+        BL_PROFILE_VAR("diagnostics::electric energy", ehe);
         for (int cc = 0; cc < vdim; cc++)
         {
-            // amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]),
-            // *(mw_yee->E_Array[cc]),
-            //                                        0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
+            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]),
+                                                   0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
 
-            amrex::Real val = computeDotProd(*(mw_yee->E_Array[cc]), *(mw_yee->HE_Array[cc]),
-                                             *(mw_yee->E_Masks[cc]));
+            // amrex::Real val = computeDotProd(*(mw_yee->E_Array[cc]), *(mw_yee->HE_Array[cc]),
+            //                                  *(mw_yee->E_Masks[cc]));
 
             val *= infra.dx[0] / infra.Length[0]
 #if (GEMPIC_SPACEDIM > 1)
@@ -168,19 +168,20 @@ public:
                    * infra.dx[2] / infra.Length[2]
 #endif
                 ;
-            // reduced sum over mpi ranks
-            amrex::ParallelDescriptor::ReduceRealSum(
-                val, amrex::ParallelDescriptor::IOProcessorNumber());
+            // amrex::ParallelDescriptor::ReduceRealSum(
+            //     val, amrex::ParallelDescriptor::IOProcessorNumber());
             Efield_energy[step][cc] = mw_yee->epref_ep0 * val;
         }
+        BL_PROFILE_VAR_STOP(ehe);
 
         mw_yee->template hodge_full<degree>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
+        BL_PROFILE_VAR("diagnostics::magnetic energy", bhb);
         for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
         {
-            // amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]),
-            //                                        0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
-            amrex::Real val = computeDotProd(*(mw_yee->B_Array[cc]), *(mw_yee->HB_Array[cc]),
-                                             *(mw_yee->B_Masks[cc]));
+            amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]),
+                                                   0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
+            // amrex::Real val = computeDotProd(*(mw_yee->B_Array[cc]), *(mw_yee->HB_Array[cc]),
+            //                                  *(mw_yee->B_Masks[cc]));
             val *= infra.dx[0] / infra.Length[0]
 #if (GEMPIC_SPACEDIM > 1)
                    * infra.dx[1] / infra.Length[1]
@@ -190,10 +191,11 @@ public:
 #endif
                 ;
             // reduced sum over mpi ranks
-            amrex::ParallelDescriptor::ReduceRealSum(
-                val, amrex::ParallelDescriptor::IOProcessorNumber());
+            // amrex::ParallelDescriptor::ReduceRealSum(
+            //     val, amrex::ParallelDescriptor::IOProcessorNumber());
             Bfield_energy[step][cc] = mw_yee->energy_b_scaling * val;
         }
+        BL_PROFILE_VAR_STOP(bhb);
 
         // compute kinetic energy norm and momentum
         kin[step] = 0.0;
@@ -201,6 +203,7 @@ public:
         {
             mom[step][cmp] = 0.0;
         }
+        BL_PROFILE_VAR("diagnostics::kinetic energy", kin);
         for (int spec = 0; spec < numspec; spec++)
         {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
@@ -217,6 +220,9 @@ public:
                 kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
             kin[step] += 0.5 * kin_tmp;
+            BL_PROFILE_VAR_STOP(kin);
+
+            BL_PROFILE_VAR("diagnostics::momentum", mom);
             for (int cmp = 0; cmp < vdim; cmp++)
             {
                 auto mom_tmp =
@@ -235,6 +241,7 @@ public:
                 // save results for this species i_s into m_data
                 mom[step][cmp] += mom_tmp;
             }
+            BL_PROFILE_VAR_STOP(mom);
         }
         gauss_error[step] =
             mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
