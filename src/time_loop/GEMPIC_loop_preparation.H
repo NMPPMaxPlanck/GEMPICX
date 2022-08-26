@@ -31,38 +31,41 @@ namespace Gempic
 namespace Time_Loop
 {
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
-void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
-                           computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                           particle_groups<vdim, numspec> *part_gr)
+void loop_preparation_init(
+    gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
+    maxwell_yee<vdim> *mw_yee,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr)
 {
     BL_PROFILE("Gempic::Time_Loop::loop_preparation_init");
 
     // initial rho by: deposition of particle charge
     // Set rho to 0
-    mw_yee->rho.setVal(0.0, 0);  // value and component
-    mw_yee->rho.FillBoundary(infra.geom.periodicity());
+    // mw_yee->rho.setVal(0.0);
+    // Not needed setVal(0.0) set all values including ghost cells to zero
+    mw_yee->rho.setVal(0.0);  // value and component
 
     // Set J and E to 0: This is important in order not to have uninitialized arrays when calling
     // diagnostics
     for (int dim = 0; dim < vdim; dim++)
     {
-        mw_yee->J_Array[dim]->setVal(0.0, 0);  // value and component
-        mw_yee->J_Array[dim]->FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[dim]->setVal(0.0);
 
-        mw_yee->E_Array[dim]->setVal(0.0, 0);  // value and component
-        mw_yee->E_Array[dim]->FillBoundary(infra.geom.periodicity());
+        mw_yee->E_Array[dim]->setVal(0.0);
     }
+
+    (mw_yee->rho).setVal(0.0);
 
     // Deposit charges:
     for (int spec = 0; spec < numspec; spec++)
     {
-        (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they are in
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid(); ++pti)
+        amrex::Real charge = part_gr[spec]->getCharge();
+        part_gr[spec]->Redistribute();  // assign particles to the tile they are in
+        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = part_gr->charge[spec];
-            auto &aos = pti.GetArrayOfStructs();
-            auto *AMREX_RESTRICT particles = aos().dataPtr();
             const long np = pti.numParticles();
+            const auto& particles = pti.GetArrayOfStructs();
+            const auto partData = particles().data();
+            const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
             amrex::Array4<amrex::Real> const &rhoarr = mw_yee->rho[pti].array();
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
@@ -72,11 +75,10 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
                 splines_at_particles<degx, degy, degz> spline;
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                    position[d] = particles[pp].pos(d);
+                    position[d] = partData[pp].pos(d);
                 spline.init_particles(position, infra.plo, infra.dxi);
                 gempic_deposit_rho_C3<degx, degy, degz>(
-                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * particles[pp].rdata(vdim),
-                    rhoarr);
+                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
             });
         }
     }
@@ -84,7 +86,7 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
     // assign particles to tiles they are in TODO: do I need this?
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr->mypc[spec]->Redistribute();
+        part_gr[spec]->Redistribute();
     }
 
     // add values from ghost cells and periodic boundary
@@ -96,16 +98,13 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
     // initial E by rho
     amrex::MultiFab kx(convert(infra.grid, *mw_yee->E_Index[0]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    kx.setVal(1.0, 0);
-    kx.FillBoundary(infra.geom.periodicity());
+    kx.setVal(1.0);
     amrex::MultiFab ky(convert(infra.grid, *mw_yee->E_Index[1]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    ky.setVal(1.0, 0);
-    ky.FillBoundary(infra.geom.periodicity());
+    ky.setVal(1.0);
     amrex::MultiFab kz(convert(infra.grid, *mw_yee->E_Index[2]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    kz.setVal(1.0, 0);
-    kz.FillBoundary(infra.geom.periodicity());
+    kz.setVal(1.0);
 
     mw_yee->solve_poisson(infra, 1e-11, meanVelocity.max_coarsening_level);
     if (degmw > 2)
@@ -118,7 +117,8 @@ void loop_preparation_init(gempic_parameters<vdim, numspec> meanVelocity,
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
-                     maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
+                     maxwell_yee<vdim> *mw_yee,
+                     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
                      diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
                      bool time_staggered)
 {
@@ -133,32 +133,32 @@ void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computationa
         // approximate x^1/2
         for (int spec = 0; spec < numspec; spec++)
         {
-            for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
-                 ++pti)
+            for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
             {
-                amrex::Particle<vdim + 1, 0> *AMREX_RESTRICT particles =
-                    &(pti.GetArrayOfStructs()[0]);  // get particles
-
                 const long np = pti.numParticles();
+                auto &particles = pti.GetArrayOfStructs();
+                auto partData = particles().data();
+                auto &particleAttributes = pti.GetStructOfArrays();
+                auto weight = particleAttributes.GetRealData(vdim).data();
+                auto velx = particleAttributes.GetRealData(0).data();
+                auto vely = particleAttributes.GetRealData(1).data();
+                auto velz = particleAttributes.GetRealData(2).data();
+
                 const amrex::Real dt = mw_yee->dt;
                 amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
                     for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
                     {
-                        pos[comp] = particles[pp].pos(comp);
+                        pos[comp] = partData[pp].pos(comp);
                     }
-                    amrex::GpuArray<amrex::Real, vdim> vel;
-                    for (int comp = 0; comp < vdim; comp++)
-                    {
-                        vel[comp] = particles[pp].rdata(comp);
-                    }
+                    amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos =
                         push_particle_pos<vdim>(infra.plo, infra.phi, pos, vel, 0.5 * dt);
-                    for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = newPos[xd];
+                    for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) partData[pp].pos(xd) = newPos[xd];
                 });
             }
-            part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
+            part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         }
     }
 
@@ -169,7 +169,8 @@ void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computationa
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
-                      maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
+                      maxwell_yee<vdim> *mw_yee,
+                      amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr,
                       diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
                       bool time_staggered,
                       amrex::GpuArray<std::string, int(vdim / 2.5) * 2 + 1> fields_B)
@@ -187,7 +188,8 @@ void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computation
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
-    maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
+    maxwell_yee<vdim> *mw_yee,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
     diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool time_staggered,
     amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
     amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
@@ -206,7 +208,8 @@ void loop_preparation(
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
-                      maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
+                      maxwell_yee<vdim> *mw_yee,
+                      amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
                       diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
                       bool time_staggered, amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelect)
 {
@@ -222,7 +225,8 @@ void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computation
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>
 void loop_preparation(gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
-                      maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
+                      maxwell_yee<vdim> *mw_yee,
+                      amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
                       diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
                       bool time_staggered, amrex::ParserExecutor<4> BxEval,
                       amrex::ParserExecutor<4> ByEval, amrex::ParserExecutor<4> BzEval)

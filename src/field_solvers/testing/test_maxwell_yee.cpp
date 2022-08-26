@@ -172,8 +172,7 @@ void main_main()
 
     for (int i = 0; i < vdim; i++)
     {
-        mw_yee.J_Array[i]->setVal(0.0, 0);  // value and component
-        mw_yee.J_Array[i]->FillBoundary(infra.geom.periodicity());
+        mw_yee.J_Array[i]->setVal(0.0);
     }
 
     amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB;
@@ -225,8 +224,7 @@ void main_main()
 
     for (int i = 0; i < vdim; i++)
     {
-        mw_yee_2.J_Array[i]->setVal(0.0, 0);  // value and component
-        mw_yee_2.J_Array[i]->FillBoundary(infra.geom.periodicity());
+        mw_yee_2.J_Array[i]->setVal(0.0);  
     }
 
     funcSelectB[0] = MAXWELL_YEE_B0;

@@ -32,6 +32,35 @@ namespace Gempic
 namespace Diagnostics_Output
 {
 /**
+ * @brief Compute the dot product of two MultiFabs with a mask
+ *
+ * @param mf1
+ * @param mf2
+ * @param mask
+ * @return amrex::Real
+ */
+amrex::Real computeDotProd(amrex::MultiFab const &mf1, amrex::MultiFab const &mf2,
+                           amrex::iMultiFab const &mask)
+{
+    auto const &data1 = mf1.const_arrays();
+    auto const &data2 = mf2.const_arrays();
+    auto const &mask_ma = mask.const_arrays();
+    return amrex::ParReduce(
+        amrex::TypeList<amrex::ReduceOpSum>{}, amrex::TypeList<amrex::Real>{}, mf1,
+        amrex::IntVect(0),  // zero ghost cells
+        [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::Real {
+            if (mask_ma[box_no](i, j, k))
+            {
+                amrex::Real prod = data1[box_no](i, j, k) * data2[box_no](i, j, k);
+                return prod;
+            }
+            else
+            {
+                return 0.0;
+            }
+        });
+}
+/**
  * Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored
  * and written into files. Slice Data of fields can be generated.
  */
@@ -79,27 +108,24 @@ public:
     }
 
     void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra,
-                         maxwell_yee<vdim> *mw_yee, particle_groups<vdim, numspec> *part_gr,
+                         maxwell_yee<vdim> *mw_yee,
+                         amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
                          std::string simulation_name, bool ctest)
     {
         BL_PROFILE("diagnostics::end_of_timestep");
 
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics -= MPI_Wtime();
-        // Disable all diagnostics by setting freq_slice > 100000
-        if (freq_slice < 100000)
-        {
-            // save norms for diagnostics
-            save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        // save norms for diagnostics
+        save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
-            // save temporary results every freq_save steps
-            if (t_step == 0)
-            {
-                save_time_history(mw_yee->dt, simulation_name, t_step);
-            }
-            if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
-            {
-                save_time_history(mw_yee->dt, simulation_name, t_step + 1);
-            }
+        // save temporary results every freq_save steps
+        if (t_step == 0)
+        {
+            save_time_history(mw_yee->dt, simulation_name, t_step);
+        }
+        if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
+        {
+            save_time_history(mw_yee->dt, simulation_name, t_step + 1);
         }
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step + 1 << std::endl;
@@ -113,7 +139,7 @@ public:
      * if needed according to the Slice Plot frequency.
      */
     void save_step_data(int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                        particle_groups<vdim, numspec> *part_gr)
+                        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr)
     {
         BL_PROFILE("diagnostics::save_step_data");
 
@@ -125,10 +151,15 @@ public:
 
         // E and B field
         mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
+        BL_PROFILE_VAR("diagnostics::electric energy", ehe);
         for (int cc = 0; cc < vdim; cc++)
         {
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]),
                                                    0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
+
+            // amrex::Real val = computeDotProd(*(mw_yee->E_Array[cc]), *(mw_yee->HE_Array[cc]),
+            //                                  *(mw_yee->E_Masks[cc]));
+
             val *= infra.dx[0] / infra.Length[0]
 #if (GEMPIC_SPACEDIM > 1)
                    * infra.dx[1] / infra.Length[1]
@@ -137,14 +168,20 @@ public:
                    * infra.dx[2] / infra.Length[2]
 #endif
                 ;
+            // amrex::ParallelDescriptor::ReduceRealSum(
+            //     val, amrex::ParallelDescriptor::IOProcessorNumber());
             Efield_energy[step][cc] = mw_yee->epref_ep0 * val;
         }
+        BL_PROFILE_VAR_STOP(ehe);
 
         mw_yee->template hodge_full<degree>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
+        BL_PROFILE_VAR("diagnostics::magnetic energy", bhb);
         for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
         {
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]),
                                                    0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
+            // amrex::Real val = computeDotProd(*(mw_yee->B_Array[cc]), *(mw_yee->HB_Array[cc]),
+            //                                  *(mw_yee->B_Masks[cc]));
             val *= infra.dx[0] / infra.Length[0]
 #if (GEMPIC_SPACEDIM > 1)
                    * infra.dx[1] / infra.Length[1]
@@ -153,8 +190,12 @@ public:
                    * infra.dx[2] / infra.Length[2]
 #endif
                 ;
+            // reduced sum over mpi ranks
+            // amrex::ParallelDescriptor::ReduceRealSum(
+            //     val, amrex::ParallelDescriptor::IOProcessorNumber());
             Bfield_energy[step][cc] = mw_yee->energy_b_scaling * val;
         }
+        BL_PROFILE_VAR_STOP(bhb);
 
         // compute kinetic energy norm and momentum
         kin[step] = 0.0;
@@ -162,10 +203,11 @@ public:
         {
             mom[step][cmp] = 0.0;
         }
+        BL_PROFILE_VAR("diagnostics::kinetic energy", kin);
         for (int spec = 0; spec < numspec; spec++)
         {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
-                *part_gr->mypc[spec],
+                *part_gr[spec],
                 [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
                     auto m = p.rdata(vdim);
                     auto vel = pow(std::abs(p.rdata(0)), 2) + pow(std::abs(p.rdata(1)), 2) +
@@ -178,10 +220,13 @@ public:
                 kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
             kin[step] += 0.5 * kin_tmp;
+            BL_PROFILE_VAR_STOP(kin);
+
+            BL_PROFILE_VAR("diagnostics::momentum", mom);
             for (int cmp = 0; cmp < vdim; cmp++)
             {
                 auto mom_tmp =
-                    amrex::ReduceSum(*part_gr->mypc[spec],
+                    amrex::ReduceSum(*part_gr[spec],
                                      [=] AMREX_GPU_HOST_DEVICE(
                                          const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
                                          auto m = p.rdata(vdim);
@@ -196,6 +241,7 @@ public:
                 // save results for this species i_s into m_data
                 mom[step][cmp] += mom_tmp;
             }
+            BL_PROFILE_VAR_STOP(mom);
         }
         gauss_error[step] =
             mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
@@ -204,9 +250,9 @@ public:
         // if ((step == 0) || ((step+1)%freq_slice == 0)) {
         if ((step + 1) % freq_slice == 0)
         {
-            Gempic_WriteCheckpointFile(mw_yee, part_gr, &infra, "Checkpoint/" + sim_name, step + 1,
-                                       20);
-            Gempic_WritePlotFile(part_gr, mw_yee, &infra, sim_name, step + 1);
+            Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra,
+                                                      "Checkpoint/" + sim_name, step + 1, 20);
+            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, step + 1);
         }
     }
 

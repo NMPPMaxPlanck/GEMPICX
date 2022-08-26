@@ -45,7 +45,7 @@ public:
     gempic_parameters<vdim, numspec> params;
     computational_domain domain;
     maxwell_yee<vdim, int(vdim / 2.5) * 2 + 1> mw_yee;
-    particle_groups<vdim, numspec> part_gr;
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
     diagnostics<vdim, numspec, degx, degy, degz, degvm> diagn;
     bool readinfile = false;
     bool ctest = false;
@@ -72,7 +72,12 @@ public:
         mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
         mw_yee.template init_rho_phi<degvm>(domain, funcSelectRho);
         // particles
-        part_gr.reinit(params.charge, params.mass, domain);
+        for (int s = 0; s < numspec; s++)
+        {
+            part_gr[s] =
+                std::make_unique<particle_groups<vdim>>(params.charge[s], params.mass[s], domain);
+        }
+
         amrex::Real vol = (domain.geom.ProbHi(0) - domain.geom.ProbLo(0)) *
                           (domain.geom.ProbHi(1) - domain.geom.ProbLo(1)) *
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
@@ -85,7 +90,7 @@ public:
                                                   params.vWeight[0], 0, wave_function);
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(
-            params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, funcSelectB);
+            params, domain, &mw_yee, part_gr, &diagn, params.time_staggered, funcSelectB);
 
         // Print AMReX grid information and warn about resource usage
         if (ParallelDescriptor::IOProcessor())
@@ -111,7 +116,8 @@ public:
         MPI_Barrier(MPI_COMM_WORLD);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-        amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count() << " s" << std::endl;
+        amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count()
+                       << " s" << std::endl;
     }
 
     void initialize_gempic_structures()
@@ -124,20 +130,30 @@ public:
         mw_yee.reinit(domain, params.dt, params.n_steps, params.Nghost);
         mw_yee.template init_rho_phi<degvm>(domain, params.rhoEval, params.phiEval);
         // particles
-        part_gr.reinit(params.charge, params.mass, domain);
+        for (int s = 0; s < numspec; s++)
+        {
+            part_gr[s] =
+                std::make_unique<particle_groups<vdim>>(params.charge[s], params.mass[s], domain);
+        }
         amrex::Real vol = (domain.geom.ProbHi(0) - domain.geom.ProbLo(0)) *
                           (domain.geom.ProbHi(1) - domain.geom.ProbLo(1)) *
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice,
                      params.sim_name, vol, ctest);
-        //------------------------------------------------------------------------------
-        // initialize particles & loop preparation:
+//------------------------------------------------------------------------------
+// initialize particles & loop preparation:
+#if GEMPIC_GPU
+        init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
+                                                      params.meanVelocity[0], params.vThermal[0],
+                                                      params.vWeight[0], 0, params.densityEval[0]);
+#else
         init_particles_full_domain<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
-                                                  params.meanVelocity[0], params.vThermal[0],
-                                                  params.vWeight[0], 0, wave_function);
+                                                      params.meanVelocity[0], params.vThermal[0],
+                                                      params.vWeight[0], 0, params.densityEval[0]);
+#endif
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(
-            params, domain, &mw_yee, &part_gr, &diagn, params.time_staggered, params.BxEval,
+            params, domain, &mw_yee, part_gr, &diagn, params.time_staggered, params.BxEval,
             params.ByEval, params.BzEval);
 
         // Print AMReX grid information and warn about resource usage
@@ -162,8 +178,10 @@ public:
         }
         MPI_Barrier(MPI_COMM_WORLD);
         auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-        amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count() << " s" << std::endl;
+        auto duration = std::chrono::duration<double>(stop - start);
+        amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count()
+                       << " s" << std::endl
+                       << std::endl;
     }
 
     void run_time_loop()
@@ -174,40 +192,41 @@ public:
         switch (params.propagator)
         {
             case 0:
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, false>(
-                    domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, electromagnetic, true>(
+                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 1:
                 time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(
-                    domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 2:
                 time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(
-                    domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 3:
                 time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, electromagnetic,
-                                       false, output>(domain, &mw_yee, &part_gr, &diagn, ctest,
-                                                      params.sim_name, params.strang_order);
+                                       true, output>(domain, &mw_yee, part_gr, &diagn, ctest,
+                                                     params.sim_name, params.strang_order);
                 break;
                 // case 4:
                 //     ls_rungekutta<3> rk_prop();
                 //     rk_prop.time_loop(domain, &mw_yee, &art_gr);
             case 100:
                 time_loop_particles<vdim, numspec, degx, degy, degz, degvm, electromagnetic>(
-                    domain, &mw_yee, &part_gr, &diagn, ctest, params.sim_name);
+                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name);
                 break;
             default:
                 break;
         }
         MPI_Barrier(MPI_COMM_WORLD);
         auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-        amrex::Print() << "run_time_loop execution lasted: " << duration.count() << " s" << std::endl;
+        auto duration = std::chrono::duration<double>(stop - start);
+        amrex::Print() << "run_time_loop execution lasted: " << duration.count() << " s"
+                       << std::endl;
         switch (params.propagator)
         {
             case 100:
-                Gempic_WritePlotFile(&part_gr, &mw_yee, &domain, "Edipole", 10);
+                Gempic_WritePlotFile<vdim, numspec>(part_gr, &mw_yee, &domain, "Edipole", 10);
                 break;
             default:
                 break;

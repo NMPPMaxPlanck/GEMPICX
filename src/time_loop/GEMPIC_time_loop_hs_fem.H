@@ -37,10 +37,10 @@ namespace Time_Loop
    for Lagrange elements of order one and zero
    */
 
-template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
-          bool electromagnetic = true>
-void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee, amrex::Real coeff,
-                           particle_groups<vdim, numspec> *part_gr, timers *profiling_timers)
+template<int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
+void time_loop_hs_fem_step (computational_domain infra, maxwell_yee<vdim> *mw_yee,
+                       amrex::Real coeff, amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+                       timers *profiling_timers) 
 {
     mw_yee->advance_time(coeff);
 
@@ -63,19 +63,19 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        mw_yee->J_Array[i]->setVal(0.0, 0);  // value and component
-        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->setVal(0.0);  // value and component
     }
 
     for (int spec = 0; spec < numspec; spec++)
     {
-        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
-        amrex::Real charge = part_gr->charge[spec];
+        amrex::Real chargemass = part_gr[spec]->getCharge()/part_gr[spec]->getMass();
+        amrex::Real charge = part_gr[spec]->getCharge();
 
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*part_gr[spec], 0); pti.isValid(); ++pti) 
         {
-            auto &particles = pti.GetArrayOfStructs();  // get particles
-            const long np = pti.numParticles();
+            auto& particles = pti.GetArrayOfStructs(); // get particles
+            const long np  = pti.numParticles();
+            auto& particle_attributes = pti.GetStructOfArrays();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
@@ -110,55 +110,59 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
                 amrex::GpuArray<amrex::Real, vdim> vel;
                 for (int comp = 0; comp < vdim; comp++)
                 {
-                    vel[comp] = particles[pp].rdata(comp);
+                    vel[comp] = particle_attributes.GetRealData(comp)[pp];
                 }
-                amrex::GpuArray<amrex::Real, vdim> newPosE =
+                    amrex::GpuArray<amrex::Real, vdim> newPosE =
                     push_v_efield<vdim>(vel, mw_yee->dt * 0.5 * coeff, chargemass, efield);
-                std::copy(newPosE.begin(), newPosE.end(),
-                          &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2) + GEMPIC_SPACEDIM]);
+                    //std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                    for (int comp = 0; comp < vdim; comp++) 
+                    {
+                        particle_attributes.GetRealData(comp)[pp] = newPosE[comp];
+                    }
 
-                // push x and v with the magnetic field
-                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
-                {
-                    pos[comp] = particles[pp].pos(comp);
-                }
-                for (int comp = 0; comp < vdim; comp++)
-                {
-                    vel[comp] = particles[pp].rdata(comp);
-                }
-                spline.init_particles(pos, infra.plo, infra.dxi);
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos =
-                    push_x_v_bfield<vdim, degx, degy, degz>(
-                        pos, vel, mw_yee->dt * coeff, chargemass, bA, infra.tolerance_particle,
-                        infra.plo, infra.phi, infra.dxi, spline);
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
-                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                {
-                    xOld[d] = particles[pp].pos(d);
-                    xNew[d] = newPos[d];
-                }
+                    // push x and v with the magnetic field
+                    for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) 
+                    {
+                        pos[comp] = particles[pp].pos(comp);
+                    }
+                    for (int comp = 0; comp < vdim; comp++) 
+                    {
+                        vel[comp] = particle_attributes.GetRealData(comp)[pp];
+                    }
+                    spline.init_particles(pos , infra.plo, infra.dxi);
+                    amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM+vdim> newPos = 
+                        push_x_v_bfield<vdim,degx,degy,degz>(
+                            pos, vel, (*mw_yee).dt*coeff, chargemass, bA, infra.tolerance_particle,
+                            infra.plo, infra.phi, infra.dxi, spline);
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> xNew, xOld;
+                    for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                    {
+                        xOld[d] = particles[pp].pos(d);
+                        xNew[d] = newPos[d];
+                    }
 
-                amrex::GpuArray<amrex::Real, vdim> velocity;
-                for (unsigned int d = 0; d < vdim; ++d)
-                    velocity[d] = 0.5 * (newPos[d + GEMPIC_SPACEDIM] + particles[pp].rdata(d));
-                /*  //Old version with only depositon at the mid point
-                  std::array<amrex::Real, GEMPIC_SPACEDIM> xMean;
-                  for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
-                    xMean[d] = 0.5*(newPos[d] + particles[pp].pos(d));
-                  accumulate_j_fem_integral(xMean,
-                                            velocity,
-                                            charge*particles[pp].rdata(vdim),
-                                            infra.dxi,
-                                            infra.plo,
-                                            jA);*/
-                accumulate_j_fem_integral<vdim, degx, degy, degz>(
-                    spline, xOld, xNew, velocity, charge * particles[pp].rdata(vdim), infra.dxi,
-                    infra.plo, jA);
-                std::copy(newPos.begin(), newPos.end(),
-                          &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2)]);
+                    amrex::GpuArray<amrex::Real, vdim> velocity;
+                    for (unsigned int d=0;d<vdim;++d)
+                        velocity[d] = 0.5*(newPos[d+GEMPIC_SPACEDIM] + particle_attributes.GetRealData(d)[pp]);
+                    /*  //Old version with only depositon at the mid point
+                      std::array<amrex::Real, GEMPIC_SPACEDIM> xMean;
+                      for (unsigned int d=0;d<GEMPIC_SPACEDIM;++d)
+                        xMean[d] = 0.5*(newPos[d] + particles[pp].pos(d));
+                      accumulate_j_fem_integral(xMean,
+                                                velocity,
+                                                charge*particles[pp].rdata(vdim),
+                                                infra.dxi,
+                                                infra.plo,
+                                                jA);*/
+                    accumulate_j_fem_integral<vdim,degx,degy,degz>(
+                        spline, xOld, xNew, velocity, charge*particle_attributes.GetRealData(vdim)[pp],
+                        infra.dxi, infra.plo, jA);
+                    //std::copy(newPos.begin(),newPos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+1)]);
+                    for (int xd=0;xd<GEMPIC_SPACEDIM; xd++)
+                        particles[pp].pos(xd) = newPos[xd];
             }
         }
-        part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
+        part_gr[spec]->Redistribute(); // assign particles to the tile they are in
     }
 
     // add values from ghost cells and periodic boundary
@@ -177,15 +181,17 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
     // advance E from j (field part of H_p)
     mw_yee->advance_E(infra, mw_yee->dt * coeff, false, true, mw_yee->HB_Array, mw_yee->E_Array);
 
-    // Second particle loop for particle part from H_E
-    for (int spec = 0; spec < numspec; spec++)
+        // Second particle loop for particle part from H_E
+    for (int spec=0;spec<numspec;spec++) 
     {
-        amrex::Real chargemass = part_gr->charge[spec] / part_gr->mass[spec];
-
-        for (amrex::ParIter<vdim + 1, 0, 0, 0> pti(*part_gr->mypc[spec], 0); pti.isValid(); ++pti)
+        amrex::Real chargemass = part_gr[spec]->getCharge() / part_gr[spec] -> getMass();
+        
+        for (amrex::ParIter<0,0,vdim+1,0> pti(*part_gr[spec], 0); pti.isValid(); ++pti) 
         {
-            auto &particles = pti.GetArrayOfStructs();  // get particles
-            const long np = pti.numParticles();
+            const long np  = pti.numParticles();
+            auto& particles = pti.GetArrayOfStructs(); // get particles
+            auto partData = particles().data();
+            auto& particle_attributes = pti.GetStructOfArrays();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
 
@@ -203,47 +209,50 @@ void time_loop_hs_fem_step(computational_domain infra, maxwell_yee<vdim> *mw_yee
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
                 for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
                 {
-                    pos[comp] = particles[pp].pos(comp);
+                    pos[comp] = partData[pp].pos(comp);
                 }
-                spline.init_particles(pos, infra.plo, infra.dxi);
-                amrex::GpuArray<amrex::Real, vdim> efield =
-                    evaluate_fem_efield<vdim, degx, degy, degz>(spline, eA);
+                spline.init_particles(pos , infra.plo, infra.dxi);
+                amrex::GpuArray<amrex::Real, vdim> efield 
+                    = evaluate_fem_efield<vdim,degx,degy,degz>(spline, eA);
 
                 // push v with the electric field
-                amrex::GpuArray<amrex::Real, vdim> vel;
-                for (int comp = 0; comp < vdim; comp++)
+                amrex::GpuArray<amrex::Real,vdim> vel;
+                for (int comp = 0; comp < vdim; comp++) 
                 {
-                    vel[comp] = particles[pp].rdata(comp);
+                    //vel[comp] = particles[pp].rdata(comp);
+                    vel[comp] = particle_attributes.GetRealData(comp)[pp];
+
                 }
-                amrex::GpuArray<amrex::Real, vdim> newPosE =
-                    push_v_efield<vdim>(vel, mw_yee->dt * 0.5 * coeff, chargemass, efield);
-                std::copy(newPosE.begin(), newPosE.end(),
-                          &particles.data()[pp * (GEMPIC_SPACEDIM + vdim + 2) + GEMPIC_SPACEDIM]);
+                amrex::GpuArray<amrex::Real,vdim> newPosE = 
+                    push_v_efield<vdim>(vel, (*mw_yee).dt*0.5*coeff, chargemass, efield);
+                //std::copy(newPosE.begin(),newPosE.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)+GEMPIC_SPACEDIM]);
+                for (int comp = 0; comp < vdim; comp++) 
+                {
+                    particle_attributes.GetRealData(comp)[pp] = newPosE[comp];
+                }
             }
         }
-        part_gr->mypc[spec]->Redistribute();  // assign particles to the tile they are in
+        part_gr[spec]->Redistribute(); // assign particles to the tile they are in
     }
 
     if (electromagnetic)
     {
-        //--------------------------------------------------------------------------
-        // Operator H_E for dt/2 (field part)
+      //--------------------------------------------------------------------------
+      // Operator H_E for dt/2 (field part)
         mw_yee->template hodge_full<degmw>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
-        mw_yee->advance_B(infra, mw_yee->dt * 0.5 * coeff, mw_yee->HE_Array, mw_yee->B_Array);
+        mw_yee->advance_B(infra, mw_yee->dt*0.5*coeff, mw_yee->HE_Array, mw_yee->B_Array);
 
-        // Operator H_B for dt/2
+      // Operator H_B for dt/2
         mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
-        mw_yee->advance_E(infra, mw_yee->dt * 0.5 * coeff, true, false, mw_yee->HB_Array,
-                          mw_yee->E_Array);
+        mw_yee->advance_E(infra, mw_yee->dt*0.5*coeff, true, false, mw_yee->HB_Array, mw_yee->E_Array);
     }
 }
 
-template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
-          bool electromagnetic = true>
-void time_loop_hs_fem(computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                      particle_groups<vdim, numspec> *part_gr,
-                      diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool ctest,
-                      std::string simulation_name, int strang_order)
+template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool electromagnetic=true>
+void time_loop_hs_fem (computational_domain infra, maxwell_yee<vdim> *mw_yee,
+                       amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+                       diagnostics<vdim, numspec, degx, degy, degz,degmw> *diagn, bool ctest,
+                       std::string simulation_name, int strang_order) 
 {
     BL_PROFILE("time_loop_hs_fem");
 

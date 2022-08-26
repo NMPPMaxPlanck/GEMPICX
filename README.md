@@ -30,6 +30,14 @@ Installing manually
 
 Main executable vlasov_maxwell is in build/simulation/vlasov_maxwell  
 
+- Update AMReX version in submodule
+1.) cd third_party/amrex
+2.) git checkout SHA (commit that is desired)
+3.) cd ../..
+4.) git add third_party/amrex
+5.) git commit -m"update AMReX to ..."
+6.) git submodule update
+
 Changing dimension
 =====================
 cd ~build/amrex1D  

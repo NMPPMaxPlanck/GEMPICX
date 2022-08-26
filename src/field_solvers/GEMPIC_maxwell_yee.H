@@ -203,7 +203,6 @@ public:
             E_Masks[comp].reset(new amrex::iMultiFab(convert(ifr.grid, *E_Index[comp]),
                                                      ifr.distriMap, Ncomp, Nghost));
             (*E_Masks[comp]).setVal(0.0);
-            (*E_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
             for (amrex::MFIter mfi(*E_Masks[comp]); mfi.isValid(); ++mfi)
             {
@@ -227,7 +226,6 @@ public:
             B_Masks[comp].reset(new amrex::iMultiFab(convert(ifr.grid, *B_Index[comp]),
                                                      ifr.distriMap, Ncomp, Nghost));
             (*B_Masks[comp]).setVal(0.0);
-            (*B_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
             for (amrex::MFIter mfi((*(B_Masks[comp]))); mfi.isValid(); ++mfi)
             {
@@ -249,7 +247,6 @@ public:
         nodal_Mask.reset(new amrex::iMultiFab(convert(ifr.grid, amrex::IntVect::TheNodeVector()),
                                               ifr.distriMap, Ncomp, Nghost));
         (*nodal_Mask).setVal(0.0);
-        (*nodal_Mask).FillBoundary(ifr.geom.periodicity());
 
         for (amrex::MFIter mfi(*nodal_Mask); mfi.isValid(); ++mfi)
         {
@@ -1133,6 +1130,7 @@ public:
                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim> &MultiInput,
                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim> &MultiOutput, bool is_E)
     {
+        BL_PROFILE("maxwell_yee::Hodge_full");
         for (int field = 0; field < edim; field++)
         {
             amrex::MultiFab tmp(convert(ifr.grid, (is_E ? *E_Index[field] : *B_Index[field])),
@@ -1535,14 +1533,11 @@ public:
         amrex::MultiFab Drho_z(convert(ifr.grid, *E_Index[2]), ifr.distriMap, Ncomp, Nghost);
 
         amrex::MultiFab HDrho_x(convert(ifr.grid, *E_Index[0]), ifr.distriMap, Ncomp, Nghost);
-        HDrho_x.setVal(1.0, 0);
-        HDrho_x.FillBoundary(ifr.geom.periodicity());
+        HDrho_x.setVal(1.0);
         amrex::MultiFab HDrho_y(convert(ifr.grid, *E_Index[1]), ifr.distriMap, Ncomp, Nghost);
-        HDrho_y.setVal(1.0, 0);
-        HDrho_y.FillBoundary(ifr.geom.periodicity());
+        HDrho_y.setVal(1.0);
         amrex::MultiFab HDrho_z(convert(ifr.grid, *E_Index[2]), ifr.distriMap, Ncomp, Nghost);
-        HDrho_z.setVal(1.0, 0);
-        HDrho_z.FillBoundary(ifr.geom.periodicity());
+        HDrho_z.setVal(1.0);
 
         // 1) Apply D
         matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, Drho_x, *E_Index[0]);
@@ -1620,8 +1615,8 @@ public:
                           Nghost);
         amrex::MultiFab k_scaled(convert(ifr.grid, amrex::IntVect::TheNodeVector()), ifr.distriMap,
                                  Ncomp, Nghost);
-        k.setVal(1.0, 0);
-        k.FillBoundary(ifr.geom.periodicity());
+        k.setVal(1.0);
+
         amrex::Real kern_factor;
 
         amrex::Real alpha, beta, rr;
@@ -1721,7 +1716,6 @@ public:
             tmp[i].reset(
                 new amrex::MultiFab(convert(ifr.grid, *E_Index[i]), ifr.distriMap, Ncomp, Nghost));
             tmp[i]->setVal(0.0);
-            tmp[i]->FillBoundary(ifr.geom.periodicity());
         }
         // ---------------------------------------------------------------------
         // D-operator
@@ -1804,7 +1798,6 @@ public:
         mlmg.setBottomSolver(amrex::BottomSolver::cg);
 
         phi.setVal(0.0);  // initialise phi
-        phi.FillBoundary(ifr.geom.periodicity());
 
         // Substract the constant part
         amrex::Real nm1 = 0.0;
@@ -1864,6 +1857,7 @@ public:
      */
     void rho_from_E(computational_domain ifr)
     {
+	BL_PROFILE("maxwell_yee::rho_from_E");
         for (amrex::MFIter mfi(rho_gauss_law); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
@@ -1872,9 +1866,9 @@ public:
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const &E_arr = {
                 (*E_Array[0])[mfi].array(), (*E_Array[1])[mfi].array(), (*E_Array[2])[mfi].array()};
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                rho_arr(i, j, k) = (E_arr[0](i, j, k) - E_arr[0](i - 1, j, k)) / ifr.dx[0];
-                rho_arr(i, j, k) += (E_arr[1](i, j, k) - E_arr[1](i, j - 1, k)) / ifr.dx[1];
-                rho_arr(i, j, k) += (E_arr[2](i, j, k) - E_arr[2](i, j, k - 1)) / ifr.dx[2];
+                rho_arr(i, j, k) = (E_arr[0](i, j, k) - E_arr[0](i - 1, j, k)) * ifr.dxi[0]
+                    + (E_arr[1](i, j, k) - E_arr[1](i, j - 1, k)) * ifr.dxi[1]
+                    + (E_arr[2](i, j, k) - E_arr[2](i, j, k - 1)) * ifr.dxi[2];
             });
         }
         rho_gauss_law.FillBoundary(ifr.geom.periodicity());
@@ -1885,34 +1879,38 @@ public:
      */
     template <int numspec, int degx, int degy, int degz>
     amrex::Real compute_gauss_error(computational_domain ifr,
-                                    Particles::particle_groups<edim, numspec> *part_gr)
+                                    amrex::GpuArray<std::unique_ptr<particle_groups<edim>>, numspec> &part_gr)
     {
+        BL_PROFILE("maxwell_yee::compute_gauss_error");
         rho_from_E(ifr);  // fills rho_gauss_law
 
         // Deposit charges in rho:
         rho.setVal(0.0);
-        rho.FillBoundary(ifr.geom.periodicity());
         for (int spec = 0; spec < numspec; spec++)
         {
-            (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they
-                                                      // are in
-            for (amrex::ParIter<edim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
+            part_gr[spec]->Redistribute();  // assign particles to the tile they are in
+            for (amrex::ParIter<0, 0, edim + 1, 0> pti(*part_gr[spec], 0); pti.isValid();
                  ++pti)
             {
-                auto particles = pti.GetArrayOfStructs()().data();
+                amrex::Real charge = part_gr[spec]->getCharge();
                 const long np = pti.numParticles();
-                amrex::Real charge = part_gr->charge[spec];
+                // const auto particleStruct = pti.GetArrayOfStructs();
+                const auto& particles = pti.GetArrayOfStructs();
+                const auto& partData = particles().data();
+                const auto& particleAttributes = pti.GetStructOfArrays();
+                const auto weight = particleAttributes.GetRealData(edim).data();
+
                 amrex::Array4<amrex::Real> const &rhoarr = rho[pti].array();
 
                 amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
+                    // for (int pp = 0; pp < np; pp++)
                     splines_at_particles<degx, degy, degz> spline;
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
                     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                        position[d] = particles[pp].pos(d);
+                        position[d] = partData[pp].pos(d);
                     spline.init_particles(position, ifr.plo, ifr.dxi);
                     gempic_deposit_rho_C3<degx, degy, degz>(
-                        spline, charge * ifr.dxi[GEMPIC_SPACEDIM] * particles[pp].rdata(edim),
-                        rhoarr);
+                        spline, charge * ifr.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }
         }
@@ -1923,6 +1921,7 @@ public:
 
         // we cannot use rho.sum(0) because this would count nodal data
         // at edges twice, whereas norm1 doesn't
+        // rho.sum_unique which is available in last AMReX version could be used when this is updated
 
         // 1) make all values positive
         rho.plus(-rho.min(0), 0, 1);
@@ -1943,177 +1942,6 @@ public:
         rho_gauss_law.minus(rho, 0, 1, 0);
         amrex::Real rho_norm = gempic_norm(rho_gauss_law, ifr, 2);
         return (rho_norm * rho_norm);
-    }
-
-    /**
-     * Compute E for rho from particles (for diagnostics: Gauss law)
-     */
-    template <int numspec, int degx, int degy, int degz>
-    amrex::Real compute_gauss_error_E(computational_domain ifr,
-                                      Particles::particle_groups<edim, numspec> *part_gr)
-    {
-        (*E_sol_Array[0]).Copy(*E_sol_Array[0], *E_Array[0], 0, 0, 1, Nghost);
-        (*E_sol_Array[1]).Copy(*E_sol_Array[1], *E_Array[1], 0, 0, 1, Nghost);
-        (*E_sol_Array[2]).Copy(*E_sol_Array[2], *E_Array[2], 0, 0, 1, Nghost);
-
-        // init phi for poisson solver
-        double x, y, z;
-        int err;
-        std::string phi_str = "4 * 0.5 * cos(0.5 * x)";
-        std::string rho_str = "0.0";
-
-        // te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-        // int varcount = 3;
-        // te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars,
-        // varcount, &err); te_expr *phi_parse =
-        // te_compile(phi_str.c_str(), read_vars, varcount, &err);
-        amrex::Parser rho_parse(rho_str);
-        rho_parse.registerVariables({"x", "y", "z"});
-        amrex::Parser phi_parse(phi_str);
-        phi_parse.registerVariables({"x", "y", "z"});
-        // init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
-        init_rho_phi(ifr, phi_parse, rho_parse);
-
-        // Deposit charges in rho:
-
-        rho.setVal(0.0);
-        rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec = 0; spec < numspec; spec++)
-        {
-            (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they
-                                                      // are in
-            for (amrex::ParIter<edim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
-                 ++pti)
-            {
-                auto &particles = pti.GetArrayOfStructs();
-                const long np = pti.numParticles();
-
-                amrex::Array4<amrex::Real> const &rhoarr = rho[pti].array();
-                for (int pp = 0; pp < np; pp++)
-                {
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                    for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
-                    {
-                        pos[comp] = particles[pp].pos(comp);
-                    }
-                    amrex::Real weight = particles[pp].rdata(edim);
-
-                    splines_at_particles<degx, degy, degz> spline;
-                    spline.init_particles(pos, ifr.plo, ifr.dxi);
-                    Particles::gempic_deposit_rho_C3<degx, degy, degz>(spline, weight, rhoarr);
-                }
-            }
-        }
-
-        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
-        rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
-        rho.FillBoundary(ifr.geom.periodicity());
-
-        solve_poisson(ifr);
-
-        (*E_Array[0]).minus(*E_sol_Array[0], 0, 1, 0);
-        (*E_Array[1]).minus(*E_sol_Array[1], 0, 1, 0);
-        (*E_Array[2]).minus(*E_sol_Array[2], 0, 1, 0);
-
-        amrex::Real res1 = gempic_norm(&(*E_Array[0]), ifr, 2);
-        amrex::Real res2 = gempic_norm(&(*E_Array[1]), ifr, 2);
-        amrex::Real res3 = gempic_norm(&(*E_Array[2]), ifr, 2);
-        amrex::Real res = res1 * res1 + res2 * res2 + res3 * res3;
-
-        (*E_Array[0]).Copy(*E_Array[0], *E_sol_Array[0], 0, 0, 1, Nghost);
-        E_Array[0]->FillBoundary(ifr.geom.periodicity());
-        (*E_Array[1]).Copy(*E_Array[1], *E_sol_Array[1], 0, 0, 1, Nghost);
-        E_Array[1]->FillBoundary(ifr.geom.periodicity());
-        (*E_Array[2]).Copy(*E_Array[2], *E_sol_Array[2], 0, 0, 1, Nghost);
-        E_Array[2]->FillBoundary(ifr.geom.periodicity());
-
-        return (res);
-    }
-
-    template <int numspec, int degx, int degy, int degz, int degree>
-    amrex::Real compute_gauss_error_hodge(computational_domain ifr,
-                                          Particles::particle_groups<edim, numspec> *part_gr)
-    {
-        amrex::MultiFab kx(convert(ifr.grid, *E_Index[0]), ifr.distriMap, 1, Nghost);
-        kx.setVal(1.0, 0);
-        kx.FillBoundary(ifr.geom.periodicity());
-        amrex::MultiFab ky(convert(ifr.grid, *E_Index[1]), ifr.distriMap, 1, Nghost);
-        ky.setVal(1.0, 0);
-        ky.FillBoundary(ifr.geom.periodicity());
-        amrex::MultiFab kz(convert(ifr.grid, *E_Index[2]), ifr.distriMap, 1, Nghost);
-        kz.setVal(1.0, 0);
-        kz.FillBoundary(ifr.geom.periodicity());
-
-        // init phi for poisson solver
-        double x, y, z;
-        int err;
-        std::string phi_str = "4 * 0.5 * cos(0.5 * x)";
-        std::string rho_str = "0.0";
-
-        // te_variable read_vars[] = {{"x", &x}, {"y", &y}, {"z", &z}};
-        // int varcount = 3;
-        // te_expr *rho_parse = te_compile(rho_str.c_str(), read_vars,
-        // varcount, &err); te_expr *phi_parse =
-        // te_compile(phi_str.c_str(), read_vars, varcount, &err);
-        amrex::Parser rho_parse(rho_str);
-        rho_parse.registerVariables({"x", "y", "z"});
-        amrex::Parser phi_parse(phi_str);
-        phi_parse.registerVariables({"x", "y", "z"});
-        // init_rho_phi(ifr, phi_parse, rho_parse, &x, &y, &z);
-        init_rho_phi(ifr, phi_parse, rho_parse);
-
-        // Deposit charges in rho:
-
-        rho.setVal(0.0);
-        rho.FillBoundary(ifr.geom.periodicity());
-        for (int spec = 0; spec < numspec; spec++)
-        {
-            (*(*part_gr).mypc[spec]).Redistribute();  // assign particles to the tile they
-                                                      // are in
-            for (amrex::ParIter<edim + 1, 0, 0, 0> pti(*(*part_gr).mypc[spec], 0); pti.isValid();
-                 ++pti)
-            {
-                auto &particles = pti.GetArrayOfStructs();
-                const long np = pti.numParticles();
-
-                amrex::Array4<amrex::Real> const &rhoarr = rho[pti].array();
-                for (int pp = 0; pp < np; pp++)
-                {
-                    splines_at_particles<degx, degy, degz> spline;
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                        position[d] = particles[pp].pos(d);
-                    spline.init_particles(position, ifr.plo, ifr.dxi);
-                    gempic_deposit_rho_C3<degx, degy, degz>(spline,
-                                                            (*part_gr).charge[spec] *
-                                                                ifr.dxi[GEMPIC_SPACEDIM] *
-                                                                particles[pp].rdata(edim),
-                                                            rhoarr);
-                }
-            }
-        }
-
-        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
-        rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
-        rho.FillBoundary(ifr.geom.periodicity());
-
-        solve_poisson(ifr, 1e-11);
-        if (degree > 2)
-        {
-            solve_poisson_CG<degree>(&rho, &phi, &kx, &ky, &kz, ifr);
-            D_from_phi<degree>(&phi, &(E_sol_Array), &kx, &ky, &kz, ifr);
-        }
-
-        (*E_sol_Array[0]).minus(*E_Array[0], 0, 1, 0);
-        (*E_sol_Array[1]).minus(*E_Array[1], 0, 1, 0);
-        (*E_sol_Array[2]).minus(*E_Array[2], 0, 1, 0);
-
-        amrex::Real res1 = gempic_norm(&(*E_Array[0]), ifr, 2);
-        amrex::Real res2 = gempic_norm(&(*E_Array[1]), ifr, 2);
-        amrex::Real res3 = gempic_norm(&(*E_Array[2]), ifr, 2);
-        amrex::Real res = res1 * res1 + res2 * res2 + res3 * res3;
-
-        return (res);
     }
 
     /**
