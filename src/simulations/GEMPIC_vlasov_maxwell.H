@@ -140,11 +140,17 @@ public:
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
         diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice,
                      params.sim_name, vol, ctest);
-        //------------------------------------------------------------------------------
-        // initialize particles & loop preparation:
+//------------------------------------------------------------------------------
+// initialize particles & loop preparation:
+#if GEMPIC_GPU
+        init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
+                                                      params.meanVelocity[0], params.vThermal[0],
+                                                      params.vWeight[0], 0, params.densityEval[0]);
+#else
         init_particles_full_domain<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
-                                                  params.meanVelocity[0], params.vThermal[0],
-                                                  params.vWeight[0], 0, wave_function);
+                                                      params.meanVelocity[0], params.vThermal[0],
+                                                      params.vWeight[0], 0, params.densityEval[0]);
+#endif
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(
             params, domain, &mw_yee, part_gr, &diagn, params.time_staggered, params.BxEval,
@@ -174,7 +180,8 @@ public:
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration<double>(stop - start);
         amrex::Print() << "initialize_gempic_structures execution lasted: " << duration.count()
-                       << " s" << std::endl << std::endl;
+                       << " s" << std::endl
+                       << std::endl;
     }
 
     void run_time_loop()

@@ -70,8 +70,7 @@ void time_loop_hsall_fem_step (computational_domain infra, maxwell_yee<vdim> *mw
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        (*(mw_yee->J_Array)[i]).setVal(0.0, 0);  // value and component
-        (*(mw_yee->J_Array)[i]).FillBoundary(infra.geom.periodicity());
+        (*(mw_yee->J_Array)[i]).setVal(0.0);  // value and component
     }
 
     for (int spec=0;spec<numspec;spec++) 

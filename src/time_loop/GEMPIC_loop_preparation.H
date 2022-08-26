@@ -40,29 +40,30 @@ void loop_preparation_init(
 
     // initial rho by: deposition of particle charge
     // Set rho to 0
-    mw_yee->rho.setVal(0.0, 0);  // value and component
-    mw_yee->rho.FillBoundary(infra.geom.periodicity());
+    // mw_yee->rho.setVal(0.0);
+    // Not needed setVal(0.0) set all values including ghost cells to zero
+    mw_yee->rho.setVal(0.0);  // value and component
 
     // Set J and E to 0: This is important in order not to have uninitialized arrays when calling
     // diagnostics
     for (int dim = 0; dim < vdim; dim++)
     {
-        mw_yee->J_Array[dim]->setVal(0.0, 0);  // value and component
-        mw_yee->J_Array[dim]->FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[dim]->setVal(0.0);
 
-        mw_yee->E_Array[dim]->setVal(0.0, 0);  // value and component
-        mw_yee->E_Array[dim]->FillBoundary(infra.geom.periodicity());
+        mw_yee->E_Array[dim]->setVal(0.0);
     }
+
+    (mw_yee->rho).setVal(0.0);
 
     // Deposit charges:
     for (int spec = 0; spec < numspec; spec++)
     {
+        amrex::Real charge = part_gr[spec]->getCharge();
         part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
-            amrex::Real charge = part_gr[spec]->getCharge();
             const long np = pti.numParticles();
-            const auto particles = pti.GetArrayOfStructs();
+            const auto& particles = pti.GetArrayOfStructs();
             const auto partData = particles().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
@@ -97,16 +98,13 @@ void loop_preparation_init(
     // initial E by rho
     amrex::MultiFab kx(convert(infra.grid, *mw_yee->E_Index[0]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    kx.setVal(1.0, 0);
-    kx.FillBoundary(infra.geom.periodicity());
+    kx.setVal(1.0);
     amrex::MultiFab ky(convert(infra.grid, *mw_yee->E_Index[1]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    ky.setVal(1.0, 0);
-    ky.FillBoundary(infra.geom.periodicity());
+    ky.setVal(1.0);
     amrex::MultiFab kz(convert(infra.grid, *mw_yee->E_Index[2]), infra.distriMap, 1,
                        mw_yee->Nghost);
-    kz.setVal(1.0, 0);
-    kz.FillBoundary(infra.geom.periodicity());
+    kz.setVal(1.0);
 
     mw_yee->solve_poisson(infra, 1e-11, meanVelocity.max_coarsening_level);
     if (degmw > 2)

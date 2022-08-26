@@ -61,8 +61,7 @@ void time_loop_particles (computational_domain infra,
         // set J to 0 before we start depositing values from current particles
         for (int i = 0; i < vdim; i++)
         {
-            (mw_yee->J_Array)[i]->setVal(0.0, 0);  // value and component
-            (mw_yee->J_Array)[i]->FillBoundary(infra.geom.periodicity());
+            (mw_yee->J_Array)[i]->setVal(0.0);  // value and component
         }
 
         for (int spec=0;spec<numspec;spec++) {

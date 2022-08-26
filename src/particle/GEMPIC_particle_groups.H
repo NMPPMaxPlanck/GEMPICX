@@ -57,9 +57,11 @@ public:
      * Default Constructor.
      */
     particle_groups() {}
-    particle_groups(amrex::Geometry geom, amrex::DistributionMapping distriMap, amrex::BoxArray grid) : 
-    amrex::ParticleContainer<0, 0, vdim + n_data, 0>(geom, distriMap, grid)
-    {}
+    particle_groups(amrex::Geometry geom, amrex::DistributionMapping distriMap,
+                    amrex::BoxArray grid) :
+        amrex::ParticleContainer<0, 0, vdim + n_data, 0>(geom, distriMap, grid)
+    {
+    }
     // Explicit const
     /**
      * Explicit Constructor: By passing an object of class vlasov maxwell and infrastructure one can
@@ -70,20 +72,22 @@ public:
     // particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
     //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
     particle_groups(amrex::Real charge_in, amrex::Real mass_in, computational_domain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + n_data, 0>(ifr.geom, ifr.distriMap, ifr.grid), 
-        charge(charge_in), mass(mass_in)
+        amrex::ParticleContainer<0, 0, vdim + n_data, 0>(ifr.geom, ifr.distriMap, ifr.grid),
+        charge(charge_in),
+        mass(mass_in)
     {
 #if GEMPIC_GPU
         amrex::ParticleContainerBase::do_tiling = false;
 #else
-        amrex::ParticleContainerBase::do_tiling  = true;
+        amrex::ParticleContainerBase::do_tiling = true;
 #endif
 #if (GEMPIC_SPACEDIM > 1)
-        amrex::ParticleContainerBase::tile_size = ifr.max_grid_size;
+        amrex::ParticleContainerBase::tile_size = ifr.max_grid_size; // tiling useless in this case
+        //amrex::Print() << "particle tile " << amrex::ParticleContainerBase::tile_size << std::endl;
+        //amrex::Print() << "mfiter_tile_size " << amrex::FabArrayBase::mfiter_tile_size << std::endl;
 #else
         amrex::ParticleContainerBase::tile_size[0] = ifr.max_grid_size[0];
 #endif
-
     }
 
     /**
@@ -93,9 +97,8 @@ public:
     void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
                       amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight,
                       amrex::ParticleTile<0, 0, vdim + n_data, 0>& particles)
-    {  // Array of Structures
-        // using ParticleType = amrex::Particle<vdim+n_data, 0>; // Particle template
-        using ParticleType = amrex::Particle<0, 0>;  // Particle template
+    {                                                // Array of Structures
+        using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
 
         // new particle:
         ParticleType p;
@@ -123,6 +126,41 @@ public:
         particles.push_back(p);
     }
 };
+// /**
+//  * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
+//  * velocity and the weight @p weight to the Particle Tile @p particles.
+//  */
+// template <typename T, int vdim>
+// void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
+//                   amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight, T& particles)
+// {                                                // Array of Structures
+//     using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
+
+//     // new particle:
+//     ParticleType p;
+//     p.id() = ParticleType::NextID();
+//     p.cpu() = amrex::ParallelDescriptor::MyProc();
+
+//     for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
+//     {
+//         p.pos(cc) = position[cc];
+//     }
+
+//     // Creating attributes for Structure of Arrays container
+//     // amrex::GpuArray<amrex::Real,vdim+1> particleAttributes{};
+
+//     for (int cc = 0; cc < vdim; cc++)
+//     {
+//         // p.rdata(cc) = velocity[cc];
+//         // particleAttributes[cc] = velocity[cc];
+//         particles.push_back_real(cc, velocity[cc]);
+//     }
+//     // p.rdata(vdim) = weight; //weight
+//     // particleAttributes[vdim] = weight; //weight
+//     particles.push_back_real(vdim, weight);
+
+//     particles.push_back(p);
+// }
 }  // namespace Particles
 }  // namespace Gempic
 

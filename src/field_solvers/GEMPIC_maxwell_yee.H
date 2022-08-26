@@ -203,7 +203,6 @@ public:
             E_Masks[comp].reset(new amrex::iMultiFab(convert(ifr.grid, *E_Index[comp]),
                                                      ifr.distriMap, Ncomp, Nghost));
             (*E_Masks[comp]).setVal(0.0);
-            (*E_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
             for (amrex::MFIter mfi(*E_Masks[comp]); mfi.isValid(); ++mfi)
             {
@@ -227,7 +226,6 @@ public:
             B_Masks[comp].reset(new amrex::iMultiFab(convert(ifr.grid, *B_Index[comp]),
                                                      ifr.distriMap, Ncomp, Nghost));
             (*B_Masks[comp]).setVal(0.0);
-            (*B_Masks[comp]).FillBoundary(ifr.geom.periodicity());
 
             for (amrex::MFIter mfi((*(B_Masks[comp]))); mfi.isValid(); ++mfi)
             {
@@ -249,7 +247,6 @@ public:
         nodal_Mask.reset(new amrex::iMultiFab(convert(ifr.grid, amrex::IntVect::TheNodeVector()),
                                               ifr.distriMap, Ncomp, Nghost));
         (*nodal_Mask).setVal(0.0);
-        (*nodal_Mask).FillBoundary(ifr.geom.periodicity());
 
         for (amrex::MFIter mfi(*nodal_Mask); mfi.isValid(); ++mfi)
         {
@@ -1133,6 +1130,7 @@ public:
                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim> &MultiInput,
                     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, edim> &MultiOutput, bool is_E)
     {
+        BL_PROFILE("maxwell_yee::Hodge_full");
         for (int field = 0; field < edim; field++)
         {
             amrex::MultiFab tmp(convert(ifr.grid, (is_E ? *E_Index[field] : *B_Index[field])),
@@ -1535,14 +1533,11 @@ public:
         amrex::MultiFab Drho_z(convert(ifr.grid, *E_Index[2]), ifr.distriMap, Ncomp, Nghost);
 
         amrex::MultiFab HDrho_x(convert(ifr.grid, *E_Index[0]), ifr.distriMap, Ncomp, Nghost);
-        HDrho_x.setVal(1.0, 0);
-        HDrho_x.FillBoundary(ifr.geom.periodicity());
+        HDrho_x.setVal(1.0);
         amrex::MultiFab HDrho_y(convert(ifr.grid, *E_Index[1]), ifr.distriMap, Ncomp, Nghost);
-        HDrho_y.setVal(1.0, 0);
-        HDrho_y.FillBoundary(ifr.geom.periodicity());
+        HDrho_y.setVal(1.0);
         amrex::MultiFab HDrho_z(convert(ifr.grid, *E_Index[2]), ifr.distriMap, Ncomp, Nghost);
-        HDrho_z.setVal(1.0, 0);
-        HDrho_z.FillBoundary(ifr.geom.periodicity());
+        HDrho_z.setVal(1.0);
 
         // 1) Apply D
         matrix_mult<stencil_length>(ifr, stencil_x, MultiIn, Drho_x, *E_Index[0]);
@@ -1620,8 +1615,8 @@ public:
                           Nghost);
         amrex::MultiFab k_scaled(convert(ifr.grid, amrex::IntVect::TheNodeVector()), ifr.distriMap,
                                  Ncomp, Nghost);
-        k.setVal(1.0, 0);
-        k.FillBoundary(ifr.geom.periodicity());
+        k.setVal(1.0);
+
         amrex::Real kern_factor;
 
         amrex::Real alpha, beta, rr;
@@ -1721,7 +1716,6 @@ public:
             tmp[i].reset(
                 new amrex::MultiFab(convert(ifr.grid, *E_Index[i]), ifr.distriMap, Ncomp, Nghost));
             tmp[i]->setVal(0.0);
-            tmp[i]->FillBoundary(ifr.geom.periodicity());
         }
         // ---------------------------------------------------------------------
         // D-operator
@@ -1804,7 +1798,6 @@ public:
         mlmg.setBottomSolver(amrex::BottomSolver::cg);
 
         phi.setVal(0.0);  // initialise phi
-        phi.FillBoundary(ifr.geom.periodicity());
 
         // Substract the constant part
         amrex::Real nm1 = 0.0;
@@ -1864,6 +1857,7 @@ public:
      */
     void rho_from_E(computational_domain ifr)
     {
+	BL_PROFILE("maxwell_yee::rho_from_E");
         for (amrex::MFIter mfi(rho_gauss_law); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
@@ -1872,9 +1866,9 @@ public:
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const &E_arr = {
                 (*E_Array[0])[mfi].array(), (*E_Array[1])[mfi].array(), (*E_Array[2])[mfi].array()};
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-                rho_arr(i, j, k) = (E_arr[0](i, j, k) - E_arr[0](i - 1, j, k)) / ifr.dx[0];
-                rho_arr(i, j, k) += (E_arr[1](i, j, k) - E_arr[1](i, j - 1, k)) / ifr.dx[1];
-                rho_arr(i, j, k) += (E_arr[2](i, j, k) - E_arr[2](i, j, k - 1)) / ifr.dx[2];
+                rho_arr(i, j, k) = (E_arr[0](i, j, k) - E_arr[0](i - 1, j, k)) * ifr.dxi[0]
+                    + (E_arr[1](i, j, k) - E_arr[1](i, j - 1, k)) * ifr.dxi[1]
+                    + (E_arr[2](i, j, k) - E_arr[2](i, j, k - 1)) * ifr.dxi[2];
             });
         }
         rho_gauss_law.FillBoundary(ifr.geom.periodicity());
@@ -1887,11 +1881,11 @@ public:
     amrex::Real compute_gauss_error(computational_domain ifr,
                                     amrex::GpuArray<std::unique_ptr<particle_groups<edim>>, numspec> &part_gr)
     {
+        BL_PROFILE("maxwell_yee::compute_gauss_error");
         rho_from_E(ifr);  // fills rho_gauss_law
 
         // Deposit charges in rho:
         rho.setVal(0.0);
-        rho.FillBoundary(ifr.geom.periodicity());
         for (int spec = 0; spec < numspec; spec++)
         {
             part_gr[spec]->Redistribute();  // assign particles to the tile they are in
@@ -1927,6 +1921,7 @@ public:
 
         // we cannot use rho.sum(0) because this would count nodal data
         // at edges twice, whereas norm1 doesn't
+        // rho.sum_unique which is available in last AMReX version could be used when this is updated
 
         // 1) make all values positive
         rho.plus(-rho.min(0), 0, 1);

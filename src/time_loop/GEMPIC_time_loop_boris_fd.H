@@ -62,8 +62,7 @@ void time_loop_boris_fd_step(
     // set J to 0 before we start depositing values from current particles
     for (int i = 0; i < vdim; i++)
     {
-        mw_yee->J_Array[i]->setVal(0.0, 0);  // value and component
-        mw_yee->J_Array[i]->FillBoundary(infra.geom.periodicity());
+        mw_yee->J_Array[i]->setVal(0.0);  // value and component
     }
     if (profiling_timers->profiling) profiling_timers->counter_jboundary += MPI_Wtime();
     for (int spec = 0; spec < numspec; spec++)
