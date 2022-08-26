@@ -14,8 +14,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
@@ -101,7 +101,7 @@ void main_main()
     for (int comp = 0; comp < 3; comp++)
     {
         mw_yee.template projection<degree>(0.0, infra, {false, false, false}, *mw_yee.E_Index[comp],
-                                      *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
+                                           *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
     }
 
     //------------------------------------------------------------------------------
@@ -120,7 +120,12 @@ void main_main()
         << "Bx error: " << E_B_error[vdim] << " |By error: " << E_B_error[vdim + 1]
         << " |Bz error: " << E_B_error[vdim + 2] << std::endl;
 
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
+    for (int spec = 0; spec < numspec; spec++)
+    {
+        part_gr[spec] =
+            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     //------------------------------------------------------------------------------
     // time loop
     // Gempic_WritePlotFile(&part_gr, &mw_yee, &infra, "Alfven_Test", 0);
@@ -169,14 +174,9 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim1=1, vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
+    const int vdim1 = 1, vdim2 = 2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 
 #if (GEMPIC_SPACEDIM == 1)
     main_main<vdim1, numspec, degx, degy, degz>();

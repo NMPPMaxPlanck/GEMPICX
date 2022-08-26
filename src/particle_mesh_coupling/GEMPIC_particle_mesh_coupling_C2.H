@@ -428,6 +428,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
                                                  amrex::Real weight,
                                                  amrex::Array4<amrex::Real> const &rho)
 {
+	BL_PROFILE("particle_mesh_coupling_C2::gempic_deposit_rho_C3");
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= degz; ++kk)
 #endif
@@ -460,6 +461,9 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
     }
 }
 
+/**
+     Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the B-splines 
+     */
 template <typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     S const &spline, spline1d_at_particles<degp> const &spline_new,

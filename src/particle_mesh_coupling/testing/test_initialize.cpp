@@ -39,16 +39,17 @@ void main_main()
     // need a multifab to be able to iterate later:
     maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
-    //------------------------------------------------------------------------------
-    // Initialize Particle Groups
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
+    int species = 0; // all particles are same species for now
 
-    // set particles for first cell (and copies in remaining cells)
-    int Np_cell = 100;  // number of particles per cell
-    int species = 0;    // all particles are same species for now
-    amrex::GpuArray<double, GEMPIC_SPACEDIM> position;
-    amrex::GpuArray<double, GEMPIC_SPACEDIM> shifted_position;
-    amrex::GpuArray<double, vdim> velocity;
+    //------------------------------------------------------------------------------
+    //Initialize Particle Groups
+    particle_groups<vdim> part_gr(VlMa.charge[species], VlMa.mass[species], infra);
+
+    //set particles for first cell (and copies in remaining cells)
+    int Np_cell = 100; //number of particles per cell
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<double,GEMPIC_SPACEDIM> shifted_position;
+    amrex::GpuArray<double,vdim> velocity;
     Real weight;
 
     // normally distributed random number generator:
@@ -80,16 +81,14 @@ void main_main()
         }
         weight = 1.0;
 
-        // MFI that adds particle from the modell cell to all cells
-        for (MFIter mfi = (*(part_gr).mypc[species]).MakeMFIter(0); mfi.isValid(); ++mfi)
+        //MFI that adds particle from the modell cell to all cells
+        for ( MFIter mfi = part_gr.MakeMFIter(0); mfi.isValid(); ++mfi )
         {
-            const amrex::Box &bx = mfi.validbox();
+            const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
-            auto &particles =
-                (*part_gr.mypc[species])
-                    .GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            auto& particles = part_gr.GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
             for (int k = lo[2]; k <= hi[2]; k++)

@@ -3,8 +3,8 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
@@ -24,7 +24,8 @@ using namespace Sampling;
 // wave function
 // we want particles to have the weight 1, in the sampler, the weight is scaled with dx*dy*dz/nppc,
 // to make up for it here we multiply by 1/dx*1/dy*1/dz*nppc = (n_cell*k/(2*pi))^3*1
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z,
+                                                amrex::Real t)
 {
     amrex::Real val = (32 * 1.25 / 6.28318530718) * (32 * 1.25 / 6.28318530718) *
                       (32 * 1.25 / 6.28318530718) * 1.0;
@@ -69,7 +70,7 @@ void main_main()
     amrex::Vector<amrex::Vector<amrex::Real>> vWeight{{1.0}};
 
     gempic_parameters<vdim, numspec> VlMa;
-    const int Nghost=1;
+    const int Nghost = 1;
     VlMa.init_Nghost(Nghost, Nghost, Nghost);
     const int NS = 0, FX = 2, FV = 2, FS = 2;
     VlMa.set_params("part_gr_ctest", n_cell, {1}, NS, FX, FV, FS, is_periodic, max_grid_size, 0.01,
@@ -90,23 +91,26 @@ void main_main()
     mw_yee.template initE<degmw>(zero, zero, zero, infra);
 
     // particles
-    particle_groups<vdim, numspec> part_gr(VlMa.charge, VlMa.mass, infra);
-
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
+    for (int spec = 0; spec < numspec; spec++)
+    {
+        part_gr[spec] =
+            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
+    }
     //------------------------------------------------------------------------------
     // initialize particles:
     int species = 0;  // all particles are same species for now
     init_particles_cellwise<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell,
                                            VlMa.meanVelocity[species], VlMa.vThermal[species],
                                            VlMa.vWeight[species], species, wave_function);
-    part_gr.mypc[0]->Redistribute();
+    part_gr[0]->Redistribute();
 
     int spec = 0;
 
     // compute mass, momentum and kinetic energy
     auto mass = amrex::ReduceSum(
-        *part_gr.mypc[spec],
-        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
-        {
+        *part_gr[spec],
+        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
             auto m = p.rdata(vdim);
             return (m);
         });
@@ -117,9 +121,8 @@ void main_main()
     for (int cmp = 0; cmp < vdim; cmp++)
     {
         auto mom_tmp = amrex::ReduceSum(
-            *part_gr.mypc[spec],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
-            {
+            *part_gr[spec],
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
                 auto m = p.rdata(vdim);
                 auto vel = p.rdata(cmp);
                 return (m * vel);
@@ -136,9 +139,8 @@ void main_main()
     for (int cmp = 0; cmp < vdim; cmp++)
     {
         auto mom_tmp = amrex::ReduceSum(
-            *part_gr.mypc[spec],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real
-            {
+            *part_gr[spec],
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
                 auto m = p.rdata(vdim);
                 auto vel = p.rdata(cmp);
                 return (m * vel * vel);
@@ -201,16 +203,11 @@ void main_main()
     }
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
     if (ParallelDescriptor::MyProc() == 0) remove("test_particle_groups.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_particle_groups_additional.tmp.0");
 
