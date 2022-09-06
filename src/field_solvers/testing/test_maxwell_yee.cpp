@@ -18,8 +18,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -159,8 +159,8 @@ void main_main()
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params("test_maxwell_yee", n_cell, {1}, 5, 10, 10, 10, is_periodic, {AMREX_D_DECL(32, 32, 32)}, 0.01,
-                    {1.0}, {1.0}, 0.5);
+    VlMa.set_params("test_maxwell_yee", n_cell, {1}, 5, 10, 10, 10, is_periodic,
+                    {AMREX_D_DECL(32, 32, 32)}, 0.01, {1.0}, {1.0}, 0.5);
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic,
@@ -224,7 +224,7 @@ void main_main()
 
     for (int i = 0; i < vdim; i++)
     {
-        mw_yee_2.J_Array[i]->setVal(0.0);  
+        mw_yee_2.J_Array[i]->setVal(0.0);
     }
 
     funcSelectB[0] = MAXWELL_YEE_B0;
@@ -308,22 +308,19 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim1=1, vdim2=2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
 #if (GEMPIC_SPACEDIM == 1)
+    const int vdim1 = 1, vdim2 = 2, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim1, numspec, degx, degy, degz>();
     main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
+    const int vdim2 = 2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim2, numspec, degx, degy, degz>();
     main_main<vdim, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 3)
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
