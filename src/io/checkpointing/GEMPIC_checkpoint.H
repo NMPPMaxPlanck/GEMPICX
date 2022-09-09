@@ -53,37 +53,6 @@ void Gempic_WriteCheckpointFile_Field(maxwell_yee<vdim> *mw_yee, computational_d
     const std::string &checkpointname =
         amrex::Concatenate(dirname + "_" + fieldnames[field] + "_", step);
 
-    if (field / 3 == 0)
-    {
-
-        amrex::WriteSingleLevelPlotfile (checkpointname,
-                                         *(mw_yee->J_Array[field % 3]),
-                                         {fieldnames[field]},
-                                         infra->geom,
-                                         mw_yee->dt*step,
-                                         step );
-    }
-    else if (field / 3 == 1)
-    {
-
-        amrex::WriteSingleLevelPlotfile (checkpointname,
-                                         *(mw_yee->E_Array[field % 3]),
-                                         {fieldnames[field]},
-                                         infra->geom,
-                                         mw_yee->dt*step,
-                                         step );
-    }
-    else
-    {
-
-        amrex::WriteSingleLevelPlotfile (checkpointname,
-                                         *(mw_yee->B_Array[field % 3]),
-                                         {fieldnames[field]},
-                                         infra->geom,
-                                         mw_yee->dt*step,
-                                         step );
-     }
-    /*
     // ---- prebuild a hierarchy of directories
     // ---- dirName is built first.  if dirName exists, it is renamed.  then build
     // ---- dirName/subDirPrefix_0 .. dirName/subDirPrefix_nlevels-1
@@ -153,7 +122,6 @@ void Gempic_WriteCheckpointFile_Field(maxwell_yee<vdim> *mw_yee, computational_d
                             amrex::MultiFabFileFullPrefix(nlevels - 1, checkpointname, "Level_",
                                                           fieldnames[field]));
     }
-    */
 }
 
 template<int vdim, int numspec>
