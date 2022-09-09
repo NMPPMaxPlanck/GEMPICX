@@ -137,7 +137,6 @@ void init_particles_cellwise(
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
-            amrex::Real z = 0;
 #if (GEMPIC_SPACEDIM > 2)
             for (int k = lo[2]; k <= hi[2]; k++)
             {
@@ -244,7 +243,6 @@ void init_particles_full_domain_gpu(
         amrex::ParticleReal* weightArray = particles.GetStructOfArrays().realarray()[vdim];
         int procID = amrex::ParallelDescriptor::MyProc();
 
-        amrex::RandomEngine gen;
         amrex::InitRandom(rSeed + lo[0] + lo[1] * 10 + lo[2] * 100 + species * 1000);
 
         ParallelForRNG(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k,

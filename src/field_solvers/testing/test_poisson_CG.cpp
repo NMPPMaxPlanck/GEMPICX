@@ -2,8 +2,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -113,22 +113,19 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim1=1, vdim2=2, vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
 #if (GEMPIC_SPACEDIM == 1)
+    const int vdim1 = 1, vdim2 = 2, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim1, numspec, degx, degy, degz>();
     main_main<vdim2, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 2)
+    const int vdim2 = 2, vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim2, numspec, degx, degy, degz>();
     main_main<vdim, numspec, degx, degy, degz>();
 #elif (GEMPIC_SPACEDIM == 3)
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     main_main<vdim, numspec, degx, degy, degz>();
 #endif
     if (ParallelDescriptor::MyProc() == 0)
