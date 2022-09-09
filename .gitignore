@@ -17,3 +17,5 @@ build/**/*
 **/CMakeScripts
 **/compile_commands.json
 .vscode/
+.DS_store
+runs/**/*
