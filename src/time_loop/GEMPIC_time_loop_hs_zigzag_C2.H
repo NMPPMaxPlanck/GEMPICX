@@ -440,12 +440,6 @@ void time_loop_hs_zigzag_C2(
 {
     BL_PROFILE("time_loop_hs_zigzag_C2");
 
-    bool energy_experiment = true;
-    amrex::Real init_energy = 0.5 * (diagn->Efield_energy[0][0] + diagn->Efield_energy[0][1] +
-                                     diagn->Efield_energy[0][2] + diagn->Bfield_energy[0][0] +
-                                     diagn->Bfield_energy[0][1] + diagn->Bfield_energy[0][2]) +
-                              diagn->kin[0] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
-    if (amrex::ParallelDescriptor::MyProc() == 0) remove("energy_error.out.0");
     bool profiling_count = false;
     timers profiling_timers(true);
 
@@ -482,20 +476,6 @@ void time_loop_hs_zigzag_C2(
             diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
                                    simulation_name, ctest);
         profiling_count = true;
-        if (energy_experiment)
-        {
-            BL_PROFILE("energy_experiment");
-            amrex::Real end_energy =
-                0.5 * (diagn->Efield_energy[t_step][0] + diagn->Efield_energy[t_step][1] +
-                       diagn->Efield_energy[t_step][2] + diagn->Bfield_energy[t_step][0] +
-                       diagn->Bfield_energy[t_step][1] + diagn->Bfield_energy[t_step][2]) +
-                diagn->kin[t_step] / (infra.Length[0] * infra.Length[1] * infra.Length[2]);
-
-            if (amrex::ParallelDescriptor::MyProc() == 0)
-                amrex::PrintToFile("energy_error.out")
-                    << t_step * mw_yee->dt << " " << std::abs(init_energy - end_energy)
-                    << std::endl;
-        }
     }
 
     if (profiling_timers.profiling)
