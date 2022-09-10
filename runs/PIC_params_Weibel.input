@@ -1,16 +1,25 @@
 # General setting
-sim_name = "test_vlasov_maxwell_input"
+sim_name = "Weibel"
+
+# GPU settings
+#amrex.use_gpu_aware_mpi = 1 
+#amrex.abort_on_out_of_gpu_memory = 1
+# OPENMP settings
+#mfiter_tile_size = 16 16 8 
+particles.do_tiling = 1 
 
 # Grid parameters
-n_cell_vector = 24 8 8
-max_grid_size_vector = 4 4 4
+n_cell_vector = 64 64 16
+max_grid_size_vector = 64 16 16
+particles.tile_size = 64 8 8
+#max_grid_size_vector = 16 8 8
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
-species0.n_part_per_cell = 100 # number of particles per cell
+species0.n_part_per_cell = 20 # number of particles per cell
 species0.charge = -1.0 # vector (one entry per species)
 species0.mass = 1.0 # vector (one entry per species)
-species0.density = "1.0 + 0.0 * cos(kvarx * x)"
+species0.density = "1.0" #"1.0 + 0.0 * cos(kvarx * x)"
 species0.num_gaussians = 1
 
 # Gaussian parameters
@@ -22,32 +31,27 @@ species0.vWeight_g0 = 1.0
 k = 1.25 1.25 1.25 # 1.25 for Weibel, 0.5 for Landau
  
 # Simulation parameters
-n_steps = 5
-dt = 0.02
-strang_order = 2
-propagator = 3
-save_fields = 100001 
+n_steps = 10
+dt = 0.04
+save_fields = 5 
 save_particles = 100001 
-save_checkpoint = 100001 
+save_checkpoint = 4
 
 # Function parameters
 Bx = "0.0"
 By = "0.0"
 Bz = "1e-3 * cos(kvarx * x)"
 phi = "4 * 0.5 * cos(0.5 * x)"
-rho = "1"
+
+# Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
+propagator = 3
+#strang_order = 2
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
 tolerance_particles = 1.e-10
-# For multigrid solver
-max_coarsening_level = 30
+#max_coarsening_level = 0
 
 # Restart parameters
 restart = 0
 checkpoint_file = "Checkpoint/Test_Weibel_2_"
 curr_step = 4
-
-# Scaling parameters
-curlB_scaling = 1.0
-epref_ep0 = 1.0
-energy_b_scaling = 1.0

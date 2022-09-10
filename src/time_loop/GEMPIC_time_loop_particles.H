@@ -184,8 +184,8 @@ void time_loop_particles (computational_domain infra,
                               mw_yee->E_Array);
         }
 
-        // save norms for diagnostics
-        diagn->save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        // save norms for diagnostics. At the end of the time step time = (t_step + 1) * dt
+        diagn->ComputeReducedDiag(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
 
         // save temporary results every n steps
         if ((t_step + 1) % 5 == 0)

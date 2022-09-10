@@ -26,9 +26,9 @@ n_steps = 5
 dt = 0.02
 strang_order = 2
 propagator = 3
-freq_x = 100001 
-freq_v = 100001 
-freq_slice = 10001 
+save_fields = 100001 
+save_particles = 100001 
+save_checkpoint = 10001 
 
 # Function parameters
 Bx = "0.0"

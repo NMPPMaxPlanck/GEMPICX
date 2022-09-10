@@ -75,10 +75,11 @@ public:
     amrex::Vector<amrex::Real> kin;
     amrex::Vector<amrex::Real> gauss_error;
     amrex::Real init_tot_energy;
-    int freq_x;
-    int freq_v;
-    int freq_slice;
+    int save_fields;
+    int save_particles;
+    int save_checkpoint;
     int freq_save = 5;
+    int lastSaved = -1;
     std::string sim_name;
     amrex::Real domain_volume;
     bool ctest;
@@ -92,7 +93,7 @@ public:
     // Explicit const
     /**
      * Explicit constructor: object can be initialized by passing the parameters: number of time
-     * steps @p n_t, the frequency with which to output positins @p fx and velocities @p fv, the
+     * steps @p n_t, the frequency with which to output positions @p fx and velocities @p fv, the
      * frequency with which to generate slices and the name of the simulation @p sim_name.
      */
     diagnostics(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol,
@@ -115,34 +116,57 @@ public:
         BL_PROFILE("diagnostics::end_of_timestep");
 
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics -= MPI_Wtime();
-        // save norms for diagnostics
-        save_step_data(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        // compute reduced diagnostics at end of time step t_step, i.e. time
+        ComputeReducedDiag(t_step + 1, infra, mw_yee, part_gr);
 
-        // save temporary results every freq_save steps
-        if (t_step == 0)
-        {
-            save_time_history(mw_yee->dt, simulation_name, t_step);
-        }
+        // save reduced data every freq_save steps
         if ((t_step + 1) % freq_save == 0 || t_step + 1 == nSteps)
         {
             save_time_history(mw_yee->dt, simulation_name, t_step + 1);
         }
+        // save Plot and Checkpoint-files
+                if ((t_step + 1) % save_checkpoint == 0)
+        {
+            Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra, "Checkpoint",
+                                                      sim_name, t_step + 1, 20);
+        }
+        // Save fields
+        if ((t_step + 1) % save_fields == 0)
+        {
+            bool save_part = false;
+            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
+                                                save_part);
+        }
+        // Save particles
+        if ((t_step + 1) % save_particles == 0)
+        {
+            bool save_part = true;
+            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
+                                                save_part);
+        }
+
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics += MPI_Wtime();
         amrex::Print() << "finished step " << t_step + 1 << std::endl;
 
         if (ctest) ctest_output(simulation_name, t_step);
     }
 
-    // save position and velocities
     /**
-     * This function saves all the relevant data for the step in field arrays and saves SlicePlots
-     * if needed according to the Slice Plot frequency.
+     * @brief Computes the reduced diagnostics that are integrated over space and
+     * summed over particles at time step*dt
+     *
+     * @param step step number in time
+     * @param infra compuational parameters
+     * @param mw_yee
+     * @param part_gr particle container
      */
-    void save_step_data(int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr)
+    void ComputeReducedDiag(
+        int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
+        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr)
     {
-        BL_PROFILE("diagnostics::save_step_data");
+        BL_PROFILE("diagnostics::ComputeReducedData");
 
+        // make room for one more component in vector
         Bfield_energy.push_back({0., 0., 0.});
         Efield_energy.push_back({0., 0., 0.});
         mom.push_back({0., 0., 0.});
@@ -246,45 +270,40 @@ public:
         gauss_error[step] =
             mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
 
-        // save Plot and Checkpoint-files
-        // if ((step == 0) || ((step+1)%freq_slice == 0)) {
-        if ((step + 1) % freq_x == 0)
+        // save initial total energy
+        if (step == 0)
         {
-            Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra,
-                                                      "Checkpoint/" + sim_name, step + 1, 20);
-	}
-	if ((step + 1) % freq_slice == 0)
-	  {
-            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, step + 1);
+            init_tot_energy =
+                0.5 * (Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
+                       Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2]) +
+                kin[0] / domain_volume;
         }
-
     }
 
     /**
-     * This function writes the time history data from the last freq_save steps so far (at time @p
-     * dt) into an output file simulation.txt.
+     * @brief Writes the time history data from the last freq_save steps so far (at time @p
+     * dt * @p t_step) into an output file simulation.txt.
+     *
+     * @param dt time step
+     * @param simulation_name
+     * @param t_step time step number
      */
     void save_time_history(amrex::Real dt, std::string simulation_name, int t_step)
     {
         BL_PROFILE("diagnostics::save_time_history");
 
-        int firstStep = freq_save * ((t_step - 1) / freq_save) + 1;
-        int lastStep = t_step;
+        int firstStep = lastSaved + 1;
+        int lastSaved = t_step;
 
         if (amrex::ParallelDescriptor::IOProcessor())  // only IOProcessor prints
         {
             std::ofstream ofsfun(simulation_name + ".txt", std::ofstream::out | std::ofstream::app);
             if (t_step == 0)
             {
-                init_tot_energy =
-                    0.5 * (Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
-                           Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2]) +
-                    kin[0] / domain_volume;
-                firstStep = 0;
-                lastStep = 0;
+                int firstStep = 0;
+                int lastSaved = 0;
             }
-
-            for (int step = firstStep; step <= lastStep; step++)
+            for (int step = firstStep; step <= lastSaved; step++)
             {
                 amrex::Real tot_energy = 0.5 * (Efield_energy[step][0] + Efield_energy[step][1] +
                                                 Efield_energy[step][2] + Bfield_energy[step][0] +
@@ -451,9 +470,9 @@ private:
         BL_PROFILE("diagnostics::initialize_diagnostics");
 
         nSteps = n_t;
-        freq_x = fx;
-        freq_v = fv;
-        freq_slice = fs;
+        save_fields = fx;
+        save_particles = fv;
+        save_checkpoint = fs;
         sim_name = sim_n;
         domain_volume = vol;
 
