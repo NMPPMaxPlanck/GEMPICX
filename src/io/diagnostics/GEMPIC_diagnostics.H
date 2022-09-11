@@ -267,6 +267,7 @@ public:
             }
             BL_PROFILE_VAR_STOP(mom);
         }
+        // Here rho is computed at each time step
         gauss_error[step] =
             mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
 
