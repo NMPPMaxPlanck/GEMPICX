@@ -42,7 +42,7 @@ void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
         amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
 
         int bdim = int(vdim / 2.5) * 2 + 1;
-        amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim,
+        amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim + 1,
                                  0);  // temporary MF to store all fields
         amrex::Vector<std::string> varnames;
         tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[0], 0, 0, 1,
@@ -84,6 +84,8 @@ void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
             tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[2], 0, vdim + bdim + 2, 1, 0);
             varnames.push_back("J_z ");
         }
+        tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, 2 * vdim + bdim, 1, 0);  // srccomp, destcomp, numcomp, nghost
+        varnames.push_back("rho");
         WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames, infra->geom, time, 0);
     }
     else  // save particles
