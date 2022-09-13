@@ -59,7 +59,7 @@ void main_main(bool ctest)
     int n_steps = 1;
     int save_fields = 2;
     int save_particles = 2;
-    int save_checkpoint = 1;
+    int save_checkpoint = 2;
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};
     amrex::Real dt = 0.02;
