@@ -300,8 +300,8 @@ public:
             std::ofstream ofsfun(simulation_name + ".txt", std::ofstream::out | std::ofstream::app);
             if (t_step == 0)
             {
-                int firstStep = 0;
-                int lastSaved = 0;
+                firstStep = 0;
+                lastSaved = 0;
             }
             for (int step = firstStep; step <= lastSaved; step++)
             {
