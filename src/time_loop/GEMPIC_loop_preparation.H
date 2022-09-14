@@ -168,12 +168,8 @@ void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computationa
     {
         int t_step = 0;
         diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
-        // save Fields at initial time
-        bool save_part = false;
-        Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, diagn->sim_name, t_step,
-                                            save_part);
-        // save particles at initial time
-        save_part = true;
+        // save fields and particles at initial time
+        int save_part = true;
         Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, diagn->sim_name, t_step,
                                             save_part);
     }

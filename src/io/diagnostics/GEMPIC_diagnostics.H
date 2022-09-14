@@ -125,22 +125,22 @@ public:
             save_time_history(mw_yee->dt, simulation_name, t_step + 1);
         }
         // save Plot and Checkpoint-files
-                if ((t_step + 1) % save_checkpoint == 0)
+        if ((t_step + 1) % save_checkpoint == 0)
         {
             Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra, "Checkpoint",
                                                       sim_name, t_step + 1, 20);
         }
-        // Save fields
-        if ((t_step + 1) % save_fields == 0)
-        {
-            bool save_part = false;
-            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
-                                                save_part);
-        }
-        // Save particles
+        // Save fields and particles
         if ((t_step + 1) % save_particles == 0)
         {
             bool save_part = true;
+            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
+                                                save_part);
+        }
+        // Save fields
+        else if ((t_step + 1) % save_fields == 0)
+        {
+            bool save_part = false;
             Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
                                                 save_part);
         }

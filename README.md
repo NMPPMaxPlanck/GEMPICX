@@ -45,6 +45,12 @@ make install
 cd ~build/gempic  
 make
 
+Ctests
+======
+- To write a test code, write a main program in the testing directory corresponding to the code you are testing. This code should be in a file *test_mytest.cpp* and write the results of the test in a file called *test_mytest.output*   
+- The new test is automatically added to the list of ctests when a *test_mytest.expected_output* file is added in the directory IOFiles_1D, IOFiles_2D or IOFiles_3D in the testing directory containing *test_mytest.cpp*. When ctest is called the files *test_mytest.output* and *test_mytest.expected_output* are compared and the test is passed when they are identical up to round of errors that are set by parameters used in numdiff (these parameters are hard coded in define_ctest.cmake). Which directory of IOFiles_1D, IOFiles_2D or IOFiles_3D is used when ctest is looking for tests is determined at compile time by the value of AMReX_SPACEDIM.
+- Assuming *build* is the directory in which Gempic is built, the executables of the tests are found in build/src/my_dir/testing and can be run directly without performing all the ctests. You can also run all the tests in a testing directory by executing ctest in build/src/my_dir/testing
+
 Using QT-creator with gempic
 =====================
 Do NOT open amrex as a project with QT-creator. This will build a second instance of amrex and gempic will not be able to find either of them. Building gempic as a project automatically links it to amrex, so amrex doesn't need to be set up as project itself.

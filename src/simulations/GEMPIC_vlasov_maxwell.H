@@ -143,13 +143,22 @@ public:
 //------------------------------------------------------------------------------
 // initialize particles & loop preparation:
 #if GEMPIC_GPU
-        init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
+        if (ctest)
+        {
+            init_particles_full_domain<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
                                                       params.meanVelocity[0], params.vThermal[0],
                                                       params.vWeight[0], 0, params.densityEval[0]);
+        }
+        else
+        {
+            init_particles_full_domain_gpu<vdim, numspec>(
+                domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0],
+                params.vWeight[0], 0, params.densityEval[0]);
+        }
 #else
         init_particles_full_domain<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
-                                                      params.meanVelocity[0], params.vThermal[0],
-                                                      params.vWeight[0], 0, params.densityEval[0]);
+                                                  params.meanVelocity[0], params.vThermal[0],
+                                                  params.vWeight[0], 0, params.densityEval[0]);
 #endif
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, output>(
