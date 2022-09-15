@@ -83,12 +83,6 @@ void loop_preparation_init(
         }
     }
 
-    // assign particles to tiles they are in TODO: do I need this?
-    // for (int spec = 0; spec < numspec; spec++)
-    // {
-    //     part_gr[spec]->Redistribute();
-    // }
-
     // add values from ghost cells and periodic boundary
     mw_yee->rho.SumBoundary(0, 1, {mw_yee->Nghost, mw_yee->Nghost, mw_yee->Nghost}, {0, 0, 0},
                             infra.geom.periodicity());
