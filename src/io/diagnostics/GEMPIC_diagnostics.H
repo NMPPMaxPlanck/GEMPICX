@@ -299,7 +299,7 @@ public:
         BL_PROFILE("diagnostics::save_time_history");
 
         int firstStep = lastSaved + 1;
-        int lastSaved = t_step;
+        lastSaved = t_step;
 
         if (amrex::ParallelDescriptor::IOProcessor())  // only IOProcessor prints
         {
