@@ -45,12 +45,14 @@ template <int vdim, int n_data = 1>
 class particle_groups : public amrex::ParticleContainer<0, 0, vdim + n_data, 0>
 {
 private:
-    amrex::ParticleReal charge = 1;
-    amrex::ParticleReal mass = 1;
+    amrex::ParticleReal m_charge = 1;
+    amrex::ParticleReal m_mass = 1;
+    std::string m_name = "electrons";
 
 public:
-    amrex::ParticleReal getCharge() { return charge; }
-    amrex::ParticleReal getMass() { return mass; }
+    amrex::ParticleReal getCharge() { return m_charge; }
+    amrex::ParticleReal getMass() { return m_mass; }
+    std::string getName() { return m_name; }
     // std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>> mypc;
 
     /**
@@ -71,24 +73,12 @@ public:
      */
     // particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
     //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
-    particle_groups(amrex::Real charge_in, amrex::Real mass_in, computational_domain ifr) :
+    particle_groups(amrex::Real charge, amrex::Real mass, std::string& name, computational_domain ifr) :
         amrex::ParticleContainer<0, 0, vdim + n_data, 0>(ifr.geom, ifr.distriMap, ifr.grid),
-        charge(charge_in),
-        mass(mass_in)
-    {
-#if GEMPIC_GPU
-        amrex::ParticleContainerBase::do_tiling = false;
-#else
-        amrex::ParticleContainerBase::do_tiling = true;
-#endif
-#if (GEMPIC_SPACEDIM > 1)
-        amrex::ParticleContainerBase::tile_size = ifr.max_grid_size; // tiling useless in this case
-        //amrex::Print() << "particle tile " << amrex::ParticleContainerBase::tile_size << std::endl;
-        //amrex::Print() << "mfiter_tile_size " << amrex::FabArrayBase::mfiter_tile_size << std::endl;
-#else
-        amrex::ParticleContainerBase::tile_size[0] = ifr.max_grid_size[0];
-#endif
-    }
+        m_charge(charge), m_mass(mass), m_name(name){}
+    particle_groups(amrex::Real charge, amrex::Real mass, computational_domain ifr) :
+        amrex::ParticleContainer<0, 0, vdim + n_data, 0>(ifr.geom, ifr.distriMap, ifr.grid),
+        m_charge(charge), m_mass(mass){}
 
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p

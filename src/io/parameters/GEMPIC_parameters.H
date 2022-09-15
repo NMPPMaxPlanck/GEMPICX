@@ -65,6 +65,7 @@ public:
     amrex::GpuArray<int, numspec> n_part_per_cell = {100};
     amrex::GpuArray<amrex::Real, numspec> charge = {-1};
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
+    amrex::GpuArray<std::string, numspec> name = {"electrons"};
     // Initial velocity distribution (sum of gaussians)
     amrex::GpuArray<int, numspec> num_gaussians = {0};
     amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{};  // species, gaussian, vdim
@@ -108,9 +109,9 @@ public:
     int curr_step = 0;
 
     // Diagnostics
-    int freq_x = 10000;  //
-    int freq_v = 10000;
-    int freq_slice = 10000;  // time evolution
+    int save_fields = 10000;  //
+    int save_particles = 10000;
+    int save_checkpoint = 10000;  // time evolution
 
     // Scaling parameters
     amrex::Real curlB_scaling = 1.;
@@ -225,6 +226,10 @@ public:
             {
                 parseErrorMessage(specString + ".mass");
             }
+            if (!ppSpec.query("name", name[spec]))
+            {
+                parseErrorMessage(specString + ".name");
+            }
             if (!ppSpec.query("density", density[spec]))  // initial density
             {
                 parseErrorMessage(specString + ".density");
@@ -318,17 +323,17 @@ public:
         }
 
         // diagnostics
-        if (!pp.query("freq_x", freq_x))
+        if (!pp.query("save_fields", save_fields))
         {
-            parseErrorMessage("freq_x");
+            parseErrorMessage("save_fields");
         }
-        if (!pp.query("freq_v", freq_v))
+        if (!pp.query("save_particles", save_particles))
         {
-            parseErrorMessage("freq_v");
+            parseErrorMessage("save_particles");
         }
-        if (!pp.query("freq_slice", freq_slice))
+        if (!pp.query("save_checkpoint", save_checkpoint))
         {
-            parseErrorMessage("freq_slice");
+            parseErrorMessage("save_checkpoint");
         }
 
         // scaling parameters
@@ -382,9 +387,9 @@ public:
             n_cell_vector;  // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
         for (int i = 0; i < numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
-        freq_x = FX;
-        freq_v = FV;
-        freq_slice = FS;
+        save_fields = FX;
+        save_particles = FV;
+        save_checkpoint = FS;
         // is_periodic_vector = PER;
         is_periodic =
             is_periodic_vector;  // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
@@ -429,7 +434,7 @@ public:
         n_steps = nStepsIn;
         n_cell = nCellIn;
         dt = dtIn;
-        freq_slice = freqSliceIn;
+        save_checkpoint = freqSliceIn;
         assert(numspec == 1);  // Only electrons
         n_part_per_cell[0] = nPartPerCellIn[0];
         charge[0] = -1.0;

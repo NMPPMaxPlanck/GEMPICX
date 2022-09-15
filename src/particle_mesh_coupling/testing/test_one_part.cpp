@@ -57,9 +57,9 @@ void main_main(bool ctest)
     amrex::IntVect n_cell = {AMREX_D_DECL(4, 4, 4)};
     amrex::GpuArray<int, numspec> n_part_per_cell = {1};
     int n_steps = 1;
-    int freq_x = 2;
-    int freq_v = 2;
-    int freq_slice = 1;
+    int save_fields = 2;
+    int save_particles = 2;
+    int save_checkpoint = 2;
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};
     amrex::Real dt = 0.02;
@@ -94,7 +94,7 @@ void main_main(bool ctest)
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v, freq_slice,
+    VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, save_fields, save_particles, save_checkpoint,
                     is_periodic, max_grid_size, dt, charge, mass, k, density, Bx, By, Bz, Ex, Ey,
                     Ez, phi, {1}, propagator, tolerance_particles);
     VlMa.set_computed_params();
@@ -141,8 +141,8 @@ void main_main(bool ctest)
     amrex::Real vol = (infra.geom.ProbHi(0) - infra.geom.ProbLo(0)) *
                       (infra.geom.ProbHi(1) - infra.geom.ProbLo(1)) *
                       (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
-    diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(mw_yee.nsteps, freq_x, freq_v,
-                                                              freq_slice, sim_name, vol);
+    diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(mw_yee.nsteps, save_fields, save_particles,
+                                                              save_checkpoint, sim_name, vol);
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(
         VlMa, infra, &mw_yee, part_gr, &diagn, time_staggered, zero, zero, cosine);
 

@@ -27,9 +27,9 @@ k = 0.5 # 1.25 for Weibel, 0.5 for Landau
 # Simulation parameters
 n_steps = 100000
 dt = 0.02
-freq_x = 100001 
-freq_v = 100001 
-freq_slice = 100001 
+save_fields = 100001 
+save_particles = 100001 
+save_checkpoint = 100001 
 
 # Function parameters
 density = "1.0 + 0.5 * cos(kvar * x)"

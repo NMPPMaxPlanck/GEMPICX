@@ -124,13 +124,15 @@ void Gempic_WriteCheckpointFile_Field(maxwell_yee<vdim> *mw_yee, computational_d
     }
 }
 
-template<int vdim, int numspec>
-void Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr, 
-                                 computational_domain *infra, const std::string& dirname, const int step,
-                                 int header_precision, bool particles = true)
+template <int vdim, int numspec>
+void Gempic_WriteCheckpointFile(
+    maxwell_yee<vdim> *mw_yee,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
+    computational_domain *infra, const std::string &name, const std::string &simulationName,
+    const int step, int header_precision, bool particles = true)
 {
-    amrex::Print() << "Writing checkpoint folders " << amrex::Concatenate(dirname + "_field_", step)
-                   << "\n";
+    const std::string &dirname = name + "/" + simulationName;
+    amrex::Print() << "Writing checkpoint folders " << amrex::Concatenate(dirname, step) << "\n";
 
     // J
     Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 0, step, *(mw_yee->E_Index[0]),
@@ -149,15 +151,20 @@ void Gempic_WriteCheckpointFile (maxwell_yee<vdim> *mw_yee, amrex::GpuArray<std:
                                      header_precision);
 
     // B
-    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 6, step, *(mw_yee->B_Index[0]), header_precision);
-    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 7, step, *(mw_yee->B_Index[1]), header_precision);
-    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]), header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 6, step, *(mw_yee->B_Index[0]),
+                                     header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 7, step, *(mw_yee->B_Index[1]),
+                                     header_precision);
+    Gempic_WriteCheckpointFile_Field(mw_yee, infra, dirname, 8, step, *(mw_yee->B_Index[2]),
+                                     header_precision);
 
-    if (particles) 
+    if (particles)
     {
-        for (int spec=0;spec<numspec;spec++) 
+        for (int spec = 0; spec < numspec; spec++)
         {
-            part_gr[spec]->Checkpoint("test_dir", "electrons", true, {"vx", "vy", "vz", "weight"}, {});
+            part_gr[spec]->Checkpoint(name,
+                                      amrex::Concatenate(part_gr[spec]->getName() + "_", step),
+                                      true, {"vx", "vy", "vz", "weight"}, {});
         }
     }
 }
@@ -238,10 +245,15 @@ void Gempic_ReadCheckpointFile_Field(maxwell_yee<vdim> *mw_yee, const std::strin
     }
 }
 
-template<int vdim, int numspec, int field_dim=vdim>
-void Gempic_ReadCheckpointFile (maxwell_yee<field_dim> *mw_yee, amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr, 
-                                computational_domain *infra, const std::string& dirname, const int step, bool particles = true) {
-    amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname+"_field_",step) << "\n";
+template <int vdim, int numspec, int field_dim = vdim>
+void Gempic_ReadCheckpointFile(
+    maxwell_yee<field_dim> *mw_yee,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
+    computational_domain *infra, const std::string &name, const std::string &simulationName,
+    const int step, bool particles = true)
+{
+    const std::string &dirname = name + "/" + simulationName;
+    amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname, step) << "\n";
 
     // J
     Gempic_ReadCheckpointFile_Field(mw_yee, dirname, 0, step);
@@ -261,9 +273,12 @@ void Gempic_ReadCheckpointFile (maxwell_yee<field_dim> *mw_yee, amrex::GpuArray<
     mw_yee->FillBD(*infra);
 
     // Particles
-    if (particles) {
-        for (int spec=0;spec<numspec;spec++) {
-            part_gr[spec]->Restart ("test_dir", "electrons", true);
+    if (particles)
+    {
+        for (int spec = 0; spec < numspec; spec++)
+        {
+            part_gr[spec]->Restart(name,
+                                   amrex::Concatenate(part_gr[spec]->getName() + "_", spec), true);
         }
     }
 }

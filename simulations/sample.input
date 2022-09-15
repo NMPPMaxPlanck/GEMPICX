@@ -27,9 +27,9 @@ density = "1.0 + 0.0 * cos(kvarx * x)"   # (string) function: initial particle d
 # Simulation parameters
 n_steps = 100000    # (integer) number of simulation steps
 dt = 0.02           # (double) size of time step
-freq_x = 100001     # (integer) how often should the x-Coordinates of particles be saved into a file
-freq_v = 100001     # (integer) how often should the v-Coordinates of particles be saved into a file
-freq_slice = 100001 # (integer) how often should slices of the fields be saved into a file
+save_fields = 100001     # (integer) how often should the x-Coordinates of particles be saved into a file
+save_particles = 100001     # (integer) how often should the v-Coordinates of particles be saved into a file
+save_checkpoint = 100001 # (integer) how often should slices of the fields be saved into a file
 propagator = 0  #  0 - Boris-FD, 1 - HS-FEM, 2 - HS-FEM-ALL, 3 - HS-FEM-ZIGZAG
 tolerance_particles = 1.e-10 # Tolerances for iterative solver (if needed by the chosen propagator)
 

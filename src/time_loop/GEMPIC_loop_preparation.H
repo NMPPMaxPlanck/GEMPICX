@@ -59,11 +59,11 @@ void loop_preparation_init(
     for (int spec = 0; spec < numspec; spec++)
     {
         amrex::Real charge = part_gr[spec]->getCharge();
-        part_gr[spec]->Redistribute();  // assign particles to the tile they are in
+        //   part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
             const long np = pti.numParticles();
-            const auto& particles = pti.GetArrayOfStructs();
+            const auto &particles = pti.GetArrayOfStructs();
             const auto partData = particles().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
@@ -81,12 +81,6 @@ void loop_preparation_init(
                     spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
             });
         }
-    }
-
-    // assign particles to tiles they are in TODO: do I need this?
-    for (int spec = 0; spec < numspec; spec++)
-    {
-        part_gr[spec]->Redistribute();
     }
 
     // add values from ghost cells and periodic boundary
@@ -164,7 +158,15 @@ void loop_staggering(gempic_parameters<vdim, numspec> meanVelocity, computationa
 
     //------------------------------------------------------------------------------
     // Save "step 0" data
-    if (output) diagn->save_step_data(0, infra, mw_yee, part_gr);  // false: slices are not saved
+    if (output)
+    {
+        int t_step = 0;
+        diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
+        // save fields and particles at initial time
+        int save_part = true;
+        Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, diagn->sim_name, t_step,
+                                            save_part);
+    }
 }
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, bool output>

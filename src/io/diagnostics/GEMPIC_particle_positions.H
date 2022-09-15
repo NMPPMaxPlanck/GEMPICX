@@ -22,26 +22,26 @@ using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
 
-namespace Gempic 
+namespace Gempic
 {
-namespace Diagnostics_Output 
+namespace Diagnostics_Output
 {
 template <int vdim, int numspec>
-void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg, maxwell_yee<vdim> *mw_yee,
-                          computational_domain *infra, const std::string &plot_file, const int step,
-                          const std::string &name = "electrons", int species = 0)
+void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg,
+                          maxwell_yee<vdim>* mw_yee, computational_domain* infra,
+                          const std::string& plot_file, const int step, bool particles = true)
 {
-    // TODO: other dims
-
-    // MultiFab Info -------------------------------------------------------------
-    const std::string &plotfilename = "ParticlePlotfiles/" + amrex::Concatenate(plot_file, step);
-    amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
-
+    std::string plotfilename;
+    amrex::Real time = step * mw_yee->dt;
     amrex::VisMF::Header::Version current_version = amrex::VisMF::GetHeaderVersion();
     amrex::VisMF::SetHeaderVersion(amrex::VisMF::Header::Version_v1);
+    // save fields
+    // MultiFab Info -------------------------------------------------------------
+    plotfilename = "Plotfiles/" + amrex::Concatenate(plot_file, step);
+    amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
 
     int bdim = int(vdim / 2.5) * 2 + 1;
-    amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim,
+    amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim + 1,
                              0);  // temporary MF to store all fields
     amrex::Vector<std::string> varnames;
     tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[0], 0, 0, 1,
@@ -83,110 +83,133 @@ void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
         tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[2], 0, vdim + bdim + 2, 1, 0);
         varnames.push_back("J_z ");
     }
-
-    amrex::Real time = step * mw_yee->dt;
+    tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, 2 * vdim + bdim, 1,
+                  0);  // srccomp, destcomp, numcomp, nghost
+    varnames.push_back("rho");
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames, infra->geom, time, 0);
 
-    // Particle Info -------------------------------------------------------------
-    const amrex::Vector<int>& write_int_comp = {};
-    const amrex::Vector<std::string>&  int_comp_names = {};
-    if(vdim ==1) 
+    // save particles
+    if (particles)
     {
-        const amrex::Vector<int>& write_real_comp = {1,1};
-        const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
-        ppg[species]->WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
-    } else if (vdim ==2) 
-    {
-        const amrex::Vector<int>& write_real_comp = {1,1,1};
-        const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
-        ppg[species]->WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
-    } else if (vdim ==3) 
-    {
-        const amrex::Vector<int>& write_real_comp = {1,1,1,1};
-        const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-        ppg[species]->WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
-    }
-    else if (vdim == 2)
-    {
-        const amrex::Vector<int> &write_real_comp = {1, 1, 1};
-        const amrex::Vector<std::string> &real_comp_names = {"vx", "vy", "weight"};
-        ppg[species]->WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names,
-                           int_comp_names);
-    }
-    else if (vdim == 3)
-    {
-        const amrex::Vector<int> &write_real_comp = {1, 1, 1, 1};
-        const amrex::Vector<std::string> &real_comp_names = {"vx", "vy", "vz", "weight"};
-        ppg[species]->WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names,
-                           int_comp_names);
-    }
-    // warpx_job_info -------------------------------------------------------------
-    if (amrex::ParallelDescriptor::IOProcessor()) {
-      std::string FullPathJobInfoFile = plotfilename;
-      FullPathJobInfoFile += "/warpx_job_info";
-      std::ofstream jobInfoFile(FullPathJobInfoFile);
-      amrex::Print(jobInfoFile)
-          << "geometry.is_periodic = " << infra->is_periodic[0]
+        for (int species = 0; species < numspec; species++)
+        {
+            // Particle Info -------------------------------------------------------------
+            const amrex::Vector<int>& write_int_comp = {};
+            const amrex::Vector<std::string>& int_comp_names = {};
+            if (vdim == 1)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+            else if (vdim == 2)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+            else if (vdim == 3)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+            else if (vdim == 2)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+            else if (vdim == 3)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+        }
+
+        // warpx_job_info -------------------------------------------------------------
+        if (amrex::ParallelDescriptor::IOProcessor())
+        {
+            std::string FullPathJobInfoFile = plotfilename;
+            FullPathJobInfoFile += "/warpx_job_info";
+            std::ofstream jobInfoFile(FullPathJobInfoFile);
+            amrex::Print(jobInfoFile) << "geometry.is_periodic = " << infra->is_periodic[0]
 #if GEMPIC_SPACEDIM > 1
-          << " " << infra->is_periodic[1]
+                                      << " " << infra->is_periodic[1]
 #endif
 #if GEMPIC_SPACEDIM > 2
-          << " " << infra->is_periodic[2]
+                                      << " " << infra->is_periodic[2]
 #endif
-          << std::endl;
-      jobInfoFile.close();
+                                      << std::endl;
+            jobInfoFile.close();
 
-      // WarpXHeader
-      // -------------------------------------------------------------
-      std::string FullPathHeaderFile = plotfilename;
-      FullPathHeaderFile += "/WarpXHeader";
-      std::ofstream headerFile(FullPathHeaderFile);
-      headerFile << "Checkpoint version: 1" << std::endl;
-      headerFile << "1" << std::endl;                  // num_levels
-      headerFile << "0" << std::endl;                  // i_step
-      headerFile << "1" << std::endl;                  // numsubsteps
-      headerFile << time << std::endl;                 // t_new
-      headerFile << time - mw_yee->dt << std::endl;  // t_old
-      headerFile << mw_yee->dt << std::endl;         // dt
-      headerFile << std::numeric_limits<amrex::Real>::max()
-                 << std::endl;         // moving_window_x
-      headerFile << "1" << std::endl;  // is_synchronised
+            // WarpXHeader
+            // -------------------------------------------------------------
+            std::string FullPathHeaderFile = plotfilename;
+            FullPathHeaderFile += "/WarpXHeader";
+            std::ofstream headerFile(FullPathHeaderFile);
+            headerFile << "Checkpoint version: 1" << std::endl;
+            headerFile << "1" << std::endl;                                      // num_levels
+            headerFile << "0" << std::endl;                                      // i_step
+            headerFile << "1" << std::endl;                                      // numsubsteps
+            headerFile << time << std::endl;                                     // t_new
+            headerFile << time - mw_yee->dt << std::endl;                        // t_old
+            headerFile << mw_yee->dt << std::endl;                               // dt
+            headerFile << std::numeric_limits<amrex::Real>::max() << std::endl;  // moving_window_x
+            headerFile << "1" << std::endl;                                      // is_synchronised
 
-      for (int i = 0; i < GEMPIC_SPACEDIM; ++i) {
-        headerFile << infra->geom.ProbLo(i) << " ";  // domain_low
-      }
-      headerFile << std::endl;
+            for (int i = 0; i < GEMPIC_SPACEDIM; ++i)
+            {
+                headerFile << infra->geom.ProbLo(i) << " ";  // domain_low
+            }
+            headerFile << std::endl;
 
-      for (int i = 0; i < GEMPIC_SPACEDIM; ++i) {
-        headerFile << infra->geom.ProbHi(i) << " ";  // domain_high
-      }
-      headerFile << std::endl;
+            for (int i = 0; i < GEMPIC_SPACEDIM; ++i)
+            {
+                headerFile << infra->geom.ProbHi(i) << " ";  // domain_high
+            }
+            headerFile << std::endl;
 
-      infra->grid.writeOn(headerFile);
-      headerFile << '\n';
+            infra->grid.writeOn(headerFile);
+            headerFile << '\n';
 
-      amrex::Print(headerFile) << ppg[species]->getCharge() << std::endl;  // charge
-      headerFile.close();
+            if (particles)
+            {
+                for (int species = 0; species < numspec; species++)
+                {
+                    amrex::Print(headerFile) << ppg[species]->getCharge() << std::endl;  // charge
+                }
+            }
+            headerFile.close();
 
-      amrex::VisMF::SetHeaderVersion(current_version);
+            amrex::VisMF::SetHeaderVersion(current_version);
+        }
     }
 }
 
-template<int vdim, int numspec>
-void Gempic_WritePlotFile_rho_phi (amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg, maxwell_yee<vdim> *mw_yee, 
-                                   computational_domain *infra, const std::string& plot_file, const int step)
+template <int vdim, int numspec>
+void Gempic_WritePlotFile_rho_phi(
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg,
+    maxwell_yee<vdim>* mw_yee, computational_domain* infra, const std::string& plot_file,
+    const int step)
 {
     // TODO: other dims
 
     // MultiFab Info -------------------------------------------------------------
-    const std::string &plotfilename = "ParticlePlotfiles/" + amrex::Concatenate(plot_file, step);
+    const std::string& plotfilename = "ParticlePlotfiles/" + amrex::Concatenate(plot_file, step);
     amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
 
     amrex::VisMF::Header::Version current_version = amrex::VisMF::GetHeaderVersion();
     amrex::VisMF::SetHeaderVersion(amrex::VisMF::Header::Version_v1);
 
     amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2,
-                             0);                         // temporary MF to store all fields
+                             0);                       // temporary MF to store all fields
     tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, 0, 1, 0);  // srccomp, destcomp, numcomp, nghost
     tmp_b_mf.Copy(tmp_b_mf, mw_yee->phi, 0, 1, 1, 0);
 
@@ -197,24 +220,31 @@ void Gempic_WritePlotFile_rho_phi (amrex::GpuArray<std::unique_ptr<particle_grou
     // Particle Info -------------------------------------------------------------
     const std::string& name = "electrons";
     const amrex::Vector<int>& write_int_comp = {};
-    const amrex::Vector<std::string>&  int_comp_names = {};
-    int species = 0; //TODO: multispecies
-    if(vdim ==1) 
+    const amrex::Vector<std::string>& int_comp_names = {};
+    int species = 0;  // TODO: multispecies
+    if (vdim == 1)
     {
-        const amrex::Vector<int>& write_real_comp = {1,1};
+        const amrex::Vector<int>& write_real_comp = {1, 1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "weight"};
-        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
-    } else if (vdim ==2) 
+        (*ppg[species].mypc)
+            .WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names,
+                           int_comp_names);
+    }
+    else if (vdim == 2)
     {
-        const amrex::Vector<int>& write_real_comp = {1,1,1};
+        const amrex::Vector<int>& write_real_comp = {1, 1, 1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
-        (*ppg[species].mypc).WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
-    } else if (vdim ==3) 
+        (*ppg[species].mypc)
+            .WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names,
+                           int_comp_names);
+    }
+    else if (vdim == 3)
     {
-        const amrex::Vector<int>& write_real_comp = {1,1,1,1};
+        const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
         const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-        (*ppg[species].mypc).WritePlotFile(
-                plotfilename, name, write_real_comp, write_int_comp, real_comp_names, int_comp_names);
+        (*ppg[species].mypc)
+            .WritePlotFile(plotfilename, name, write_real_comp, write_int_comp, real_comp_names,
+                           int_comp_names);
     }
 
     // warpx_job_info -------------------------------------------------------------
@@ -240,8 +270,8 @@ void Gempic_WritePlotFile_rho_phi (amrex::GpuArray<std::unique_ptr<particle_grou
     headerFile << "0" << std::endl;                                      // i_step
     headerFile << "1" << std::endl;                                      // numsubsteps
     headerFile << time << std::endl;                                     // t_new
-    headerFile << time - mw_yee->dt << std::endl;                      // t_old
-    headerFile << mw_yee->dt << std::endl;                             // dt
+    headerFile << time - mw_yee->dt << std::endl;                        // t_old
+    headerFile << mw_yee->dt << std::endl;                               // dt
     headerFile << std::numeric_limits<amrex::Real>::max() << std::endl;  // moving_window_x
     headerFile << "1" << std::endl;                                      // is_synchronised
 
@@ -260,7 +290,7 @@ void Gempic_WritePlotFile_rho_phi (amrex::GpuArray<std::unique_ptr<particle_grou
     infra->grid.writeOn(headerFile);
     headerFile << '\n';
 
-    amrex::Print(headerFile) << ppg[species].charge << std::endl; //charge
+    amrex::Print(headerFile) << ppg[species].charge << std::endl;  // charge
     headerFile.close();
 
     amrex::VisMF::SetHeaderVersion(current_version);

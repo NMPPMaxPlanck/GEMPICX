@@ -81,7 +81,7 @@ public:
         amrex::Real vol = (domain.geom.ProbHi(0) - domain.geom.ProbLo(0)) *
                           (domain.geom.ProbHi(1) - domain.geom.ProbLo(1)) *
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
-        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice,
+        diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles, params.save_checkpoint,
                      params.sim_name, vol, ctest);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
@@ -138,7 +138,7 @@ public:
         amrex::Real vol = (domain.geom.ProbHi(0) - domain.geom.ProbLo(0)) *
                           (domain.geom.ProbHi(1) - domain.geom.ProbLo(1)) *
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
-        diagn.reinit(mw_yee.nsteps, params.freq_x, params.freq_v, params.freq_slice,
+        diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles, params.save_checkpoint,
                      params.sim_name, vol, ctest);
 //------------------------------------------------------------------------------
 // initialize particles & loop preparation:
