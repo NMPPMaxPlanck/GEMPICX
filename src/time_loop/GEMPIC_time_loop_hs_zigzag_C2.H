@@ -33,15 +33,15 @@ namespace Gempic
 namespace Time_Loop
 {
 /**
- * @brief This is the time propagator with a Hamiltonian splitting in a FEM formulation with mass lumping
-   for Lagrange elements of order one and zero
+ * @brief This is the time propagator with a Hamiltonian splitting in a FEM formulation with mass
+ lumping for Lagrange elements of order one and zero
 
     This propagator is currently not implemented for the 2d2v case. In this case, the operator H_p3
    is dismissed and the operators H_p1 and H_p2 must be reimplemented only producing the b3 updates.
    In principle the operators are exactly the same but they should just return one bfield value -
    the one that concerns b_z - and it should read out the first component of the bfield vector
    (which saves the b_z in this case).
- * 
+ *
  * @tparam vdim number of velocity dimensions
  * @tparam numspec number of species
  * @tparam degx spline degree in x
@@ -51,18 +51,18 @@ namespace Time_Loop
  * @tparam electromagnetic (true/false)
  * @tparam profiling (true/false)
  * @param infra (simulation parameters)
- * @param mw_yee 
- * @param coeff 
- * @param part_gr 
- * @param profiling_timers 
- * @param profiling_count 
+ * @param mw_yee
+ * @param coeff
+ * @param part_gr
+ * @param profiling_timers
+ * @param profiling_count
  */
 
-template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
+template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata,
           bool electromagnetic = true, bool profiling = true>
 void time_loop_hs_zigzag_C2_step(
     computational_domain infra, maxwell_yee<vdim>* mw_yee, amrex::Real coeff,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& part_gr,
     timers* profiling_timers, bool profiling_count)
 {
     BL_PROFILE("Gempic::Time_Loop::time_loop_hs_zigzag_C2_step");
@@ -112,7 +112,7 @@ void time_loop_hs_zigzag_C2_step(
         amrex::Real chargemass = part_gr[spec]->getCharge() / part_gr[spec]->getMass();
         amrex::Real charge = part_gr[spec]->getCharge();
 
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Particle<0, 0>* AMREX_RESTRICT particles =
                 &(pti.GetArrayOfStructs()[0]);  // get particles
@@ -146,84 +146,92 @@ void time_loop_hs_zigzag_C2_step(
             amrex::Real const dt = mw_yee->dt;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx = {
                 infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
-            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
-                // for ( int pp=0; pp<np;pp++){
-
-                splines_at_particles<degx, degy, degz> spline;
-                spline1d_at_particles<degx> spline_new_x;
-                spline1d_at_particles<degx> spline_old_x;
-                spline1d_at_particles<degy> spline_new_y;
-                spline1d_at_particles<degy> spline_old_y;
-                spline1d_at_particles<degz> spline_new_z;
-                spline1d_at_particles<degz> spline_old_z;
-                // Read out particle position
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = particles[pp].pos(d);
-                // evaluate the spline
-                spline.init_particles(pos, infra.plo, infra.dxi);
-                // evaluate the electric field
-                amrex::GpuArray<amrex::Real, vdim> efield =
-                    evaluate_efield<vdim, degx, degy, degz>(spline, eA);
-
-                // push v with the electric field
-                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
-                amrex::GpuArray<amrex::Real, vdim> newPosE =
-                    push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass, efield);
-
-                // for (int vd=0;vd<vdim; vd++)
-                //    //(particles[pp].rdata(vd)) = newPosE[vd];
-                //    particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
-                velx[pp] = newPosE[0];
-                vely[pp] = newPosE[1];
-                velz[pp] = newPosE[2];
-
-                // amrex::Real weight = charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
-                amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM];
-
-                // for (unsigned int d=0;d<vdim;++d)
-                // vel[d] = particles[pp].rdata(d);
-                //  vel[d] = particle_attributes->GetRealData(d)[pp];
-                vel[0] = velx[pp];
-                vel[1] = vely[pp];
-                vel[2] = velz[pp];
-
-                amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
-                // push x1
-                amrex::Real x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
-                spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
-                spline_old_x.init_position(pos[0], infra.plo[0], infra.dxi[0]);
-                spline.template init_position<0, degx>(x1_new, infra.plo[0], infra.dxi[0]);
-
-                amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> primitive;
-                accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degx, degy,
-                                         degz, 0, std::max(degx, std::max(degy, degz)) + 4>(
-                    spline, spline_new_x, spline_old_x, weight, dx, bA, jA, bfields, primitive);
-
-                // Push v2 and v3
-                if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
-                if (vdim > 2) vel[2] = vel[2] + chargemass * bfields[1];
-                pos[0] = x1_new;
-
-                if (vdim > 1)
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
                 {
-#if GEMPIC_SPACEDIM > 1
-                    // push x2
-                    amrex::Real x2_new = pos[1] + dt * 0.5 * coeff * vel[1];
+                    // for ( int pp=0; pp<np;pp++){
 
-                    spline_new_y.init_position(x2_new, infra.plo[1], infra.dxi[1]);
-                    spline_old_y.init_position(pos[1], infra.plo[1], infra.dxi[1]);
-                    spline.template init_position<1, degy>(x2_new, infra.plo[1], infra.dxi[1]);
+                    splines_at_particles<degx, degy, degz> spline;
+                    spline1d_at_particles<degx> spline_new_x;
+                    spline1d_at_particles<degx> spline_old_x;
+                    spline1d_at_particles<degy> spline_new_y;
+                    spline1d_at_particles<degy> spline_old_y;
+                    spline1d_at_particles<degz> spline_new_z;
+                    spline1d_at_particles<degz> spline_old_z;
+                    // Read out particle position
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        pos[d] = particles[pp].pos(d);
+                    // evaluate the spline
+                    spline.init_particles(pos, infra.plo, infra.dxi);
+                    // evaluate the electric field
+                    amrex::GpuArray<amrex::Real, vdim> efield =
+                        evaluate_efield<vdim, degx, degy, degz>(spline, eA);
 
-                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degy,
-                                             degz, degx, 1,
+                    // push v with the electric field
+                    amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+                    amrex::GpuArray<amrex::Real, vdim> newPosE =
+                        push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass, efield);
+
+                    // for (int vd=0;vd<vdim; vd++)
+                    //    //(particles[pp].rdata(vd)) = newPosE[vd];
+                    //    particle_attributes->GetRealData(vd)[pp] = newPosE[vd];
+                    velx[pp] = newPosE[0];
+                    vely[pp] = newPosE[1];
+                    velz[pp] = newPosE[2];
+
+                    // amrex::Real weight =
+                    // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
+                    amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM];
+
+                    // for (unsigned int d=0;d<vdim;++d)
+                    // vel[d] = particles[pp].rdata(d);
+                    //  vel[d] = particle_attributes->GetRealData(d)[pp];
+                    vel[0] = velx[pp];
+                    vel[1] = vely[pp];
+                    vel[2] = velz[pp];
+
+                    amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
+                    // push x1
+                    amrex::Real x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
+                    spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
+                    spline_old_x.init_position(pos[0], infra.plo[0], infra.dxi[0]);
+                    spline.template init_position<0, degx>(x1_new, infra.plo[0], infra.dxi[0]);
+
+                    amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4>
+                        primitive;
+                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degx,
+                                             degy, degz, 0,
                                              std::max(degx, std::max(degy, degz)) + 4>(
-                        spline, spline_new_y, spline_old_y, weight, dx, bA, jA, bfields, primitive);
+                        spline, spline_new_x, spline_old_x, weight, dx, bA, jA, bfields, primitive);
+
                     // Push v2 and v3
-                    vel[0] = vel[0] + chargemass * bfields[1];
-                    if (vdim > 2) vel[2] = vel[2] - chargemass * bfields[0];
-                    pos[1] = x2_new;
+                    if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
+                    if (vdim > 2) vel[2] = vel[2] + chargemass * bfields[1];
+                    pos[0] = x1_new;
+
+                    if (vdim > 1)
+                    {
+#if GEMPIC_SPACEDIM > 1
+                        // push x2
+                        amrex::Real x2_new = pos[1] + dt * 0.5 * coeff * vel[1];
+
+                        spline_new_y.init_position(x2_new, infra.plo[1], infra.dxi[1]);
+                        spline_old_y.init_position(pos[1], infra.plo[1], infra.dxi[1]);
+                        spline.template init_position<1, degy>(x2_new, infra.plo[1], infra.dxi[1]);
+
+                        accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degy,
+                                                 degz, degx, 1,
+                                                 std::max(degx, std::max(degy, degz)) + 4>(
+                            spline, spline_new_y, spline_old_y, weight, dx, bA, jA, bfields,
+                            primitive);
+                        // Push v2 and v3
+                        vel[0] = vel[0] + chargemass * bfields[1];
+                        if (vdim > 2) vel[2] = vel[2] - chargemass * bfields[0];
+                        pos[1] = x2_new;
 #else
-                        amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> bfield =
+                        amrex::GpuArray<amrex::Real, int(vdim / 2.5)* 2 + 1> bfield =
                             evaluate_fem_bfield<vdim, degx, degy, degz>(pos, infra.dxi, infra.plo,
                                                                         bA);
                         gempic_deposit_rho<degx, degy, degz>(spline, weight * vel[1] * dt * coeff,
@@ -231,28 +239,29 @@ void time_loop_hs_zigzag_C2_step(
                         // Push v2 and v3
                         vel[0] = vel[0] + chargemass * bfields[0] * vel[1] * dt * coeff;
 #endif
-                }
-                if (vdim > 2)
-                {
+                    }
+                    if (vdim > 2)
+                    {
 #if GEMPIC_SPACEDIM == 3
-                    // push x3
-                    amrex::Real x3_new = pos[2] + dt * coeff * vel[2];
+                        // push x3
+                        amrex::Real x3_new = pos[2] + dt * coeff * vel[2];
 
-                    spline_new_z.init_position(x3_new, infra.plo[2], infra.dxi[2]);
-                    spline_old_z.init_position(pos[2], infra.plo[2], infra.dxi[2]);
-                    spline.template init_position<2, degz>(x3_new, infra.plo[2], infra.dxi[2]);
+                        spline_new_z.init_position(x3_new, infra.plo[2], infra.dxi[2]);
+                        spline_old_z.init_position(pos[2], infra.plo[2], infra.dxi[2]);
+                        spline.template init_position<2, degz>(x3_new, infra.plo[2], infra.dxi[2]);
 
-                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degz,
-                                             degx, degy, 2,
-                                             std::max(degx, std::max(degy, degz)) + 4>(
-                        spline, spline_new_z, spline_old_z, weight, dx, bA, jA, bfields, primitive);
+                        accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degz,
+                                                 degx, degy, 2,
+                                                 std::max(degx, std::max(degy, degz)) + 4>(
+                            spline, spline_new_z, spline_old_z, weight, dx, bA, jA, bfields,
+                            primitive);
 
-                    // Push v2 and v3
-                    vel[0] = vel[0] - chargemass * bfields[0];
-                    vel[1] = vel[1] + chargemass * bfields[1];
-                    pos[2] = x3_new;
+                        // Push v2 and v3
+                        vel[0] = vel[0] - chargemass * bfields[0];
+                        vel[1] = vel[1] + chargemass * bfields[1];
+                        pos[2] = x3_new;
 #else
-                        amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> bfield =
+                        amrex::GpuArray<amrex::Real, int(vdim / 2.5)* 2 + 1> bfield =
                             evaluate_bfield<vdim, degx, degy, degz>(spline, bA);
                         gempic_deposit_rho<degx, degy, degz>(spline, weight * vel[2] * dt * coeff,
                                                              jA[2]);
@@ -260,29 +269,30 @@ void time_loop_hs_zigzag_C2_step(
                         vel[0] = vel[0] - chargemass * bfields[1] * vel[2] * dt * coeff;
                         vel[1] = vel[1] + chargemass * bfields[0] * vel[2] * dt * coeff;
 #endif
-                }
+                    }
 
-                if (vdim > 1)
-                {
+                    if (vdim > 1)
+                    {
 #if GEMPIC_SPACEDIM > 1
-                    // push x2
-                    amrex::Real x2_new = pos[1] + dt * 0.5 * coeff * vel[1];
+                        // push x2
+                        amrex::Real x2_new = pos[1] + dt * 0.5 * coeff * vel[1];
 
-                    spline_new_y.init_position(x2_new, infra.plo[1], infra.dxi[1]);
-                    spline_old_y.init_position(pos[1], infra.plo[1], infra.dxi[1]);
-                    spline.template init_position<1, degy>(x2_new, infra.plo[1], infra.dxi[1]);
+                        spline_new_y.init_position(x2_new, infra.plo[1], infra.dxi[1]);
+                        spline_old_y.init_position(pos[1], infra.plo[1], infra.dxi[1]);
+                        spline.template init_position<1, degy>(x2_new, infra.plo[1], infra.dxi[1]);
 
-                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degy,
-                                             degz, degx, 1,
-                                             std::max(degx, std::max(degy, degz)) + 4>(
-                        spline, spline_new_y, spline_old_y, weight, dx, bA, jA, bfields, primitive);
+                        accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degy,
+                                                 degz, degx, 1,
+                                                 std::max(degx, std::max(degy, degz)) + 4>(
+                            spline, spline_new_y, spline_old_y, weight, dx, bA, jA, bfields,
+                            primitive);
 
-                    // Push v2 and v3
-                    vel[0] = vel[0] + chargemass * bfields[1];
-                    if (vdim > 2) vel[2] = vel[2] - chargemass * bfields[0];
-                    pos[1] = x2_new;
+                        // Push v2 and v3
+                        vel[0] = vel[0] + chargemass * bfields[1];
+                        if (vdim > 2) vel[2] = vel[2] - chargemass * bfields[0];
+                        pos[1] = x2_new;
 #else
-                        amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> bfield =
+                        amrex::GpuArray<amrex::Real, int(vdim / 2.5)* 2 + 1> bfield =
                             evaluate_fem_bfield<vdim, degx, degy, degz>(pos, infra.dxi, infra.plo,
                                                                         bA);
                         gempic_deposit_rho<degx, degy, degz>(spline, weight * vel[1] * dt * coeff,
@@ -290,32 +300,33 @@ void time_loop_hs_zigzag_C2_step(
                         // Push v2 and v3
                         vel[0] = vel[0] + chargemass * bfields[0] * vel[1] * dt * coeff;
 #endif
-                }
+                    }
 
-                // second half step of Hp1
-                x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
-                spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
-                spline_old_x.init_position(pos[0], infra.plo[0], infra.dxi[0]);
-                spline.template init_position<0, degx>(x1_new, infra.plo[0], infra.dxi[0]);
+                    // second half step of Hp1
+                    x1_new = pos[0] + dt * 0.5 * coeff * vel[0];
+                    spline_new_x.init_position(x1_new, infra.plo[0], infra.dxi[0]);
+                    spline_old_x.init_position(pos[0], infra.plo[0], infra.dxi[0]);
+                    spline.template init_position<0, degx>(x1_new, infra.plo[0], infra.dxi[0]);
 
-                accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degx, degy,
-                                         degz, 0, std::max(degx, std::max(degy, degz)) + 4>(
-                    spline, spline_new_x, spline_old_x, weight, dx, bA, jA, bfields, primitive);
+                    accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>, vdim, degx,
+                                             degy, degz, 0,
+                                             std::max(degx, std::max(degy, degz)) + 4>(
+                        spline, spline_new_x, spline_old_x, weight, dx, bA, jA, bfields, primitive);
 
-                // Push v2 and v3
-                if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
-                if (vdim > 2) vel[2] = vel[2] + chargemass * bfields[1];
-                pos[0] = x1_new;
+                    // Push v2 and v3
+                    if (vdim > 1) vel[1] = vel[1] - chargemass * bfields[0];
+                    if (vdim > 2) vel[2] = vel[2] + chargemass * bfields[1];
+                    pos[0] = x1_new;
 
-                for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
-                // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
-                // for (int vd=0;vd<vdim; vd++)
-                //    particle_attributes->GetRealData(vd)[pp] = vel[vd];
-                velx[pp] = vel[0];
-                vely[pp] = vel[1];
-                velz[pp] = vel[2];
-                // exit(0);
-            });
+                    for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
+                    // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                    // for (int vd=0;vd<vdim; vd++)
+                    //    particle_attributes->GetRealData(vd)[pp] = vel[vd];
+                    velx[pp] = vel[0];
+                    vely[pp] = vel[1];
+                    velz[pp] = vel[2];
+                    // exit(0);
+                });
             BL_PROFILE_VAR_STOP(heV_hp);
         }
         if (profiling_timers->profiling && profiling_count)
@@ -357,7 +368,7 @@ void time_loop_hs_zigzag_C2_step(
             profiling_timers->counter_deposition -= MPI_Wtime();
         amrex::Real chargemass = part_gr[spec]->getCharge() / part_gr[spec]->getMass();
 
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*part_gr[spec], 0); pti.isValid(); ++pti)
         {
             amrex::Particle<0, 0>* AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
             // amrex::ArrayOfStructs<4, 0, amrex::DefaultAllocator>*  AMREX_RESTRICT particles =
@@ -380,24 +391,28 @@ void time_loop_hs_zigzag_C2_step(
             amrex::Real dt = mw_yee->dt;
             // loop over particles: add contribution of old particle position to J and push
             BL_PROFILE_VAR("Apply H_E, update v (second part", heV_2);
-            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) pos[d] = particles[pp].pos(d);
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
+                {
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        pos[d] = particles[pp].pos(d);
 
-                splines_at_particles<degx, degy, degz> splines;
-                // evaluate the spline
-                splines.init_particles(pos, infra.plo, infra.dxi);
-                // evaluate the electric field
-                amrex::GpuArray<amrex::Real, vdim> efield =
-                    evaluate_efield<vdim, degx, degy, degz>(splines, eA);
-                // push v with the electric field
-                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
-                amrex::GpuArray<amrex::Real, vdim> newPosE =
-                    push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass, efield);
-                velx[pp] = newPosE[0];
-                vely[pp] = newPosE[1];
-                velz[pp] = newPosE[2];
-            });
+                    splines_at_particles<degx, degy, degz> splines;
+                    // evaluate the spline
+                    splines.init_particles(pos, infra.plo, infra.dxi);
+                    // evaluate the electric field
+                    amrex::GpuArray<amrex::Real, vdim> efield =
+                        evaluate_efield<vdim, degx, degy, degz>(splines, eA);
+                    // push v with the electric field
+                    amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+                    amrex::GpuArray<amrex::Real, vdim> newPosE =
+                        push_v_efield<vdim>(vel, dt * 0.5 * coeff, chargemass, efield);
+                    velx[pp] = newPosE[0];
+                    vely[pp] = newPosE[1];
+                    velz[pp] = newPosE[2];
+                });
             BL_PROFILE_VAR_STOP(heV_2);
         }
         if (profiling_timers->profiling && profiling_count)
@@ -430,11 +445,11 @@ void time_loop_hs_zigzag_C2_step(
     if (profiling_timers->profiling && profiling_count)
         profiling_timers->counter_fields += MPI_Wtime();
 }
-template <int vdim, int numspec, int degx, int degy, int degz, int degmw,
+template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata,
           bool electromagnetic = true, bool profiling = true, bool output = true>
 void time_loop_hs_zigzag_C2(
     computational_domain infra, maxwell_yee<vdim>* mw_yee,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& part_gr,
     diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn, bool ctest,
     std::string simulation_name, int strang_order)
 {
@@ -452,23 +467,23 @@ void time_loop_hs_zigzag_C2(
         switch (strang_order)
         {
             case 2:
-                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
-                                            profiling>(infra, mw_yee, 1.0, part_gr,
-                                                       &profiling_timers, profiling_count);
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, ndata,
+                                            electromagnetic, profiling>(
+                    infra, mw_yee, 1.0, part_gr, &profiling_timers, profiling_count);
                 break;
             case 4:
                 amrex::Real alpha = 1. / (2. - pow(2., 1. / 3.));
                 amrex::Real beta = 1. - 2. * alpha;
 
-                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
-                                            profiling>(infra, mw_yee, alpha, part_gr,
-                                                       &profiling_timers, profiling_count);
-                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
-                                            profiling>(infra, mw_yee, beta, part_gr,
-                                                       &profiling_timers, profiling_count);
-                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, electromagnetic,
-                                            profiling>(infra, mw_yee, alpha, part_gr,
-                                                       &profiling_timers, profiling_count);
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, ndata,
+                                            electromagnetic, profiling>(
+                    infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, ndata,
+                                            electromagnetic, profiling>(
+                    infra, mw_yee, beta, part_gr, &profiling_timers, profiling_count);
+                time_loop_hs_zigzag_C2_step<vdim, numspec, degx, degy, degz, degmw, ndata,
+                                            electromagnetic, profiling>(
+                    infra, mw_yee, alpha, part_gr, &profiling_timers, profiling_count);
                 break;
         }
 

@@ -48,7 +48,8 @@ amrex::Real computeDotProd(amrex::MultiFab const &mf1, amrex::MultiFab const &mf
     return amrex::ParReduce(
         amrex::TypeList<amrex::ReduceOpSum>{}, amrex::TypeList<amrex::Real>{}, mf1,
         amrex::IntVect(0),  // zero ghost cells
-        [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::Real {
+        [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::Real
+        {
             if (mask_ma[box_no](i, j, k))
             {
                 amrex::Real prod = data1[box_no](i, j, k) * data2[box_no](i, j, k);
@@ -108,10 +109,11 @@ public:
         initialize_diagnostics(n_t, fx, fv, fs, sim_n, vol, ctest);
     }
 
-    void end_of_timestep(timers *profiling_timers, int t_step, computational_domain infra,
-                         maxwell_yee<vdim> *mw_yee,
-                         amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
-                         std::string simulation_name, bool ctest)
+    template <int ndata = 1>
+    void end_of_timestep(
+        timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
+        amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
+        std::string simulation_name, bool ctest)
     {
         BL_PROFILE("diagnostics::end_of_timestep");
 
@@ -160,9 +162,10 @@ public:
      * @param mw_yee
      * @param part_gr particle container
      */
+    template <int ndata = 1>
     void ComputeReducedDiag(
         int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr)
+        amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr)
     {
         BL_PROFILE("diagnostics::ComputeReducedData");
 
@@ -232,7 +235,8 @@ public:
         {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
                 *part_gr[spec],
-                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real
+                {
                     auto m = p.rdata(vdim);
                     auto vel = pow(std::abs(p.rdata(0)), 2) + pow(std::abs(p.rdata(1)), 2) +
                                pow(std::abs(p.rdata(2)), 2);
@@ -252,7 +256,8 @@ public:
                 auto mom_tmp =
                     amrex::ReduceSum(*part_gr[spec],
                                      [=] AMREX_GPU_HOST_DEVICE(
-                                         const amrex::Particle<vdim + 1, 0> &p) -> amrex::Real {
+                                         const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real
+                                     {
                                          auto m = p.rdata(vdim);
                                          auto vel = p.rdata(cmp);
                                          return (m * vel);
@@ -268,7 +273,8 @@ public:
             BL_PROFILE_VAR_STOP(mom);
         }
         gauss_error[step] =
-            mw_yee->template compute_gauss_error<numspec, degx, degy, degz>(infra, part_gr);
+            mw_yee->template compute_gauss_error<numspec, degx, degy, degz, vdim, ndata>(infra,
+                                                                                         part_gr);
 
         // save initial total energy
         if (step == 0)

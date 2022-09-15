@@ -14,7 +14,7 @@
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
 
-using namespace amrex;
+    using namespace amrex;
 using namespace Gempic;
 
 using namespace Diagnostics_Output;
@@ -111,14 +111,9 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output
     file contains all outputs. For each dimension, apart from running the main_main for the
@@ -127,7 +122,7 @@ int main(int argc, char *argv[])
     GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=3 */
 
 #if (GEMPIC_SPACEDIM == 1)
-    const int vdim2=2;
+    const int vdim2 = 2;
     // Output for GEMPIC_SPACEDIM=1 vdim=2
     main_main<vdim2, numspec, degx, degy, degz>();
 

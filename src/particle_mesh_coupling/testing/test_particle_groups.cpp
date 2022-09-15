@@ -110,7 +110,8 @@ void main_main()
     // compute mass, momentum and kinetic energy
     auto mass = amrex::ReduceSum(
         *part_gr[spec],
-        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
+        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
+        {
             auto m = p.rdata(vdim);
             return (m);
         });
@@ -122,7 +123,8 @@ void main_main()
     {
         auto mom_tmp = amrex::ReduceSum(
             *part_gr[spec],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
+            {
                 auto m = p.rdata(vdim);
                 auto vel = p.rdata(cmp);
                 return (m * vel);
@@ -140,7 +142,8 @@ void main_main()
     {
         auto mom_tmp = amrex::ReduceSum(
             *part_gr[spec],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
+            {
                 auto m = p.rdata(vdim);
                 auto vel = p.rdata(cmp);
                 return (m * vel * vel);

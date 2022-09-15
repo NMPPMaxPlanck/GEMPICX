@@ -1,26 +1,20 @@
 #include <AMReX.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_vlasov_maxwell.H>
 
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
     {
+        const int vdim = 3, numspec = 1, degx = 2, degy = 2, degz = 2, degvm = 2;
+        vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degvm> vlasovMaxwell;
 
-    const int vdim = 3, numspec = 1, degx = 2, degy = 2, degz = 2, degvm = 2;
-    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degvm> vlasovMaxwell;
-    
-    vlasovMaxwell.ctest = true;
-    vlasovMaxwell.initialize_vlasov_maxwell_from_file();
-    vlasovMaxwell.run_time_loop();
+        vlasovMaxwell.ctest = true;
+        vlasovMaxwell.initialize_vlasov_maxwell_from_file();
+        vlasovMaxwell.run_time_loop();
 
         if (amrex::ParallelDescriptor::MyProc() == 0)
         {

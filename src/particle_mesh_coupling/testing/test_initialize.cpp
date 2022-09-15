@@ -3,8 +3,8 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
@@ -28,8 +28,8 @@ void main_main()
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
-    VlMa.set_params("initialize_ctest", n_cell, {1000}, 5, 10, 10, 10, is_periodic, {AMREX_D_DECL(32, 32, 32)},
-                    0.01, {1.0}, {1.0}, 1);
+    VlMa.set_params("initialize_ctest", n_cell, {1000}, 5, 10, 10, 10, is_periodic,
+                    {AMREX_D_DECL(32, 32, 32)}, 0.01, {1.0}, {1.0}, 1);
     VlMa.set_computed_params();
 
     computational_domain infra;
@@ -39,17 +39,17 @@ void main_main()
     // need a multifab to be able to iterate later:
     maxwell_yee<vdim> mw_yee(infra, VlMa.dt, VlMa.n_steps, VlMa.Nghost);
 
-    int species = 0; // all particles are same species for now
+    int species = 0;  // all particles are same species for now
 
     //------------------------------------------------------------------------------
     //Initialize Particle Groups
     particle_groups<vdim> part_gr(VlMa.charge[species], VlMa.mass[species], VlMa.name[species], infra);
 
-    //set particles for first cell (and copies in remaining cells)
-    int Np_cell = 100; //number of particles per cell
-    amrex::GpuArray<double,GEMPIC_SPACEDIM> position;
-    amrex::GpuArray<double,GEMPIC_SPACEDIM> shifted_position;
-    amrex::GpuArray<double,vdim> velocity;
+    // set particles for first cell (and copies in remaining cells)
+    int Np_cell = 100;  // number of particles per cell
+    amrex::GpuArray<double, GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<double, GEMPIC_SPACEDIM> shifted_position;
+    amrex::GpuArray<double, vdim> velocity;
     Real weight;
 
     // normally distributed random number generator:
@@ -81,14 +81,15 @@ void main_main()
         }
         weight = 1.0;
 
-        //MFI that adds particle from the modell cell to all cells
-        for ( MFIter mfi = part_gr.MakeMFIter(0); mfi.isValid(); ++mfi )
+        // MFI that adds particle from the modell cell to all cells
+        for (MFIter mfi = part_gr.MakeMFIter(0); mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
-            auto& particles = part_gr.GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            auto& particles =
+                part_gr.GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
 #if (GEMPIC_SPACEDIM > 2)
             for (int k = lo[2]; k <= hi[2]; k++)
@@ -120,16 +121,11 @@ void main_main()
     amrex::PrintToFile("test_initialize.tmp") << 1 << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_initialize.tmp.0");
 

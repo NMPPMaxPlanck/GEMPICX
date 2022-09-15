@@ -48,7 +48,7 @@ public:
     amrex::Vector<amrex::Real> domain_hi = {AMREX_D_DECL(1.0, 1.0, 1.0)};
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)}; // for parallelisation
+    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};  // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
     amrex::Vector<amrex::Real> k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
     amrex::Real kx, ky, kz;
@@ -68,7 +68,8 @@ public:
     amrex::GpuArray<std::string, numspec> name = {"electrons"};
     // Initial velocity distribution (sum of gaussians)
     amrex::GpuArray<int, numspec> num_gaussians = {0};
-    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{};  // species, gaussian, vdim
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>>
+        meanVelocity{};  // species, gaussian, vdim
     amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{};
     amrex::Vector<amrex::Vector<amrex::Real>> vWeight{};
 
@@ -135,9 +136,9 @@ public:
     {
         // Local variables
         amrex::ParmParse pp;
-        amrex::Array<int, GEMPIC_SPACEDIM> is_periodic_vector {AMREX_D_DECL(1, 1, 1)};
-        amrex::Array<int, GEMPIC_SPACEDIM> max_grid_size_vector {AMREX_D_DECL(4, 4, 4)};
-        amrex::Array<int, GEMPIC_SPACEDIM> n_cell_vector {AMREX_D_DECL(10, 10, 10)};
+        amrex::Array<int, GEMPIC_SPACEDIM> is_periodic_vector{AMREX_D_DECL(1, 1, 1)};
+        amrex::Array<int, GEMPIC_SPACEDIM> max_grid_size_vector{AMREX_D_DECL(4, 4, 4)};
+        amrex::Array<int, GEMPIC_SPACEDIM> n_cell_vector{AMREX_D_DECL(10, 10, 10)};
 
         if (!pp.query("sim_name", sim_name))
         {
@@ -362,14 +363,13 @@ public:
         amrex::IntVect n_cell_vector = {AMREX_D_DECL(
             24, 8,
             8)},  // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
-        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
-        int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
+        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12,
+        int FV = 12, int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
         amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
         amrex::GpuArray<amrex::Real, numspec> M = {1.0}, amrex::Real K = 1.25,
         amrex::GpuArray<std::string, numspec> wf = {"1.0"}, std::string BX = "0.0",
-        std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)",
-        std::string EX = "0.0",
+        std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)", std::string EX = "0.0",
         std::string EY = "0.0", std::string EZ = "1e-3 * cos(kvarx * x)",
         std::string PHI = "4 * 0.5 * cos(0.5 * x)",
         // std::vector<int> NG = {1},
@@ -377,7 +377,8 @@ public:
         // int NG = 1,
         int PROP = 0, amrex::Real TOL_P = 1.e-10, int MAX_C = 30, int RST = 0, std::string CF = "",
         int CD = 0,
-        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0,
+                                                                                      0.0}}},
         amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal_in =
             {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
         amrex::Vector<amrex::Vector<amrex::Real>> vWeight_in = {{1.0}})
@@ -426,8 +427,8 @@ public:
 
     void set_params_Weibel(std::string sim_name_in = "Weibel", int propagatorIn = 3,
                            int nStepsIn = 10, amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
-                           amrex::Array<int, numspec> nPartPerCellIn = {100}, amrex::Real dtIn = 0.02,
-                           int freqSliceIn = 100)
+                           amrex::Array<int, numspec> nPartPerCellIn = {100},
+                           amrex::Real dtIn = 0.02, int freqSliceIn = 100)
     {
         sim_name = sim_name_in;
         propagator = propagatorIn;
@@ -475,6 +476,10 @@ public:
                 Nghost += 3;
                 break;
             case 3:
+                time_staggered = false;
+                Nghost += 3;
+                break;
+            case 4:
                 time_staggered = false;
                 Nghost += 3;
                 break;

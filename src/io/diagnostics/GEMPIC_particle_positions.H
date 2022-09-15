@@ -26,8 +26,8 @@ namespace Gempic
 {
 namespace Diagnostics_Output
 {
-template <int vdim, int numspec>
-void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg,
+      template <int vdim, int numspec, int ndata>
+	void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim,ndata>>, numspec>& ppg,
                           maxwell_yee<vdim>* mw_yee, computational_domain* infra,
                           const std::string& plot_file, const int step, bool particles = true)
 {
