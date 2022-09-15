@@ -74,27 +74,30 @@ void main_main()
     //-----------------------------------------------------------------------------
     // Deposit charge
     // Deposit charges:
-    for (amrex::ParIter<0,0,vdim + 1, 0> pti(pg, 0); pti.isValid(); ++pti) 
+    for (amrex::ParIter<0, 0, vdim + 1, 0> pti(pg, 0); pti.isValid(); ++pti)
     {
         const auto& particles = pti.GetArrayOfStructs();
-        const auto partData = particles().data();    
-        const long np  = pti.numParticles();
+        const auto partData = particles().data();
+        const long np = pti.numParticles();
         const auto& particle_attributes = pti.GetStructOfArrays();
         const auto weight = particle_attributes.GetRealData(vdim).data();
 
         amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
-        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
-        {
-            splines_at_particles<degx,degy,degz> spline;
-            amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM> pos;
-            for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++) 
+        amrex::ParallelFor(
+            np,
+            [=] AMREX_GPU_DEVICE(long pp)
             {
-                pos[comp] = partData[pp].pos(comp);
-            }
-            spline.init_particles(pos , plo, dxi);
-            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(
-                spline, charge * dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr, Index_A);
-        });
+                splines_at_particles<degx, degy, degz> spline;
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
+                {
+                    pos[comp] = partData[pp].pos(comp);
+                }
+                spline.init_particles(pos, plo, dxi);
+                Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim + 1>, vdim,
+                                                                   degx, degy, degz>(
+                    spline, charge * dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr, Index_A);
+            });
     }
     amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi)
@@ -105,7 +108,8 @@ void main_main()
     //-----------------------------------------------------------------------------
     // SumBoundary
 
-    TestMF.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)}, geom.periodicity());
+    TestMF.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)},
+                       geom.periodicity());
 
     amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << "SUMBOUNDARY" << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi)
@@ -119,22 +123,17 @@ void main_main()
     amrex::PrintToFile("test_AMReX_SumBoundary.tmp") << passed << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim=3, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
+    const int vdim = 3, degx = 1, degy = 1, degz = 1;
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_SumBoundary.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_SumBoundary_additional.tmp.0");
 
-    main_main<vdim,degx,degy,degz>();
+    main_main<vdim, degx, degy, degz>();
 
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_AMReX_SumBoundary.tmp.0", "test_AMReX_SumBoundary.output");

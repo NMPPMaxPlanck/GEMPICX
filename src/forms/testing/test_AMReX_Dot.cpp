@@ -4,8 +4,8 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
@@ -89,19 +89,14 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_Dot.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_Dot.tmp.0");
 
-    main_main<vdim,numspec,degx,degy,degz>();
+    main_main<vdim, numspec, degx, degy, degz>();
 
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_AMReX_Dot.tmp.0", "test_AMReX_Dot.output");

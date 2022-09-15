@@ -374,9 +374,9 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(
 
 #if GEMPIC_SPACEDIM == 3
 template <int vdim, int degx, int degy, int degz>
-amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
     splines_at_particles<degx, degy, degz> &spline,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> &eArray)
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eArray)
 {
     amrex::GpuArray<amrex::Real, vdim> fields;
     for (int comp = 0; comp < vdim; comp++)
@@ -428,6 +428,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
                                                  amrex::Real weight,
                                                  amrex::Array4<amrex::Real> const &rho)
 {
+    BL_PROFILE("particle_mesh_coupling_C2::gempic_deposit_rho_C3");
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= degz; ++kk)
 #endif
@@ -461,7 +462,8 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
 }
 
 /**
-     Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the B-splines 
+     Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the
+   B-splines
      */
 template <typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
@@ -470,7 +472,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
-    amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength>& primitive)
+    amrex::GpuArray<amrex::Real, 2> &fields, amrex::GpuArray<amrex::Real, plength> &primitive)
 {
     int pdim1 = (pdim + 1) % 3;
     int pdim2 = (pdim + 2) % 3;
@@ -485,8 +487,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
 
     if (spline_old.box < spline_new.box)
     {
-        for (unsigned int j = 0; j < degp; j++)
-            primitive[j] = spline_old.primitive[j] * dx[pdim];
+        for (unsigned int j = 0; j < degp; j++) primitive[j] = spline_old.primitive[j] * dx[pdim];
         for (unsigned int j = degp; j < local_size; j++) primitive[j] = dx[pdim];
 
         for (unsigned int j = 0; j < degp; j++)
@@ -526,8 +527,8 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
                 else if (pdim == 2)
                     cell_index = {
                         AMREX_D_DECL(spline.box[0] + jj, spline.box[1] + kk, box_start + ii)};
-                double s_coeff = primitive[ii] * spline.spline_node[pdim1][jj] *
-                                 spline.spline_node[pdim2][kk];
+                double s_coeff =
+                    primitive[ii] * spline.spline_node[pdim1][jj] * spline.spline_node[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0, 0),
                                                s_coeff * weight);
@@ -564,6 +565,84 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
                 }
             }
         }
+    }
+}
+
+template <int vdim, int degx, int degy, int degz>
+AMREX_GPU_HOST_DEVICE void gempic_accumulate_j(
+    amrex::Real charge, amrex::GpuArray<amrex::Real, vdim> &vel,
+    splines_at_particles<degx, degy, degz> const &spline,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray, amrex::Real dxi)
+
+{
+#if (GEMPIC_SPACEDIM > 2)
+    for (int kk = 0; kk <= degz; ++kk)
+    {
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+        for (int jj = 0; jj <= degy; ++jj)
+        {
+#endif
+            for (int ii = 0; ii <= degx; ++ii)
+            {
+                // deposit in J
+                for (int cc = 0; cc < vdim; cc++)
+                {
+                    if (!(
+#if (GEMPIC_SPACEDIM > 2)
+                            ((kk == degz) & (cc % 3 == 2)) |
+#endif
+#if (GEMPIC_SPACEDIM > 1)
+                            ((jj == degy) & (cc % 3 == 1)) |
+#endif
+                            ((ii == degx) & (cc % 3 == 0))))
+                    {
+                        double s_coeff = 0;
+                        if (cc % 3 == 0)
+                        {
+                            s_coeff = spline.spline_cell[0][ii];
+                        }
+                        else
+                        {
+                            s_coeff = spline.spline_node[0][ii];
+                        }
+                        if (cc % 3 == 1)
+                        {
+                            s_coeff *= spline.spline_cell[1][jj];
+                        }
+                        else
+                        {
+                            s_coeff *= spline.spline_node[1][jj];
+                        }
+#if (GEMPIC_SPACEDIM > 2)
+                        if (cc % 3 == 2)
+                        {
+                            s_coeff *= spline.spline_cell[2][kk];
+                        }
+                        else
+                        {
+                            s_coeff *= spline.spline_node[2][kk];
+                        }
+#endif
+                        amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(
+                            spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+
+#if (GEMPIC_SPACEDIM == 1)
+                        amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0),
+                                                       s_coeff * charge * vel[cc]);
+#else
+                amrex::HostDevice::Atomic::Add(
+                    jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
+                    s_coeff * dxi * charge * vel[cc]);
+#endif
+                    }
+                }
+#if (GEMPIC_SPACEDIM > 1)
+            }
+#endif
+#if (GEMPIC_SPACEDIM > 2)
+        }
+#endif
     }
 }
 

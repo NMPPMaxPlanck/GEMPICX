@@ -2,8 +2,8 @@
 
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_vlasov_maxwell.H>
 
 #define VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO 0
@@ -47,12 +47,12 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ;
 
-    const int numspec=1;
+    const int numspec = 1;
     vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, electromagnetic, output> sim;
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
-    amrex::IntVect nCell = {AMREX_D_DECL(20,20,20)};
+    amrex::IntVect nCell = {AMREX_D_DECL(20, 20, 20)};
     std::array<int, 1> nPartPerCell = {2000};
     const amrex::Real dt = 0.01;
     sim.params.set_params_Weibel(test_name, propagator, nSteps, nCell, nPartPerCell, dt);
@@ -66,16 +66,11 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
     std::string test_name = "test_vlasov_maxwell_hs_zigzag_C2";
-    const int degx=2, degy=2, degz=2, degmw=2, vdim=3;
-    const bool electromagnetic=true, output=false;
+    const int degx = 2, degy = 2, degz = 2, degmw = 2, vdim = 3;
+    const bool electromagnetic = true, output = false;
     vlasov_maxwell_run<degx, degy, degz, degmw, vdim, electromagnetic, output>(test_name, 3);
 
     amrex::Finalize();

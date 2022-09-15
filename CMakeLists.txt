@@ -150,7 +150,7 @@ if (USE_CUDA)
 
 endif()
 
-include_directories(src)
+include_directories("${CMAKE_SOURCE_DIR}/src")
 include_directories("${CMAKE_SOURCE_DIR}/src/utils")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers")
 include_directories("${CMAKE_SOURCE_DIR}/src/field_solvers/poisson_solvers")

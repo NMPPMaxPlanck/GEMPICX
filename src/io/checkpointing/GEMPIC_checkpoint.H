@@ -124,10 +124,10 @@ void Gempic_WriteCheckpointFile_Field(maxwell_yee<vdim> *mw_yee, computational_d
     }
 }
 
-template <int vdim, int numspec>
+template <int vdim, int numspec, int ndata>
 void Gempic_WriteCheckpointFile(
     maxwell_yee<vdim> *mw_yee,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
     computational_domain *infra, const std::string &name, const std::string &simulationName,
     const int step, int header_precision, bool particles = true)
 {
@@ -245,10 +245,10 @@ void Gempic_ReadCheckpointFile_Field(maxwell_yee<vdim> *mw_yee, const std::strin
     }
 }
 
-template <int vdim, int numspec, int field_dim = vdim>
+template <int vdim, int numspec, int ndata = 1, int field_dim = vdim>
 void Gempic_ReadCheckpointFile(
     maxwell_yee<field_dim> *mw_yee,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
     computational_domain *infra, const std::string &name, const std::string &simulationName,
     const int step, bool particles = true)
 {
@@ -277,8 +277,8 @@ void Gempic_ReadCheckpointFile(
     {
         for (int spec = 0; spec < numspec; spec++)
         {
-            part_gr[spec]->Restart(name,
-                                   amrex::Concatenate(part_gr[spec]->getName() + "_", spec), true);
+            part_gr[spec]->Restart(name, amrex::Concatenate(part_gr[spec]->getName() + "_", spec),
+                                   true);
         }
     }
 }
