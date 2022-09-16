@@ -26,10 +26,11 @@ namespace Gempic
 {
 namespace Diagnostics_Output
 {
-      template <int vdim, int numspec, int ndata>
-	void Gempic_WritePlotFile(amrex::GpuArray<std::unique_ptr<particle_groups<vdim,ndata>>, numspec>& ppg,
-                          maxwell_yee<vdim>* mw_yee, computational_domain* infra,
-                          const std::string& plot_file, const int step, bool particles = true)
+template <int vdim, int numspec, int ndata>
+void Gempic_WritePlotFile(
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
+    maxwell_yee<vdim>* mw_yee, computational_domain* infra, const std::string& plot_file,
+    const int step, bool particles = true)
 {
     std::string plotfilename;
     amrex::Real time = step * mw_yee->dt;
@@ -112,24 +113,25 @@ namespace Diagnostics_Output
             }
             else if (vdim == 3)
             {
-                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
-                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
-                                            write_int_comp, real_comp_names, int_comp_names);
-            }
-            else if (vdim == 2)
-            {
-                const amrex::Vector<int>& write_real_comp = {1, 1, 1};
-                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
-                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
-                                            write_int_comp, real_comp_names, int_comp_names);
-            }
-            else if (vdim == 3)
-            {
-                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
-                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
-                                            write_int_comp, real_comp_names, int_comp_names);
+                if (ndata == 1)
+                {
+                    const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
+                    const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz",
+                                                                         "weight"};
+                    ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(),
+                                                write_real_comp, write_int_comp, real_comp_names,
+                                                int_comp_names);
+                }
+                else if (ndata == 7)
+                {
+                    const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0};
+                    const amrex::Vector<std::string>& real_comp_names = {
+                        "vx",     "vy",     "vz",      "weight",  "stagex",
+                        "stagey", "stagez", "stagevx", "stagevy", "stagevz"};
+                    ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(),
+                                                write_real_comp, write_int_comp, real_comp_names,
+                                                int_comp_names);
+                }
             }
         }
 

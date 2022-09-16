@@ -173,8 +173,8 @@ void loop_staggering(
         diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
         // save fields and particles at initial time
         int save_part = true;
-        Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, diagn->sim_name, t_step,
-                                            save_part);
+        Gempic_WritePlotFile<vdim, numspec, ndata>(part_gr, mw_yee, &infra, diagn->sim_name, t_step,
+                                                   save_part);
     }
 }
 
