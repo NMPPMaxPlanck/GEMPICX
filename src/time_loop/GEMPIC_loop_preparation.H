@@ -200,7 +200,7 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int nd
 void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<vdim> *mw_yee,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> &part_gr,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
     diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool time_staggered,
     amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
     amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
