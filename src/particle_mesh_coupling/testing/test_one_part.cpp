@@ -14,6 +14,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
+#include <GEMPIC_time_loop_ls_rungekutta.H>
 
 using namespace amrex;
 using namespace Gempic;
@@ -112,8 +113,8 @@ void main_main(bool ctest)
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> part_gr;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr[spec] =
-            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
+        part_gr[spec] = std::make_unique<particle_groups<vdim, ndata>>(VlMa.charge[spec],
+                                                                       VlMa.mass[spec], infra);
     }
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -122,7 +123,7 @@ void main_main(bool ctest)
     {
         if (mfi.index() == 0)
         {
-            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles = part_gr[species]->GetParticles(
+            amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles = part_gr[species]->GetParticles(
                 0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             amrex::GpuArray<amrex::Real, vdim> velocity;
             for (int comp = 0; comp < vdim; comp++)
@@ -160,6 +161,14 @@ void main_main(bool ctest)
         case 3:
             time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
                 infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+            break;
+        case 4:
+        {
+            ls_rungekutta<3, vdim, numspec> rk_prop(infra, mw_yee);
+            rk_prop.template time_loop<degx, degy, degz, degmw, ndata, true>(
+                infra, mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+            break;
+        }
         default:
             break;
     }
@@ -238,6 +247,8 @@ int main(int argc, char* argv[])
     main_main<vdim, numspec, degx2, degy2, degz, degmw2, ndata, propagator2>(argc == 1);
     const int degx3 = 2, degy3 = 4, degz3 = 2, propagator3 = 3;
     main_main<vdim, numspec, degx3, degy3, degz3, degmw2, ndata, propagator3>(argc == 1);
+    const int degx4 = 2, degy4 = 2, degz4 = 2, propagator4 = 4;
+    main_main<vdim, numspec, degx4, degy4, degz4, 2, ndata + 6, propagator4>(argc == 1);
 #endif
 
     if (ParallelDescriptor::MyProc() == 0)
