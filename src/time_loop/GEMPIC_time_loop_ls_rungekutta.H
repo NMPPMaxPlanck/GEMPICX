@@ -34,13 +34,11 @@ template <int stages, int vdim, int numspec>
 class ls_rungekutta
 {
 public:
-    amrex::Vector<amrex::Real> m_coeffs_a;
-    amrex::Vector<amrex::Real> m_coeffs_b;
+    amrex::GpuArray<amrex::Real, stages - 1> m_coeffs_a;
+    amrex::GpuArray<amrex::Real, stages> m_coeffs_b;
 
     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> m_E_stage;
     amrex::GpuArray<std::unique_ptr<amrex::MultiFab>, 3> m_B_stage;
-    // Particles::particle_groups<vdim, numspec> m_part_gr_stage;
-    // amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> m_part_gr_stage;
 
 public:
     // The default constructor.
@@ -69,7 +67,7 @@ public:
         {
             case 1:
                 m_coeffs_b = {1.0};
-                m_coeffs_a = {1.0};
+                m_coeffs_a = {};
                 break;
             case 3:
                 m_coeffs_b = {{0.245170287303492, 0.184896052186740, 0.569933660509768}};
@@ -209,13 +207,6 @@ public:
                             {
                                 pos[xd] = partData[pp].pos(xd);
                                 partData[pp].pos(xd) = pos[xd] + dt * m_coeffs_b[s] * vels[xd];
-                                if (std::abs(dt * m_coeffs_b[s] * vels[xd]) > infra.dx[xd])
-                                {
-                                    amrex::Print() << "too large" << vels[xd] << " " << infra.dx[xd]
-                                                   << " " << dt << " " << np << std::endl
-                                                   << std::flush;
-                                    abort();
-                                }
                             }
                             velx[pp] = newvel[0];
                             vely[pp] = newvel[1];
