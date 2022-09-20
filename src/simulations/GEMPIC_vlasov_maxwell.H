@@ -152,7 +152,7 @@ public:
         }
         else
         {
-            init_particles_full_domain_gpu<vdim, numspec>(
+            init_particles_full_domain_gpu<vdim, numspec, ndata>(
                 domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0],
                 params.vWeight[0], 0, params.densityEval[0]);
         }
