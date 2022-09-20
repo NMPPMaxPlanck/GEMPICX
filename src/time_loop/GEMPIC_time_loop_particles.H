@@ -182,7 +182,8 @@ void time_loop_particles(
         }
 
         // save norms for diagnostics. At the end of the time step time = (t_step + 1) * dt
-        diagn->ComputeReducedDiag(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        diagn->ComputeReducedDiag(t_step + 1, infra, mw_yee,
+                                  part_gr);  // false: slices are not saved
 
         // save temporary results every n steps
         if ((t_step + 1) % 5 == 0)

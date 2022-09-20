@@ -57,8 +57,9 @@ void main_main()
 
         amrex::Array4<amrex::Real> const &vecMF = (TestMF)[mfi].array();
 
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                    { vecMF(i, j, k) = (i)*100 + (j)*10 + (k); });
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+            vecMF(i, j, k) = (i)*100 + (j)*10 + (k);
+        });
     }
 
     amrex::PrintToFile("test_AMReX_FillBoundary_additional.tmp") << std::endl;
