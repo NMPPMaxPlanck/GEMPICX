@@ -123,20 +123,17 @@ void main_main()
             amrex::Array4<amrex::Real> const& rhoarr = (mw_yee.rho)[pti].array();
 
             // for (int pp = 0; pp < np; pp++)
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                   for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
-                                   {
-                                       pos[comp] = partData[pp].pos(comp);
-                                   }
-                                   splines_at_particles<degx, degy, degz> spline;
-                                   spline.init_particles(pos, infra.plo, infra.dxi);
-                                   gempic_deposit_rho_C3<degx, degy, degz>(
-                                       spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
-                                       rhoarr);
-                               });
+            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
+                {
+                    pos[comp] = partData[pp].pos(comp);
+                }
+                splines_at_particles<degx, degy, degz> spline;
+                spline.init_particles(pos, infra.plo, infra.dxi);
+                gempic_deposit_rho_C3<degx, degy, degz>(
+                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
+            });
         }
     }
 

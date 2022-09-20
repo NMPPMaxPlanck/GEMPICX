@@ -97,7 +97,8 @@ void main_main()
                       (infra.geom.ProbHi(1) - infra.geom.ProbLo(1)) *
                       (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(
-        mw_yee.nsteps, VlMa.save_fields, VlMa.save_particles, VlMa.save_checkpoint, VlMa.sim_name, vol);
+        mw_yee.nsteps, VlMa.save_fields, VlMa.save_particles, VlMa.save_checkpoint, VlMa.sim_name,
+        vol);
 
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:

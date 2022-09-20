@@ -81,8 +81,8 @@ public:
         amrex::Real vol = (domain.geom.ProbHi(0) - domain.geom.ProbLo(0)) *
                           (domain.geom.ProbHi(1) - domain.geom.ProbLo(1)) *
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
-        diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles, params.save_checkpoint,
-                     params.sim_name, vol, ctest);
+        diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles,
+                     params.save_checkpoint, params.sim_name, vol, ctest);
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
         init_particles_full_domain<vdim, numspec, ndata>(domain, part_gr, params.n_part_per_cell,
@@ -138,8 +138,8 @@ public:
         amrex::Real vol = (domain.geom.ProbHi(0) - domain.geom.ProbLo(0)) *
                           (domain.geom.ProbHi(1) - domain.geom.ProbLo(1)) *
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
-        diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles, params.save_checkpoint,
-                     params.sim_name, vol, ctest);
+        diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles,
+                     params.save_checkpoint, params.sim_name, vol, ctest);
 //------------------------------------------------------------------------------
 // initialize particles & loop preparation:
 #if GEMPIC_GPU

@@ -73,12 +73,20 @@ public:
      */
     // particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
     //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
-    particle_groups(amrex::Real charge, amrex::Real mass, std::string& name, computational_domain ifr) :
+    particle_groups(amrex::Real charge, amrex::Real mass, std::string& name,
+                    computational_domain ifr) :
         amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.geom, ifr.distriMap, ifr.grid),
-        m_charge(charge), m_mass(mass), m_name(name){}
+        m_charge(charge),
+        m_mass(mass),
+        m_name(name)
+    {
+    }
     particle_groups(amrex::Real charge, amrex::Real mass, computational_domain ifr) :
         amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.geom, ifr.distriMap, ifr.grid),
-        m_charge(charge), m_mass(mass){}
+        m_charge(charge),
+        m_mass(mass)
+    {
+    }
 
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p

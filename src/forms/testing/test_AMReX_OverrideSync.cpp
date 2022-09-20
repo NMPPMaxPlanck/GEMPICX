@@ -59,16 +59,14 @@ void main_main()
         amrex::IntVect hi = {bx.bigEnd()};
 
         amrex::Array4<amrex::Real> const &mf_arr = (TestMF)[mfi].array();
-        ParallelFor(bx,
-                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                    {
-                        // if-loop to exclude ownership for the point that is at the upper boundary
-                        // for nodal dimensions
-                        if ((i <= (Index_A[0] == 0 ? hi[0] : (hi[0] - 1))) &&
-                            (j <= (Index_A[1] == 0 ? hi[1] : (hi[1] - 1))) &&
-                            (k <= (Index_A[2] == 0 ? hi[2] : (hi[2] - 1))))
-                            mf_arr(i, j, k) = 1000 * lo[0] + 100 * i + 10 * j + k;
-                    });
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+            // if-loop to exclude ownership for the point that is at the upper boundary
+            // for nodal dimensions
+            if ((i <= (Index_A[0] == 0 ? hi[0] : (hi[0] - 1))) &&
+                (j <= (Index_A[1] == 0 ? hi[1] : (hi[1] - 1))) &&
+                (k <= (Index_A[2] == 0 ? hi[2] : (hi[2] - 1))))
+                mf_arr(i, j, k) = 1000 * lo[0] + 100 * i + 10 * j + k;
+        });
     }
 
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi)
@@ -85,16 +83,14 @@ void main_main()
         amrex::IntVect hi = {bx.bigEnd()};
 
         amrex::Array4<int> const &mask_arr = (Mask)[mfi].array();
-        ParallelFor(bx,
-                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                    {
-                        // if-loop to exclude ownership for the point that is at the upper boundary
-                        // for nodal dimensions
-                        if ((i <= (Index_A[0] == 0 ? hi[0] : (hi[0] - 1))) &&
-                            (j <= (Index_A[1] == 0 ? hi[1] : (hi[1] - 1))) &&
-                            (k <= (Index_A[2] == 0 ? hi[2] : (hi[2] - 1))))
-                            mask_arr(i, j, k) = 1;
-                    });
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+            // if-loop to exclude ownership for the point that is at the upper boundary
+            // for nodal dimensions
+            if ((i <= (Index_A[0] == 0 ? hi[0] : (hi[0] - 1))) &&
+                (j <= (Index_A[1] == 0 ? hi[1] : (hi[1] - 1))) &&
+                (k <= (Index_A[2] == 0 ? hi[2] : (hi[2] - 1))))
+                mask_arr(i, j, k) = 1;
+        });
     }
 
     bool passed = true;
