@@ -30,6 +30,12 @@ namespace Gempic
 namespace Time_Loop
 {
 
+/* This propagator implements a low-storage Runge-Kutta scheme to solve the Vlasov-Maxwell system. A
+   two-register scheme from the reference https://doi.org/10.1016/S0168-9274(99)00141-5 is
+   implemented.
+
+*/
+
 template <int stages, int vdim, int numspec>
 class ls_rungekutta
 {
@@ -97,7 +103,7 @@ public:
         amrex::Real dt = mw_yee.dt;
         amrex::Real inv_vol = infra.dxi[GEMPIC_SPACEDIM];
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = infra.plo;
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi = infra.dxi; 
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi = infra.dxi;
         // Copy the E and B solutions
         for (int cc = 0; cc < 3; cc++)
         {
