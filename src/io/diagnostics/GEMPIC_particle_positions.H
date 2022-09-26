@@ -26,10 +26,10 @@ namespace Gempic
 {
 namespace Diagnostics_Output
 {
-template <int vdim, int numspec, int ndata>
+template <int vdim, int bdim, int edim, int numspec, int ndata>
 void Gempic_WritePlotFile(
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
-    maxwell_yee<vdim>* mw_yee, computational_domain* infra, const std::string& plot_file,
+    maxwell_yee<edim, bdim>* mw_yee, computational_domain* infra, const std::string& plot_file,
     const int step, bool particles = true)
 {
     std::string plotfilename;
@@ -41,50 +41,49 @@ void Gempic_WritePlotFile(
     plotfilename = "Plotfiles/" + amrex::Concatenate(plot_file, step);
     amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
 
-    int bdim = int(vdim / 2.5) * 2 + 1;
-    amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim + 1,
+    amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, edim + bdim + vdim + 1,
                              0);  // temporary MF to store all fields
     amrex::Vector<std::string> varnames;
     tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[0], 0, 0, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("E_x");
-    if (vdim > 1)
+    if (edim > 1)
     {
         tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[1], 0, 1, 1, 0);
         varnames.push_back("E_y");
     }
-    if (vdim > 2)
+    if (edim > 2)
     {
         tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[2], 0, 2, 1, 0);
         varnames.push_back("E_z");
     }
-    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[0], 0, vdim, 1,
+    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[0], 0, edim, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("B_x");
     if (bdim > 1)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[1], 0, vdim + 1, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[1], 0, edim + 1, 1, 0);
         varnames.push_back("B_y");
     }
     if (bdim > 2)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[2], 0, vdim + 2, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[2], 0, edim + 2, 1, 0);
         varnames.push_back("B_z");
     }
-    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[0], 0, vdim + bdim, 1,
+    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[0], 0, edim + bdim, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("J_x");
     if (vdim > 1)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[1], 0, vdim + bdim + 1, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[1], 0, edim + bdim + 1, 1, 0);
         varnames.push_back("J_y");
     }
     if (vdim > 2)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[2], 0, vdim + bdim + 2, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[2], 0, edim + bdim + 2, 1, 0);
         varnames.push_back("J_z ");
     }
-    tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, 2 * vdim + bdim, 1,
+    tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, edim + bdim + vdim, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("rho");
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames, infra->geom, time, 0);

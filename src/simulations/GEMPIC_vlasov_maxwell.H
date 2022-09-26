@@ -246,8 +246,8 @@ public:
         switch (params.propagator)
         {
             case 100:
-                Gempic_WritePlotFile<vdim, numspec, ndata>(part_gr, &mw_yee, &domain, "Edipole",
-                                                           10);
+                Gempic_WritePlotFile<vdim, vdim, int(vdim / 2.5) * 2 + 1, numspec, ndata>(
+                    part_gr, &mw_yee, &domain, "Edipole", 10);
                 break;
             default:
                 break;

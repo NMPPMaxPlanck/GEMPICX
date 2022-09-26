@@ -66,13 +66,14 @@ amrex::Real computeDotProd(amrex::MultiFab const &mf1, amrex::MultiFab const &mf
  * and written into files. Slice Data of fields can be generated.
  */
 
-template <int vdim, int numspec, int degx, int degy, int degz, int degree>
+template <int vdim, int numspec, int degx, int degy, int degz, int degree,
+          int bdim = int(vdim / 2.5) * 2 + 1, int edim = vdim>
 class diagnostics
 {
 public:
     int nSteps;  // number of timesteps
-    amrex::Vector<amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1>> Bfield_energy;
-    amrex::Vector<amrex::GpuArray<amrex::Real, vdim>> Efield_energy, mom;
+    amrex::Vector<amrex::GpuArray<amrex::Real, bdim>> Bfield_energy;
+    amrex::Vector<amrex::GpuArray<amrex::Real, edim>> Efield_energy, mom;
     amrex::Vector<amrex::Real> kin;
     amrex::Vector<amrex::Real> gauss_error;
     amrex::Real init_tot_energy;
@@ -111,7 +112,7 @@ public:
 
     template <int ndata = 1>
     void end_of_timestep(
-        timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
+        timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee<edim> *mw_yee,
         amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
         std::string simulation_name, bool ctest)
     {
@@ -129,22 +130,22 @@ public:
         // save Plot and Checkpoint-files
         if ((t_step + 1) % save_checkpoint == 0)
         {
-            Gempic_WriteCheckpointFile<vdim, numspec>(mw_yee, part_gr, &infra, "Checkpoint",
-                                                      sim_name, t_step + 1, 20);
+            Gempic_WriteCheckpointFile<vdim, edim, bdim, numspec>(
+                mw_yee, part_gr, &infra, "Checkpoint", sim_name, t_step + 1, 20);
         }
         // Save fields and particles
         if ((t_step + 1) % save_particles == 0)
         {
             bool save_part = true;
-            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
-                                                save_part);
+            Gempic_WritePlotFile<vdim, edim, bdim, numspec, ndata>(part_gr, mw_yee, &infra,
+                                                                   sim_name, t_step + 1, save_part);
         }
         // Save fields
         else if ((t_step + 1) % save_fields == 0)
         {
             bool save_part = false;
-            Gempic_WritePlotFile<vdim, numspec>(part_gr, mw_yee, &infra, sim_name, t_step + 1,
-                                                save_part);
+            Gempic_WritePlotFile<vdim, edim, bdim, numspec, ndata>(part_gr, mw_yee, &infra,
+                                                                   sim_name, t_step + 1, save_part);
         }
 
         if (profiling_timers->profiling) profiling_timers->counter_diagnostics += MPI_Wtime();
@@ -164,7 +165,7 @@ public:
      */
     template <int ndata = 1>
     void ComputeReducedDiag(
-        int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
+        int step, computational_domain infra, maxwell_yee<edim, bdim> *mw_yee,
         amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr)
     {
         BL_PROFILE("diagnostics::ComputeReducedData");
