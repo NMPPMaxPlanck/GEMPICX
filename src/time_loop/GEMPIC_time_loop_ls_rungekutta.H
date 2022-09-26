@@ -96,6 +96,8 @@ public:
     {
         amrex::Real dt = mw_yee.dt;
         amrex::Real inv_vol = infra.dxi[GEMPIC_SPACEDIM];
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = infra.plo;
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi = infra.dxi; 
         // Copy the E and B solutions
         for (int cc = 0; cc < 3; cc++)
         {
@@ -180,7 +182,7 @@ public:
                                 vels[2] = velsz[pp];
                             }
 
-                            spline.init_particles(pos, infra.plo, infra.dxi);
+                            spline.init_particles(pos, plo, dxi);
                             // evaluate the electric field
                             amrex::GpuArray<amrex::Real, vdim> efield =
                                 evaluate_efield<vdim, degx, degy, degz>(spline, eA);
