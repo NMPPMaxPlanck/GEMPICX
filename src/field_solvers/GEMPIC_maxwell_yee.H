@@ -1942,8 +1942,9 @@ public:
         rho_gauss_law.FillBoundary(ifr.geom.periodicity());
 
         rho_gauss_law.minus(rho, 0, 1, 0);
-        amrex::Real rho_norm = gempic_norm(rho_gauss_law, ifr, 2);
-        return (rho_norm * rho_norm);
+        amrex::Real rho_norm = gempic_norm(rho, ifr, 2);
+        amrex::Real rho_diff_norm = gempic_norm(rho_gauss_law, ifr, 2);
+        return (rho_diff_norm / rho_norm);
     }
 
     /**
