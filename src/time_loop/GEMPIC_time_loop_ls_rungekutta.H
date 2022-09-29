@@ -110,7 +110,6 @@ public:
             amrex::MultiFab::Copy(*m_E_stage[cc], (*mw_yee.E_Array[cc]), 0, 0, 1, mw_yee.Nghost);
             amrex::MultiFab::Copy(*m_B_stage[cc], (*mw_yee.B_Array[cc]), 0, 0, 1, mw_yee.Nghost);
         }
-
         // int old_flag = amrex::MFIter::allowMultipleMFIters(true);
         for (int s = 0; s < stages; ++s)
         {
@@ -158,9 +157,11 @@ public:
                     {
                         bA[cc] = (*m_B_stage[cc])[pti].array();
                     }
-
                     // loop over particles: add contribution of old particle position to J
                     // and push
+
+                    amrex::Real coeffb = m_coeffs_b[s];
+                    amrex::Real coeffa = m_coeffs_a[s];
                     amrex::ParallelFor(
                         np,
                         [=] AMREX_GPU_DEVICE(long pp)
@@ -202,19 +203,19 @@ public:
                             //   update the solution
                             amrex::GpuArray<amrex::Real, vdim> newvel;
                             newvel[0] = vel[0] +
-                                        chargemass * dt * m_coeffs_b[s] *
+                                        chargemass * dt * coeffb *
                                             (efield[0] + vels[1] * bfield[2] - vels[2] * bfield[1]);
                             newvel[1] = vel[1] +
-                                        chargemass * dt * m_coeffs_b[s] *
+                                        chargemass * dt * coeffb *
                                             (efield[1] + vels[2] * bfield[0] - vels[0] * bfield[2]);
                             newvel[2] = vel[2] +
-                                        chargemass * dt * m_coeffs_b[s] *
+                                        chargemass * dt * coeffb *
                                             (efield[2] + vels[0] * bfield[1] - vels[1] * bfield[0]);
 
                             for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
                             {
                                 pos[xd] = partData[pp].pos(xd);
-                                partData[pp].pos(xd) = pos[xd] + dt * m_coeffs_b[s] * vels[xd];
+                                partData[pp].pos(xd) = pos[xd] + dt * coeffb * vels[xd];
                             }
                             velx[pp] = newvel[0];
                             vely[pp] = newvel[1];
@@ -222,25 +223,26 @@ public:
                             if (s < stages - 1)
                             {
                                 // update where to evaluate in next stage
-                                newvel[0] = vel[0] + chargemass * dt * m_coeffs_a[s] *
+                                newvel[0] = vel[0] + chargemass * dt * coeffa *
                                                          (efield[0] + vels[1] * bfield[2] -
                                                           vels[2] * bfield[1]);
-                                newvel[1] = vel[1] + chargemass * dt * m_coeffs_a[s] *
+                                newvel[1] = vel[1] + chargemass * dt * coeffa *
                                                          (efield[1] + vels[2] * bfield[0] -
                                                           vels[0] * bfield[2]);
-                                newvel[2] = vel[2] + chargemass * dt * m_coeffs_a[s] *
+                                newvel[2] = vel[2] + chargemass * dt * coeffa *
                                                          (efield[2] + vels[0] * bfield[1] -
                                                           vels[1] * bfield[0]);
 
-                                possx[pp] = pos[0] + dt * m_coeffs_a[s] * vels[0];
-                                possy[pp] = pos[1] + dt * m_coeffs_a[s] * vels[1];
-                                possz[pp] = pos[2] + dt * m_coeffs_a[s] * vels[2];
+                                possx[pp] = pos[0] + dt * coeffa * vels[0];
+                                possy[pp] = pos[1] + dt * coeffa * vels[1];
+                                possz[pp] = pos[2] + dt * coeffa * vels[2];
                                 velsx[pp] = newvel[0];
                                 velsy[pp] = newvel[1];
                                 velsz[pp] = newvel[2];
                             }
                         });
                 }
+
                 part_gr[spec]->Redistribute();
             }
             // Update the fields
