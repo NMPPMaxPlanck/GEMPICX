@@ -180,7 +180,7 @@ public:
         // E and B field
         mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
         BL_PROFILE_VAR("diagnostics::electric energy", ehe);
-        for (int cc = 0; cc < vdim; cc++)
+        for (int cc = 0; cc < edim; cc++)
         {
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]),
                                                    0, *(mw_yee->HE_Array[cc]), 0, 1, 0);
@@ -204,7 +204,7 @@ public:
 
         mw_yee->template hodge_full<degree>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
         BL_PROFILE_VAR("diagnostics::magnetic energy", bhb);
-        for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
+        for (int cc = 0; cc < bdim; cc++)
         {
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->B_Masks[cc]), *(mw_yee->B_Array[cc]),
                                                    0, *(mw_yee->HB_Array[cc]), 0, 1, 0);
