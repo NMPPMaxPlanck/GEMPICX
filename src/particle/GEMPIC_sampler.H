@@ -182,10 +182,10 @@ void init_particles_cellwise(
     }
 }
 
-template <int vdim, int numspec>
+template <int vdim, int numspec, int ndata = 1>
 void init_particles_full_domain_gpu(
     computational_domain infra,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg,
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
     amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
     amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
     amrex::ParserExecutor<4> densityEval, int rSeed = 925)
