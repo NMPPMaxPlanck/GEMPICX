@@ -161,82 +161,85 @@ public:
 
                     amrex::Real coeffb = m_coeffs_b[s];
                     amrex::Real coeffa = m_coeffs_a[s];
-                    amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
-                        splines_at_particles<degx, degy, degz> spline;
-                        // Read out particle position
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                        amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
-                        amrex::GpuArray<amrex::Real, vdim> vels;
-                        if (s == 0)
+                    amrex::ParallelFor(
+                        np,
+                        [=] AMREX_GPU_DEVICE(long pp)
                         {
-                            for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
-                                pos[xd] = partData[pp].pos(xd);
-                            vels[0] = velx[pp];
-                            vels[1] = vely[pp];
-                            vels[2] = velz[pp];
-                        }
-                        else
-                        {
-                            pos[0] = possx[pp];
-                            pos[1] = possy[pp];
-                            pos[2] = possz[pp];
-                            vels[0] = velsx[pp];
-                            vels[1] = velsy[pp];
-                            vels[2] = velsz[pp];
-                        }
+                            splines_at_particles<degx, degy, degz> spline;
+                            // Read out particle position
+                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                            amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+                            amrex::GpuArray<amrex::Real, vdim> vels;
+                            if (s == 0)
+                            {
+                                for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
+                                    pos[xd] = partData[pp].pos(xd);
+                                vels[0] = velx[pp];
+                                vels[1] = vely[pp];
+                                vels[2] = velz[pp];
+                            }
+                            else
+                            {
+                                pos[0] = possx[pp];
+                                pos[1] = possy[pp];
+                                pos[2] = possz[pp];
+                                vels[0] = velsx[pp];
+                                vels[1] = velsy[pp];
+                                vels[2] = velsz[pp];
+                            }
 
-                        spline.init_particles(pos, plo, dxi);
-                        // evaluate the electric field
-                        amrex::GpuArray<amrex::Real, vdim> efield =
-                            evaluate_efield<vdim, degx, degy, degz>(spline, eA);
-                        amrex::GpuArray<amrex::Real, vdim> bfield =
-                            evaluate_efield<vdim, degx, degy, degz>(spline, bA);
-                        // push v with the electric field
+                            spline.init_particles(pos, plo, dxi);
+                            // evaluate the electric field
+                            amrex::GpuArray<amrex::Real, vdim> efield =
+                                evaluate_efield<vdim, degx, degy, degz>(spline, eA);
+                            amrex::GpuArray<amrex::Real, vdim> bfield =
+                                evaluate_efield<vdim, degx, degy, degz>(spline, bA);
+                            // push v with the electric field
 
-                        //   Accumulation of j
-                        gempic_accumulate_j<vdim, degx, degy, degz>(charge, vels, spline, jA,
-                                                                    inv_vol * weight[pp]);
-                        //   update the solution
-                        amrex::GpuArray<amrex::Real, vdim> newvel;
-                        newvel[0] =
-                            vel[0] + chargemass * dt * coeffb *
-                                         (efield[0] + vels[1] * bfield[2] - vels[2] * bfield[1]);
-                        newvel[1] =
-                            vel[1] + chargemass * dt * coeffb *
-                                         (efield[1] + vels[2] * bfield[0] - vels[0] * bfield[2]);
-                        newvel[2] =
-                            vel[2] + chargemass * dt * coeffb *
-                                         (efield[2] + vels[0] * bfield[1] - vels[1] * bfield[0]);
-
-                        for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
-                        {
-                            pos[xd] = partData[pp].pos(xd);
-                            partData[pp].pos(xd) = pos[xd] + dt * coeffb * vels[xd];
-                        }
-                        velx[pp] = newvel[0];
-                        vely[pp] = newvel[1];
-                        velz[pp] = newvel[2];
-                        if (s < stages - 1)
-                        {
-                            // update where to evaluate in next stage
+                            //   Accumulation of j
+                            gempic_accumulate_j<vdim, degx, degy, degz>(charge, vels, spline, jA,
+                                                                        inv_vol * weight[pp]);
+                            //   update the solution
+                            amrex::GpuArray<amrex::Real, vdim> newvel;
                             newvel[0] = vel[0] +
-                                        chargemass * dt * coeffa *
+                                        chargemass * dt * coeffb *
                                             (efield[0] + vels[1] * bfield[2] - vels[2] * bfield[1]);
                             newvel[1] = vel[1] +
-                                        chargemass * dt * coeffa *
+                                        chargemass * dt * coeffb *
                                             (efield[1] + vels[2] * bfield[0] - vels[0] * bfield[2]);
                             newvel[2] = vel[2] +
-                                        chargemass * dt * coeffa *
+                                        chargemass * dt * coeffb *
                                             (efield[2] + vels[0] * bfield[1] - vels[1] * bfield[0]);
 
-                            possx[pp] = pos[0] + dt * coeffa * vels[0];
-                            possy[pp] = pos[1] + dt * coeffa * vels[1];
-                            possz[pp] = pos[2] + dt * coeffa * vels[2];
-                            velsx[pp] = newvel[0];
-                            velsy[pp] = newvel[1];
-                            velsz[pp] = newvel[2];
-                        }
-                    });
+                            for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
+                            {
+                                pos[xd] = partData[pp].pos(xd);
+                                partData[pp].pos(xd) = pos[xd] + dt * coeffb * vels[xd];
+                            }
+                            velx[pp] = newvel[0];
+                            vely[pp] = newvel[1];
+                            velz[pp] = newvel[2];
+                            if (s < stages - 1)
+                            {
+                                // update where to evaluate in next stage
+                                newvel[0] = vel[0] + chargemass * dt * coeffa *
+                                                         (efield[0] + vels[1] * bfield[2] -
+                                                          vels[2] * bfield[1]);
+                                newvel[1] = vel[1] + chargemass * dt * coeffa *
+                                                         (efield[1] + vels[2] * bfield[0] -
+                                                          vels[0] * bfield[2]);
+                                newvel[2] = vel[2] + chargemass * dt * coeffa *
+                                                         (efield[2] + vels[0] * bfield[1] -
+                                                          vels[1] * bfield[0]);
+
+                                possx[pp] = pos[0] + dt * coeffa * vels[0];
+                                possy[pp] = pos[1] + dt * coeffa * vels[1];
+                                possz[pp] = pos[2] + dt * coeffa * vels[2];
+                                velsx[pp] = newvel[0];
+                                velsy[pp] = newvel[1];
+                                velsz[pp] = newvel[2];
+                            }
+                        });
                 }
 
                 part_gr[spec]->Redistribute();

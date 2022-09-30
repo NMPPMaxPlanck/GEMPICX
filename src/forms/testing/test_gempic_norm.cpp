@@ -105,13 +105,15 @@ void main_main()
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = infra.plo;
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = infra.dx;
         amrex::Array4<amrex::Real> const &rho_arr = mw_yee.rho[mfi].array();
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> x;
-            x[0] = plo[0] + ((amrex::Real)i) * dx[0];
-            x[1] = plo[1] + ((amrex::Real)j) * dx[1];
-            x[2] = plo[2] + ((amrex::Real)k) * dx[2];
-            rho_arr(i, j, k) = func(x, a, b, c);
-        });
+        ParallelFor(bx,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> x;
+                        x[0] = plo[0] + ((amrex::Real)i) * dx[0];
+                        x[1] = plo[1] + ((amrex::Real)j) * dx[1];
+                        x[2] = plo[2] + ((amrex::Real)k) * dx[2];
+                        rho_arr(i, j, k) = func(x, a, b, c);
+                    });
     }
     PrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << std::endl;
 #if (GEMPIC_SPACEDIM == 1)
