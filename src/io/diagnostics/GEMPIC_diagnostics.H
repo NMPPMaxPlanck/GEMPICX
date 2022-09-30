@@ -48,8 +48,7 @@ amrex::Real computeDotProd(amrex::MultiFab const &mf1, amrex::MultiFab const &mf
     return amrex::ParReduce(
         amrex::TypeList<amrex::ReduceOpSum>{}, amrex::TypeList<amrex::Real>{}, mf1,
         amrex::IntVect(0),  // zero ghost cells
-        [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::Real
-        {
+        [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::Real {
             if (mask_ma[box_no](i, j, k))
             {
                 amrex::Real prod = data1[box_no](i, j, k) * data2[box_no](i, j, k);
@@ -236,8 +235,8 @@ public:
         {  // TODO: multispecies
             auto kin_tmp = amrex::ReduceSum(
                 *part_gr[spec],
-                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real
-                {
+                [=] AMREX_GPU_HOST_DEVICE(
+                    const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real {
                     auto m = p.rdata(vdim);
                     auto vel = pow(std::abs(p.rdata(0)), 2) + pow(std::abs(p.rdata(1)), 2) +
                                pow(std::abs(p.rdata(2)), 2);
@@ -257,8 +256,7 @@ public:
                 auto mom_tmp =
                     amrex::ReduceSum(*part_gr[spec],
                                      [=] AMREX_GPU_HOST_DEVICE(
-                                         const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real
-                                     {
+                                         const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real {
                                          auto m = p.rdata(vdim);
                                          auto vel = p.rdata(cmp);
                                          return (m * vel);

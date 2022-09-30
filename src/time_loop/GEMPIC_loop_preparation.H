@@ -69,21 +69,18 @@ void loop_preparation_init(
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
             amrex::Array4<amrex::Real> const &rhoarr = mw_yee->rho[pti].array();
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   // for (int pp=0;pp<np;pp++) {
-                                   // gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],
-                                   // (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
-                                   splines_at_particles<degx, degy, degz> spline;
-                                   amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-                                   for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                                       position[d] = partData[pp].pos(d);
-                                   spline.init_particles(position, infra.plo, infra.dxi);
-                                   gempic_deposit_rho_C3<degx, degy, degz>(
-                                       spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
-                                       rhoarr);
-                               });
+            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
+                // for (int pp=0;pp<np;pp++) {
+                // gempic_deposit_rho<amrex::Particle<vdim+1>,vdim,degx,degy,degz>(particles[pp],
+                // (*part_gr).charge[spec], rhoarr, infra.plo, infra.dxi);
+                splines_at_particles<degx, degy, degz> spline;
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                    position[d] = partData[pp].pos(d);
+                spline.init_particles(position, infra.plo, infra.dxi);
+                gempic_deposit_rho_C3<degx, degy, degz>(
+                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
+            });
         }
     }
 
@@ -146,26 +143,21 @@ void loop_staggering(
                 auto velz = particleAttributes.GetRealData(2).data();
 
                 const amrex::Real dt = mw_yee->dt;
-                amrex::ParallelFor(np,
-                                   [=] AMREX_GPU_DEVICE(long pp)
-                                   {
-                                       amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                       for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
-                                       {
-                                           pos[comp] = partData[pp].pos(comp);
-                                       }
+                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                    for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
+                    {
+                        pos[comp] = partData[pp].pos(comp);
+                    }
+                    amrex::GpuArray<amrex::Real, vdim> vel;
+                    vel[0] = velx[pp];
+                    if (vdim > 1) vel[1] = vely[pp];
+                    if (vdim > 2) vel[2] = velz[pp];
 
-                                       amrex::GpuArray<amrex::Real, vdim> vel;
-                                       vel[0] = velx[pp];
-                                       if (vdim > 1) vel[1] = vely[pp];
-                                       if (vdim > 2) vel[2] = velz[pp];
-
-                                       amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos =
-                                           push_particle_pos<vdim>(infra.plo, infra.phi, pos, vel,
-                                                                   0.5 * dt);
-                                       for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
-                                           partData[pp].pos(xd) = newPos[xd];
-                                   });
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos =
+                        push_particle_pos<vdim>(infra.plo, infra.phi, pos, vel, 0.5 * dt);
+                    for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) partData[pp].pos(xd) = newPos[xd];
+                });
             }
             part_gr[spec]->Redistribute();  // assign particles to the tile they are in
         }

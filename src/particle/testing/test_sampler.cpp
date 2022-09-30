@@ -93,8 +93,7 @@ void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
     // 1) \int f(x,v) dx dv
     vMoment_tmp = amrex::ReduceSum(
         *part_gr[species],
-        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
-        {
+        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
             auto w = p.rdata(vdim);  // particle weight
             return (w);
         });
@@ -109,8 +108,7 @@ void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
         // reduce sum over one MPI rank
         vMoment_tmp = amrex::ReduceSum(
             *part_gr[species],
-            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
-            {
+            [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
                 auto w = p.rdata(vdim);   // particle weight
                 auto vel = p.rdata(cmp);  // velocity component
                 return (w * vel);
@@ -123,8 +121,7 @@ void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
     // 3) \int v^2 f(x,v) dx dv
     vMoment_tmp = amrex::ReduceSum(
         *part_gr[species],
-        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
-        {
+        [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real {
             auto w = p.rdata(vdim);  // particle weight
             auto v2 = std::pow(p.rdata(0), 2) + std::pow(p.rdata(1), 2) + std::pow(p.rdata(2), 2);
             return (w * v2);

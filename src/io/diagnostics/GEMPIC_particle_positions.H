@@ -41,49 +41,50 @@ void Gempic_WritePlotFile(
     plotfilename = "Plotfiles/" + amrex::Concatenate(plot_file, step);
     amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
 
-    amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, edim + bdim + vdim + 1,
+    int bdim = int(vdim / 2.5) * 2 + 1;
+    amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim + 1,
                              0);  // temporary MF to store all fields
     amrex::Vector<std::string> varnames;
     tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[0], 0, 0, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("E_x");
-    if (edim > 1)
+    if (vdim > 1)
     {
         tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[1], 0, 1, 1, 0);
         varnames.push_back("E_y");
     }
-    if (edim > 2)
+    if (vdim > 2)
     {
         tmp_b_mf.Copy(tmp_b_mf, *mw_yee->E_Array[2], 0, 2, 1, 0);
         varnames.push_back("E_z");
     }
-    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[0], 0, edim, 1,
+    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[0], 0, vdim, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("B_x");
     if (bdim > 1)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[1], 0, edim + 1, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[1], 0, vdim + 1, 1, 0);
         varnames.push_back("B_y");
     }
     if (bdim > 2)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[2], 0, edim + 2, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->B_Array[2], 0, vdim + 2, 1, 0);
         varnames.push_back("B_z");
     }
-    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[0], 0, edim + bdim, 1,
+    tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[0], 0, vdim + bdim, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("J_x");
     if (vdim > 1)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[1], 0, edim + bdim + 1, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[1], 0, vdim + bdim + 1, 1, 0);
         varnames.push_back("J_y");
     }
     if (vdim > 2)
     {
-        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[2], 0, edim + bdim + 2, 1, 0);
+        tmp_b_mf.Copy(tmp_b_mf, *mw_yee->J_Array[2], 0, vdim + bdim + 2, 1, 0);
         varnames.push_back("J_z ");
     }
-    tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, edim + bdim + vdim, 1,
+    tmp_b_mf.Copy(tmp_b_mf, mw_yee->rho, 0, 2 * vdim + bdim, 1,
                   0);  // srccomp, destcomp, numcomp, nghost
     varnames.push_back("rho");
     WriteSingleLevelPlotfile(plotfilename, tmp_b_mf, varnames, infra->geom, time, 0);
@@ -112,25 +113,24 @@ void Gempic_WritePlotFile(
             }
             else if (vdim == 3)
             {
-                if (ndata == 1)
-                {
-                    const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
-                    const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz",
-                                                                         "weight"};
-                    ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(),
-                                                write_real_comp, write_int_comp, real_comp_names,
-                                                int_comp_names);
-                }
-                else if (ndata == 7)
-                {
-                    const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0};
-                    const amrex::Vector<std::string>& real_comp_names = {
-                        "vx",     "vy",     "vz",      "weight",  "stagex",
-                        "stagey", "stagez", "stagevx", "stagevy", "stagevz"};
-                    ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(),
-                                                write_real_comp, write_int_comp, real_comp_names,
-                                                int_comp_names);
-                }
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+            else if (vdim == 2)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
+            }
+            else if (vdim == 3)
+            {
+                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
+                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
+                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
+                                            write_int_comp, real_comp_names, int_comp_names);
             }
         }
 

@@ -83,21 +83,18 @@ void main_main()
         const auto weight = particle_attributes.GetRealData(vdim).data();
 
         amrex::Array4<amrex::Real> const& rhoarr = TestMF[pti].array();
-        amrex::ParallelFor(
-            np,
-            [=] AMREX_GPU_DEVICE(long pp)
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) {
+            splines_at_particles<degx, degy, degz> spline;
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+            for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
             {
-                splines_at_particles<degx, degy, degz> spline;
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
-                {
-                    pos[comp] = partData[pp].pos(comp);
-                }
-                spline.init_particles(pos, plo, dxi);
-                Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim + 1>, vdim,
-                                                                   degx, degy, degz>(
-                    spline, charge * dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr, Index_A);
-            });
+                pos[comp] = partData[pp].pos(comp);
+            }
+            spline.init_particles(pos, plo, dxi);
+            Gempic::Particles::gempic_deposit_charge_indextype<amrex::Particle<vdim + 1>, vdim,
+                                                               degx, degy, degz>(
+                spline, charge * dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr, Index_A);
+        });
     }
     amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << std::endl;
     for (amrex::MFIter mfi(TestMF); mfi.isValid(); ++mfi)
