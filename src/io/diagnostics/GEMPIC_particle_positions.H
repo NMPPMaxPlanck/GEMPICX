@@ -41,7 +41,6 @@ void Gempic_WritePlotFile(
     plotfilename = "Plotfiles/" + amrex::Concatenate(plot_file, step);
     amrex::Print() << "  Writing plotfile " << plotfilename << "\n";
 
-    int bdim = int(vdim / 2.5) * 2 + 1;
     amrex::MultiFab tmp_b_mf(infra->grid, infra->distriMap, 2 * vdim + bdim + 1,
                              0);  // temporary MF to store all fields
     amrex::Vector<std::string> varnames;
