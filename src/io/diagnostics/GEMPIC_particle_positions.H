@@ -114,10 +114,12 @@ void Gempic_WritePlotFile(
             {
                 if (ndata == 1)
                 {
-                const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
-                const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz", "weight"};
-                ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(), write_real_comp,
-                                            write_int_comp, real_comp_names, int_comp_names);
+                    const amrex::Vector<int>& write_real_comp = {1, 1, 1, 1};
+                    const amrex::Vector<std::string>& real_comp_names = {"vx", "vy", "vz",
+                                                                         "weight"};
+                    ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(),
+                                                write_real_comp, write_int_comp, real_comp_names,
+                                                int_comp_names);
                 }
                 else if (ndata == 7)
                 {
@@ -128,7 +130,6 @@ void Gempic_WritePlotFile(
                     ppg[species]->WritePlotFile(plotfilename, ppg[species]->getName(),
                                                 write_real_comp, write_int_comp, real_comp_names,
                                                 int_comp_names);
-
                 }
             }
         }
