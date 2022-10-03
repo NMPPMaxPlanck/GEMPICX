@@ -109,6 +109,8 @@ The format of the code (identation, spacing, etc.) follows the WarpX conventions
 
 `source scripts/sanitize_code.sh`
 
+The formatting should be done with clang-format version 14.
+
 Documentation
 =====================
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
