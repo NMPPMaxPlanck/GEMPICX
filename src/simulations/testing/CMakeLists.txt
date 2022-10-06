@@ -10,6 +10,7 @@ add_executable ( test_vlasov_maxwell_hs_all test_vlasov_maxwell_hs_all.cpp )
 add_executable ( test_vlasov_maxwell_hs_zigzag_C2 test_vlasov_maxwell_hs_zigzag_C2.cpp )
 add_executable ( test_simulation test_simulation.cpp )
 add_executable ( test_vlasov_maxwell_input test_vlasov_maxwell_input.cpp )
+add_executable ( test_vlasov_maxwell_ls_rungekutta test_vlasov_maxwell_ls_rungekutta.cpp )
 
 if (USE_CUDA) 
 	setup_target_for_cuda_compilation( test_vlasov_maxwell_by )       
@@ -22,6 +23,7 @@ if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_vlasov_maxwell_hs_zigzag_C2 )
 	setup_target_for_cuda_compilation( test_simulation )
 	setup_target_for_cuda_compilation( test_vlasov_maxwell_input )
+	setup_target_for_cuda_compilation( test_vlasov_maxwell_ls_rungekutta )
 endif()
 
 target_link_libraries( test_vlasov_maxwell_by  AMReX::amrex AMReX::Flags_CXX  )
@@ -34,6 +36,7 @@ target_link_libraries( test_vlasov_maxwell_hs_all  AMReX::amrex AMReX::Flags_CXX
 target_link_libraries( test_vlasov_maxwell_hs_zigzag_C2  AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_simulation  AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_vlasov_maxwell_input  AMReX::amrex AMReX::Flags_CXX  )
+target_link_libraries( test_vlasov_maxwell_ls_rungekutta AMReX::amrex AMReX::Flags_CXX )
 
 if("${AMReX_SPACEDIM}" STREQUAL "3")
 	add_subdirectory(IOFiles_3D)

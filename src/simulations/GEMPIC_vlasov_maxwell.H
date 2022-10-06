@@ -17,6 +17,7 @@
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
 #include <GEMPIC_time_loop_hsall_fem.H>
+#include <GEMPIC_time_loop_ls_rungekutta.H>
 #include <GEMPIC_time_loop_particles.H>
 
 using namespace amrex;
@@ -151,7 +152,7 @@ public:
         }
         else
         {
-            init_particles_full_domain_gpu<vdim, numspec>(
+            init_particles_full_domain_gpu<vdim, numspec, ndata>(
                 domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0],
                 params.vWeight[0], 0, params.densityEval[0]);
         }
@@ -198,6 +199,7 @@ public:
     {
         BL_PROFILE("vlasov_maxwell_simulation::run_time_loop");
 
+        amrex::Print() << "Propagator: " << params.propagator << std::endl;
         auto start = std::chrono::high_resolution_clock::now();
         switch (params.propagator)
         {
@@ -221,13 +223,13 @@ public:
                 break;
             case 4:
             {
-                /*  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-                      ndata == 1 + 2 * GEMPIC_SPACEDIM,
-                      'Runge-Kutta integrator needs extra data in the particle array.');
-                  ls_rungekutta<1, vdim, numspec> rk_prop(params.charge, params.mass, domain,
-                  mw_yee); rk_prop.template time_loop<degx, degy, degz, degvm, ndata,
-                  electromagnetic>( domain, mw_yee, part_gr, &diagn, ctest, params.sim_name,
-                  params.strang_order); break;*/
+                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+                    ndata == 1 + 2 * GEMPIC_SPACEDIM,
+                    'Runge-Kutta integrator needs extra data in the particle array.');
+                ls_rungekutta<3, vdim, numspec> rk_prop(domain, mw_yee);
+                rk_prop.template time_loop<degx, degy, degz, degvm, ndata, electromagnetic>(
+                    domain, mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                break;
             }
             case 100:
                 time_loop_particles<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic>(
@@ -244,8 +246,8 @@ public:
         switch (params.propagator)
         {
             case 100:
-                Gempic_WritePlotFile<vdim, numspec, ndata>(part_gr, &mw_yee, &domain, "Edipole",
-                                                           10);
+                Gempic_WritePlotFile<vdim, vdim, int(vdim / 2.5) * 2 + 1, numspec, ndata>(
+                    part_gr, &mw_yee, &domain, "Edipole", 10);
                 break;
             default:
                 break;
