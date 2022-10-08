@@ -42,7 +42,9 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
 
     const int numspec = 1;
-    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, true, true, n_data> sim;
+    const bool electromagnetic = true;
+    const bool output = false;
+    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, electromagnetic, output, n_data> sim;
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
