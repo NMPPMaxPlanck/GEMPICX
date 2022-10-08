@@ -25,7 +25,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real, amrex::Real, amrex::Real, am
     return val;
 }
 
-template <int degx, int degy, int degz, int degmw, int vdim, int n_data = 1>
+template <int degx, int degy, int degz, int degmw, int vdim, int ndata = 1>
 void vlasov_maxwell_ctest(std::string test_name, int propagator)
 {
     std::string test_name_tmp = test_name + ".output.0";
