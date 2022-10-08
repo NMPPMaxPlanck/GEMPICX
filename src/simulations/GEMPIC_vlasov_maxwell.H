@@ -143,24 +143,27 @@ public:
                      params.save_checkpoint, params.sim_name, vol, ctest);
 //------------------------------------------------------------------------------
 // initialize particles & loop preparation:
+for (int s = 0; s < numspec; s++)
+        {
 #if GEMPIC_GPU
         if (ctest)
         {
             init_particles_full_domain<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
-                                                      params.meanVelocity[0], params.vThermal[0],
-                                                      params.vWeight[0], 0, params.densityEval[0]);
+                                                      params.meanVelocity[s], params.vThermal[s],
+                                                      params.vWeight[s], s, params.densityEval[s]);
         }
         else
         {
             init_particles_full_domain_gpu<vdim, numspec, ndata>(
-                domain, part_gr, params.n_part_per_cell, params.meanVelocity[0], params.vThermal[0],
-                params.vWeight[0], 0, params.densityEval[0]);
+                domain, part_gr, params.n_part_per_cell, params.meanVelocity[s], params.vThermal[s],
+                params.vWeight[s], s, params.densityEval[s]);
         }
 #else
         init_particles_full_domain<vdim, numspec>(domain, part_gr, params.n_part_per_cell,
-                                                  params.meanVelocity[0], params.vThermal[0],
-                                                  params.vWeight[0], 0, params.densityEval[0]);
+                                                  params.meanVelocity[s], params.vThermal[s],
+                                                  params.vWeight[s], s, params.densityEval[s]);
 #endif
+        }
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, ndata, output>(
             params, domain, &mw_yee, part_gr, &diagn, params.time_staggered, params.BxEval,
