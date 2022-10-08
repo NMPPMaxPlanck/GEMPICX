@@ -21,6 +21,8 @@
 #include <GEMPIC_particle_positions.H>
 #include <GEMPIC_profiling.H>
 
+#include <cassert>
+
 using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
@@ -177,6 +179,9 @@ public:
         kin.push_back(0.);
         gauss_error.push_back(0.);
 
+        // Verify that diagnostics vectors are large enough
+        assert(mom.size() == step + 1);
+
         // E and B field
         mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
         BL_PROFILE_VAR("diagnostics::electric energy", ehe);
@@ -198,7 +203,7 @@ public:
                 ;
             // amrex::ParallelDescriptor::ReduceRealSum(
             //     val, amrex::ParallelDescriptor::IOProcessorNumber());
-            Efield_energy[step][cc] = mw_yee->epref_ep0 * val;
+            Efield_energy[step][cc] = 0.5 * mw_yee->epref_ep0 * val;
         }
         BL_PROFILE_VAR_STOP(ehe);
 
@@ -221,7 +226,7 @@ public:
             // reduced sum over mpi ranks
             // amrex::ParallelDescriptor::ReduceRealSum(
             //     val, amrex::ParallelDescriptor::IOProcessorNumber());
-            Bfield_energy[step][cc] = mw_yee->energy_b_scaling * val;
+            Bfield_energy[step][cc] = 0.5 * mw_yee->energy_b_scaling * val;
         }
         BL_PROFILE_VAR_STOP(bhb);
 
@@ -248,7 +253,7 @@ public:
             amrex::ParallelDescriptor::ReduceRealSum(
                 kin_tmp, amrex::ParallelDescriptor::IOProcessorNumber());
 
-            kin[step] += 0.5 * kin_tmp;
+            kin[step] += 0.5 * kin_tmp / domain_volume;
             BL_PROFILE_VAR_STOP(kin);
 
             BL_PROFILE_VAR("diagnostics::momentum", mom);
@@ -280,10 +285,9 @@ public:
         // save initial total energy
         if (step == 0)
         {
-            init_tot_energy =
-                0.5 * (Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
-                       Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2]) +
-                kin[0] / domain_volume;
+            init_tot_energy = Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
+                              Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2] +
+                              kin[0];
         }
     }
 
@@ -312,10 +316,10 @@ public:
             }
             for (int step = firstStep; step <= lastSaved; step++)
             {
-                amrex::Real tot_energy = 0.5 * (Efield_energy[step][0] + Efield_energy[step][1] +
-                                                Efield_energy[step][2] + Bfield_energy[step][0] +
-                                                Bfield_energy[step][1] + Bfield_energy[step][2]) +
-                                         kin[step] / domain_volume;
+                amrex::Real tot_energy = Efield_energy[step][0] + Efield_energy[step][1] +
+                                         Efield_energy[step][2] + Bfield_energy[step][0] +
+                                         Bfield_energy[step][1] + Bfield_energy[step][2] +
+                                         kin[step];
                 amrex::Print(ofsfun).SetPrecision(20) << dt * (step) << " ";
                 switch (vdim)
                 {
@@ -483,11 +487,11 @@ private:
         sim_name = sim_n;
         domain_volume = vol;
 
-        Bfield_energy.reserve(nSteps);
-        Efield_energy.reserve(nSteps);
-        mom.reserve(nSteps);
-        kin.reserve(nSteps);
-        gauss_error.reserve(nSteps);
+        Bfield_energy.reserve(nSteps + 1);
+        Efield_energy.reserve(nSteps + 1);
+        mom.reserve(nSteps + 1);
+        kin.reserve(nSteps + 1);
+        gauss_error.reserve(nSteps + 1);
 
         // Open time history file
         if (amrex::ParallelDescriptor::IOProcessor())
