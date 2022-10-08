@@ -14,6 +14,7 @@
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
+#include <GEMPIC_time_loop_ls_rungekutta.H>
 
 using namespace amrex;
 using namespace Gempic;
@@ -45,7 +46,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real func_phi(amrex::Real x, amrex::Real y, amrex::
     return val;
 }
 
-template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
+template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata, int propagator>
 void main_main(bool ctest)
 {
     int const strang_order = 2;
@@ -57,9 +58,9 @@ void main_main(bool ctest)
     amrex::IntVect n_cell = {AMREX_D_DECL(4, 4, 4)};
     amrex::GpuArray<int, numspec> n_part_per_cell = {1};
     int n_steps = 1;
-    int freq_x = 2;
-    int freq_v = 2;
-    int freq_slice = 1;
+    int save_fields = 2;
+    int save_particles = 2;
+    int save_checkpoint = 2;
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};
     amrex::Real dt = 0.02;
@@ -94,9 +95,9 @@ void main_main(bool ctest)
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
-    VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, freq_x, freq_v, freq_slice,
-                    is_periodic, max_grid_size, dt, charge, mass, k, density, Bx, By, Bz, Ex, Ey,
-                    Ez, phi, {1}, propagator, tolerance_particles);
+    VlMa.set_params(sim_name, n_cell, n_part_per_cell, n_steps, save_fields, save_particles,
+                    save_checkpoint, is_periodic, max_grid_size, dt, charge, mass, k, density, Bx,
+                    By, Bz, Ex, Ey, Ez, phi, {1}, propagator, tolerance_particles);
     VlMa.set_computed_params();
 
     // infrastructure
@@ -109,11 +110,11 @@ void main_main(bool ctest)
     mw_yee.template init_rho_phi<degmw>(zero, func_phi, infra);
 
     // particles
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr;
+    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> part_gr;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr[spec] =
-            std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
+        part_gr[spec] = std::make_unique<particle_groups<vdim, ndata>>(VlMa.charge[spec],
+                                                                       VlMa.mass[spec], infra);
     }
     //------------------------------------------------------------------------------
     // initialize particles:
@@ -122,15 +123,15 @@ void main_main(bool ctest)
     {
         if (mfi.index() == 0)
         {
-            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
-                part_gr[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+            amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles = part_gr[species]->GetParticles(
+                0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             amrex::GpuArray<amrex::Real, vdim> velocity;
             for (int comp = 0; comp < vdim; comp++)
             {
                 velocity[comp] = 0.1;
             }
             part_gr[species]->add_particle({AMREX_D_DECL(2.512, 2.2, 2.3)}, velocity, 1.0,
-                                          particles);
+                                           particles);
         }
     }
 
@@ -141,25 +142,33 @@ void main_main(bool ctest)
     amrex::Real vol = (infra.geom.ProbHi(0) - infra.geom.ProbLo(0)) *
                       (infra.geom.ProbHi(1) - infra.geom.ProbLo(1)) *
                       (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
-    diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(mw_yee.nsteps, freq_x, freq_v,
-                                                              freq_slice, sim_name, vol);
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, true>(
+    diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(
+        mw_yee.nsteps, save_fields, save_particles, save_checkpoint, sim_name, vol);
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
         VlMa, infra, &mw_yee, part_gr, &diagn, time_staggered, zero, zero, cosine);
 
     amrex::PrintToFile("test_one_part.output") << std::endl;
     switch (propagator)
     {
         case 0:
-            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, true, false>(
+            time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, ndata, true, false>(
                 infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
             break;
         case 1:
-            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(
+            time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
                 infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
             break;
         case 3:
-            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true>(
+            time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
                 infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+            break;
+        case 4:
+        {
+            ls_rungekutta<3, vdim, numspec> rk_prop(infra, mw_yee);
+            rk_prop.template time_loop<degx, degy, degz, degmw, ndata, true>(
+                infra, mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+            break;
+        }
         default:
             break;
     }
@@ -170,7 +179,8 @@ int main(int argc, char* argv[])
     const bool build_parm_parse = true;
     amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
                       overwrite_amrex_parser_defaults);
-    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1, degmw = 2, propagator = 0;
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1, degmw = 2, ndata = 1,
+              propagator = 0;
 
     /* This ctest has a different output for each GEMPIC_SPACEDIM and vdim. Therefore, the
     expected_output file contains all outputs. For each dimension, apart from running the main_main
@@ -232,11 +242,13 @@ int main(int argc, char* argv[])
 
     // Output for GEMPIC_SPACEDIM=3 vdim=3
     // PrintToFile("test_one_part.output") << std::endl;
-    main_main<vdim, numspec, degx, degy, degz, degmw, propagator>(argc == 1);
+    main_main<vdim, numspec, degx, degy, degz, degmw, ndata, propagator>(argc == 1);
     const int degx2 = 3, degy2 = 2, degmw2 = 4, propagator2 = 1;
-    main_main<vdim, numspec, degx2, degy2, degz, degmw2, propagator2>(argc == 1);
+    main_main<vdim, numspec, degx2, degy2, degz, degmw2, ndata, propagator2>(argc == 1);
     const int degx3 = 2, degy3 = 4, degz3 = 2, propagator3 = 3;
-    main_main<vdim, numspec, degx3, degy3, degz3, degmw2, propagator3>(argc == 1);
+    main_main<vdim, numspec, degx3, degy3, degz3, degmw2, ndata, propagator3>(argc == 1);
+    const int degx4 = 2, degy4 = 2, degz4 = 2, propagator4 = 4;
+    main_main<vdim, numspec, degx4, degy4, degz4, 2, ndata + 6, propagator4>(argc == 1);
 #endif
 
     if (ParallelDescriptor::MyProc() == 0)

@@ -91,7 +91,8 @@ void main_main()
                       (infra.geom.ProbHi(1) - infra.geom.ProbLo(1)) *
                       (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(
-        mw_yee.nsteps, VlMa.freq_x, VlMa.freq_v, VlMa.freq_slice, VlMa.sim_name, vol);
+        mw_yee.nsteps, VlMa.save_fields, VlMa.save_particles, VlMa.save_checkpoint, VlMa.sim_name,
+        vol);
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa, VlMa.meanVelocity,
@@ -108,14 +109,9 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
-    const int vdim=3, numspec=1, degx=1, degy=1, degz=1;
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
+    const int vdim = 3, numspec = 1, degx = 1, degy = 1, degz = 1;
     /* This ctest has a different output for each GEMPIC_SPACEDIM. Therefore, the expected_output
     file contains all outputs. For each dimension, apart from running the main_main for the
     dimension, the output for the other dimensions needs to be outputted, so that the comparison to
@@ -123,7 +119,7 @@ int main(int argc, char *argv[])
     GEMPIC_SPACEDIM=1 vdim=2, GEMPIC_SPACEDIM=2 vdim=3 */
 
 #if (GEMPIC_SPACEDIM == 1)
-    const int vdim2=2;
+    const int vdim2 = 2;
     // Output for GEMPIC_SPACEDIM=1 vdim=2
     main_main<vdim2, numspec, degx, degy, degz>();
 

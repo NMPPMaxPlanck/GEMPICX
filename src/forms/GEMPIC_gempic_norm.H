@@ -12,8 +12,8 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-#include <assert.h>
 #include <GEMPIC_computational_domain.H>
+#include <assert.h>
 
 using namespace Gempic;
 using namespace CompDom;

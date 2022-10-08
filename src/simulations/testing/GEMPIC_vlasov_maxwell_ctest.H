@@ -25,7 +25,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real zero(amrex::Real, amrex::Real, amrex::Real, am
     return val;
 }
 
-template <int degx, int degy, int degz, int degmw, int vdim>
+template <int degx, int degy, int degz, int degmw, int vdim, int n_data = 1>
 void vlasov_maxwell_ctest(std::string test_name, int propagator)
 {
     std::string test_name_tmp = test_name + ".output.0";
@@ -41,13 +41,19 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     funcSelectB[1] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
     funcSelectB[2] = VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO;
 
-    const int numspec=1;
-    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw> sim;
+    const int numspec = 1;
+    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, true, true, n_data> sim;
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
     amrex::IntVect nCell = {AMREX_D_DECL(12, 8, 8)};
-    sim.params.set_params_Weibel(test_name, propagator, nSteps, nCell);
+    amrex::Array<int, numspec> nPartPerCell = {100};
+    amrex::Real dt = 0.02;
+    if (propagator == 4) dt = 0.005;
+    sim.params.set_params_Weibel(test_name, propagator, nSteps, nCell, nPartPerCell, dt);
+
+    amrex::Print() << sim.params.max_grid_size[0] << " grid size " << sim.params.n_cell[0]
+                   << std::endl;
 
     sim.ctest = true;
 

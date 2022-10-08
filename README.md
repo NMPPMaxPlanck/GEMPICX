@@ -31,12 +31,15 @@ Installing manually
 Main executable vlasov_maxwell is in build/simulation/vlasov_maxwell  
 
 - Update AMReX version in submodule
-1.) cd third_party/amrex
-2.) git checkout SHA (commit that is desired)
-3.) cd ../..
-4.) git add third_party/amrex
-5.) git commit -m"update AMReX to ..."
-6.) git submodule update
+1. cd third_party/amrex
+2. git checkout SHA (commit that is desired)
+3. cd ../..
+4. git add third_party/amrex
+5. git commit -m"update AMReX to ..."
+6. git submodule update
+
+To update your own version with the version from the repository type 
+*git submodule update* 
 
 Changing dimension
 =====================
@@ -44,6 +47,26 @@ cd ~build/amrex1D
 make install  
 cd ~build/gempic  
 make
+
+Ctests
+======
+- To write a test code, write a main program in the testing directory corresponding to the code you are testing. This code should be in a file *test_mytest.cpp* and write the results of the test in a file called *test_mytest.output*   
+- The new test is automatically added to the list of ctests when a *test_mytest.expected_output* file is added in the directory IOFiles_1D, IOFiles_2D or IOFiles_3D in the testing directory containing *test_mytest.cpp*. When ctest is called the files *test_mytest.output* and *test_mytest.expected_output* are compared and the test is passed when they are identical up to round of errors that are set by parameters used in numdiff (these parameters are hard coded in define_ctest.cmake). Which directory of IOFiles_1D, IOFiles_2D or IOFiles_3D is used when ctest is looking for tests is determined at compile time by the value of AMReX_SPACEDIM.
+- Assuming *build* is the directory in which Gempic is built, the executables of the tests are found in build/src/my_dir/testing and can be run directly without performing all the ctests. You can also run all the tests in a testing directory by executing ctest in build/src/my_dir/testing
+
+Settings for vscode
+===================
+- Install extensions: C/C++, C/C++ Extension Pack, Clang-Format, CMake, CMake Tools
+- setup the environment: 
+  - Open folder where the cloned gempic is. This will be $(workspaceFolder). Create a folder gempic_obj in the parent directory
+  - Open settings from the menu 
+    - In Extensions/CMake Tools: 
+      - set build directory to ${workspaceFolder}/../gempic_obj 
+      - set Cmake: Source Directory to ${workspaceFolder}
+- formatting: set C_Cpp.clang_format_style to .clang-format (the .clang-format file is in the home of the gempic repository)
+- Debugging: Two configuration examples are in scripts/launch.json
+  - vlasov-maxwell: simulation example with input file
+  - (lldb) Cmake: debugs the target that is set in vscode (without input file). Can be used to debug ctests
 
 Using QT-creator with gempic
 =====================
@@ -85,6 +108,8 @@ Formatting
 The format of the code (identation, spacing, etc.) follows the WarpX conventions, which are automatically done by `clang-format`. To format your code before committing run:
 
 `source scripts/sanitize_code.sh`
+
+The formatting should be done with clang-format version 14.
 
 Documentation
 =====================

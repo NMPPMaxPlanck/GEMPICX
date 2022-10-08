@@ -25,8 +25,8 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_amrex_init.H>
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
@@ -69,8 +69,8 @@ void main_main()
     amrex::IntVect n_cell = {AMREX_D_DECL(128, 128, 128)};
 
     gempic_parameters<vdim, numspec> VlMa;
-    
-    const int Nghostx=1, Nghosty=1, Nghostz=1;
+
+    const int Nghostx = 1, Nghosty = 1, Nghostz = 1;
     VlMa.init_Nghost(Nghostx, Nghosty, Nghostz);
     VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {AMREX_D_DECL(64, 64, 64)});
     VlMa.set_computed_params();
@@ -105,13 +105,15 @@ void main_main()
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo = infra.plo;
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = infra.dx;
         amrex::Array4<amrex::Real> const &rho_arr = mw_yee.rho[mfi].array();
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> x;
-            x[0] = plo[0] + ((amrex::Real)i) * dx[0];
-            x[1] = plo[1] + ((amrex::Real)j) * dx[1];
-            x[2] = plo[2] + ((amrex::Real)k) * dx[2];
-            rho_arr(i, j, k) = func(x, a, b, c);
-        });
+        ParallelFor(bx,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> x;
+                        x[0] = plo[0] + ((amrex::Real)i) * dx[0];
+                        x[1] = plo[1] + ((amrex::Real)j) * dx[1];
+                        x[2] = plo[2] + ((amrex::Real)k) * dx[2];
+                        rho_arr(i, j, k) = func(x, a, b, c);
+                    });
     }
     PrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << std::endl;
 #if (GEMPIC_SPACEDIM == 1)
@@ -177,13 +179,8 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      overwrite_amrex_parser_defaults);
     if (ParallelDescriptor::MyProc() == 0) remove("test_gempic_norm.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_gempic_norm_additional.tmp.0");
 

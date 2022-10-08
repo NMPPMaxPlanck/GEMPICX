@@ -39,7 +39,7 @@ public:
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> phi;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi; // inverse of dx
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi;  // inverse of dx
 
     amrex::Real tolerance_particle;  //
 
@@ -94,14 +94,14 @@ public:
 
         distriMap.define(grid);
 
-        dxi[GEMPIC_SPACEDIM] = 1.; 
+        dxi[GEMPIC_SPACEDIM] = 1.;
         for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
         {
             dx[cc] = geom.CellSize()[cc];
             plo[cc] = geom.ProbLo()[cc];
             phi[cc] = geom.ProbHi()[cc];
             dxi[cc] = 1.0 / dx[cc];
-            dxi[GEMPIC_SPACEDIM] *= dxi[cc]; // inverse volume
+            dxi[GEMPIC_SPACEDIM] *= dxi[cc];  // inverse volume
         }
 
         tolerance_particle = tolerance_particle_in;

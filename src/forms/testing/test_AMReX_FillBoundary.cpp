@@ -3,7 +3,6 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-
 #include <GEMPIC_amrex_init.H>
 
 using namespace amrex;
@@ -58,9 +57,8 @@ void main_main()
 
         amrex::Array4<amrex::Real> const &vecMF = (TestMF)[mfi].array();
 
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
-            vecMF(i, j, k) = (i)*100 + (j)*10 + (k);
-        });
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    { vecMF(i, j, k) = (i)*100 + (j)*10 + (k); });
     }
 
     amrex::PrintToFile("test_AMReX_FillBoundary_additional.tmp") << std::endl;
@@ -87,13 +85,8 @@ void main_main()
 int main(int argc, char *argv[])
 {
     const bool build_parm_parse = true;
-    amrex::Initialize(
-        argc,
-        argv,
-        build_parm_parse,
-        MPI_COMM_WORLD,
-        Gempic::overwrite_amrex_parser_defaults
-    );
+    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
+                      Gempic::overwrite_amrex_parser_defaults);
 
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_FillBoundary.tmp.0");
     if (ParallelDescriptor::MyProc() == 0) remove("test_AMReX_FillBoundary_additional.tmp.0");

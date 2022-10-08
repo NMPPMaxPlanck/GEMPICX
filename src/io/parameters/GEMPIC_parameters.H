@@ -48,7 +48,7 @@ public:
     amrex::Vector<amrex::Real> domain_hi = {AMREX_D_DECL(1.0, 1.0, 1.0)};
     amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)}; // for parallelisation
+    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};  // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
     amrex::Vector<amrex::Real> k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
     amrex::Real kx, ky, kz;
@@ -65,9 +65,11 @@ public:
     amrex::GpuArray<int, numspec> n_part_per_cell = {100};
     amrex::GpuArray<amrex::Real, numspec> charge = {-1};
     amrex::GpuArray<amrex::Real, numspec> mass = {1};
+    amrex::GpuArray<std::string, numspec> name = {"electrons"};
     // Initial velocity distribution (sum of gaussians)
     amrex::GpuArray<int, numspec> num_gaussians = {0};
-    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{};  // species, gaussian, vdim
+    amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>>
+        meanVelocity{};  // species, gaussian, vdim
     amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal{};
     amrex::Vector<amrex::Vector<amrex::Real>> vWeight{};
 
@@ -108,9 +110,9 @@ public:
     int curr_step = 0;
 
     // Diagnostics
-    int freq_x = 10000;  //
-    int freq_v = 10000;
-    int freq_slice = 10000;  // time evolution
+    int save_fields = 10000;  //
+    int save_particles = 10000;
+    int save_checkpoint = 10000;  // time evolution
 
     // Scaling parameters
     amrex::Real curlB_scaling = 1.;
@@ -134,9 +136,9 @@ public:
     {
         // Local variables
         amrex::ParmParse pp;
-        amrex::Array<int, GEMPIC_SPACEDIM> is_periodic_vector {AMREX_D_DECL(1, 1, 1)};
-        amrex::Array<int, GEMPIC_SPACEDIM> max_grid_size_vector {AMREX_D_DECL(4, 4, 4)};
-        amrex::Array<int, GEMPIC_SPACEDIM> n_cell_vector {AMREX_D_DECL(10, 10, 10)};
+        amrex::Array<int, GEMPIC_SPACEDIM> is_periodic_vector{AMREX_D_DECL(1, 1, 1)};
+        amrex::Array<int, GEMPIC_SPACEDIM> max_grid_size_vector{AMREX_D_DECL(4, 4, 4)};
+        amrex::Array<int, GEMPIC_SPACEDIM> n_cell_vector{AMREX_D_DECL(10, 10, 10)};
 
         if (!pp.query("sim_name", sim_name))
         {
@@ -224,6 +226,10 @@ public:
             if (!ppSpec.query("mass", mass[spec]))
             {
                 parseErrorMessage(specString + ".mass");
+            }
+            if (!ppSpec.query("name", name[spec]))
+            {
+                parseErrorMessage(specString + ".name");
             }
             if (!ppSpec.query("density", density[spec]))  // initial density
             {
@@ -318,17 +324,17 @@ public:
         }
 
         // diagnostics
-        if (!pp.query("freq_x", freq_x))
+        if (!pp.query("save_fields", save_fields))
         {
-            parseErrorMessage("freq_x");
+            parseErrorMessage("save_fields");
         }
-        if (!pp.query("freq_v", freq_v))
+        if (!pp.query("save_particles", save_particles))
         {
-            parseErrorMessage("freq_v");
+            parseErrorMessage("save_particles");
         }
-        if (!pp.query("freq_slice", freq_slice))
+        if (!pp.query("save_checkpoint", save_checkpoint))
         {
-            parseErrorMessage("freq_slice");
+            parseErrorMessage("save_checkpoint");
         }
 
         // scaling parameters
@@ -357,14 +363,13 @@ public:
         amrex::IntVect n_cell_vector = {AMREX_D_DECL(
             24, 8,
             8)},  // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
-        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12, int FV = 12,
-        int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
+        amrex::GpuArray<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12,
+        int FV = 12, int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
         amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
         amrex::GpuArray<amrex::Real, numspec> M = {1.0}, amrex::Real K = 1.25,
         amrex::GpuArray<std::string, numspec> wf = {"1.0"}, std::string BX = "0.0",
-        std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)",
-        std::string EX = "0.0",
+        std::string BY = "0.0", std::string BZ = "1e-3 * cos(kvarx * x)", std::string EX = "0.0",
         std::string EY = "0.0", std::string EZ = "1e-3 * cos(kvarx * x)",
         std::string PHI = "4 * 0.5 * cos(0.5 * x)",
         // std::vector<int> NG = {1},
@@ -372,7 +377,8 @@ public:
         // int NG = 1,
         int PROP = 0, amrex::Real TOL_P = 1.e-10, int MAX_C = 30, int RST = 0, std::string CF = "",
         int CD = 0,
-        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0, 0.0}}},
+        amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity_in = {{{0.0, 0.0,
+                                                                                      0.0}}},
         amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> vThermal_in =
             {{{0.014142135623730949, 0.04898979485566356, 0.04898979485566356}}},
         amrex::Vector<amrex::Vector<amrex::Real>> vWeight_in = {{1.0}})
@@ -382,9 +388,9 @@ public:
             n_cell_vector;  // amrex::IntVect{AMREX_D_DECL(n_cell_vector[0],n_cell_vector[1],n_cell_vector[2])};
         for (int i = 0; i < numspec; i++) n_part_per_cell[i] = n_part_per_cell_in[i];
         n_steps = NS;
-        freq_x = FX;
-        freq_v = FV;
-        freq_slice = FS;
+        save_fields = FX;
+        save_particles = FV;
+        save_checkpoint = FS;
         // is_periodic_vector = PER;
         is_periodic =
             is_periodic_vector;  // amrex::IntVect{AMREX_D_DECL(is_periodic_vector[0],is_periodic_vector[1],is_periodic_vector[2])};
@@ -421,15 +427,15 @@ public:
 
     void set_params_Weibel(std::string sim_name_in = "Weibel", int propagatorIn = 3,
                            int nStepsIn = 10, amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
-                           amrex::Array<int, numspec> nPartPerCellIn = {100}, amrex::Real dtIn = 0.02,
-                           int freqSliceIn = 100)
+                           amrex::Array<int, numspec> nPartPerCellIn = {100},
+                           amrex::Real dtIn = 0.02, int freqSliceIn = 100)
     {
         sim_name = sim_name_in;
         propagator = propagatorIn;
         n_steps = nStepsIn;
         n_cell = nCellIn;
         dt = dtIn;
-        freq_slice = freqSliceIn;
+        save_checkpoint = freqSliceIn;
         assert(numspec == 1);  // Only electrons
         n_part_per_cell[0] = nPartPerCellIn[0];
         charge[0] = -1.0;
@@ -470,6 +476,10 @@ public:
                 Nghost += 3;
                 break;
             case 3:
+                time_staggered = false;
+                Nghost += 3;
+                break;
+            case 4:
                 time_staggered = false;
                 Nghost += 3;
                 break;
