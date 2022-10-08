@@ -17,3 +17,5 @@ build/**/*
 **/CMakeScripts
 **/compile_commands.json
 .vscode/
+**/dispersion_relations/__pycache__
+**/dispersion_relations/.ipynb_checkpoints
