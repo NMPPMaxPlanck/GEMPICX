@@ -159,10 +159,11 @@ public:
 
     /**
      * @brief Computes the reduced diagnostics that are integrated over space and
-     * summed over particles at time step*dt
+     * summed over particles at time step*dt.
+     * All diagnostics are normalized by domain volume
      *
      * @param step step number in time
-     * @param infra compuational parameters
+     * @param infra computational parameters
      * @param mw_yee
      * @param part_gr particle container
      */
@@ -232,13 +233,13 @@ public:
         {
             mom[step][cmp] = 0.0;
         }
-        BL_PROFILE_VAR("diagnostics::kinetic energy", kin);
         for (int spec = 0; spec < numspec; spec++)
-        {  // TODO: multispecies
+        {
+            BL_PROFILE_VAR("diagnostics::kinetic energy", kin);
             auto kin_tmp = amrex::ReduceSum(
                 *part_gr[spec],
-                [=] AMREX_GPU_HOST_DEVICE(
-                    const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real {
+                [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real
+                {
                     amrex::Real weight = p.rdata(vdim);
                     amrex::Real vel2 = pow(p.rdata(0), 2) + pow(p.rdata(1), 2) + pow(p.rdata(2), 2);
                     return (weight * vel2);
@@ -254,14 +255,15 @@ public:
             BL_PROFILE_VAR("diagnostics::momentum", mom);
             for (int cmp = 0; cmp < vdim; cmp++)
             {
-                auto mom_tmp = amrex::ReduceSum(
-                    *part_gr[spec],
-                    [=] AMREX_GPU_HOST_DEVICE(
-                        const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real {
-                        auto weight = p.rdata(vdim);
-                        auto vel = p.rdata(cmp);
-                        return (weight * vel);
-                    });
+                auto mom_tmp =
+                    amrex::ReduceSum(*part_gr[spec],
+                                     [=] AMREX_GPU_HOST_DEVICE(
+                                         const amrex::Particle<vdim + ndata, 0> &p) -> amrex::Real
+                                     {
+                                         auto weight = p.rdata(vdim);
+                                         auto vel = p.rdata(cmp);
+                                         return (weight * vel);
+                                     });
 
                 // reduced sum over mpi ranks
                 amrex::ParallelDescriptor::ReduceRealSum(
@@ -279,9 +281,9 @@ public:
         // save initial total energy (normalized by domain_volume)
         if (step == 0)
         {
-            init_tot_energy = Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
-                              Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2] +
-                              kin[0];
+            m_init_tot_energy = Efield_energy[0][0] + Efield_energy[0][1] + Efield_energy[0][2] +
+                                Bfield_energy[0][0] + Bfield_energy[0][1] + Bfield_energy[0][2] +
+                                kin[0];
         }
     }
 

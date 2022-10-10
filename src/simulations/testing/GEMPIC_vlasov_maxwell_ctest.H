@@ -43,8 +43,10 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
 
     const int numspec = 1;
     const bool electromagnetic = true;
-    const bool output = false;
-    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, electromagnetic, output, n_data> sim;
+    const bool output = true;
+    vlasov_maxwell_simulation<vdim, numspec, degx, degy, degz, degmw, electromagnetic, output,
+                              ndata>
+        sim;
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
