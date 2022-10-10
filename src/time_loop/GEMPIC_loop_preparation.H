@@ -171,13 +171,21 @@ void loop_staggering(
     }
 
     //------------------------------------------------------------------------------
+    // Initialize reduced diagnostics
+    int t_step = 0;
+    diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
     // Save "step 0" data
-    if (output)
+    if (diagn->save_particles < diagn->nSteps)
     {
-        int t_step = 0;
-        diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
         // save fields and particles at initial time
         int save_part = true;
+        Gempic_WritePlotFile<vdim, edim, bdim, numspec, ndata>(part_gr, mw_yee, &infra,
+                                                               diagn->sim_name, t_step, save_part);
+    }
+    else if (diagn->save_fields < diagn->nSteps)
+    {
+        // save only fields at initial time
+        int save_part = false;
         Gempic_WritePlotFile<vdim, edim, bdim, numspec, ndata>(part_gr, mw_yee, &infra,
                                                                diagn->sim_name, t_step, save_part);
     }
