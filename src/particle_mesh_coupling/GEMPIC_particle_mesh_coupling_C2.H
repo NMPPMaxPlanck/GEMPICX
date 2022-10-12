@@ -428,7 +428,6 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
                                                  amrex::Real weight,
                                                  amrex::Array4<amrex::Real> const &rho)
 {
-    BL_PROFILE("particle_mesh_coupling_C2::gempic_deposit_rho_C3");
 #if (GEMPIC_SPACEDIM > 2)
     for (int kk = 0; kk <= degz; ++kk)
 #endif

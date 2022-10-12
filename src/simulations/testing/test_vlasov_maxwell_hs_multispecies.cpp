@@ -118,7 +118,9 @@ void main_main()
     init_particles_full_domain<vdim, numspec>(infra, part_gr, VlMa.n_part_per_cell, meanVelocity,
                                               vThermal, vWeight, 1, VlMa.densityEval[1]);
 
-    loop_preparation<vdim, numspec, degx, degy, degz, degmw, 1, true>(
+    const int ndata = 1;
+    const bool output = false;
+    loop_preparation<vdim, numspec, degx, degy, degz, degmw, ndata, output>(
         VlMa, infra, &mw_yee, part_gr, &diagn, VlMa.time_staggered, VlMa.BxEval, VlMa.ByEval,
         VlMa.BzEval);
 

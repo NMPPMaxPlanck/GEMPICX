@@ -40,7 +40,6 @@ namespace Particles
  * particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The
  * charge and mass of the particle species are stored in a separate array.
  */
-// template <int vdim, int numspec, int n_data=1>
 template <int vdim, int ndata = 1>
 class particle_groups : public amrex::ParticleContainer<0, 0, vdim + ndata, 0>
 {
@@ -53,7 +52,6 @@ public:
     amrex::ParticleReal getCharge() { return m_charge; }
     amrex::ParticleReal getMass() { return m_mass; }
     std::string getName() { return m_name; }
-    // std::unique_ptr<amrex::ParticleContainer<0, 0, vdim+n_data, 0>> mypc;
 
     /**
      * Default Constructor.
