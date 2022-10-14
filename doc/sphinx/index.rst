@@ -24,6 +24,7 @@ Table of Contents
 
    :maxdepth: 2
    self
+   latex/deRham_diagrams
    api/Field_Solvers_Chapter
    api/Forms_Chapter
    api/IO_Chapter
