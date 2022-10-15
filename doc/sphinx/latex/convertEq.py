@@ -1,4 +1,5 @@
 import re
+import sys
 """_summary_
     
     information about the match object are availble in the methods
@@ -7,7 +8,7 @@ import re
     .group() returns the part of the string where there was a match
 """
 
-def convert_label(file):
+def convert(file):
     f = open(file,'r')
     flines = f.readlines()
 
@@ -19,7 +20,7 @@ def convert_label(file):
             line = re.sub("\\}","", line)
             flines[i-1] = line
             flines[i] = "\n"
-            
+                
     for i in range(flines.__len__()):
         line = flines[i]       
         hasEqref = re.search("`\[.*\]",line)
@@ -36,10 +37,14 @@ def convert_label(file):
                     lineout = lineout + s
             flines[i] = lineout
 
+    f.close()
     fout = open(file,'w')
     fout.writelines(flines)
 
-convert_label('deRham_diagrams.rst')
-
-
-    
+if __name__ == '__main__':
+    file = sys.argv[1]
+    # Check that it is a .rst file
+    if (file[-4:] != '.rst'):
+        print('wrong file format. convertEq should be applied to a .rst file')
+        print('input file name is ' + file) 
+    convert(file)
