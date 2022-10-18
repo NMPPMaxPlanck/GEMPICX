@@ -22,6 +22,6 @@ if (GEMPIC_DOCUMENTATION)
       COMMENT "Generating Doxygen documentation"
       VERBATIM )
   else (DOXYGEN_FOUND)
-    message("Doxygen is not installe")
+    message("Doxygen is not installed")
   endif (DOXYGEN_FOUND)
 endif (GEMPIC_DOCUMENTATION)
