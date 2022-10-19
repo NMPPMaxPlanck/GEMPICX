@@ -1,7 +1,11 @@
 import re
 import sys
 """_summary_
+ Completes conversion of .tex file into .rst file for proper equation numbering and referencing.
+ - \label is replaced by :label: (keeping actual label)
+ - eqref is replaced by :eq:
     
+    Reminder on regexp class:
     information about the match object are availble in the methods
     .span() returns a tuple containing the start-, and end positions of the match.
     .string returns the string passed into the function
@@ -12,6 +16,7 @@ def convert(file):
     f = open(file,'r')
     flines = f.readlines()
 
+    # replace \label by :label: and switch empty line from above to below
     for i in range(flines.__len__()):
         line = flines[i]
         hasLabel = re.search(r'\\label',line)
@@ -20,7 +25,8 @@ def convert(file):
             line = re.sub("\\}","", line)
             flines[i-1] = line
             flines[i] = "\n"
-                
+    
+    # replace \eq by :eq:            
     for i in range(flines.__len__()):
         line = flines[i]       
         hasEqref = re.search("`\[.*\]",line)
