@@ -69,7 +69,7 @@ amrex::Real computeDotProd(amrex::MultiFab const &mf1, amrex::MultiFab const &mf
  */
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degree,
-          int bdim = int(vdim / 2.5) * 2 + 1, int edim = vdim>
+          int edim = vdim, int bdim = int(vdim / 2.5) * 2 + 1>
 class diagnostics
 {
 public:
