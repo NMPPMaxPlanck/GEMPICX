@@ -189,7 +189,7 @@ void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<edim, bdim> *mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool time_staggered,
+    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn, bool time_staggered,
     amrex::GpuArray<std::string, int(vdim / 2.5) * 2 + 1> fields_B)
 {
     loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
