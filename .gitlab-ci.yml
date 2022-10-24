@@ -74,7 +74,7 @@ build-gcc-gpu:
     - gpu
   script:
     - cd scripts
-    - ./ci_raven_gpu_launcher.sh
+    - bash ci_raven_gpu_launcher.sh
 
 # Weekly scheduled jobs
 job:on-schedule:
@@ -83,7 +83,7 @@ job:on-schedule:
   script:
     - echo "This is a scheduled job"
     - cd scripts
-    - ./ci_raven_gpu_long_test.sh
+    - bash ci_raven_gpu_long_test.sh
 
 
 # Create and publish documentation pages (Ubuntu 20.04)
