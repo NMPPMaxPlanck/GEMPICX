@@ -6,7 +6,7 @@ n_cell_vector = 32 32 32
 max_grid_size_vector = 32 16 16
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 # wave vector
-k = .4 .4 .4  # 1.25 for Weibel, 0.4 for Landau
+k = 0.4 0.4 0.4  #  Landau
 
 # Particle parameters
 species0.n_part_per_cell = 10000 # number of particles per cell
@@ -30,11 +30,10 @@ propagator = 3  0 - Boris-FD, 1 - HS-FEM, 2 - HS-FEM-ALL, 3 - HS-FEM-ZIGZAG
 tolerance_particles = 1.e-10 # Tolerances for iterative solver (if needed by the chosen propagator)
 
 # Function parameters
-density = "1.0 + 0.5 * cos(kvarx * x)"
 Bx = "0.0"
 By = "0.0"
 Bz = "0.0" 
-phi = "0.5/(kvarx**2) * cos(kvarx * x)" # -d^2/dx^2 phi = rho 
+phi = "-0.05/(kvarx**2) * cos(kvarx * x)" # -d^2/dx^2 phi = rho = -q*density (up to a constant)
 
 # Restart parameters
 restart = 0
