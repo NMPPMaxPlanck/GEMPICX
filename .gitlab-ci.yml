@@ -79,8 +79,6 @@ build-gcc-gpu:
 # Weekly scheduled jobs
 job:on-schedule:
   stage: test
-  only:
-    - DISABLE
   tags:
     - gpu
   rules:
