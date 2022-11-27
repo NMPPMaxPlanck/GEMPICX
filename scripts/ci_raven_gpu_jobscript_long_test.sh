@@ -2,7 +2,7 @@
 #
 # Slurm job script for a continuous integration run on Raven,
 # using one A100 GPU and an OpenMPI-based build of GEMPIC.
-# Job submission:  sbatch --wait ci_raven_gpu_jobscript.sh
+# Job submission:  sbatch --wait ci_raven_gpu_jobscript_long_test.sh
 #
 #SBATCH -o ./ci_job.out
 #SBATCH -D ./
@@ -19,7 +19,7 @@
 #SBATCH --mail-user=sonnen@ipp.mpg.de
 #
 # Wall clock limit:
-#SBATCH --time=0:60:00
+#SBATCH --time=0:30:00
 
 # exit immediately at any error
 set -e
