@@ -18,7 +18,7 @@
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_profiling.H>
 
 #include <cassert>

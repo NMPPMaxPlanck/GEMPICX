@@ -19,8 +19,10 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_profiling.H>
+
+#include <MultiReducedDiags.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -255,8 +257,9 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int nd
 void time_loop_hs_fem(
     computational_domain infra, maxwell_yee<vdim>* mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn, bool ctest,
-    std::string simulation_name, int strang_order)
+    diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn,
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn, 
+    bool ctest, std::string simulation_name, int strang_order)
 {
     BL_PROFILE("time_loop_hs_fem");
 
@@ -291,6 +294,9 @@ void time_loop_hs_fem(
 
         diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr, simulation_name,
                                ctest);
+        
+        redDiagn->ComputeDiags(t_step, infra, mw_yee, part_gr);
+        redDiagn->WriteToFile(t_step, mw_yee);
     }
 }
 }  // namespace Time_Loop

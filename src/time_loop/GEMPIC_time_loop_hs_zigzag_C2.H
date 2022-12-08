@@ -19,7 +19,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_profiling.H>
 
 using namespace Diagnostics_Output;
@@ -450,8 +450,9 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int nd
 void time_loop_hs_zigzag_C2(
     computational_domain infra, maxwell_yee<vdim>* mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn, bool ctest,
-    std::string simulation_name, int strang_order)
+    diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn,
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn,
+    bool ctest, std::string simulation_name, int strang_order)
 {
     BL_PROFILE("time_loop_hs_zigzag_C2");
 
@@ -488,8 +489,12 @@ void time_loop_hs_zigzag_C2(
         }
 
         if (output)
-            diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
+            {
+                diagn->end_of_timestep(&profiling_timers, t_step, infra, mw_yee, part_gr,
                                    simulation_name, ctest);
+                redDiagn->ComputeDiags(t_step, infra, mw_yee, part_gr);
+                redDiagn->WriteToFile(t_step, mw_yee);
+            }
         profiling_count = true;
     }
 

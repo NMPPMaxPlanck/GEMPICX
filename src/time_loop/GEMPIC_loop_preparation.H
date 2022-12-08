@@ -21,6 +21,8 @@
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 
+#include <MultiReducedDiags.H>
+
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
 using namespace CompDom;
@@ -122,7 +124,9 @@ void loop_staggering(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<edim, bdim> *mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn, bool time_staggered)
+    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn,
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn,
+    bool time_staggered)
 {
     if (time_staggered)
     {
@@ -174,6 +178,9 @@ void loop_staggering(
     // Initialize reduced diagnostics
     int t_step = 0;
     diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
+    redDiagn->ComputeDiags(0, infra, mw_yee, part_gr);
+    redDiagn->WriteToFile(0, mw_yee);
+    
     // Save "step 0" data
     if (diagn->save_particles < diagn->nSteps)
     {
@@ -197,8 +204,9 @@ void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<edim, bdim> *mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn, bool time_staggered,
-    amrex::GpuArray<std::string, int(vdim / 2.5) * 2 + 1> fields_B)
+    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn,
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn, 
+    bool time_staggered, amrex::GpuArray<std::string, int(vdim / 2.5) * 2 + 1> fields_B)
 {
     loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
         meanVelocity, infra, mw_yee, part_gr);
@@ -207,7 +215,7 @@ void loop_preparation(
     mw_yee->template initB<degmw>(fields_B, meanVelocity.k, infra);
 
     loop_staggering<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
-        meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
+        meanVelocity, infra, mw_yee, part_gr, diagn, redDiagn, time_staggered);
 }
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata, bool output,
@@ -216,7 +224,9 @@ void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<edim, bdim> *mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn, bool time_staggered,
+    diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, 
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn,
+    bool time_staggered,
     amrex::Real (*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
     amrex::Real (*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
     amrex::Real (*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real))
@@ -229,7 +239,7 @@ void loop_preparation(
                                   function_to_project_2, infra);
 
     loop_staggering<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
-        meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
+        meanVelocity, infra, mw_yee, part_gr, diagn, redDiagn, time_staggered);
 }
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata, bool output,
@@ -238,8 +248,9 @@ void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<edim, bdim> *mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn, bool time_staggered,
-    amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelect)
+    diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn,
+    bool time_staggered, amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelect)
 {
     loop_preparation_init<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
         meanVelocity, infra, mw_yee, part_gr);
@@ -248,7 +259,7 @@ void loop_preparation(
     mw_yee->template initB<degmw>(infra, funcSelect);
 
     loop_staggering<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
-        meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
+        meanVelocity, infra, mw_yee, part_gr, diagn, redDiagn, time_staggered);
 }
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata, bool output,
@@ -257,7 +268,9 @@ void loop_preparation(
     gempic_parameters<vdim, numspec> meanVelocity, computational_domain infra,
     maxwell_yee<edim, bdim> *mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw, edim, bdim> *diagn, bool time_staggered,
+    diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, 
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn,
+    bool time_staggered,
     amrex::ParserExecutor<4> BxEval, amrex::ParserExecutor<4> ByEval,
     amrex::ParserExecutor<4> BzEval)
 {
@@ -269,7 +282,7 @@ void loop_preparation(
     mw_yee->template initB<degmw>(BxEval, ByEval, BzEval, infra);
 
     loop_staggering<vdim, numspec, degx, degy, degz, degmw, ndata, output, edim, bdim>(
-        meanVelocity, infra, mw_yee, part_gr, diagn, time_staggered);
+        meanVelocity, infra, mw_yee, part_gr, diagn, redDiagn, time_staggered);
 }
 }  // namespace Time_Loop
 }  // namespace Gempic

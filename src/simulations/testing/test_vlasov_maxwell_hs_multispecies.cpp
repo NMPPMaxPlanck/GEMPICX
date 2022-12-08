@@ -9,7 +9,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
@@ -102,6 +102,7 @@ void main_main()
         mw_yee.nsteps, VlMa.save_fields, VlMa.save_particles, VlMa.save_checkpoint, VlMa.sim_name,
         vol, ctest);
 
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw> redDiagn;
     //------------------------------------------------------------------------------
     // initialize particles & loop preparation:
     // FIRST SPECIES
@@ -121,7 +122,7 @@ void main_main()
     const int ndata = 1;
     const bool output = false;
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, ndata, output>(
-        VlMa, infra, &mw_yee, part_gr, &diagn, VlMa.time_staggered, VlMa.BxEval, VlMa.ByEval,
+        VlMa, infra, &mw_yee, part_gr, &diagn, &redDiagn, VlMa.time_staggered, VlMa.BxEval, VlMa.ByEval,
         VlMa.BzEval);
 
     //------------------------------------------------------------------------------
@@ -130,12 +131,12 @@ void main_main()
     {
         case 1:
             time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, true>(
-                infra, &mw_yee, part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies",
+                infra, &mw_yee, part_gr, &diagn, &redDiagn, ctest, "test_vlasov_maxwell_hs_multispecies",
                 strang_order);
             break;
         case 3:
             time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, true, false, true>(
-                infra, &mw_yee, part_gr, &diagn, ctest, "test_vlasov_maxwell_hs_multispecies",
+                infra, &mw_yee, part_gr, &diagn, &redDiagn, ctest, "test_vlasov_maxwell_hs_multispecies",
                 strang_order);
             break;
     }

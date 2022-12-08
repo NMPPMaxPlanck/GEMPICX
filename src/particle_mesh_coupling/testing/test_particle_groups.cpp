@@ -10,7 +10,7 @@
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_sampler.H>
 
 using namespace amrex;

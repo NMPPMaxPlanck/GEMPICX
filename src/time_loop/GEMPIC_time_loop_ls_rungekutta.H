@@ -18,8 +18,9 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_profiling.H>
+#include <MultiReducedDiags.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -302,8 +303,9 @@ public:
               bool electromagnetic = true>
     void time_loop(computational_domain infra, maxwell_yee<vdim> &mw_yee,
                    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr,
-                   diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn, bool ctest,
-                   std::string simulation_name, int strang_order)
+                   diagnostics<vdim, numspec, degx, degy, degz, degmw> *diagn,
+                   MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn,  
+                   bool ctest, std::string simulation_name, int strang_order)
     {
         timers profiling_timers(false);
 

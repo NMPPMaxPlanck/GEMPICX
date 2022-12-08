@@ -19,7 +19,7 @@
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 
 using namespace amrex;
 using namespace Gempic;

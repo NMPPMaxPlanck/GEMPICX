@@ -6,8 +6,8 @@ amrex.use_gpu_aware_mpi = 1
 amrex.abort_on_out_of_gpu_memory = 1
 
 # Grid parameters
-n_cell_vector = 128 128 128
-max_grid_size_vector = 128 128 128
+n_cell_vector = 32 32 32
+max_grid_size_vector = 32 32 32
 blocking_factor = 8 8 8  # in each dimension max_grid_size_vector must be divisible by blocking_factor
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 
@@ -51,3 +51,13 @@ tolerance_particles = 1.e-10
 restart = 0
 checkpoint_file = "Checkpoint/Test_Weibel_2_"
 curr_step = 4
+
+# Reduced Diagnostics
+gempic.reduced_diags_names = FieldElec FieldMag Mom Kin GaussErr
+gempic.save_reduced = 5
+
+FieldElec.type = ElecFieldEnergy
+FieldMag.type = MagFieldEnergy
+Mom.type = Momentum
+Kin.type = ParticleEnergy
+GaussErr.type = GaussError

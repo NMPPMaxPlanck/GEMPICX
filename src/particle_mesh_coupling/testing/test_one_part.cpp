@@ -9,11 +9,12 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
 #include <GEMPIC_time_loop_hs_zigzag_C2.H>
+#include <MultiReducedDiags.H>
 #include <GEMPIC_time_loop_ls_rungekutta.H>
 
 using namespace amrex;
@@ -144,29 +145,30 @@ void main_main(bool ctest)
                       (infra.geom.ProbHi(2) - infra.geom.ProbLo(2));
     diagnostics<vdim, numspec, degx, degy, degz, degmw> diagn(
         mw_yee.nsteps, save_fields, save_particles, save_checkpoint, sim_name, vol);
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> redDiagn;
     loop_preparation<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
-        VlMa, infra, &mw_yee, part_gr, &diagn, time_staggered, zero, zero, cosine);
+        VlMa, infra, &mw_yee, part_gr, &diagn, &redDiagn, time_staggered, zero, zero, cosine);
 
     amrex::PrintToFile("test_one_part.output") << std::endl;
     switch (propagator)
     {
         case 0:
             time_loop_boris_fd<vdim, numspec, degx, degy, degz, degmw, ndata, true, false>(
-                infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+                infra, &mw_yee, part_gr, &diagn, &redDiagn, ctest, "test_one_part", strang_order);
             break;
         case 1:
             time_loop_hs_fem<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
-                infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+                infra, &mw_yee, part_gr, &diagn, &redDiagn, ctest, "test_one_part", strang_order);
             break;
         case 3:
             time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degmw, ndata, true>(
-                infra, &mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+                infra, &mw_yee, part_gr, &diagn, &redDiagn, ctest, "test_one_part", strang_order);
             break;
         case 4:
         {
             ls_rungekutta<3, vdim, numspec> rk_prop(infra, mw_yee);
             rk_prop.template time_loop<degx, degy, degz, degmw, ndata, true>(
-                infra, mw_yee, part_gr, &diagn, ctest, "test_one_part", strang_order);
+                infra, mw_yee, part_gr, &diagn, &redDiagn, ctest, "test_one_part", strang_order);
             break;
         }
         default:
