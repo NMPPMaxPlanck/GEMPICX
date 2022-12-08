@@ -20,7 +20,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -36,8 +36,9 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int nd
 void time_loop_particles(
     computational_domain infra, maxwell_yee<vdim>* mw_yee,
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& part_gr,
-    diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn, bool ctest,
-    std::string simulation_name)
+    diagnostics<vdim, numspec, degx, degy, degz, degmw>* diagn, 
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degmw, ndata> *redDiagn, 
+    bool ctest, std::string simulation_name)
 {
     BL_PROFILE("time_loop_particles");
 
@@ -182,8 +183,9 @@ void time_loop_particles(
         }
 
         // save norms for diagnostics. At the end of the time step time = (t_step + 1) * dt
-        diagn->ComputeReducedDiag(t_step + 1, infra, mw_yee,
-                                  part_gr);  // false: slices are not saved
+        diagn->ComputeReducedDiag(t_step + 1, infra, mw_yee, part_gr);  // false: slices are not saved
+        redDiagn->ComputeDiags(t_step, infra, mw_yee, part_gr);
+        redDiagn->WriteToFile(t_step, mw_yee);
 
         // save temporary results every n steps
         if ((t_step + 1) % 5 == 0)

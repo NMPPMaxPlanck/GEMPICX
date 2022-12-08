@@ -13,7 +13,7 @@ GEMPIC_diagnostics.H
 --------------------
 Subsubchapter
 
-GEMPIC_particle_positions.H
+GEMPIC_PlotFile.H
 ---------------------------
 
 

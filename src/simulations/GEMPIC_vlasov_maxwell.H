@@ -11,7 +11,7 @@
 #include <GEMPIC_maxwell_yee.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_positions.H>
+#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_time_loop_boris_fd.H>
 #include <GEMPIC_time_loop_hs_fem.H>
@@ -19,6 +19,8 @@
 #include <GEMPIC_time_loop_hsall_fem.H>
 #include <GEMPIC_time_loop_ls_rungekutta.H>
 #include <GEMPIC_time_loop_particles.H>
+
+#include <MultiReducedDiags.H>
 
 using namespace amrex;
 using namespace Gempic;
@@ -48,6 +50,7 @@ public:
     maxwell_yee<vdim, int(vdim / 2.5) * 2 + 1> mw_yee;
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> part_gr;
     diagnostics<vdim, numspec, degx, degy, degz, degvm> diagn;
+    MultiReducedDiags<vdim, numspec, degx, degy, degz, degvm, ndata> redDiagn;
     bool readinfile = false;
     bool ctest = false;
 
@@ -84,6 +87,7 @@ public:
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
         diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles,
                      params.save_checkpoint, params.sim_name, vol, ctest);
+        redDiagn.InitData();
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
         init_particles_full_domain<vdim, numspec, ndata>(domain, part_gr, params.n_part_per_cell,
@@ -91,7 +95,7 @@ public:
                                                          params.vWeight[0], 0, wave_function);
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, ndata, output>(
-            params, domain, &mw_yee, part_gr, &diagn, params.time_staggered, funcSelectB);
+            params, domain, &mw_yee, part_gr, &diagn, &redDiagn, params.time_staggered, funcSelectB);
 
         // Print AMReX grid information and warn about resource usage
         if (ParallelDescriptor::IOProcessor())
@@ -141,6 +145,7 @@ public:
                           (domain.geom.ProbHi(2) - domain.geom.ProbLo(2));
         diagn.reinit(mw_yee.nsteps, params.save_fields, params.save_particles,
                      params.save_checkpoint, params.sim_name, vol, ctest);
+        redDiagn.InitData();
         //------------------------------------------------------------------------------
         // initialize particles & loop preparation:
         for (int s = 0; s < numspec; s++)
@@ -166,7 +171,7 @@ public:
         }
 
         loop_preparation<vdim, numspec, degx, degy, degz, degvm, ndata, output>(
-            params, domain, &mw_yee, part_gr, &diagn, params.time_staggered, params.BxEval,
+            params, domain, &mw_yee, part_gr, &diagn, &redDiagn, params.time_staggered, params.BxEval,
             params.ByEval, params.BzEval);
 
         // Print AMReX grid information and warn about resource usage
@@ -207,22 +212,21 @@ public:
         switch (params.propagator)
         {
             case 0:
-                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic,
-                                   true>(domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name,
-                                         params.strang_order);
+                time_loop_boris_fd<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic, false>(
+                    domain, &mw_yee, part_gr, &diagn, &redDiagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 1:
                 time_loop_hs_fem<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic>(
-                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                    domain, &mw_yee, part_gr, &diagn, &redDiagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 2:
                 time_loop_hsall_fem<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic>(
-                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                    domain, &mw_yee, part_gr, &diagn, &redDiagn, ctest, params.sim_name, params.strang_order);
                 break;
             case 3:
-                time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, ndata,
-                                       electromagnetic, true, output>(
-                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                time_loop_hs_zigzag_C2<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic,
+                                       false, output>(domain, &mw_yee, part_gr, &diagn, &redDiagn, ctest,
+                                                      params.sim_name, params.strang_order);
                 break;
             case 4:
             {
@@ -231,12 +235,12 @@ public:
                     'Runge-Kutta integrator needs extra data in the particle array.');
                 ls_rungekutta<3, vdim, numspec> rk_prop(domain, mw_yee);
                 rk_prop.template time_loop<degx, degy, degz, degvm, ndata, electromagnetic>(
-                    domain, mw_yee, part_gr, &diagn, ctest, params.sim_name, params.strang_order);
+                    domain, mw_yee, part_gr, &diagn, &redDiagn, ctest, params.sim_name, params.strang_order);
                 break;
             }
             case 100:
-                time_loop_particles<vdim, numspec, degx, degy, degz, degvm, ndata, electromagnetic>(
-                    domain, &mw_yee, part_gr, &diagn, ctest, params.sim_name);
+                 time_loop_particles<vdim, numspec, degx, degy, degz, degvm, ndata,
+                 electromagnetic>(domain, &mw_yee, part_gr, &diagn, &redDiagn, ctest, params.sim_name);
                 break;
             default:
                 break;
