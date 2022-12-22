@@ -1,3 +1,7 @@
+file(GLOB PARAMETERS "../../io/parameters/GEMPIC_Params.cpp")
+file(GLOB FDDERHAMCOMPLEX "../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../../forms/GEMPIC_extDerivatives.cpp")
+
 add_executable ( test_maxwell_yee test_maxwell_yee.cpp )
 add_executable ( test_maxwell_yee_order test_maxwell_yee_order.cpp )
 add_executable ( test_poisson_CG test_poisson_CG.cpp )
@@ -5,6 +9,7 @@ add_executable ( test_ihodge_CG test_ihodge_CG.cpp )
 add_executable ( test_ampere_faraday test_ampere_faraday.cpp )
 add_executable ( test_AMReX_atomic_add test_AMReX_atomic_add.cpp )
 add_executable ( test_constval test_constval.cpp )
+add_executable ( test_maxwell_solver ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} test_maxwell_solver.cpp )
 
 if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_maxwell_yee )
@@ -14,6 +19,7 @@ if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_ampere_faraday )
 	setup_target_for_cuda_compilation( test_AMReX_atomic_add )
 	setup_target_for_cuda_compilation( test_constval )
+    setup_target_for_cuda_compilation( test_maxwell_solver )
 endif()
 
 
@@ -24,12 +30,14 @@ target_link_libraries( test_ihodge_CG  AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_ampere_faraday  AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_AMReX_atomic_add  AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_constval AMReX::amrex AMReX::Flags_CXX )
+target_link_libraries( test_maxwell_solver AMReX::amrex AMReX::Flags_CXX )
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
 
 
 if (USE_CUDA)
   setup_target_for_cuda_compilation( test_constval )
+  setup_target_for_cuda_compilation( test_maxwell_solver )
 endif()
 
 if("${AMReX_SPACEDIM}" STREQUAL "3")
