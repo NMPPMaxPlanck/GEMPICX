@@ -1,9 +1,14 @@
+file(GLOB SOURCES "../GEMPIC_Params.cpp")
+
+add_executable( test_Parameters ${SOURCES} test_Parameters.cpp )
 add_executable ( test_parser test_parser.cpp )
 
 if (USE_CUDA) 
+	setup_target_for_cuda_compilation( test_Parameters )
 	setup_target_for_cuda_compilation( test_parser )
 endif()
 
+target_link_libraries( test_Parameters AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_parser AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 LIST(SORT _tests)
