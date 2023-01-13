@@ -1,0 +1,71 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\renewcommand{\Affilfont}{\footnotesize}
+%\renewcommand{\Authfont}{\normalsize}
+
+%\usepackage{algpseudocode}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\include{gempic_spectral_macros}
+
+\title{Tests}
+
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This note describes some conventions that should be followed in the GEMPIC code
+and its documentation.
+\end{abstract}
+
+\tableofcontents
+
+\section{Tests}
+
+\subsection{\verb|test_projection.cpp|}
+\subsection{\verb|test_projection_dual.cpp|}
+\subsection{\verb|test_projection_polynomial.cpp|}
+\subsection{\verb|test_curl_projection.cpp|}
+\subsection{\verb|test_hodge_degree2.cpp|}
+\subsection{\verb|test_hodge_degree4.cpp|}
+\subsection{\verb|test_hodge_degree6.cpp|}
+\subsection{\verb|test_plus_minus_mult.cpp|}
+
+\end{document}

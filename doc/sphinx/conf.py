@@ -19,8 +19,18 @@ sys.path.insert(-1, os.path.abspath('..'))
 from sphinx.builders.html import StandaloneHTMLBuilder
 import subprocess, os
 
+def configureDoxyfile(input_dir, output_dir):
+    with open('Doxyfile.in', 'r') as file :
+        filedata = file.read()
+
+    filedata = filedata.replace('./../../src', input_dir)
+    filedata = filedata.replace('_build', output_dir)
+
+    with open('Doxyfile', 'w') as file:
+        file.write(filedata)
+
 # Doxygen
-subprocess.call('doxygen ../doxygen/Doxyfile.in', shell=True)
+#subprocess.call('doxygen ../doxygen/Doxyfile.in', shell=True)
 
 # -- Project information -----------------------------------------------------
 
@@ -83,6 +93,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
+highlight_language = 'c++'
+
 # equations numbering
 mathjax3_config = {
    'TeX': { 
@@ -99,7 +111,7 @@ mathjax3_config = {
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -109,7 +121,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
@@ -205,7 +217,14 @@ epub_exclude_files = ['search.html']
 # breathe configuration. More here: https://breathe.readthedocs.io/en/latest/quickstart.html
 # And here: https://medium.com/practical-coding/c-documentation-with-doxygen-cmake-sphinx-breathe-for-those-of-use-who-are-totally-lost-part-2-21f4fb1abd9f
 #sys.path.append( "home/bdealbuq/.local/lib/python3.8/site-packages/breathe/" )
-breathe_projects = { "gempic": "xml/"}
+breathe_projects = { "gempic": "../doxygen/xml/"}
+#breathe_projects = {}
 breathe_default_project = "gempic"
 breathe_default_members = ('members', 'undoc-members')
-breathe_implementation_filename_extensions = ['.cpp', '.H']
+breathe_implementation_filename_extensions = ['.cpp', '.H', '.h']
+if read_the_docs_build:
+    input_dir = '../../src'
+    output_dir = '_build'
+    configureDoxyfile(input_dir, output_dir)
+    subprocess.call('doxygen', shell=True)
+    breathe_projects['gempic'] = output_dir + '/xml'
