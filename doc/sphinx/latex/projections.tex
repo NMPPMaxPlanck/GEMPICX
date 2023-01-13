@@ -1,0 +1,118 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\renewcommand{\Affilfont}{\footnotesize}
+%\renewcommand{\Authfont}{\normalsize}
+
+%\usepackage{algpseudocode}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\include{gempic_spectral_macros}
+
+\title{Projections}
+
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This note describes some conventions that should be followed in the GEMPIC code
+and its documentation.
+\end{abstract}
+
+\tableofcontents
+
+\section{Projections}
+With the projection operators we map the infinite-dimensional function spaces to the finite-dimensional ones corresponding to the degrees of freedom. A projection to an 1-form solves line integrals for the degrees of freedom corresponding to the edges of the grid, for a 2-form the projection solves face integrals corresponding to the faces of the grid. The Gauss-Quadrature algorithm approximates the integral: 
+
+\begin{equation}
+    \int_ a ^ b W(x) f(x) dx \approx \sum_{j=0}^{N-1} w_j f(q_j)
+\end{equation}
+
+Where $W(x)$ is a known function that can be chosen arbitrarily to fit the problem, $N$ is the number of abscissas $q_j$ in the interval $\left[a, b\right]$, and $w_j$ are the weights we assign to each abscissa in which $f$ is evaluated.
+
+The advantage of Gaussian quadratures is the possibility of choosing the weighting coefficients and the location of the abscissas at which the function is to be evaluated. Thus, we are able to integrate high order functions with higher accuracy (if the integrand is smooth and can be approximated well by a polynomial, such as periodic functions and waves).
+
+\subsection{Projection to 1-form}
+We solve line integrals for the different degrees of freedom that correspond to the edges of the grid:
+
+\begin{equation}
+    f_{I,x}^1(i, j, k) = \int _{i} ^ {i+1} f_x (x, y_j, z_k) dx
+\end{equation}
+
+\begin{equation}
+    f_{I,y}^1(i, j, k) = \int _{j} ^ {j+1} f_y (x_i, y, z_k) dy
+\end{equation}
+
+\begin{equation}
+    f_{I,z}^1(i, j, k) = \int _{k} ^ {k+1} f_z (x_i, y_j, z) dz
+\end{equation}
+
+
+The following steps are used in order to implement the Gauss quadrature:
+
+\begin{itemize}
+    \item Initialize the abscissas (from -1 to 1) and the weights
+    \item Calculate component-wise the location of each point in the grid $\bfr = \{ r_{0,x} + idx, r_{0,y} + jdy, r_{0,z} + kdz \}$, being $\bfr_0$ the reference point and $i, j, k$ the indexes of the point in the grid (we need to take into account the centeredness of the grid, for the dual grid we need to shift the point by half).
+    \item Calculate the midpoint of the quadratule rule after having the position of the point in the grid: $\bfr_{comp,mid} = \bfr + \frac{d\bfr_{comp}}{2}$
+    \item Compute the integral along the direction of the component in two steps looping over the $N$ abscissas, which we denominate here by $q_l$ being l and index from $1$ to $N$:
+        \begin{enumerate}
+        \item location of the quadrature point: $\bfr_{comp} = \bfr_{comp, mid} + q_l \frac{d\bfr_{comp}}{2}$
+        \item Increment the integral according to the quadrature rule: $integral += w_l f(r_x, r_y, r_z, t)$
+        \end{enumerate}
+    \item Re-scale the integral and assign it to the degrees of freedom: $f_{comp}^1(i, j, k) = integral * \frac{d\bfr_{comp}}{2}$
+\end{itemize}
+
+\subsection{Projection to 2-form}
+The degrees of freedom are the faces of the grid. Therefore, face integrals have to be solved:
+
+\begin{equation}
+    f_{I,x}^2(i, j, k) = \int _{j} ^ {j+1} \int _{k} ^ {k+1} f_x (x_i, y, z) dy dz
+\end{equation}
+
+\begin{equation}
+    f_{I,y}^2(i, j, k) = \int _{i} ^ {i+1} \int _{k} ^ {k+1} f_y (x, y_j, z) dx dz
+\end{equation}
+
+\begin{equation}
+    f_{I,z}^2(i, j, k) = \int _{i} ^ {i+1} \int _{j} ^ {j+1} f_z (x, y, z_k) dx dy
+\end{equation}
+
+The implementation of the Gauss quadrature is similar to the one used for the 1-form. Although, there are two midpoints (one for each direction integrated) and two integrals.
+
+\end{document}

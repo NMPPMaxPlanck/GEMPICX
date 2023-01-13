@@ -20,3 +20,6 @@ help:
 
 latex-conversion:
 	cd latex; make
+
+clean:
+	rm -r _build/ ../doxygen/xml

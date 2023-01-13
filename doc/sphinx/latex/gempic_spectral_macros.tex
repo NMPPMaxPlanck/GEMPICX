@@ -99,6 +99,11 @@
 % macro for testing fields
 \newcommand{\test}[1]{\check{#1}}
 
+% macro for subitemizing
+\newcommand{\SubItem}[1]{
+    {\setlength\itemindent{15pt} \item[-] #1}
+}
+
 
 % blackboard fonts (eg for number sets)
 % \mathbbm, \mathbbmss or \mathbbmtt with \usepackage{bbm}
@@ -233,8 +238,11 @@
 
 \newcommand\bfa{\mathbf{a}}
 \newcommand\bfe{\mathbf{e}}
+\newcommand\bff{\mathbf{f}}
 \newcommand\bfq{\mathbf{q}}
 \newcommand\bfg{\mathbf{g}}
+\newcommand\bfl{\mathbf{l}}
+\newcommand\bfr{\mathbf{r}}
 \newcommand\bfv{\mathbf{v}}
 \newcommand\bfw{\mathbf{w}}
 \newcommand\bfx{\mathbf{x}}
@@ -248,6 +256,7 @@
 \newcommand\bfE{\mathbf{E}}
 \newcommand\bfJ{\mathbf{J}}
 \newcommand\bfK{\mathbf{K}}
+\newcommand\bfS{\mathbf{S}}
 \newcommand\bfU{\mathbf{U}}
 \newcommand\bfV{\mathbf{V}}
 \newcommand\bfW{\mathbf{W}}

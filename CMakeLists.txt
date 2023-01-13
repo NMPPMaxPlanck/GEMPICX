@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 14)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Name of the project
-project(gempic)
+project("gempic")
 
 option(USE_CUDA "Use CUDA" OFF)
 option(USE_OMP "Use OpenMP" OFF)
