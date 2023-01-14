@@ -98,8 +98,9 @@ pages:
   only:
     - master
   script:
-    - doxygen doc/doxygen/Doxyfile.in
-    - cd doc/sphinx
+    - cd doc/doxygen
+    - doxygen Doxyfile.in
+    - cd ../sphinx
     - make latex-conversion
     - make html
     - mv _build/html/ ../../public/
