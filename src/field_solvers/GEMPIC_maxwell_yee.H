@@ -1466,10 +1466,16 @@ public:
         hodge<degree, 0>(ifr, (dimension == 0 ? 0 : 1), x, r, *E_Index[dimension]);
         hodge<degree, 1>(ifr, (dimension == 1 ? 0 : 1), r, tmp, *E_Index[dimension]);
         hodge<degree, 2>(ifr, (dimension == 2 ? 0 : 1), tmp, r, *E_Index[dimension]);
+
+        // Modification of the CG algorithm for the matrix A with non-zero kernel
+        // k is the kernel of the matrix A, kern_factor projects the residual on the normalized
+        // kernel
         kern_factor = amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, r, 0, Ncomp, Nghost) /
                       amrex::MultiFab::Dot(*E_Masks[dimension], k, 0, k, 0, Ncomp, Nghost);
         amrex::MultiFab::Copy(k_scaled, k, 0, 0, Ncomp, Nghost);
+        // k_scaled scales the kernel by kern_factor
         k_scaled.mult(kern_factor, 0, Ncomp, Nghost);
+        // It subtracts the part of the residual that is in the kernel of A
         r.plus(k_scaled, 0, Ncomp, Nghost);
 
         // r = b-A*x
