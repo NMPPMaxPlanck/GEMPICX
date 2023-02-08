@@ -1,4 +1,4 @@
-RST_FILES = deRham_diagrams.rst exteriorDerivatives.rst projections.rst hodge.rst tests.rst
+RST_FILES = deRham_diagrams.rst exteriorDerivatives.rst projections.rst hodge.rst tests.rst code_units.rst
 
 %.rst: %.tex
 	pandoc $< --mathjax --wrap=preserve --bibliography spectral_gempic.bib --citeproc -o $@
