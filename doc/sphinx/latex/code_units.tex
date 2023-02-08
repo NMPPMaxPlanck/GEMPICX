@@ -1,0 +1,125 @@
+\documentclass[english]{article}
+
+\usepackage{amssymb,amsmath,amsfonts,amstext,amsthm}
+\usepackage{bbm}
+\newcommand{\bx}{\textbf{x}}
+\newcommand{\bv}{\textbf{v}}
+\newcommand{\bB}{\textbf{B}}
+\newcommand{\bE}{\textbf{E}}
+\newcommand{\bJ}{\textbf{J}}
+\newcommand{\du}{\,\mathrm{d}}
+
+\newcommand{\nr}{n_{\mathrm{ref}}}
+\newcommand{\qr}{q_{\mathrm{ref}}}
+\newcommand{\Tr}{T_{\mathrm{ref}}}
+\newcommand{\mr}{m_{\mathrm{ref}}}
+\newcommand{\Br}{B_{\mathrm{ref}}}
+\newcommand{\betar}{\beta_{\mathrm{ref}}}
+\newcommand{\Lr}{L_{\mathrm{ref}}}
+\newcommand{\vr}{v_{\mathrm{ref}}}
+\newcommand{\omr}{\omega_{\mathrm{ref}}}
+\newcommand{\rhor}{\rho_{\mathrm{ref}}}
+\newcommand{\epsr}{\varepsilon_{\mathrm{ref}}}
+
+\newcommand{\phiht}{\hat{\phi}}
+\newcommand{\psigaht}{\hat{\psiga}}
+\newcommand{\Apht}{\hat A_{\parallel}}
+\newcommand{\Tsht}{\hat{T_{s}}}
+\newcommand{\fht}{\hat{f}}
+\newcommand{\qht}{\hat{q}}
+\newcommand{\mht}{\hat{m}}
+\newcommand{\Eht}{\hat{\bE}}
+\newcommand{\Bht}{\hat{\bE}}
+\newcommand{\rhoht}{\hat{\rho}}
+\newcommand{\jht}{\hat{\bJ}}
+\newcommand{\fsht}{\hat{f_s}}
+\newcommand{\tht}{\hat{t}}
+\newcommand{\xht}{\hat{\bx}}
+\newcommand{\vht}{\hat{\bv}}
+\newcommand{\muht}{\hat{\mu}}
+\newcommand{\vpht}{\hat{\vp}}
+
+\title{Code units in GEMPIC}
+
+\author{Katharina Kormann}
+
+\begin{document}
+
+\maketitle
+
+Vlasov equation for the distribution function of s particle species $s$ reads in SI units
+\begin{equation}\label{Vlasov}
+\partial_t f_s + \bv \cdot \nabla_{\bx} f_s + \frac{q_s}{m_s} \left( \bE + \bv \times \bB \right) \cdot \nabla_{\bv} f_s = 0
+\end{equation}
+and Maxwell's equations
+\begin{subequations}
+\begin{align}
+\label{ampere}
+\nabla \times \bE &= - \frac{\partial \bB}{\partial t}, \\
+\label{electric_gauss}
+\nabla \times \bB &= \mu_0 \left( \bJ + \varepsilon_0 \frac{\partial \bE}{\partial t} \right), \\
+\label{faraday}
+\nabla \cdot \bE &= \frac{\rho}{\varepsilon_0},\\
+\label{magnetic_gauss}
+\nabla \cdot \bB &= 0.
+\end{align}
+\end{subequations}
+The source terms of the Maxwell's equation are given by the velocity moments of the distribution function: the charge density
+\begin{align*}
+\rho= \sum_s q \int f_s \du\bv
+\end{align*}
+and the current density
+\begin{align*}
+\bJ =\sum_s q\int \bv f_s \du\bv.
+\end{align*}
+The total energy of the system is given by the Hamiltonian in SI units, 
+\begin{align}\label{hamiltonian}
+\mathcal{H}=\sum_s\frac{m_s}{2}\int |\bv|^2 f_s \du\bx \du\bv + \frac{\varepsilon_0}{2} \int \|\bE\|^2 \du\bx + \frac{1}{2\mu_0} \int \|\bB\|^2 \du\bx.
+\end{align}
+
+In the code, we use a normalization that prescribes the following reference values:
+\begin{itemize}
+	\item $\nr$, $\mr$, $\qr$ 
+	\item two out of  $\omr$, $\Lr$, $\vr$. 
+\end{itemize}
+There is the following relation between the reference quanties:
+\begin{itemize}
+\item The reference velocity $\vr = \sqrt{\frac{\Tr k_B}{\mr}}$,
+\item The  reference length or frequency $\Lr = \frac{\vr}{\omr}, \omr = \frac{\vr}{\Lr}$,
+\item The reference epsilon $\epsr = \frac{\qr^2\nr}{\omr^2\mr}$,
+\item The reference beta $\betar = \mu_0 \varepsilon_0 \vr^2$.
+\end{itemize}
+
+
+There are two common choices:
+\begin{itemize}
+	\item $\omega_{c,i}$ (gyrofrequency), $d_i$, $v_{A,i}$ (Alfven velocity), $\betar = \beta_i$ (plasma beta)
+	\item $\omega_{p,i}$ (plasma frequency), $d_i$ ($d_i$ ion inertial length), $c$, $\epsr = \varepsilon_0$
+\end{itemize}
+
+
+The dimensionless Vlasov--Maxwell system takes the following form: 
+\begin{align*}
+\partial_{\tht} \fsht + \vht \cdot \nabla_{\xht} \fsht + \frac{\qht}{\mht} \left( \Eht + \vht \times \Bht \right) \cdot \nabla_{\vht} \fsht &= 0,
+\end{align*}
+
+\begin{align*}
+\frac{\partial \Bht}{\partial \tht}&=-\nabla_{\xht} \times \Eht,   &\nabla_{\xht}  \cdot \Eht &= \frac{\epsr}{\varepsilon_0}\rhoht,
+\\ 
+\frac{\partial \Eht}{\partial \tht} &=\frac{1}{\betar }\nabla_{\xht} \times \Bht -\frac{\epsr}{\varepsilon_0 } \jht, 
+&\nabla_{\xht} \cdot \Bht  &= 0 
+\end{align*}
+
+with the source terms
+\begin{align*}
+\rhoht= \sum_s  \hat q_{s} \int  \fsht \du\vht,  \quad  \jht=\sum_s \hat q_{s}  \int \vht \fsht \du\vht.
+\end{align*}
+
+
+The dimensionless Hamiltonian takes the following form:
+\begin{align*}
+\hat{\mathcal{H}}= \sum_s \frac{\mht_s}{2}\int  |\vht|^2  \fsht \du\xht \du\vht + \frac{\varepsilon_0 }{\epsr}\frac{1}{2} \int  \|\Eht \|^2 \du\xht  + \frac{1}{\mu \epsr \vr^2 } \frac{1}{2} \int \|\Bht \|^2 \du\xht.
+\end{align*}
+
+
+\end{document}
