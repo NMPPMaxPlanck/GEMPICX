@@ -95,7 +95,7 @@ int main (int argc, char *argv[])
             amrex::Array4<amrex::Real> const &analyticalMF = (integral.data[comp])[mfi].array();
             amrex::Array4<amrex::Real> const &errorMF = (errorH.data[comp])[mfi].array();
 
-            // Pseudo-L2 norm because values at the boundaries are set to zero artificially in order to avoid problems
+            // Values at the boundaries are set to zero artificially in order to avoid problems
             // with the Boundary Conditions
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
@@ -203,7 +203,7 @@ int main (int argc, char *argv[])
             amrex::Array4<amrex::Real> const &analyticalMF = (faceIntegral.data[comp])[mfi].array();
             amrex::Array4<amrex::Real> const &errorMF = (errorD.data[comp])[mfi].array();
 
-            // Pseudo-L2 norm because values at the boundaries are set to zero artificially in order to avoid problems
+            // Values at the boundaries are set to zero artificially in order to avoid problems
             // with the Boundary Conditions
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
