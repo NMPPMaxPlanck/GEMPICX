@@ -36,22 +36,23 @@ enum Space
 };
 
 class DeRhamComplex;
-/** @brief Structure DeRhamField
- * Stores a specific element of a deRham complex
- * @p g: primal or dual grid
- * @p elementType: Space::node, Space::edge,Space::face or Space::cell.
- * elementType is defined on primal grid:
- * e.g. DeRhamField<dual, node> is the cell based complex dual to DeRhamField<primal, node>
- * In 1D only Space::node and Space::cell exist.
- * In 2D there are 4 complexes because of the two different deRham sequences
- * For node and cell only scalarData will be allocated, for edge and face only vector data
- */
+/// DeRhamField
+///
+/// Stores a specific element of a deRham complex
+///
+/// @p gridType: Grid::primal or Grid::dual grid
+///
+/// @p spaceType: Space::node, Space::edge, Space::face or Space::cell.
+///
+/// spaceType is defined on primal grid:
+/// e.g. DeRhamField<dual, node> is the cell based complex dual to DeRhamField<primal, node>
+///
+/// In 1D only Space::node and Space::cell exist.
+///
+/// In 2D there are 4 complexes because of the two different deRham sequences
+///
+/// For node and cell only scalarData will be allocated, for edge and face only vector data
 
-/**
- * @brief Partial template specializations for different datatypes accoding to DeRham diagram.
- *
- *
- */
 template <int grid, int space>
 struct DeRhamField
 {
@@ -92,15 +93,18 @@ struct DeRhamField <grid, Space::cell>
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
     void fillBoundary();
+    void averageSync();
     void multEqual(const amrex::Real& dt);
 };
 
 /**
- * @brief Base class for discrete de Rham Complexes
+ * @brief Base class for discrete de Rham Complexes. The member functions with the `inline` specifier implement the methods of the elements of the Complex (the functions of the fields). 
+ * The projections are virtual functions, whose details are implemented in the inherited subclasses.
  *
  */
 class DeRhamComplex
 {
+
 private:
     // Computational grid
     amrex::RealBox realBox;
@@ -136,6 +140,8 @@ private:
 #endif
 
 public:
+    /// Constructor for the DeRhamComplex class
+    /// @param params The parameters needed to construct the class correctly
     DeRhamComplex(Parameters params)
     {
         realBox = params.realBox();
@@ -191,7 +197,7 @@ public:
         faceMask[0].define(amrex::convert(grid, primalFaceIndex[0]), distriMap, nComp, nGhost[0]);
         faceMask[1].define(amrex::convert(grid, primalFaceIndex[1]), distriMap, nComp, nGhost[1]);
         faceMask[2].define(amrex::convert(grid, primalFaceIndex[2]), distriMap, nComp, nGhost[2]);
-        cellMask.define(amrex::convert(grid, primalCellIndex), distriMap, nComp, nGhost[0]); 
+        cellMask.define(amrex::convert(grid, primalCellIndex), deistriMap, nComp, nGhost[0]); 
 
         for (int comp = 0; comp < 3; ++comp)
         {
@@ -252,7 +258,7 @@ public:
 
     virtual ~DeRhamComplex() {}
 
-    // Getter for the number of ghost cells
+    /// Getter for the number of ghost cells
     const amrex::Array<int, GEMPIC_SPACEDIM>& getNGhost() const
     {
         return nGhost;
@@ -403,6 +409,20 @@ public:
     }
 
 
+    void fillBoundary(DeRhamField<Grid::dual, Space::node>& field)
+    {
+#if GEMPIC_SPACEDIM == 3
+        field.data.FillBoundary(geom.periodicity());
+#endif
+    }
+
+
+    void fillBoundary(DeRhamField<Grid::dual, Space::cell>& field)
+    {
+#if GEMPIC_SPACEDIM == 3
+        field.data.FillBoundary(geom.periodicity());
+#endif
+    }
     /*
     // Function overloads for overridesync
     void overrideSync(DeRhamField<primal, Space::edge>& field)
@@ -511,6 +531,15 @@ public:
 #endif
     }
 
+
+    void averageSync(DeRhamField<dual, Space::cell>& field)
+    {
+#if GEMPIC_SPACEDIM == 3
+        field.data.AverageSync(geom.periodicity());
+#endif
+    }
+
+
 //---------------------
 // exterior derivatives
 //---------------------
@@ -535,8 +564,8 @@ public:
                             DeRhamField<primal, Space::face>&);
     void div(const DeRhamField<primal, Space::face>&,
                             DeRhamField<primal, Space::cell>&);
-    void grad(const DeRhamField<dual, Space::cell>&,
-                            DeRhamField<dual, Space::face>&);
+    void grad(const DeRhamField<dual, Space::node>&,
+                            DeRhamField<dual, Space::edge>&);
     void curl(const DeRhamField<dual, Space::face>&,
                             DeRhamField<dual, Space::node>&);
 #endif
@@ -547,35 +576,35 @@ public:
                             DeRhamField<primal, Space::face>&);
     void div(const DeRhamField<primal, Space::face>&,
                             DeRhamField<primal, Space::cell>&);
-    void grad(const DeRhamField<dual, Space::cell>&,
-                            DeRhamField<dual, Space::face>&);
+    void grad(const DeRhamField<dual, Space::node>&,
+                            DeRhamField<dual, Space::edge>&);
     void curl(const DeRhamField<dual, Space::edge>&,
                             DeRhamField<dual, Space::face>&);
-    void div(const DeRhamField<dual, Space::edge>&,
-                            DeRhamField<dual, Space::node>&);
+    void div(const DeRhamField<dual, Space::face>&,
+                            DeRhamField<dual, Space::cell>&);
 #endif
 
     //------------
     // Projections
     //------------
     
-    virtual void projection(amrex::ParserExecutor<4> parserEval, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
                     DeRhamField<primal, Space::node>&) = 0;
-    virtual void projection(amrex::ParserExecutor<4> parserEval, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
                     DeRhamField<primal, Space::cell>&) = 0;
-    virtual void projection(amrex::ParserExecutor<4> parserEval, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
                     DeRhamField<dual, Space::node>&) = 0;
-    virtual void projection(amrex::ParserExecutor<4> parserEval, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
                     DeRhamField<dual, Space::cell>&) = 0;
                     
 #if GEMPIC_SPACEDIM > 1
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> parserEval,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
                     amrex::Real t, DeRhamField<dual, Space::edge>&) = 0;
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> parserEval,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
                     amrex::Real t, DeRhamField<primal, Space::face>&) = 0;
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> parserEval,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
                     amrex::Real t, DeRhamField<primal, Space::edge>&) = 0;
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> parserEval,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
                     amrex::Real t, DeRhamField<dual, Space::face>&) = 0;
                     
 #endif
@@ -665,6 +694,12 @@ inline void DeRhamField<grid, Space::node>::averageSync()
     deRham -> averageSync(*this);
 }
 
+template <int grid>
+inline void DeRhamField<grid, Space::cell>::averageSync()
+{
+    deRham -> averageSync(*this);
+}
+
 // Multiply by scalar
 template <int grid, int space>
 inline void DeRhamField<grid, space>::multEqual(const amrex::Real& dt)
@@ -726,6 +761,7 @@ inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
 }
 
 }  
+
 
 // namespace GEMPIC_Fields
 
