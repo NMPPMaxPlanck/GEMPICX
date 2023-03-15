@@ -29,6 +29,7 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
                             - oneForm1(i, j, k + 1) + oneForm1(i, j, k); 
        });
    }
+   twoForm.data[0].AverageSync(geom.periodicity());
    (twoForm.data[0]).FillBoundary_nowait(geom.periodicity());
 
 
@@ -47,6 +48,7 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
           
        });
    }
+   twoForm.data[1].AverageSync(geom.periodicity());
    (twoForm.data[1]).FillBoundary_nowait(geom.periodicity());
 
 
@@ -64,6 +66,7 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
                             - oneForm0(i, j + 1, k) + oneForm0(i, j, k); 
        });
    }
+   twoForm.data[2].AverageSync(geom.periodicity());
    (twoForm.data[2]).FillBoundary_nowait(geom.periodicity());
 
    // Wait for completed communication of guard data
@@ -81,18 +84,17 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
    {
        const amrex::Box &bx = mfi.validbox();
 
-       const auto lo = lbound(bx);
-       const auto hi = ubound(bx);
-
        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.data[0])[mfi].array();
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
        amrex::Array4<amrex::Real const> const &oneForm2 = (oneForm.data[2])[mfi].const_array();
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = oneForm2(i, j == hi.y ? lo.y : j, k) - oneForm2(i, j == lo.y ? (hi.y - 1) : (j - 1), k) 
-                            - oneForm1(i, j, k == hi.z ? lo.z : k) + oneForm1(i, j, k == lo.z ? (hi.z - 1) : (k - 1)); 
+          twoForm0(i, j, k) = oneForm2(i, j, k) - oneForm2(i, j - 1, k) 
+                            - oneForm1(i, j, k) + oneForm1(i, j, k - 1); 
        });
    }
+
+   twoForm.data[0].AverageSync(geom.periodicity());
    (twoForm.data[0]).FillBoundary_nowait(geom.periodicity());
 
 
@@ -101,19 +103,18 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
    {
        const amrex::Box &bx = mfi.validbox();
 
-       const auto lo = lbound(bx);
-       const auto hi = ubound(bx);
-
        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.data[1])[mfi].array();
        amrex::Array4<amrex::Real const> const &oneForm2 = (oneForm.data[2])[mfi].const_array();
        amrex::Array4<amrex::Real const> const &oneForm0 = (oneForm.data[0])[mfi].const_array();
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm1(i, j, k) = oneForm0(i, j, k == hi.z ? lo.z : k) - oneForm0(i, j, k == lo.z ? (hi.z - 1) : (k - 1))
-                            - oneForm2(i == hi.x ? lo.x : i, j, k) + oneForm2(i == lo.x ? (hi.x - 1) : (i - 1), j, k); 
+          twoForm1(i, j, k) = oneForm0(i, j, k) - oneForm0(i, j, k - 1)
+                            - oneForm2(i, j, k) + oneForm2(i - 1, j, k); 
           
        });
    }
+
+   twoForm.data[1].AverageSync(geom.periodicity());
    (twoForm.data[1]).FillBoundary_nowait(geom.periodicity());
 
 
@@ -122,19 +123,18 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
    {
        const amrex::Box &bx = mfi.validbox();
 
-       const auto lo = lbound(bx);
-       const auto hi = ubound(bx);
-
        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.data[2])[mfi].array();
        amrex::Array4<amrex::Real const> const &oneForm0 = (oneForm.data[0])[mfi].const_array();
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
-       // Minding the centeredness of oneForm1 and oneForm0, use ternary operators to set boundary conditions
+
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm2(i, j, k) = oneForm1(i == hi.x ? lo.x : i, j, k) - oneForm1(i == lo.x ? (hi.x - 1) : i - 1, j, k) 
-                            - oneForm0(i, j == hi.y ? lo.y : j, k) + oneForm0(i, j == lo.y ? (hi.y - 1) : j - 1, k); 
+          twoForm2(i, j, k) = oneForm1(i, j, k) - oneForm1(i - 1, j, k) 
+                            - oneForm0(i, j, k) + oneForm0(i, j - 1, k); 
        });
    }
+
+   twoForm.data[2].AverageSync(geom.periodicity());
    (twoForm.data[2]).FillBoundary_nowait(geom.periodicity());
 
    // Wait for completed communication of guard data
@@ -152,8 +152,6 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
         for (amrex::MFIter mfi(oneForm.data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            const auto lo = lbound(bx);
-            const auto hi = ubound(bx);
 
             amrex::Array4<amrex::Real const> const &zeroFormMF = (zeroForm.data)[mfi].const_array();
             amrex::Array4<amrex::Real> const &oneFormMF = (oneForm.data[comp])[mfi].array();
@@ -165,7 +163,6 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                 {
                     oneFormMF(i, j, k) = zeroFormMF(i + 1, j, k) - zeroFormMF(i, j, k);
                 });
-                (oneForm.data[0]).FillBoundary_nowait(geom.periodicity());
             }
 
             if (comp == 1)
@@ -174,7 +171,6 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                 {
                     oneFormMF(i, j, k) = zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k);
                 });
-                (oneForm.data[1]).FillBoundary_nowait(geom.periodicity());
             }
             
             if (comp == 2)
@@ -183,9 +179,10 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                 {
                     oneFormMF(i, j, k) = zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k);
                 });
-                (oneForm.data[2]).FillBoundary_nowait(geom.periodicity());
             }
         }
+        oneForm.data[comp].AverageSync(geom.periodicity());
+        (oneForm.data[comp]).FillBoundary_nowait(geom.periodicity());
     }
     (oneForm.data[0]).FillBoundary_finish();
     (oneForm.data[1]).FillBoundary_finish();
@@ -201,8 +198,6 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
         for (amrex::MFIter mfi(oneForm.data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            const auto lo = lbound(bx);
-            const auto hi = ubound(bx);
 
             amrex::Array4<amrex::Real const> const &zeroFormMF = (zeroForm.data)[mfi].const_array();
             amrex::Array4<amrex::Real> const &oneFormMF = (oneForm.data[comp])[mfi].array();
@@ -212,29 +207,28 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i == hi.x ? lo.x : i, j, k) - zeroFormMF(i == lo.x ? (hi.x - 1) : (i - 1), j, k);
+                    oneFormMF(i, j, k) = zeroFormMF(i, j, k) - zeroFormMF(i - 1, j, k);
                 });
-                (oneForm.data[0]).FillBoundary_nowait(geom.periodicity());
             }
 
             if (comp == 1)
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i, j == hi.y ? lo.y : j, k) - zeroFormMF(i, j == lo.y ? (hi.y - 1) : (j - 1), k);
+                    oneFormMF(i, j, k) = zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k);
                 });
-                (oneForm.data[1]).FillBoundary_nowait(geom.periodicity());
             }
             
             if (comp == 2)
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i, j, k == hi.z ? lo.z : k) - zeroFormMF(i, j, k == lo.z ? (hi.z - 1) : (k - 1));
+                    oneFormMF(i, j, k) = zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1);
                 });
-                (oneForm.data[2]).FillBoundary_nowait(geom.periodicity());
             }
         }
+        oneForm.data[comp].AverageSync(geom.periodicity());
+        (oneForm.data[comp]).FillBoundary_nowait(geom.periodicity());
     }
     
     (oneForm.data[0]).FillBoundary_finish();
@@ -249,8 +243,6 @@ void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
     for (amrex::MFIter mfi(threeForm.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
-        const auto lo = lbound(bx);
-        const auto hi = ubound(bx);
 
         amrex::Array4<amrex::Real const> const &twoFormMF0 = (twoForm.data[0])[mfi].const_array();
         amrex::Array4<amrex::Real const> const &twoFormMF1 = (twoForm.data[1])[mfi].const_array();
@@ -264,7 +256,7 @@ void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
                                  + (twoFormMF2(i, j, k + 1) - twoFormMF2(i, j, k));
         });
     }
-
+    threeForm.averageSync();
     threeForm.fillBoundary();
 }
 
@@ -275,8 +267,6 @@ void DeRhamComplex::div(const DeRhamField<dual, Space::face>& twoForm,
     for (amrex::MFIter mfi(threeForm.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
-        const auto lo = lbound(bx);
-        const auto hi = ubound(bx);
 
         amrex::Array4<amrex::Real const> const &twoFormMF0 = (twoForm.data[0])[mfi].const_array();
         amrex::Array4<amrex::Real const> const &twoFormMF1 = (twoForm.data[1])[mfi].const_array();
@@ -285,12 +275,12 @@ void DeRhamComplex::div(const DeRhamField<dual, Space::face>& twoForm,
         
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            threeFormMF(i, j, k) = (twoFormMF0(i == hi.x ? lo.x : i, j, k) - twoFormMF0(i == lo.x ? (hi.x - 1) : (i - 1), j, k))
-                                 + (twoFormMF1(i, j == hi.y ? lo.y : j, k) - twoFormMF1(i ,j == lo.y ? (hi.y - 1) : (j - 1), k))
-                                 + (twoFormMF2(i, j, k == hi.z ? lo.z : k) - twoFormMF2(i, j, k == lo.z ? (hi.z - 1) : (k - 1)));
+            threeFormMF(i, j, k) = (twoFormMF0(i, j, k) - twoFormMF0(i - 1, j, k))
+                                 + (twoFormMF1(i, j, k) - twoFormMF1(i, j - 1, k))
+                                 + (twoFormMF2(i, j, k) - twoFormMF2(i, j, k - 1));
 
         });
     }
-    
+    threeForm.averageSync();
     threeForm.fillBoundary();
 }
