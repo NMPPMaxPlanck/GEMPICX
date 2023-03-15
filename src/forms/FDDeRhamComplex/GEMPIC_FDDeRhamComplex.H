@@ -99,8 +99,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
 
-            zeroForm.fillBoundary();
-
             for (amrex::MFIter mfi(zeroForm.data); mfi.isValid(); ++mfi)
             {
                 amrex::Box bx = mfi.validbox();
@@ -156,6 +154,8 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             
             zeroForm.data.mult(1/(dr[0]*dr[1]*dr[2]));
 
+            zeroForm.averageSync();
+            zeroForm.fillBoundary();
         }
 
 
@@ -199,8 +199,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
-
-            zeroForm.fillBoundary();
 
             for (amrex::MFIter mfi(zeroForm.data); mfi.isValid(); ++mfi)
             {
@@ -256,7 +254,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             }
             
             zeroForm.data.mult(1/(dr[0]*dr[1]*dr[2]));
-
+            
+            zeroForm.averageSync();
+            zeroForm.fillBoundary();
         }
 
         // Hodge_1 primal and dual
@@ -300,8 +300,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
-
-            oneForm.fillBoundary();
 
             for (int comp = 0; comp < 3; ++comp)
             {
@@ -375,7 +373,8 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                     oneForm.data[comp].mult(dr[2]/(dr[0]*dr[1]));
             }
 
-
+            oneForm.averageSync();
+            oneForm.fillBoundary();
         }
 
         
@@ -419,8 +418,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
-
-            oneForm.fillBoundary();
 
             for (int comp = 0; comp < 3; ++comp)
             {
@@ -490,7 +487,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                 if(comp == 2)
                     oneForm.data[comp].mult(dr[2]/(dr[0]*dr[1]));
             }
-            
+
+            oneForm.averageSync();
+            oneForm.fillBoundary();
         }
 
 
@@ -536,8 +535,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
 
-            twoForm.fillBoundary();
-
             for (int comp = 0; comp < 3; ++comp)
             {
                 for (amrex::MFIter mfi(twoForm.data[comp]); mfi.isValid(); ++mfi)
@@ -610,7 +607,8 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                     twoForm.data[comp].mult((dr[0]*dr[1])/dr[2]);
             }
 
-
+            twoForm.averageSync();
+            twoForm.fillBoundary();
         }
 
 
@@ -655,8 +653,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
 
-            twoForm.fillBoundary();
-
             for (int comp = 0; comp < 3; ++comp)
             {
                 for (amrex::MFIter mfi(twoForm.data[comp]); mfi.isValid(); ++mfi)
@@ -729,7 +725,8 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                     twoForm.data[comp].mult((dr[0]*dr[1])/dr[2]);
             }
 
-
+            twoForm.averageSync();
+            twoForm.fillBoundary();
         }
 
 
@@ -774,8 +771,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
-
-            threeForm.fillBoundary();
 
             for (amrex::MFIter mfi(zeroForm.data); mfi.isValid(); ++mfi)
             {
@@ -832,6 +827,8 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             
             threeForm.data.mult(dr[0]*dr[1]*dr[2]);
 
+            threeForm.averageSync();
+            threeForm.fillBoundary();
         }
 
 
@@ -875,8 +872,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
             // Calculate box growth depending on the degree. bx.grow(direction, growth)
             //int boxGrow = degree/2 - 1;
-
-            threeForm.fillBoundary();
 
             for (amrex::MFIter mfi(zeroForm.data); mfi.isValid(); ++mfi)
             {
@@ -933,7 +928,10 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             
             threeForm.data.mult(dr[0]*dr[1]*dr[2]);
 
+            threeForm.averageSync();
+            threeForm.fillBoundary();
         }
+
 
 #endif
 

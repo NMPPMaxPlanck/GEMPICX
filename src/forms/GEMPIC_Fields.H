@@ -169,7 +169,7 @@ public:
         switch (m_hodgeDegree)
         {
             case 2:
-                nGhost = {0,0,0};
+                nGhost = {1,1,1}; // one ghost cell always needed for differential operators
                 break;
             case 4:
                 nGhost = {1,1,1};
@@ -267,7 +267,7 @@ public:
     void initializeField(DeRhamField<Grid::primal, Space::node>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data.define(amrex::convert(grid, primalNodeIndex) , distriMap, nComp, nGhost[0]);
 #endif
@@ -277,7 +277,7 @@ public:
     void initializeField(DeRhamField<Grid::primal, Space::edge>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data[0].define(amrex::convert(grid, primalEdgeIndex[0]) , distriMap, nComp, nGhost[0]);
         field.data[1].define(amrex::convert(grid, primalEdgeIndex[1]) , distriMap, nComp, nGhost[1]);
@@ -289,7 +289,7 @@ public:
     void initializeField(DeRhamField<Grid::primal, Space::face>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, nComp, nGhost[0]);
         field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, nComp, nGhost[1]);
@@ -300,7 +300,7 @@ public:
     void initializeField(DeRhamField<Grid::primal, Space::cell>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data.define(amrex::convert(grid, primalCellIndex) , distriMap, nComp, nGhost[0]);
 #endif
@@ -311,7 +311,7 @@ public:
     void initializeField(DeRhamField<Grid::dual, Space::node>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data.define(amrex::convert(grid, primalCellIndex) , distriMap, nComp, nGhost[0]);
 #endif
@@ -321,7 +321,7 @@ public:
     void initializeField(DeRhamField<Grid::dual, Space::edge>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, nComp, nGhost[0]);
         field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, nComp, nGhost[1]);
@@ -333,7 +333,7 @@ public:
     void initializeField(DeRhamField<Grid::dual, Space::face>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data[0].define(amrex::convert(grid, primalEdgeIndex[0]) , distriMap, nComp, nGhost[0]);
         field.data[1].define(amrex::convert(grid, primalEdgeIndex[1]) , distriMap, nComp, nGhost[1]);
@@ -344,7 +344,7 @@ public:
     void initializeField(DeRhamField<Grid::dual, Space::cell>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        const int nComp = 3;
+        const int nComp = 1;
 
         field.data.define(amrex::convert(grid, primalNodeIndex) , distriMap, nComp, nGhost[0]);
 #endif
@@ -704,25 +704,31 @@ inline void DeRhamField<grid, Space::cell>::averageSync()
 template <int grid, int space>
 inline void DeRhamField<grid, space>::multEqual(const amrex::Real& dt)
 {
-    std::for_each(data.begin(), data.end(), [dt](amrex::MultiFab& elem){ elem.mult(dt); });
+    auto nGhost = deRham -> getNGhost();
+    for (int comp = 0; comp < GEMPIC_SPACEDIM; ++comp)
+        data[comp].mult(dt, nGhost[0]);
 }
 
 template <int grid, int space>
 inline void DeRhamField<grid, space>::operator*=(const amrex::Real& dt)
 {
-    std::for_each(data.begin(), data.end(), [dt](amrex::MultiFab& elem){ elem.mult(dt); });
+    auto nGhost = deRham -> getNGhost();
+    for (int comp = 0; comp < GEMPIC_SPACEDIM; ++comp)
+        data[comp].mult(dt,nGhost[0]);
 }
 
 template <int grid>
 inline void DeRhamField<grid, Space::node>::multEqual(const amrex::Real& dt)
 {
-    data.mult(dt);
+    auto nGhost = deRham -> getNGhost();
+    data.mult(dt, nGhost[0]);
 }
 
 template <int grid>
 inline void DeRhamField<grid, Space::cell>::multEqual(const amrex::Real& dt)
 {
-    data.mult(dt);
+    auto nGhost = deRham -> getNGhost();
+    data.mult(dt, nGhost[0]);
 }
 
 // plusEqual
@@ -731,7 +737,7 @@ inline void DeRhamField<grid, space>::plusEqual(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).plus(form.data[comp], 0, 3, nGhost[comp]);
+        ((this) -> data[comp]).plus(form.data[comp], 0, 1, nGhost[comp]);
 }
 
 template <int grid, int space>
@@ -739,7 +745,7 @@ inline void DeRhamField<grid, space>::operator+=(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).plus(form.data[comp], 0, 3, nGhost[comp]);
+        ((this) -> data[comp]).plus(form.data[comp], 0, 1, nGhost[comp]);
 }
 
 
@@ -749,7 +755,7 @@ inline void DeRhamField<grid, space>::minusEqual(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).minus(form.data[comp], 0, 3, nGhost[comp]);
+        ((this) -> data[comp]).minus(form.data[comp], 0, 1, nGhost[comp]);
 }
 
 template <int grid, int space>
@@ -757,7 +763,7 @@ inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).minus(form.data[comp], 0, 3, nGhost[comp]);
+        ((this) -> data[comp]).minus(form.data[comp], 0, 1, nGhost[comp]);
 }
 
 }  

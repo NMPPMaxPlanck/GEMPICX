@@ -15,28 +15,28 @@ FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamCompl
     m_nGhost = params.degree()/2 - 1;
 
     // nghost is degree/2 - 1, 3 is the number of components of each MultiFab
-    m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 3, m_nGhost);
-    m_tempDualZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 3, m_nGhost);
+    m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempDualZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 1, m_nGhost);
 
-    m_tempPrimalOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 1))) , m_distriMap, 3, m_nGhost);
-    m_tempPrimalOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 1))) , m_distriMap, 3, m_nGhost);
-    m_tempPrimalOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 0))) , m_distriMap, 3, m_nGhost);
+    m_tempPrimalOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 0))) , m_distriMap, 1, m_nGhost);
 
-    m_tempDualOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 0))) , m_distriMap, 3, m_nGhost);
-    m_tempDualOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 0))) , m_distriMap, 3, m_nGhost);
-    m_tempDualOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 1))) , m_distriMap, 3, m_nGhost);
+    m_tempDualOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempDualOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempDualOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 1))) , m_distriMap, 1, m_nGhost);
 
-    m_tempPrimalTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 0))) , m_distriMap, 3, m_nGhost);
-    m_tempPrimalTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 0))) , m_distriMap, 3, m_nGhost);
-    m_tempPrimalTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 1))) , m_distriMap, 3, m_nGhost);
+    m_tempPrimalTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 1))) , m_distriMap, 1, m_nGhost);
 
-    m_tempDualTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 1))) , m_distriMap, 3, m_nGhost);
-    m_tempDualTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 1))) , m_distriMap, 3, m_nGhost);
-    m_tempDualTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 0))) , m_distriMap, 3, m_nGhost);
+    m_tempDualTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempDualTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempDualTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 0))) , m_distriMap, 1, m_nGhost);
 
 
-    m_tempPrimalThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 3, m_nGhost);
-    m_tempDualThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 3, m_nGhost);
+    m_tempPrimalThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempDualThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 1, m_nGhost);
 
 }
 
