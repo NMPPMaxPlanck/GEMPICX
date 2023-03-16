@@ -1,0 +1,76 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+\usepackage[ansinew]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{bbm}
+\usepackage{graphicx}
+\include{gempic_spectral_macros}
+
+\newcommand{\iph}{{i+\frac{1}{2}}}
+\newcommand{\imh}{{i-\frac{1}{2}}}
+\newcommand{\jph}{{j+\frac{1}{2}}}
+\newcommand{\jmh}{{j-\frac{1}{2}}}
+\newcommand{\kph}{{k+\frac{1}{2}}}
+\newcommand{\kmh}{{k-\frac{1}{2}}}
+
+\begin{document}
+    \section{Particle-Mesh Coupling}
+
+    \subsection{Smoothing function}
+
+    The Particle-Mesh coupling algorithms are based on a smoothing function which is taken to be a tensor product spline
+    $S_h( \mathbf{x}) = S_{\Delta x}^{d_x-1}(x)S_{\Delta y}^{d_y-1}(y)S_{\Delta z}^{d_z-1}(z)$, where $S_h^d(x)=S^d(\frac {x}{h})$,
+    $S^d$ being the cardinal B-spline defined recursively by 
+    $$S^0(x)= 1 \mbox{ if } -\frac{1}{2} \leq x \leq \frac{1}{2}, ~~~ 0 \mbox{ else}.$$
+    $$ S^d(x) = S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-y) \dd y.$$
+    \textbf{Properties of the cardinal B-spline}
+    \begin{itemize}
+        \item The cardinal splines are even $S^d(x) = S^d(-x)$
+        \item The support of $S^d$ is $\left[-\frac{d-1}{2},\frac{d-1}{2} \right]$
+        \item The cardinal B-Spline verifies
+        $$\int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = S_h^d(x_i-x_p),$$
+    \end{itemize}
+
+    \subsection{Smoothed particle quantities}
+
+    The particle distribution function is of the form
+    $$ f(t,\mathbf{x},\mathbf{v}) = \sum_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t))\delta (\mathbf{v}-\mathbf{v}_p(t)).$$
+    It follows that the particle charge and current densities are respectively
+    $$\rho(t,\mathbf{x}) = \sum_p q_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t)), ~~~~ \mathbf{J}(t,\mathbf{x}) = \sum_p q_p w_p \mathbf{v}_p(t) S_h(\mathbf{x}-\mathbf{x}_p(t)).$$
+    In the GEMPIC theory, the particle charge density $rho$ is a 3-form on the dual mesh and is characterized by its cell integrals on the dual mesh $\tcR_3(\rho)$ and the particle current density is a 2-form on the dual mesh characterized by its fluxes through all the faces of the mesh $\tcR_2( \mathbf{J})$.
+
+    \subsection{Reduction of the smoothing function at a particle position}
+
+    The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. This yields
+    $$
+    \begin{aligned}
+        \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
+        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= \Delta x \,S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
+        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= \Delta y \, S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
+        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= \Delta z \,S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
+        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= \Delta y\, \Delta z  \, S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
+        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= \Delta x\, \Delta z  \, S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
+        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &= \Delta x\, \Delta y  \, S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
+        \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k} &= \Delta x\, \Delta y  \,\Delta z S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p).
+    \end{aligned}
+    $$
+    We observe that the terms of the reduction are products of \textbf{node centered splines} of the form $S_{\Delta x}^{d_x}(x_i-x_p)$ and of
+    \textbf{cell centered splines} of the form $S_{\Delta x}^{d_x-1}(x_\iph-x_p)$.
+
+    It follows by linearity of the reduction operators that the degrees of freedom (the cell integrals) of $\rho$, which are its coefficients in $\tilde{ \cC}_3$, are 
+    $$\tilde{\rho}_{i,j,k} = \Delta x\, \Delta y  \,\Delta z  \sum_p q_p w_p S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p)$$
+    and similarly the coefficients of $ \mathbf{J}$ in $\tilde{ \cC}_2$, are 
+    $$
+    \begin{aligned}
+    \tilde{J}_{\iph,j,k} &= \Delta y\, \Delta z  \, \sum_p q_p w_p v_{p,x}(t) S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
+    \tilde{J}_{i,\jph,k} &= \Delta x\, \Delta z  \, \sum_p q_p w_p v_{p,y}(t) S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
+    \tilde{J}_{i,j,\kph} &= \Delta x\, \Delta y  \, \sum_p q_p w_p v_{p,z}(t) S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p)
+    \end{aligned}
+    $$
+    which are the components corresponding respectively to $J_x$, $J_y$, $J_z$ 
+\end{document}

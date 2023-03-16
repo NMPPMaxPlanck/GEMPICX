@@ -23,4 +23,6 @@ Table of Contents
 
    self
    latex/deRham_diagrams
+   latex/code_units
    Forms/Forms
+   Particles/Particles

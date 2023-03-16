@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
     const int hodgeDegree = 2;
 
 	const amrex::Real dt = 0.01;
-    const int Nsteps[6] = {0, 1, 2, 5, 10, 20};
+    const int Nsteps[7] = {0, 1, 2, 5, 10, 20, 50};
 
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
     const amrex::Geometry geom = params.geometry();
@@ -120,9 +120,9 @@ int main (int argc, char *argv[])
         auxPrimalF2 -= B;
 
         for (int comp = 0; comp < 3; ++comp)
-            amrex::Print() << "errorD[" << comp << "]: " << (1/std::sqrt(nCell[0]))*(1/std::sqrt(nCell[1]))*(1/std::sqrt(nCell[2]))*(auxDualF2.data[comp].norm2()) << std::endl;
+            amrex::Print() << "errorD[" << comp << "]: " << (1/std::sqrt(nCell[0]))*(1/std::sqrt(nCell[1]))*(1/std::sqrt(nCell[2]))*(auxDualF2.data[comp].norm0()) << std::endl;
         for (int comp = 0; comp < 3; ++comp)
-            amrex::Print() << "errorB[" << comp << "]: " << (1/std::sqrt(nCell[0]))*(1/std::sqrt(nCell[1]))*(1/std::sqrt(nCell[2]))*(auxPrimalF2.data[comp].norm2()) << std::endl;
+            amrex::Print() << "errorB[" << comp << "]: " << (1/std::sqrt(nCell[0]))*(1/std::sqrt(nCell[1]))*(1/std::sqrt(nCell[2]))*(auxPrimalF2.data[comp].norm0()) << std::endl;
 
         amrex::Print() << std::endl;
     }

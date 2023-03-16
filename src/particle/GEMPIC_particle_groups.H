@@ -16,6 +16,7 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 #include <GEMPIC_computational_domain.H>
+#include <GEMPIC_Params.H>
 
 namespace Gempic
 {
@@ -85,6 +86,12 @@ public:
         m_mass(mass)
     {
     }
+
+    particle_groups(const amrex::Real& charge, const amrex::Real& mass, Parameters params) :
+        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(params.geometry(), params.distriMap(), params.grid()),
+        m_charge(charge),
+        m_mass(mass)
+    {}
 
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p

@@ -117,6 +117,7 @@ void time_loop_hs_zigzag_C2_step(
             amrex::Particle<0, 0>* AMREX_RESTRICT particles =
                 &(pti.GetArrayOfStructs()[0]);  // get particles
             const long np = pti.numParticles();
+
             auto particle_attributes = &pti.GetStructOfArrays();
             amrex::ParticleReal* const AMREX_RESTRICT part_weight =
                 particle_attributes->GetRealData(vdim).data();
@@ -183,7 +184,7 @@ void time_loop_hs_zigzag_C2_step(
 
                     // amrex::Real weight =
                     // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
-                    amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM];
+                    amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM]; // why infra.dxi[GEMPIC_SPACEDIM]?
 
                     // for (unsigned int d=0;d<vdim;++d)
                     // vel[d] = particles[pp].rdata(d);

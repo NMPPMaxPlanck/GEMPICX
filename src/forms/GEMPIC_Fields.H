@@ -166,16 +166,23 @@ public:
         primalCellIndex = amrex::IndexType(amrex::IntVect(0, 0));
 #endif
 #if GEMPIC_SPACEDIM == 3
+        /* Ghost cells are decided for the fields by the degree of the Hodge.
+        ** Needs to be changed for particles and decided by spline degree:
+        ** to max(degx, degy, degz) + safety margin to let particles move
+        **
+        ** Example: for linear splines (deg_i = 1) 1 ghost cell is needed.
+        ** 3 more ghost cells are added to let particles move.
+        ** */
         switch (m_hodgeDegree)
         {
             case 2:
                 nGhost = {1,1,1}; // one ghost cell always needed for differential operators
                 break;
             case 4:
-                nGhost = {1,1,1};
+                nGhost = {2,2,2};
                 break;
             case 6:
-                nGhost = {2,2,2};
+                nGhost = {3,3,3};
                 break;
         }
 

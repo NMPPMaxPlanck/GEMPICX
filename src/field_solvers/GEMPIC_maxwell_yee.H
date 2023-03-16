@@ -1959,7 +1959,7 @@ public:
                                            position[d] = partData[pp].pos(d);
                                        spline.init_particles(position, ifr.plo, ifr.dxi);
                                        gempic_deposit_rho_C3<degx, degy, degz>(
-                                           spline, charge * ifr.dxi[GEMPIC_SPACEDIM] * weight[pp],
+                                           spline, charge * ifr.dxi[GEMPIC_SPACEDIM] * weight[pp], // CHECK ifr.dxi[GEMPIC_SPACEDIM] WHY SHOULD ONLY LAST DIMMENSION BE USED
                                            rhoarr);
                                    });
             }
