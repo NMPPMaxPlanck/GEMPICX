@@ -70,6 +70,8 @@ void loop_preparation_init(
             const auto partData = particles().data();
             const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
+            amrex::Print() << "np from loop preparation: " << np << std::endl;
+
             amrex::Array4<amrex::Real> const &rhoarr = mw_yee->rho[pti].array();
             amrex::ParallelFor(np,
                                [=] AMREX_GPU_DEVICE(long pp)

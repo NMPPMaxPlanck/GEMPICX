@@ -14,7 +14,7 @@ FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamCompl
     m_distriMap = params.distriMap();
     m_nGhost = params.degree()/2 - 1;
 
-    // nghost is degree/2 - 1, 3 is the number of components of each MultiFab
+    // There is only one components in each MultiFab as the different components of the forms are centered differently
     m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 1, m_nGhost);
     m_tempDualZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 1, m_nGhost);
 

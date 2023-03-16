@@ -7,6 +7,48 @@
 using namespace GEMPIC_Fields;
 
 namespace GEMPIC_FDDeRhamComplex {
+
+// This function fills the arrays of stencils for the Hodge operator. It gets called in the hodgeFD members
+template <int degree>
+inline std::tuple<amrex::GpuArray<amrex::Real, degree - 1>, amrex::GpuArray<amrex::Real, degree - 1>> getStencils()
+{
+    amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
+    amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
+
+    switch (degree)
+    {
+        case 2:
+            stencilNodeToCell[0] = 1.0;
+            stencilCellToNode[0] = 1.0;
+            break;
+        case 4:
+            stencilNodeToCell[0] = 1./8.;
+            stencilNodeToCell[1] = 6./8.;
+            stencilNodeToCell[2] = 1./8.;
+            stencilCellToNode[0] = -1./24.;
+            stencilCellToNode[1] = 13./12.;
+            stencilCellToNode[2] = -1./24.;
+            break;
+        case 6:
+            stencilNodeToCell[0] = -7./384.;
+            stencilNodeToCell[1] = 44./384.;
+            stencilNodeToCell[2] = 310./384.;
+            stencilNodeToCell[3] = 44./384.; 
+            stencilNodeToCell[4] = -7./384; 
+            stencilCellToNode[0] = 3./640.;
+            stencilCellToNode[1] = -29./480.;
+            stencilCellToNode[2] = 1067./960.;
+            stencilCellToNode[3] = -29./480.;
+            stencilCellToNode[4] = 3./640.;
+            break;
+        default:
+            amrex::Print() << "Degree not implemented" << std::endl;
+    }
+
+    return std::make_tuple(stencilNodeToCell, stencilCellToNode);
+}
+
+
 /// FDDeRhamComplex
 class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 {
@@ -64,35 +106,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -165,35 +181,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -266,35 +256,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -384,35 +348,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
         {
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -500,35 +438,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -618,35 +530,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -661,7 +547,7 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
                     amrex::Array4<amrex::Real const> const &oneFormMF = (oneForm.data[comp])[mfi].const_array();
                     amrex::Array4<amrex::Real> const &twoFormMF = (twoForm.data[comp])[mfi].array();
-                    amrex::Array4<amrex::Real> const &tempMF = (m_tempPrimalTwoForm[comp])[mfi].array();
+                    amrex::Array4<amrex::Real> const &tempMF = (m_tempDualTwoForm[comp])[mfi].array();
                     // Finite differences hodge operator algorithm
                                    
                     // t_1
@@ -700,7 +586,7 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
 
                     // t_3
-                   // bx.grow(0, boxGrow);
+                    //bx.grow(0, boxGrow);
                     ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                     {
                         amrex::Real val = 0.0;
@@ -737,35 +623,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 
@@ -838,35 +698,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
             // Select stencil according to degree
             amrex::GpuArray<amrex::Real, degree - 1> stencilNodeToCell;
             amrex::GpuArray<amrex::Real, degree - 1> stencilCellToNode;
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1./8.;
-                    stencilNodeToCell[1] = 6./8.;
-                    stencilNodeToCell[2] = 1./8.;
-                    stencilCellToNode[0] = -1./24.;
-                    stencilCellToNode[1] = 13./12.;
-                    stencilCellToNode[2] = -1./24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7./384.;
-                    stencilNodeToCell[1] = 44./384.;
-                    stencilNodeToCell[2] = 310./384.;
-                    stencilNodeToCell[3] = 44./384.; 
-                    stencilNodeToCell[4] = -7./384; 
-                    stencilCellToNode[0] = 3./640.;
-                    stencilCellToNode[1] = -29./480.;
-                    stencilCellToNode[2] = 1067./960.;
-                    stencilCellToNode[3] = -29./480.;
-                    stencilCellToNode[4] = 3./640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
+            
+            std::tie(stencilNodeToCell, stencilCellToNode) = getStencils<degree>();
+
 
             const amrex::RealVect dr = m_dr;
 

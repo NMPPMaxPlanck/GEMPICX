@@ -13,14 +13,25 @@ namespace Gempic
 {
 namespace Particles
 {
+/**
+ * @brief Evaluate all 1D splines and spline primitives at a given particle position
+ *
+ * @tparam deg spline degree
+ */
 template <int deg>
 class spline1d_at_particles
 {
 public:
     amrex::GpuArray<amrex::Real, deg> primitive;
-    amrex::GpuArray<amrex::Real, deg + 1> spline;
+    amrex::GpuArray<amrex::Real, deg + 1> spline; // deg+1 non zero contributions
     int box;
-
+    /**
+     * @brief Find the 1D cell in which the particle is
+     *
+     * @param position position of particle
+     * @param plo left extremity of 1D grid
+     * @param dxi cell size
+     */
     AMREX_GPU_HOST_DEVICE void init_position(amrex::Real position, amrex::Real plo, amrex::Real dxi)
     {
         // Compute normalized position xint and box
@@ -51,10 +62,18 @@ public:
     }
 
 private:
+    /**
+     * @brief Computes the values of the (degree + 1) splines that are not zero at any given point x
+     * in [0,1]
+     *
+     * @tparam degree Spline degree
+     * @param x Position at which splines are evaluated
+     * @return s Array of spline values at x
+     */
     template <int degree>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> spline_eval(amrex::Real x)
     {
-        amrex::GpuArray<amrex::Real, degree + 1> s;
+        amrex::GpuArray<amrex::Real, degree + 1> s;  // there are degree + 1 splines which are
         switch (degree)
         {
             case 0:
@@ -108,7 +127,12 @@ private:
         }
         return (s);
     }
-
+    /**
+     * @brief Evaluate primitives of splines of a given degree at given point x
+     *
+     * @tparam degree
+     * @param x
+     */
     template <int degree>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> spline_eval_primitive(
         amrex::Real x)
@@ -176,23 +200,39 @@ private:
         return (s);
     }
 };
-
+/**
+ * @brief Computes values of splines at particles in 3D
+ *
+ * In GEMPIC formalisms components of forms in the de Rham diagram are products of spline_node
+ * (splines of degree deg+1) for node based components and spline_node (splines of degree deg + 1)
+ * for node based components
+ * @tparam degx Spline degree in x
+ * @tparam degy Spline degree in y
+ * @tparam degz Spline degree in z
+ */
 template <int degx, int degy, int degz>
 class splines_at_particles
 {
 public:
     amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz)>,
                     GEMPIC_SPACEDIM>
-        spline_cell;
+        spline_cell;  /// Cell centered spline = \f$S_h^{d-1}(x-x_{i+\frac 12})\f$
     amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz) + 1>,
                     GEMPIC_SPACEDIM>
-        spline_node;
+        spline_node;  /// node centered spline = \f$S_h^d(x-x_{i})\f$
 
     amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
 
     // Default constructor
     // splines_at_particles();
 
+    /**
+     * @brief Find the 1D cell in which the particle is
+     *
+     * @param position position of particle
+     * @param plo left extremity of 1D grid
+     * @param dxi cell size
+     */
     template <int dim, int deg>
     AMREX_GPU_HOST_DEVICE void init_position(amrex::Real position, amrex::Real plo, amrex::Real dxi)
     {
@@ -297,7 +337,24 @@ private:
         return (s);
     }
 };
-
+/**
+ * @brief Computes electric field at particle position
+ *
+ * @tparam vdim Number of components of electric field
+ * @tparam degx Spline degree in x
+ * @tparam degy Spline degree in y
+ * @tparam degz Spline degree in z
+ * @param spline Spline evaluated at given particle position
+ * @param eArray Degrees of freedom of electric field
+ * @return amrex::GpuArray<amrex::Real, vdim> values of electric field at particle position
+ *
+ * Electric field is a one form so its components are
+ * \f$ E_x(x,y,z) = \sum e_x spline_{cell}(x) spline_{node}(y) spline_{node}(z)/\Delta x \f$
+ * \f$ E_y(x,y,z) = \sum e_y spline_{node}(x) spline_{cell}(y) spline_{node}(z)/\Delta y \f$
+ * \f$ E_y(x,y,z) = \sum e_z spline_{node}(x) spline_{node}(y) spline_{cell}(z)/\Delta z \f$
+ *
+ * !!! SCALING NEEDS TO BE ADAPTED (divisions by $\Delta x,y,z)
+ */
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(
     splines_at_particles<degx, degy, degz> &spline,
@@ -372,11 +429,21 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_efield(
     return (fields);
 }
 
-#if GEMPIC_SPACEDIM == 3
+/**
+ * @brief Evaluated magnetic field (2-form) at particle positions
+ *
+ * @tparam vdim number of components
+ * @tparam degx Spline degree in x
+ * @tparam degy Spline degree in y
+ * @tparam degz Spline degree in z
+ * @param spline Contains splines evaluated at some particle position
+ * @param bArray Contains degrees of freedom of 2-form
+ * @return amrex::GpuArray<amrex::Real, vdim> Values of components of 2-form at particle positions
+ */
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
     splines_at_particles<degx, degy, degz> &spline,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eArray)
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &bArray)
 {
     amrex::GpuArray<amrex::Real, vdim> fields;
     for (int comp = 0; comp < vdim; comp++)
@@ -398,7 +465,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
                                      spline.spline_cell[2][kk];
                     fields[0] +=
                         s_coeff *
-                        (eArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+                        (bArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
                 }
                 if (jj < degy)
                 {
@@ -406,7 +473,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
                                      spline.spline_node[2][kk];
                     fields[1] +=
                         s_coeff *
-                        (eArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+                        (bArray[1])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
                 }
                 if (kk < degz)
                 {
@@ -414,15 +481,27 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
                                      spline.spline_cell[2][kk];
                     fields[2] +=
                         s_coeff *
-                        (eArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
+                        (bArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
                 }
             }
         }
     }
     return (fields);
 }
-#endif
 
+/**
+ * @brief Deposits charge density on cells of dual grid
+ *
+ * Here nodal splines seem to be used for deposition where integral of cell splines are expected
+ *
+ * @tparam degx Spline degree in x
+ * @tparam degy Spline degree in y
+ * @tparam degz Spline degree in z
+ * @param spline Splines evaluated at given particle position
+ * @param weight Particle weight*charge*dx
+ * @param rho charge density to be computed
+
+ */
 template <int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy, degz> &spline,
                                                  amrex::Real weight,
@@ -464,6 +543,27 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
      Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the
    B-splines
      */
+
+/**
+ * @brief Updates J and B along one grid direction
+ *
+ * @tparam S splines_at_particles type
+ * @tparam vdim Number of Components of B and J
+ * @tparam degp Degree of spline in direction of integration (x, y or z)
+ * @tparam degp1 Degree of spline in next direction (cyclic)
+ * @tparam degp2 Degree of spline in second next direction (cyclic)
+ * @tparam pdim Direction of integration (x=0, y=1, z=2)
+ * @tparam plength
+ * @param spline 3D spline at particle position
+ * @param spline_new 1D spline at new particle position along given direction
+ * @param spline_old 1D spline at old particle position along given direction
+ * @param weight Particle charge * weight * dx
+ * @param dx
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
+ * @param[out] fields Contribution of B (the 2 that are not in integration direction)
+ * @param primitive Temporary array for holding difference of primitives (used for each direction)
+ */
 template <typename S, int vdim, int degp, int degp1, int degp2, int pdim, int plength>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     S const &spline, spline1d_at_particles<degp> const &spline_new,
@@ -477,11 +577,12 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     int pdim2 = (pdim + 2) % 3;
 
     fields = {0., 0.};
-
+    // Size of support of difference of primitives
     int local_size = std::abs(spline_new.box - spline_old.box) + degp;
     int box_start = spline_old.box;
     if (spline_new.box < spline_old.box) box_start = spline_new.box;
 
+    // Compute primitive at particle position
     for (unsigned int j = 0; j < plength; j++) primitive[j] = 0.0;
 
     if (spline_old.box < spline_new.box)
@@ -510,6 +611,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
         }
     }
 
+    // Add particle contribution to J
     for (int kk = 0; kk <= degp2; ++kk)
     {
         for (int jj = 0; jj <= degp1; ++jj)
@@ -536,7 +638,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
                     jArray[pdim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
                     s_coeff * weight);
 #endif
-
+                // Update two components of B
                 if (jj < degp1)
                 {
                     double s_coeff = primitive[ii] * spline.spline_cell[pdim1][jj] *
