@@ -22,8 +22,8 @@ template <int deg>
 class spline1d_at_particles
 {
 public:
-    amrex::GpuArray<amrex::Real, deg> primitive;
     amrex::GpuArray<amrex::Real, deg + 1> spline; // deg+1 non zero contributions
+    amrex::GpuArray<amrex::Real, deg> primitive; // non vanishing primitives for splines of deg-1
     int box;
     /**
      * @brief Find the 1D cell in which the particle is
@@ -203,9 +203,9 @@ private:
 /**
  * @brief Computes values of splines at particles in 3D
  *
- * In GEMPIC formalisms components of forms in the de Rham diagram are products of spline_node
- * (splines of degree deg+1) for node based components and spline_node (splines of degree deg + 1)
- * for node based components
+ * In Finite Difference GEMPIC formalism components of forms in the de Rham diagram are products of 
+ * node centered splines of the form \f$S^d(x_i-x_p)\f$ of degree d and cell centered splines
+ * of the form \f$S^{d-1}(x_{i+\frac{1}{2}}-x_p)\f$ of degree d-1
  * @tparam degx Spline degree in x
  * @tparam degy Spline degree in y
  * @tparam degz Spline degree in z
@@ -214,12 +214,14 @@ template <int degx, int degy, int degz>
 class splines_at_particles
 {
 public:
+/// Cell centered spline = \f$S^{d-1}(x-x_{i+\frac 12})\f$
     amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz)>,
                     GEMPIC_SPACEDIM>
-        spline_cell;  /// Cell centered spline = \f$S_h^{d-1}(x-x_{i+\frac 12})\f$
+        spline_cell;  
+/// node centered spline = \f$S^d(x-x_{i})\f$
     amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degx, degy), degz) + 1>,
                     GEMPIC_SPACEDIM>
-        spline_node;  /// node centered spline = \f$S_h^d(x-x_{i})\f$
+        spline_node;  
 
     amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
 
@@ -349,10 +351,11 @@ private:
  * @return amrex::GpuArray<amrex::Real, vdim> values of electric field at particle position
  *
  * Electric field is a one form so its components are
- * \f$ E_x(x,y,z) = \sum e_x spline_{cell}(x) spline_{node}(y) spline_{node}(z)/\Delta x \f$
- * \f$ E_y(x,y,z) = \sum e_y spline_{node}(x) spline_{cell}(y) spline_{node}(z)/\Delta y \f$
- * \f$ E_y(x,y,z) = \sum e_z spline_{node}(x) spline_{node}(y) spline_{cell}(z)/\Delta z \f$
- *
+ * \f$ E_x(x,y,z) = \sum e_x S_c(x) S_n(y) S_n(z)/\Delta x \f$
+ * \f$ E_y(x,y,z) = \sum e_y S_n(x) S_c(y) S_n(z)/\Delta y \f$
+ * \f$ E_y(x,y,z) = \sum e_z S_n(x) S_n(y) S_c(z)/\Delta z \f$
+ * where \f$S_c\f$ are the cell centered splines of degree d-1 and \f$S_c\f$ the node centered splines of degree d.
+ * 
  * !!! SCALING NEEDS TO BE ADAPTED (divisions by $\Delta x,y,z)
  */
 template <int vdim, int degx, int degy, int degz>
