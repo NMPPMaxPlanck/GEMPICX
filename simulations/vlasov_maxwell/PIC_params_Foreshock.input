@@ -1,0 +1,69 @@
+# General setting
+sim_name = "Foreshock"
+
+# GPU settings
+amrex.use_gpu_aware_mpi = 1 
+amrex.abort_on_out_of_gpu_memory = 1
+
+# Grid parameters
+n_cell_vector = 2560 960 960
+max_grid_size_vector = 32 32 32
+blocking_factor = 8 8 8  # in each dimension max_grid_size_vector must be divisible by blocking_factor
+is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+species0.n_part_per_cell = 40 # number of particles per cell
+species0.charge = -1.0 # vector (one entry per species)
+species0.mass = 1.0 # vector (one entry per species)
+species0.density = "1.0"
+species0.num_gaussians = 2
+
+# Gaussian parameters
+species0.vMean_g0 = 0.05 0.0 0.0
+species0.vThermal_g0 = 0.01 0.01 0.01
+species0.vWeight_g0 = 0.5
+species0.vMean_g1 = -0.05 0.0 0.0
+species0.vThermal_g1 = 0.01 0.01 0.01
+species0.vWeight_g1 = 0.5
+
+# wave vector
+k = 0.002454369260617026 0.006544984694978735 0.006544984694978735
+
+# Scaling parameters
+epref_ep0 = 80
+ 
+# Simulation parameters
+n_steps = 10000
+dt = 0.5
+save_fields = 100001 
+save_particles = 100001 
+save_checkpoint = 100001 
+
+# Function parameters
+Bx = "11.313708"
+By = "0.0"
+Bz = "0.0"
+phi = "0.0"
+
+# Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
+propagator = 3
+strang_order = 2
+
+# Tolerances for iterative solver (if needed by the chosen propagator)
+tolerance_particles = 1.e-10
+#max_coarsening_level = 0
+
+# Restart parameters
+restart = 0
+checkpoint_file = "Checkpoint/Test_Foreshock_2_"
+curr_step = 4
+
+# Reduced Diagnostics
+gempic.reduced_diags_names = FieldElec FieldMag Mom Kin GaussErr
+gempic.save_reduced = 5
+
+FieldElec.type = ElecFieldEnergy
+FieldMag.type = MagFieldEnergy
+Mom.type = Momentum
+Kin.type = ParticleEnergy
+GaussErr.type = GaussError
