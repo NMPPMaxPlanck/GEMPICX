@@ -5,6 +5,8 @@
 #include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 #include <gtest/gtest.h>
+#include <algorithm> // std::all_of, for add_particles function
+#include <stdexcept>
 
 /** Global setup/teardown test enviroment configuration for unit tests
  * (stolen from AMR_wind)
@@ -175,6 +177,77 @@ namespace {
         amrex::Real val = 0.0;
         return val;
     }
+
+    // Nghost helper function
+    const int init_Nghost(int degx, int degy, int degz)
+    {
+        amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
+        const int maxdeg = *(std::max_element(degs.begin(), degs.end()));
+        return maxdeg;
+    }
+
+    // Stream arr helper function
+    template<typename T>
+    std::string string_array(const T& array, int length) {
+        std::stringstream stream;
+        stream << "(" << array[0];
+        for (int i = 1; i < length; i++) {
+            stream << ", " << array[i];
+        }
+        stream << ")";
+        return stream.str();
+    }
+
+    // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
+    // of all particles to be added.
+    template<int vdim, int numspec, int numparticles>
+    void add_single_particles(
+        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+        computational_domain& infra,
+        amrex::Array<amrex::Real, numparticles>& weights,
+        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles>& positions,
+        int spec = 0,
+        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles>&& velocities = {0})
+        {
+            amrex::Array<bool, numparticles> checklist = {false};
+
+            for (amrex::MFIter mfi = part_gr[0]->MakeMFIter(0); mfi.isValid(); ++mfi)
+            {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::IntVect lo = {bx.smallEnd()};
+                amrex::IntVect hi = {bx.bigEnd()};
+                amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
+                    part_gr[spec]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+                for (int i = 0; i < numparticles; i++) {
+                    if (!checklist[i] &&
+                        lo[0] <= positions[i][0] && positions[i][0] < hi[0] && 
+                        lo[1] <= positions[i][1] && positions[i][1] < hi[1] &&
+                        lo[2] <= positions[i][2] && positions[i][2] < hi[2])
+                    {
+                        part_gr[spec]->add_particle({AMREX_D_DECL(positions[i][0],
+                                                                  positions[i][1],
+                                                                  positions[i][2])},
+                                                    {AMREX_D_DECL(velocities[i][0],
+                                                                  velocities[i][1],
+                                                                  velocities[i][2])},
+                                                    weights[i], particles);
+                        checklist[i] = true;
+                    }
+                }
+            }
+
+            // Check that all particles have been added
+            int idx{-1};
+            auto result1 = std::find_if(std::begin(checklist), std::end(checklist), [&idx] (bool i) {idx++; return !i;});
+            if (result1 != std::end(checklist)) {
+                std::cerr << "Invalid position given to add_particle function:\n" << 
+                            string_array(positions[idx], GEMPIC_SPACEDIM) << 
+                            " is out of simulation bounds.\nLower: " << 
+                            string_array(infra.geom.ProbLo(), GEMPIC_SPACEDIM) << 
+                            "\nUpper: " << string_array(infra.geom.ProbHi(), GEMPIC_SPACEDIM);
+            }
+        }
+
     // Test fixture
     class DepositRhoTest : public testing::Test {
         protected:
@@ -185,6 +258,7 @@ namespace {
         static const int numspec = 1;
         static const int vdim = 3;
         static const int degree = 2;
+        const int Nghost = init_Nghost(degx, degy, degz);
 
         double charge = 1;
         double mass = 1;
@@ -206,8 +280,13 @@ namespace {
             // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
             infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
 
-            //projection<degree>(funct_rho, 0.0, infra, {AMREX_D_DECL(true, true, true)},
-            //                    amrex::IndexType(amrex::IntVect::TheNodeVector()), rho);
+            // node centered BA:
+            const amrex::BoxArray &nba = amrex::convert(infra.grid, amrex::IntVect::TheNodeVector());
+            int Ncomp = 1;
+
+            rho.define(nba, infra.distriMap, Ncomp, Nghost);
+            projection<degree>(funct_rho, 0.0, infra, {AMREX_D_DECL(true, true, true)},
+                                amrex::IndexType(amrex::IntVect::TheNodeVector()), rho);
             
             // particles
             for (int spec = 0; spec < numspec; spec++)
@@ -219,46 +298,48 @@ namespace {
         }
     };
 
-    TEST_F(DepositRhoTest, BasicAssertions) {
-        EXPECT_EQ(0,3*0);
+    TEST_F(DepositRhoTest, NullTest) {
         // Adding particle to one cell
-       // for (amrex::MFIter mfi = part_gr[0]->MakeMFIter(0); mfi.isValid(); ++mfi)
-       // {
-       //     const amrex::Box& bx = mfi.validbox();
-       //     amrex::IntVect lo = {bx.smallEnd()};
-       //     if (lo[0] != infra.geom.ProbLo()[0] || lo[1] != infra.geom.ProbLo()[1] || lo[2] != infra.geom.ProbLo()[2]) continue;
-       //     amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
-       //         part_gr[0]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-       //     part_gr[0]->add_particle({AMREX_D_DECL(infra.geom.ProbLo()[0] + 0.5*infra.dx[0],
-       //                                            infra.geom.ProbLo()[1] + 0.5*infra.dx[1],
-       //                                            infra.geom.ProbLo()[2] + 0.5*infra.dx[2])},
-       //                             {0,0,0}, 1, particles);
-       // }
-       // EXPECT_EQ(0,3*0);
-       // EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
+        const int numparticles{1};
+        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles> positions{infra.geom.ProbLo()[0] + 0.5*infra.dx[0], infra.geom.ProbLo()[1] + 0.5*infra.dx[1], infra.geom.ProbLo()[2] + 0.5*infra.dx[2]};
+        amrex::Array<amrex::Real, numparticles> weights{1};
+        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        //for (amrex::MFIter mfi = part_gr[0]->MakeMFIter(0); mfi.isValid(); ++mfi)
+        //{
+        //    const amrex::Box& bx = mfi.validbox();
+        //    amrex::IntVect lo = {bx.smallEnd()};
+        //    if (lo[0] != infra.geom.ProbLo()[0] || lo[1] != infra.geom.ProbLo()[1] || lo[2] != infra.geom.ProbLo()[2]) continue;
+        //    amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
+        //        part_gr[0]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
+        //    part_gr[0]->add_particle({AMREX_D_DECL(infra.geom.ProbLo()[0] + 0.5*infra.dx[0],
+        //                                           infra.geom.ProbLo()[1] + 0.5*infra.dx[1],
+        //                                           infra.geom.ProbLo()[2] + 0.5*infra.dx[2])},
+        //                            {0,0,0}, 1, particles);
+        //}
+        EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
        // rho.setVal(0.0);
 
        // EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
-       // part_gr[0]->Redistribute();  // assign particles to the tile they are in
-       // // Particle iteration ... over one particle. Hopefully.
-       // for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[0], 0); pti.isValid(); ++pti)
-       // {
-       //     const auto& particles = pti.GetArrayOfStructs();
-       //     const auto partData = particles().data();
+        part_gr[0]->Redistribute();  // assign particles to the tile they are in
+        // Particle iteration ... over one particle. Hopefully.
+        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[0], 0); pti.isValid(); ++pti)
+        {
+            const auto& particles = pti.GetArrayOfStructs();
+            const auto partData = particles().data();
 
-       //     amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
-       //     splines_at_particles<degx, degy, degz> spline;
-       //     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-       //     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-       //         position[d] = partData[0].pos(d);
-       //     spline.init_particles(position, infra.plo, infra.dxi);
-       //     // Needs at least max(degx, degy, degz) ghost cells
-       //     gempic_deposit_rho_C3<degx, degy, degz>(
-       //         spline, 0*infra.dxi[GEMPIC_SPACEDIM],
-       //         rhoarr);
-       // }
+            amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
+            splines_at_particles<degx, degy, degz> spline;
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+            for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                position[d] = partData[0].pos(d);
+            spline.init_particles(position, infra.plo, infra.dxi);
+            // Needs at least max(degx, degy, degz) ghost cells
+            gempic_deposit_rho_C3<degx, degy, degz>(
+                spline, 0*infra.dxi[GEMPIC_SPACEDIM],
+                rhoarr);
+        }
 
-       // EXPECT_EQ(0,gempic_norm(rho, infra, 2));
+        EXPECT_EQ(0,gempic_norm(rho, infra, 2));
     }
 }
 
