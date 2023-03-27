@@ -131,7 +131,7 @@ We solve the equations using a hamiltonian splitting procedure, which yields thr
 \begin{aligned}
     \fract{z}{t} &= v_{p,z}, \\
     \fract{v_{p,x} }{t} &= - \frac {q_p}{m_p} v_{p,z} B_y(x,y,z(t)) \\
-    \fract{v_{p,y} }{t} &=  \frac {q_p}{m_p} v_{p,z} B_y(x,y,z(t)) \\
+    \fract{v_{p,y} }{t} &=  \frac {q_p}{m_p} v_{p,z} B_x(x,y,z(t)) \\
      \fract{\tilde{\arrD}_z}{t} &=  -\tilde{\arrJ}_z.
 \end{aligned}
 $$
@@ -145,5 +145,75 @@ all equations can be integrated exactly in a straightforward manner without usin
 including the last equation using the definition of $\tilde{\arrJ}_z$.
 
 In one space dimension, the same also applies to the previous step.
+
+\subsection{Algorithm for the $\cH_p$ part}
+
+As we just saw, the  $\cH_p$ part of the hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting. 
+
+In our algorithm described in the Particle-Mesh coupling section, we need the primitives
+of $\bB$  and $\bJ$ in each of the direction. We shall denote them by
+$\check{B}^x(x,y,z) = \int^x B(x',y,z) \dd x'$ and in the same way the primitives in the other directions  by $\check{B}^y$, $\check{B}^z$. Similarly, the primitives of $\bJ$ in the three directions are denoted by $\check{J}^x$, $\check{J}^y$, $\check{J}^z$.
+We observe that $\bB$ does not vary in this split step. We express only the quantities that vary during each step, giving them a new upper index when they are modified.
+
+ \begin{itemize}
+     \item $\cH_{p,x}$ over $\Delta t/2$
+     $$
+     \begin{aligned}
+        x^{(1)} &= x^n + \frac{\Delta t}{2} v_{p,x}^n, \\
+        v_{p,y}^{(1)} &= v_{p,y}^{n} - \frac {q_p}{m_p} (\check{B}^x_z(x^{(1)},y^n,z^n) - \check{B}^x_z(x^n,y^n,z^n) \\
+        v_{p,z}^{(1)} &= v_{p,z}^{n} + \frac {q_p}{m_p} (\check{B}^x_y(x^{(1)},y^n,z^n) - \check{B}^x_y(x^n,y^n,z^n) \\
+ 	    \tilde{\arrD}_x^{(1)} &= \tilde{\arrD}_x^n -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n).
+    \end{aligned}
+    $$
+    \item $\cH_{p,y}$ over $\Delta t/2$
+     $$
+     \begin{aligned}
+        y^{(1)} &= y^n + \frac{\Delta t}{2} v_{p,y}^{(1)}, \\
+        v_{p,x}^{(1)} &= v_{p,x}^{n} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{(1)},z^n) - \check{B}^y_z(x^{(1)},y^n,z^n) \\
+        v_{p,z}^{(2)} &= v_{p,z}^{(1)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{(1)},z^n) - \check{B}^y_x(x^{(1)},y^n,z^n) \\
+ 	    \tilde{\arrD}_y^{(1)} &= \tilde{\arrD}_y^n -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n).
+    \end{aligned}
+    $$
+    \item $\cH_{p,z}$ over $\Delta t$
+     $$
+     \begin{aligned}
+        z^{n+1} &= z^n + \Delta t \, v_{p,z}^{(2)}, \\
+        v_{p,x}^{(2)} &= v_{p,x}^{(1)} - \frac {q_p}{m_p} (\check{B}^z_y(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_y(x^{(1)},y^{(1)},z^n) \\
+        v_{p,y}^{(2)} &= v_{p,y}^{(1)} + \frac {q_p}{m_p} (\check{B}^z_x(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_x(x^{(1)},y^{(1)},z^n) \\
+ 	    \tilde{\arrD}_z^{n+1} &= \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
+    \end{aligned}
+    $$
+    \item $\cH_{p,y}$ over $\Delta t/2$
+     $$
+     \begin{aligned}
+        y^{n+1} &= y^{(1)} + \frac{\Delta t}{2} v_{p,y}^{(2)}, \\
+        v_{p,x}^{n+1} &= v_{p,x}^{(2)} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_z(x^{(1)},y^{(1)},z^{n+1})) \\
+        v_{p,z}^{(3)} &= v_{p,z}^{(2)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_x(x^{(1)},y^{(1)},z^{n+1}) \\
+ 	    \tilde{\arrD}_y^{n+1} &= \tilde{\arrD}_y^{(1)} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)}).
+    \end{aligned}
+    $$
+    \item $\cH_{p,x}$ over $\Delta t/2$
+     $$
+     \begin{aligned}
+        x^{n+1} &= x^{(1)} + \frac{\Delta t}{2} v_{p,x}^{n+1}, \\
+        v_{p,y}^{n+1} &= v_{p,y}^{(2)} - \frac {q_p}{m_p} (\check{B}^x_z(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_z(x^{(1)},y^{n+1},z^{n+1}) \\
+        v_{p,z}^{n+1} &= v_{p,z}^{(3)} + \frac {q_p}{m_p} (\check{B}^x_y(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_y(x^{n+1},y^{n+1},z^{(1)}) \\
+ 	    \tilde{\arrD}_x^{n+1} &= \tilde{\arrD}_x^{(1)} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)}).
+    \end{aligned}
+    $$
+ \end{itemize}
+Note that the primitives $\check{\arrJ}_x$ are evaluated at different points in the two steps in which they appear. For this reason $\check{\arrJ}_x^{(2)}\neq \check{\arrJ}_x^{(1)}$. The same is true for the $y$ components. Nonetheless, as the new values of $\arrD$ are not used in any of these steps, we can postpone their calculation to the end of the full step.
+This means that only the right-hand sides involving the primitives of $\bJ$ are computed in the particle loop in this algorithm. And after the particle loop, a loop on the grid is used to compute
+$$
+     \begin{aligned}
+ 	    \tilde{\arrD}_x^{n+1} &= \tilde{\arrD}_x^{n} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)})
+         -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n), \\
+         \tilde{\arrD}_y^{n+1} &= \tilde{\arrD}_y^{n} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)})
+         -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n) \\
+         \tilde{\arrD}_z^{n+1} &= \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
+    \end{aligned}
+    $$
+
+
 
 \end{document}
