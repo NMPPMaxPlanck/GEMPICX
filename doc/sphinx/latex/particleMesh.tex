@@ -110,7 +110,7 @@ $$
 \end{aligned}
 $$
 
-\subsection{Exact computation of time integrated $\bJ_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
+\subsection{Exact computation of time integrated $J_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
 
 One step of the hamiltonian splitting algorithm, consists in pushing the particles successively in the 3 axis dimensions and updating positions, velocities and electric field leaving the magnetic field constant.
 Let us describe this algorithm when the particles are pushed in the $x$-direction. The two other directions are handled similarly.  
@@ -150,7 +150,7 @@ $$
     \frac{1}{\Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph}  \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right) 
      S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
     \tilde{\arrD}_{\iph,j,k} & (t_1) =  \tilde{\arrD}_{\iph,j,k}(t_0) - 
-    \frac{1}{\Delta x}  \, \sum_p q_p w_p v_{p,x}(t)  \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right)  
+    \frac{1}{\Delta x}  \, \sum_p q_p w_p   \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right)  
     S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)
 \end{aligned}
 $$
