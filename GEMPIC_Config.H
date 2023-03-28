@@ -19,4 +19,12 @@
 #    define GEMPIC_D_DECL_0(a, b, c) a, b, c
 #endif
 
+#if GEMPIC_SPACEDIM==1
+#   define GEMPIC_D_COND(a, b, c) a
+#elif GEMPIC_SPACEDIM==2
+#   define GEMPIC_D_COND(a, b, c) a b
+#elif GEMPIC_SPACEDIM==3
+#   define GEMPIC_D_COND(a, b, c) a b c 
+#endif
+
 #endif
