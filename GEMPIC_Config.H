@@ -11,4 +11,13 @@
 #define GEMPIC_CTEST_TOL 1e-4
 #define GEMPIC_CTEST_RELTOL 1e-4
 
+#if GEMPIC_SPACEDIM==1
+#   define GEMPIC_D_MULT(a, b, c) a
+#elif GEMPIC_SPACEDIM==2
+#   define GEMPIC_D_MULT(a, b, c) a * b
+#elif GEMPIC_SPACEDIM==3
+#   define GEMPIC_D_MULT(a, b, c) (a) * (b) * (c)
+#endif
+
+
 #endif

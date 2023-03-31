@@ -76,23 +76,23 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
         ~FDDeRhamComplex();
 
-        void projection (amrex::ParserExecutor<4> func, amrex::Real t,
+        void projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                         DeRhamField<primal, Space::node>& field) override;
-        void projection (amrex::ParserExecutor<4> func, amrex::Real t,
+        void projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                         DeRhamField<primal, Space::cell>& field) override;
-        void projection (amrex::ParserExecutor<4> func, amrex::Real t,
+        void projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                         DeRhamField<dual, Space::node>& field) override;
-        void projection (amrex::ParserExecutor<4> func, amrex::Real t,
+        void projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                         DeRhamField<dual, Space::cell>& field) override;
         
 #if GEMPIC_SPACEDIM > 1
-        void projection (amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+        void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                         amrex::Real t, DeRhamField<dual, Space::edge>& field) override;
-        void projection (amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+        void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                         amrex::Real t, DeRhamField<primal, Space::face>& field) override;
-        void projection (amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+        void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                         amrex::Real t, DeRhamField<primal, Space::edge>& field) override;
-        void projection (amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+        void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                         amrex::Real t, DeRhamField<dual, Space::face>& field) override;
 
 #endif
