@@ -331,7 +331,7 @@ void DeRhamComplex::div(const DeRhamField<dual, Space::face>& twoForm,
         amrex::Array4<amrex::Real const> const &twoFormMF1 = (twoForm.data[1])[mfi].const_array();
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &twoFormMF2 = (twoForm.data[2])[mfi].const_array(),
+        amrex::Array4<amrex::Real const> const &twoFormMF2 = (twoForm.data[2])[mfi].const_array();
 #endif
         amrex::Array4<amrex::Real> const &threeFormMF = (threeForm.data)[mfi].array();
         
