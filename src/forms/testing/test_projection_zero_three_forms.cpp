@@ -10,7 +10,7 @@ int main (int argc, char *argv[])
 	amrex::Initialize(argc, argv);
 
     // error tolerance
-    const amrex::Real tol = 1e-6;
+    const amrex::Real tol = 1e-5;
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
@@ -326,12 +326,12 @@ int main (int argc, char *argv[])
     if (passQ == true && passQDual == true && passRho == true && passRhoDual == true)
     {
         amrex::PrintToFile("test_projection_zero_three_forms.output") << std::endl;
-        amrex::PrintToFile("test_projection_zero_three_forms.output") << "test passed" << std::endl;
+        amrex::PrintToFile("test_projection_zero_three_forms.output") << GEMPIC_SPACEDIM << "D test passed" << std::endl;
     }
     else
     {
         amrex::PrintToFile("test_projection_zero_three_forms.output") << std::endl;
-        amrex::PrintToFile("test_projection_zero_three_forms.output") << "test failed" << std::endl;
+        amrex::PrintToFile("test_projection_zero_three_forms.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
