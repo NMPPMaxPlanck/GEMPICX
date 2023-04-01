@@ -62,10 +62,10 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
         // Temporary 3D Array of MultiFab with the centeredness of the primal oneForm
         amrex::MultiFab m_tempPrimalZeroForm;
         amrex::MultiFab m_tempDualZeroForm;
-        amrex::Array<amrex::MultiFab, GEMPIC_SPACEDIM> m_tempPrimalOneForm;
-        amrex::Array<amrex::MultiFab, GEMPIC_SPACEDIM> m_tempDualOneForm;
-        amrex::Array<amrex::MultiFab, GEMPIC_SPACEDIM> m_tempPrimalTwoForm;
-        amrex::Array<amrex::MultiFab, GEMPIC_SPACEDIM> m_tempDualTwoForm;
+        amrex::Array<amrex::MultiFab, 3> m_tempPrimalOneForm;
+        amrex::Array<amrex::MultiFab, 3> m_tempDualOneForm;
+        amrex::Array<amrex::MultiFab, 3> m_tempPrimalTwoForm;
+        amrex::Array<amrex::MultiFab, 3> m_tempDualTwoForm;
         amrex::MultiFab m_tempPrimalThreeForm;
         amrex::MultiFab m_tempDualThreeForm;
         
@@ -84,8 +84,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                         DeRhamField<dual, Space::node>& field) override;
         void projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                         DeRhamField<dual, Space::cell>& field) override;
-        
-#if GEMPIC_SPACEDIM > 1
         void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                         amrex::Real t, DeRhamField<dual, Space::edge>& field) override;
         void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
@@ -95,7 +93,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
         void projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                         amrex::Real t, DeRhamField<dual, Space::face>& field) override;
 
-#endif
 
 #if GEMPIC_SPACEDIM > 1
 

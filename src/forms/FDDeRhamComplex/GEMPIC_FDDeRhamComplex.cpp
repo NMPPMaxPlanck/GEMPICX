@@ -15,28 +15,28 @@ FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamCompl
     m_nGhost = params.degree()/2 - 1;
 
     // There is only one components in each MultiFab as the different components of the forms are centered differently
-    m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 1, m_nGhost);
-    m_tempDualZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)})), m_distriMap, 1, m_nGhost);
+    m_tempDualZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)})), m_distriMap, 1, m_nGhost);
 
-    m_tempPrimalOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 1))) , m_distriMap, 1, m_nGhost);
-    m_tempPrimalOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 1))) , m_distriMap, 1, m_nGhost);
-    m_tempPrimalOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 1)})), m_distriMap, 1, m_nGhost);
+    m_tempPrimalOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 1)})), m_distriMap, 1, m_nGhost);
+    m_tempPrimalOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 0)})), m_distriMap, 1, m_nGhost);
 
-    m_tempDualOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 0))) , m_distriMap, 1, m_nGhost);
-    m_tempDualOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 0))) , m_distriMap, 1, m_nGhost);
-    m_tempDualOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempDualOneForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 0)})), m_distriMap, 1, m_nGhost);
+    m_tempDualOneForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 0)})), m_distriMap, 1, m_nGhost);
+    m_tempDualOneForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 1)})), m_distriMap, 1, m_nGhost);
 
-    m_tempPrimalTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 0))) , m_distriMap, 1, m_nGhost);
-    m_tempPrimalTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 0))) , m_distriMap, 1, m_nGhost);
-    m_tempPrimalTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 0)})), m_distriMap, 1, m_nGhost);
+    m_tempPrimalTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 0)})), m_distriMap, 1, m_nGhost);
+    m_tempPrimalTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 1)})), m_distriMap, 1, m_nGhost);
 
-    m_tempDualTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 1, 1))) , m_distriMap, 1, m_nGhost);
-    m_tempDualTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 0, 1))) , m_distriMap, 1, m_nGhost);
-    m_tempDualTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 0))) , m_distriMap, 1, m_nGhost);
+    m_tempDualTwoForm[0].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 1)})), m_distriMap, 1, m_nGhost);
+    m_tempDualTwoForm[1].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 1)})), m_distriMap, 1, m_nGhost);
+    m_tempDualTwoForm[2].define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 0)})), m_distriMap, 1, m_nGhost);
 
 
-    m_tempPrimalThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(0, 0, 0))) , m_distriMap, 1, m_nGhost);
-    m_tempDualThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect(1, 1, 1))) , m_distriMap, 1, m_nGhost);
+    m_tempPrimalThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)})), m_distriMap, 1, m_nGhost);
+    m_tempDualThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)})), m_distriMap, 1, m_nGhost);
 
 }
 
@@ -89,7 +89,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 {
     const int nQuad = 3;
     const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9. , 8./9., 5./9.}; // Can be initialized somewhere else
+    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
 
     // Volume integral 
     for (amrex::MFIter mfi(field.data, true); mfi.isValid(); ++mfi)
@@ -98,7 +98,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         amrex::Array4<amrex::Real> const &threeForm = (field.data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
-        const amrex::GpuArray<amrex::Real, 3> r0 = m_geom.ProbLoArray();
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
         const amrex::Real drHalfX = dr[0]/2;
@@ -229,7 +229,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 {
     const int nQuad = 3;
     const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9. , 8./9., 5./9.}; // Can be initialized somewhere else
+    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
 
     // Volume integral 
     for (amrex::MFIter mfi(field.data, true); mfi.isValid(); ++mfi)
@@ -238,7 +238,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         amrex::Array4<amrex::Real> const &threeForm = (field.data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
-        const amrex::GpuArray<amrex::Real, 3> r0 = m_geom.ProbLoArray();
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
         const amrex::Real drHalfX = dr[0]/2;
@@ -329,7 +329,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     // Gauss quadrature
     const int nQuad = 3;
     const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9. , 8./9., 5./9.}; // Can be initialized somewhere else
+    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
 
     // Do the loop over comp-direction
     for (int comp = 0; comp < 3; ++comp)
@@ -397,13 +397,13 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     field.averageSync();
 }
 
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, GEMPIC_SPACEDIM> func, amrex::Real t,
+void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
                                       DeRhamField<Grid::primal, Space::face>& field)
 {
     // Gauss quadrature
     const int nQuad = 3;
     const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9. , 8./9., 5./9.}; // Can be initialized somewhere else
+    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
 
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.data[0], true); mfi.isValid(); ++mfi)
@@ -619,14 +619,14 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 
 }
 
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func, amrex::Real t,
+void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
                                       DeRhamField<Grid::primal, Space::edge>& field)
 
 {
     // Gauss quadrature
     const int nQuad = 3;
     const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9. , 8./9., 5./9.}; // Can be initialized somewhere else
+    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
 
     // Do the loop over comp-direction
     for (int comp = 0; comp < 3; ++comp)
@@ -696,13 +696,13 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<4>, GEMPIC_
 }
 
 
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, GEMPIC_SPACEDIM> func, amrex::Real t,
+void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
                                       DeRhamField<Grid::dual, Space::face>& field)
 {
     // Gauss quadrature 
     const int nQuad = 3;
     const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9. , 8./9., 5./9.}; // Can be initialized somewhere else
+    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
 
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.data[0], true); mfi.isValid(); ++mfi)

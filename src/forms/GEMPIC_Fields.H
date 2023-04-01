@@ -57,7 +57,7 @@ template <int grid, int space>
 struct DeRhamField
 {
     std::shared_ptr<DeRhamComplex> deRham;
-    amrex::Array<amrex::MultiFab, GEMPIC_SPACEDIM> data;
+    amrex::Array<amrex::MultiFab, 3> data;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
 
@@ -518,22 +518,22 @@ public:
     // Projections
     //------------
     
-    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<primal, Space::node>&) = 0;
-    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<primal, Space::cell>&) = 0;
-    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<dual, Space::node>&) = 0;
-    virtual void projection(amrex::ParserExecutor<4> func, amrex::Real t,
+    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<dual, Space::cell>&) = 0;
                     
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                     amrex::Real t, DeRhamField<dual, Space::edge>&) = 0;
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                     amrex::Real t, DeRhamField<primal, Space::face>&) = 0;
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                     amrex::Real t, DeRhamField<primal, Space::edge>&) = 0;
-    virtual void projection(amrex::Array<amrex::ParserExecutor<4>, GEMPIC_SPACEDIM> func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                     amrex::Real t, DeRhamField<dual, Space::face>&) = 0;
                     
 

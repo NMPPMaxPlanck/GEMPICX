@@ -4,19 +4,19 @@
 
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
-
+///xxx
 int main (int argc, char *argv[]) 
 {
 	amrex::Initialize(argc, argv);
 
     // error tolerance
     const amrex::Real tol = 1e-6;
-
+    
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(4, 4, 4)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {AMREX_D_DECL(1, 1, 1)};
+	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
 
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
 
 	// Declare the fields 
 	DeRhamField<Grid::primal, Space::edge> E(deRham);
-    
+
     // Parse analytical fields and and initialize parserEval
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalE = {"cos(x)", 
@@ -36,8 +36,9 @@ int main (int argc, char *argv[])
 #if (GEMPIC_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalE = {"cos(x) * cos(y)", 
                                                       "cos(x) * cos(y)",
-                                                      "cos(x) * cos(y) * cos(z)"};
+                                                      "cos(x) * cos(y)"};
 #endif
+
 #if (GEMPIC_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalE = {"cos(x) * cos(y) * cos(z)", 
                                                       "cos(x) * cos(y) * cos(z)",
@@ -135,7 +136,7 @@ int main (int argc, char *argv[])
     // Declare the fields 
 	DeRhamField<Grid::primal, Space::face> B(deRham);
 	DeRhamField<Grid::primal, Space::face> faceIntegral(deRham);
-    
+
     // Parse analytical fields and and initialize parserEval
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalB = {"cos(x)", 
@@ -144,8 +145,8 @@ int main (int argc, char *argv[])
 #endif
 #if (GEMPIC_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalB= {"cos(x) * cos(y)", 
-                                                      "cos(x) * cos(y)",
-                                                      "cos(x) * cos(y) * cos(z)"};
+                                                     "cos(x) * cos(y)",
+                                                     "cos(x) * cos(y)"};
 #endif
 #if (GEMPIC_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalB = {"cos(x) * cos(y) * cos(z)", 
@@ -245,14 +246,14 @@ int main (int argc, char *argv[])
 #if (GEMPIC_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalH = {"cos(x) * cos(y)", 
                                                       "cos(x) * cos(y)",
-                                                      "cos(x) * cos(y) * cos(z)"};
+                                                      "cos(x) * cos(y)"};
 #endif
 #if (GEMPIC_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalH = {"cos(x) * cos(y) * cos(z)", 
                                                       "cos(x) * cos(y) * cos(z)",
                                                       "cos(x) * cos(y) * cos(z)"};
 #endif
-    
+
     for (int i = 0; i < 3; ++i)
     {
         parser[i].define(analyticalH[i]);
@@ -347,7 +348,7 @@ int main (int argc, char *argv[])
 #if (GEMPIC_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalD = {"cos(x) * cos(y)", 
                                                       "cos(x) * cos(y)",
-                                                      "cos(x) * cos(y) * cos(z)"};
+                                                      "cos(x) * cos(y)"};
 #endif
 #if (GEMPIC_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalD = {"cos(x) * cos(y) * cos(z)", 
@@ -427,7 +428,6 @@ int main (int argc, char *argv[])
             });
         }
     }
-
 
     bool passD = false;
     

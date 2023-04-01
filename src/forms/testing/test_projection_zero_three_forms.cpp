@@ -14,9 +14,9 @@ int main (int argc, char *argv[])
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(4, 4, 4)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {AMREX_D_DECL(1, 1, 1)};
+	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
 
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
