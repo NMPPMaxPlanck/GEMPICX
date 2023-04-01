@@ -218,11 +218,10 @@ int main (int argc, char *argv[])
         });
     }
 
-    rhoAn.averageSync();
     rhoAn.fillBoundary();
 
     // Calculate error
-	DeRhamField<Grid::dual, Space::cell> errorRho(deRham);
+	DeRhamField<Grid::primal, Space::cell> errorRho(deRham);
     for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
@@ -314,6 +313,11 @@ int main (int argc, char *argv[])
     amrex::Real errorQDual_norm0 = errorQDual.data.norm0();
     amrex::Real errorRho_norm0 = errorRho.data.norm0();
     amrex::Real errorRhoDual_norm0 = errorRhoDual.data.norm0();
+
+    amrex::Print() << "errorQ_norm0 = " << errorQ_norm0 << std::endl;
+    amrex::Print() << "errorQDual_norm0 = " << errorQDual_norm0 << std::endl;
+    amrex::Print() << "errorRho_norm0 = " << errorRho_norm0 << std::endl;
+    amrex::Print() << "errorRhoDual_norm0 = " << errorRhoDual_norm0 << std::endl;
 
     if (std::max({errorQ_norm0, errorQDual_norm0, errorRho_norm0, errorRhoDual_norm0}) < tol)
     {

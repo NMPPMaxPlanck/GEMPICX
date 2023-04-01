@@ -101,12 +101,12 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0]/2;
+        const amrex::Real drHalfX = dr[0] / 2;
 #if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1]/2;
+        const amrex::Real drHalfY = dr[1] / 2;
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2]/2;
+        const amrex::Real drHalfZ = dr[2] / 2;
 #endif
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -138,13 +138,13 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx=0; qx<nQuad; ++qx)
+            for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
                 r[0] = midpointX + quadPoints[qx] * drHalfX;
 
 #if (GEMPIC_SPACEDIM > 1)
-                for (int qy=0; qy<nQuad; ++qy)
+                for (int qy = 0; qy < nQuad; ++qy)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 1)
@@ -152,7 +152,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
-                    for (int qz=0; qz<nQuad; ++qz)
+                    for (int qz = 0; qz < nQuad; ++qz)
 #endif
                     {
 #if (GEMPIC_SPACEDIM > 2)
@@ -179,7 +179,6 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
     }
 
     field.fillBoundary();
-    field.averageSync();
 }
 
 void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
@@ -241,12 +240,12 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0]/2;
+        const amrex::Real drHalfX = dr[0] / 2;
 #if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1]/2;
+        const amrex::Real drHalfY = dr[1] / 2;
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2]/2;
+        const amrex::Real drHalfZ = dr[2] / 2;
 #endif
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -278,13 +277,13 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx=0; qx<nQuad; ++qx)
+            for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
                 r[0] = midpointX + quadPoints[qx] * drHalfX;
 
 #if (GEMPIC_SPACEDIM > 1)
-                for (int qy=0; qy<nQuad; ++qy)
+                for (int qy = 0; qy < nQuad; ++qy)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 1)
@@ -292,7 +291,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
-                    for (int qz=0; qz<nQuad; ++qz)
+                    for (int qz = 0; qz < nQuad; ++qz)
 #endif
                     {
 #if (GEMPIC_SPACEDIM > 2)

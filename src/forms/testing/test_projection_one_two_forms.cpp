@@ -127,7 +127,7 @@ int main (int argc, char *argv[])
     amrex::Real errorEx_norm0 = errorE.data[0].norm0();
     amrex::Real errorEy_norm0 = errorE.data[1].norm0();
     amrex::Real errorEz_norm0 = errorE.data[2].norm0();
-    amrex::Print() << errorEx_norm0 << ", " << errorEy_norm0 << ", " << errorEz_norm0 << std::endl;
+    amrex::Print() << "errorEx_norm0 = " << errorEx_norm0 << ", errorEy_norm0 = " << errorEy_norm0 << ", errorEz_norm0 = " << errorEz_norm0 << std::endl;
 
     if (std::max({errorEx_norm0, errorEy_norm0, errorEz_norm0}) < tol)
         passE = true;
@@ -230,7 +230,7 @@ int main (int argc, char *argv[])
     amrex::Real errorBx_norm0 = errorB.data[0].norm0();
     amrex::Real errorBy_norm0 = errorB.data[1].norm0();
     amrex::Real errorBz_norm0 = errorB.data[2].norm0();
-    amrex::Print() << errorBx_norm0 << ", " << errorBy_norm0 << ", " << errorBz_norm0 << std::endl;
+    amrex::Print() << "errorBx_norm0 = " << errorBx_norm0 << ", errorBy_norm0 = " << errorBy_norm0 << ", errorBz_norm0 = " << errorBz_norm0 << std::endl;
 
     if (std::max({errorBx_norm0, errorBy_norm0, errorBz_norm0}) < tol)
         passB = true;
@@ -332,7 +332,7 @@ int main (int argc, char *argv[])
     amrex::Real errorHx_norm0 = errorH.data[0].norm0();
     amrex::Real errorHy_norm0 = errorH.data[1].norm0();
     amrex::Real errorHz_norm0 = errorH.data[2].norm0();
-    amrex::Print() << errorHx_norm0 << ", " << errorHy_norm0 << ", " << errorHz_norm0 << std::endl;
+    amrex::Print() << "errorHx_norm0 = " << errorHx_norm0 << ", errorHy_norm0 = " << errorHy_norm0 << ", errorHz_norm0 = " << errorHz_norm0 << std::endl;
 
     if (std::max({errorHx_norm0, errorHy_norm0, errorHz_norm0}) < tol)
         passH = true;
@@ -434,7 +434,7 @@ int main (int argc, char *argv[])
     amrex::Real errorDx_norm0 = errorD.data[0].norm0();
     amrex::Real errorDy_norm0 = errorD.data[1].norm0();
     amrex::Real errorDz_norm0 = errorD.data[2].norm0();
-    amrex::Print() << errorDx_norm0 << ", " << errorDy_norm0 << ", " << errorDz_norm0 << std::endl;
+    amrex::Print() << "errorDx_norm0 = " << errorDx_norm0 << ", errorDy_norm0 = " << errorDy_norm0 << ", errorDz_norm0 = " << errorDz_norm0 << std::endl;
 
     if (std::max({errorDx_norm0, errorDy_norm0, errorDz_norm0}) < tol)
         passD = true;
