@@ -102,7 +102,7 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
    {
        const amrex::Box &bx = mfi.validbox();
 
-       amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.data[0])[mfi].array()
+       amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.data[0])[mfi].array();
 #if (GEMPIC_SPACEDIM > 2)
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
 #endif
