@@ -1,5 +1,5 @@
 # Minimum version of CMake required to build this project
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.14.0)
 set(CMAKE_CXX_STANDARD 14)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -176,6 +176,8 @@ add_subdirectory(src)
 add_subdirectory(simulations)
 # Add doxygen documentation
 add_subdirectory(doc)
+# Add subfolder with tests
+add_subdirectory(Testing)
 
 # Config summary
 message( STATUS "GEMPIC configuration summary: ")
@@ -198,5 +200,3 @@ FetchContent_Declare(
   URL https://github.com/google/googletest/archive/b796f7d44681514f58a683a3a71ff17c94edb0c1.zip
 )
 FetchContent_MakeAvailable(googletest)
-
-add_subdirectory(Testing)
