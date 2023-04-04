@@ -818,7 +818,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                         break;
                     
                     default:
-                        amrex::Print() << "wrong form entered" << std::endl;
                         break;
                     }
                     
