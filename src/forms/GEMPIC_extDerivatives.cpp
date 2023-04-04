@@ -27,7 +27,7 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
 #endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = 0
+          twoForm0(i, j, k) = 0.
 #if (GEMPIC_SPACEDIM > 1)
                             + oneForm2(i, j + 1, k) - oneForm2(i, j, k)
 #endif
@@ -111,13 +111,14 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 #endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = 0
+          twoForm0(i, j, k) = 0.
 #if (GEMPIC_SPACEDIM > 1)
                             + oneForm2(i, j, k) - oneForm2(i, j - 1, k)
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-                            - oneForm1(i, j, k) + oneForm1(i, j, k - 1);
+                            - oneForm1(i, j, k) + oneForm1(i, j, k - 1)
 #endif
+                                                                        ;
        });
    }
 
@@ -206,10 +207,11 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0
+                    oneFormMF(i, j, k) = 0.
 #if (GEMPIC_SPACEDIM > 1)
-                                        + zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k);
+                                        + zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k)
 #endif
+                                                                                        ;
                 });
             }
             
@@ -217,10 +219,11 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0
+                    oneFormMF(i, j, k) = 0.
 #if (GEMPIC_SPACEDIM > 2)
-                                        + zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k);
+                                        + zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k)
 #endif
+                                                                                        ;
                 });
             }
         }
@@ -258,10 +261,11 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0
+                    oneFormMF(i, j, k) = 0.
 #if (GEMPIC_SPACEDIM > 1)
-                                        + zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k);
+                                        + zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k)
 #endif
+                                                                                        ;
                 });
             }
             
@@ -269,10 +273,11 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0
+                    oneFormMF(i, j, k) = 0.
 #if (GEMPIC_SPACEDIM > 2)
-                                        + zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1);
+                                        + zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1)
 #endif
+                                                                                        ;
                 });
             }
         }

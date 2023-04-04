@@ -17,6 +17,7 @@ add_executable ( test_hodge_sinusoidal_degree_6 ${PARAMETERS} ${FDDERHAMCOMPLEX}
 add_executable ( test_projection_one_two_forms ${PARAMETERS} ${FDDERHAMCOMPLEX} test_projection_one_two_forms.cpp )
 add_executable ( test_projection_zero_three_forms ${PARAMETERS} ${FDDERHAMCOMPLEX} test_projection_zero_three_forms.cpp )
 add_executable ( test_plus_minus_mult ${PARAMETERS} ${FDDERHAMCOMPLEX} test_plus_minus_mult.cpp )
+add_executable ( test_FDHodge_degree_4 ${PARAMETERS} ${FDDERHAMCOMPLEX} test_FDHodge_degree_4.cpp )
 
 #message("#########")
 #message( ${AMReX_DIR} )
@@ -36,6 +37,7 @@ target_link_libraries( test_hodge_sinusoidal_degree_6 AMReX::amrex AMReX::Flags_
 target_link_libraries( test_projection_one_two_forms AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_projection_zero_three_forms AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_plus_minus_mult AMReX::amrex AMReX::Flags_CXX )
+target_link_libraries( test_FDHodge_degree_4 AMReX::amrex AMReX::Flags_CXX )
 
 if (USE_CUDA)
 	setup_target_for_cuda_compilation( test_gempic_norm )
@@ -53,6 +55,7 @@ if (USE_CUDA)
     setup_target_for_cuda_compilation( test_projection_one_two_forms )
     setup_target_for_cuda_compilation( test_projection_zero_three_forms )
     setup_target_for_cuda_compilation( test_plus_minus_mult )
+    setup_target_for_cuda_compilation( test_FDHodge_degree_4 )
 endif()
 
 if("${AMReX_SPACEDIM}" STREQUAL "3")

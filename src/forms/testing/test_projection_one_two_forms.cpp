@@ -4,7 +4,7 @@
 
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
-///xxx
+
 int main (int argc, char *argv[]) 
 {
 	amrex::Initialize(argc, argv);

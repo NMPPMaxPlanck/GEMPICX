@@ -275,8 +275,8 @@ public:
     void initializeField(DeRhamField<Grid::primal, Space::face>& field)
     {
         field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, 1, nGhost[0]);
-        field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, 1, nGhost[1]);
-        field.data[2].define(amrex::convert(grid, primalFaceIndex[2]) , distriMap, 1, nGhost[2]);
+        field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, 1, nGhost[0]);
+        field.data[2].define(amrex::convert(grid, primalFaceIndex[2]) , distriMap, 1, nGhost[0]);
     }
 
     void initializeField(DeRhamField<Grid::primal, Space::cell>& field)
@@ -665,7 +665,7 @@ inline void DeRhamField<grid, space>::plusEqual(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).plus(form.data[comp], 0, 1, nGhost[comp]);
+        data[comp].plus(form.data[comp], 0, 1, nGhost[0]);
 }
 
 template <int grid, int space>
@@ -673,7 +673,7 @@ inline void DeRhamField<grid, space>::operator+=(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).plus(form.data[comp], 0, 1, nGhost[comp]);
+        data[comp].plus(form.data[comp], 0, 1, nGhost[0]);
 }
 
 
@@ -683,7 +683,7 @@ inline void DeRhamField<grid, space>::minusEqual(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).minus(form.data[comp], 0, 1, nGhost[comp]);
+        data[comp].minus(form.data[comp], 0, 1, nGhost[0]);
 }
 
 template <int grid, int space>
@@ -691,7 +691,7 @@ inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        ((this) -> data[comp]).minus(form.data[comp], 0, 1, nGhost[comp]);
+        data[comp].minus(form.data[comp], 0, 1, nGhost[0]);
 }
 
 }  
