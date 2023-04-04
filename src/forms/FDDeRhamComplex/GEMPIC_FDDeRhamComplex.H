@@ -619,7 +619,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                     val = ((1./24. * std::pow(diff, 2) / std::pow(dx, 2) - 1./8.) * std::pow(diff, 2) / std::pow(dx, 2) + 1./30.) / dx;
                     break;
                 default:
-                    amrex::Print() << "invalid basis function selected" << std::endl;
                     break;
                 }
                 break;
