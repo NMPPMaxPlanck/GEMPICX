@@ -13,9 +13,9 @@ int main (int argc, char *argv[])
     const amrex::Real tol = 1e-5;
     
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 8, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
 
@@ -71,17 +71,9 @@ int main (int argc, char *argv[])
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
 
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    r0[0] + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                    r0[1] + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                    r0[2] + k*dr[2]
-#endif
+                    AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
                 };
 
                 if (comp == 0)
@@ -127,7 +119,6 @@ int main (int argc, char *argv[])
     amrex::Real errorEx_norm0 = errorE.data[0].norm0();
     amrex::Real errorEy_norm0 = errorE.data[1].norm0();
     amrex::Real errorEz_norm0 = errorE.data[2].norm0();
-    amrex::Print() << "errorEx_norm0 = " << errorEx_norm0 << ", errorEy_norm0 = " << errorEy_norm0 << ", errorEz_norm0 = " << errorEz_norm0 << std::endl;
 
     if (std::max({errorEx_norm0, errorEy_norm0, errorEz_norm0}) < tol)
         passE = true;
@@ -174,17 +165,9 @@ int main (int argc, char *argv[])
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    r0[0] + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                    ,
-                    r0[1] + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                    ,
-                    r0[2] + k*dr[2]
-#endif
+                    AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
                 };
 
                 if (comp == 0)
@@ -230,7 +213,6 @@ int main (int argc, char *argv[])
     amrex::Real errorBx_norm0 = errorB.data[0].norm0();
     amrex::Real errorBy_norm0 = errorB.data[1].norm0();
     amrex::Real errorBz_norm0 = errorB.data[2].norm0();
-    amrex::Print() << "errorBx_norm0 = " << errorBx_norm0 << ", errorBy_norm0 = " << errorBy_norm0 << ", errorBz_norm0 = " << errorBz_norm0 << std::endl;
 
     if (std::max({errorBx_norm0, errorBy_norm0, errorBz_norm0}) < tol)
         passB = true;
@@ -279,17 +261,9 @@ int main (int argc, char *argv[])
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    (r0[0] + 0.5*dr[0]) + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                    (r0[1] + 0.5*dr[1]) + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                    (r0[2] + 0.5*dr[2]) + k*dr[2]
-#endif
+                    AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
                 };
                 
                 if (comp == 0)
@@ -332,7 +306,6 @@ int main (int argc, char *argv[])
     amrex::Real errorHx_norm0 = errorH.data[0].norm0();
     amrex::Real errorHy_norm0 = errorH.data[1].norm0();
     amrex::Real errorHz_norm0 = errorH.data[2].norm0();
-    amrex::Print() << "errorHx_norm0 = " << errorHx_norm0 << ", errorHy_norm0 = " << errorHy_norm0 << ", errorHz_norm0 = " << errorHz_norm0 << std::endl;
 
     if (std::max({errorHx_norm0, errorHy_norm0, errorHz_norm0}) < tol)
         passH = true;
@@ -381,17 +354,9 @@ int main (int argc, char *argv[])
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    (r0[0] + 0.5*dr[0]) + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                    (r0[1] + 0.5*dr[1]) + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                    (r0[2] + 0.5*dr[2]) + k*dr[2]
-#endif
+                    AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
                 };
 
                 if (comp == 0)
@@ -434,7 +399,13 @@ int main (int argc, char *argv[])
     amrex::Real errorDx_norm0 = errorD.data[0].norm0();
     amrex::Real errorDy_norm0 = errorD.data[1].norm0();
     amrex::Real errorDz_norm0 = errorD.data[2].norm0();
+
+    /*
+    amrex::Print() << "errorEx_norm0 = " << errorEx_norm0 << ", errorEy_norm0 = " << errorEy_norm0 << ", errorEz_norm0 = " << errorEz_norm0 << std::endl;
+    amrex::Print() << "errorBx_norm0 = " << errorBx_norm0 << ", errorBy_norm0 = " << errorBy_norm0 << ", errorBz_norm0 = " << errorBz_norm0 << std::endl;
+    amrex::Print() << "errorHx_norm0 = " << errorHx_norm0 << ", errorHy_norm0 = " << errorHy_norm0 << ", errorHz_norm0 = " << errorHz_norm0 << std::endl;
     amrex::Print() << "errorDx_norm0 = " << errorDx_norm0 << ", errorDy_norm0 = " << errorDy_norm0 << ", errorDz_norm0 = " << errorDz_norm0 << std::endl;
+    */
 
     if (std::max({errorDx_norm0, errorDy_norm0, errorDz_norm0}) < tol)
         passD = true;

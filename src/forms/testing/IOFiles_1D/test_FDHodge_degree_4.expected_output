@@ -1,0 +1,6 @@
+1D Finite Difference Hodge degree 4 convergence test:
+
+Hodge 1 -> 2 rate: 1.98
+Hodge 2 -> 1 rate: 2.53
+Hodge 0 -> 3 rate: 2
+Hodge 3 -> 0 rate: 3.99

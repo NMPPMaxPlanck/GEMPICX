@@ -59,17 +59,9 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
 
@@ -100,55 +92,40 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::RealVect dr = m_dr;
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
-
-        const amrex::Real drHalfX = dr[0] / 2;
-#if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1] / 2;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2] / 2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
-
             // Midpoint for the quadrature rule
-            amrex::Real midpointX = r[0] + drHalfX;
-#if (GEMPIC_SPACEDIM > 1)
-            amrex::Real midpointY = r[1] + drHalfY;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            amrex::Real midpointZ = r[2] + drHalfZ;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] + drHalf[0], r[1] + drHalf[1], r[2] + drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
             for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
-                r[0] = midpointX + quadPoints[qx] * drHalfX;
+                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
 
 #if (GEMPIC_SPACEDIM > 1)
                 for (int qy = 0; qy < nQuad; ++qy)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpointY + quadPoints[qy] * drHalfY;
+                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -156,24 +133,17 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 #endif
                     {
 #if (GEMPIC_SPACEDIM > 2)
-                        r[2] = midpointZ + quadPoints[qz] * drHalfZ;
+                        r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
 #endif
                 
                         // Increment integral according to quadrature rule in the z direction with dx and dy
-                        integral += quadWeights[qx] * 
-#if (GEMPIC_SPACEDIM > 1)
-                                    quadWeights[qy] * 
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                    quadWeights[qz] * 
-#endif
-                                    func(AMREX_D_DECL(r[0], r[1], r[2]), t);
+                        integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], quadWeights[qz]) * func(AMREX_D_DECL(r[0], r[1], r[2]), t);
                     }
                 } 
             }
         
             // Rescale the integral and assign it to degrees of freedom
-            threeForm(i, j, k) = integral * GEMPIC_D_MULT(drHalfX, drHalfY, drHalfZ);
+            threeForm(i, j, k) = integral * GEMPIC_D_MULT(drHalf[0], drHalf[1], drHalf[2]);
         });
 
     }
@@ -197,17 +167,9 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         {
 
             // Compute the position of the point i + 1/2, j + 1/2, k + 1/2
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                (r0[0] + 0.5*dr[0]) + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                (r0[1] + 0.5*dr[1]) + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                (r0[2] + 0.5*dr[2]) + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
 
 
@@ -240,54 +202,40 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0] / 2;
-#if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1] / 2;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2] / 2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + 0.5*dr[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                            ,
-                r0[1] + 0.5*dr[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                            ,
-                r0[2] + 0.5*dr[2] + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
 
-
             // Midpoint for the quadrature rule
-            amrex::Real midpointX = r[0] - drHalfX;
-#if (GEMPIC_SPACEDIM > 1)
-            amrex::Real midpointY = r[1] - drHalfY;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            amrex::Real midpointZ = r[2] - drHalfZ;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] - drHalf[0], r[1] - drHalf[1], r[2] - drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
             for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
-                r[0] = midpointX + quadPoints[qx] * drHalfX;
+                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
 
 #if (GEMPIC_SPACEDIM > 1)
                 for (int qy = 0; qy < nQuad; ++qy)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpointY + quadPoints[qy] * drHalfY;
+                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -295,24 +243,17 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 #endif
                     {
 #if (GEMPIC_SPACEDIM > 2)
-                        r[2] = midpointZ + quadPoints[qz] * drHalfZ;
+                        r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
 #endif
                 
                         // Increment integral according to quadrature rule in the z direction with dx and dy
-                        integral += quadWeights[qx] * 
-#if (GEMPIC_SPACEDIM > 1)
-                                    quadWeights[qy] * 
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                    quadWeights[qz] * 
-#endif
-                                    func(AMREX_D_DECL(r[0], r[1], r[2]), t);
+                        integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], quadWeights[qz]) * func(AMREX_D_DECL(r[0], r[1], r[2]), t);
                     }
                 } 
             }
         
             // Rescale the integral and assign it to degrees of freedom
-            threeForm(i, j, k) = integral * GEMPIC_D_MULT(drHalfX, drHalfY, drHalfZ);
+            threeForm(i, j, k) = integral * GEMPIC_D_MULT(drHalf[0], drHalf[1], drHalf[2]);
         });
     }
 
@@ -345,21 +286,13 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             {
 
                 // Compute the position of the point i + 1/2, j + 1/2, k + 1/2
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    (r0[0] + 0.5*dr[0]) + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                    (r0[1] + 0.5*dr[1]) + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                    (r0[2] + 0.5*dr[2]) + k * dr[2]
-#endif
+                    AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
                 };
                 
 #if (GEMPIC_SPACEDIM < 3)
-                if (comp < GEMPIC_SPACEDIM)
+                if (comp < GEMPIC_SPACEDIM) // 1-forms in 1D, 2D are node centered in the last 1, 2 components respectively
 #endif
                 {
                     const amrex::Real drHalf = dr[comp] / 2;
@@ -413,35 +346,25 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::RealVect dr = m_dr;
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
-#if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1] / 2;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2] / 2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
+
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
             // Midpoint for the quadrature rule
-#if (GEMPIC_SPACEDIM > 1)
-            amrex::Real midpointY = r[1] + drHalfY;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            amrex::Real midpointZ = r[2] + drHalfZ;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] + drHalf[0], r[1] + drHalf[1], r[2] + drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
@@ -451,14 +374,14 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             {
                 // Update location of quadrature point
 #if (GEMPIC_SPACEDIM > 1)
-                r[1] = midpointY + quadPoints[qy] * drHalfY;
+                r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
 #endif
 #if (GEMPIC_SPACEDIM > 2)
                 for (int qz = 0; qz < nQuad; ++qz)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpointZ + quadPoints[qz] * drHalfZ;
+                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
 #endif
             
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) * func[0](AMREX_D_DECL(r[0], r[1], r[2]), t); // in 1D this is just evalutation
@@ -466,14 +389,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             } 
         
             // Rescale the integral and assign it to array of degrees of freedom
-            twoForm(i, j, k) = integral
-#if (GEMPIC_SPACEDIM > 1)
-                                * drHalfY
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                * drHalfZ
-#endif
-                                ;
+            twoForm(i, j, k) = GEMPIC_D_MULT(integral, drHalf[1], drHalf[2]);
         });
 
     }
@@ -489,47 +405,39 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0] / 2;
-#if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2] / 2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
-
             // Midpoint for the quadrature rule
-            amrex::Real midpointX = r[0] + drHalfX;
-#if (GEMPIC_SPACEDIM > 2)
-            amrex::Real midpointZ = r[2] + drHalfZ;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] + drHalf[0], r[1] + drHalf[1], r[2] + drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
             for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
-                r[0] = midpointX + quadPoints[qx] * drHalfX;
+                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
 
 #if (GEMPIC_SPACEDIM > 2)
                 for (int qz = 0; qz < nQuad; ++qz)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpointZ + quadPoints[qz] * drHalfZ;
+                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
 #endif
             
                     integral += GEMPIC_D_MULT(quadWeights[qx], 1., quadWeights[qz]) * func[1](AMREX_D_DECL(r[0], r[1], r[2]), t);
@@ -537,11 +445,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             } 
 
             // Rescale the integral and assign it to array of degrees of freedom
-            twoForm(i, j, k) = integral * drHalfX
-#if (GEMPIC_SPACEDIM > 2)
-                                * drHalfZ
-#endif
-                                    ;
+            twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[0], 1, drHalf[2]);
         });
 
     }
@@ -556,47 +460,39 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0]/2;
-#if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1]/2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
-
             // Midpoint for the quadrature rule
-            amrex::Real midpointX = r[0] + drHalfX;
-#if (GEMPIC_SPACEDIM > 1)
-            amrex::Real midpointY = r[1] + drHalfY;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] + drHalf[0], r[1] + drHalf[1], r[2] + drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
             for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
-                r[0] = midpointX + quadPoints[qx] * drHalfX;
+                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
 
 #if (GEMPIC_SPACEDIM > 1)
                 for (int qy = 0; qy < nQuad; ++qy)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpointY + quadPoints[qy] * drHalfY;
+                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
 #endif
             
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], 1.) * func[2](AMREX_D_DECL(r[0], r[1], r[2]), t);
@@ -604,11 +500,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             } 
         
             // Rescale the integral and assign it to array of degrees of freedom
-            twoForm(i, j, k) = integral * drHalfX
-#if (GEMPIC_SPACEDIM > 1)
-                                        * drHalfY
-#endif
-                                                ;
+            twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[0], drHalf[1], 1);
         });
 
     }
@@ -642,21 +534,13 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             {
 
                 // Compute the position of the point i, j, k
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    r0[0] + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                    r0[1] + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                    r0[2] + k * dr[2]
-#endif
+                    AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
                 };
 
 #if (GEMPIC_SPACEDIM < 3)
-                if (comp < GEMPIC_SPACEDIM)
+                if (comp < GEMPIC_SPACEDIM) // 1-forms in 1D, 2D are node centered in the last 1, 2 components respectively
 #endif
                 {
                     const amrex::Real drHalf = dr[comp] / 2;
@@ -713,35 +597,25 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-#if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1] / 2;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2] / 2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
+
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                (r0[0] + 0.5*dr[0]) + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                (r0[1] + 0.5*dr[1]) + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                (r0[2] + 0.5*dr[2]) + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
 
             // Midpoint for the quadrature rule. The minus for dual means that it integrates from j-1/2 to j+1/2
-#if (GEMPIC_SPACEDIM > 1)
-            amrex::Real midpointY = r[1] - drHalfY;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-            amrex::Real midpointZ = r[2] - drHalfZ;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] - drHalf[0], r[1] - drHalf[1], r[2] - drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
@@ -751,7 +625,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             {
                 // Update location of quadrature point
 #if (GEMPIC_SPACEDIM > 1)
-                r[1] = midpointY + quadPoints[qy] * drHalfY;
+                r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
 #endif
 
 #if (GEMPIC_SPACEDIM > 2)
@@ -759,7 +633,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpointZ + quadPoints[qz] * drHalfZ;
+                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
 #endif
             
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) * func[0](AMREX_D_DECL(r[0], r[1], r[2]), t); // in 1D this is just evalutation
@@ -767,14 +641,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             } 
         
             // Rescale the integral and assign it to array of degrees of freedom
-            twoForm(i, j, k) = integral
-#if (GEMPIC_SPACEDIM > 1)
-                                * drHalfY
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                * drHalfZ
-#endif
-                                ;
+            twoForm(i, j, k) = GEMPIC_D_MULT(integral, drHalf[1], drHalf[2]);
         });
 
     }
@@ -790,47 +657,41 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0] / 2; 
-#if (GEMPIC_SPACEDIM > 2)
-        const amrex::Real drHalfZ = dr[2] / 2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
+
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                (r0[0] + 0.5*dr[0]) + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                (r0[1] + 0.5*dr[1]) + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                (r0[2] + 0.5*dr[2]) + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
 
 
             // Midpoint for the quadrature rule
-            amrex::Real midpointX = r[0] - drHalfX;
-#if (GEMPIC_SPACEDIM > 2)
-            amrex::Real midpointZ = r[2] - drHalfZ;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] - drHalf[0], r[1] - drHalf[1], r[2] - drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
             for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
-                r[0] = midpointX + quadPoints[qx] * drHalfX;
+                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
 
 #if (GEMPIC_SPACEDIM > 2)
                 for (int qz = 0; qz < nQuad; ++qz)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpointZ + quadPoints[qz] * drHalfZ;
+                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
 #endif
             
                     integral += GEMPIC_D_MULT(quadWeights[qx], 1., quadWeights[qz]) * func[1](AMREX_D_DECL(r[0], r[1], r[2]), t);
@@ -838,11 +699,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             } 
 
             // Rescale the integral and assign it to array of degrees of freedom
-            twoForm(i, j, k) = integral* drHalfX
-#if (GEMPIC_SPACEDIM > 2)
-                                * drHalfZ
-#endif
-                                    ;
+            twoForm(i, j, k) = GEMPIC_D_MULT(integral* drHalf[0], 1, drHalf[2]);
         });
 
     }
@@ -857,47 +714,41 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
 
-        const amrex::Real drHalfX = dr[0]/2;
-#if (GEMPIC_SPACEDIM > 1)
-        const amrex::Real drHalfY = dr[1]/2;
-#endif
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+        {
+            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+        };
+        
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
             // Compute the position of the point i, j, k
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                (r0[0] + 0.5*dr[0]) + i * dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                (r0[1] + 0.5*dr[1]) + j * dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                (r0[2] + 0.5*dr[2]) + k * dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
 
 
             // Midpoint for the quadrature rule
-            amrex::Real midpointX = r[0] - drHalfX;
-#if (GEMPIC_SPACEDIM > 1)
-            amrex::Real midpointY = r[1] - drHalfY;
-#endif
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint =
+            {
+                AMREX_D_DECL(r[0] - drHalf[0], r[1] - drHalf[1], r[2] - drHalf[2])
+            };
+
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
             for (int qx = 0; qx < nQuad; ++qx)
             {
                 // Update location of quadrature point
-                r[0] = midpointX + quadPoints[qx] * drHalfX;
+                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
 
 #if (GEMPIC_SPACEDIM > 1)
                 for (int qy = 0; qy < nQuad; ++qy)
 #endif
                 {
 #if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpointY + quadPoints[qy] * drHalfY;
+                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
 #endif
             
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], 1.) * func[2](AMREX_D_DECL(r[0], r[1], r[2]), t);
@@ -905,11 +756,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             } 
         
             // Rescale the integral and assign it to array of degrees of freedom
-            twoForm(i, j, k) = integral * drHalfX
-#if (GEMPIC_SPACEDIM > 1)
-                                        * drHalfY
-#endif
-                                                ;
+            twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[0], drHalf[1], 1);
         });
 
     }

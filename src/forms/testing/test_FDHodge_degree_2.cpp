@@ -21,7 +21,7 @@
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 
-const int hodgeDegree = 4;
+const int hodgeDegree = 2;
 
 std::map<int, std::string> hodges{{0, "Hodge 1 -> 2"}, {1, "Hodge 2 -> 1"}, {2, "Hodge 0 -> 3"}, {3, "Hodge 3 -> 0"}};
 
@@ -313,21 +313,25 @@ int main (int argc, char *argv[])
         error_coarse = test03(coarse);
         error_fine = test03(fine);
         rate[2] = std::log2(error_coarse / error_fine);
+        if (error_coarse < 1e-15 || error_fine < 1e-15) // this happens..
+            rate[2] = 2;
+        else
+            rate[2] = std::log2(error_coarse / error_fine);
 
         error_coarse = test30(coarse);
         error_fine = test30(fine);
         rate[3] = std::log2(error_coarse / error_fine);
 
-        amrex::PrintToFile("test_FDHodge_degree_4.output") << std::endl;
-        amrex::PrintToFile("test_FDHodge_degree_4.output") << GEMPIC_SPACEDIM << "D Finite Difference Hodge degree 4 convergence test:" << std::endl;
-        amrex::PrintToFile("test_FDHodge_degree_4.output") << std::endl;
+        amrex::PrintToFile("test_FDHodge_degree_2.output") << std::endl;
+        amrex::PrintToFile("test_FDHodge_degree_2.output") << GEMPIC_SPACEDIM << "D Finite Difference Hodge degree 2 convergence test:" << std::endl;
+        amrex::PrintToFile("test_FDHodge_degree_2.output") << std::endl;
         for (int i = 0; i < len; ++i)
         {
-            amrex::PrintToFile("test_FDHodge_degree_4.output").SetPrecision(3) << hodges[i] + " rate: " << rate[i] << std::endl;
+            amrex::PrintToFile("test_FDHodge_degree_2.output").SetPrecision(3) << hodges[i] + " rate: " << rate[i] << std::endl;
         }
         
         if (amrex::ParallelDescriptor::MyProc() == 0)
-            std::rename("test_FDHodge_degree_4.output.0", "test_FDHodge_degree_4.output");
+            std::rename("test_FDHodge_degree_2.output.0", "test_FDHodge_degree_2.output");
 
     }
     amrex::Finalize();

@@ -304,11 +304,11 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 #endif
             
                 if(comp == 0)
-                    oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1,dr[1],dr[2]) * weight));
+                    oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
                 if(comp == 1)
-                    oneForm.data[comp].mult(GEMPIC_D_MULT(1,dr[1],1) / (GEMPIC_D_MULT(dr[0],1,dr[2]) * weight));
+                    oneForm.data[comp].mult(GEMPIC_D_MULT(1, dr[1], 1) / (GEMPIC_D_MULT(dr[0], 1, dr[2]) * weight));
                 if(comp == 2)
-                    oneForm.data[comp].mult(GEMPIC_D_MULT(1,1,dr[2]) / (GEMPIC_D_MULT(dr[0],dr[1],1) * weight));
+                    oneForm.data[comp].mult(GEMPIC_D_MULT(1, 1, dr[2]) / (GEMPIC_D_MULT(dr[0], dr[1], 1) * weight));
             }
 
             oneForm.averageSync();
@@ -345,11 +345,11 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 #endif
             
                 if(comp == 0)
-                    oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1,dr[1],dr[2]) * weight));
+                    oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
                 if(comp == 1)
-                    oneForm.data[comp].mult(GEMPIC_D_MULT(1,dr[1],1)/(GEMPIC_D_MULT(dr[0],1,dr[2]) * weight));
+                    oneForm.data[comp].mult(GEMPIC_D_MULT(1, dr[1], 1)/(GEMPIC_D_MULT(dr[0], 1, dr[2]) * weight));
                 if(comp == 2)
-                    oneForm.data[comp].mult(GEMPIC_D_MULT(1,1,dr[2]) / (GEMPIC_D_MULT(dr[0],dr[1],1) * weight));
+                    oneForm.data[comp].mult(GEMPIC_D_MULT(1, 1, dr[2]) / (GEMPIC_D_MULT(dr[0], dr[1], 1) * weight));
             }
 
             oneForm.averageSync();
@@ -387,11 +387,11 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 #endif
             
                 if(comp == 0)
-                    twoForm.data[comp].mult((GEMPIC_D_MULT(1,dr[1],dr[2])) / (GEMPIC_D_MULT(dr[0],1,1) * weight));
+                    twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) / (GEMPIC_D_MULT(dr[0], 1, 1) * weight));
                 if(comp == 1)
-                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0],1,dr[2])) / (GEMPIC_D_MULT(1,dr[1],1) * weight));
+                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], 1, dr[2])) / (GEMPIC_D_MULT(1, dr[1], 1) * weight));
                 if(comp == 2)
-                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0],dr[1],1)) / (GEMPIC_D_MULT(1,1,dr[2]) * weight));
+                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], dr[1], 1)) / (GEMPIC_D_MULT(1, 1, dr[2]) * weight));
             }
 
             twoForm.averageSync();
@@ -428,11 +428,11 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 #endif
             
                 if(comp == 0)
-                    twoForm.data[comp].mult((GEMPIC_D_MULT(1,dr[1],dr[2])) / (GEMPIC_D_MULT(dr[0],1,1) * weight));
+                    twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) / (GEMPIC_D_MULT(dr[0], 1, 1) * weight));
                 if(comp == 1)
-                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0],1,dr[2])) / (GEMPIC_D_MULT(1,dr[1],1) * weight));
+                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], 1, dr[2])) / (GEMPIC_D_MULT(1, dr[1], 1) * weight));
                 if(comp == 2)
-                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0],dr[1],1)) / (GEMPIC_D_MULT(1,1,dr[2]) * weight));
+                    twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], dr[1], 1)) / (GEMPIC_D_MULT(1, 1, dr[2]) * weight));
             }
 
             twoForm.averageSync();
@@ -680,29 +680,19 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                 
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    amrex::GpuArray<amrex::Real, 3> rr;
                     // Compute the position of the point i, j, k
-                    rr[0] = r0[0] + i*dr[0] - (dual ? drHalfX : 0);
-#if (GEMPIC_SPACEDIM > 1)
-                    rr[1] = r0[1] + j*dr[1] - (dual ? drHalfY : 0);
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                    rr[2] = r0[2] + k*dr[2] - (dual ? drHalfZ : 0);
-#endif
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = 
+                    {
+                        AMREX_D_DECL(rr[0] = r0[0] + i*dr[0] - (dual ? drHalfX : 0),
+                                    rr[1] = r0[1] + j*dr[1] - (dual ? drHalfY : 0),
+                                    rr[2] = r0[2] + k*dr[2] - (dual ? drHalfZ : 0))
+                    };
 
                     amrex::Real error = 0.0;
 
-                    amrex::GpuArray<amrex::Real, 3> r = 
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = 
                     {
-                        rr[0] + drHalfX
-#if (GEMPIC_SPACEDIM > 1)
-                                        ,
-                        rr[1] + drHalfY
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                        ,
-                        rr[2] + drHalfZ
-#endif
+                        AMREX_D_DECL(rr[0] + drHalfX, rr[1] + drHalfY, rr[2] + drHalfZ)
                     };
 
                     amrex::Real fval = 0;
@@ -723,14 +713,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                                 int c = 0;
 #endif
                                 {
-                                    fval += funcMF(i+a,j+b,k+c) * evalLagrange<degree>(a, rr[0] + (dual ? dr[0] : 0), dr[0], r[0] + (dual ? dr[0] : 0))
-#if (GEMPIC_SPACEDIM > 1)
-                                                                * evalLagrange<degree>(b, rr[1] + (dual ? dr[1] : 0), dr[1], r[1] + (dual ? dr[1] : 0))
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                                * evalLagrange<degree>(c, rr[2] + (dual ? dr[2] : 0), dr[2], r[2] + (dual ? dr[2] : 0))
-#endif
-                                                                                                                                                        ;
+                                    fval += funcMF(i+a,j+b,k+c) * GEMPIC_D_MULT(evalLagrange<degree>(a, rr[0] + (dual ? dr[0] : 0), dr[0], r[0] + (dual ? dr[0] : 0)),
+                                                                                evalLagrange<degree>(b, rr[1] + (dual ? dr[1] : 0), dr[1], r[1] + (dual ? dr[1] : 0)),
+                                                                                evalLagrange<degree>(c, rr[2] + (dual ? dr[2] : 0), dr[2], r[2] + (dual ? dr[2] : 0)));
                                 }
                             }
                         }
@@ -750,14 +735,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                                 int c = 0;
 #endif
                                 {
-                                    fval += funcMF(i+a,j+b,k+c) * (comp == 0 ? evalEdge<degree>(a, rr[0], dr[0], r[0]) : evalLagrange<degree>(a, rr[0], dr[0], r[0]))
-#if (GEMPIC_SPACEDIM > 1)
-                                                                * (comp == 1 ? evalEdge<degree>(b, rr[1], dr[1], r[1]) : evalLagrange<degree>(b, rr[1], dr[1], r[1]))
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                                * (comp == 2 ? evalEdge<degree>(c, rr[2], dr[2], r[2]) : evalLagrange<degree>(c, rr[2], dr[2], r[2]))
-#endif
-                                                                                                                                                                    ;
+                                    fval += funcMF(i+a,j+b,k+c) * GEMPIC_D_MULT(comp == 0 ? evalEdge<degree>(a, rr[0], dr[0], r[0]) : evalLagrange<degree>(a, rr[0], dr[0], r[0]),
+                                                                                comp == 1 ? evalEdge<degree>(b, rr[1], dr[1], r[1]) : evalLagrange<degree>(b, rr[1], dr[1], r[1]),
+                                                                                comp == 2 ? evalEdge<degree>(c, rr[2], dr[2], r[2]) : evalLagrange<degree>(c, rr[2], dr[2], r[2]));
                                 }
                             }
                         }
@@ -777,14 +757,9 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                                 int c = 0;
 #endif
                                 {
-                                    fval += funcMF(i+a,j+b,k+c) * (comp == 0 ? evalLagrange<degree>(a, rr[0], dr[0], r[0]) : evalEdge<degree>(a, rr[0], dr[0], r[0]))
-#if (GEMPIC_SPACEDIM > 1)
-                                                                * (comp == 1 ? evalLagrange<degree>(b, rr[1], dr[1], r[1]) : evalEdge<degree>(b, rr[1], dr[1], r[1]))
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                                * (comp == 2 ? evalLagrange<degree>(c, rr[2], dr[2], r[2]) : evalEdge<degree>(c, rr[2], dr[2], r[2]))
-#endif
-                                                                                                                                                                    ;
+                                    fval += funcMF(i+a,j+b,k+c) * GEMPIC_D_MULT(comp == 0 ? evalLagrange<degree>(a, rr[0], dr[0], r[0]) : evalEdge<degree>(a, rr[0], dr[0], r[0]),
+                                                                                comp == 1 ? evalLagrange<degree>(b, rr[1], dr[1], r[1]) : evalEdge<degree>(b, rr[1], dr[1], r[1]),
+                                                                                comp == 2 ? evalLagrange<degree>(c, rr[2], dr[2], r[2]) : evalEdge<degree>(c, rr[2], dr[2], r[2]));
                                 }
                             }
                         }
@@ -804,14 +779,8 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                                 int c = 0;
 #endif
                                 {
-                                    fval += funcMF(i+a,j+b,k+c) * evalEdge<degree>(a, rr[0], dr[0], r[0])
-#if (GEMPIC_SPACEDIM > 1)
-                                                                * evalEdge<degree>(b, rr[1], dr[1], r[1])
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                                * evalEdge<degree>(c, rr[2], dr[2], r[2])
-#endif
-                                                                                                        ;
+                                    fval += funcMF(i+a,j+b,k+c) * GEMPIC_D_MULT(evalEdge<degree>(a, rr[0], dr[0], r[0]), evalEdge<degree>(b, rr[1], dr[1], r[1]),
+                                                                                evalEdge<degree>(c, rr[2], dr[2], r[2]));
                                 }
                             }
                         }
@@ -825,18 +794,18 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
                     {
                     case 0:
                         error += func(AMREX_D_DECL(r[0] + (dual ? dr[0] : 0),
-                                    r[1] + (dual ? dr[1] : 0),
-                                    r[2] + (dual ? dr[2] : 0)), t) - fval;
+                                                    r[1] + (dual ? dr[1] : 0),
+                                                    r[2] + (dual ? dr[2] : 0)), t) - fval;
                         break;
                     case 1:
                         error += func(AMREX_D_DECL(r[0] + (dual && comp != 0 ? dr[0] : 0),
-                                    r[1] + (dual && comp != 1 ? dr[1] : 0),
-                                    r[2] + (dual && comp != 2 ? dr[2] : 0)), t) - fval;
+                                                    r[1] + (dual && comp != 1 ? dr[1] : 0),
+                                                    r[2] + (dual && comp != 2 ? dr[2] : 0)), t) - fval;
                         break;
                     case 2:
                         error += func(AMREX_D_DECL(r[0] + (dual && comp == 0 ? dr[0] : 0),
-                                    r[1] + (dual && comp == 1 ? dr[1] : 0),
-                                    r[2] + (dual && comp == 2 ? dr[2] : 0)), t) - fval;
+                                                    r[1] + (dual && comp == 1 ? dr[1] : 0),
+                                                    r[2] + (dual && comp == 2 ? dr[2] : 0)), t) - fval;
                         break;
                     case 3:
                         error += func(AMREX_D_DECL(r[0], r[1], r[2]), t) - fval;

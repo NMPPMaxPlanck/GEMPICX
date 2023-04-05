@@ -13,9 +13,9 @@ int main (int argc, char *argv[])
     const amrex::Real tol = 1e-5;
 
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 8, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
 
@@ -61,17 +61,9 @@ int main (int argc, char *argv[])
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k*dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
             zeroForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::cos(r[2]));
@@ -131,17 +123,9 @@ int main (int argc, char *argv[])
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                (r0[0] + 0.5*dr[0]) + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                (r0[1] + 0.5*dr[1]) + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                (r0[2] + 0.5*dr[2]) + k*dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
             
             zeroForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::cos(r[2]));
@@ -201,17 +185,9 @@ int main (int argc, char *argv[])
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                r0[0] + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                ,
-                r0[1] + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                ,
-                r0[2] + k*dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
             
             threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[0] + dr[0]) - std::sin(r[0])), (std::sin(r[1] + dr[1]) - std::sin(r[1])), (std::sin(r[2] + dr[2]) - std::sin(r[2])));
@@ -271,17 +247,9 @@ int main (int argc, char *argv[])
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
 
-            amrex::GpuArray<amrex::Real, 3> r =
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                (r0[0] + 0.5*dr[0]) + i*dr[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                                ,
-                (r0[1] + 0.5*dr[1]) + j*dr[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                                ,
-                (r0[2] + 0.5*dr[2]) + k*dr[2]
-#endif
+                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
             };
 
             threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[0]) - std::sin(r[0] - dr[0])), (std::sin(r[1]) - std::sin(r[1] - dr[1])), (std::sin(r[2]) - std::sin(r[2] - dr[2])));
@@ -314,10 +282,12 @@ int main (int argc, char *argv[])
     amrex::Real errorRho_norm0 = errorRho.data.norm0();
     amrex::Real errorRhoDual_norm0 = errorRhoDual.data.norm0();
 
+    /*
     amrex::Print() << "errorQ_norm0 = " << errorQ_norm0 << std::endl;
     amrex::Print() << "errorQDual_norm0 = " << errorQDual_norm0 << std::endl;
     amrex::Print() << "errorRho_norm0 = " << errorRho_norm0 << std::endl;
     amrex::Print() << "errorRhoDual_norm0 = " << errorRhoDual_norm0 << std::endl;
+    */
 
     if (std::max({errorQ_norm0, errorQDual_norm0, errorRho_norm0, errorRhoDual_norm0}) < tol)
     {

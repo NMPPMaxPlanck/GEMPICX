@@ -1,3 +1,36 @@
+/*------------------------------------------------------------------------------
+ Test Maxwell solver convergence rates with Finite Difference Hodges.
+
+  Performs 10 time steps with dt = 0.0001 so that spatial discretization error dominates.
+  Analytical solutions are
+  in 1D:                           (     0    )
+                          D(x,t) = ( cos(x-t) )
+                                   ( cos(x-t) )
+
+                                   (     0     )
+                          B(x,t) = ( -cos(x-t) )
+                                   (  cos(x-t) )
+
+  in 2D:                           (  cos(x+y-sqrt(2)*t)         )
+                        D(x,y,t) = ( -cos(x+y-sqrt(2)*t)         )
+                                   ( -sqrt(2)*cos(x+y-sqrt(2)*t) )
+
+                                   ( -cos(x+y-sqrt(2)*t)         )
+                        B(x,y,t) = (  cos(x+y-sqrt(2)*t)         )
+                                   ( -sqrt(2)*cos(x+y-sqrt(2)*t) )
+
+  in 3D:                           (  cos(x+y+z-sqrt(3)*t)   )
+                      D(x,y,z,t) = ( -2*cos(x+y+z-sqrt(3)*t) )
+                                   (  cos(x+y+z-sqrt(3)*t)   )
+
+                                   (  sqrt(3)*cos(x+y+z-sqrt(3)*t) )
+                      B(x,y,z,t) = (                0              )
+                                   ( -sqrt(3)*cos(x+y+z-sqrt(3)*t) ).
+
+  And epsilon = mu = 1.
+  They are computed for 16 and 32 nodes in each direction. The convergence rate is estimated by log_2 (error_16 / error_32)
+------------------------------------------------------------------------------*/
+
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -5,14 +38,14 @@
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 
-const int hodgeDegree = 4;
+const int hodgeDegree = 2;
 
 std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
 {
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(0,0,0)},{AMREX_D_DECL(2*M_PI, 2*M_PI, 2*M_PI)});
+    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
     const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 8, 8)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 6, 7)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     const amrex::Real dt = 0.0001;
@@ -88,7 +121,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     deRham -> projection(funcB, 0.0, B);
     
     // Advance Maxwell equations using second-order Hamiltonian splitting
-    amrex::Print() << "Start computing " << Nt << " time steps with " << n << " nodes in each direction....." << std::endl;
+    //amrex::Print() << "Start computing " << Nt << " time steps with " << n << " nodes in each direction....." << std::endl;
     for (int i = 0; i < Nt; ++i)
     {
         // Compute E from D 
@@ -145,15 +178,30 @@ int main (int argc, char *argv[])
 {
 	amrex::Initialize(argc, argv);
     {
-        amrex::Print() << "Maxwell solver test for Hodge degree " << hodgeDegree << std::endl;
-        const int min = 3;
-        const int max = 6;
-        for (int i = min; i < max; ++i)
-        {
-            amrex::Real r1,r2;
-            std::tie(r1, r2) = maxwell(std::pow(2,i));
-            amrex::Print() << "D error: " << r1 << ", B error: " << r2 << std::endl;
-        }
+        const int coarse = 16;
+        const int fine = 32;
+        amrex::Real error_coarseD;
+        amrex::Real error_coarseB;
+        amrex::Real error_fineD;
+        amrex::Real error_fineB;
+
+        amrex::GpuArray<amrex::Real, 2> rate;
+
+        std::tie(error_coarseD, error_coarseB) = maxwell(coarse);
+        std::tie(error_fineD, error_fineB) = maxwell(fine);
+        rate[0] = std::log2(error_coarseD / error_fineD);
+        rate[1] = std::log2(error_coarseB / error_fineB);
+
+        amrex::PrintToFile("test_maxwell_FDsolver_degree_2.output") << std::endl;
+        amrex::PrintToFile("test_maxwell_FDsolver_degree_2.output") << GEMPIC_SPACEDIM << "D Maxwell degree 2 convergence test:" << std::endl;
+        amrex::PrintToFile("test_maxwell_FDsolver_degree_2.output") << std::endl;
+        amrex::PrintToFile("test_maxwell_FDsolver_degree_2.output").SetPrecision(3) << "D field rate: " << rate[0] << std::endl;
+        amrex::PrintToFile("test_maxwell_FDsolver_degree_2.output").SetPrecision(3) << "B field rate: " << rate[1] << std::endl;
+        
+        
+        if (amrex::ParallelDescriptor::MyProc() == 0)
+            std::rename("test_maxwell_FDsolver_degree_2.output.0", "test_maxwell_FDsolver_degree_2.output");
+
     }
     amrex::Finalize();
 }
