@@ -11,7 +11,7 @@ int main (int argc, char *argv[])
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(9, 8, 7)};
+	const amrex::IntVect nCell{AMREX_D_DECL(19, 15, 17)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
@@ -33,7 +33,7 @@ int main (int argc, char *argv[])
     const std::string analyticalQ = "sin(x + 2*y)";
 #endif
 #if (GEMPIC_SPACEDIM == 3)
-    const std::string analyticalQ = "sin(x + 2*y + 3*z)";
+    const std::string analyticalQ = "sin(x + 2*y - z)";
 #endif
 
     const int nVar = GEMPIC_SPACEDIM + 1; //x, y, z, t
@@ -62,9 +62,9 @@ int main (int argc, char *argv[])
                                                           "0."};
 #endif
 #if (GEMPIC_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> analyticalGradQ = {"cos(x + 2*y + 3*z)", 
-                                                          "2*cos(x + 2*y + 3*z)",
-                                                          "3*cos(x + 2*y + 3*z)"};
+    const amrex::Array<std::string, 3> analyticalGradQ = {"cos(x + 2*y - z)", 
+                                                          "2*cos(x + 2*y - z)",
+                                                          "-cos(x + 2*y - z)"};
 #endif
     
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcGradQ; 
@@ -81,7 +81,7 @@ int main (int argc, char *argv[])
     deRham -> projection(funcGradQ, 0.0, E);
 
     // Calculate errorQ
-    bool passQ = false;
+    bool passQ{false};
     DeRhamField<Grid::primal, Space::edge> errorQ(deRham);
 
     for (int comp = 0; comp < 3; ++comp)
@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
     const std::string analyticalDualQ = "sin(x + 2*y)";
 #endif
 #if (GEMPIC_SPACEDIM == 3)
-    const std::string analyticalDualQ = "sin(x + 2*y + 3*z)";
+    const std::string analyticalDualQ = "sin(x + 2*y - z)";
 #endif
 
     amrex::ParserExecutor<nVar> funcDualQ; 
@@ -144,9 +144,9 @@ int main (int argc, char *argv[])
                                                               "0."};
 #endif
 #if (GEMPIC_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> analyticalGradDualQ = {"cos(x + 2*y + 3*z)", 
-                                                              "2*cos(x + 2*y + 3*z)",
-                                                              "3*cos(x + 2*y + 3*z)"};
+    const amrex::Array<std::string, 3> analyticalGradDualQ = {"cos(x + 2*y - z)", 
+                                                              "2*cos(x + 2*y - z)",
+                                                              "-cos(x + 2*y - z)"};
 #endif
     
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcGradDualQ; 
@@ -163,7 +163,7 @@ int main (int argc, char *argv[])
     deRham -> projection(funcGradDualQ, 0.0, H);
 
     // Calculate errorQDual
-    bool passDualQ = false;
+    bool passDualQ{false};
     DeRhamField<Grid::dual, Space::edge> errorDualQ(deRham);
 
     for (int comp = 0; comp < 3; ++comp)
@@ -201,9 +201,9 @@ int main (int argc, char *argv[])
     amrex::Print() << "errorGradQDualz_norm0 = " << errorGradQDualz_norm0 << std::endl;
     */
 
-    if (std::max({errorGradQx_norm0, errorGradQy_norm0, errorGradQz_norm0}) < 1e-5)
+    if (std::max({errorGradQx_norm0, errorGradQy_norm0, errorGradQz_norm0}) < 1e-6)
         passQ = true;
-    if (std::max({errorGradQDualx_norm0, errorGradQDualy_norm0, errorGradQDualz_norm0}) < 1e-5)
+    if (std::max({errorGradQDualx_norm0, errorGradQDualy_norm0, errorGradQDualz_norm0}) < 1e-6)
         passDualQ = true;
     
     if (passQ == true && passDualQ == true)

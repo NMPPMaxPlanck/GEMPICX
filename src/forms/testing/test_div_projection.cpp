@@ -11,7 +11,7 @@ int main (int argc, char *argv[])
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(9, 8, 7)};
+	const amrex::IntVect nCell{AMREX_D_DECL(19, 15, 17)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
@@ -81,7 +81,7 @@ int main (int argc, char *argv[])
     deRham -> projection(funcDivB, 0.0, rho);
 
     // Calculate errorE
-    bool passRho = false;
+    bool passRho{false};
     DeRhamField<Grid::primal, Space::cell> errorRho(deRham);
 
     for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
@@ -160,7 +160,7 @@ int main (int argc, char *argv[])
     deRham -> projection(funcDivD, 0.0, rhoDual);
 
     // Calculate errorE
-    bool passRhoDual = false;
+    bool passRhoDual{false};
     DeRhamField<Grid::dual, Space::cell> errorRhoDual(deRham);
 
     for (amrex::MFIter mfi(errorRhoDual.data); mfi.isValid(); ++mfi)

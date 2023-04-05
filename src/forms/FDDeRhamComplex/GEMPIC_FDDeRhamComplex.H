@@ -670,29 +670,26 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 
                 const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = geom.ProbLoArray();
 
-                const amrex::Real drHalfX = dr[0]/2;
-#if (GEMPIC_SPACEDIM > 1)
-                const amrex::Real drHalfY = dr[1]/2;
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                const amrex::Real drHalfZ = dr[2]/2;
-#endif
+                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
+                {
+                    AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+                };
                 
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
                     // Compute the position of the point i, j, k
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = 
                     {
-                        AMREX_D_DECL(rr[0] = r0[0] + i*dr[0] - (dual ? drHalfX : 0),
-                                    rr[1] = r0[1] + j*dr[1] - (dual ? drHalfY : 0),
-                                    rr[2] = r0[2] + k*dr[2] - (dual ? drHalfZ : 0))
+                        AMREX_D_DECL(rr[0] = r0[0] + i*dr[0] - (dual ? drHalf[0] : 0),
+                                    rr[1] = r0[1] + j*dr[1] - (dual ? drHalf[1] : 0),
+                                    rr[2] = r0[2] + k*dr[2] - (dual ? drHalf[2] : 0))
                     };
 
                     amrex::Real error = 0.0;
 
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = 
                     {
-                        AMREX_D_DECL(rr[0] + drHalfX, rr[1] + drHalfY, rr[2] + drHalfZ)
+                        AMREX_D_DECL(rr[0] + drHalf[0], rr[1] + drHalf[1], rr[2] + drHalf[2])
                     };
 
                     amrex::Real fval = 0;
