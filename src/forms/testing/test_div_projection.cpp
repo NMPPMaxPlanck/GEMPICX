@@ -10,9 +10,9 @@ int main (int argc, char *argv[])
 	amrex::Initialize(argc, argv); 
 
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 8, 8)};
+    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 8, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
 
