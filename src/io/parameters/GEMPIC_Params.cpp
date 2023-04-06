@@ -1,5 +1,7 @@
 #include "GEMPIC_Params.H"
 
+Parameters::Parameters() {};
+
 Parameters::Parameters(const amrex::RealBox& realBox, const amrex::IntVect& nCell,
                        const amrex::IntVect& maxGridSize, const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic, const int degree):
             m_realBox(realBox), m_nCell(nCell), m_maxGridSize(maxGridSize),

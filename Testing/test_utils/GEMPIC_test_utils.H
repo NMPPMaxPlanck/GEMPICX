@@ -7,7 +7,7 @@
 
 namespace GEMPIC_TestUtils {
     // Nghost helper function
-    const int initNGhost(int degX, int degY, int degZ)
+    inline const int initNGhost(int degX, int degY, int degZ)
     {
         amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
         const int maxDeg = *(std::max_element(degs.begin(), degs.end()));
