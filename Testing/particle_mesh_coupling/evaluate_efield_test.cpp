@@ -1,168 +1,46 @@
+/** Testing for evaluate_efield function 
+*/
+
 #include <AMReX.H>
+#include <GEMPIC_Config.H>
+#include <GEMPIC_FDDeRhamComplex.H>
+#include <GEMPIC_Fields.H>
+#include <GEMPIC_Params.H>
+#include <GEMPIC_particle_groups.H>
+#include <GEMPIC_particle_mesh_coupling_C2.H>
+#include "gtest/gtest.h"
+#include "test_utils/GEMPIC_test_utils.H"
+
+/*
 #include <GEMPIC_amrex_init.H>
 #include <GEMPIC_parameters.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_gempic_norm.H>
-#include <GEMPIC_particle_mesh_coupling_C2.H>
-#include <GEMPIC_FDDeRhamComplex.H>
-#include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
 #include <gtest/gtest.h>
 #include <algorithm> // std::all_of, for add_particles function
 #include <stdexcept>
+*/
 
+using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_Fields;
 
-/** Global setup/teardown test enviroment configuration for unit tests
- * (stolen from AMR_wind)
- *
- *  This class is registered with GoogleTest infrastructure to perform global
- *  setup/teardown tasks. The base implementation calls the amrex::Initialize
- *  and amrex::Finalize calls.
- *
- *  During the AmrexTestEnv::SetUp call, it also finalizes the amrex::ParmParse
- *  global instance so that each test can utilize a clean "input file". The user
- *  can disable this feature by passing `utest.keep_parameters=1` at the command
- *  line.
- *
- */
-class AmrexTestEnv : public ::testing::Environment
-{
-public:
-    AmrexTestEnv(int& argc, char**& argv) : m_argc(argc), m_argv(argv) {}
-
-    ~AmrexTestEnv() override = default;
-
-    void SetUp() override
-    {
-        amrex::Initialize(m_argc, m_argv, true, MPI_COMM_WORLD, []() {
-            amrex::ParmParse pp("amrex");
-            if (!(pp.contains("v") || pp.contains("verbose"))) {
-                pp.add("verbose", -1);
-                pp.add("v", -1);
-            }
-
-            pp.add("throw_exception", 1);
-            pp.add("signal_handling", 0);
-        });
-
-        // Save managed memory flag for future use
-        {
-            amrex::ParmParse pp("amrex");
-            pp.query("the_arena_is_managed", m_has_managed_memory);
-        }
-
-        // Call ParmParse::Finalize immediately to allow unit tests to start
-        // with a clean "input file". However, allow user to override this
-        // behavior through command line arguments.
-        {
-            amrex::ParmParse pp("utest");
-            bool keep_parameters = false;
-            pp.query("keep_parameters", keep_parameters);
-
-            if (!keep_parameters) {
-                amrex::ParmParse::Finalize();
-            }
-        }
-    }
-
-    void TearDown() override { amrex::Finalize(); }
-
-    bool has_managed_memory() const { return m_has_managed_memory; }
-
-protected:
-    int& m_argc;
-    char**& m_argv;
-
-    bool m_has_managed_memory{true};
-};
-
 //Basics first
 namespace {
-
-    // Nghost helper function
-    const int init_Nghost(int degx, int degy, int degz)
-    {
-        amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degx, degy, degz)};
-        const int maxdeg = *(std::max_element(degs.begin(), degs.end()));
-        return maxdeg;
-    }
-
-    // Stream arr helper function
-    template<typename T>
-    std::string string_array(const T& valArray, int length) {
-        std::stringstream stream;
-        stream << "(" << valArray[0];
-        for (int i = 1; i < length; i++) {
-            stream << ", " << valArray[i];
-        }
-        stream << ")";
-        return stream.str();
-    }
-
-    // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
-    // of all particles to be added.
-    template<int vdim, int numspec, int numparticles>
-    void add_single_particles(
-        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
-        computational_domain& infra,
-        amrex::Array<amrex::Real, numparticles>& weights,
-        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles>& positions,
-        int spec = 0,
-        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles>&& velocities = {0})
-        {
-            amrex::Array<bool, numparticles> checklist = {false};
-
-            for (amrex::MFIter mfi = part_gr[0]->MakeMFIter(0); mfi.isValid(); ++mfi)
-            {
-                const amrex::Box& bx = mfi.validbox();
-                amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
-                amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
-                    part_gr[spec]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-                for (int i = 0; i < numparticles; i++) {
-                    if (!checklist[i] &&
-                        lo[0] <= positions[i][0] && positions[i][0] < hi[0] && 
-                        lo[1] <= positions[i][1] && positions[i][1] < hi[1] &&
-                        lo[2] <= positions[i][2] && positions[i][2] < hi[2])
-                    {
-                        part_gr[spec]->add_particle({AMREX_D_DECL(positions[i][0],
-                                                                  positions[i][1],
-                                                                  positions[i][2])},
-                                                    {AMREX_D_DECL(velocities[i][0],
-                                                                  velocities[i][1],
-                                                                  velocities[i][2])},
-                                                    weights[i], particles);
-                        checklist[i] = true;
-                    }
-                }
-            }
-
-            // Check that all particles have been added
-            int idx{-1};
-            auto result1 = std::find_if(std::begin(checklist), std::end(checklist), [&idx] (bool i) {idx++; return !i;});
-            if (result1 != std::end(checklist)) {
-                std::cerr << "Invalid position given to add_particle function:\n" << 
-                            string_array(positions[idx], GEMPIC_SPACEDIM) << 
-                            " is out of simulation bounds.\nLower: " << 
-                            string_array(infra.geom.ProbLo(), GEMPIC_SPACEDIM) << 
-                            "\nUpper: " << string_array(infra.geom.ProbHi(), GEMPIC_SPACEDIM);
-            }
-        }
-
     // Test fixture
     class EvaluateEFieldTest : public testing::Test {
         protected:
 
-        static const int degx = 1;
-        static const int degy = 1;
-        static const int degz = 1;
+        static const int degx{1};
+        static const int degy{1};
+        static const int degz{1};
+
         static const int numspec = 1;
+        // Number of velocity dimensions. Really ought to be 0, but then GEMPIC_TestUtils::addSingleParticles doesn't work.
         static const int vdim = 3;
         static const int ndata = 1;
         static const int spec = 0;
-        const int Nghost = init_Nghost(degx, degy, degz);
+        const int Nghost = GEMPIC_TestUtils::initNGhost(degx, degy, degz);
         Parameters params;
 
         double charge = 1;
@@ -204,9 +82,9 @@ namespace {
         amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles> positions{*infra.geom.ProbLo()};
 
         amrex::Array<amrex::Real, numparticles> weights{1};
-        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
 
-        // (default) charge correctly transferred from add_single_particles
+        // (default) charge correctly transferred from addSinglePparticles
         EXPECT_EQ(1, part_gr[0]->getCharge()); 
 
         // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
@@ -240,7 +118,7 @@ namespace {
 
             const long np = pti.numParticles();
 
-            EXPECT_EQ(1, np); // Only one particle added by add_single_particles
+            EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
             const auto& particles = pti.GetArrayOfStructs();
             const auto partData = particles().data();
@@ -272,7 +150,7 @@ namespace {
         // Particle at position (0,0,0) in box (0,0,0)
         amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numparticles> positions{*infra.geom.ProbLo()};
 
-        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
         part_gr[0]->Redistribute();  // assign particles to the tile they are in
 
         // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
@@ -346,7 +224,7 @@ namespace {
                       infra.geom.ProbHi()[1] - 1.5*infra.dx[1],
                       infra.geom.ProbHi()[2] - 1.5*infra.dx[2])};
 
-        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
         part_gr[0]->Redistribute();  // assign particles to the tile they are in
 
         // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
@@ -420,7 +298,7 @@ namespace {
                       infra.geom.ProbHi()[1] - 1.25*infra.dx[1],
                       infra.geom.ProbHi()[2] - 1.25*infra.dx[2])};
 
-        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
         part_gr[0]->Redistribute();  // assign particles to the tile they are in
 
         // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
@@ -496,7 +374,7 @@ namespace {
 
         amrex::Array<amrex::Real, numparticles> weights{1, 1};
 
-        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
         
         part_gr[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -567,7 +445,7 @@ namespace {
 
         amrex::Array<amrex::Real, numparticles> weights{1, 1};
 
-        add_single_particles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vdim, numspec, numparticles>(part_gr, infra, weights, positions);
         
         part_gr[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -625,12 +503,4 @@ namespace {
             });
         }
     }
-}
-
-int main(int argc, char* argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  // gtest takes ownership of the TestEnvironment ptr - we don't delete it.
-  auto utest_env = new AmrexTestEnv(argc, argv);
-  ::testing::AddGlobalTestEnvironment(utest_env);
-  return RUN_ALL_TESTS();
 }
