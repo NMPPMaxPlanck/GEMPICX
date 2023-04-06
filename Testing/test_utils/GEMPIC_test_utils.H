@@ -1,5 +1,5 @@
-#ifndef TESTUTILS
-#define TESTUTILS
+#ifndef TEST_UTILS_H_
+#define TEST_UTILS_H_
 
 #include "AMReX.H"
 #include <algorithm> // std::all_of, for add_particles function
@@ -10,7 +10,7 @@ namespace GEMPIC_TestUtils {
     inline const int initNGhost(int degX, int degY, int degZ)
     {
         amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
-        const int maxDeg = *(std::max_element(degs.begin(), degs.end()));
+        const int maxDeg{*(std::max_element(degs.begin(), degs.end()))};
         return maxDeg;
     }
 
@@ -33,23 +33,23 @@ namespace GEMPIC_TestUtils {
         amrex::GpuArray<std::unique_ptr<Gempic::Particles::particle_groups<vdim>>, numSpec>& particleGroup,
         computational_domain& infra,
         amrex::Array<amrex::Real, numParticles>& weights,
-        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
         int spec = 0,
-        amrex::Array<amrex::Array<amrex::Real, GEMPIC_SPACEDIM>, numParticles>&& velocities = {0})
+        amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>&& velocities = {})
     {
-        amrex::Array<bool, numParticles> checklist = {false};
+        amrex::Array<bool, numParticles> checklist{false};
 
-        for (amrex::MFIter mfi = particleGroup[0]->MakeMFIter(0); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi{particleGroup[0]->MakeMFIter(0)}; mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.validbox();
-            amrex::IntVect lo = {bx.smallEnd()};
-            amrex::IntVect hi = {bx.bigEnd()};
+            const amrex::Box& bx{mfi.validbox()};
+            amrex::IntVect lo{bx.smallEnd()};
+            amrex::IntVect hi{bx.bigEnd()};
 
-            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
-                particleGroup[spec]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-            for (int i = 0; i < numParticles; i++) {
+            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles{
+                particleGroup[spec]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
+            for (int i{0}; i < numParticles; i++) {
                 // make sure particle is within box (and not previously added? Why?)
-                if (!checklist[i] GEMPIC_D_COND(
+                if (!checklist[i] AMREX_D_TERM(
                     && lo[0]*infra.dx[0] <= positions[i][0] && 
                                             positions[i][0] < (hi[0] + 1)*infra.dx[0],
                     && lo[1]*infra.dx[1] <= positions[i][1] &&
@@ -57,13 +57,8 @@ namespace GEMPIC_TestUtils {
                     && lo[2]*infra.dx[2] <= positions[i][2] &&
                                             positions[i][2] < (hi[2] + 1)*infra.dx[2]))
                 {
-                    particleGroup[spec]->add_particle({AMREX_D_DECL(positions[i][0],
-                                                                positions[i][1],
-                                                                positions[i][2])},
-                                                {AMREX_D_DECL(velocities[i][0],
-                                                                velocities[i][1],
-                                                                velocities[i][2])},
-                                                weights[i], particles);
+                    particleGroup[spec]->add_particle(positions[i], velocities[i], weights[i],
+                                                      particles);
                     checklist[i] = true;
                 }
             }

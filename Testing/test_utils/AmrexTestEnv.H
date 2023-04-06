@@ -4,7 +4,6 @@
 #include "gtest/gtest.h"
 #include "AMReX.H"
 #include "AMReX_ParmParse.H"
-#include <GEMPIC_amrex_init.H>
 
 namespace GEMPIC_tests {
 
@@ -39,6 +38,14 @@ public:
 
             pp.add("throw_exception", 1);
             pp.add("signal_handling", 0);
+
+            // Abort the simulation when we run out of GPU memory
+            // By default, AMReX starts swapping to CPU, which makes runs very slow.
+            // It's more useful to abort and tell the user to request more GPUs or scale
+            // down the simulation.
+            // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
+            bool abort_on_out_of_gpu_memory = true;  // AMReX' default: false
+            pp.queryAdd("abort_on_out_of_gpu_memory", abort_on_out_of_gpu_memory);
         });
 
         // Save managed memory flag for future use

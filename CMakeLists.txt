@@ -105,6 +105,11 @@ endif()
 
 #set (CMAKE_CUDAA_FLAGS_RELEASE AMReX::Flags_CXX)
 
+# Give verbose output when tests fail
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+message("ctest should be: ${CMAKE_CTEST_COMMAND}")
+set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS})
+message("ctest should be: ${CMAKE_CTEST_COMMAND}")
 # Enable ctests
 enable_testing()
 # This defines how the ctests are run

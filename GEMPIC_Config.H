@@ -12,19 +12,35 @@
 #define GEMPIC_CTEST_RELTOL 1e-4
 
 #if GEMPIC_SPACEDIM==1
-#    define GEMPIC_D_DECL_0(a, b, c) a, 0, 0
+#    define GEMPIC_D_MULT(a, b, c) (a)
 #elif GEMPIC_SPACEDIM==2
-#    define GEMPIC_D_DECL_0(a, b, c) a, b, 0
+#    define GEMPIC_D_MULT(a, b, c) ((a) * (b))
 #elif GEMPIC_SPACEDIM==3
-#    define GEMPIC_D_DECL_0(a, b, c) a, b, c
+#    define GEMPIC_D_MULT(a, b, c) ((a) * (b) * (c))
 #endif
 
 #if GEMPIC_SPACEDIM==1
-#   define GEMPIC_D_COND(a, b, c) a
+#    define GEMPIC_D_ADD(a, b, c) (a)
 #elif GEMPIC_SPACEDIM==2
-#   define GEMPIC_D_COND(a, b, c) a b
+#    define GEMPIC_D_ADD(a, b, c) ((a) + (b))
 #elif GEMPIC_SPACEDIM==3
-#   define GEMPIC_D_COND(a, b, c) a b c 
+#    define GEMPIC_D_ADD(a, b, c) ((a) + (b) + (c))
+#endif
+
+#if GEMPIC_SPACEDIM==1
+#   define GEMPIC_D_LOOP_BEGIN(a, b, c) a {
+#elif GEMPIC_SPACEDIM==2
+#   define GEMPIC_D_LOOP_BEGIN(a, b, c) b { a { 
+#elif GEMPIC_SPACEDIM==3
+#   define GEMPIC_D_LOOP_BEGIN(a, b, c) c { b { a { 
+#endif
+
+#if GEMPIC_SPACEDIM==1
+#   define GEMPIC_D_LOOP_END }
+#elif GEMPIC_SPACEDIM==2
+#   define GEMPIC_D_LOOP_END } }
+#elif GEMPIC_SPACEDIM==3
+#   define GEMPIC_D_LOOP_END } } }
 #endif
 
 #endif
