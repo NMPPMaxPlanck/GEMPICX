@@ -19,9 +19,9 @@
                         B(x,y,t) = (  cos(x+y-sqrt(2)*t)         )
                                    ( -sqrt(2)*cos(x+y-sqrt(2)*t) )
 
-  in 3D:                           (  cos(x+y+z-sqrt(3)*t)   )
-                      D(x,y,z,t) = ( -2*cos(x+y+z-sqrt(3)*t) )
-                                   (  cos(x+y+z-sqrt(3)*t)   )
+  in 3D:                           (    cos(x+y+z-sqrt(3)*t)   )
+                      D(x,y,z,t) = ( -2*cos(x+y+z-sqrt(3)*t)   )
+                                   (    cos(x+y+z-sqrt(3)*t)   )
 
                                    (  sqrt(3)*cos(x+y+z-sqrt(3)*t) )
                       B(x,y,z,t) = (                0              )
@@ -45,7 +45,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
     const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 6, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 9, 7)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     const amrex::Real dt = 0.0001;
@@ -65,10 +65,10 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     DeRhamField<Grid::dual, Space::cell> divD(deRham);
     DeRhamField<Grid::primal, Space::cell> divB(deRham);
 
-    DeRhamField<Grid::primal, Space::face> auxPrimalF2(deRham);
-    DeRhamField<Grid::dual, Space::face> auxDualF2(deRham);
+    DeRhamField<Grid::primal, Space::face> curlE(deRham);
+    DeRhamField<Grid::dual, Space::face> curlH(deRham);
 
-    // Parse analytical fields and and initialize parserEval
+    // Analytical solutions in every dimension
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalD = {"0.",
                                                       "cos(x-t)",
@@ -117,61 +117,48 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
         funcB[i] = parserB[i].compile<nVar>();
     }
 
-    deRham -> projection(funcD, 0.0, D);
-    deRham -> projection(funcB, 0.0, B);
+    deRham->projection(funcD, 0.0, D);
+    deRham->projection(funcB, 0.0, B);
     
-    // Advance Maxwell equations using second-order Hamiltonian splitting
-    //amrex::Print() << "Start computing " << Nt << " time steps with " << n << " nodes in each direction....." << std::endl;
+    // Advance Maxwell's equations using second-order Hamiltonian Strang splitting
     for (int i = 0; i < Nt; ++i)
     {
-        // Compute E from D 
-        deRham -> hodgeFD<hodgeDegree>(D, E); // E = Hodge(D)
-
-        // Faraday's law
-        deRham -> curl(E, auxPrimalF2); // f2 = curl(E)
-        auxPrimalF2 *= dt/2; // f2 = dt/2 * curl(E)
-
-        //B -= f2;  // B -= dt/2 * curl(E)
-        B -= auxPrimalF2;
+        // solve Faraday equation for a half step
+        deRham->hodgeFD<hodgeDegree>(D, E);
+        deRham->curl(E, curlE);
+        curlE *= dt/2;
+        B -= curlE;
         
-        // Compute H from B 
-        deRham -> hodgeFD<hodgeDegree>(B, H); // H = Hodge(B)
-        
-        // Ampere-Maxwell law 
-        deRham -> curl(H, auxDualF2); // df2 = curl(H)
-        auxDualF2 *= dt; // df2 = dt * curl(H)
-                                
-        //D += df2; // D += dt * curl(H)
-        D += auxDualF2;
+        // solve Ampère equation for a full step
+        deRham->hodgeFD<hodgeDegree>(B, H);
+        deRham->curl(H, curlH);
+        curlH *= dt;
+        D += curlH;
 
-        // Compute E from D 
-        deRham -> hodgeFD<hodgeDegree>(D, E); // E = Hodge(D)
-
-        // Faraday's law
-        deRham -> curl(E, auxPrimalF2); // f2 = curl(E)
-        auxPrimalF2 *= dt/2; // f2 = dt/2 * curl(E)
-
-        //B -= f2;  // B -= dt/2 * curl(E)
-        B -= auxPrimalF2;
+        // solve Faraday's equation again for a half step
+        deRham->hodgeFD<hodgeDegree>(D, E);
+        deRham->curl(E, curlE);
+        curlE *= dt/2;
+        B -= curlE;
     }
     
-    deRham -> div(D, divD);
-    deRham -> div(B, divB);
+    deRham->div(D, divD);
+    deRham->div(B, divB);
     amrex::Print() << "Gauss errors: max(div D) = " << divD.data.norm0() << ", max(div B) = " << divB.data.norm0() << std::endl;
     
     // Calculate max error of D and B
-    amrex::Real de = 0;
-    amrex::Real be = 0;
+    amrex::Real dError = 0;
+    amrex::Real bError = 0;
     for (int comp = 0; comp < 3; ++comp)
     {
-        de += deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcD[comp], D.data[comp], params.dr(), 2, true, comp, Nt*dt);
+        dError += deRham->maxErrorMidpoint<hodgeDegree>(geom, funcD[comp], D.data[comp], params.dr(), 2, true, comp, Nt*dt);
     }
     for (int comp = 0; comp < 3; ++comp)
     {
-        be += deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcB[comp], B.data[comp], params.dr(), 2, false, comp, Nt*dt);
+        bError += deRham->maxErrorMidpoint<hodgeDegree>(geom, funcB[comp], B.data[comp], params.dr(), 2, false, comp, Nt*dt);
     }
     
-    return std::make_tuple(de,be);
+    return std::make_tuple(dError,bError);
 }
 
 int main (int argc, char *argv[]) 
