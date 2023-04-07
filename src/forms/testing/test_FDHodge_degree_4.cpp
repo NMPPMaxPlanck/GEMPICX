@@ -25,7 +25,7 @@ using namespace GEMPIC_Interpolation;
 
 const int hodgeDegree = 4;
 
-std::map<int, std::string> hodges{{0, "Hodge 1->2"}, {1, "Hodge 2->1"}, {2, "Hodge 0->3"}, {3, "Hodge 3->0"}};
+std::map<int, std::string> hodges{{0, "Hodge 1 -> 2"}, {1, "Hodge 2 -> 1"}, {2, "Hodge 0 -> 3"}, {3, "Hodge 3 -> 0"}};
 
 amrex::Real test12(int n)
 {
