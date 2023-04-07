@@ -23,6 +23,7 @@ Table of Contents
 
    self
    latex/deRham_diagrams
+   latex/deRhamComplex
    latex/code_units
    latex/TimeLoops
    Forms/Forms

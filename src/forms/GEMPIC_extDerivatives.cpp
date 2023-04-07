@@ -27,18 +27,11 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
 #endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = 0.
-#if (GEMPIC_SPACEDIM > 1)
-                            + oneForm2(i, j + 1, k) - oneForm2(i, j, k)
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                            - oneForm1(i, j, k + 1) + oneForm1(i, j, k)
-#endif
-                                                                        ;
+          twoForm0(i, j, k) = GEMPIC_D_ADD(0., oneForm2(i, j + 1, k) - oneForm2(i, j, k), - oneForm1(i, j, k + 1) + oneForm1(i, j, k));
        });
    }
    twoForm.data[0].AverageSync(geom.periodicity());
-   (twoForm.data[0]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[0].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-1 of curl
@@ -53,16 +46,11 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
 #endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm1(i, j, k) =
-#if (GEMPIC_SPACEDIM > 2)
-                              oneForm0(i, j, k + 1) - oneForm0(i, j, k)
-#endif
-                            - oneForm2(i + 1, j, k) + oneForm2(i, j, k); 
-          
+          twoForm1(i, j, k) = GEMPIC_D_ADD(- oneForm2(i + 1, j, k) + oneForm2(i, j, k), 0., oneForm0(i, j, k + 1) - oneForm0(i, j, k));
        });
    }
    twoForm.data[1].AverageSync(geom.periodicity());
-   (twoForm.data[1]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[1].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-2 of curl
@@ -77,20 +65,16 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm2(i, j, k) = oneForm1(i + 1, j, k) - oneForm1(i, j, k) 
-#if (GEMPIC_SPACEDIM > 1)
-                            - oneForm0(i, j + 1, k) + oneForm0(i, j, k)
-#endif
-                                                                        ;
+          twoForm2(i, j, k) = GEMPIC_D_ADD(oneForm1(i + 1, j, k) - oneForm1(i, j, k), - oneForm0(i, j + 1, k) + oneForm0(i, j, k), 0.);                                                                        ;
        });
    }
    twoForm.data[2].AverageSync(geom.periodicity());
-   (twoForm.data[2]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[2].FillBoundary_nowait(geom.periodicity());
 
    // Wait for completed communication of guard data
-   (twoForm.data[0]).FillBoundary_finish();
-   (twoForm.data[1]).FillBoundary_finish();
-   (twoForm.data[2]).FillBoundary_finish();
+   twoForm.data[0].FillBoundary_finish();
+   twoForm.data[1].FillBoundary_finish();
+   twoForm.data[2].FillBoundary_finish();
 }
 
 
@@ -111,19 +95,12 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 #endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = 0.
-#if (GEMPIC_SPACEDIM > 1)
-                            + oneForm2(i, j, k) - oneForm2(i, j - 1, k)
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                            - oneForm1(i, j, k) + oneForm1(i, j, k - 1)
-#endif
-                                                                        ;
+          twoForm0(i, j, k) = GEMPIC_D_ADD(0., oneForm2(i, j, k) - oneForm2(i, j - 1, k), - oneForm1(i, j, k) + oneForm1(i, j, k - 1));
        });
    }
 
    twoForm.data[0].AverageSync(geom.periodicity());
-   (twoForm.data[0]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[0].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-1 of curl
@@ -138,17 +115,12 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 #endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm1(i, j, k) =
-#if (GEMPIC_SPACEDIM > 2)
-                              oneForm0(i, j, k) - oneForm0(i, j, k - 1)
-#endif
-                            - oneForm2(i, j, k) + oneForm2(i - 1, j, k); 
-          
+          twoForm1(i, j, k) = GEMPIC_D_ADD(- oneForm2(i, j, k) + oneForm2(i - 1, j, k), 0., oneForm0(i, j, k) - oneForm0(i, j, k - 1));          
        });
    }
 
    twoForm.data[1].AverageSync(geom.periodicity());
-   (twoForm.data[1]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[1].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-2 of curl
@@ -164,21 +136,17 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm2(i, j, k) = oneForm1(i, j, k) - oneForm1(i - 1, j, k)
-#if (GEMPIC_SPACEDIM > 1)
-                            - oneForm0(i, j, k) + oneForm0(i, j - 1, k)
-#endif
-                                                                        ;
+          twoForm2(i, j, k) = GEMPIC_D_ADD(oneForm1(i, j, k) - oneForm1(i - 1, j, k), - oneForm0(i, j, k) + oneForm0(i, j - 1, k), 0.);
        });
    }
 
    twoForm.data[2].AverageSync(geom.periodicity());
-   (twoForm.data[2]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[2].FillBoundary_nowait(geom.periodicity());
 
    // Wait for completed communication of guard data
-   (twoForm.data[0]).FillBoundary_finish();
-   (twoForm.data[1]).FillBoundary_finish();
-   (twoForm.data[2]).FillBoundary_finish();
+   twoForm.data[0].FillBoundary_finish();
+   twoForm.data[1].FillBoundary_finish();
+   twoForm.data[2].FillBoundary_finish();
 }
 
 
@@ -207,11 +175,7 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0.
-#if (GEMPIC_SPACEDIM > 1)
-                                        + zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k)
-#endif
-                                                                                        ;
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k), 0.);
                 });
             }
             
@@ -219,20 +183,16 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0.
-#if (GEMPIC_SPACEDIM > 2)
-                                        + zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k)
-#endif
-                                                                                        ;
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., 0., zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k));
                 });
             }
         }
         oneForm.data[comp].AverageSync(geom.periodicity());
-        (oneForm.data[comp]).FillBoundary_nowait(geom.periodicity());
+        oneForm.data[comp].FillBoundary_nowait(geom.periodicity());
     }
-    (oneForm.data[0]).FillBoundary_finish();
-    (oneForm.data[1]).FillBoundary_finish();
-    (oneForm.data[2]).FillBoundary_finish();
+    oneForm.data[0].FillBoundary_finish();
+    oneForm.data[1].FillBoundary_finish();
+    oneForm.data[2].FillBoundary_finish();
 }
 
 
@@ -261,11 +221,7 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0.
-#if (GEMPIC_SPACEDIM > 1)
-                                        + zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k)
-#endif
-                                                                                        ;
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k), 0.);
                 });
             }
             
@@ -273,21 +229,17 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = 0.
-#if (GEMPIC_SPACEDIM > 2)
-                                        + zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1)
-#endif
-                                                                                        ;
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., 0., zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1));
                 });
             }
         }
         oneForm.data[comp].AverageSync(geom.periodicity());
-        (oneForm.data[comp]).FillBoundary_nowait(geom.periodicity());
+        oneForm.data[comp].FillBoundary_nowait(geom.periodicity());
     }
     
-    (oneForm.data[0]).FillBoundary_finish();
-    (oneForm.data[1]).FillBoundary_finish();
-    (oneForm.data[2]).FillBoundary_finish();
+    oneForm.data[0].FillBoundary_finish();
+    oneForm.data[1].FillBoundary_finish();
+    oneForm.data[2].FillBoundary_finish();
 }
 
 
@@ -309,14 +261,7 @@ void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
         
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            threeFormMF(i, j, k) = (twoFormMF0(i + 1, j, k) - twoFormMF0(i, j, k))
-#if (GEMPIC_SPACEDIM > 1)
-                                 + (twoFormMF1(i, j + 1, k) - twoFormMF1(i, j, k))
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                 + (twoFormMF2(i, j, k + 1) - twoFormMF2(i, j, k))
-#endif
-                                                                                    ;
+            threeFormMF(i, j, k) = GEMPIC_D_ADD(twoFormMF0(i + 1, j, k) - twoFormMF0(i, j, k), twoFormMF1(i, j + 1, k) - twoFormMF1(i, j, k), twoFormMF2(i, j, k + 1) - twoFormMF2(i, j, k));
         });
     }
     threeForm.averageSync();
@@ -342,15 +287,7 @@ void DeRhamComplex::div(const DeRhamField<dual, Space::face>& twoForm,
         
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            threeFormMF(i, j, k) = (twoFormMF0(i, j, k) - twoFormMF0(i - 1, j, k))
-#if (GEMPIC_SPACEDIM > 1)
-                                 + (twoFormMF1(i, j, k) - twoFormMF1(i, j - 1, k))
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                 + (twoFormMF2(i, j, k) - twoFormMF2(i, j, k - 1))
-#endif
-                                                                                    ;
-
+            threeFormMF(i, j, k) = GEMPIC_D_ADD(twoFormMF0(i, j, k) - twoFormMF0(i - 1, j, k), twoFormMF1(i, j, k) - twoFormMF1(i, j - 1, k), twoFormMF2(i, j, k) - twoFormMF2(i, j, k - 1));
         });
     }
     threeForm.averageSync();

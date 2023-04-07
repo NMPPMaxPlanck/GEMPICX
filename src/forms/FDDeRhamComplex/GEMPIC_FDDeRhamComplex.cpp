@@ -115,32 +115,16 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx = 0; qx < nQuad; ++qx)
-            {
-                // Update location of quadrature point
-                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
-
-#if (GEMPIC_SPACEDIM > 1)
-                for (int qy = 0; qy < nQuad; ++qy)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
-#endif
-
-#if (GEMPIC_SPACEDIM > 2)
-                    for (int qz = 0; qz < nQuad; ++qz)
-#endif
-                    {
-#if (GEMPIC_SPACEDIM > 2)
-                        r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
-#endif
-                
+            GEMPIC_D_LOOP_BEGIN(
+            for (int qx = 0; qx < nQuad; ++qx),
+                for (int qy = 0; qy < nQuad; ++qy),
+                    for (int qz = 0; qz < nQuad; ++qz))
+                         // Update location of quadrature points
+                        r = {AMREX_D_DECL(midpoint[0] + quadPoints[qx] * drHalf[0], midpoint[1] + quadPoints[qy] * drHalf[1], midpoint[2] + quadPoints[qz] * drHalf[2])};
+            
                         // Increment integral according to quadrature rule in the z direction with dx and dy
                         integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], quadWeights[qz]) * func(AMREX_D_DECL(r[0], r[1], r[2]), t);
-                    }
-                } 
-            }
+            GEMPIC_D_LOOP_END
         
             // Rescale the integral and assign it to degrees of freedom
             threeForm(i, j, k) = integral * GEMPIC_D_MULT(drHalf[0], drHalf[1], drHalf[2]);
@@ -225,32 +209,16 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx = 0; qx < nQuad; ++qx)
-            {
-                // Update location of quadrature point
-                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
-
-#if (GEMPIC_SPACEDIM > 1)
-                for (int qy = 0; qy < nQuad; ++qy)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
-#endif
-
-#if (GEMPIC_SPACEDIM > 2)
-                    for (int qz = 0; qz < nQuad; ++qz)
-#endif
-                    {
-#if (GEMPIC_SPACEDIM > 2)
-                        r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
-#endif
-                
+            GEMPIC_D_LOOP_BEGIN(
+            for (int qx = 0; qx < nQuad; ++qx),
+                for (int qy = 0; qy < nQuad; ++qy),
+                    for (int qz = 0; qz < nQuad; ++qz))
+                         // Update location of quadrature points
+                        r = {AMREX_D_DECL(midpoint[0] + quadPoints[qx] * drHalf[0], midpoint[1] + quadPoints[qy] * drHalf[1], midpoint[2] + quadPoints[qz] * drHalf[2])};
+            
                         // Increment integral according to quadrature rule in the z direction with dx and dy
                         integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], quadWeights[qz]) * func(AMREX_D_DECL(r[0], r[1], r[2]), t);
-                    }
-                } 
-            }
+            GEMPIC_D_LOOP_END
         
             // Rescale the integral and assign it to degrees of freedom
             threeForm(i, j, k) = integral * GEMPIC_D_MULT(drHalf[0], drHalf[1], drHalf[2]);
@@ -368,25 +336,14 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-#if (GEMPIC_SPACEDIM > 1)
-            for (int qy = 0; qy < nQuad; ++qy)
-#endif
-            {
-                // Update location of quadrature point
-#if (GEMPIC_SPACEDIM > 1)
-                r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                for (int qz = 0; qz < nQuad; ++qz)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
-#endif
-            
+            GEMPIC_D_LOOP_BEGIN(,
+            for (int qy = 0; qy < nQuad; ++qy),
+                for (int qz = 0; qz < nQuad; ++qz))
+                    // Update location of quadrature points
+                    r = {AMREX_D_DECL(r[0], midpoint[1] + quadPoints[qy] * drHalf[1], midpoint[2] + quadPoints[qz] * drHalf[2])};
+
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) * func[0](AMREX_D_DECL(r[0], r[1], r[2]), t); // in 1D this is just evalutation
-                }
-            } 
+            GEMPIC_D_LOOP_END
         
             // Rescale the integral and assign it to array of degrees of freedom
             twoForm(i, j, k) = GEMPIC_D_MULT(integral, drHalf[1], drHalf[2]);
@@ -427,23 +384,15 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx = 0; qx < nQuad; ++qx)
-            {
-                // Update location of quadrature point
-                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
+            GEMPIC_D_LOOP_BEGIN(
+            for (int qx = 0; qx < nQuad; ++qx),,
+                for (int qz = 0; qz < nQuad; ++qz))
+                    // Update location of quadrature points
+                    r = {AMREX_D_DECL(midpoint[0] + quadPoints[qx] * drHalf[0], r[1], midpoint[2] + quadPoints[qz] * drHalf[2])};
 
-#if (GEMPIC_SPACEDIM > 2)
-                for (int qz = 0; qz < nQuad; ++qz)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
-#endif
-            
                     integral += GEMPIC_D_MULT(quadWeights[qx], 1., quadWeights[qz]) * func[1](AMREX_D_DECL(r[0], r[1], r[2]), t);
-                }
-            } 
-
+            GEMPIC_D_LOOP_END
+            
             // Rescale the integral and assign it to array of degrees of freedom
             twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[0], 1, drHalf[2]);
         });
@@ -482,23 +431,15 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx = 0; qx < nQuad; ++qx)
-            {
-                // Update location of quadrature point
-                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
+            GEMPIC_D_LOOP_BEGIN(
+            for (int qx = 0; qx < nQuad; ++qx),
+                for (int qy = 0; qy < nQuad; ++qy),)
+                    // Update location of quadrature points
+                    r = {AMREX_D_DECL(midpoint[0] + quadPoints[qx] * drHalf[0], midpoint[1] + quadPoints[qy] * drHalf[1], r[2])};
 
-#if (GEMPIC_SPACEDIM > 1)
-                for (int qy = 0; qy < nQuad; ++qy)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
-#endif
-            
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], 1.) * func[2](AMREX_D_DECL(r[0], r[1], r[2]), t);
-                }
-            } 
-        
+            GEMPIC_D_LOOP_END
+            
             // Rescale the integral and assign it to array of degrees of freedom
             twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[0], drHalf[1], 1);
         });
@@ -619,26 +560,14 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-#if (GEMPIC_SPACEDIM > 1)
-            for (int qy = 0; qy < nQuad; ++qy)
-#endif
-            {
-                // Update location of quadrature point
-#if (GEMPIC_SPACEDIM > 1)
-                r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
-#endif
+            GEMPIC_D_LOOP_BEGIN(,
+            for (int qy = 0; qy < nQuad; ++qy),
+                for (int qz = 0; qz < nQuad; ++qz))
+                    // Update location of quadrature points
+                    r = {AMREX_D_DECL(r[0], midpoint[1] + quadPoints[qy] * drHalf[1], midpoint[2] + quadPoints[qz] * drHalf[2])};
 
-#if (GEMPIC_SPACEDIM > 2)
-                for (int qz = 0; qz < nQuad; ++qz)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
-#endif
-            
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) * func[0](AMREX_D_DECL(r[0], r[1], r[2]), t); // in 1D this is just evalutation
-                }
-            } 
+            GEMPIC_D_LOOP_END
         
             // Rescale the integral and assign it to array of degrees of freedom
             twoForm(i, j, k) = GEMPIC_D_MULT(integral, drHalf[1], drHalf[2]);
@@ -681,22 +610,14 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx = 0; qx < nQuad; ++qx)
-            {
-                // Update location of quadrature point
-                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
+            GEMPIC_D_LOOP_BEGIN(
+            for (int qx = 0; qx < nQuad; ++qx),,
+                for (int qz = 0; qz < nQuad; ++qz))
+                    // Update location of quadrature points
+                    r = {AMREX_D_DECL(midpoint[0] + quadPoints[qx] * drHalf[0], r[1], midpoint[2] + quadPoints[qz] * drHalf[2])};
 
-#if (GEMPIC_SPACEDIM > 2)
-                for (int qz = 0; qz < nQuad; ++qz)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 2)
-                    r[2] = midpoint[2] + quadPoints[qz] * drHalf[2];
-#endif
-            
                     integral += GEMPIC_D_MULT(quadWeights[qx], 1., quadWeights[qz]) * func[1](AMREX_D_DECL(r[0], r[1], r[2]), t);
-                }
-            } 
+            GEMPIC_D_LOOP_END
 
             // Rescale the integral and assign it to array of degrees of freedom
             twoForm(i, j, k) = GEMPIC_D_MULT(integral* drHalf[0], 1, drHalf[2]);
@@ -738,22 +659,14 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             amrex::Real integral = 0.0;
 
             // Integral over the xy plane and z direction
-            for (int qx = 0; qx < nQuad; ++qx)
-            {
-                // Update location of quadrature point
-                r[0] = midpoint[0] + quadPoints[qx] * drHalf[0];
+            GEMPIC_D_LOOP_BEGIN(
+            for (int qx = 0; qx < nQuad; ++qx),
+                for (int qy = 0; qy < nQuad; ++qy),)
+                    // Update location of quadrature points
+                    r = {AMREX_D_DECL(midpoint[0] + quadPoints[qx] * drHalf[0], midpoint[1] + quadPoints[qy] * drHalf[1], r[2])};
 
-#if (GEMPIC_SPACEDIM > 1)
-                for (int qy = 0; qy < nQuad; ++qy)
-#endif
-                {
-#if (GEMPIC_SPACEDIM > 1)
-                    r[1] = midpoint[1] + quadPoints[qy] * drHalf[1];
-#endif
-            
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], 1.) * func[2](AMREX_D_DECL(r[0], r[1], r[2]), t);
-                }
-            } 
+            GEMPIC_D_LOOP_END
         
             // Rescale the integral and assign it to array of degrees of freedom
             twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[0], drHalf[1], 1);

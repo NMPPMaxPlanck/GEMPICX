@@ -34,9 +34,11 @@
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
+#include <GEMPIC_Interpolation.H>
 
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
+using namespace GEMPIC_Interpolation;
 
 const int hodgeDegree = 4;
 
@@ -151,11 +153,11 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     amrex::Real bError = 0;
     for (int comp = 0; comp < 3; ++comp)
     {
-        dError += deRham->maxErrorMidpoint<hodgeDegree>(geom, funcD[comp], D.data[comp], params.dr(), 2, true, comp, Nt*dt);
+        dError += maxErrorMidpoint<hodgeDegree>(geom, funcD[comp], D.data[comp], params.dr(), 2, true, comp, Nt*dt);
     }
     for (int comp = 0; comp < 3; ++comp)
     {
-        bError += deRham->maxErrorMidpoint<hodgeDegree>(geom, funcB[comp], B.data[comp], params.dr(), 2, false, comp, Nt*dt);
+        bError += maxErrorMidpoint<hodgeDegree>(geom, funcB[comp], B.data[comp], params.dr(), 2, false, comp, Nt*dt);
     }
     
     return std::make_tuple(dError,bError);

@@ -14,16 +14,18 @@
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
+#include <GEMPIC_Interpolation.H>
 #include <cmath>
 #include <map>
 #include <string>
 
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
+using namespace GEMPIC_Interpolation;
 
 const int hodgeDegree = 2;
 
-std::map<int, std::string> hodges{{0, "Hodge 1 -> 2"}, {1, "Hodge 2 -> 1"}, {2, "Hodge 0 -> 3"}, {3, "Hodge 3 -> 0"}};
+std::map<int, std::string> hodges{{0, "Hodge 1->2"}, {1, "Hodge 2->1"}, {2, "Hodge 0->3"}, {3, "Hodge 3->0"}};
 
 amrex::Real test12(int n)
 {
@@ -74,11 +76,11 @@ amrex::Real test12(int n)
         funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
     }
 
-    deRham -> projection(funcP, 0.0, dualOneForm);
-    deRham -> hodgeFD<hodgeDegree>(dualOneForm, primalTwoForm, weight);
+    deRham->projection(funcP, 0.0, dualOneForm);
+    deRham->hodgeFD<hodgeDegree>(dualOneForm, primalTwoForm, weight);
 
-    deRham -> projection(funcP, 0.0, primalOneForm);
-    deRham -> hodgeFD<hodgeDegree>(primalOneForm, dualTwoForm, weight);
+    deRham->projection(funcP, 0.0, primalOneForm);
+    deRham->hodgeFD<hodgeDegree>(primalOneForm, dualTwoForm, weight);
 
     
     for (int i = 0; i < 3; ++i)
@@ -93,8 +95,8 @@ amrex::Real test12(int n)
     amrex::Real e2 = 0;
     for (int comp = 0; comp < 3; ++comp)
     {
-        e1 += deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], primalTwoForm.data[comp], params.dr(), 2, false, comp);
-        e2 += deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], dualTwoForm.data[comp], params.dr(), 2, true, comp);
+        e1 += maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], primalTwoForm.data[comp], params.dr(), 2, false, comp);
+        e2 += maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], dualTwoForm.data[comp], params.dr(), 2, true, comp);
     }
     return std::max((e1),(e2));
 }
@@ -148,11 +150,11 @@ amrex::Real test21(int n)
         funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
     }
 
-    deRham -> projection(funcP, 0.0, primalTwoForm);
-    deRham -> hodgeFD<hodgeDegree>(primalTwoForm, dualOneForm, weight);
+    deRham->projection(funcP, 0.0, primalTwoForm);
+    deRham->hodgeFD<hodgeDegree>(primalTwoForm, dualOneForm, weight);
 
-    deRham -> projection(funcP, 0.0, dualTwoForm);
-    deRham -> hodgeFD<hodgeDegree>(dualTwoForm, primalOneForm, weight);
+    deRham->projection(funcP, 0.0, dualTwoForm);
+    deRham->hodgeFD<hodgeDegree>(dualTwoForm, primalOneForm, weight);
 
 
     for (int i = 0; i < 3; ++i)
@@ -167,8 +169,8 @@ amrex::Real test21(int n)
     amrex::Real e2 = 0;
     for (int comp = 0; comp < 3; ++comp)
     {
-        e1 += deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], primalOneForm.data[comp], params.dr(), 1, false, comp);
-        e2 += deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], dualOneForm.data[comp], params.dr(), 1, true, comp);
+        e1 += maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], primalOneForm.data[comp], params.dr(), 1, false, comp);
+        e2 += maxErrorMidpoint<hodgeDegree>(geom, funcP[comp], dualOneForm.data[comp], params.dr(), 1, true, comp);
     }
     return std::max((e1),(e2));
 }
@@ -215,11 +217,11 @@ amrex::Real test03(int n)
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
     
 
-    deRham -> projection(funcP, 0.0, dualZeroForm);
-    deRham -> hodgeFD<hodgeDegree>(dualZeroForm, primalThreeForm, weight);
+    deRham->projection(funcP, 0.0, dualZeroForm);
+    deRham->hodgeFD<hodgeDegree>(dualZeroForm, primalThreeForm, weight);
 
-    deRham -> projection(funcP, 0.0, primalZeroForm);
-    deRham -> hodgeFD<hodgeDegree>(primalZeroForm, dualThreeForm, weight);
+    deRham->projection(funcP, 0.0, primalZeroForm);
+    deRham->hodgeFD<hodgeDegree>(primalZeroForm, dualThreeForm, weight);
     
     
     parser.define(func);
@@ -227,8 +229,8 @@ amrex::Real test03(int n)
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 
-    amrex::Real e1 = deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP, primalThreeForm.data, params.dr(), 3, false);
-    amrex::Real e2 = deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP, dualThreeForm.data, params.dr(), 3, true);
+    amrex::Real e1 = maxErrorMidpoint<hodgeDegree>(geom, funcP, primalThreeForm.data, params.dr(), 3, false);
+    amrex::Real e2 = maxErrorMidpoint<hodgeDegree>(geom, funcP, dualThreeForm.data, params.dr(), 3, true);
     return std::max((e1),(e2));
 }
 
@@ -273,11 +275,11 @@ amrex::Real test30(int n)
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
     
 
-    deRham -> projection(funcP, 0.0, dualThreeForm);
-    deRham -> hodgeFD<hodgeDegree>(dualThreeForm, primalZeroForm, weight);
+    deRham->projection(funcP, 0.0, dualThreeForm);
+    deRham->hodgeFD<hodgeDegree>(dualThreeForm, primalZeroForm, weight);
 
-    deRham -> projection(funcP, 0.0, primalThreeForm);
-    deRham -> hodgeFD<hodgeDegree>(primalThreeForm,dualZeroForm, weight);
+    deRham->projection(funcP, 0.0, primalThreeForm);
+    deRham->hodgeFD<hodgeDegree>(primalThreeForm,dualZeroForm, weight);
 
     
     parser.define(func);
@@ -285,8 +287,8 @@ amrex::Real test30(int n)
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 
-    amrex::Real e1 = deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP, primalZeroForm.data, params.dr(), 0, false);
-    amrex::Real e2 = deRham -> maxErrorMidpoint<hodgeDegree>(geom, funcP, dualZeroForm.data, params.dr(), 0, true);
+    amrex::Real e1 = maxErrorMidpoint<hodgeDegree>(geom, funcP, primalZeroForm.data, params.dr(), 0, false);
+    amrex::Real e2 = maxErrorMidpoint<hodgeDegree>(geom, funcP, dualZeroForm.data, params.dr(), 0, true);
     return std::max((e1),(e2));
 }
 
