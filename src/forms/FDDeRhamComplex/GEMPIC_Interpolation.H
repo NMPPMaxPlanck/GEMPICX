@@ -182,9 +182,9 @@ amrex::Real maxErrorMidpoint(amrex::Geometry geom, amrex::ParserExecutor<GEMPIC_
             // Compute the position of the point i, j, k
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = 
             {
-                AMREX_D_DECL(rr[0] = r0[0] + i*dr[0] - (dual ? drHalf[0] : 0),
-                                rr[1] = r0[1] + j*dr[1] - (dual ? drHalf[1] : 0),
-                                rr[2] = r0[2] + k*dr[2] - (dual ? drHalf[2] : 0))
+                AMREX_D_DECL(r0[0] + i*dr[0] - (dual ? drHalf[0] : 0),
+                             r0[1] + j*dr[1] - (dual ? drHalf[1] : 0),
+                             r0[2] + k*dr[2] - (dual ? drHalf[2] : 0))
             };
 
             amrex::Real error = 0.0;
