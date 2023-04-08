@@ -77,16 +77,16 @@ build-gcc-gpu:
     - bash ci_raven_gpu_launcher.sh
 
 # Weekly scheduled jobs
-job:on-schedule:
-  stage: test
-  tags:
-    - gpu
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-  script:
-    - echo "This is a scheduled job"
-    - cd scripts
-    - bash ci_raven_gpu_long_test.sh
+# job:on-schedule:
+#   stage: test
+#   tags:
+#     - gpu
+#   rules:
+#     - if: $CI_PIPELINE_SOURCE == "schedule"
+#   script:
+#     - echo "This is a scheduled job"
+#     - cd scripts
+#     - bash ci_raven_gpu_long_test.sh
 
 
 # Create and publish documentation pages (Ubuntu 20.04)

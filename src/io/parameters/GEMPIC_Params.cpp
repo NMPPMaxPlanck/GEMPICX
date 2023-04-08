@@ -24,7 +24,7 @@ Parameters::Parameters(const amrex::RealBox& realBox, const amrex::IntVect& nCel
     m_distriMap.define(m_grid);
 
     //define the length of the domain
-    m_length = {AMREX_D_DECL(m_geometry.ProbHi(0) - m_geometry.ProbLo(0), m_geometry.ProbHi(1) - m_geometry.ProbLo(1), m_geometry.ProbHi(2) - m_geometry.ProbLo(2))};
+    m_length = amrex::RealVect{AMREX_D_DECL(m_geometry.ProbHi(0) - m_geometry.ProbLo(0), m_geometry.ProbHi(1) - m_geometry.ProbLo(1), m_geometry.ProbHi(2) - m_geometry.ProbLo(2))};
 
 }
 
@@ -65,7 +65,7 @@ const amrex::Box& Parameters::domain() const
 
 const amrex::RealVect Parameters::dr() const
 {
-    return {AMREX_D_DECL(m_length[0]/m_nCell[0], m_length[1]/m_nCell[1], m_length[2]/m_nCell[2])};
+    return amrex::RealVect{AMREX_D_DECL(m_length[0]/m_nCell[0], m_length[1]/m_nCell[1], m_length[2]/m_nCell[2])};
 }
 
 int Parameters::degree() const

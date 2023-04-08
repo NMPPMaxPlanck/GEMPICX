@@ -466,10 +466,11 @@ public:
 #endif
                                 val += parserEval(x_eval, y_eval, z_eval, t) *
                                        (integrate[0] ? stencil[xd] : 1) *
-                                       (integrate[1] ? stencil[yd] : 1) *
+                                       (integrate[1] ? stencil[yd] : 1)
 #if (GEMPIC_SPACEDIM > 2)
-                                       (integrate[2] ? stencil[zd] : 1);
+                                       * (integrate[2] ? stencil[zd] : 1)
 #endif
+                                                                        ;
                             }
                         }
 #if (GEMPIC_SPACEDIM > 2)
