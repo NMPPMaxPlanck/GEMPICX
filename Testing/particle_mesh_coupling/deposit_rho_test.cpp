@@ -21,15 +21,15 @@ using namespace Particles;
 
 namespace {
         // When using amrex::ParallelFor you have to create a standalone helper function that does the execution on GPU and call that function from the unit test because of how GTest creates tests within a TEST_F fixture.
-        template <int vdim, int degX, int degY, int degZ>
-        void updateRhoParallelFor(amrex::ParIter<0, 0, vdim + 1, 0>& pti,
+        template <int vDim, int degX, int degY, int degZ>
+        void updateRhoParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                   computational_domain& infra, 
                                   amrex::MultiFab& rho,
                                   amrex::Real charge) {
             const long np{pti.numParticles()};
             const auto& particles{pti.GetArrayOfStructs()};
             const auto partData{particles().data()};
-            const auto weight{pti.GetStructOfArrays().GetRealData(vdim).data()};
+            const auto weight{pti.GetStructOfArrays().GetRealData(vDim).data()};
             amrex::Array4<amrex::Real> const& rhoarr{rho[pti].array()};
 
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
@@ -103,7 +103,7 @@ namespace {
         // Number of species (second species only used for DoubleParticleMultipleSpecies)
         static const int numSpec{2};
         // Number of velocity dimensions.
-        static const int vdim{0};
+        static const int vDim{0};
         // Number of ghost cells in mesh
         const int Nghost{GEMPIC_TestUtils::initNGhost(degX, degY, degZ)};
 
@@ -111,7 +111,7 @@ namespace {
         amrex::Array<amrex::Real, numSpec> mass{1, 0.1};
 
         computational_domain infra;
-        amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numSpec> particleGroup;
+        amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
         amrex::MultiFab rho; 
 
         // virtual void SetUp() will be called before each test is run.
@@ -139,7 +139,7 @@ namespace {
             for (int spec{0}; spec < numSpec; spec++)
             {
                 particleGroup[spec] =
-                    std::make_unique<particle_groups<vdim>>(charge[spec], mass[spec], infra);
+                    std::make_unique<particle_groups<vDim>>(charge[spec], mass[spec], infra);
             }
         }
     };
@@ -158,7 +158,7 @@ namespace {
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
 
         // (default) charge correctly transferred from GEMPIC_TestUtils::addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge()); 
@@ -169,17 +169,16 @@ namespace {
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle.
         bool particleLoopRun{false};
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
             particleLoopRun = true;
 
             const long np{pti.numParticles()};
-
             EXPECT_EQ(numParticles, np); // Only one particle added by GEMPIC_TestUtils::addSingleParticles
 
             const auto& particles{pti.GetArrayOfStructs()};
             const auto partData{particles().data()};
-            const auto weight{pti.GetStructOfArrays().GetRealData(vdim).data()};
+            const auto weight{pti.GetStructOfArrays().GetRealData(vDim).data()};
 
             EXPECT_EQ(1, weight[0]); // weight correctly transferred from GEMPIC_TestUtils::addSingleParticles
 
@@ -205,16 +204,16 @@ namespace {
         // Particle at position (0,0,0) in box (0,0,0)
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle.
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Only one particle added
 
-            updateRhoParallelFor<vdim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
 
             // Expect only one node of rhoarr (0, 0, 0) to be non-zero and receiving full weight of particle (1)
             checkRho(__LINE__, rho[pti].array(), infra.n_cell.dim3(),
@@ -248,15 +247,15 @@ namespace {
         const auto charge{particleGroup[0]->getCharge()};
         amrex::Real expectedVal{charge * infra.dxi[GEMPIC_SPACEDIM] * weights[0] * pow(0.5, GEMPIC_SPACEDIM)};
 
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle.
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Only one particle added
 
-            updateRhoParallelFor<vdim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
 
             // Expect the eight nearest nodes of rhoarr (9/10, 9/10, 9/10) to be non-zero and receiving 1/8 the weight of the particle (3)
             checkRho(__LINE__, rho[pti].array(), infra.n_cell.dim3(),
@@ -286,15 +285,15 @@ namespace {
                       infra.geom.ProbLo(2) + 0.25*infra.dx[2])};
         amrex::Array<amrex::Real, numParticles> weights{1};
 
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle.
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Only one particle added
 
-            updateRhoParallelFor<vdim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
 
             // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rhoarr (0/1, 0/1, 0/1) to be non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the particle (1)
             checkRho(__LINE__, rho[pti].array(), infra.n_cell.dim3(),
@@ -335,16 +334,16 @@ namespace {
         amrex::Array<amrex::Real, numParticles> weights{1, 3};
         amrex::Real expectedValA{1}, expectedValB{3*pow(0.5, GEMPIC_SPACEDIM)};
 
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
         
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over two distant particles.
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Two particles added
 
-            updateRhoParallelFor<vdim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
 
             // See SingleParticle test for explanation of expectations
             checkRho(__LINE__, rho[pti].array(), infra.n_cell.dim3(),
@@ -380,16 +379,16 @@ namespace {
         amrex::Real expectedValA{1 + 3*pow(0.5, GEMPIC_SPACEDIM)};
         amrex::Real expectedValB{3*pow(0.5, GEMPIC_SPACEDIM)};
 
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
         
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over two close particles.
-        for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Two particles added
 
-            updateRhoParallelFor<vdim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
 
             // See SingleParticle test for explanation of expectations
             checkRho(__LINE__, rho[pti].array(), infra.n_cell.dim3(),
@@ -422,8 +421,8 @@ namespace {
         amrex::Array<amrex::Real, numParticles> eWeights{3};
         int pSpec{0}, eSpec{1};
         
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, pWeights, pPos, pSpec);
-        GEMPIC_TestUtils::addSingleParticles<vdim, numSpec, numParticles>(particleGroup, infra, eWeights, ePos, eSpec);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, pWeights, pPos, pSpec);
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, eWeights, ePos, eSpec);
 
         const auto pCharge{particleGroup[pSpec]->getCharge()};
         const auto eCharge{particleGroup[eSpec]->getCharge()};
@@ -436,12 +435,12 @@ namespace {
             particleGroup[spec]->Redistribute();  // assign particles to the tile they are in
             const auto charge{particleGroup[spec]->getCharge()};
             // Particle iteration
-            for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
+            for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
             {
                 const long np{pti.numParticles()};
                 EXPECT_EQ(numParticles, np); // Two particles added
 
-                updateRhoParallelFor<vdim, degX, degY, degZ>(pti, infra, rho, charge);
+                updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, charge);
 
                 if (spec == numSpec - 1) {
                     // See SingleParticle test for explanation of expectations
