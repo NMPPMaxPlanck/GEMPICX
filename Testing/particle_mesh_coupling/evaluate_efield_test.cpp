@@ -25,12 +25,12 @@ namespace {
         const long np{pti.numParticles()};
         const auto& particles{pti.GetArrayOfStructs()};
         const auto partData{particles().data()};
-        amrex::GpuArray<amrex::GpuArray<amrex::Real, vDim>, 2> efields;
+        std::shared_ptr<amrex::GpuArray<amrex::Real, vDim>[]> efields(new amrex::GpuArray<amrex::Real, vDim>[np]);
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
         for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.data[cc])[pti].array();
 
-        amrex::ParallelFor(np, [=, &efields] AMREX_GPU_DEVICE(long pp)
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
         {
             splines_at_particles<degX, degY, degZ> spline;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
