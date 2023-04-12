@@ -1,0 +1,817 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="test__ihodge__CG_8cpp" kind="file" language="C++">
+    <compoundname>test_ihodge_CG.cpp</compoundname>
+    <includes local="no">AMReX.H</includes>
+    <includes local="no">AMReX_ParmParse.H</includes>
+    <includes local="no">AMReX_PlotFileUtil.H</includes>
+    <includes local="no">AMReX_Print.H</includes>
+    <includes local="no">GEMPIC_Config.H</includes>
+    <includes refid="GEMPIC__amrex__init_8H" local="no">GEMPIC_amrex_init.H</includes>
+    <includes refid="GEMPIC__assertion_8H" local="no">GEMPIC_assertion.H</includes>
+    <includes refid="GEMPIC__gempic__norm_8H" local="no">GEMPIC_gempic_norm.H</includes>
+    <includes refid="GEMPIC__maxwell__yee_8H" local="no">GEMPIC_maxwell_yee.H</includes>
+    <includes refid="GEMPIC__parameters_8H" local="no">GEMPIC_parameters.H</includes>
+    <incdepgraph>
+      <node id="32">
+        <label>GEMPIC_particle_groups.H</label>
+        <link refid="GEMPIC__particle__groups_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="11">
+        <label>limits</label>
+      </node>
+      <node id="23">
+        <label>assert.h</label>
+      </node>
+      <node id="21">
+        <label>AMReX_Array.H</label>
+      </node>
+      <node id="42">
+        <label>GEMPIC_particle_mesh_coupling_C2.H</label>
+        <link refid="GEMPIC__particle__mesh__coupling__C2_8H"/>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+      </node>
+      <node id="24">
+        <label>GEMPIC_maxwell_yee.H</label>
+        <link refid="GEMPIC__maxwell__yee_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+      </node>
+      <node id="39">
+        <label>GEMPIC_particle_mesh_coupling.H</label>
+        <link refid="GEMPIC__particle__mesh__coupling_8H"/>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="41" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+      </node>
+      <node id="40">
+        <label>AMReX_FArrayBox.H</label>
+      </node>
+      <node id="31">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="7">
+        <label>GEMPIC_amrex_init.H</label>
+        <link refid="GEMPIC__amrex__init_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>GEMPIC_gempic_norm.H</label>
+        <link refid="GEMPIC__gempic__norm_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="10">
+        <label>cmath</label>
+      </node>
+      <node id="45">
+        <label>AMReX_MLNodeLaplacian.H</label>
+      </node>
+      <node id="15">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="20">
+        <label>GEMPIC_computational_domain.H</label>
+        <link refid="GEMPIC__computational__domain_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp</label>
+        <link refid="test__ihodge__CG_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+      </node>
+      <node id="43">
+        <label>GEMPIC_splines.H</label>
+        <link refid="GEMPIC__splines_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="35">
+        <label>AMReX_Particles.H</label>
+      </node>
+      <node id="37">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="27">
+        <label>AMReX_MFIter.H</label>
+      </node>
+      <node id="33">
+        <label>AMReX_ArrayOfStructs.H</label>
+      </node>
+      <node id="38">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="34">
+        <label>AMReX_Particle.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="36">
+        <label>AMReX_StructOfArrays.H</label>
+      </node>
+      <node id="5">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="19">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="26">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="16">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="30">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="41">
+        <label>AMReX_Math.H</label>
+      </node>
+      <node id="29">
+        <label>AMReX_MLEBNodeFDLaplacian.H</label>
+      </node>
+      <node id="44">
+        <label>GEMPIC_parameters.H</label>
+        <link refid="GEMPIC__parameters_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+      <node id="25">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="17">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="8">
+        <label>GEMPIC_assertion.H</label>
+        <link refid="GEMPIC__assertion_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="22">
+        <label>AMReX_BLProfiler.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="28">
+        <label>AMReX_MLMG.H</label>
+      </node>
+      <node id="2">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="test__ihodge__CG_8cpp_1a052a21bd901698875822852ae0077719" prot="public" static="no">
+        <name>IHODGE_CG_ZERO</name>
+        <initializer>0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="32" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="test__ihodge__CG_8cpp_1abb60cab19960f51f36a7419f08f316fa" prot="public" static="no">
+        <name>IHODGE_CG_E0</name>
+        <initializer>1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="33" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="33" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="test__ihodge__CG_8cpp_1ab2a7a9f664daa47f93c215c8977bcefe" prot="public" static="no">
+        <name>IHODGE_CG_E1</name>
+        <initializer>2</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="34" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="test__ihodge__CG_8cpp_1a87ee030cb22e4d546983144703066f70" prot="public" static="no">
+        <name>IHODGE_CG_E2</name>
+        <initializer>3</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="35" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="test__ihodge__CG_8cpp_1a6e7c815f40eafeaecf116efa67626d71" prot="public" static="no">
+        <name>IHODGE_CG_B0</name>
+        <initializer>4</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="36" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="test__ihodge__CG_8cpp_1a5a229739452d0b5ebf2e60a88ac2e280" prot="public" static="no">
+        <name>IHODGE_CG_B2</name>
+        <initializer>5</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="37" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test__ihodge__CG_8cpp_1a5fc59e54e297500e68ce09f4ce3b3820" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real function_to_project</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t, int funcSelect)</argsstring>
+        <name>function_to_project</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>funcSelect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="39" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="39" bodyend="64"/>
+      </memberdef>
+      <memberdef kind="function" id="test__ihodge__CG_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void main_main</definition>
+        <argsstring>()</argsstring>
+        <name>main_main</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="66" column="6" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="66" bodyend="147"/>
+      </memberdef>
+      <memberdef kind="function" id="test__ihodge__CG_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>(int argc, char *argv[])</argsstring>
+        <name>main</name>
+        <param>
+          <type>int</type>
+          <declname>argc</declname>
+        </param>
+        <param>
+          <type>char *</type>
+          <declname>argv</declname>
+          <array>[]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" line="149" column="5" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp" bodystart="149" bodyend="170"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*------------------------------------------------------------------------------</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>Test<sp/>3D<sp/>Maxwell<sp/>Yee<sp/>Solver<sp/>(finite<sp/>differences)<sp/>on<sp/>periodic<sp/>grid</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"></highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/><sp/>For<sp/>the<sp/>Maxwell-equations<sp/>we<sp/>use<sp/>the<sp/>solution</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/><sp/>E(x,t)<sp/>=<sp/><sp/>\begin{pmatrix}<sp/>\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\\</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>-2\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt(3)<sp/>t)<sp/>\\</highlight></codeline>
+<codeline lineno="7"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\end{pmatrix}</highlight></codeline>
+<codeline lineno="8"><highlight class="comment"><sp/><sp/>B(x,t)<sp/>=<sp/>\begin{pmatrix}<sp/>\sqrt{3}<sp/>\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\\<sp/>0<sp/>\\<sp/>-\sqrt{3}</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\end{pmatrix}</highlight></codeline>
+<codeline lineno="10"><highlight class="comment"></highlight></codeline>
+<codeline lineno="11"><highlight class="comment"><sp/>For<sp/>the<sp/>Poisson<sp/>equation<sp/>we<sp/>use:</highlight></codeline>
+<codeline lineno="12"><highlight class="comment"><sp/>E(x,t)<sp/>=<sp/>\begin{pmatrix}<sp/>-\sin(x)\cos(y)\cos(z)-0.5\sin(2x)cos(2y)cos(2z)\\</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>-\cos(x)\sin(y)\cos(z)-0.5\cos(2x)sin(2y)cos(2z)\\</highlight></codeline>
+<codeline lineno="14"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>-\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z)<sp/>\end{pmatrix}</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">------------------------------------------------------------------------------*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_ParmParse.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_PlotFileUtil.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Print.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;GEMPIC_Config.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__amrex__init_8H" kindref="compound">GEMPIC_amrex_init.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__assertion_8H" kindref="compound">GEMPIC_assertion.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__gempic__norm_8H" kindref="compound">GEMPIC_gempic_norm.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__maxwell__yee_8H" kindref="compound">GEMPIC_maxwell_yee.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__parameters_8H" kindref="compound">GEMPIC_parameters.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">amrex;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref>;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">Field_solvers;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IHODGE_CG_ZERO<sp/>0</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IHODGE_CG_E0<sp/>1</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IHODGE_CG_E1<sp/>2</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IHODGE_CG_E2<sp/>3</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IHODGE_CG_B0<sp/>4</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>IHODGE_CG_B2<sp/>5</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__ihodge__CG_8cpp_1a5fc59e54e297500e68ce09f4ce3b3820" kindref="member">function_to_project</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>funcSelect)</highlight></codeline>
+<codeline lineno="41"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">switch</highlight><highlight class="normal"><sp/>(funcSelect)</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1abb60cab19960f51f36a7419f08f316fa" kindref="member">IHODGE_CG_E0</ref>:</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::cos(x);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1ab2a7a9f664daa47f93c215c8977bcefe" kindref="member">IHODGE_CG_E1</ref>:</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>-2.0<sp/>*<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1a87ee030cb22e4d546983144703066f70" kindref="member">IHODGE_CG_E2</ref>:</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1a6e7c815f40eafeaecf116efa67626d71" kindref="member">IHODGE_CG_B0</ref>:</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>std::sqrt(3.)<sp/>*<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1a5a229739452d0b5ebf2e60a88ac2e280" kindref="member">IHODGE_CG_B2</ref>:</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>-std::sqrt(3.)<sp/>*<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1a052a21bd901698875822852ae0077719" kindref="member">IHODGE_CG_ZERO</ref>:</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.0;</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.0;</highlight></codeline>
+<codeline lineno="64"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"></highlight><highlight class="keyword">template</highlight><highlight class="normal"><sp/>&lt;</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numspec,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degx,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degy,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degz&gt;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kindref="member">main_main</ref>()</highlight></codeline>
+<codeline lineno="67"><highlight class="normal">{<sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Analytical<sp/>solutions<sp/>--<sp/>Maxwell</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>amrex::GpuArray&lt;std::string,<sp/>vdim&gt;<sp/>fields_E;</highlight></codeline>
+<codeline lineno="70"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;std::string,<sp/>int(vdim/2.5)*2+1&gt;<sp/>fields_B;</highlight></codeline>
+<codeline lineno="71"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/>&quot;cos(x+y+z-sqrt(3.0)*t)&quot;;</highlight></codeline>
+<codeline lineno="72"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/>&quot;cos(x)&quot;;</highlight></codeline>
+<codeline lineno="73"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_E[1]<sp/>=<sp/>&quot;-2*cos(x+y+z-sqrt(3.0)*t)&quot;;</highlight></codeline>
+<codeline lineno="74"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_E[2]<sp/>=<sp/>&quot;cos(x+y+z-sqrt(3.0)*t)&quot;;</highlight></codeline>
+<codeline lineno="75"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_B[0]<sp/>=<sp/>&quot;sqrt(3)*cos(x+y+z-sqrt(3.0)*t)&quot;;</highlight></codeline>
+<codeline lineno="76"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_B[1]<sp/>=<sp/>&quot;0.0&quot;;</highlight></codeline>
+<codeline lineno="77"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>fields_B[2]<sp/>=<sp/>&quot;-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)&quot;;</highlight></codeline>
+<codeline lineno="78"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degree<sp/>=<sp/>4;</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>twopi<sp/>=<sp/>4<sp/>*<sp/>asin(1.0);<sp/><sp/></highlight><highlight class="comment">//<sp/>2.0*3.14159265359;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Initialize<sp/>Infrastructure</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>is_periodic<sp/>=<sp/>{AMREX_D_DECL(1,<sp/>1,<sp/>1)};</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>std::array&lt;int,GEMPIC_SPACEDIM&gt;<sp/>n_cell<sp/>=<sp/>{AMREX_D_DECL(32,32,32)};</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>n_cell<sp/>=<sp/>{AMREX_D_DECL(32,<sp/>32,<sp/>32)};</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>mx_grid<sp/>=<sp/>{AMREX_D_DECL(32,<sp/>32,<sp/>32)};</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>boxLo[GEMPIC_SPACEDIM]<sp/>=<sp/>{AMREX_D_DECL(0,<sp/>0,<sp/>0)};</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>boxHi[GEMPIC_SPACEDIM]<sp/>=<sp/>{AMREX_D_DECL(twopi<sp/>/<sp/>0.5,<sp/>twopi<sp/>/<sp/>0.5,<sp/>twopi<sp/>/<sp/>0.5)};</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::RealBox<sp/>real_box;</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/>real_box.setLo(boxLo);</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/>real_box.setHi(boxHi);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1CompDom_1_1computational__domain" kindref="compound">CompDom::computational_domain</ref><sp/>infra;</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/>infra.<ref refid="classGempic_1_1CompDom_1_1computational__domain_1a429954f363f952fdc4e198952d47f5bf" kindref="member">initialize_computational_domain</ref>(n_cell,<sp/>mx_grid,<sp/>is_periodic,<sp/>real_box);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Solve</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/>std::array&lt;int,<sp/>GEMPIC_SPACEDIM&gt;<sp/>degs<sp/>=<sp/>{AMREX_D_DECL(degx,<sp/>degy,<sp/>degz)};</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>Nghost<sp/>=<sp/>*(std::max_element(degs.begin(),<sp/>degs.end()));</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>Nsteps<sp/>=<sp/>5;</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Real<sp/>dt<sp/>=<sp/>0.01;</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Field__solvers_1_1maxwell__yee" kindref="compound">maxwell_yee&lt;vdim&gt;</ref><sp/>mw_yee(infra,<sp/>dt,<sp/>Nsteps,<sp/>Nghost);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;int,<sp/>int(vdim<sp/>/<sp/>2.5)<sp/>*<sp/>2<sp/>+<sp/>1&gt;<sp/>funcSelectB;</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/>funcSelectB[0]<sp/>=<sp/><ref refid="test__ihodge__CG_8cpp_1a6e7c815f40eafeaecf116efa67626d71" kindref="member">IHODGE_CG_B0</ref>;</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>funcSelectB[1]<sp/>=<sp/><ref refid="test__ihodge__CG_8cpp_1a052a21bd901698875822852ae0077719" kindref="member">IHODGE_CG_ZERO</ref>;</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/>funcSelectB[2]<sp/>=<sp/><ref refid="test__ihodge__CG_8cpp_1a5a229739452d0b5ebf2e60a88ac2e280" kindref="member">IHODGE_CG_B2</ref>;</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.template<sp/>initB&lt;degree&gt;(infra,<sp/>funcSelectB);</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"></highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;int,<sp/>vdim&gt;<sp/>funcSelectE;</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/>funcSelectE[0]<sp/>=<sp/><ref refid="test__ihodge__CG_8cpp_1abb60cab19960f51f36a7419f08f316fa" kindref="member">IHODGE_CG_E0</ref>;</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>funcSelectE[1]<sp/>=<sp/><ref refid="test__ihodge__CG_8cpp_1ab2a7a9f664daa47f93c215c8977bcefe" kindref="member">IHODGE_CG_E1</ref>;</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/>funcSelectE[2]<sp/>=<sp/><ref refid="test__ihodge__CG_8cpp_1a87ee030cb22e4d546983144703066f70" kindref="member">IHODGE_CG_E2</ref>;</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.template<sp/>initE&lt;degree&gt;(infra,<sp/>funcSelectE);</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.template<sp/>hodge_full&lt;degree&gt;(infra,<sp/>mw_yee.E_Array,<sp/>mw_yee.HE_Array,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim<sp/>=<sp/>0;<sp/>dim<sp/>&lt;<sp/>vdim;<sp/>dim++)</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::MultiFab<sp/>k(convert(infra.<ref refid="classGempic_1_1CompDom_1_1computational__domain_1a2290c64802bc2b62ffa096ca88799657" kindref="member">grid</ref>,<sp/>*mw_yee.E_Index[dim]),<sp/>infra.<ref refid="classGempic_1_1CompDom_1_1computational__domain_1a9f73479b251e046dc5579bae8265d1ef" kindref="member">distriMap</ref>,<sp/>1,</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.Nghost);</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"></highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>k.setVal(-2.0,<sp/>Nghost);</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"></highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(mw_yee.E_sol_Array[dim])-&gt;setVal(1.0);</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"></highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.template<sp/>solve_hodge_CG&lt;degree&gt;(*mw_yee.HE_Array[dim],<sp/>*mw_yee.E_sol_Array[dim],<sp/>k,</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>infra,<sp/>dim,<sp/>2,<sp/>1.e-16);</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"></highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_ihodge_CG.output&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>comparing<sp/>ihodge(hoge(E))<sp/>to<sp/>E</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>passed<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>dim<sp/>=<sp/>0;<sp/>dim<sp/>&lt;<sp/>vdim;<sp/>dim++)</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(mw_yee.E_sol_Array[dim])-&gt;minus(*(mw_yee.E_Array[dim]),<sp/>0,<sp/>1,<sp/>0);</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>err_norm<sp/>=<sp/><ref refid="namespaceGempic_1_1Utils_1a317e5f0fefa3fe0902a73d22807a6817" kindref="member">Utils::gempic_norm</ref>(*(mw_yee.E_sol_Array[dim]),<sp/>infra,<sp/>2);</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_ihodge_CG.output&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;For<sp/>component<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>dim<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>the<sp/>error<sp/>is:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>err_norm<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>E_norm<sp/>=<sp/><ref refid="namespaceGempic_1_1Utils_1a317e5f0fefa3fe0902a73d22807a6817" kindref="member">Utils::gempic_norm</ref>(*(mw_yee.E_Array[dim]),<sp/>infra,<sp/>2);</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>E_norm,<sp/>err_norm<sp/>*<sp/>err_norm);</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="147"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="test__ihodge__CG_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kindref="member">main</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>argc,<sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*argv[])</highlight></codeline>
+<codeline lineno="150"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>build_parm_parse<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Initialize(argc,<sp/>argv,<sp/>build_parm_parse,<sp/>MPI_COMM_WORLD,</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a3a730df9bb861d0905cd1411f02cf67d" kindref="member">overwrite_amrex_parser_defaults</ref>);</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim1<sp/>=<sp/>1,<sp/>vdim2<sp/>=<sp/>2,<sp/>numspec<sp/>=<sp/>1,<sp/>degx<sp/>=<sp/>1,<sp/>degy<sp/>=<sp/>1,<sp/>degz<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="157"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim1,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim2,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="159"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>2)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim2<sp/>=<sp/>2,<sp/>vdim<sp/>=<sp/>3,<sp/>numspec<sp/>=<sp/>1,<sp/>degx<sp/>=<sp/>1,<sp/>degy<sp/>=<sp/>1,<sp/>degz<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim2,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="163"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim<sp/>=<sp/>3,<sp/>numspec<sp/>=<sp/>1,<sp/>degx<sp/>=<sp/>1,<sp/>degy<sp/>=<sp/>1,<sp/>degz<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ParallelDescriptor::MyProc()<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::rename(</highlight><highlight class="stringliteral">&quot;test_ihodge_CG.output.0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;test_ihodge_CG.output&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Finalize();</highlight></codeline>
+<codeline lineno="170"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_86dae66d0a0fdf88de2eacd293cadc88" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/forms/testing</compoundname>
+    <innerfile refid="test__AMReX__Dot_8cpp">test_AMReX_Dot.cpp</innerfile>
+    <innerfile refid="test__AMReX__FillBoundary_8cpp">test_AMReX_FillBoundary.cpp</innerfile>
+    <innerfile refid="test__AMReX__OverrideSync_8cpp">test_AMReX_OverrideSync.cpp</innerfile>
+    <innerfile refid="test__AMReX__SumBoundary_8cpp">test_AMReX_SumBoundary.cpp</innerfile>
+    <innerfile refid="test__boundaries__sync_8cpp">test_boundaries_sync.cpp</innerfile>
+    <innerfile refid="test__curl__projection_8cpp">test_curl_projection.cpp</innerfile>
+    <innerfile refid="test__div__projection_8cpp">test_div_projection.cpp</innerfile>
+    <innerfile refid="test__gempic__norm_8cpp">test_gempic_norm.cpp</innerfile>
+    <innerfile refid="test__grad__projection_8cpp">test_grad_projection.cpp</innerfile>
+    <innerfile refid="test__gtest_8cpp">test_gtest.cpp</innerfile>
+    <innerfile refid="test__hodge__sinusoidal__degree__2_8cpp">test_hodge_sinusoidal_degree_2.cpp</innerfile>
+    <innerfile refid="test__hodge__sinusoidal__degree__4_8cpp">test_hodge_sinusoidal_degree_4.cpp</innerfile>
+    <innerfile refid="test__hodge__sinusoidal__degree__6_8cpp">test_hodge_sinusoidal_degree_6.cpp</innerfile>
+    <innerfile refid="test__plus__minus__mult_8cpp">test_plus_minus_mult.cpp</innerfile>
+    <innerfile refid="test__projection_8cpp">test_projection.cpp</innerfile>
+    <innerfile refid="test__projection__dual_8cpp">test_projection_dual.cpp</innerfile>
+    <innerfile refid="test__projection__polynomial_8cpp">test_projection_polynomial.cpp</innerfile>
+    <innerfile refid="test__projection__zero__three__forms_8cpp">test_projection_zero_three_forms.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/forms/testing/"/>
+  </compounddef>
+</doxygen>

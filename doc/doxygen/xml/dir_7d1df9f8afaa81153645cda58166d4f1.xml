@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_7d1df9f8afaa81153645cda58166d4f1" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/field_solvers/testing</compoundname>
+    <innerfile refid="test__ampere__faraday_8cpp">test_ampere_faraday.cpp</innerfile>
+    <innerfile refid="test__AMReX__atomic__add_8cpp">test_AMReX_atomic_add.cpp</innerfile>
+    <innerfile refid="test__constval_8cpp">test_constval.cpp</innerfile>
+    <innerfile refid="test__ihodge__CG_8cpp">test_ihodge_CG.cpp</innerfile>
+    <innerfile refid="test__maxwell__solver_8cpp">test_maxwell_solver.cpp</innerfile>
+    <innerfile refid="test__maxwell__yee_8cpp">test_maxwell_yee.cpp</innerfile>
+    <innerfile refid="test__maxwell__yee__order_8cpp">test_maxwell_yee_order.cpp</innerfile>
+    <innerfile refid="test__Poisson_8cpp">test_Poisson.cpp</innerfile>
+    <innerfile refid="test__poisson__CG_8cpp">test_poisson_CG.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/"/>
+  </compounddef>
+</doxygen>

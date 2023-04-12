@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::Vlasov_Maxwell::vlasov_maxwell</compoundname>
+    <includes local="no">GEMPIC_particle_groups.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>vdim</declname>
+        <defname>vdim</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>numspec</declname>
+        <defname>numspec</defname>
+      </param>
+    </templateparamlist>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Gempic::Vlasov_Maxwell::vlasov_maxwell&lt; vdim, numspec &gt;</label>
+        <link refid="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="26" column="1" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="26" bodyend="-1"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,291 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="GEMPIC__PoissonSolver_8H" kind="file" language="C++">
+    <compoundname>GEMPIC_PoissonSolver.H</compoundname>
+    <includes local="no">AMReX.H</includes>
+    <includes local="no">AMReX_Print.H</includes>
+    <includes refid="GEMPIC__Params_8H" local="no">GEMPIC_Params.H</includes>
+    <includes local="no">AMReX_MFIter.H</includes>
+    <includes local="no">AMReX_MLMG.H</includes>
+    <includes local="no">AMReX_MLEBNodeFDLaplacian.H</includes>
+    <includes local="no">AMReX_MLNodeLaplacian.H</includes>
+    <includes refid="GEMPIC__Fields_8H" local="no">GEMPIC_Fields.H</includes>
+    <includes refid="GEMPIC__FDDeRhamComplex_8H" local="no">GEMPIC_FDDeRhamComplex.H</includes>
+    <includedby refid="GEMPIC__PoissonSolver_8cpp" local="yes">/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp</includedby>
+    <includedby refid="test__Poisson_8cpp" local="no">/home/marm/Desktop/gempic/src/field_solvers/testing/test_Poisson.cpp</includedby>
+    <includedby refid="test__vlasov__maxwell__hs__deRham_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_deRham.cpp</includedby>
+    <includedby refid="test__vlasov__qn__e__adiabatic_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_qn_e_adiabatic.cpp</includedby>
+    <includedby refid="GEMPIC__time__loop__hs__zigzag_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H</includedby>
+    <incdepgraph>
+      <node id="14">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="15">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="20">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="24">
+        <label>AMReX_MLNodeLaplacian.H</label>
+      </node>
+      <node id="7">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="21">
+        <label>AMReX_MFIter.H</label>
+      </node>
+      <node id="4">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="16">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="6">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="26">
+        <label>GEMPIC_FDDeRhamComplex.H</label>
+        <link refid="GEMPIC__FDDeRhamComplex_8H"/>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H</label>
+        <link refid="GEMPIC__PoissonSolver_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="19">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="11">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="8">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="23">
+        <label>AMReX_MLEBNodeFDLaplacian.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="10">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="12">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="17">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="5">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="25">
+        <label>GEMPIC_Fields.H</label>
+        <link refid="GEMPIC__Fields_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="22">
+        <label>AMReX_MLMG.H</label>
+      </node>
+      <node id="2">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_Poisson.cpp</label>
+        <link refid="test__Poisson_8cpp"/>
+      </node>
+      <node id="2">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp</label>
+        <link refid="GEMPIC__PoissonSolver_8cpp"/>
+      </node>
+      <node id="4">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_deRham.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__deRham_8cpp"/>
+      </node>
+      <node id="6">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H</label>
+        <link refid="GEMPIC__time__loop__hs__zigzag_8H"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_qn_e_adiabatic.cpp</label>
+        <link refid="test__vlasov__qn__e__adiabatic_8cpp"/>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H</label>
+        <link refid="GEMPIC__PoissonSolver_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classGEMPIC__PoissonSolver_1_1PoissonSolver" prot="public">GEMPIC_PoissonSolver::PoissonSolver</innerclass>
+    <innernamespace refid="namespaceGEMPIC__PoissonSolver">GEMPIC_PoissonSolver</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>GEMPIC_POISSONSOLVER_H_</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>GEMPIC_POISSONSOLVER_H_</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Print.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__Params_8H" kindref="compound">GEMPIC_Params.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_MFIter.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_MLMG.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_MLEBNodeFDLaplacian.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_MLNodeLaplacian.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__Fields_8H" kindref="compound">GEMPIC_Fields.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__FDDeRhamComplex_8H" kindref="compound">GEMPIC_FDDeRhamComplex.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGEMPIC__Fields" kindref="compound">GEMPIC_Fields</ref>;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGEMPIC__FDDeRhamComplex" kindref="compound">GEMPIC_FDDeRhamComplex</ref>;</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17" refid="namespaceGEMPIC__PoissonSolver" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGEMPIC__PoissonSolver" kindref="compound">GEMPIC_PoissonSolver</ref></highlight></codeline>
+<codeline lineno="18"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="19" refid="classGEMPIC__PoissonSolver_1_1PoissonSolver" refkind="compound"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver" kindref="compound">PoissonSolver</ref></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m_maxIter;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m_maxCoarseningLevel;</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m_maxFmgIter;</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m_mgBottomMaxIter;</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m_verbose;</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>m_bottomVerbose;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//for<sp/>Poisson</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Array&lt;amrex::Real,<sp/>GEMPIC_SPACEDIM&gt;<sp/>m_sigma;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver" kindref="compound">PoissonSolver</ref>();</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>~<ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver" kindref="compound">PoissonSolver</ref>();</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>solve(<ref refid="classParameters" kindref="compound">Parameters</ref><sp/>params,<sp/><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField&lt;Grid::dual, Space::cell&gt;</ref>&amp;<sp/>rho,</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField&lt;Grid::primal, Space::node&gt;</ref>&amp;<sp/>phi);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>The<sp/>solver<sp/>needs<sp/>to<sp/>subtract<sp/>the<sp/>kernel<sp/>of<sp/>the<sp/>matrix<sp/>to<sp/>be<sp/>invertible</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>subtractConstantPart(<ref refid="classParameters" kindref="compound">Parameters</ref><sp/>params,<sp/><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField&lt;Grid::dual, Space::cell&gt;</ref>&amp;<sp/>rho,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nGhost);</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline lineno="44"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H"/>
+  </compounddef>
+</doxygen>

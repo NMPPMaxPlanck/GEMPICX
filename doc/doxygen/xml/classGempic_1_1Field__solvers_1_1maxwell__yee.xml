@@ -1,0 +1,2030 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1Field__solvers_1_1maxwell__yee" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::Field_solvers::maxwell_yee</compoundname>
+    <includes local="no">GEMPIC_maxwell_yee.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>edim</declname>
+        <defname>edim</defname>
+        <defval>GEMPIC_SPACEDIM</defval>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>bdim</declname>
+        <defname>bdim</defname>
+        <defval>GEMPIC_SPACEDIM</defval>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a395d727ea09a69f101aee26d46b0eb0b" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::nsteps</definition>
+        <argsstring></argsstring>
+        <name>nsteps</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="66" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="66" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a481a8a0808cafe2f8812ff0c3e672469" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::dt</definition>
+        <argsstring></argsstring>
+        <name>dt</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>number of simulation steps </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="67" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="67" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8b541aac95b174be9db46140b6d566ab" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::E_Array</definition>
+        <argsstring></argsstring>
+        <name>E_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>stepsize </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="69" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="69" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1af4f65295795c53e2ac939a8009e15203" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::Alfven_Tensor</definition>
+        <argsstring></argsstring>
+        <name>Alfven_Tensor</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Array storing components of E-Field </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="71" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="71" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a96fe0145ffe02c014633545ac27de8f1" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::HE_Array</definition>
+        <argsstring></argsstring>
+        <name>HE_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Array storing the Alfven tensor </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="72" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="72" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a713338fcfe69e099afbc891a0b94fbda" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::J_Array</definition>
+        <argsstring></argsstring>
+        <name>J_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="73" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="73" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a040acf4b76cfdb9f6a03741f872afc03" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::B_Array</definition>
+        <argsstring></argsstring>
+        <name>B_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="74" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="74" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8026b67489ba54a0974832eb3f945349" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::HB_Array</definition>
+        <argsstring></argsstring>
+        <name>HB_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="75" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="75" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ae53845aa8872d103e0fc4eece45cca21" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::E_sol_Array</definition>
+        <argsstring></argsstring>
+        <name>E_sol_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="76" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1abdc0f08447f19a6ca2be9e73e762db19" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::MultiFab&gt;, bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::B_sol_Array</definition>
+        <argsstring></argsstring>
+        <name>B_sol_Array</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="77" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a37ad138cd451dcc47fef05620425e77a" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::IndexType &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::IndexType&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::E_Index</definition>
+        <argsstring></argsstring>
+        <name>E_Index</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="78" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a580db5a016d0b5a4f43c872faad61acd" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::IndexType &gt;, bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::IndexType&gt;, bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::B_Index</definition>
+        <argsstring></argsstring>
+        <name>B_Index</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="79" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5cb9effa70bc24cd83419208f417f11e" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::iMultiFab &gt;, edim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::iMultiFab&gt;, edim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::E_Masks</definition>
+        <argsstring></argsstring>
+        <name>E_Masks</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="80" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="80" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a660519d6085effa7b0dd4fd76cc576c5" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::iMultiFab &gt;, bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;std::unique_ptr&lt;amrex::iMultiFab&gt;, bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::B_Masks</definition>
+        <argsstring></argsstring>
+        <name>B_Masks</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="81" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="81" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1abffbf4b1c3ec8c33bd07fb1c34f1375e" prot="public" static="no" mutable="no">
+        <type>std::unique_ptr&lt; amrex::iMultiFab &gt;</type>
+        <definition>std::unique_ptr&lt;amrex::iMultiFab&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::nodal_Mask</definition>
+        <argsstring></argsstring>
+        <name>nodal_Mask</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="82" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="82" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a6fa6044b745f7c1fcc7314b5127301a3" prot="public" static="no" mutable="no">
+        <type>amrex::MultiFab</type>
+        <definition>amrex::MultiFab Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::phi_init</definition>
+        <argsstring></argsstring>
+        <name>phi_init</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="83" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="83" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a47b7679153c012b951d69e93e14bcb65" prot="public" static="no" mutable="no">
+        <type>amrex::MultiFab</type>
+        <definition>amrex::MultiFab Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::rho</definition>
+        <argsstring></argsstring>
+        <name>rho</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="84" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a54e935a61e0983594d6288a1e77ee927" prot="public" static="no" mutable="no">
+        <type>amrex::MultiFab</type>
+        <definition>amrex::MultiFab Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::rho_gauss_law</definition>
+        <argsstring></argsstring>
+        <name>rho_gauss_law</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="85" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="85" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a55bc3a0a30c74406ec8192e39e2248f4" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::Nghost</definition>
+        <argsstring></argsstring>
+        <name>Nghost</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="86" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a851c8c2340a2c1b37009e7591096e18b" prot="public" static="no" mutable="no">
+        <type>amrex::MultiFab</type>
+        <definition>amrex::MultiFab Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::phi</definition>
+        <argsstring></argsstring>
+        <name>phi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="87" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1af6299d127c46461e027f0a1e2d9783c1" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::epref_ep0</definition>
+        <argsstring></argsstring>
+        <name>epref_ep0</name>
+        <initializer>= 1.</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="90" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="90" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab92b7d6b6442dfa95ae734690d8f38fd" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::curlB_scaling</definition>
+        <argsstring></argsstring>
+        <name>curlB_scaling</name>
+        <initializer>= 1.</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="91" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="91" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1af83c82811c12075491592a5c21234377" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::energy_b_scaling</definition>
+        <argsstring></argsstring>
+        <name>energy_b_scaling</name>
+        <initializer>= 1.</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="92" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="92" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1af7a683e9ca4c16cb4dfefa8b8073f40d" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::Ncomp</definition>
+        <argsstring></argsstring>
+        <name>Ncomp</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2099" column="9" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2099" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1aaec84e463fc0509d6993970b6c5c8653" prot="private" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::time</definition>
+        <argsstring></argsstring>
+        <name>time</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Number of components for each MultiFab. Is 1 because the different field components are differently staggered </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2101" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2101" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1afd5d87927908f6076124e91b8257f80c" prot="private" static="no" mutable="no">
+        <type>amrex::Array&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+        <definition>amrex::Array&lt;amrex::Real, GEMPIC_SPACEDIM&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::sigma</definition>
+        <argsstring></argsstring>
+        <name>sigma</name>
+        <initializer>= {AMREX_D_DECL(-1., -1., -1.)}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2103" column="18" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2103" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a01577e3de1369cf753e0e343cb650ac1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::maxwell_yee</definition>
+        <argsstring>()</argsstring>
+        <name>maxwell_yee</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Default Constructor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="98" column="5" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="98" bodyend="98"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a06d55ebb4d69096b5545c01b66bc933c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::maxwell_yee</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in, amrex::Real epref_ep0_in=1.0, amrex::Real curlB_scaling_in=1.0, amrex::Real energy_b_scaling_in=1.0)</argsstring>
+        <name>maxwell_yee</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>nsteps_in</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>Nghost_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>epref_ep0_in</declname>
+          <defval>1.0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>curlB_scaling_in</declname>
+          <defval>1.0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>energy_b_scaling_in</declname>
+          <defval>1.0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="101" column="5" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="101" bodyend="108"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a4d45222ebf675a986e77a94f030c33b5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::~maxwell_yee</definition>
+        <argsstring>()</argsstring>
+        <name>~maxwell_yee</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="110" column="5" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="110" bodyend="110"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1afd83a2a2a8b89c21d658ee72c8709265" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::reinit</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in, amrex::Real epref_ep0_in=1.0, amrex::Real curlB_scaling_in=1.0, amrex::Real energy_b_scaling_in=1.0)</argsstring>
+        <name>reinit</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>nsteps_in</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>Nghost_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>epref_ep0_in</declname>
+          <defval>1.0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>curlB_scaling_in</declname>
+          <defval>1.0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>energy_b_scaling_in</declname>
+          <defval>1.0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="112" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="112" bodyend="118"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab4a44d41e71f9b3c8068ac2905b5defb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initialize</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_in, amrex::Real nsteps_in, int Nghost_in, amrex::Real epref_ep0_in, amrex::Real curlB_scaling_in, amrex::Real energy_b_scaling_in)</argsstring>
+        <name>initialize</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>nsteps_in</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>Nghost_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>epref_ep0_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>curlB_scaling_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>energy_b_scaling_in</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="120" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="120" bodyend="271"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1afc44cd7fca084b5e63d00ae06440766b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::projection</definition>
+        <argsstring>(std::string function_string, amrex::Vector&lt; amrex::Real &gt; k, amrex::Real t, computational_domain ifr, amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt; integrate, amrex::IndexType IndexVect, amrex::MultiFab &amp;MultiF)</argsstring>
+        <name>projection</name>
+        <param>
+          <type>std::string</type>
+          <declname>function_string</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt;</type>
+          <declname>integrate</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndexVect</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiF</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="274" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="274" bodyend="380"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5d97d43895a2724b434565905f7dd2a8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::projection</definition>
+        <argsstring>(amrex::ParserExecutor&lt; 4 &gt; parserEval, amrex::Real t, computational_domain ifr, amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt; integrate, amrex::IndexType IndVect, amrex::MultiFab &amp;MultiF)</argsstring>
+        <name>projection</name>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>parserEval</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt;</type>
+          <declname>integrate</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndVect</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiF</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="383" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="383" bodyend="482"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1afec26769c1d74fd183991407258f6059" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::projection</definition>
+        <argsstring>(amrex::Real(*function_to_project)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real t, computational_domain ifr, amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt; integrate, amrex::IndexType IndexVect, amrex::MultiFab &amp;MultiF)</argsstring>
+        <name>projection</name>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt;</type>
+          <declname>integrate</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndexVect</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiF</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="485" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="485" bodyend="578"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a872fbd36a52364f614c1fec68d1c78b3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::projection</definition>
+        <argsstring>(amrex::Real t, computational_domain ifr, amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt; integrate, amrex::IndexType IndexVect, amrex::MultiFab &amp;MultiF, int funcSelect)</argsstring>
+        <name>projection</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; bool, GEMPIC_SPACEDIM &gt;</type>
+          <declname>integrate</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndexVect</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiF</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>funcSelect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="581" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="581" bodyend="672"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a70243deab7fb36342d229af0778b3fd8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initE</definition>
+        <argsstring>(amrex::Real(*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), computational_domain ifr)</argsstring>
+        <name>initE</name>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_2</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize E and B field for time t=0 with a given array of functions. initB&lt;degree&gt;(fieldsB, k, ifr); }</para>
+<para>Initialize E field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="682" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="682" bodyend="694"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1acb9da503b30c6c582fea05e8507c2749" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initE</definition>
+        <argsstring>(computational_domain ifr, amrex::GpuArray&lt; int, edim &gt; funcSelect)</argsstring>
+        <name>initE</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, edim &gt;</type>
+          <declname>funcSelect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize E field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="700" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="700" bodyend="705"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ad217252ac082ee8dee13ac797cd26244" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initE</definition>
+        <argsstring>(amrex::GpuArray&lt; std::string, edim &gt; fields, amrex::Vector&lt; amrex::Real &gt; k, computational_domain ifr)</argsstring>
+        <name>initE</name>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, edim &gt;</type>
+          <declname>fields</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize E field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="711" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="711" bodyend="720"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab0fbc316e384d5a97c283679704ae1b3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initB</definition>
+        <argsstring>(amrex::Real(*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), computational_domain ifr)</argsstring>
+        <name>initB</name>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_2</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize B field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="726" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="726" bodyend="741"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa141d69fa17d749a57d19eeb08fdd31c" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initB</definition>
+        <argsstring>(amrex::ParserExecutor&lt; 4 &gt; BxEval, amrex::ParserExecutor&lt; 4 &gt; ByEval, amrex::ParserExecutor&lt; 4 &gt; BzEval, computational_domain ifr)</argsstring>
+        <name>initB</name>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>BxEval</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>ByEval</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>BzEval</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize B field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="747" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="747" bodyend="759"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1abedc73dc047bd59a6c791a31949a95ff" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initB</definition>
+        <argsstring>(computational_domain ifr, amrex::GpuArray&lt; int, bdim &gt; funcSelect)</argsstring>
+        <name>initB</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, bdim &gt;</type>
+          <declname>funcSelect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize B field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="765" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="765" bodyend="773"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a89ce2e0d933a173accbab93661b463be" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::initB</definition>
+        <argsstring>(amrex::GpuArray&lt; std::string, bdim &gt; fields, amrex::Vector&lt; amrex::Real &gt; k, computational_domain ifr)</argsstring>
+        <name>initB</name>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, bdim &gt;</type>
+          <declname>fields</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize B field for time t=0 with a given array of functions. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="779" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="779" bodyend="790"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a0794eb2ee888636409ae7d9a73da42cb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::FillBD</definition>
+        <argsstring>(computational_domain ifr)</argsstring>
+        <name>FillBD</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Fill Boundaries of all relevant Fabs (E, J, B, rho). </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="795" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="795" bodyend="811"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a40570352b6f70a49ed141a3aae3362b9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::advance_time</definition>
+        <argsstring>(amrex::Real coeff=1.0)</argsstring>
+        <name>advance_time</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>coeff</declname>
+          <defval>1.0</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Advance time </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="816" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="816" bodyend="816"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1af7ec9ac637ea49e502488b8b4124c65a" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::advance_E</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt; &amp;MultiInput, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;MultiOutput)</argsstring>
+        <name>advance_E</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_step</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>from_B</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>from_J</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt; &amp;</type>
+          <declname>MultiInput</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;</type>
+          <declname>MultiOutput</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Advance E by a time step of length <computeroutput>dt_step</computeroutput> with a Yee scheme </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="821" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="821" bodyend="943"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1aaaeb43a8c90a8185beb6ce5a8592ae00" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::advance_E</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_step, bool from_B, bool from_J, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt; &amp;MultiInput, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;MultiAlfvenTensor, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;MultiOutput)</argsstring>
+        <name>advance_E</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_step</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>from_B</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>from_J</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt; &amp;</type>
+          <declname>MultiInput</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;</type>
+          <declname>MultiAlfvenTensor</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;</type>
+          <declname>MultiOutput</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Advance E by a time step of length <computeroutput>dt_step</computeroutput> with a Yee scheme </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="948" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="948" bodyend="1061"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5aa8132073ef2fd242fd44dec7416c92" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::advance_B</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_step, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;MultiInput, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt; &amp;MultiOutput)</argsstring>
+        <name>advance_B</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_step</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;</type>
+          <declname>MultiInput</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, bdim &gt; &amp;</type>
+          <declname>MultiOutput</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Advance B by a time step of length <computeroutput>dt_step</computeroutput> with a Yee scheme </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1066" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1066" bodyend="1152"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a073d3dccbcae66bdaf86aa5d937e05b0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>dimension</declname>
+            <defname>dimension</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::hodge</definition>
+        <argsstring>(computational_domain ifr, int start_from, amrex::MultiFab &amp;MultiInput, amrex::MultiFab &amp;MultiOutput, amrex::IndexType IndexVect)</argsstring>
+        <name>hodge</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>start_from</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiInput</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiOutput</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndexVect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1181" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1181" bodyend="1256"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a98455e934b5dbefb9dcb8adb32ac3ae8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::advance</definition>
+        <argsstring>(computational_domain ifr, amrex::Real dt_step)</argsstring>
+        <name>advance</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt_step</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Advance time and both fields by a time step of length <computeroutput>dt_step</computeroutput> with a Yee scheme </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1262" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1262" bodyend="1268"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a22f2991b6a8e33d881e7f62e6a94d6ae" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::init_rho_phi</definition>
+        <argsstring>(amrex::Real(*function_to_project_rho)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_phi)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), computational_domain ifr)</argsstring>
+        <name>init_rho_phi</name>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_rho</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_phi</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1284" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1284" bodyend="1296"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa5332ee27f9214a224f2b9d15f042e23" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::init_rho_phi</definition>
+        <argsstring>(computational_domain ifr, amrex::ParserExecutor&lt; 4 &gt; rhoEval, amrex::ParserExecutor&lt; 4 &gt; phiEval)</argsstring>
+        <name>init_rho_phi</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>rhoEval</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>phiEval</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1299" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1299" bodyend="1309"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1af8093be8f99ffea519a6b16e23a27860" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::init_rho_phi</definition>
+        <argsstring>(computational_domain ifr, amrex::GpuArray&lt; int, 2 &gt; funcSelect)</argsstring>
+        <name>init_rho_phi</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, 2 &gt;</type>
+          <declname>funcSelect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1312" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1312" bodyend="1320"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab1a16cb3516ca23190368f81a0c351b9" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>stencil_length</declname>
+            <defname>stencil_length</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::matrix_mult</definition>
+        <argsstring>(computational_domain ifr, amrex::GpuArray&lt; amrex::GpuArray&lt; amrex::Real, stencil_length &gt;, GEMPIC_SPACEDIM &gt; stencil, amrex::MultiFab &amp;MultiInput, amrex::MultiFab &amp;MultiOutput, amrex::IndexType IndexVect)</argsstring>
+        <name>matrix_mult</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::GpuArray&lt; amrex::Real, stencil_length &gt;, GEMPIC_SPACEDIM &gt;</type>
+          <declname>stencil</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiInput</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiOutput</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndexVect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1323" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1323" bodyend="1354"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8d2cc4b6de60684f1ac8543273914448" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>stencil_length</declname>
+            <defname>stencil_length</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>dimension</declname>
+            <defname>dimension</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::solve_stencil_CG</definition>
+        <argsstring>(amrex::GpuArray&lt; amrex::GpuArray&lt; amrex::Real, stencil_length &gt;, GEMPIC_SPACEDIM &gt; stencil, amrex::MultiFab &amp;b, amrex::MultiFab &amp;x, computational_domain ifr, amrex::IndexType IndexVect, int verbose=0, amrex::Real reltol=1.e-11, int maxsteps=100)</argsstring>
+        <name>solve_stencil_CG</name>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::GpuArray&lt; amrex::Real, stencil_length &gt;, GEMPIC_SPACEDIM &gt;</type>
+          <declname>stencil</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::IndexType</type>
+          <declname>IndexVect</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>verbose</declname>
+          <defval>0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>reltol</declname>
+          <defval>1.e-11</defval>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxsteps</declname>
+          <defval>100</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1357" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1357" bodyend="1441"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1ad479a9f6269cdabe2330cf74b2c01701" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::solve_hodge_CG</definition>
+        <argsstring>(amrex::MultiFab &amp;b, amrex::MultiFab &amp;x, amrex::MultiFab &amp;k, computational_domain ifr, int dimension, int verbose=0, amrex::Real reltol=1.e-11, int maxsteps=100)</argsstring>
+        <name>solve_hodge_CG</name>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>dimension</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>verbose</declname>
+          <defval>0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>reltol</declname>
+          <defval>1.e-11</defval>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxsteps</declname>
+          <defval>100</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1444" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1444" bodyend="1546"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a319a4c19f1c5048e6f3d098dbf0bf13b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::poisson_operator</definition>
+        <argsstring>(amrex::MultiFab &amp;MultiIn, amrex::MultiFab &amp;MultiOut, amrex::MultiFab &amp;kx, amrex::MultiFab &amp;ky, amrex::MultiFab &amp;kz, computational_domain ifr, int verbose=0, amrex::Real reltol=1.e-11, int maxsteps=100)</argsstring>
+        <name>poisson_operator</name>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiIn</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>MultiOut</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>kx</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>ky</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>kz</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>verbose</declname>
+          <defval>0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>reltol</declname>
+          <defval>1.e-11</defval>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxsteps</declname>
+          <defval>100</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1549" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1549" bodyend="1626"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a78cecbbd669c3f708c7e5014ef8ad73f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::solve_poisson_CG</definition>
+        <argsstring>(amrex::MultiFab &amp;b, amrex::MultiFab &amp;x, amrex::MultiFab &amp;kx, amrex::MultiFab &amp;ky, amrex::MultiFab &amp;kz, computational_domain ifr, int verbose=0, amrex::Real reltol=1.e-11, int maxsteps=100)</argsstring>
+        <name>solve_poisson_CG</name>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>b</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>kx</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>ky</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>kz</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>verbose</declname>
+          <defval>0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>reltol</declname>
+          <defval>1.e-11</defval>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxsteps</declname>
+          <defval>100</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1629" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1629" bodyend="1743"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a014ccd5597c517dc2fb010967588e3ad" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::D_from_phi</definition>
+        <argsstring>(amrex::MultiFab &amp;phi_mf, amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;D, amrex::MultiFab &amp;kx, amrex::MultiFab &amp;ky, amrex::MultiFab &amp;kz, computational_domain ifr, int verbose=0, amrex::Real reltol=1.e-11, int maxsteps=100)</argsstring>
+        <name>D_from_phi</name>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>phi_mf</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; amrex::MultiFab &gt;, edim &gt; &amp;</type>
+          <declname>D</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>kx</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>ky</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab &amp;</type>
+          <declname>kz</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>verbose</declname>
+          <defval>0</defval>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>reltol</declname>
+          <defval>1.e-11</defval>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>maxsteps</declname>
+          <defval>100</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1746" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1746" bodyend="1799"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a4c41f269391814a2dc7ce8b96c3c9360" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::solve_poisson</definition>
+        <argsstring>(computational_domain ifr, amrex::Real reltol=1.e-11, int max_coarsening_level=30)</argsstring>
+        <name>solve_poisson</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>reltol</declname>
+          <defval>1.e-11</defval>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>max_coarsening_level</declname>
+          <defval>30</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Initialize E by solving Poisson problem in two steps: 1) use the MLMG solver of amrex to solve rho -&gt; phi 2) use differences for phi -&gt; E </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1806" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1806" bodyend="1897"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a94bb42bea955772f3ed0c4ed4f68a3ba" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::rho_from_E</definition>
+        <argsstring>(computational_domain ifr)</argsstring>
+        <name>rho_from_E</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Compute rho for a given rho (for diagnostics: Gauss law) </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1902" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1902" bodyend="1922"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa50ad1dddafec8f9dde3fad47cad42f2" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+        </templateparamlist>
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::compute_gauss_error</definition>
+        <argsstring>(computational_domain ifr, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr)</argsstring>
+        <name>compute_gauss_error</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Compute rho for a given rho (for diagnostics: Gauss law) </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="1928" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="1928" bodyend="1997"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a96d1d685de1f3686599a14ac024600fb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>amrex::GpuArray&lt; amrex::Real, edim+bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, edim + bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::computeError</definition>
+        <argsstring>(amrex::GpuArray&lt; std::string, edim &gt; fields_E, amrex::GpuArray&lt; std::string, bdim &gt; fields_B, amrex::Vector&lt; amrex::Real &gt; k, bool bool_B, computational_domain ifr)</argsstring>
+        <name>computeError</name>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, edim &gt;</type>
+          <declname>fields_E</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, bdim &gt;</type>
+          <declname>fields_B</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>bool_B</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Compute norm of errors of E and B field from function with exact solution </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2004" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2004" bodyend="2028"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a06fb043d497a5488739a2913c7ff3e25" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>amrex::GpuArray&lt; amrex::Real, edim+bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, edim + bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::computeError</definition>
+        <argsstring>(amrex::Real(*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), bool bool_B, computational_domain ifr)</argsstring>
+        <name>computeError</name>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_E0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_E1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_E2</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_B0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_B1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_B2</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>bool_B</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Compute norm of errors of E and B field from function with exact solution </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2035" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2035" bodyend="2066"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a7242d5c8826e849d7a3702ca51243622" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>amrex::GpuArray&lt; amrex::Real, edim+bdim &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, edim + bdim&gt; Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::computeError</definition>
+        <argsstring>(bool bool_B, computational_domain ifr, amrex::GpuArray&lt; int, edim &gt; funcSelectE, amrex::GpuArray&lt; int, bdim &gt; funcSelectB)</argsstring>
+        <name>computeError</name>
+        <param>
+          <type>bool</type>
+          <declname>bool_B</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, edim &gt;</type>
+          <declname>funcSelectE</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, bdim &gt;</type>
+          <declname>funcSelectB</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Compute norm of errors of E and B field from function with exact solution </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2073" column="21" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2073" bodyend="2096"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1a6bbd424a405bce025b1f9a7756c5dd43" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::exactSolution</definition>
+        <argsstring>(amrex::GpuArray&lt; std::string, edim &gt; fields_E, amrex::GpuArray&lt; std::string, bdim &gt; fields_B, amrex::Vector&lt; amrex::Real &gt; k, bool bool_B, computational_domain ifr)</argsstring>
+        <name>exactSolution</name>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, edim &gt;</type>
+          <declname>fields_E</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, bdim &gt;</type>
+          <declname>fields_B</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>k</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>bool_B</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2106" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2106" bodyend="2129"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1add0b19c557881be51c85acb3df46b67a" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::exactSolution</definition>
+        <argsstring>(amrex::Real(*function_to_project_E0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_E1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_E2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_B0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_B1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_B2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), bool bool_B, computational_domain ifr)</argsstring>
+        <name>exactSolution</name>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_E0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_E1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_E2</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_B0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_B1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_B2</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>bool_B</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2132" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2132" bodyend="2161"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Field__solvers_1_1maxwell__yee_1aee6bd18dc1f1156f67282e46b1bb85d5" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;::exactSolution</definition>
+        <argsstring>(bool bool_B, computational_domain ifr, amrex::GpuArray&lt; int, edim &gt; funcSelectE, amrex::GpuArray&lt; int, bdim &gt; funcSelectB)</argsstring>
+        <name>exactSolution</name>
+        <param>
+          <type>bool</type>
+          <declname>bool_B</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, edim &gt;</type>
+          <declname>funcSelectE</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, bdim &gt;</type>
+          <declname>funcSelectB</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="2164" column="10" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="2164" bodyend="2184"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Class Maxwell_Yee. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>Class storing all the field information (both analytical (<computeroutput>E_sol_Array</computeroutput>, <computeroutput>B_sol_Array</computeroutput>) and numerical (<computeroutput>E_Array</computeroutput>, <computeroutput>B_Array</computeroutput>, <computeroutput>J_Array</computeroutput>), infrastructure information for the fields (<computeroutput>E_Index</computeroutput>, <computeroutput>B_Index</computeroutput>, <computeroutput>Nghost</computeroutput>, <computeroutput>Ncomp</computeroutput>, <computeroutput>time</computeroutput>) and the necessary components to solve the Poisson problem for the first step (<computeroutput>phi_init</computeroutput>, <computeroutput>rho</computeroutput>, <computeroutput>phi</computeroutput>, <computeroutput>sigma</computeroutput>). In addition, the class can initialize the fields (init_E_B, ) and the functions for the Poisson problem (init_rho_phi), advance the complete problem (advance) or parts of it (advance_E, advance_B, advance_time), initialize E by solving the Poisson problem (solve_poisson), fill ghost cells of all relevant MultiFabs (FillBD), compute the analytical solution (exactSolution) and compute the error of the numerical solution (computeError).</para>
+<para><simplesect kind="authors"><para>Irene Garnelo, Katharina Kormann </para>
+</simplesect>
+</para>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Gempic::Field_solvers::maxwell_yee&lt; edim, bdim &gt;</label>
+        <link refid="classGempic_1_1Field__solvers_1_1maxwell__yee"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" line="62" column="1" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H" bodystart="61" bodyend="2185"/>
+    <listofallmembers>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a98455e934b5dbefb9dcb8adb32ac3ae8" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>advance</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5aa8132073ef2fd242fd44dec7416c92" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>advance_B</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af7ec9ac637ea49e502488b8b4124c65a" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>advance_E</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aaaeb43a8c90a8185beb6ce5a8592ae00" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>advance_E</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a40570352b6f70a49ed141a3aae3362b9" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>advance_time</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af4f65295795c53e2ac939a8009e15203" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>Alfven_Tensor</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a040acf4b76cfdb9f6a03741f872afc03" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>B_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a580db5a016d0b5a4f43c872faad61acd" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>B_Index</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a660519d6085effa7b0dd4fd76cc576c5" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>B_Masks</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1abdc0f08447f19a6ca2be9e73e762db19" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>B_sol_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa50ad1dddafec8f9dde3fad47cad42f2" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>compute_gauss_error</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a96d1d685de1f3686599a14ac024600fb" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>computeError</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a06fb043d497a5488739a2913c7ff3e25" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>computeError</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a7242d5c8826e849d7a3702ca51243622" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>computeError</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab92b7d6b6442dfa95ae734690d8f38fd" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>curlB_scaling</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a014ccd5597c517dc2fb010967588e3ad" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>D_from_phi</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a481a8a0808cafe2f8812ff0c3e672469" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>dt</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8b541aac95b174be9db46140b6d566ab" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>E_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a37ad138cd451dcc47fef05620425e77a" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>E_Index</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5cb9effa70bc24cd83419208f417f11e" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>E_Masks</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ae53845aa8872d103e0fc4eece45cca21" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>E_sol_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af83c82811c12075491592a5c21234377" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>energy_b_scaling</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af6299d127c46461e027f0a1e2d9783c1" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>epref_ep0</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a6bbd424a405bce025b1f9a7756c5dd43" prot="private" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>exactSolution</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1add0b19c557881be51c85acb3df46b67a" prot="private" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>exactSolution</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aee6bd18dc1f1156f67282e46b1bb85d5" prot="private" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>exactSolution</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a0794eb2ee888636409ae7d9a73da42cb" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>FillBD</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8026b67489ba54a0974832eb3f945349" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>HB_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a96fe0145ffe02c014633545ac27de8f1" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>HE_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a073d3dccbcae66bdaf86aa5d937e05b0" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>hodge</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a22f2991b6a8e33d881e7f62e6a94d6ae" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>init_rho_phi</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa5332ee27f9214a224f2b9d15f042e23" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>init_rho_phi</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af8093be8f99ffea519a6b16e23a27860" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>init_rho_phi</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab0fbc316e384d5a97c283679704ae1b3" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initB</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa141d69fa17d749a57d19eeb08fdd31c" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initB</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1abedc73dc047bd59a6c791a31949a95ff" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initB</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a89ce2e0d933a173accbab93661b463be" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initB</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a70243deab7fb36342d229af0778b3fd8" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initE</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1acb9da503b30c6c582fea05e8507c2749" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initE</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ad217252ac082ee8dee13ac797cd26244" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initE</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab4a44d41e71f9b3c8068ac2905b5defb" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>initialize</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a713338fcfe69e099afbc891a0b94fbda" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>J_Array</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab1a16cb3516ca23190368f81a0c351b9" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>matrix_mult</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a01577e3de1369cf753e0e343cb650ac1" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>maxwell_yee</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a06d55ebb4d69096b5545c01b66bc933c" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>maxwell_yee</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af7a683e9ca4c16cb4dfefa8b8073f40d" prot="private" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>Ncomp</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a55bc3a0a30c74406ec8192e39e2248f4" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>Nghost</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1abffbf4b1c3ec8c33bd07fb1c34f1375e" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>nodal_Mask</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a395d727ea09a69f101aee26d46b0eb0b" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>nsteps</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a851c8c2340a2c1b37009e7591096e18b" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>phi</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a6fa6044b745f7c1fcc7314b5127301a3" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>phi_init</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a319a4c19f1c5048e6f3d098dbf0bf13b" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>poisson_operator</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afc44cd7fca084b5e63d00ae06440766b" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>projection</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5d97d43895a2724b434565905f7dd2a8" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>projection</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afec26769c1d74fd183991407258f6059" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>projection</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a872fbd36a52364f614c1fec68d1c78b3" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>projection</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afd83a2a2a8b89c21d658ee72c8709265" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>reinit</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a47b7679153c012b951d69e93e14bcb65" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>rho</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a94bb42bea955772f3ed0c4ed4f68a3ba" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>rho_from_E</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a54e935a61e0983594d6288a1e77ee927" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>rho_gauss_law</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afd5d87927908f6076124e91b8257f80c" prot="private" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>sigma</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ad479a9f6269cdabe2330cf74b2c01701" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>solve_hodge_CG</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a4c41f269391814a2dc7ce8b96c3c9360" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>solve_poisson</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a78cecbbd669c3f708c7e5014ef8ad73f" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>solve_poisson_CG</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8d2cc4b6de60684f1ac8543273914448" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>solve_stencil_CG</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aaec84e463fc0509d6993970b6c5c8653" prot="private" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>time</name></member>
+      <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a4d45222ebf675a986e77a94f030c33b5" prot="public" virt="non-virtual"><scope>Gempic::Field_solvers::maxwell_yee</scope><name>~maxwell_yee</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

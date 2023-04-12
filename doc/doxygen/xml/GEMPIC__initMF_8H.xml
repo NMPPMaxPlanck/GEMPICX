@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="GEMPIC__initMF_8H" kind="file" language="C++">
+    <compoundname>GEMPIC_initMF.H</compoundname>
+    <includes local="no">AMReX.H</includes>
+    <includes local="no">AMReX_Box.H</includes>
+    <includes local="no">AMReX_BoxArray.H</includes>
+    <includes local="no">AMReX_CoordSys.H</includes>
+    <includes local="no">AMReX_DistributionMapping.H</includes>
+    <includes local="no">AMReX_FillPatchUtil.H</includes>
+    <includes local="no">AMReX_Geometry.H</includes>
+    <includes local="no">AMReX_IndexType.H</includes>
+    <includes local="no">AMReX_IntVect.H</includes>
+    <includes local="no">AMReX_MFIter.H</includes>
+    <includes local="no">AMReX_MultiFab.H</includes>
+    <includes local="no">AMReX_PlotFileUtil.H</includes>
+    <includes local="no">AMReX_Print.H</includes>
+    <includes local="no">AMReX_REAL.H</includes>
+    <includes local="no">AMReX_RealBox.H</includes>
+    <includedby refid="test__constval_8cpp" local="no">/home/marm/Desktop/gempic/src/field_solvers/testing/test_constval.cpp</includedby>
+    <incdepgraph>
+      <node id="5">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="11">
+        <label>AMReX_MFIter.H</label>
+      </node>
+      <node id="4">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="16">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="15">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="6">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_initMF.H</label>
+        <link refid="GEMPIC__initMF_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="7">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="8">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="10">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="3">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="2">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="2">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_constval.cpp</label>
+        <link refid="test__constval_8cpp"/>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_initMF.H</label>
+        <link refid="GEMPIC__initMF_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innernamespace refid="namespaceGempic">Gempic</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1FieldSolvers">Gempic::FieldSolvers</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;AMReX.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Box.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_BoxArray.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_CoordSys.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_DistributionMapping.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_FillPatchUtil.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Geometry.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_IndexType.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_IntVect.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_MFIter.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_MultiFab.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_PlotFileUtil.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Print.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_REAL.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_RealBox.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>INIT_H_</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>INIT_H_</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight></codeline>
+<codeline lineno="20" refid="namespaceGempic" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref></highlight></codeline>
+<codeline lineno="21"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="22" refid="namespaceGempic_1_1FieldSolvers" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">FieldSolvers</highlight></codeline>
+<codeline lineno="23"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="namespaceGempic_1_1FieldSolvers_1ae326a1697c1331b2c28572003cdedf5e" kindref="member">initConst</ref>(amrex::MultiFab&amp;<sp/>multiF,<sp/>amrex::Real<sp/>constant)</highlight></codeline>
+<codeline lineno="25"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(amrex::MFIter<sp/>mfi(multiF);<sp/>mfi.isValid();<sp/>++mfi)</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Box&amp;<sp/>bx<sp/>=<sp/>mfi.tilebox();</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Array4&lt;amrex::Real&gt;<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal">&amp;<sp/>initArr<sp/>=<sp/>multiF[mfi].array();</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ParallelFor(bx,<sp/>[=]<sp/>AMREX_GPU_DEVICE(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>j,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>k)<sp/>{<sp/>initArr(i,<sp/>j,<sp/>k)<sp/>=<sp/>constant;<sp/>});</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="33"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">}<sp/><sp/></highlight><highlight class="comment">//<sp/>namespace<sp/>FieldSolvers</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal">}<sp/><sp/></highlight><highlight class="comment">//<sp/>namespace<sp/>Gempic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_initMF.H"/>
+  </compounddef>
+</doxygen>

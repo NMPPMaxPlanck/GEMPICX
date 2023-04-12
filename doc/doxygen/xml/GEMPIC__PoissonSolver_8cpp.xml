@@ -1,0 +1,294 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="GEMPIC__PoissonSolver_8cpp" kind="file" language="C++">
+    <compoundname>GEMPIC_PoissonSolver.cpp</compoundname>
+    <includes refid="GEMPIC__PoissonSolver_8H" local="yes">GEMPIC_PoissonSolver.H</includes>
+    <incdepgraph>
+      <node id="15">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp</label>
+        <link refid="GEMPIC__PoissonSolver_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="16">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="21">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="25">
+        <label>AMReX_MLNodeLaplacian.H</label>
+      </node>
+      <node id="8">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="22">
+        <label>AMReX_MFIter.H</label>
+      </node>
+      <node id="5">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+      </node>
+      <node id="17">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="7">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="27">
+        <label>GEMPIC_FDDeRhamComplex.H</label>
+        <link refid="GEMPIC__FDDeRhamComplex_8H"/>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>GEMPIC_PoissonSolver.H</label>
+        <link refid="GEMPIC__PoissonSolver_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="20">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="19">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="12">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="24">
+        <label>AMReX_MLEBNodeFDLaplacian.H</label>
+      </node>
+      <node id="10">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="11">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="6">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="26">
+        <label>GEMPIC_Fields.H</label>
+        <link refid="GEMPIC__Fields_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="23">
+        <label>AMReX_MLMG.H</label>
+      </node>
+      <node id="3">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&quot;<ref refid="GEMPIC__PoissonSolver_8H" kindref="compound">GEMPIC_PoissonSolver.H</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGEMPIC__PoissonSolver" kindref="compound">GEMPIC_PoissonSolver</ref>;</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac65e4d2bf3ba90f8d3a12d07f161779d" kindref="member">PoissonSolver::PoissonSolver</ref>()</highlight></codeline>
+<codeline lineno="15"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/>m_maxCoarseningLevel<sp/>=<sp/>30;</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/>m_maxIter<sp/>=<sp/>1000;</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/>m_maxFmgIter<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/>m_verbose<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/>m_bottomVerbose<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="21"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac969904c4056a9dae2c60a39d44f1a55" kindref="member">PoissonSolver::~PoissonSolver</ref>()<sp/>{}</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ab2cb88735ba63e70e42d55cf05f256ff" kindref="member">PoissonSolver::solve</ref>(<ref refid="classParameters" kindref="compound">Parameters</ref><sp/>params,<sp/><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField&lt;Grid::dual, Space::cell&gt;</ref>&amp;<sp/>rho,</highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField&lt;Grid::primal, Space::node&gt;</ref>&amp;<sp/>phi)</highlight></codeline>
+<codeline lineno="27"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::LPInfo<sp/>lpInfo;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>lpInfo.setMaxCoarseningLevel(m_maxCoarseningLevel);</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::MLEBNodeFDLaplacian<sp/>linop({params.<ref refid="classParameters_1ac5676a6463dbdc406594828966d4a1ad" kindref="member">geometry</ref>()},<sp/>{params.<ref refid="classParameters_1aa57f51db327369dbe8dae963a52ddce3" kindref="member">grid</ref>()},<sp/>{params.<ref refid="classParameters_1ab551dbf94b9cb8e910a2b8fd2d92f81c" kindref="member">distriMap</ref>()},<sp/>lpInfo);</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Set<sp/>boundary<sp/>conditions<sp/>on<sp/>linear<sp/>operator<sp/>for<sp/>lower<sp/>end<sp/>and<sp/>higher<sp/>end</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/>linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic,<sp/>amrex::LinOpBCType::Periodic,<sp/>amrex::LinOpBCType::Periodic)},</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{AMREX_D_DECL(amrex::LinOpBCType::Periodic,<sp/>amrex::LinOpBCType::Periodic,<sp/>amrex::LinOpBCType::Periodic)});</highlight></codeline>
+<codeline lineno="36"><highlight class="normal"></highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Additional<sp/>parameters<sp/>for<sp/>Poisson</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/>m_sigma<sp/>=<sp/>{AMREX_D_DECL(-1.,<sp/>-1.,<sp/>-1.)};</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>linop.setSigma(m_sigma);</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>relTol<sp/>=<sp/>1.e-11;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Initialize<sp/>solver<sp/>class</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::MLMG<sp/>mlmg(linop);</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Configure<sp/>solver<sp/>class</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.setMaxIter(m_maxIter);</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.setMaxFmgIter(m_maxFmgIter);</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.setBottomMaxIter(m_mgBottomMaxIter);</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.setVerbose(m_verbose);</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.setBottomVerbose(m_bottomVerbose);</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.setBottomSolver(amrex::BottomSolver::cg);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Do<sp/>we<sp/>need<sp/>to<sp/>subtract<sp/>the<sp/>constant<sp/>part<sp/>if<sp/>we<sp/>have<sp/>averageSync<sp/>?</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a8fa66479b9cfc0fbb015093581d73df2" kindref="member">subtractConstantPart</ref>(params,<sp/>rho,<sp/>4);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Solve<sp/>Poisson</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>mlmg.solve({&amp;phi.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1a3ea34efe48e253266476fc7906e31a38" kindref="member">data</ref>},<sp/>{&amp;rho.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1a3ea34efe48e253266476fc7906e31a38" kindref="member">data</ref>},<sp/>relTol,<sp/>0.0);</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/>phi.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1a82ed6031cb3e12d82fb2d544fab97648" kindref="member">averageSync</ref>();</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>phi.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1ae2056b42fe7dbd941580830e0b67fd13" kindref="member">fillBoundary</ref>();</highlight></codeline>
+<codeline lineno="61"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a8fa66479b9cfc0fbb015093581d73df2" kindref="member">PoissonSolver::subtractConstantPart</ref>(<ref refid="classParameters" kindref="compound">Parameters</ref><sp/>params,<sp/><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField&lt;Grid::dual, Space::cell&gt;</ref>&amp;<sp/>rho,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nGhost)</highlight></codeline>
+<codeline lineno="64"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nComp<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Calculates<sp/>a<sp/>nodal<sp/>mask<sp/>for<sp/>rho</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/>std::unique_ptr&lt;amrex::iMultiFab&gt;<sp/>nodal_Mask;</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>nodal_Mask.reset(</highlight><highlight class="keyword">new</highlight><highlight class="normal"><sp/>amrex::iMultiFab(convert(params.<ref refid="classParameters_1aa57f51db327369dbe8dae963a52ddce3" kindref="member">grid</ref>(),<sp/>amrex::IntVect::TheNodeVector()),</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>params.<ref refid="classParameters_1ab551dbf94b9cb8e910a2b8fd2d92f81c" kindref="member">distriMap</ref>(),<sp/>nComp,<sp/>nGhost));</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"></highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(amrex::MFIter<sp/>mfi(*nodal_Mask);<sp/>mfi.isValid();<sp/>++mfi)</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Box<sp/>&amp;bx<sp/>=<sp/>mfi.validbox();</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>hi<sp/>=<sp/>{bx.bigEnd()};</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Array4&lt;int&gt;<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>&amp;mask_arr<sp/>=<sp/>(*nodal_Mask)[mfi].array();</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>ParallelFor(bx,</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>[=]<sp/>AMREX_GPU_DEVICE(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>j,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>k)</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>if-loop<sp/>to<sp/>exclude<sp/>ownership<sp/>for<sp/>the<sp/>point<sp/>that<sp/>is<sp/>at<sp/>the<sp/>upper</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>boundary<sp/>for<sp/>nodal<sp/>dimensions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>((i<sp/>&lt;=<sp/>(hi[0]<sp/>-<sp/>1))<sp/>&amp;&amp;<sp/>(j<sp/>&lt;=<sp/>(hi[1]<sp/>-<sp/>1))<sp/>&amp;&amp;<sp/>(k<sp/>&lt;=<sp/>(hi[2]<sp/>-<sp/>1)))</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mask_arr(i,<sp/>j,<sp/>k)<sp/>=<sp/>1.0;</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>});</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"></highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>nm1<sp/>=<sp/>0.0;</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>counter<sp/>=<sp/>0;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(amrex::MFIter<sp/>mfi(rho.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1a3ea34efe48e253266476fc7906e31a38" kindref="member">data</ref>,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">);<sp/>mfi.isValid();<sp/>++mfi)</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Box<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>&amp;bx<sp/>=<sp/>mfi.growntilebox(0);</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">auto</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>&amp;a<sp/>=<sp/>rho.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1a3ea34efe48e253266476fc7906e31a38" kindref="member">data</ref>.const_array(mfi);</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Array4&lt;int<sp/>const&gt;<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>&amp;mfab<sp/>=<sp/>nodal_Mask-&gt;const_array(mfi);</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>AMREX_LOOP_3D(bx,<sp/>i,<sp/>j,<sp/>k,<sp/>{</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(mfab(i,<sp/>j,<sp/>k))</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>nm1<sp/>+=<sp/>a(i,<sp/>j,<sp/>k,<sp/>0);</highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>counter++;</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>});</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"></highlight></codeline>
+<codeline lineno="103"><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::ParallelAllReduce::Sum(nm1,<sp/>amrex::ParallelContext::CommunicatorSub());</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::ParallelAllReduce::Sum(counter,<sp/>amrex::ParallelContext::CommunicatorSub());</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/>rho.<ref refid="structGEMPIC__Fields_1_1DeRhamField_1a3ea34efe48e253266476fc7906e31a38" kindref="member">data</ref>.plus(-nm1<sp/>/<sp/>((</highlight><highlight class="keywordtype">double</highlight><highlight class="normal">)counter),<sp/>nGhost);</highlight></codeline>
+<codeline lineno="107"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_006fe2222175f7c32fc72c3c537dd212" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/io/parameters</compoundname>
+    <innerdir refid="dir_5773b4b4a6e1d3500bc3b18e39e89bde">/home/marm/Desktop/gempic/src/io/parameters/testing</innerdir>
+    <innerfile refid="GEMPIC__amrex__init_8H">GEMPIC_amrex_init.H</innerfile>
+    <innerfile refid="GEMPIC__parameters_8H">GEMPIC_parameters.H</innerfile>
+    <innerfile refid="GEMPIC__Params_8cpp">GEMPIC_Params.cpp</innerfile>
+    <innerfile refid="GEMPIC__Params_8H">GEMPIC_Params.H</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/io/parameters/"/>
+  </compounddef>
+</doxygen>

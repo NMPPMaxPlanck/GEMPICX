@@ -1,0 +1,828 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="test__checkpoint_8cpp" kind="file" language="C++">
+    <compoundname>test_checkpoint.cpp</compoundname>
+    <includes local="no">AMReX.H</includes>
+    <includes local="no">AMReX_ParmParse.H</includes>
+    <includes local="no">AMReX_PlotFileUtil.H</includes>
+    <includes local="no">AMReX_Print.H</includes>
+    <includes local="no">GEMPIC_Config.H</includes>
+    <includes refid="GEMPIC__amrex__init_8H" local="no">GEMPIC_amrex_init.H</includes>
+    <includes refid="GEMPIC__checkpoint_8H" local="no">GEMPIC_checkpoint.H</includes>
+    <includes refid="GEMPIC__maxwell__yee_8H" local="no">GEMPIC_maxwell_yee.H</includes>
+    <includes refid="GEMPIC__parameters_8H" local="no">GEMPIC_parameters.H</includes>
+    <includes refid="GEMPIC__sampler_8H" local="no">GEMPIC_sampler.H</includes>
+    <incdepgraph>
+      <node id="33">
+        <label>GEMPIC_particle_groups.H</label>
+        <link refid="GEMPIC__particle__groups_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="32">
+        <label>assert.h</label>
+      </node>
+      <node id="21">
+        <label>AMReX_Array.H</label>
+      </node>
+      <node id="43">
+        <label>GEMPIC_particle_mesh_coupling_C2.H</label>
+        <link refid="GEMPIC__particle__mesh__coupling__C2_8H"/>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="41" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+      </node>
+      <node id="23">
+        <label>GEMPIC_maxwell_yee.H</label>
+        <link refid="GEMPIC__maxwell__yee_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+      </node>
+      <node id="40">
+        <label>GEMPIC_particle_mesh_coupling.H</label>
+        <link refid="GEMPIC__particle__mesh__coupling_8H"/>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="41" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+      </node>
+      <node id="41">
+        <label>AMReX_FArrayBox.H</label>
+      </node>
+      <node id="30">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="7">
+        <label>GEMPIC_amrex_init.H</label>
+        <link refid="GEMPIC__amrex__init_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="19">
+        <label>AMReX_Utility.H</label>
+      </node>
+      <node id="31">
+        <label>GEMPIC_gempic_norm.H</label>
+        <link refid="GEMPIC__gempic__norm_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="44">
+        <label>cmath</label>
+      </node>
+      <node id="47">
+        <label>AMReX_MLNodeLaplacian.H</label>
+      </node>
+      <node id="11">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="20">
+        <label>GEMPIC_computational_domain.H</label>
+        <link refid="GEMPIC__computational__domain_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="45">
+        <label>GEMPIC_splines.H</label>
+        <link refid="GEMPIC__splines_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="36">
+        <label>AMReX_Particles.H</label>
+      </node>
+      <node id="38">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="26">
+        <label>AMReX_MFIter.H</label>
+      </node>
+      <node id="48">
+        <label>GEMPIC_sampler.H</label>
+        <link refid="GEMPIC__sampler_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+      </node>
+      <node id="8">
+        <label>GEMPIC_checkpoint.H</label>
+        <link refid="GEMPIC__checkpoint_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+      </node>
+      <node id="34">
+        <label>AMReX_ArrayOfStructs.H</label>
+      </node>
+      <node id="39">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="35">
+        <label>AMReX_Particle.H</label>
+      </node>
+      <node id="10">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="37">
+        <label>AMReX_StructOfArrays.H</label>
+      </node>
+      <node id="5">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="16">
+        <label>AMReX_ParallelDescriptor.H</label>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp</label>
+        <link refid="test__checkpoint_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="46" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+      </node>
+      <node id="17">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="25">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="12">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="29">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="42">
+        <label>AMReX_Math.H</label>
+      </node>
+      <node id="28">
+        <label>AMReX_MLEBNodeFDLaplacian.H</label>
+      </node>
+      <node id="46">
+        <label>GEMPIC_parameters.H</label>
+        <link refid="GEMPIC__parameters_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+      </node>
+      <node id="24">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="15">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="4">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="22">
+        <label>AMReX_BLProfiler.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_FPC.H</label>
+      </node>
+      <node id="27">
+        <label>AMReX_MLMG.H</label>
+      </node>
+      <node id="49">
+        <label>AMReX_Random.H</label>
+      </node>
+      <node id="2">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test__checkpoint_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real wave_function</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>wave_function</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" line="19" column="14" bodyfile="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" bodystart="19" bodyend="23"/>
+      </memberdef>
+      <memberdef kind="function" id="test__checkpoint_8cpp_1ad947de9a717976928e49150934f0d110" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real zero</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>zero</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" line="25" column="14" bodyfile="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" bodystart="25" bodyend="28"/>
+      </memberdef>
+      <memberdef kind="function" id="test__checkpoint_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void main_main</definition>
+        <argsstring>()</argsstring>
+        <name>main_main</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" line="30" column="6" bodyfile="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" bodystart="30" bodyend="131"/>
+      </memberdef>
+      <memberdef kind="function" id="test__checkpoint_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>(int argc, char *argv[])</argsstring>
+        <name>main</name>
+        <param>
+          <type>int</type>
+          <declname>argc</declname>
+        </param>
+        <param>
+          <type>char *</type>
+          <declname>argv</declname>
+          <array>[]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" line="133" column="5" bodyfile="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp" bodystart="133" bodyend="151"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;AMReX.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_ParmParse.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_PlotFileUtil.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Print.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;GEMPIC_Config.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__amrex__init_8H" kindref="compound">GEMPIC_amrex_init.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__checkpoint_8H" kindref="compound">GEMPIC_checkpoint.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__maxwell__yee_8H" kindref="compound">GEMPIC_maxwell_yee.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__parameters_8H" kindref="compound">GEMPIC_parameters.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__sampler_8H" kindref="compound">GEMPIC_sampler.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">amrex;</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref>;</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">Field_solvers;</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">Sampling;</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">Utils;</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__checkpoint_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" kindref="member">wave_function</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="21"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.0;</highlight></codeline>
+<codeline lineno="23"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__checkpoint_8cpp_1ad947de9a717976928e49150934f0d110" kindref="member">zero</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,<sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="26"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>0.0;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="keyword">template</highlight><highlight class="normal"><sp/>&lt;</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numspec,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degx,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degy,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degz&gt;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="test__checkpoint_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kindref="member">main_main</ref>()</highlight></codeline>
+<codeline lineno="31"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>------------PARAMETERS--------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>initialize<sp/>parameters</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>n_cell_vector<sp/>=<sp/>{AMREX_D_DECL(4,<sp/>4,<sp/>4)};</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;int,<sp/>numspec&gt;<sp/>n_part_per_cell<sp/>=<sp/>{1};</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n_steps<sp/>=<sp/>2;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>is_periodic_vector<sp/>=<sp/>{AMREX_D_DECL(1,<sp/>1,<sp/>1)};</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>max_grid_size<sp/>=<sp/>{AMREX_D_DECL(2,<sp/>2,<sp/>2)};</highlight></codeline>
+<codeline lineno="41"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>dt<sp/>=<sp/>0.1;</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;amrex::Real,<sp/>numspec&gt;<sp/>charge<sp/>=<sp/>{-1.0};</highlight></codeline>
+<codeline lineno="43"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;amrex::Real,<sp/>numspec&gt;<sp/>mass<sp/>=<sp/>{1.0};</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>std::array&lt;amrex::Real,GEMPIC_SPACEDIM&gt;<sp/>k<sp/>=<sp/>{AMREX_D_DECL(1.25,1.25,1.25)};</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>k<sp/>=<sp/>1.25;</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>tolerance_particles<sp/>=<sp/>1.e-10;</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Vector&lt;amrex::Vector&lt;amrex::Real&gt;&gt;<sp/>meanVelocity<sp/>=<sp/>{{0.0,<sp/>0.0,<sp/>0.0}};</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Vector&lt;amrex::Vector&lt;amrex::Real&gt;&gt;<sp/>vThermal<sp/>=<sp/>{</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{0.0141421356237309493730949,<sp/>0.04898979485566356,<sp/>0.04898979485566356}};</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(vdim<sp/>==<sp/>2)</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Vector&lt;amrex::Vector&lt;amrex::Real&gt;&gt;<sp/>meanVelocity<sp/>=<sp/>{{0.0,<sp/>0.0}};</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Vector&lt;amrex::Vector&lt;amrex::Real&gt;&gt;<sp/>vThermal<sp/>=<sp/>{</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{0.0141421356237309493730949,<sp/>0.04898979485566356}};</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Vector&lt;amrex::Real&gt;<sp/>vWeight<sp/>=<sp/>{1.0};</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>initialize<sp/>amrex<sp/>data<sp/>structures<sp/>from<sp/>parameters</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>n_cell(AMREX_D_DECL(n_cell_vector[0],<sp/>n_cell_vector[1],<sp/>n_cell_vector[2]));</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>is_periodic(</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>AMREX_D_DECL(is_periodic_vector[0],<sp/>is_periodic_vector[1],<sp/>is_periodic_vector[2]));</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>------------INITIALIZE<sp/>GEMPIC-STRUCTURES--------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="66"><highlight class="normal"></highlight></codeline>
+<codeline lineno="67"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classgempic__parameters" kindref="compound">gempic_parameters&lt;vdim, numspec&gt;</ref><sp/>VlMa;</highlight></codeline>
+<codeline lineno="68"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1acb9a698d80c62004884737b6ac2f501d" kindref="member">init_Nghost</ref>(degx,<sp/>degy,<sp/>degz);</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>FX<sp/>=<sp/>10,<sp/>FV<sp/>=<sp/>10,<sp/>FS<sp/>=<sp/>10;</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a05ae18f89e7e18a10898a835e682cd4e" kindref="member">set_params</ref>(</highlight><highlight class="stringliteral">&quot;checkpoint_ctest&quot;</highlight><highlight class="normal">,<sp/>n_cell_vector,<sp/>n_part_per_cell,<sp/>n_steps,<sp/>FX,<sp/>FV,<sp/>FS,</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>is_periodic_vector,<sp/>max_grid_size,<sp/>dt,<sp/>charge,<sp/>mass,<sp/>k,<sp/>{</highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">},<sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;0&quot;</highlight><highlight class="normal">,<sp/>{1},<sp/>0,<sp/>tolerance_particles);</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a5b2ebe512657f31400f3a7a65f9b1675" kindref="member">set_computed_params</ref>();</highlight></codeline>
+<codeline lineno="74"><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>infrastructure</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/>computational_domain<sp/>infra;</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/>infra.initialize_computational_domain(VlMa.<ref refid="classgempic__parameters_1a5313d160a093248282695377bea8e265" kindref="member">n_cell</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1a37ed705ccbd242baac11cdd90bdfe0b6" kindref="member">max_grid_size</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1add90ce8e64a5bd29d9ea017ea70c55e3" kindref="member">is_periodic</ref>,</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a683e4caa3607b82a4df0d2d3bc385d55" kindref="member">real_box</ref>);</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"></highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>maxwell_yee</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/>maxwell_yee&lt;vdim&gt;<sp/>mw_yee(infra,<sp/>VlMa.<ref refid="classgempic__parameters_1ad0866f15699d3d192097ae600538ebe7" kindref="member">dt</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1afdbbab959a9921281839094634f90a00" kindref="member">n_steps</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1a6648ae91ab49ca16a5db636ec833325c" kindref="member">Nghost</ref>);</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.template<sp/>init_rho_phi&lt;2&gt;(<ref refid="test__checkpoint_8cpp_1ad947de9a717976928e49150934f0d110" kindref="member">zero</ref>,<sp/><ref refid="test__checkpoint_8cpp_1ad947de9a717976928e49150934f0d110" kindref="member">zero</ref>,<sp/>infra);</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>particles</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;std::unique_ptr&lt;particle_groups&lt;vdim&gt;&gt;,<sp/>numspec&gt;<sp/>part_gr;</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>spec<sp/>=<sp/>0;<sp/>spec<sp/>&lt;<sp/>numspec;<sp/>spec++)</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>part_gr[spec]<sp/>=</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::make_unique&lt;particle_groups&lt;vdim&gt;&gt;(VlMa.<ref refid="classgempic__parameters_1aeb7fe76227773d7d3a164494da607791" kindref="member">charge</ref>[spec],<sp/>VlMa.<ref refid="classgempic__parameters_1ab1f2fe641e5006609e42892d4b011122" kindref="member">mass</ref>[spec],<sp/>infra);</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"></highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>initialize<sp/>particles:</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>species<sp/>=<sp/>0;<sp/><sp/></highlight><highlight class="comment">//<sp/>all<sp/>particles<sp/>are<sp/>same<sp/>species<sp/>for<sp/>now</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/>init_particles_full_domain&lt;vdim,<sp/>numspec&gt;(infra,<sp/>part_gr,<sp/>VlMa.<ref refid="classgempic__parameters_1ad7c7531160126363d328cb874621ded5" kindref="member">n_part_per_cell</ref>,<sp/>meanVelocity,</highlight></codeline>
+<codeline lineno="96"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>vThermal,<sp/>vWeight,<sp/>species,<sp/><ref refid="test__checkpoint_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" kindref="member">wave_function</ref>);</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>test:</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Initialize<sp/>fields</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">size_t</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>vdim;<sp/>i++)</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.J_Array[i]-&gt;setVal(0.0);</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.E_Array[i]-&gt;setVal(0.0);</highlight></codeline>
+<codeline lineno="105"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.B_Array[i]-&gt;setVal(0.0);</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="107"><highlight class="normal"></highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.J_Array[0]-&gt;setVal(1.0);</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>old_val<sp/>=<sp/><ref refid="namespaceGempic_1_1Utils_1a317e5f0fefa3fe0902a73d22807a6817" kindref="member">gempic_norm</ref>(*mw_yee.J_Array[0],<sp/>infra,<sp/>0);</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>Gempic_WriteCheckpointFile&lt;vdim,<sp/>vdim,<sp/>vdim,<sp/>numspec&gt;(&amp;mw_yee,<sp/>part_gr,<sp/>&amp;infra,<sp/></highlight><highlight class="stringliteral">&quot;Checkpoint&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&quot;test&quot;</highlight><highlight class="normal">,<sp/>0,<sp/>20);</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"></highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.J_Array[0]-&gt;setVal(2.0);</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>new_val<sp/>=<sp/><ref refid="namespaceGempic_1_1Utils_1a317e5f0fefa3fe0902a73d22807a6817" kindref="member">gempic_norm</ref>(*mw_yee.J_Array[0],<sp/>infra,<sp/>0);</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>Gempic_ReadCheckpointFile&lt;vdim,<sp/>numspec&gt;(&amp;mw_yee,<sp/>part_gr,<sp/>&amp;infra,<sp/></highlight><highlight class="stringliteral">&quot;Checkpoint&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;test&quot;</highlight><highlight class="normal">,</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>0);<sp/><sp/></highlight><highlight class="comment">//<sp/>last<sp/>2<sp/>args:<sp/>field,<sp/>step</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>read_val<sp/>=<sp/><ref refid="namespaceGempic_1_1Utils_1a317e5f0fefa3fe0902a73d22807a6817" kindref="member">gempic_norm</ref>(*mw_yee.J_Array[0],<sp/>infra,<sp/>0);</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"></highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.tmp&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.tmp&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Norm<sp/>of<sp/>MF<sp/>that<sp/>is<sp/>written<sp/>out:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>old_val<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.tmp&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Norm<sp/>the<sp/>MF<sp/>has<sp/>after<sp/>changing<sp/>it:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>new_val<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.tmp&quot;</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Norm<sp/>of<sp/>MF<sp/>that<sp/>is<sp/>read<sp/>in:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>read_val<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"></highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>passed<sp/>=<sp/>(std::abs(old_val<sp/>-<sp/>read_val)<sp/>&lt;<sp/>1e-12)<sp/>&amp;&amp;<sp/>(std::abs(old_val<sp/>-<sp/>new_val)<sp/>&gt;<sp/>1e-1);</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_checkpoint.tmp&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_checkpoint.tmp&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/>passed<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="131"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="test__checkpoint_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kindref="member">main</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>argc,<sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*argv[])</highlight></codeline>
+<codeline lineno="134"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>build_parm_parse<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Initialize(argc,<sp/>argv,<sp/>build_parm_parse,<sp/>MPI_COMM_WORLD,</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a3a730df9bb861d0905cd1411f02cf67d" kindref="member">overwrite_amrex_parser_defaults</ref>);</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"></highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ParallelDescriptor::MyProc()<sp/>==<sp/>0)<sp/>remove(</highlight><highlight class="stringliteral">&quot;test_checkpoint.tmp.0&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ParallelDescriptor::MyProc()<sp/>==<sp/>0)<sp/>remove(</highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.tmp.0&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"></highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim<sp/>=<sp/>3,<sp/>numspec<sp/>=<sp/>1,<sp/>degx<sp/>=<sp/>1,<sp/>degy<sp/>=<sp/>1,<sp/>degz<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ParallelDescriptor::MyProc()<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::rename(</highlight><highlight class="stringliteral">&quot;test_checkpoint.tmp.0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;test_checkpoint.output&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ParallelDescriptor::MyProc()<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="148"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::rename(</highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.tmp.0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;test_checkpoint_additional.output&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Finalize();</highlight></codeline>
+<codeline lineno="151"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp"/>
+  </compounddef>
+</doxygen>

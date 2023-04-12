@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceGempic" kind="namespace" language="C++">
+    <compoundname>Gempic</compoundname>
+    <innernamespace refid="namespaceGempic_1_1CompDom">Gempic::CompDom</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Diagnostics__Output">Gempic::Diagnostics_Output</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Field__solvers">Gempic::Field_solvers</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1FieldSolvers">Gempic::FieldSolvers</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Particles">Gempic::Particles</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Profiling">Gempic::Profiling</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Sampling">Gempic::Sampling</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Time__Loop">Gempic::Time_Loop</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Utils">Gempic::Utils</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Vlasov__Maxwell">Gempic::Vlasov_Maxwell</innernamespace>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceGempic_1a3a730df9bb861d0905cd1411f02cf67d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::overwrite_amrex_parser_defaults</definition>
+        <argsstring>()</argsstring>
+        <name>overwrite_amrex_parser_defaults</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Overwrite defaults in AMReX Inputs</para>
+<para>This overwrites defaults in amrex::ParmParse for inputs. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/parameters/GEMPIC_amrex_init.H" line="13" column="6" bodyfile="/home/marm/Desktop/gempic/src/io/parameters/GEMPIC_amrex_init.H" bodystart="13" bodyend="24"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1adff35f05c59033147852be6854f5fbf0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::gempic_assert</definition>
+        <argsstring>(bool passed, amrex::Real solution, amrex::Real value)</argsstring>
+        <name>gempic_assert</name>
+        <param>
+          <type>bool</type>
+          <declname>passed</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>solution</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>value</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/utils/GEMPIC_assertion.H" line="13" column="6" bodyfile="/home/marm/Desktop/gempic/src/utils/GEMPIC_assertion.H" bodystart="13" bodyend="24"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::gempic_assert_err</definition>
+        <argsstring>(bool &amp;passed, amrex::Real solution, amrex::Real err)</argsstring>
+        <name>gempic_assert_err</name>
+        <param>
+          <type>bool &amp;</type>
+          <declname>passed</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>solution</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>err</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/utils/GEMPIC_assertion.H" line="26" column="6" bodyfile="/home/marm/Desktop/gempic/src/utils/GEMPIC_assertion.H" bodystart="26" bodyend="36"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_initMF.H" line="21" column="1"/>
+  </compounddef>
+</doxygen>

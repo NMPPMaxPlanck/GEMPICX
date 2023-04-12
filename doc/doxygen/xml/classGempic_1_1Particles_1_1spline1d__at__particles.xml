@@ -1,0 +1,231 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1Particles_1_1spline1d__at__particles" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::Particles::spline1d_at_particles</compoundname>
+    <includes local="no">GEMPIC_particle_mesh_coupling_C2.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>deg</declname>
+        <defname>deg</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classGempic_1_1Particles_1_1spline1d__at__particles_1abe66ce215974725ba65b14c2a58334e4" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; amrex::Real, deg+1 &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, deg + 1&gt; Gempic::Particles::spline1d_at_particles&lt; deg &gt;::spline</definition>
+        <argsstring></argsstring>
+        <name>spline</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="25" column="21" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Particles_1_1spline1d__at__particles_1a0f5caa6acd4e53d8f43b545fea2688a2" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; amrex::Real, deg &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, deg&gt; Gempic::Particles::spline1d_at_particles&lt; deg &gt;::primitive</definition>
+        <argsstring></argsstring>
+        <name>primitive</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="26" column="21" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Particles_1_1spline1d__at__particles_1a208821628b34d05c00515eca1bfbbd01" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Particles::spline1d_at_particles&lt; deg &gt;::box</definition>
+        <argsstring></argsstring>
+        <name>box</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="27" column="9" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1spline1d__at__particles_1af34b6491385979599b4acea0f46c8ab8" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Particles::spline1d_at_particles&lt; deg &gt;::init_position</definition>
+        <argsstring>(amrex::Real position, amrex::Real plo, amrex::Real dxi)</argsstring>
+        <name>init_position</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>position</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>plo</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dxi</declname>
+        </param>
+        <briefdescription>
+<para>Find the 1D cell in which the particle is. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>position</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>position of particle </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>plo</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>left extremity of 1D grid </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>dxi</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>cell size </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="35" column="11" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="35" bodyend="62"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1spline1d__at__particles_1a629afe13490f66ae06303c804d1c6d06" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>amrex::GpuArray&lt; amrex::Real, degree+1 &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, degree + 1&gt; Gempic::Particles::spline1d_at_particles&lt; deg &gt;::spline_eval</definition>
+        <argsstring>(amrex::Real x)</argsstring>
+        <name>spline_eval</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <briefdescription>
+<para>Computes the values of the (degree + 1) splines that are not zero at any given point x in [0,1]. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="templateparam"><parameteritem>
+<parameternamelist>
+<parametername>degree</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Spline degree </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Position at which splines are evaluated </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>s Array of spline values at x </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="74" column="22" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="74" bodyend="129"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1spline1d__at__particles_1a3f6bc1e9e1457a4a137ed4fbb81e95ad" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>amrex::GpuArray&lt; amrex::Real, degree+1 &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, degree + 1&gt; Gempic::Particles::spline1d_at_particles&lt; deg &gt;::spline_eval_primitive</definition>
+        <argsstring>(amrex::Real x)</argsstring>
+        <name>spline_eval_primitive</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <briefdescription>
+<para>Evaluate primitives of splines of a given degree at given point x. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="templateparam"><parameteritem>
+<parameternamelist>
+<parametername>degree</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>x</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="137" column="22" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="137" bodyend="201"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Evaluate all 1D splines and spline primitives at a given particle position. </para>
+    </briefdescription>
+    <detaileddescription>
+<para><parameterlist kind="templateparam"><parameteritem>
+<parameternamelist>
+<parametername>deg</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>spline degree </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Gempic::Particles::spline1d_at_particles&lt; deg &gt;</label>
+        <link refid="classGempic_1_1Particles_1_1spline1d__at__particles"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" line="23" column="1" bodyfile="/home/marm/Desktop/gempic/src/particle_mesh_coupling/GEMPIC_particle_mesh_coupling_C2.H" bodystart="22" bodyend="202"/>
+    <listofallmembers>
+      <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a208821628b34d05c00515eca1bfbbd01" prot="public" virt="non-virtual"><scope>Gempic::Particles::spline1d_at_particles</scope><name>box</name></member>
+      <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1af34b6491385979599b4acea0f46c8ab8" prot="public" virt="non-virtual"><scope>Gempic::Particles::spline1d_at_particles</scope><name>init_position</name></member>
+      <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a0f5caa6acd4e53d8f43b545fea2688a2" prot="public" virt="non-virtual"><scope>Gempic::Particles::spline1d_at_particles</scope><name>primitive</name></member>
+      <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1abe66ce215974725ba65b14c2a58334e4" prot="public" virt="non-virtual"><scope>Gempic::Particles::spline1d_at_particles</scope><name>spline</name></member>
+      <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a629afe13490f66ae06303c804d1c6d06" prot="private" virt="non-virtual"><scope>Gempic::Particles::spline1d_at_particles</scope><name>spline_eval</name></member>
+      <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a3f6bc1e9e1457a4a137ed4fbb81e95ad" prot="private" virt="non-virtual"><scope>Gempic::Particles::spline1d_at_particles</scope><name>spline_eval_primitive</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

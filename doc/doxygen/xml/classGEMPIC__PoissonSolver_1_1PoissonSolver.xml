@@ -1,0 +1,203 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGEMPIC__PoissonSolver_1_1PoissonSolver" kind="class" language="C++" prot="public">
+    <compoundname>GEMPIC_PoissonSolver::PoissonSolver</compoundname>
+    <includes local="no">GEMPIC_PoissonSolver.H</includes>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1aceccd7096ae068757a3a4079e885755c" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int GEMPIC_PoissonSolver::PoissonSolver::m_maxIter</definition>
+        <argsstring></argsstring>
+        <name>m_maxIter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="22" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a505649d7a1c4930cfbe533923caeead3" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int GEMPIC_PoissonSolver::PoissonSolver::m_maxCoarseningLevel</definition>
+        <argsstring></argsstring>
+        <name>m_maxCoarseningLevel</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="23" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a7f0e03674ba787015170a7cb90ed49c7" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int GEMPIC_PoissonSolver::PoissonSolver::m_maxFmgIter</definition>
+        <argsstring></argsstring>
+        <name>m_maxFmgIter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="24" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a76a6da160677a7e0415c29d6991bd380" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int GEMPIC_PoissonSolver::PoissonSolver::m_mgBottomMaxIter</definition>
+        <argsstring></argsstring>
+        <name>m_mgBottomMaxIter</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="25" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a5a0cd61338ccaf5c9caf8235262b2d99" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int GEMPIC_PoissonSolver::PoissonSolver::m_verbose</definition>
+        <argsstring></argsstring>
+        <name>m_verbose</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="26" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a5fc861d309715d5cb2262859f27051b4" prot="private" static="no" mutable="no">
+        <type>int</type>
+        <definition>int GEMPIC_PoissonSolver::PoissonSolver::m_bottomVerbose</definition>
+        <argsstring></argsstring>
+        <name>m_bottomVerbose</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="27" column="17" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a0fec48de2bd0d3a34dd1b6e2d3448659" prot="private" static="no" mutable="no">
+        <type>amrex::Array&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+        <definition>amrex::Array&lt;amrex::Real, GEMPIC_SPACEDIM&gt; GEMPIC_PoissonSolver::PoissonSolver::m_sigma</definition>
+        <argsstring></argsstring>
+        <name>m_sigma</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="30" column="26" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac65e4d2bf3ba90f8d3a12d07f161779d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PoissonSolver::PoissonSolver</definition>
+        <argsstring>()</argsstring>
+        <name>PoissonSolver</name>
+        <briefdescription>
+<para>Implementation of Poisson solvers <computeroutput><ref refid="classParameters" kindref="compound">Parameters</ref></computeroutput> <computeroutput>rho</computeroutput>, which is a dual 3-form <computeroutput>phi</computeroutput>, which is a primal 0-form. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="34" column="13" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp" bodystart="14" bodyend="21"/>
+      </memberdef>
+      <memberdef kind="function" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac969904c4056a9dae2c60a39d44f1a55" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>PoissonSolver::~PoissonSolver</definition>
+        <argsstring>()</argsstring>
+        <name>~PoissonSolver</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="36" column="13" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp" bodystart="23" bodyend="23"/>
+      </memberdef>
+      <memberdef kind="function" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ab2cb88735ba63e70e42d55cf05f256ff" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PoissonSolver::solve</definition>
+        <argsstring>(Parameters params, DeRhamField&lt; Grid::dual, Space::cell &gt; &amp;rho, DeRhamField&lt; Grid::primal, Space::node &gt; &amp;phi)</argsstring>
+        <name>solve</name>
+        <param>
+          <type><ref refid="classParameters" kindref="compound">Parameters</ref></type>
+          <declname>params</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::cell &gt; &amp;</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::node &gt; &amp;</type>
+          <declname>phi</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="38" column="18" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp" bodystart="25" bodyend="61"/>
+      </memberdef>
+      <memberdef kind="function" id="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a8fa66479b9cfc0fbb015093581d73df2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void PoissonSolver::subtractConstantPart</definition>
+        <argsstring>(Parameters params, DeRhamField&lt; Grid::dual, Space::cell &gt; &amp;rho, const int nGhost)</argsstring>
+        <name>subtractConstantPart</name>
+        <param>
+          <type><ref refid="classParameters" kindref="compound">Parameters</ref></type>
+          <declname>params</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::cell &gt; &amp;</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>nGhost</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="42" column="18" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.cpp" bodystart="63" bodyend="107"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>GEMPIC_PoissonSolver::PoissonSolver</label>
+        <link refid="classGEMPIC__PoissonSolver_1_1PoissonSolver"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" line="20" column="1" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/Poisson/GEMPIC_PoissonSolver.H" bodystart="19" bodyend="43"/>
+    <listofallmembers>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a5fc861d309715d5cb2262859f27051b4" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_bottomVerbose</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a505649d7a1c4930cfbe533923caeead3" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_maxCoarseningLevel</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a7f0e03674ba787015170a7cb90ed49c7" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_maxFmgIter</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1aceccd7096ae068757a3a4079e885755c" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_maxIter</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a76a6da160677a7e0415c29d6991bd380" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_mgBottomMaxIter</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a0fec48de2bd0d3a34dd1b6e2d3448659" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_sigma</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a5a0cd61338ccaf5c9caf8235262b2d99" prot="private" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>m_verbose</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac65e4d2bf3ba90f8d3a12d07f161779d" prot="public" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>PoissonSolver</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ab2cb88735ba63e70e42d55cf05f256ff" prot="public" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>solve</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a8fa66479b9cfc0fbb015093581d73df2" prot="public" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>subtractConstantPart</name></member>
+      <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac969904c4056a9dae2c60a39d44f1a55" prot="public" virt="non-virtual"><scope>GEMPIC_PoissonSolver::PoissonSolver</scope><name>~PoissonSolver</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

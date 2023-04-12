@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1Profiling_1_1timers" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::Profiling::timers</compoundname>
+    <includes local="no">GEMPIC_profiling.H</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a324a91814399182fad04d520bbcfc876" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool Gempic::Profiling::timers::profiling</definition>
+        <argsstring></argsstring>
+        <name>profiling</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="18" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="18" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a11cc9a05bf08f46602ae86d02f748403" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Profiling::timers::counter_deposition</definition>
+        <argsstring></argsstring>
+        <name>counter_deposition</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="19" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="19" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a57a5288f3f9139af7ee47122face6ff1" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Profiling::timers::counter_redistribute</definition>
+        <argsstring></argsstring>
+        <name>counter_redistribute</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="20" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="20" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a53e7ffb21bbee1ae5ad8f5cae506b681" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Profiling::timers::counter_jboundary</definition>
+        <argsstring></argsstring>
+        <name>counter_jboundary</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="21" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a945b0e7631c57cfb55d6f305fd084638" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Profiling::timers::counter_fields</definition>
+        <argsstring></argsstring>
+        <name>counter_fields</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="22" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a40e353560216eedc0bf4997237118fce" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Profiling::timers::counter_diagnostics</definition>
+        <argsstring></argsstring>
+        <name>counter_diagnostics</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="23" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Profiling_1_1timers_1a473d83223739ae348f2be9dbdc5434d5" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Profiling::timers::counter_all</definition>
+        <argsstring></argsstring>
+        <name>counter_all</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="24" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGempic_1_1Profiling_1_1timers_1a8cbcaddfc91cd95da7df07b6384d5678" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Profiling::timers::timers</definition>
+        <argsstring>()</argsstring>
+        <name>timers</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Default Constructor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="30" column="5"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Profiling_1_1timers_1aeac43e75c9be376041bfe5204d91b7e0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Profiling::timers::timers</definition>
+        <argsstring>(bool prof)</argsstring>
+        <name>timers</name>
+        <param>
+          <type>bool</type>
+          <declname>prof</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Explicit constructor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="36" column="5" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="36" bodyend="45"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Class responsible contains all timers for profiling the code </para>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Gempic::Profiling::timers</label>
+        <link refid="classGempic_1_1Profiling_1_1timers"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" line="16" column="1" bodyfile="/home/marm/Desktop/gempic/src/io/profiling/GEMPIC_profiling.H" bodystart="15" bodyend="46"/>
+    <listofallmembers>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a473d83223739ae348f2be9dbdc5434d5" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>counter_all</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a11cc9a05bf08f46602ae86d02f748403" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>counter_deposition</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a40e353560216eedc0bf4997237118fce" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>counter_diagnostics</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a945b0e7631c57cfb55d6f305fd084638" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>counter_fields</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a53e7ffb21bbee1ae5ad8f5cae506b681" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>counter_jboundary</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a57a5288f3f9139af7ee47122face6ff1" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>counter_redistribute</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a324a91814399182fad04d520bbcfc876" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>profiling</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1a8cbcaddfc91cd95da7df07b6384d5678" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>timers</name></member>
+      <member refid="classGempic_1_1Profiling_1_1timers_1aeac43e75c9be376041bfe5204d91b7e0" prot="public" virt="non-virtual"><scope>Gempic::Profiling::timers</scope><name>timers</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

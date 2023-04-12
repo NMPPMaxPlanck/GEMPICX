@@ -1,0 +1,625 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1Diagnostics__Output_1_1diagnostics" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::Diagnostics_Output::diagnostics</compoundname>
+    <includes local="no">GEMPIC_diagnostics.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>vdim</declname>
+        <defname>vdim</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>numspec</declname>
+        <defname>numspec</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degx</declname>
+        <defname>degx</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degy</declname>
+        <defname>degy</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degz</declname>
+        <defname>degz</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degree</declname>
+        <defname>degree</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>edim</declname>
+        <defname>edim</defname>
+        <defval>vdim</defval>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>bdim</declname>
+        <defname>bdim</defname>
+        <defval>int(vdim / 2.5) * 2 + 1</defval>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a5f62ed789ba32f5808df58359e78d6bb" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::nSteps</definition>
+        <argsstring></argsstring>
+        <name>nSteps</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="76" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="76" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1afc89ea0414c2c2c357b2d95f18962b8a" prot="public" static="no" mutable="no">
+        <type>amrex::Vector&lt; amrex::GpuArray&lt; amrex::Real, bdim &gt; &gt;</type>
+        <definition>amrex::Vector&lt;amrex::GpuArray&lt;amrex::Real, bdim&gt; &gt; Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::Bfield_energy</definition>
+        <argsstring></argsstring>
+        <name>Bfield_energy</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="77" column="19" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="77" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aa60245942a24347c76b71cd34eec1be3" prot="public" static="no" mutable="no">
+        <type>amrex::Vector&lt; amrex::GpuArray&lt; amrex::Real, edim &gt; &gt;</type>
+        <definition>amrex::Vector&lt;amrex::GpuArray&lt;amrex::Real, edim&gt; &gt; Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::Efield_energy</definition>
+        <argsstring></argsstring>
+        <name>Efield_energy</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="78" column="19" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1abc477612653695fe937f766395921a97" prot="public" static="no" mutable="no">
+        <type>amrex::Vector&lt; amrex::GpuArray&lt; amrex::Real, edim &gt; &gt;</type>
+        <definition>amrex::Vector&lt;amrex::GpuArray&lt;amrex::Real, edim&gt; &gt; Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::mom</definition>
+        <argsstring></argsstring>
+        <name>mom</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="78" column="33" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="78" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a30810b467e67220cb4229e610b77a807" prot="public" static="no" mutable="no">
+        <type>amrex::Vector&lt; amrex::Real &gt;</type>
+        <definition>amrex::Vector&lt;amrex::Real&gt; Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::kin</definition>
+        <argsstring></argsstring>
+        <name>kin</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="79" column="19" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="79" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a1cc2da96545617a621a2e2a9d21aa593" prot="public" static="no" mutable="no">
+        <type>amrex::Vector&lt; amrex::Real &gt;</type>
+        <definition>amrex::Vector&lt;amrex::Real&gt; Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::gauss_error</definition>
+        <argsstring></argsstring>
+        <name>gauss_error</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="80" column="19" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="80" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a947aa9e83fc3b2e45dc99ae77348a505" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::m_init_tot_energy</definition>
+        <argsstring></argsstring>
+        <name>m_init_tot_energy</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="81" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="81" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aa04c72c829530fa73f8e5965ad66adff" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::save_fields</definition>
+        <argsstring></argsstring>
+        <name>save_fields</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="82" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="82" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ac192960f8b08c8af4ca45f9420be0608" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::save_particles</definition>
+        <argsstring></argsstring>
+        <name>save_particles</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="83" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="83" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ab1fda87cddb4d4baebf2d7c6cab58fbc" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::save_checkpoint</definition>
+        <argsstring></argsstring>
+        <name>save_checkpoint</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="84" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="84" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a6796af16e50af33983cbb210584b72c7" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::freq_save</definition>
+        <argsstring></argsstring>
+        <name>freq_save</name>
+        <initializer>= 5</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="85" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="85" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aaf5e14d760fa441b0a88a110b3426302" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::lastSaved</definition>
+        <argsstring></argsstring>
+        <name>lastSaved</name>
+        <initializer>= -1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="86" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="86" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a015ebea00a88a1a663b9681c9bcaf10a" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::sim_name</definition>
+        <argsstring></argsstring>
+        <name>sim_name</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="87" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="87" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a0b33ceb6c891fdc5e753978d921590c3" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::domain_volume</definition>
+        <argsstring></argsstring>
+        <name>domain_volume</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="88" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="88" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a03b2ea7d1246b2c663b9d5446f0cf4a1" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::ctest</definition>
+        <argsstring></argsstring>
+        <name>ctest</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="89" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="89" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a446994b67cbc1d5b1b0a4a8d315e85e6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::diagnostics</definition>
+        <argsstring>()</argsstring>
+        <name>diagnostics</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Default Constructor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="95" column="5" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="95" bodyend="95"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a1631ffb18519343965825c544dc48c41" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::diagnostics</definition>
+        <argsstring>(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol, bool ctest=false)</argsstring>
+        <name>diagnostics</name>
+        <param>
+          <type>int</type>
+          <declname>n_t</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fx</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fv</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fs</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>sim_n</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>vol</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Explicit constructor: object can be initialized by passing the parameters: number of time steps <computeroutput>n_t</computeroutput>, the frequency with which to output positions <computeroutput>fx</computeroutput> and velocities <computeroutput>fv</computeroutput>, the frequency with which to generate slices and the name of the simulation <computeroutput>sim_name</computeroutput>. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="103" column="5" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="103" bodyend="107"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a8fff33f93267a0b51a7658bf9c9d81bc" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::reinit</definition>
+        <argsstring>(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol, bool ctest=false)</argsstring>
+        <name>reinit</name>
+        <param>
+          <type>int</type>
+          <declname>n_t</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fx</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fv</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fs</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>sim_n</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>vol</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="109" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="109" bodyend="113"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a0dfa68b36bd3ee26c938eb41938799ac" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+            <defval>1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::end_of_timestep</definition>
+        <argsstring>(timers *profiling_timers, int t_step, computational_domain infra, maxwell_yee&lt; edim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, std::string simulation_name, bool ctest)</argsstring>
+        <name>end_of_timestep</name>
+        <param>
+          <type>timers *</type>
+          <declname>profiling_timers</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>t_step</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="116" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="116" bodyend="158"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a25664a5771ce77568eed11190e598186" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+            <defval>1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::ComputeReducedDiag</definition>
+        <argsstring>(int step, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr)</argsstring>
+        <name>ComputeReducedDiag</name>
+        <param>
+          <type>int</type>
+          <declname>step</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <briefdescription>
+<para>Computes the reduced diagnostics that are integrated over space and summed over particles at time step*dt. All diagnostics are normalized by domain volume. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>step</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>step number in time </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>infra</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>computational parameters </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mw_yee</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>part_gr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>particle container </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="171" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="171" bodyend="288"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a2aad54c98d255caedbffa57957f5e81f" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::save_time_history</definition>
+        <argsstring>(amrex::Real dt, std::string simulation_name, int t_step)</argsstring>
+        <name>save_time_history</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>t_step</declname>
+        </param>
+        <briefdescription>
+<para>Writes the time history data from the last freq_save steps so far (at time <computeroutput>dt</computeroutput> * <computeroutput>t_step</computeroutput>) into an output file simulation.txt. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>dt</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>time step </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>simulation_name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>t_step</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>time step number </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="298" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="298" bodyend="368"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a2302e05a3c4136ccd56098807b5f58f4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::ctest_output</definition>
+        <argsstring>(std::string simulation_name, int t_step)</argsstring>
+        <name>ctest_output</name>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>t_step</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="370" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="370" bodyend="418"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ae59edbd97d6d68344479bdd761b7abcd" prot="private" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;::initialize_diagnostics</definition>
+        <argsstring>(int n_t, int fx, int fv, int fs, std::string sim_n, amrex::Real vol, bool ctest)</argsstring>
+        <name>initialize_diagnostics</name>
+        <param>
+          <type>int</type>
+          <declname>n_t</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fx</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fv</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>fs</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>sim_n</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>vol</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="474" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="474" bodyend="505"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Class responsible for all diagnostics. The field norms, momentum and kinetic energy are stored and written into files. Slice Data of fields can be generated. </para>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Gempic::Diagnostics_Output::diagnostics&lt; vdim, numspec, degx, degy, degz, degree, edim, bdim &gt;</label>
+        <link refid="classGempic_1_1Diagnostics__Output_1_1diagnostics"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="74" column="1" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="73" bodyend="506"/>
+    <listofallmembers>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1afc89ea0414c2c2c357b2d95f18962b8a" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>Bfield_energy</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a25664a5771ce77568eed11190e598186" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>ComputeReducedDiag</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a03b2ea7d1246b2c663b9d5446f0cf4a1" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>ctest</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a2302e05a3c4136ccd56098807b5f58f4" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>ctest_output</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a446994b67cbc1d5b1b0a4a8d315e85e6" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>diagnostics</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a1631ffb18519343965825c544dc48c41" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>diagnostics</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a0b33ceb6c891fdc5e753978d921590c3" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>domain_volume</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aa60245942a24347c76b71cd34eec1be3" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>Efield_energy</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a0dfa68b36bd3ee26c938eb41938799ac" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>end_of_timestep</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a6796af16e50af33983cbb210584b72c7" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>freq_save</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a1cc2da96545617a621a2e2a9d21aa593" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>gauss_error</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ae59edbd97d6d68344479bdd761b7abcd" prot="private" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>initialize_diagnostics</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a30810b467e67220cb4229e610b77a807" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>kin</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aaf5e14d760fa441b0a88a110b3426302" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>lastSaved</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a947aa9e83fc3b2e45dc99ae77348a505" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>m_init_tot_energy</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1abc477612653695fe937f766395921a97" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>mom</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a5f62ed789ba32f5808df58359e78d6bb" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>nSteps</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a8fff33f93267a0b51a7658bf9c9d81bc" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>reinit</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ab1fda87cddb4d4baebf2d7c6cab58fbc" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>save_checkpoint</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aa04c72c829530fa73f8e5965ad66adff" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>save_fields</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ac192960f8b08c8af4ca45f9420be0608" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>save_particles</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a2aad54c98d255caedbffa57957f5e81f" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>save_time_history</name></member>
+      <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a015ebea00a88a1a663b9681c9bcaf10a" prot="public" virt="non-virtual"><scope>Gempic::Diagnostics_Output::diagnostics</scope><name>sim_name</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

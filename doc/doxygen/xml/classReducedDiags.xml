@@ -1,0 +1,364 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classReducedDiags" kind="class" language="C++" prot="public" abstract="yes">
+    <compoundname>ReducedDiags</compoundname>
+    <derivedcompoundref refid="classElecFieldEnergy" prot="public" virt="non-virtual">ElecFieldEnergy&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</derivedcompoundref>
+    <derivedcompoundref refid="classGaussError" prot="public" virt="non-virtual">GaussError&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</derivedcompoundref>
+    <derivedcompoundref refid="classMagFieldEnergy" prot="public" virt="non-virtual">MagFieldEnergy&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</derivedcompoundref>
+    <derivedcompoundref refid="classMomentum" prot="public" virt="non-virtual">Momentum&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</derivedcompoundref>
+    <derivedcompoundref refid="classParticleEnergy" prot="public" virt="non-virtual">ParticleEnergy&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</derivedcompoundref>
+    <includes local="no">ReducedDiags.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>vdim</declname>
+        <defname>vdim</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>numspec</declname>
+        <defname>numspec</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degx</declname>
+        <defname>degx</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degy</declname>
+        <defname>degy</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degz</declname>
+        <defname>degz</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degree</declname>
+        <defname>degree</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>ndata</declname>
+        <defname>ndata</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classReducedDiags_1aacd7edbb7528fe27bc60640a195c4e7e" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::m_path</definition>
+        <argsstring></argsstring>
+        <name>m_path</name>
+        <initializer>= &quot;./&quot;</initializer>
+        <briefdescription>
+<para>output path (default) </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="35" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classReducedDiags_1af5b99f1420d969465129d3a0dbe90c20" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::m_extension</definition>
+        <argsstring></argsstring>
+        <name>m_extension</name>
+        <initializer>= &quot;txt&quot;</initializer>
+        <briefdescription>
+<para>output extension (default) </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="38" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classReducedDiags_1a03a7f68023666990c36cf3833706a6c4" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::m_rd_name</definition>
+        <argsstring></argsstring>
+        <name>m_rd_name</name>
+        <briefdescription>
+<para>diags name </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="41" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classReducedDiags_1a36cc2444a258678abf3d43faa271f761" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::m_IsNotRestart</definition>
+        <argsstring></argsstring>
+        <name>m_IsNotRestart</name>
+        <initializer>= 1</initializer>
+        <briefdescription>
+<para>check if it is a restart run </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="44" column="9" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classReducedDiags_1a7659dff387d977b05d96005daa75f7c9" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::m_sep</definition>
+        <argsstring></argsstring>
+        <name>m_sep</name>
+        <initializer>= &quot; &quot;</initializer>
+        <briefdescription>
+<para>separator in the output file </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="47" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="47" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classReducedDiags_1aa333455a99f0f72f15778b96ee51e6f5" prot="public" static="no" mutable="no">
+        <type>std::vector&lt; amrex::Real &gt;</type>
+        <definition>std::vector&lt;amrex::Real&gt; ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::m_data</definition>
+        <argsstring></argsstring>
+        <name>m_data</name>
+        <briefdescription>
+<para>output data </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="50" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classReducedDiags_1a250b345247a507adee447227d6a812c0" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::vol</definition>
+        <argsstring></argsstring>
+        <name>vol</name>
+        <initializer>= 1.0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="53" column="17" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="53" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classReducedDiags_1a629e3617893eb55b1eebb9c427973ac3" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::ReducedDiags</definition>
+        <argsstring>(std::string rd_name)</argsstring>
+        <name>ReducedDiags</name>
+        <param>
+          <type>std::string</type>
+          <declname>rd_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>constructor <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">rd_name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>reduced diags names </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="59" column="5" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="59" bodyend="88"/>
+      </memberdef>
+      <memberdef kind="function" id="classReducedDiags_1a2c5f2911e7273143d38ef786c7ffca3d" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>virtual ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::~ReducedDiags</definition>
+        <argsstring>()=default</argsstring>
+        <name>~ReducedDiags</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Virtual destructor for polymorphism </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="94" column="13"/>
+      </memberdef>
+      <memberdef kind="function" id="classReducedDiags_1a6afa91dcfbcdf14055e42021f10edff6" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::InitData</definition>
+        <argsstring>()</argsstring>
+        <name>InitData</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>function to initialize data after amr levels are initialized. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="100" column="18" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="100" bodyend="100"/>
+      </memberdef>
+      <memberdef kind="function" id="classReducedDiags_1a59b4c750758f429b569e167c349ae453" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::LoadBalance</definition>
+        <argsstring>()</argsstring>
+        <name>LoadBalance</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Redistribute parallel data structures during load balance </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="104" column="18" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="104" bodyend="104"/>
+      </memberdef>
+      <memberdef kind="function" id="classReducedDiags_1a6b3655d6249fd27db860f238478f4dca" prot="public" static="no" const="no" explicit="no" inline="no" virt="pure-virtual">
+        <type>void</type>
+        <definition>virtual void ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::ComputeDiags</definition>
+        <argsstring>(int step, computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr)=0</argsstring>
+        <name>ComputeDiags</name>
+        <reimplementedby refid="classGaussError_1a152c6ae4f3b320bdc09e506e86cfa57a">ComputeDiags</reimplementedby>
+        <reimplementedby refid="classParticleEnergy_1ad8b9e6a9980cc08fa8221bb8da14f17b">ComputeDiags</reimplementedby>
+        <reimplementedby refid="classMomentum_1aa44e077c97f7efa31ca9300eea7f6d8c">ComputeDiags</reimplementedby>
+        <reimplementedby refid="classMagFieldEnergy_1a255fd6c727bddfa9397aa49362d64da2">ComputeDiags</reimplementedby>
+        <reimplementedby refid="classElecFieldEnergy_1ae8e82cdb501113f6cebcc1a0317a6078">ComputeDiags</reimplementedby>
+        <param>
+          <type>int</type>
+          <declname>step</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>function to compute diags</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">step</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>current time step </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="111" column="18"/>
+      </memberdef>
+      <memberdef kind="function" id="classReducedDiags_1aa36da16e3f238531c9f6a0233b7e84dc" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>void</type>
+        <definition>virtual void ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::WriteToFile</definition>
+        <argsstring>(amrex::Real dt, int step) const</argsstring>
+        <name>WriteToFile</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>step</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>write to file function</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">step</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>current time step </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="119" column="18" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="119" bodyend="146"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Base class for reduced diagnostics. Each type of reduced diagnostics is implemented in a derived class, and must override the (pure virtual) function ComputeDiags. </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="4">
+        <label>MagFieldEnergy&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classMagFieldEnergy"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ElecFieldEnergy&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classElecFieldEnergy"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>ParticleEnergy&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classParticleEnergy"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>Momentum&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classMomentum"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>GaussError&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classGaussError"/>
+        <childnode refid="1" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classReducedDiags"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classReducedDiags"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" line="31" column="1" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ReducedDiags.H" bodystart="30" bodyend="148"/>
+    <listofallmembers>
+      <member refid="classReducedDiags_1a6b3655d6249fd27db860f238478f4dca" prot="public" virt="pure-virtual"><scope>ReducedDiags</scope><name>ComputeDiags</name></member>
+      <member refid="classReducedDiags_1a6afa91dcfbcdf14055e42021f10edff6" prot="public" virt="virtual"><scope>ReducedDiags</scope><name>InitData</name></member>
+      <member refid="classReducedDiags_1a59b4c750758f429b569e167c349ae453" prot="public" virt="virtual"><scope>ReducedDiags</scope><name>LoadBalance</name></member>
+      <member refid="classReducedDiags_1aa333455a99f0f72f15778b96ee51e6f5" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>m_data</name></member>
+      <member refid="classReducedDiags_1af5b99f1420d969465129d3a0dbe90c20" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>m_extension</name></member>
+      <member refid="classReducedDiags_1a36cc2444a258678abf3d43faa271f761" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>m_IsNotRestart</name></member>
+      <member refid="classReducedDiags_1aacd7edbb7528fe27bc60640a195c4e7e" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>m_path</name></member>
+      <member refid="classReducedDiags_1a03a7f68023666990c36cf3833706a6c4" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>m_rd_name</name></member>
+      <member refid="classReducedDiags_1a7659dff387d977b05d96005daa75f7c9" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>m_sep</name></member>
+      <member refid="classReducedDiags_1a629e3617893eb55b1eebb9c427973ac3" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>ReducedDiags</name></member>
+      <member refid="classReducedDiags_1a250b345247a507adee447227d6a812c0" prot="public" virt="non-virtual"><scope>ReducedDiags</scope><name>vol</name></member>
+      <member refid="classReducedDiags_1aa36da16e3f238531c9f6a0233b7e84dc" prot="public" virt="virtual"><scope>ReducedDiags</scope><name>WriteToFile</name></member>
+      <member refid="classReducedDiags_1a2c5f2911e7273143d38ef786c7ffca3d" prot="public" virt="virtual"><scope>ReducedDiags</scope><name>~ReducedDiags</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

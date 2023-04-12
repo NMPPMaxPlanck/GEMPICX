@@ -1,0 +1,320 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1Particles_1_1particle__groups" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::Particles::particle_groups</compoundname>
+    <basecompoundref prot="public" virt="non-virtual">amrex::ParticleContainer&lt; 0, 0, vdim+1, 0 &gt;</basecompoundref>
+    <includes local="no">GEMPIC_particle_groups.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>vdim</declname>
+        <defname>vdim</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>ndata</declname>
+        <defname>ndata</defname>
+        <defval>1</defval>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classGempic_1_1Particles_1_1particle__groups_1a45e4108cf127a0ae7e7f7e1014e4b145" prot="private" static="no" mutable="no">
+        <type>amrex::ParticleReal</type>
+        <definition>amrex::ParticleReal Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::m_charge</definition>
+        <argsstring></argsstring>
+        <name>m_charge</name>
+        <initializer>= 1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="48" column="25" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="48" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Particles_1_1particle__groups_1a26208171a0738eed254f400cc1745dc3" prot="private" static="no" mutable="no">
+        <type>amrex::ParticleReal</type>
+        <definition>amrex::ParticleReal Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::m_mass</definition>
+        <argsstring></argsstring>
+        <name>m_mass</name>
+        <initializer>= 1</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="49" column="25" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="49" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1Particles_1_1particle__groups_1a122770ffb5f531175cd618a09d9a8047" prot="private" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::m_name</definition>
+        <argsstring></argsstring>
+        <name>m_name</name>
+        <initializer>= &quot;electrons&quot;</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="50" column="17" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="50" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1a5b81b51bbf0783bd263b53cde3e5a1fd" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>amrex::ParticleReal</type>
+        <definition>amrex::ParticleReal Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::getCharge</definition>
+        <argsstring>()</argsstring>
+        <name>getCharge</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="53" column="25" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="53" bodyend="53"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1aaa5c5e97c9448ce3663e79cbe3d4bab1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>amrex::ParticleReal</type>
+        <definition>amrex::ParticleReal Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::getMass</definition>
+        <argsstring>()</argsstring>
+        <name>getMass</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="54" column="25" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="54" bodyend="54"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1af0c73d4ddab58e99ce48b598ea2fe1fb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>std::string</type>
+        <definition>std::string Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::getName</definition>
+        <argsstring>()</argsstring>
+        <name>getName</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="55" column="17" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="55" bodyend="55"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1a7b3cd26512144c24a44433e342c853d4" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::particle_groups</definition>
+        <argsstring>()</argsstring>
+        <name>particle_groups</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Default Constructor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="60" column="5" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="60" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1a642258779a64277aebc2ba000e561d1d" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::particle_groups</definition>
+        <argsstring>(amrex::Geometry geom, amrex::DistributionMapping distriMap, amrex::BoxArray grid)</argsstring>
+        <name>particle_groups</name>
+        <param>
+          <type>amrex::Geometry</type>
+          <declname>geom</declname>
+        </param>
+        <param>
+          <type>amrex::DistributionMapping</type>
+          <declname>distriMap</declname>
+        </param>
+        <param>
+          <type>amrex::BoxArray</type>
+          <declname>grid</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="61" column="5" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="61" bodyend="65"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1a0eec783bdaa586447eaa310fd0bbaa26" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::particle_groups</definition>
+        <argsstring>(amrex::Real charge, amrex::Real mass, std::string &amp;name, computational_domain ifr)</argsstring>
+        <name>particle_groups</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>charge</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>mass</declname>
+        </param>
+        <param>
+          <type>std::string &amp;</type>
+          <declname>name</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Explicit Constructor: By passing an object of class vlasov maxwell and infrastructure one can set up the empty particle object. The particles themselves need to be added separately. This can be done one by one (see method add_particle) or with the particle samples in the folder sampler. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="75" column="5" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="75" bodyend="82"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1ae254b4e701189b3fb8ff93b1d8f0fe52" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::particle_groups</definition>
+        <argsstring>(amrex::Real charge, amrex::Real mass, computational_domain ifr)</argsstring>
+        <name>particle_groups</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>charge</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>mass</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>ifr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="83" column="5" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="83" bodyend="88"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1aade59410b2d89581f3a1313be225fbe7" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::particle_groups</definition>
+        <argsstring>(const amrex::Real &amp;charge, const amrex::Real &amp;mass, Parameters params)</argsstring>
+        <name>particle_groups</name>
+        <param>
+          <type>const amrex::Real &amp;</type>
+          <declname>charge</declname>
+        </param>
+        <param>
+          <type>const amrex::Real &amp;</type>
+          <declname>mass</declname>
+        </param>
+        <param>
+          <type><ref refid="classParameters" kindref="compound">Parameters</ref></type>
+          <declname>params</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="90" column="5" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="90" bodyend="94"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1a2d31c0b52f372f9609f3544795cf1111" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::add_particle</definition>
+        <argsstring>(amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt; position, amrex::GpuArray&lt; amrex::Real, vdim &gt; velocity, amrex::Real weight, amrex::ParticleTile&lt; 0, 0, vdim+ndata, 0 &gt; &amp;particles)</argsstring>
+        <name>add_particle</name>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+          <declname>position</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::Real, vdim &gt;</type>
+          <declname>velocity</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>weight</declname>
+        </param>
+        <param>
+          <type>amrex::ParticleTile&lt; 0, 0, vdim+ndata, 0 &gt; &amp;</type>
+          <declname>particles</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Method adds one particle with the space coordinates <computeroutput>position</computeroutput>, the velocity coordinates <computeroutput>velocity</computeroutput> and the weight <computeroutput>weight</computeroutput> to the Particle Tile <computeroutput>particles</computeroutput>. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="100" column="10" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="100" bodyend="131"/>
+      </memberdef>
+      <memberdef kind="function" id="classGempic_1_1Particles_1_1particle__groups_1af2ccfc30ce92c26c524c22a8432e8718" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::Particles::particle_groups&lt; vdim, ndata &gt;::copy</definition>
+        <argsstring>(particle_groups&lt; vdim, ndata &gt; &amp;source, bool local=false)</argsstring>
+        <name>copy</name>
+        <param>
+          <type><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref>&lt; vdim, ndata &gt; &amp;</type>
+          <declname>source</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>local</declname>
+          <defval>false</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="133" column="10" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="133" bodyend="138"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Class containing all particle information. The array of particle containers has <computeroutput>n_species</computeroutput> number of particles containers, that is each responsible for one species of particles. For each particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The charge and mass of the particle species are stored in a separate array. </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="2">
+        <label>amrex::ParticleContainer&lt; 0, 0, vdim+1 , 0 &gt;</label>
+      </node>
+      <node id="1">
+        <label>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;</label>
+        <link refid="classGempic_1_1Particles_1_1particle__groups"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="2">
+        <label>amrex::ParticleContainer&lt; 0, 0, vdim+1 , 0 &gt;</label>
+      </node>
+      <node id="1">
+        <label>Gempic::Particles::particle_groups&lt; vdim, ndata &gt;</label>
+        <link refid="classGempic_1_1Particles_1_1particle__groups"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="46" column="1" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" bodystart="45" bodyend="139"/>
+    <listofallmembers>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a2d31c0b52f372f9609f3544795cf1111" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>add_particle</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1af2ccfc30ce92c26c524c22a8432e8718" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>copy</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a5b81b51bbf0783bd263b53cde3e5a1fd" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>getCharge</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1aaa5c5e97c9448ce3663e79cbe3d4bab1" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>getMass</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1af0c73d4ddab58e99ce48b598ea2fe1fb" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>getName</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a45e4108cf127a0ae7e7f7e1014e4b145" prot="private" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>m_charge</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a26208171a0738eed254f400cc1745dc3" prot="private" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>m_mass</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a122770ffb5f531175cd618a09d9a8047" prot="private" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>m_name</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a7b3cd26512144c24a44433e342c853d4" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>particle_groups</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a642258779a64277aebc2ba000e561d1d" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>particle_groups</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1a0eec783bdaa586447eaa310fd0bbaa26" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>particle_groups</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1ae254b4e701189b3fb8ff93b1d8f0fe52" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>particle_groups</name></member>
+      <member refid="classGempic_1_1Particles_1_1particle__groups_1aade59410b2d89581f3a1313be225fbe7" prot="public" virt="non-virtual"><scope>Gempic::Particles::particle_groups</scope><name>particle_groups</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

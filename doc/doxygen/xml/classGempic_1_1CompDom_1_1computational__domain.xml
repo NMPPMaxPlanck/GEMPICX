@@ -1,0 +1,257 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGempic_1_1CompDom_1_1computational__domain" kind="class" language="C++" prot="public">
+    <compoundname>Gempic::CompDom::computational_domain</compoundname>
+    <includes local="no">GEMPIC_computational_domain.H</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a1729882e23b7927cd1e4bdde26106242" prot="public" static="no" mutable="no">
+        <type>amrex::IntVect</type>
+        <definition>amrex::IntVect Gempic::CompDom::computational_domain::n_cell</definition>
+        <argsstring></argsstring>
+        <name>n_cell</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="29" column="20" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a49ac7fb4be90d26456e87f8052a3aa74" prot="public" static="no" mutable="no">
+        <type>amrex::IntVect</type>
+        <definition>amrex::IntVect Gempic::CompDom::computational_domain::max_grid_size</definition>
+        <argsstring></argsstring>
+        <name>max_grid_size</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="30" column="20" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a03c4590b559027dd50e4b681aef22911" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int Gempic::CompDom::computational_domain::is_periodic[GEMPIC_SPACEDIM]</definition>
+        <argsstring>[GEMPIC_SPACEDIM]</argsstring>
+        <name>is_periodic</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="31" column="9" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a03ca7558523e6575d758bd457237436c" prot="public" static="no" mutable="no">
+        <type>amrex::RealBox</type>
+        <definition>amrex::RealBox Gempic::CompDom::computational_domain::real_box</definition>
+        <argsstring></argsstring>
+        <name>real_box</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="32" column="20" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1af57313fcdf92a8843eb6e39b702949dd" prot="public" static="no" mutable="no">
+        <type>amrex::RealVect</type>
+        <definition>amrex::RealVect Gempic::CompDom::computational_domain::Length</definition>
+        <argsstring></argsstring>
+        <name>Length</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="34" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a2290c64802bc2b62ffa096ca88799657" prot="public" static="no" mutable="no">
+        <type>amrex::BoxArray</type>
+        <definition>amrex::BoxArray Gempic::CompDom::computational_domain::grid</definition>
+        <argsstring></argsstring>
+        <name>grid</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="35" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a3d3495717fc66867b463a57f421514be" prot="public" static="no" mutable="no">
+        <type>amrex::Geometry</type>
+        <definition>amrex::Geometry Gempic::CompDom::computational_domain::geom</definition>
+        <argsstring></argsstring>
+        <name>geom</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="36" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1aef80a9ad07de2af8cff369c0f801c415" prot="public" static="no" mutable="no">
+        <type>amrex::Box</type>
+        <definition>amrex::Box Gempic::CompDom::computational_domain::domain</definition>
+        <argsstring></argsstring>
+        <name>domain</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="37" column="16" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a9f73479b251e046dc5579bae8265d1ef" prot="public" static="no" mutable="no">
+        <type>amrex::DistributionMapping</type>
+        <definition>amrex::DistributionMapping Gempic::CompDom::computational_domain::distriMap</definition>
+        <argsstring></argsstring>
+        <name>distriMap</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="38" column="32" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1aa971ce10f7d54563d01626e742413e4c" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, GEMPIC_SPACEDIM&gt; Gempic::CompDom::computational_domain::dx</definition>
+        <argsstring></argsstring>
+        <name>dx</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="39" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="39" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a3d2d32ae730fb82c82a68116615ce06c" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, GEMPIC_SPACEDIM&gt; Gempic::CompDom::computational_domain::plo</definition>
+        <argsstring></argsstring>
+        <name>plo</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="40" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="40" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a50be998486aeb040d02f1f7c4dec3f33" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, GEMPIC_SPACEDIM&gt; Gempic::CompDom::computational_domain::phi</definition>
+        <argsstring></argsstring>
+        <name>phi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="41" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="41" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1a023e01745be915f976cbc00b29539ab8" prot="public" static="no" mutable="no">
+        <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM+1 &gt;</type>
+        <definition>amrex::GpuArray&lt;amrex::Real, GEMPIC_SPACEDIM + 1&gt; Gempic::CompDom::computational_domain::dxi</definition>
+        <argsstring></argsstring>
+        <name>dxi</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="42" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="42" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classGempic_1_1CompDom_1_1computational__domain_1aa7bddb1204e14388f1980689c328d859" prot="public" static="no" mutable="no">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::CompDom::computational_domain::tolerance_particle</definition>
+        <argsstring></argsstring>
+        <name>tolerance_particle</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="44" column="17" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="44" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGempic_1_1CompDom_1_1computational__domain_1a429954f363f952fdc4e198952d47f5bf" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void Gempic::CompDom::computational_domain::initialize_computational_domain</definition>
+        <argsstring>(amrex::IntVect n_cell_in, amrex::IntVect max_grid_size_in, amrex::IntVect is_periodic_in, amrex::RealBox real_box_in, amrex::Real tolerance_particle_in=1.e-10)</argsstring>
+        <name>initialize_computational_domain</name>
+        <param>
+          <type>amrex::IntVect</type>
+          <declname>n_cell_in</declname>
+        </param>
+        <param>
+          <type>amrex::IntVect</type>
+          <declname>max_grid_size_in</declname>
+        </param>
+        <param>
+          <type>amrex::IntVect</type>
+          <declname>is_periodic_in</declname>
+        </param>
+        <param>
+          <type>amrex::RealBox</type>
+          <declname>real_box_in</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>tolerance_particle_in</declname>
+          <defval>1.e-10</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Default Constructor. </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="63" column="10" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="63" bodyend="108"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>Class containing all the necessary structures (such as the <computeroutput>domain</computeroutput> and the <computeroutput>distriMap</computeroutput>) and information (such as <computeroutput>dx</computeroutput> and <computeroutput>n_cell</computeroutput>). </para>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>Gempic::CompDom::computational_domain</label>
+        <link refid="classGempic_1_1CompDom_1_1computational__domain"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" line="27" column="1" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_computational_domain.H" bodystart="26" bodyend="109"/>
+    <listofallmembers>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a9f73479b251e046dc5579bae8265d1ef" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>distriMap</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1aef80a9ad07de2af8cff369c0f801c415" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>domain</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1aa971ce10f7d54563d01626e742413e4c" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>dx</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a023e01745be915f976cbc00b29539ab8" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>dxi</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a3d3495717fc66867b463a57f421514be" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>geom</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a2290c64802bc2b62ffa096ca88799657" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>grid</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a429954f363f952fdc4e198952d47f5bf" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>initialize_computational_domain</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a03c4590b559027dd50e4b681aef22911" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>is_periodic</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1af57313fcdf92a8843eb6e39b702949dd" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>Length</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a49ac7fb4be90d26456e87f8052a3aa74" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>max_grid_size</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a1729882e23b7927cd1e4bdde26106242" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>n_cell</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a50be998486aeb040d02f1f7c4dec3f33" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>phi</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a3d2d32ae730fb82c82a68116615ce06c" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>plo</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1a03ca7558523e6575d758bd457237436c" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>real_box</name></member>
+      <member refid="classGempic_1_1CompDom_1_1computational__domain_1aa7bddb1204e14388f1980689c328d859" prot="public" virt="non-virtual"><scope>Gempic::CompDom::computational_domain</scope><name>tolerance_particle</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

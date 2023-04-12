@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="test__gtest_8cpp" kind="file" language="C++">
+    <compoundname>test_gtest.cpp</compoundname>
+    <includes local="no">array</includes>
+    <includes local="no">vector</includes>
+    <includes local="no">gtest/gtest.h</includes>
+    <incdepgraph>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/forms/testing/test_gtest.cpp</label>
+        <link refid="test__gtest_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>vector</label>
+      </node>
+      <node id="4">
+        <label>gtest/gtest.h</label>
+      </node>
+      <node id="2">
+        <label>array</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test__gtest_8cpp_1a5b3a8286db427aa68baa7275e514b9a1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(TestSuitExample, UnitTest1)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type>TestSuitExample</type>
+        </param>
+        <param>
+          <type>UnitTest1</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/testing/test_gtest.cpp" line="6" column="1" bodyfile="/home/marm/Desktop/gempic/src/forms/testing/test_gtest.cpp" bodystart="6" bodyend="13"/>
+      </memberdef>
+      <memberdef kind="function" id="test__gtest_8cpp_1acf75f18580a17e5c5f22706967810424" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>TEST</definition>
+        <argsstring>(TestSuitExample, UnitTest2)</argsstring>
+        <name>TEST</name>
+        <param>
+          <type>TestSuitExample</type>
+        </param>
+        <param>
+          <type>UnitTest2</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/testing/test_gtest.cpp" line="15" column="1" bodyfile="/home/marm/Desktop/gempic/src/forms/testing/test_gtest.cpp" bodystart="15" bodyend="22"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&lt;array&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;vector&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;gtest/gtest.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"><ref refid="test__gtest_8cpp_1a5b3a8286db427aa68baa7275e514b9a1" kindref="member">TEST</ref>(TestSuitExample,<sp/>UnitTest1)<sp/>{</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/><sp/><sp/>std::array&lt;int,<sp/>3&gt;<sp/>array1{1,<sp/>2,<sp/>3};</highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><sp/><sp/><sp/><sp/>std::array&lt;int,<sp/>3&gt;<sp/>array2{9,<sp/>8,<sp/>7};</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"><sp/><sp/><sp/><sp/>EXPECT_EQ(array1,<sp/>array1);</highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/>EXPECT_EQ(array1,<sp/>array2);</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/>EXPECT_EQ(array2,<sp/>array2);</highlight></codeline>
+<codeline lineno="13"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><ref refid="test__gtest_8cpp_1a5b3a8286db427aa68baa7275e514b9a1" kindref="member">TEST</ref>(TestSuitExample,<sp/>UnitTest2)<sp/>{</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;double&gt;<sp/>array1{1.,<sp/>2.,<sp/>3.};</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"><sp/><sp/><sp/><sp/>std::vector&lt;double&gt;<sp/>array2{9.,<sp/>8.,<sp/>7.};</highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/>EXPECT_DOUBLE_EQ(array1,<sp/>array1);</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/>EXPECT_DOUBLE_EQ(array1,<sp/>array2);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/>EXPECT_DOUBLE_EQ(array2,<sp/>array2);</highlight></codeline>
+<codeline lineno="22"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/forms/testing/test_gtest.cpp"/>
+  </compounddef>
+</doxygen>

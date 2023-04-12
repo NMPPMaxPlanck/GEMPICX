@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_47c8fe4489760c2d787512e731d6bb81" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/field_solvers</compoundname>
+    <innerdir refid="dir_6522a8c24eb142d93c95de0dfaf6b1e6">/home/marm/Desktop/gempic/src/field_solvers/Poisson</innerdir>
+    <innerdir refid="dir_7d1df9f8afaa81153645cda58166d4f1">/home/marm/Desktop/gempic/src/field_solvers/testing</innerdir>
+    <innerfile refid="GEMPIC__initMF_8H">GEMPIC_initMF.H</innerfile>
+    <innerfile refid="GEMPIC__maxwell__yee_8H">GEMPIC_maxwell_yee.H</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/"/>
+  </compounddef>
+</doxygen>

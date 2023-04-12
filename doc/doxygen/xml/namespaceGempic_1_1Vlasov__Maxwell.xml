@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceGempic_1_1Vlasov__Maxwell" kind="namespace" language="C++">
+    <compoundname>Gempic::Vlasov_Maxwell</compoundname>
+    <innerclass refid="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell" prot="public">Gempic::Vlasov_Maxwell::vlasov_maxwell</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H" line="24" column="1"/>
+  </compounddef>
+</doxygen>

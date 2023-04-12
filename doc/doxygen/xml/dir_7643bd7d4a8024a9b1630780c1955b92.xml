@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_7643bd7d4a8024a9b1630780c1955b92" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/forms</compoundname>
+    <innerdir refid="dir_93990bd32e09e68e7864821413592ef2">/home/marm/Desktop/gempic/src/forms/FDDeRhamComplex</innerdir>
+    <innerdir refid="dir_86dae66d0a0fdf88de2eacd293cadc88">/home/marm/Desktop/gempic/src/forms/testing</innerdir>
+    <innerfile refid="GEMPIC__computational__domain_8H">GEMPIC_computational_domain.H</innerfile>
+    <innerfile refid="GEMPIC__extDerivatives_8cpp">GEMPIC_extDerivatives.cpp</innerfile>
+    <innerfile refid="GEMPIC__Fields_8H">GEMPIC_Fields.H</innerfile>
+    <innerfile refid="GEMPIC__gempic__norm_8H">GEMPIC_gempic_norm.H</innerfile>
+    <innerfile refid="GEMPIC__SumBoundary_8H">GEMPIC_SumBoundary.H</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/forms/"/>
+  </compounddef>
+</doxygen>

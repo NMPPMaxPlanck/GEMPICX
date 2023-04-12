@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_3d39fd699dbd1bfbff233af9fd712628" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/time_loop/testing</compoundname>
+    <innerfile refid="test__H__E__Velocity_8cpp">test_H_E_Velocity.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/time_loop/testing/"/>
+  </compounddef>
+</doxygen>

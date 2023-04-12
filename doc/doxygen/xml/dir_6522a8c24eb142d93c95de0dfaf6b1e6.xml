@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_6522a8c24eb142d93c95de0dfaf6b1e6" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/field_solvers/Poisson</compoundname>
+    <innerfile refid="GEMPIC__PoissonSolver_8cpp">GEMPIC_PoissonSolver.cpp</innerfile>
+    <innerfile refid="GEMPIC__PoissonSolver_8H">GEMPIC_PoissonSolver.H</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/Poisson/"/>
+  </compounddef>
+</doxygen>

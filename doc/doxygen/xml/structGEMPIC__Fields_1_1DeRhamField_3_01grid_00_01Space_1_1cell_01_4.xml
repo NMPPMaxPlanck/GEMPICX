@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4" kind="struct" language="C++" prot="public">
+    <compoundname>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</compoundname>
+    <includes local="no">GEMPIC_Fields.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>grid</declname>
+        <defname>grid</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1aadb79d976f45c8b4afc15c20c55de7eb" prot="public" static="no" mutable="no">
+        <type>amrex::MultiFab</type>
+        <definition>amrex::MultiFab GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;::data</definition>
+        <argsstring></argsstring>
+        <name>data</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="91" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="91" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a036994c9de3965687c38a5042fbcbbc7" prot="public" static="no" mutable="no">
+        <type>std::shared_ptr&lt; <ref refid="classGEMPIC__Fields_1_1DeRhamComplex" kindref="compound">DeRhamComplex</ref> &gt;</type>
+        <definition>std::shared_ptr&lt;DeRhamComplex&gt; GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;::deRham</definition>
+        <argsstring></argsstring>
+        <name>deRham</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="92" column="21" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="92" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a3751d8ab72a252ea68ef49e26c6b315e" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;::DeRhamField</definition>
+        <argsstring>(std::shared_ptr&lt; DeRhamComplex &gt; drc)</argsstring>
+        <name>DeRhamField</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classGEMPIC__Fields_1_1DeRhamComplex" kindref="compound">DeRhamComplex</ref> &gt;</type>
+          <declname>drc</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="94" column="5" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="650" bodyend="654"/>
+      </memberdef>
+      <memberdef kind="function" id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a5e006e613d203d8ec51b45f36608eedb" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;::fillBoundary</definition>
+        <argsstring>()</argsstring>
+        <name>fillBoundary</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="95" column="10" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="670" bodyend="673"/>
+      </memberdef>
+      <memberdef kind="function" id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1afe89cf9741385bad803834c224d69551" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;::averageSync</definition>
+        <argsstring>()</argsstring>
+        <name>averageSync</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="96" column="10" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="705" bodyend="708"/>
+      </memberdef>
+      <memberdef kind="function" id="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a6ec48aa757d0b650227014ebe3f02d88" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type>void</type>
+        <definition>void GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;::multEqual</definition>
+        <argsstring>(const amrex::Real &amp;dt)</argsstring>
+        <name>multEqual</name>
+        <param>
+          <type>const amrex::Real &amp;</type>
+          <declname>dt</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="97" column="10" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="735" bodyend="739"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="1">
+        <label>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</label>
+        <link refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" line="90" column="1" bodyfile="/home/marm/Desktop/gempic/src/forms/GEMPIC_Fields.H" bodystart="89" bodyend="98"/>
+    <listofallmembers>
+      <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1afe89cf9741385bad803834c224d69551" prot="public" virt="non-virtual"><scope>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</scope><name>averageSync</name></member>
+      <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1aadb79d976f45c8b4afc15c20c55de7eb" prot="public" virt="non-virtual"><scope>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</scope><name>data</name></member>
+      <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a036994c9de3965687c38a5042fbcbbc7" prot="public" virt="non-virtual"><scope>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</scope><name>deRham</name></member>
+      <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a3751d8ab72a252ea68ef49e26c6b315e" prot="public" virt="non-virtual"><scope>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</scope><name>DeRhamField</name></member>
+      <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a5e006e613d203d8ec51b45f36608eedb" prot="public" virt="non-virtual"><scope>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</scope><name>fillBoundary</name></member>
+      <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a6ec48aa757d0b650227014ebe3f02d88" prot="public" virt="non-virtual"><scope>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</scope><name>multEqual</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

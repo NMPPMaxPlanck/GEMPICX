@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="classGaussError" kind="class" language="C++" prot="public">
+    <compoundname>GaussError</compoundname>
+    <basecompoundref refid="classReducedDiags" prot="public" virt="non-virtual">ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</basecompoundref>
+    <includes local="no">GaussError.H</includes>
+    <templateparamlist>
+      <param>
+        <type>int</type>
+        <declname>vdim</declname>
+        <defname>vdim</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>numspec</declname>
+        <defname>numspec</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degx</declname>
+        <defname>degx</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degy</declname>
+        <defname>degy</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degz</declname>
+        <defname>degz</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>degree</declname>
+        <defname>degree</defname>
+      </param>
+      <param>
+        <type>int</type>
+        <declname>ndata</declname>
+        <defname>ndata</defname>
+      </param>
+    </templateparamlist>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classGaussError_1a18febbec4d3cedb0755d2a738e5cf856" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>GaussError&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::GaussError</definition>
+        <argsstring>(std::string rd_name)</argsstring>
+        <name>GaussError</name>
+        <param>
+          <type>std::string</type>
+          <declname>rd_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>constructor <parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">rd_name</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>reduced diags names </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H" line="35" column="5" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H" bodystart="35" bodyend="57"/>
+      </memberdef>
+      <memberdef kind="function" id="classGaussError_1a152c6ae4f3b320bdc09e506e86cfa57a" prot="public" static="no" const="no" explicit="no" inline="yes" final="yes" virt="virtual">
+        <type>void</type>
+        <definition>void GaussError&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;::ComputeDiags</definition>
+        <argsstring>(int step, computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr) override final</argsstring>
+        <name>ComputeDiags</name>
+        <reimplements refid="classReducedDiags_1a6b3655d6249fd27db860f238478f4dca">ComputeDiags</reimplements>
+        <param>
+          <type>int</type>
+          <declname>step</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>This function computes the Gauss Error</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">step</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>current time step </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H" line="65" column="10" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H" bodystart="65" bodyend="73"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<para>This class mainly contains a function that computes the field energy. </para>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="1">
+        <label>GaussError&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classGaussError"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classReducedDiags"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="1">
+        <label>GaussError&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classGaussError"/>
+        <childnode refid="2" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>ReducedDiags&lt; vdim, numspec, degx, degy, degz, degree, ndata &gt;</label>
+        <link refid="classReducedDiags"/>
+      </node>
+    </collaborationgraph>
+    <location file="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H" line="28" column="1" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H" bodystart="27" bodyend="76"/>
+    <listofallmembers>
+      <member refid="classGaussError_1a152c6ae4f3b320bdc09e506e86cfa57a" prot="public" virt="virtual"><scope>GaussError</scope><name>ComputeDiags</name></member>
+      <member refid="classGaussError_1a18febbec4d3cedb0755d2a738e5cf856" prot="public" virt="non-virtual"><scope>GaussError</scope><name>GaussError</name></member>
+      <member refid="classReducedDiags_1a6afa91dcfbcdf14055e42021f10edff6" prot="public" virt="virtual"><scope>GaussError</scope><name>InitData</name></member>
+      <member refid="classReducedDiags_1a59b4c750758f429b569e167c349ae453" prot="public" virt="virtual"><scope>GaussError</scope><name>LoadBalance</name></member>
+      <member refid="classReducedDiags_1aa333455a99f0f72f15778b96ee51e6f5" prot="public" virt="non-virtual"><scope>GaussError</scope><name>m_data</name></member>
+      <member refid="classReducedDiags_1af5b99f1420d969465129d3a0dbe90c20" prot="public" virt="non-virtual"><scope>GaussError</scope><name>m_extension</name></member>
+      <member refid="classReducedDiags_1a36cc2444a258678abf3d43faa271f761" prot="public" virt="non-virtual"><scope>GaussError</scope><name>m_IsNotRestart</name></member>
+      <member refid="classReducedDiags_1aacd7edbb7528fe27bc60640a195c4e7e" prot="public" virt="non-virtual"><scope>GaussError</scope><name>m_path</name></member>
+      <member refid="classReducedDiags_1a03a7f68023666990c36cf3833706a6c4" prot="public" virt="non-virtual"><scope>GaussError</scope><name>m_rd_name</name></member>
+      <member refid="classReducedDiags_1a7659dff387d977b05d96005daa75f7c9" prot="public" virt="non-virtual"><scope>GaussError</scope><name>m_sep</name></member>
+      <member refid="classReducedDiags_1a629e3617893eb55b1eebb9c427973ac3" prot="public" virt="non-virtual"><scope>GaussError</scope><name>ReducedDiags</name></member>
+      <member refid="classReducedDiags_1a250b345247a507adee447227d6a812c0" prot="public" virt="non-virtual"><scope>GaussError</scope><name>vol</name></member>
+      <member refid="classReducedDiags_1aa36da16e3f238531c9f6a0233b7e84dc" prot="public" virt="virtual"><scope>GaussError</scope><name>WriteToFile</name></member>
+      <member refid="classReducedDiags_1a2c5f2911e7273143d38ef786c7ffca3d" prot="public" virt="virtual"><scope>GaussError</scope><name>~ReducedDiags</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

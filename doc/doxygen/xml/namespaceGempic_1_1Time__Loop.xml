@@ -1,0 +1,1725 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceGempic_1_1Time__Loop" kind="namespace" language="C++">
+    <compoundname>Gempic::Time_Loop</compoundname>
+    <innerclass refid="classGempic_1_1Time__Loop_1_1ls__rungekutta" prot="public">Gempic::Time_Loop::ls_rungekutta</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1ad61acb197620bc5adc99ecf34fb31f17" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::loop_preparation_init</definition>
+        <argsstring>(gempic_parameters&lt; vdim, numspec &gt; meanVelocity, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr)</argsstring>
+        <name>loop_preparation_init</name>
+        <param>
+          <type><ref refid="classgempic__parameters" kindref="compound">gempic_parameters</ref>&lt; vdim, numspec &gt;</type>
+          <declname>meanVelocity</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="37" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" bodystart="37" bodyend="121"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1ae272863babf8f1fb70df1fce6357e87e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::loop_staggering</definition>
+        <argsstring>(gempic_parameters&lt; vdim, numspec &gt; meanVelocity, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw, edim, bdim &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool time_staggered)</argsstring>
+        <name>loop_staggering</name>
+        <param>
+          <type><ref refid="classgempic__parameters" kindref="compound">gempic_parameters</ref>&lt; vdim, numspec &gt;</type>
+          <declname>meanVelocity</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw, edim, bdim &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>time_staggered</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="125" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" bodystart="125" bodyend="201"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a2064f7e108f6857ddaf826ae473bb36d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+            <defval>vdim</defval>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+            <defval>int(vdim / 2.5) * 2 + 1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::loop_preparation</definition>
+        <argsstring>(gempic_parameters&lt; vdim, numspec &gt; meanVelocity, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw, edim, bdim &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool time_staggered, amrex::GpuArray&lt; std::string, int(vdim/2.5) *2+1 &gt; fields_B)</argsstring>
+        <name>loop_preparation</name>
+        <param>
+          <type><ref refid="classgempic__parameters" kindref="compound">gempic_parameters</ref>&lt; vdim, numspec &gt;</type>
+          <declname>meanVelocity</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw, edim, bdim &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>time_staggered</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::string, int(vdim/2.5) *2+1 &gt;</type>
+          <declname>fields_B</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="205" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" bodystart="205" bodyend="221"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1aeec6d64053655b85bb6098403e60ffea" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+            <defval>vdim</defval>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+            <defval>int(vdim / 2.5) * 2 + 1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::loop_preparation</definition>
+        <argsstring>(gempic_parameters&lt; vdim, numspec &gt; meanVelocity, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool time_staggered, amrex::Real(*function_to_project_0)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_1)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), amrex::Real(*function_to_project_2)(amrex::Real, amrex::Real, amrex::Real, amrex::Real))</argsstring>
+        <name>loop_preparation</name>
+        <param>
+          <type><ref refid="classgempic__parameters" kindref="compound">gempic_parameters</ref>&lt; vdim, numspec &gt;</type>
+          <declname>meanVelocity</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>time_staggered</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_0</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_1</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>function_to_project_2</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="225" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" bodystart="225" bodyend="245"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a2fbf3b9b9596ccdb4262e43764f29a06" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+            <defval>vdim</defval>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+            <defval>int(vdim / 2.5) * 2 + 1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::loop_preparation</definition>
+        <argsstring>(gempic_parameters&lt; vdim, numspec &gt; meanVelocity, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool time_staggered, amrex::GpuArray&lt; int, int(vdim/2.5) *2+1 &gt; funcSelect)</argsstring>
+        <name>loop_preparation</name>
+        <param>
+          <type><ref refid="classgempic__parameters" kindref="compound">gempic_parameters</ref>&lt; vdim, numspec &gt;</type>
+          <declname>meanVelocity</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>time_staggered</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, int(vdim/2.5) *2+1 &gt;</type>
+          <declname>funcSelect</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="249" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" bodystart="249" bodyend="265"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a25321a02876e1ecc71f3d41baad19805" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+            <defval>vdim</defval>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+            <defval>int(vdim / 2.5) * 2 + 1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::loop_preparation</definition>
+        <argsstring>(gempic_parameters&lt; vdim, numspec &gt; meanVelocity, computational_domain infra, maxwell_yee&lt; edim, bdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool time_staggered, amrex::ParserExecutor&lt; 4 &gt; BxEval, amrex::ParserExecutor&lt; 4 &gt; ByEval, amrex::ParserExecutor&lt; 4 &gt; BzEval)</argsstring>
+        <name>loop_preparation</name>
+        <param>
+          <type><ref refid="classgempic__parameters" kindref="compound">gempic_parameters</ref>&lt; vdim, numspec &gt;</type>
+          <declname>meanVelocity</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>time_staggered</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>BxEval</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>ByEval</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>BzEval</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="269" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" bodystart="269" bodyend="288"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1ac6e20a1ab27be74b244127e0578ee224" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>profiling</declname>
+            <defname>profiling</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_boris_fd_step</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::Real coeff, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, timers *profiling_timers)</argsstring>
+        <name>time_loop_boris_fd_step</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>coeff</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>timers *</type>
+          <declname>profiling_timers</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_boris_fd.H" line="40" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_boris_fd.H" bodystart="40" bodyend="242"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1ac44d85f30f75ebd84f60d4594f69afd7" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>profiling</declname>
+            <defname>profiling</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_boris_fd</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool ctest, std::string simulation_name, int strang_order)</argsstring>
+        <name>time_loop_boris_fd</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>strang_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_boris_fd.H" line="246" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_boris_fd.H" bodystart="246" bodyend="301"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a5ac17b3923c7ccfe3f7708558556af4e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hs_fem_step</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::Real coeff, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, timers *profiling_timers)</argsstring>
+        <name>time_loop_hs_fem_step</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>coeff</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>timers *</type>
+          <declname>profiling_timers</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_fem.H" line="44" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_fem.H" bodystart="44" bodyend="253"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a2efbe434baaab8ec4135f0a4aa5348db" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hs_fem</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool ctest, std::string simulation_name, int strang_order)</argsstring>
+        <name>time_loop_hs_fem</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>strang_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_fem.H" line="257" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_fem.H" bodystart="257" bodyend="301"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a3a40fb42caa472ad3c00b28e80d95ca4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>profiling</declname>
+            <defname>profiling</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hs_zigzag_step</definition>
+        <argsstring>(std::shared_ptr&lt; FDDeRhamComplex &gt; deRham, DeRhamField&lt; Grid::dual, Space::cell &gt; &amp;rho, DeRhamField&lt; Grid::primal, Space::edge &gt; &amp;E, DeRhamField&lt; Grid::primal, Space::face &gt; &amp;B, DeRhamField&lt; Grid::dual, Space::face &gt; &amp;D, DeRhamField&lt; Grid::dual, Space::edge &gt; &amp;H, DeRhamField&lt; Grid::dual, Space::face &gt; &amp;J, DeRhamField&lt; Grid::primal, Space::face &gt; &amp;auxPrimalF2, DeRhamField&lt; Grid::primal, Space::face &gt; &amp;auxPrimalF2_2, DeRhamField&lt; Grid::dual, Space::face &gt; &amp;auxDualF2, DeRhamField&lt; Grid::dual, Space::face &gt; &amp;auxDualF2_2, computational_domain infra, const amrex::Real dt, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;partGr)</argsstring>
+        <name>time_loop_hs_zigzag_step</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex" kindref="compound">FDDeRhamComplex</ref> &gt;</type>
+          <declname>deRham</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::cell &gt; &amp;</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::edge &gt; &amp;</type>
+          <declname>E</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::face &gt; &amp;</type>
+          <declname>B</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::face &gt; &amp;</type>
+          <declname>D</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::edge &gt; &amp;</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::face &gt; &amp;</type>
+          <declname>J</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::face &gt; &amp;</type>
+          <declname>auxPrimalF2</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::face &gt; &amp;</type>
+          <declname>auxPrimalF2_2</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::face &gt; &amp;</type>
+          <declname>auxDualF2</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::face &gt; &amp;</type>
+          <declname>auxDualF2_2</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>const amrex::Real</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>partGr</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H" line="42" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H" bodystart="42" bodyend="379"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1ae2df128253e4fd0af6768dfd7ad52804" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>profiling</declname>
+            <defname>profiling</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hs_zigzag</definition>
+        <argsstring>(std::shared_ptr&lt; FDDeRhamComplex &gt; deRham, DeRhamField&lt; Grid::dual, Space::cell &gt; &amp;rho, DeRhamField&lt; Grid::primal, Space::edge &gt; &amp;E, DeRhamField&lt; Grid::primal, Space::face &gt; &amp;B, DeRhamField&lt; Grid::dual, Space::face &gt; &amp;D, DeRhamField&lt; Grid::dual, Space::edge &gt; &amp;H, DeRhamField&lt; Grid::dual, Space::face &gt; &amp;J, computational_domain infra, const amrex::Real dt, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;partGr, const int nSteps, int strang_order)</argsstring>
+        <name>time_loop_hs_zigzag</name>
+        <param>
+          <type>std::shared_ptr&lt; <ref refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex" kindref="compound">FDDeRhamComplex</ref> &gt;</type>
+          <declname>deRham</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::cell &gt; &amp;</type>
+          <declname>rho</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::edge &gt; &amp;</type>
+          <declname>E</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::primal, Space::face &gt; &amp;</type>
+          <declname>B</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::face &gt; &amp;</type>
+          <declname>D</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::edge &gt; &amp;</type>
+          <declname>H</declname>
+        </param>
+        <param>
+          <type><ref refid="structGEMPIC__Fields_1_1DeRhamField" kindref="compound">DeRhamField</ref>&lt; Grid::dual, Space::face &gt; &amp;</type>
+          <declname>J</declname>
+        </param>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>const amrex::Real</type>
+          <declname>dt</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>partGr</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>nSteps</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>strang_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H" line="384" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H" bodystart="384" bodyend="468"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1ab2cfd3396cdd4cfe66dafe42c45fd9d2" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>profiling</declname>
+            <defname>profiling</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hs_zigzag_C2_step</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::Real coeff, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, timers *profiling_timers, bool profiling_count)</argsstring>
+        <name>time_loop_hs_zigzag_C2_step</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>coeff</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>timers *</type>
+          <declname>profiling_timers</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>profiling_count</declname>
+        </param>
+        <briefdescription>
+<para>This is the time propagator with a Hamiltonian splitting in a FEM formulation with mass lumping for Lagrange elements of order one and zero. </para>
+        </briefdescription>
+        <detaileddescription>
+<para>This propagator is currently not implemented for the 2d2v case. In this case, the operator H_p3 is dismissed and the operators H_p1 and H_p2 must be reimplemented only producing the b3 updates. In principle the operators are exactly the same but they should just return one bfield value - the one that concerns b_z - and it should read out the first component of the bfield vector (which saves the b_z in this case).</para>
+<para><parameterlist kind="templateparam"><parameteritem>
+<parameternamelist>
+<parametername>vdim</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>number of velocity dimensions </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>numspec</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>number of species </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>degx</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>spline degree in x </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>degy</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>spline degree in y </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>degz</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>spline degree in y </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>degmw</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>degree of hodge Lagrange interpolation </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>electromagnetic</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>(true/false) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>profiling</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>(true/false) </para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>infra</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>(simulation parameters) </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mw_yee</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>coeff</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>part_gr</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>profiling_timers</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>profiling_count</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag_C2.H" line="63" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag_C2.H" bodystart="63" bodyend="448"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a1a2d479434df2bd5d03ad85a134f3a57" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>profiling</declname>
+            <defname>profiling</defname>
+            <defval>true</defval>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>output</declname>
+            <defname>output</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hs_zigzag_C2</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool ctest, std::string simulation_name, int strang_order)</argsstring>
+        <name>time_loop_hs_zigzag_C2</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>strang_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag_C2.H" line="451" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag_C2.H" bodystart="451" bodyend="512"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a4d0f7d38e26be8dd9dd834cb0efde380" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hsall_fem_step</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::Real coeff, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, timers *profiling_timers)</argsstring>
+        <name>time_loop_hsall_fem_step</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>coeff</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>timers *</type>
+          <declname>profiling_timers</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hsall_fem.H" line="50" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hsall_fem.H" bodystart="50" bodyend="366"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a7a240e9d0f95b2ac25d5e36eab07af8b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_hsall_fem</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool ctest, std::string simulation_name, int strang_order)</argsstring>
+        <name>time_loop_hsall_fem</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>strang_order</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hsall_fem.H" line="370" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hsall_fem.H" bodystart="370" bodyend="413"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Time__Loop_1a43c71961e7f77281b719c724b49802e8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degmw</declname>
+            <defname>degmw</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>bool</type>
+            <declname>electromagnetic</declname>
+            <defname>electromagnetic</defname>
+            <defval>true</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Time_Loop::time_loop_particles</definition>
+        <argsstring>(computational_domain infra, maxwell_yee&lt; vdim &gt; *mw_yee, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;part_gr, diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *diagn, MultiReducedDiags&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *redDiagn, bool ctest, std::string simulation_name)</argsstring>
+        <name>time_loop_particles</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; vdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>part_gr</declname>
+        </param>
+        <param>
+          <type>diagnostics&lt; vdim, numspec, degx, degy, degz, degmw &gt; *</type>
+          <declname>diagn</declname>
+        </param>
+        <param>
+          <type><ref refid="classMultiReducedDiags" kindref="compound">MultiReducedDiags</ref>&lt; vdim, numspec, degx, degy, degz, degmw, ndata &gt; *</type>
+          <declname>redDiagn</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>ctest</declname>
+        </param>
+        <param>
+          <type>std::string</type>
+          <declname>simulation_name</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_particles.H" line="36" column="6" bodyfile="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_particles.H" bodystart="36" bodyend="202"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H" line="34" column="1"/>
+  </compounddef>
+</doxygen>

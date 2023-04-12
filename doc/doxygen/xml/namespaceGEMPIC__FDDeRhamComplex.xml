@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceGEMPIC__FDDeRhamComplex" kind="namespace" language="C++">
+    <compoundname>GEMPIC_FDDeRhamComplex</compoundname>
+    <innerclass refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex" prot="public">GEMPIC_FDDeRhamComplex::FDDeRhamComplex</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceGEMPIC__FDDeRhamComplex_1a66f24e75179331784c335663f70b4275" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>degree</declname>
+            <defname>degree</defname>
+          </param>
+        </templateparamlist>
+        <type>std::tuple&lt; amrex::GpuArray&lt; amrex::Real, degree - 1 &gt;, amrex::GpuArray&lt; amrex::Real, degree - 1 &gt; &gt;</type>
+        <definition>std::tuple&lt;amrex::GpuArray&lt;amrex::Real, degree - 1&gt;, amrex::GpuArray&lt;amrex::Real, degree - 1&gt; &gt; GEMPIC_FDDeRhamComplex::getStencils</definition>
+        <argsstring>()</argsstring>
+        <name>getStencils</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.H" line="13" column="19" bodyfile="/home/marm/Desktop/gempic/src/forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.H" bodystart="13" bodyend="49"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.H" line="9" column="32"/>
+  </compounddef>
+</doxygen>

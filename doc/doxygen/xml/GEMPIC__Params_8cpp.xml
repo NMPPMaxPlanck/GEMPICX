@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="GEMPIC__Params_8cpp" kind="file" language="C++">
+    <compoundname>GEMPIC_Params.cpp</compoundname>
+    <includes refid="GEMPIC__Params_8H" local="yes">GEMPIC_Params.H</includes>
+    <incdepgraph>
+      <node id="13">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="20">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="6">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="2">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="15">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="5">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="17">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="19">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="10">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="7">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="12">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="8">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/io/parameters/GEMPIC_Params.cpp</label>
+        <link refid="GEMPIC__Params_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="9">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="11">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="16">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="4">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="3">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#include<sp/>&quot;<ref refid="GEMPIC__Params_8H" kindref="compound">GEMPIC_Params.H</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"><ref refid="classParameters_1af4d94ee360ac0157d9065f78797fe9a1" kindref="member">Parameters::Parameters</ref>()<sp/>{};</highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"><ref refid="classParameters_1af4d94ee360ac0157d9065f78797fe9a1" kindref="member">Parameters::Parameters</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::RealBox&amp;<sp/>realBox,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::IntVect&amp;<sp/>nCell,</highlight></codeline>
+<codeline lineno="6"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::IntVect&amp;<sp/>maxGridSize,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Array&lt;int,<sp/>GEMPIC_SPACEDIM&gt;<sp/>isPeriodic,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degree):</highlight></codeline>
+<codeline lineno="7"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_realBox(realBox),<sp/>m_nCell(nCell),<sp/>m_maxGridSize(maxGridSize),</highlight></codeline>
+<codeline lineno="8"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_isPeriodic(isPeriodic),<sp/>m_degree(degree)</highlight></codeline>
+<codeline lineno="9"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//lower-boundary<sp/>of<sp/>domain</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>domLo(AMREX_D_DECL(0,<sp/>0,<sp/>0));<sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/>m_domain.setSmall(domLo);<sp/></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//higher-boundary<sp/>of<sp/>domain</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>domHi(AMREX_D_DECL(nCell[0]<sp/>-<sp/>1,<sp/>nCell[1]<sp/>-<sp/>1,<sp/>nCell[2]<sp/>-<sp/>1));</highlight></codeline>
+<codeline lineno="17"><highlight class="normal"><sp/><sp/><sp/><sp/>m_domain.setBig(domHi);</highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"><sp/><sp/><sp/><sp/>m_grid.define(m_domain);</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/>m_grid.maxSize(maxGridSize);</highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Geometry::Setup(&amp;m_realBox,<sp/>amrex::CoordSys::cartesian,<sp/>m_isPeriodic.data());</highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/>m_geometry.define(m_domain);</highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//initialize<sp/>distribution<sp/>mapping<sp/>needed<sp/>to<sp/>define<sp/>MultiFabs</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/>m_distriMap.define(m_grid);</highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//define<sp/>the<sp/>length<sp/>of<sp/>the<sp/>domain</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"><sp/><sp/><sp/><sp/>m_length<sp/>=<sp/>{AMREX_D_DECL(m_geometry.ProbHi(0)<sp/>-<sp/>m_geometry.ProbLo(0),<sp/>m_geometry.ProbHi(1)<sp/>-<sp/>m_geometry.ProbLo(1),<sp/>m_geometry.ProbHi(2)<sp/>-<sp/>m_geometry.ProbLo(2))};</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::RealBox&amp;<sp/><ref refid="classParameters_1a6f74ba254704fd9fe64eb24b70a77e34" kindref="member">Parameters::realBox</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="34"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_realBox;</highlight></codeline>
+<codeline lineno="36"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"></highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::IntVect&amp;<sp/><ref refid="classParameters_1ac7830e2b763f8ab6badbf013115161f9" kindref="member">Parameters::nCell</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="39"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_nCell;</highlight></codeline>
+<codeline lineno="41"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"></highlight></codeline>
+<codeline lineno="43"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Array&lt;int,<sp/>GEMPIC_SPACEDIM&gt;&amp;<sp/><ref refid="classParameters_1a408b83d177e3933e48b83990bce6b38d" kindref="member">Parameters::isPeriodic</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="44"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_isPeriodic;</highlight></codeline>
+<codeline lineno="46"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::BoxArray&amp;<sp/><ref refid="classParameters_1aa57f51db327369dbe8dae963a52ddce3" kindref="member">Parameters::grid</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="49"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_grid;</highlight></codeline>
+<codeline lineno="51"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight></codeline>
+<codeline lineno="53"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Geometry&amp;<sp/><ref refid="classParameters_1ac5676a6463dbdc406594828966d4a1ad" kindref="member">Parameters::geometry</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="54"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_geometry;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::DistributionMapping&amp;<sp/><ref refid="classParameters_1ab551dbf94b9cb8e910a2b8fd2d92f81c" kindref="member">Parameters::distriMap</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="59"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_distriMap;</highlight></codeline>
+<codeline lineno="61"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"></highlight></codeline>
+<codeline lineno="63"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Box&amp;<sp/><ref refid="classParameters_1a00cbaa1b786db5a9fbc6cc02031cc276" kindref="member">Parameters::domain</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="64"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_domain;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal"></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::RealVect<sp/><ref refid="classParameters_1a71c4719b0b7fc22538b60f45be570788" kindref="member">Parameters::dr</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="69"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="70"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>{AMREX_D_DECL(m_length[0]/m_nCell[0],<sp/>m_length[1]/m_nCell[1],<sp/>m_length[2]/m_nCell[2])};</highlight></codeline>
+<codeline lineno="71"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"></highlight></codeline>
+<codeline lineno="73"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="classParameters_1a85c46de3017eb2f89851eeccee9cce70" kindref="member">Parameters::degree</ref>()</highlight><highlight class="keyword"><sp/>const</highlight></codeline>
+<codeline lineno="74"><highlight class="keyword"></highlight><highlight class="normal">{</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_degree;</highlight></codeline>
+<codeline lineno="76"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/io/parameters/GEMPIC_Params.cpp"/>
+  </compounddef>
+</doxygen>

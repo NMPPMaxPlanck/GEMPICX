@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_f5ab12aceed357ba4e839b3eb79756bd" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/io/diagnostics</compoundname>
+    <innerdir refid="dir_68a6be0ab1a4cd7bd19b4064b308c14c">/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags</innerdir>
+    <innerfile refid="GEMPIC__diagnostics_8H">GEMPIC_diagnostics.H</innerfile>
+    <innerfile refid="GEMPIC__PlotFile_8H">GEMPIC_PlotFile.H</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/io/diagnostics/"/>
+  </compounddef>
+</doxygen>

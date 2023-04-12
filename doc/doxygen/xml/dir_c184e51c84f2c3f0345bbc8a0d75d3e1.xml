@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="dir_c184e51c84f2c3f0345bbc8a0d75d3e1" kind="dir">
+    <compoundname>/home/marm/Desktop/gempic/src/io</compoundname>
+    <innerdir refid="dir_86fc81e0b128a952371f20e3227399ae">/home/marm/Desktop/gempic/src/io/checkpointing</innerdir>
+    <innerdir refid="dir_f5ab12aceed357ba4e839b3eb79756bd">/home/marm/Desktop/gempic/src/io/diagnostics</innerdir>
+    <innerdir refid="dir_006fe2222175f7c32fc72c3c537dd212">/home/marm/Desktop/gempic/src/io/parameters</innerdir>
+    <innerdir refid="dir_d4c17c16e9eaab63d3168b75fa38dbd1">/home/marm/Desktop/gempic/src/io/profiling</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/io/"/>
+  </compounddef>
+</doxygen>

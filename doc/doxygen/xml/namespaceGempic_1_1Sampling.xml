@@ -1,0 +1,434 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceGempic_1_1Sampling" kind="namespace" language="C++">
+    <compoundname>Gempic::Sampling</compoundname>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="namespaceGempic_1_1Sampling_1a93af1c8e20695f268eeb3a5f20afcb35" prot="public" static="no">
+        <type>amrex::Particle&lt; 0, 0 &gt;</type>
+        <definition>using Gempic::Sampling::ParticleType = typedef amrex::Particle&lt;0, 0&gt;</definition>
+        <argsstring></argsstring>
+        <name>ParticleType</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="30" column="1" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceGempic_1_1Sampling_1a08243d2302da9aa60d071e2904c91e59" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Sampling::init_particles_cellwise</definition>
+        <argsstring>(computational_domain infra, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim &gt;&gt;, numspec &gt; &amp;ppg, amrex::GpuArray&lt; int, numspec &gt; n_part_per_cell, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vmean, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vdev, amrex::Vector&lt; amrex::Real &gt; Vweight, int species, amrex::Real(*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real), int rSeed=925)</argsstring>
+        <name>init_particles_cellwise</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>ppg</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, numspec &gt;</type>
+          <declname>n_part_per_cell</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vmean</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vdev</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>Vweight</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>species</declname>
+        </param>
+        <param>
+          <type>amrex::Real(*)(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</type>
+          <declname>wave_function</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>rSeed</declname>
+          <defval>925</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="32" column="6" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" bodystart="32" bodyend="184"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Sampling_1a04a4c585839a3df602f7c896c781c130" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+            <defval>1</defval>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Sampling::init_particles_full_domain_gpu</definition>
+        <argsstring>(computational_domain infra, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;ppg, amrex::GpuArray&lt; int, numspec &gt; n_part_per_cell, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vmean, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vdev, amrex::Vector&lt; amrex::Real &gt; Vweight, int species, amrex::ParserExecutor&lt; 4 &gt; densityEval, int rSeed=925)</argsstring>
+        <name>init_particles_full_domain_gpu</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>ppg</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, numspec &gt;</type>
+          <declname>n_part_per_cell</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vmean</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vdev</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>Vweight</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>species</declname>
+        </param>
+        <param>
+          <type>amrex::ParserExecutor&lt; 4 &gt;</type>
+          <declname>densityEval</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>rSeed</declname>
+          <defval>925</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="187" column="6" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" bodystart="187" bodyend="350"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Sampling_1a17493a4b06a2bef420a469b2bca73a1b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>typename functionType</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Sampling::init_particles_full_domain</definition>
+        <argsstring>(computational_domain infra, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;ppg, amrex::GpuArray&lt; int, numspec &gt; n_part_per_cell, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vmean, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vdev, amrex::Vector&lt; amrex::Real &gt; Vweight, int species, functionType densityEval, int rSeed=925)</argsstring>
+        <name>init_particles_full_domain</name>
+        <param>
+          <type>computational_domain</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>ppg</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, numspec &gt;</type>
+          <declname>n_part_per_cell</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vmean</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vdev</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>Vweight</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>species</declname>
+        </param>
+        <param>
+          <type>functionType</type>
+          <declname>densityEval</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>rSeed</declname>
+          <defval>925</defval>
+        </param>
+        <briefdescription>
+<para>Random number generator. Particle positions are generated using a uniform random distribution giving position on each cell and then remapped to full domain. Velocity distribution is generated fomr uniform distribution using the Box-Muller algorithm as random_normal is machine dependent. This enables for a given seed to always get the same random sequence. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="templateparam"><parameteritem>
+<parameternamelist>
+<parametername>vdim</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>numspec</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>functionType</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>infra</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Computational Domain </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>ppg</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Particle group </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>n_part_per_cell</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>Vmean</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>Vdev</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>Vweight</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>species</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>densityEval</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>rSeed</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="373" column="6" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" bodystart="373" bodyend="504"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Sampling_1a9447edcba972c956d54c8c6cd0eec719" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+          <param>
+            <type>typename functionType</type>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Sampling::init_particles_full_domain</definition>
+        <argsstring>(const Parameters &amp;params, amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;ppg, amrex::GpuArray&lt; int, numspec &gt; n_part_per_cell, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vmean, amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt; Vdev, amrex::Vector&lt; amrex::Real &gt; Vweight, int species, functionType densityEval, int rSeed=925)</argsstring>
+        <name>init_particles_full_domain</name>
+        <param>
+          <type>const <ref refid="classParameters" kindref="compound">Parameters</ref> &amp;</type>
+          <declname>params</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>ppg</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; int, numspec &gt;</type>
+          <declname>n_part_per_cell</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vmean</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Vector&lt; amrex::Real &gt;&gt;</type>
+          <declname>Vdev</declname>
+        </param>
+        <param>
+          <type>amrex::Vector&lt; amrex::Real &gt;</type>
+          <declname>Vweight</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>species</declname>
+        </param>
+        <param>
+          <type>functionType</type>
+          <declname>densityEval</declname>
+        </param>
+        <param>
+          <type>int</type>
+          <declname>rSeed</declname>
+          <defval>925</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="507" column="6" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" bodystart="507" bodyend="641"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Sampling_1a57557be67ab999cdb11f0df6b531face" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Sampling::init_one_particle_cellwise</definition>
+        <argsstring>(amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt; const &amp;dx, amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt; const &amp;plo, particle_groups&lt; vdim &gt; &amp;pg, amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt; position)</argsstring>
+        <name>init_one_particle_cellwise</name>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt; const &amp;</type>
+          <declname>dx</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt; const &amp;</type>
+          <declname>plo</declname>
+        </param>
+        <param>
+          <type>particle_groups&lt; vdim &gt; &amp;</type>
+          <declname>pg</declname>
+        </param>
+        <param>
+          <type>amrex::GpuArray&lt; amrex::Real, GEMPIC_SPACEDIM &gt;</type>
+          <declname>position</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="644" column="6" bodyfile="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" bodystart="644" bodyend="727"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H" line="29" column="1"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,1122 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="test__maxwell__yee__order_8cpp" kind="file" language="C++">
+    <compoundname>test_maxwell_yee_order.cpp</compoundname>
+    <includes local="no">AMReX.H</includes>
+    <includes local="no">AMReX_ParmParse.H</includes>
+    <includes local="no">AMReX_PlotFileUtil.H</includes>
+    <includes local="no">AMReX_Print.H</includes>
+    <includes local="no">GEMPIC_Config.H</includes>
+    <includes refid="GEMPIC__amrex__init_8H" local="no">GEMPIC_amrex_init.H</includes>
+    <includes refid="GEMPIC__assertion_8H" local="no">GEMPIC_assertion.H</includes>
+    <includes refid="GEMPIC__gempic__norm_8H" local="no">GEMPIC_gempic_norm.H</includes>
+    <includes refid="GEMPIC__maxwell__yee_8H" local="no">GEMPIC_maxwell_yee.H</includes>
+    <includes refid="GEMPIC__parameters_8H" local="no">GEMPIC_parameters.H</includes>
+    <incdepgraph>
+      <node id="32">
+        <label>GEMPIC_particle_groups.H</label>
+        <link refid="GEMPIC__particle__groups_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="11">
+        <label>limits</label>
+      </node>
+      <node id="23">
+        <label>assert.h</label>
+      </node>
+      <node id="21">
+        <label>AMReX_Array.H</label>
+      </node>
+      <node id="42">
+        <label>GEMPIC_particle_mesh_coupling_C2.H</label>
+        <link refid="GEMPIC__particle__mesh__coupling__C2_8H"/>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+      </node>
+      <node id="24">
+        <label>GEMPIC_maxwell_yee.H</label>
+        <link refid="GEMPIC__maxwell__yee_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+      </node>
+      <node id="39">
+        <label>GEMPIC_particle_mesh_coupling.H</label>
+        <link refid="GEMPIC__particle__mesh__coupling_8H"/>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="41" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+      </node>
+      <node id="40">
+        <label>AMReX_FArrayBox.H</label>
+      </node>
+      <node id="31">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="7">
+        <label>GEMPIC_amrex_init.H</label>
+        <link refid="GEMPIC__amrex__init_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="12">
+        <label>GEMPIC_gempic_norm.H</label>
+        <link refid="GEMPIC__gempic__norm_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="10">
+        <label>cmath</label>
+      </node>
+      <node id="45">
+        <label>AMReX_MLNodeLaplacian.H</label>
+      </node>
+      <node id="15">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="20">
+        <label>GEMPIC_computational_domain.H</label>
+        <link refid="GEMPIC__computational__domain_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="43">
+        <label>GEMPIC_splines.H</label>
+        <link refid="GEMPIC__splines_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="35">
+        <label>AMReX_Particles.H</label>
+      </node>
+      <node id="37">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="27">
+        <label>AMReX_MFIter.H</label>
+      </node>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp</label>
+        <link refid="test__maxwell__yee__order_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+      </node>
+      <node id="33">
+        <label>AMReX_ArrayOfStructs.H</label>
+      </node>
+      <node id="38">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="34">
+        <label>AMReX_Particle.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="36">
+        <label>AMReX_StructOfArrays.H</label>
+      </node>
+      <node id="5">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="19">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="26">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="16">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="30">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="41">
+        <label>AMReX_Math.H</label>
+      </node>
+      <node id="29">
+        <label>AMReX_MLEBNodeFDLaplacian.H</label>
+      </node>
+      <node id="44">
+        <label>GEMPIC_parameters.H</label>
+        <link refid="GEMPIC__parameters_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+      </node>
+      <node id="25">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="17">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="8">
+        <label>GEMPIC_assertion.H</label>
+        <link refid="GEMPIC__assertion_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="22">
+        <label>AMReX_BLProfiler.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="28">
+        <label>AMReX_MLMG.H</label>
+      </node>
+      <node id="2">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a6868bdd79b0cf08ad538cab6eb5bbe2b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real funct_e1</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>funct_e1</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="34" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="34" bodyend="39"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real funct_e2</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>funct_e2</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="41" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="41" bodyend="46"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1ad950b2c9f3590b7c6df1d1bec324a607" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real funct_b0</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>funct_b0</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="48" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="48" bodyend="53"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1adb8eb1cf22827c1dc562ea457d5d6933" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real funct_b2</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>funct_b2</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="55" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="55" bodyend="60"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real zero</definition>
+        <argsstring>(amrex::Real, amrex::Real, amrex::Real, amrex::Real)</argsstring>
+        <name>zero</name>
+        <param>
+          <type>amrex::Real</type>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="62" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="62" bodyend="66"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a2fb60dad89cee592628ed0283c2b7097" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real func_phi</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>func_phi</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="68" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="68" bodyend="74"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a91039dbabf48d4d32ce922ff48b969a6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real func_rho</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>func_rho</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="76" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="76" bodyend="82"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a372b4cbc5ebb9f2aa703280409b437e3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real func_e0</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>func_e0</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="84" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="84" bodyend="89"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a460e53df6a719d95fbb80c9fa186e021" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real func_e1</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>func_e1</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="91" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="91" bodyend="96"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a037c29ade20fa727aa3b4b42c43ace97" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real func_e2</definition>
+        <argsstring>(amrex::Real x, amrex::Real y, amrex::Real z, amrex::Real t)</argsstring>
+        <name>func_e2</name>
+        <param>
+          <type>amrex::Real</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>y</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>z</declname>
+        </param>
+        <param>
+          <type>amrex::Real</type>
+          <declname>t</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="98" column="14" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="98" bodyend="103"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degx</declname>
+            <defname>degx</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degy</declname>
+            <defname>degy</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>degz</declname>
+            <defname>degz</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void main_main</definition>
+        <argsstring>()</argsstring>
+        <name>main_main</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="106" column="6" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="106" bodyend="272"/>
+      </memberdef>
+      <memberdef kind="function" id="test__maxwell__yee__order_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int main</definition>
+        <argsstring>(int argc, char *argv[])</argsstring>
+        <name>main</name>
+        <param>
+          <type>int</type>
+          <declname>argc</declname>
+        </param>
+        <param>
+          <type>char *</type>
+          <declname>argv</declname>
+          <array>[]</array>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" line="274" column="5" bodyfile="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp" bodystart="274" bodyend="290"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*------------------------------------------------------------------------------</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>Test<sp/>3D<sp/>Maxwell<sp/>Solver<sp/>(finite<sp/>differences)<sp/>for<sp/>4th<sp/>order<sp/>on<sp/>periodic<sp/>grid</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"></highlight></codeline>
+<codeline lineno="4"><highlight class="comment"><sp/><sp/>For<sp/>the<sp/>Maxwell-equations<sp/>we<sp/>use<sp/>the<sp/>solution</highlight></codeline>
+<codeline lineno="5"><highlight class="comment"><sp/><sp/>E(x,t)<sp/>=<sp/><sp/>\begin{pmatrix}<sp/>\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\\</highlight></codeline>
+<codeline lineno="6"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>-2\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt(3)<sp/>t)<sp/>\\</highlight></codeline>
+<codeline lineno="7"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\end{pmatrix}</highlight></codeline>
+<codeline lineno="8"><highlight class="comment"><sp/><sp/>B(x,t)<sp/>=<sp/>\begin{pmatrix}<sp/>\sqrt{3}<sp/>\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\\<sp/>0<sp/>\\<sp/>-\sqrt{3}</highlight></codeline>
+<codeline lineno="9"><highlight class="comment">\cos(x_1+x_2+x_3<sp/>-<sp/>\sqrt{3}<sp/>t)<sp/>\end{pmatrix}</highlight></codeline>
+<codeline lineno="10"><highlight class="comment"></highlight></codeline>
+<codeline lineno="11"><highlight class="comment"><sp/>For<sp/>the<sp/>Poisson<sp/>equation<sp/>we<sp/>use:</highlight></codeline>
+<codeline lineno="12"><highlight class="comment"><sp/>E(x,t)<sp/>=<sp/>\begin{pmatrix}<sp/>-\sin(x)\cos(y)\cos(z)-0.5\sin(2x)cos(2y)cos(2z)\\</highlight></codeline>
+<codeline lineno="13"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>-\cos(x)\sin(y)\cos(z)-0.5\cos(2x)sin(2y)cos(2z)\\</highlight></codeline>
+<codeline lineno="14"><highlight class="comment"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>-\cos(x)\cos(y)\sin(z)-0.5\cos(2x)cos(2y)sin(2z)<sp/>\end{pmatrix}</highlight></codeline>
+<codeline lineno="15"><highlight class="comment">------------------------------------------------------------------------------*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_ParmParse.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_PlotFileUtil.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Print.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;GEMPIC_Config.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__amrex__init_8H" kindref="compound">GEMPIC_amrex_init.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__assertion_8H" kindref="compound">GEMPIC_assertion.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__gempic__norm_8H" kindref="compound">GEMPIC_gempic_norm.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__maxwell__yee_8H" kindref="compound">GEMPIC_maxwell_yee.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__parameters_8H" kindref="compound">GEMPIC_parameters.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"></highlight></codeline>
+<codeline lineno="28"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">amrex;</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref>;</highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">Field_solvers;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight><highlight class="comment">//<sp/>Solutions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a6868bdd79b0cf08ad538cab6eb5bbe2b" kindref="member">funct_e1</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="36"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="37"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>-2.0<sp/>*<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="39"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="42"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="43"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="46"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight></codeline>
+<codeline lineno="48"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1ad950b2c9f3590b7c6df1d1bec324a607" kindref="member">funct_b0</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="50"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>std::sqrt(3.)<sp/>*<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="52"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="53"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"></highlight></codeline>
+<codeline lineno="55"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1adb8eb1cf22827c1dc562ea457d5d6933" kindref="member">funct_b2</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="57"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="58"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>-std::sqrt(3.)<sp/>*<sp/>std::cos(x<sp/>+<sp/>y<sp/>+<sp/>z<sp/>-<sp/>std::sqrt(3.0)<sp/>*<sp/>t);</highlight></codeline>
+<codeline lineno="59"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="60"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"></highlight></codeline>
+<codeline lineno="62"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kindref="member">zero</ref>(amrex::Real,<sp/>amrex::Real,<sp/>amrex::Real,<sp/>amrex::Real)</highlight></codeline>
+<codeline lineno="63"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>0.0;</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="67"><highlight class="normal"></highlight></codeline>
+<codeline lineno="68"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a2fb60dad89cee592628ed0283c2b7097" kindref="member">func_phi</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="69"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="70"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="71"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>std::cos(x)<sp/>-<sp/>std::cos(x)<sp/>*<sp/>std::cos(y)<sp/>*<sp/>std::cos(z)<sp/>-</highlight></codeline>
+<codeline lineno="72"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>1.0<sp/>/<sp/>4.0<sp/>*<sp/>std::cos(2<sp/>*<sp/>x)<sp/>*<sp/>std::cos(2<sp/>*<sp/>y)<sp/>*<sp/>std::cos(2<sp/>*<sp/>z);</highlight></codeline>
+<codeline lineno="73"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="74"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="75"><highlight class="normal"></highlight></codeline>
+<codeline lineno="76"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a91039dbabf48d4d32ce922ff48b969a6" kindref="member">func_rho</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="78"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>-3.0<sp/>*<sp/>(std::cos(x)<sp/>*<sp/>std::cos(y)<sp/>*<sp/>std::cos(z)<sp/>+</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::cos(2<sp/>*<sp/>x)<sp/>*<sp/>std::cos(2<sp/>*<sp/>y)<sp/>*<sp/>std::cos(2<sp/>*<sp/>z));</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="82"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"></highlight></codeline>
+<codeline lineno="84"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a372b4cbc5ebb9f2aa703280409b437e3" kindref="member">func_e0</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="86"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>-sin(x)<sp/>*<sp/>cos(y)<sp/>*<sp/>cos(z)<sp/>-<sp/>0.5<sp/>*<sp/>sin(2<sp/>*<sp/>x)<sp/>*<sp/>cos(2<sp/>*<sp/>y)<sp/>*<sp/>cos(2<sp/>*<sp/>z);</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="89"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="90"><highlight class="normal"></highlight></codeline>
+<codeline lineno="91"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a460e53df6a719d95fbb80c9fa186e021" kindref="member">func_e1</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="93"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>-cos(x)<sp/>*<sp/>sin(y)<sp/>*<sp/>cos(z)<sp/>-<sp/>0.5<sp/>*<sp/>cos(2<sp/>*<sp/>x)<sp/>*<sp/>sin(2<sp/>*<sp/>y)<sp/>*<sp/>cos(2<sp/>*<sp/>z);</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="96"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="97"><highlight class="normal"></highlight></codeline>
+<codeline lineno="98"><highlight class="normal">AMREX_GPU_HOST_DEVICE<sp/>amrex::Real<sp/><ref refid="test__maxwell__yee__order_8cpp_1a037c29ade20fa727aa3b4b42c43ace97" kindref="member">func_e2</ref>(amrex::Real<sp/>x,<sp/>amrex::Real<sp/>y,<sp/>amrex::Real<sp/>z,</highlight></codeline>
+<codeline lineno="99"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::Real<sp/>t)</highlight></codeline>
+<codeline lineno="100"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Real<sp/>val<sp/>=<sp/>-cos(x)<sp/>*<sp/>cos(y)<sp/>*<sp/>sin(z)<sp/>-<sp/>0.5<sp/>*<sp/>cos(2<sp/>*<sp/>x)<sp/>*<sp/>cos(2<sp/>*<sp/>y)<sp/>*<sp/>sin(2<sp/>*<sp/>z);</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>val;</highlight></codeline>
+<codeline lineno="103"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="104"><highlight class="normal"></highlight></codeline>
+<codeline lineno="105"><highlight class="normal"></highlight><highlight class="keyword">template</highlight><highlight class="normal"><sp/>&lt;</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numspec,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degx,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degy,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degz&gt;</highlight></codeline>
+<codeline lineno="106"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/><ref refid="test__maxwell__yee__order_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kindref="member">main_main</ref>()</highlight></codeline>
+<codeline lineno="107"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Analytical<sp/>solutions</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="110"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;std::string,<sp/>vdim&gt;<sp/>fields_E;</highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;std::string,<sp/>int(vdim<sp/>/<sp/>2.5)<sp/>*<sp/>2<sp/>+<sp/>1&gt;<sp/>fields_B;</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>1<sp/>&amp;&amp;<sp/>vdim<sp/>==<sp/>1)</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x+y+z)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;0.0&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>1<sp/>&amp;&amp;<sp/>vdim<sp/>==<sp/>2)</highlight></codeline>
+<codeline lineno="118"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[1]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x)*cos(t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;sin(x)*sin(t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>2<sp/>&amp;&amp;<sp/>vdim<sp/>==<sp/>2)</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x)*sin(y)*sin(sqrt(2.0)*t)/sqrt(2.0)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[1]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-sin(x)*cos(y)*sin(sqrt(2)*t)/sqrt(2)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-cos(x[0])*cos(x[1])*cos(sqrt(2)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>2<sp/>&amp;&amp;<sp/>vdim<sp/>==<sp/>3)</highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x+y-sqrt(2.0)*t&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[1]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-cos(x+y-sqrt(2.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[2]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-sqrt(2.0)*cos(x+y-sqrt(2.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-cos(x+y-sqrt(2.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[1]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x+y-sqrt(2.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[2]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-sqrt(2)*cos(x+y-sqrt(2.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>3<sp/>&amp;&amp;<sp/>vdim<sp/>==<sp/>3)</highlight></codeline>
+<codeline lineno="139"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x+y+z-sqrt(3.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="141"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[1]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-2*cos(x+y+z-sqrt(3.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="142"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_E[2]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;cos(x+y+z-sqrt(3.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="143"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[0]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;sqrt(3)*cos(x+y+z-sqrt(3.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="144"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[1]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;0.0&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="145"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fields_B[2]<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="146"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="147"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>degree<sp/>=<sp/>4;</highlight></codeline>
+<codeline lineno="150"><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>bdim<sp/>=<sp/>int(vdim<sp/>/<sp/>2.5)<sp/>*<sp/>2<sp/>+<sp/>1;</highlight></codeline>
+<codeline lineno="152"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cout<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;x<sp/>DIM:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>GEMPIC_SPACEDIM<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;,<sp/>v&amp;E<sp/>DIM:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>vdim<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;,<sp/>B<sp/>DIM:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>bdim</highlight></codeline>
+<codeline lineno="153"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="154"><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;Real,<sp/>vdim<sp/>+<sp/>int(vdim<sp/>/<sp/>2.5)<sp/>*<sp/>2<sp/>+<sp/>1&gt;<sp/>E_B_error;<sp/><sp/></highlight><highlight class="comment">//<sp/>array<sp/>for<sp/>storing<sp/>errors</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="159"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Initialize<sp/>Infrastructure</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>is_periodic<sp/>=<sp/>{AMREX_D_DECL(1,<sp/>1,<sp/>1)};</highlight></codeline>
+<codeline lineno="161"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::IntVect<sp/>n_cell<sp/>=<sp/>{AMREX_D_DECL(64,<sp/>64,<sp/>64)};</highlight></codeline>
+<codeline lineno="162"><highlight class="normal"></highlight></codeline>
+<codeline lineno="163"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classgempic__parameters" kindref="compound">gempic_parameters&lt;vdim, numspec&gt;</ref><sp/>VlMa;</highlight></codeline>
+<codeline lineno="164"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1acb9a698d80c62004884737b6ac2f501d" kindref="member">init_Nghost</ref>(degx,<sp/>degy,<sp/>degz);</highlight></codeline>
+<codeline lineno="165"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a6648ae91ab49ca16a5db636ec833325c" kindref="member">Nghost</ref>++;</highlight></codeline>
+<codeline lineno="166"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a05ae18f89e7e18a10898a835e682cd4e" kindref="member">set_params</ref>(</highlight><highlight class="stringliteral">&quot;maxwell_yee_ctest&quot;</highlight><highlight class="normal">,<sp/>n_cell,<sp/>{1},<sp/>5,<sp/>10,<sp/>10,<sp/>10,<sp/>is_periodic,<sp/>{32,<sp/>32,<sp/>32},</highlight></codeline>
+<codeline lineno="167"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>0.01,<sp/>{1.0},<sp/>{1.0},<sp/>0.5);</highlight></codeline>
+<codeline lineno="168"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1ad0866f15699d3d192097ae600538ebe7" kindref="member">dt</ref><sp/>=<sp/>0.01;</highlight></codeline>
+<codeline lineno="169"><highlight class="normal"><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a5b2ebe512657f31400f3a7a65f9b1675" kindref="member">set_computed_params</ref>();</highlight></codeline>
+<codeline lineno="170"><highlight class="normal"></highlight></codeline>
+<codeline lineno="171"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1CompDom_1_1computational__domain" kindref="compound">CompDom::computational_domain</ref><sp/>infra;</highlight></codeline>
+<codeline lineno="172"><highlight class="normal"><sp/><sp/><sp/><sp/>infra.<ref refid="classGempic_1_1CompDom_1_1computational__domain_1a429954f363f952fdc4e198952d47f5bf" kindref="member">initialize_computational_domain</ref>(VlMa.<ref refid="classgempic__parameters_1a5313d160a093248282695377bea8e265" kindref="member">n_cell</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1a37ed705ccbd242baac11cdd90bdfe0b6" kindref="member">max_grid_size</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1add90ce8e64a5bd29d9ea017ea70c55e3" kindref="member">is_periodic</ref>,</highlight></codeline>
+<codeline lineno="173"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>VlMa.<ref refid="classgempic__parameters_1a683e4caa3607b82a4df0d2d3bc385d55" kindref="member">real_box</ref>);</highlight></codeline>
+<codeline lineno="174"><highlight class="normal"></highlight></codeline>
+<codeline lineno="175"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//------------------------------------------------------------------------------</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Solve</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Field__solvers_1_1maxwell__yee" kindref="compound">maxwell_yee&lt;vdim&gt;</ref><sp/>mw_yee(infra,<sp/>VlMa.<ref refid="classgempic__parameters_1ad0866f15699d3d192097ae600538ebe7" kindref="member">dt</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1afdbbab959a9921281839094634f90a00" kindref="member">n_steps</ref>,<sp/>VlMa.<ref refid="classgempic__parameters_1a6648ae91ab49ca16a5db636ec833325c" kindref="member">Nghost</ref>);</highlight></codeline>
+<codeline lineno="178"><highlight class="normal"></highlight></codeline>
+<codeline lineno="179"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>i<sp/>=<sp/>0;<sp/>i<sp/>&lt;<sp/>vdim;<sp/>i++)</highlight></codeline>
+<codeline lineno="180"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="181"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(*(mw_yee).J_Array[i]).setVal(0.0);<sp/><sp/></highlight><highlight class="comment">//<sp/>value<sp/>and<sp/>component</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="182"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="183"><highlight class="normal"></highlight></codeline>
+<codeline lineno="184"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.template<sp/>initB&lt;degree&gt;(<ref refid="test__maxwell__yee__order_8cpp_1ad950b2c9f3590b7c6df1d1bec324a607" kindref="member">funct_b0</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kindref="member">zero</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1adb8eb1cf22827c1dc562ea457d5d6933" kindref="member">funct_b2</ref>,<sp/>infra);</highlight></codeline>
+<codeline lineno="185"><highlight class="normal"><sp/><sp/><sp/><sp/>mw_yee.template<sp/>initE&lt;degree&gt;(<ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1a6868bdd79b0cf08ad538cab6eb5bbe2b" kindref="member">funct_e1</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>,<sp/>infra);</highlight></codeline>
+<codeline lineno="186"><highlight class="normal"></highlight></codeline>
+<codeline lineno="187"><highlight class="normal"><sp/><sp/><sp/><sp/>std::cout<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;step:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>0<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="188"><highlight class="normal"><sp/><sp/><sp/><sp/>E_B_error<sp/>=<sp/>mw_yee.template<sp/>computeError&lt;degree&gt;(<ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1a6868bdd79b0cf08ad538cab6eb5bbe2b" kindref="member">funct_e1</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1ad950b2c9f3590b7c6df1d1bec324a607" kindref="member">funct_b0</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kindref="member">zero</ref>,</highlight></codeline>
+<codeline lineno="189"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="test__maxwell__yee__order_8cpp_1adb8eb1cf22827c1dc562ea457d5d6933" kindref="member">funct_b2</ref>,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">,<sp/>infra);</highlight></codeline>
+<codeline lineno="190"><highlight class="normal"><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="191"><highlight class="normal"><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Maxwell&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="192"><highlight class="normal"><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;step<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>0<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="193"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">switch</highlight><highlight class="normal"><sp/>(vdim)</highlight></codeline>
+<codeline lineno="194"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="195"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>1:</highlight></codeline>
+<codeline lineno="196"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="197"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Ex<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[0]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="198"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="199"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>2:</highlight></codeline>
+<codeline lineno="200"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="201"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Ex<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[0]<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Ey<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[1]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="202"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="203"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>3:</highlight></codeline>
+<codeline lineno="204"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="205"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Ex<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[0]<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Ey<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[1]</highlight></codeline>
+<codeline lineno="206"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Ez<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[2]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="207"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="208"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="209"><highlight class="normal"></highlight></codeline>
+<codeline lineno="210"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">switch</highlight><highlight class="normal"><sp/>(bdim)</highlight></codeline>
+<codeline lineno="211"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="212"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>1:</highlight></codeline>
+<codeline lineno="213"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="214"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Bx<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="215"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="216"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>3:</highlight></codeline>
+<codeline lineno="217"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="218"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Bx<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim]<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|By<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim<sp/>+<sp/>1]</highlight></codeline>
+<codeline lineno="219"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Bz<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim<sp/>+<sp/>2]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="220"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="221"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="222"><highlight class="normal"></highlight></codeline>
+<codeline lineno="223"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>n<sp/>=<sp/>1;<sp/>n<sp/>&lt;=<sp/>mw_yee.nsteps;<sp/>n++)</highlight></codeline>
+<codeline lineno="224"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="225"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::cout<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;step:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>n<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="226"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.template<sp/>hodge_full&lt;degree&gt;(infra,<sp/>mw_yee.B_Array,<sp/>mw_yee.HB_Array,<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="227"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.advance_E(infra,<sp/>VlMa.<ref refid="classgempic__parameters_1ad0866f15699d3d192097ae600538ebe7" kindref="member">dt</ref>,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">,<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">,<sp/>mw_yee.HB_Array,<sp/>mw_yee.E_Array);</highlight></codeline>
+<codeline lineno="228"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.template<sp/>hodge_full&lt;degree&gt;(infra,<sp/>mw_yee.E_Array,<sp/>mw_yee.HE_Array,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="229"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.advance_B(infra,<sp/>VlMa.<ref refid="classgempic__parameters_1ad0866f15699d3d192097ae600538ebe7" kindref="member">dt</ref>,<sp/>mw_yee.HE_Array,<sp/>mw_yee.B_Array);</highlight></codeline>
+<codeline lineno="230"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mw_yee.advance_time();</highlight></codeline>
+<codeline lineno="231"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>E_B_error<sp/>=<sp/>mw_yee.template<sp/>computeError&lt;degree&gt;(<ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1a6868bdd79b0cf08ad538cab6eb5bbe2b" kindref="member">funct_e1</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kindref="member">funct_e2</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1ad950b2c9f3590b7c6df1d1bec324a607" kindref="member">funct_b0</ref>,</highlight></codeline>
+<codeline lineno="232"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="test__maxwell__yee__order_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kindref="member">zero</ref>,<sp/><ref refid="test__maxwell__yee__order_8cpp_1adb8eb1cf22827c1dc562ea457d5d6933" kindref="member">funct_b2</ref>,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">,<sp/>infra);</highlight></codeline>
+<codeline lineno="233"><highlight class="normal"></highlight></codeline>
+<codeline lineno="234"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">)<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;step<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>n<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="235"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">switch</highlight><highlight class="normal"><sp/>(vdim)</highlight></codeline>
+<codeline lineno="236"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="237"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>1:</highlight></codeline>
+<codeline lineno="238"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="239"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Ex<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[0]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="240"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="241"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>2:</highlight></codeline>
+<codeline lineno="242"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="243"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Ex<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[0]<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Ey<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[1]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="244"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="245"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>3:</highlight></codeline>
+<codeline lineno="246"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="247"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Ex<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[0]<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Ey<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[1]</highlight></codeline>
+<codeline lineno="248"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Ez<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[2]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="249"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="250"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="251"><highlight class="normal"></highlight></codeline>
+<codeline lineno="252"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">switch</highlight><highlight class="normal"><sp/>(bdim)</highlight></codeline>
+<codeline lineno="253"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="254"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>1:</highlight></codeline>
+<codeline lineno="255"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="256"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Bx<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="257"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="258"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">case</highlight><highlight class="normal"><sp/>3:</highlight></codeline>
+<codeline lineno="259"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::PrintToFile(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">).SetPrecision(20)</highlight></codeline>
+<codeline lineno="260"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;Bx<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim]<sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|By<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim<sp/>+<sp/>1]</highlight></codeline>
+<codeline lineno="261"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&lt;&lt;<sp/></highlight><highlight class="stringliteral">&quot;<sp/>|Bz<sp/>error:<sp/>&quot;</highlight><highlight class="normal"><sp/>&lt;&lt;<sp/>E_B_error[vdim<sp/>+<sp/>2]<sp/>&lt;&lt;<sp/>std::endl;</highlight></codeline>
+<codeline lineno="262"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="263"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="264"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="265"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>passed<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="266"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>1,<sp/>E_B_error[0]);</highlight></codeline>
+<codeline lineno="267"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>1,<sp/>E_B_error[1]);</highlight></codeline>
+<codeline lineno="268"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>1,<sp/>E_B_error[2]);</highlight></codeline>
+<codeline lineno="269"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>1,<sp/>E_B_error[3]);</highlight></codeline>
+<codeline lineno="270"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>1,<sp/>E_B_error[4]);</highlight></codeline>
+<codeline lineno="271"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kindref="member">gempic_assert_err</ref>(passed,<sp/>1,<sp/>E_B_error[5]);</highlight></codeline>
+<codeline lineno="272"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="273"><highlight class="normal"></highlight></codeline>
+<codeline lineno="274"><highlight class="normal"></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><ref refid="test__maxwell__yee__order_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kindref="member">main</ref>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>argc,<sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*argv[])</highlight></codeline>
+<codeline lineno="275"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="276"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>build_parm_parse<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="277"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Initialize(argc,<sp/>argv,<sp/>build_parm_parse,<sp/>MPI_COMM_WORLD,</highlight></codeline>
+<codeline lineno="278"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1a3a730df9bb861d0905cd1411f02cf67d" kindref="member">overwrite_amrex_parser_defaults</ref>);</highlight></codeline>
+<codeline lineno="279"><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>1)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="280"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim2<sp/>=<sp/>2,<sp/>numspec<sp/>=<sp/>1,<sp/>degx<sp/>=<sp/>1,<sp/>degy<sp/>=<sp/>1,<sp/>degz<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="281"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim2,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="282"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>2)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="283"><highlight class="normal"></highlight><highlight class="preprocessor">#elif<sp/>(GEMPIC_SPACEDIM<sp/>==<sp/>3)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="284"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim<sp/>=<sp/>3,<sp/>numspec<sp/>=<sp/>1,<sp/>degx<sp/>=<sp/>1,<sp/>degy<sp/>=<sp/>1,<sp/>degz<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="285"><highlight class="normal"><sp/><sp/><sp/><sp/>main_main&lt;vdim,<sp/>numspec,<sp/>degx,<sp/>degy,<sp/>degz&gt;();</highlight></codeline>
+<codeline lineno="286"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="287"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(ParallelDescriptor::MyProc()<sp/>==<sp/>0)</highlight></codeline>
+<codeline lineno="288"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>std::rename(</highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output.0&quot;</highlight><highlight class="normal">,<sp/></highlight><highlight class="stringliteral">&quot;test_maxwell_yee_order.output&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline lineno="289"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::Finalize();</highlight></codeline>
+<codeline lineno="290"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp"/>
+  </compounddef>
+</doxygen>

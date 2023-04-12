@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="namespaceGempic_1_1Diagnostics__Output" kind="namespace" language="C++">
+    <compoundname>Gempic::Diagnostics_Output</compoundname>
+    <innerclass refid="classGempic_1_1Diagnostics__Output_1_1diagnostics" prot="public">Gempic::Diagnostics_Output::diagnostics</innerclass>
+      <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceGempic_1_1Diagnostics__Output_1ac57d4c58bdcf44e606775ba3b5f60f58" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>amrex::Real</type>
+        <definition>amrex::Real Gempic::Diagnostics_Output::computeDotProd</definition>
+        <argsstring>(amrex::MultiFab const &amp;mf1, amrex::MultiFab const &amp;mf2, amrex::iMultiFab const &amp;mask)</argsstring>
+        <name>computeDotProd</name>
+        <param>
+          <type>amrex::MultiFab const &amp;</type>
+          <declname>mf1</declname>
+        </param>
+        <param>
+          <type>amrex::MultiFab const &amp;</type>
+          <declname>mf2</declname>
+        </param>
+        <param>
+          <type>amrex::iMultiFab const &amp;</type>
+          <declname>mask</declname>
+        </param>
+        <briefdescription>
+<para>Compute the dot product of two MultiFabs with a mask. </para>
+        </briefdescription>
+        <detaileddescription>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername>mf1</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mf2</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername>mask</parametername>
+</parameternamelist>
+<parameterdescription>
+<para></para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>amrex::Real </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="44" column="13" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" bodystart="44" bodyend="65"/>
+      </memberdef>
+      <memberdef kind="function" id="namespaceGempic_1_1Diagnostics__Output_1af249107a4c299ab2d44f97a7ae782bc0" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <templateparamlist>
+          <param>
+            <type>int</type>
+            <declname>vdim</declname>
+            <defname>vdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>bdim</declname>
+            <defname>bdim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>edim</declname>
+            <defname>edim</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>numspec</declname>
+            <defname>numspec</defname>
+          </param>
+          <param>
+            <type>int</type>
+            <declname>ndata</declname>
+            <defname>ndata</defname>
+          </param>
+        </templateparamlist>
+        <type>void</type>
+        <definition>void Gempic::Diagnostics_Output::Gempic_WritePlotFile</definition>
+        <argsstring>(amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;ppg, maxwell_yee&lt; edim, bdim &gt; *mw_yee, computational_domain *infra, const std::string &amp;plot_file, const int step, bool particles=true)</argsstring>
+        <name>Gempic_WritePlotFile</name>
+        <param>
+          <type>amrex::GpuArray&lt; std::unique_ptr&lt; particle_groups&lt; vdim, ndata &gt;&gt;, numspec &gt; &amp;</type>
+          <declname>ppg</declname>
+        </param>
+        <param>
+          <type>maxwell_yee&lt; edim, bdim &gt; *</type>
+          <declname>mw_yee</declname>
+        </param>
+        <param>
+          <type>computational_domain *</type>
+          <declname>infra</declname>
+        </param>
+        <param>
+          <type>const std::string &amp;</type>
+          <declname>plot_file</declname>
+        </param>
+        <param>
+          <type>const int</type>
+          <declname>step</declname>
+        </param>
+        <param>
+          <type>bool</type>
+          <declname>particles</declname>
+          <defval>true</defval>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_PlotFile.H" line="30" column="6" bodyfile="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_PlotFile.H" bodystart="30" bodyend="195"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H" line="35" column="1"/>
+  </compounddef>
+</doxygen>

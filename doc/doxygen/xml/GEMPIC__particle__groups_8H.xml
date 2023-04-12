@@ -1,0 +1,1059 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.8.17">
+  <compounddef id="GEMPIC__particle__groups_8H" kind="file" language="C++">
+    <compoundname>GEMPIC_particle_groups.H</compoundname>
+    <includes local="no">AMReX.H</includes>
+    <includes local="no">AMReX_ArrayOfStructs.H</includes>
+    <includes local="no">AMReX_Box.H</includes>
+    <includes local="no">AMReX_BoxArray.H</includes>
+    <includes local="no">AMReX_CoordSys.H</includes>
+    <includes local="no">AMReX_DistributionMapping.H</includes>
+    <includes local="no">AMReX_Geometry.H</includes>
+    <includes local="no">AMReX_IntVect.H</includes>
+    <includes local="no">AMReX_Particle.H</includes>
+    <includes local="no">AMReX_Particles.H</includes>
+    <includes local="no">AMReX_Print.H</includes>
+    <includes local="no">AMReX_REAL.H</includes>
+    <includes local="no">AMReX_RealBox.H</includes>
+    <includes local="no">AMReX_StructOfArrays.H</includes>
+    <includes refid="GEMPIC__computational__domain_8H" local="no">GEMPIC_computational_domain.H</includes>
+    <includes refid="GEMPIC__Params_8H" local="no">GEMPIC_Params.H</includes>
+    <includedby refid="GEMPIC__maxwell__yee_8H" local="no">/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H</includedby>
+    <includedby refid="GEMPIC__SumBoundary_8H" local="no">/home/marm/Desktop/gempic/src/forms/GEMPIC_SumBoundary.H</includedby>
+    <includedby refid="test__AMReX__Dot_8cpp" local="no">/home/marm/Desktop/gempic/src/forms/testing/test_AMReX_Dot.cpp</includedby>
+    <includedby refid="GEMPIC__checkpoint_8H" local="no">/home/marm/Desktop/gempic/src/io/checkpointing/GEMPIC_checkpoint.H</includedby>
+    <includedby refid="GEMPIC__diagnostics_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H</includedby>
+    <includedby refid="GEMPIC__PlotFile_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_PlotFile.H</includedby>
+    <includedby refid="ElecFieldEnergy_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ElecFieldEnergy.H</includedby>
+    <includedby refid="GaussError_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H</includedby>
+    <includedby refid="MagFieldEnergy_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/MagFieldEnergy.H</includedby>
+    <includedby refid="Momentum_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/Momentum.H</includedby>
+    <includedby refid="ParticleEnergy_8H" local="no">/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ParticleEnergy.H</includedby>
+    <includedby refid="GEMPIC__parameters_8H" local="no">/home/marm/Desktop/gempic/src/io/parameters/GEMPIC_parameters.H</includedby>
+    <includedby refid="GEMPIC__sampler_8H" local="no">/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H</includedby>
+    <includedby refid="test__sampler_8cpp" local="no">/home/marm/Desktop/gempic/src/particle/testing/test_sampler.cpp</includedby>
+    <includedby refid="test__AMReX__NormMasks_8cpp" local="no">/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_AMReX_NormMasks.cpp</includedby>
+    <includedby refid="test__deposit__rho_8cpp" local="no">/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_deposit_rho.cpp</includedby>
+    <includedby refid="test__initialize_8cpp" local="no">/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_initialize.cpp</includedby>
+    <includedby refid="test__one__part_8cpp" local="no">/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_one_part.cpp</includedby>
+    <includedby refid="test__particle__groups_8cpp" local="no">/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_particle_groups.cpp</includedby>
+    <includedby refid="test__splines_8cpp" local="no">/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_splines.cpp</includedby>
+    <includedby refid="GEMPIC__vlasov__maxwell_8H" local="no">/home/marm/Desktop/gempic/src/simulations/GEMPIC_vlasov_maxwell.H</includedby>
+    <includedby refid="test__vlasov__maxwell__by__lower_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_by_lower.cpp</includedby>
+    <includedby refid="test__vlasov__maxwell__hs__all__lower_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_all_lower.cpp</includedby>
+    <includedby refid="test__vlasov__maxwell__hs__deRham_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_deRham.cpp</includedby>
+    <includedby refid="test__vlasov__maxwell__hs__lower_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_lower.cpp</includedby>
+    <includedby refid="test__vlasov__maxwell__hs__multispecies_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_multispecies.cpp</includedby>
+    <includedby refid="test__vlasov__qn__e__adiabatic_8cpp" local="no">/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_qn_e_adiabatic.cpp</includedby>
+    <includedby refid="GEMPIC__loop__preparation_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H</includedby>
+    <includedby refid="GEMPIC__time__loop__boris__fd_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_boris_fd.H</includedby>
+    <includedby refid="GEMPIC__time__loop__hs__fem_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_fem.H</includedby>
+    <includedby refid="GEMPIC__time__loop__hs__zigzag_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H</includedby>
+    <includedby refid="GEMPIC__time__loop__hs__zigzag__C2_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag_C2.H</includedby>
+    <includedby refid="GEMPIC__time__loop__hsall__fem_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hsall_fem.H</includedby>
+    <includedby refid="GEMPIC__time__loop__ls__rungekutta_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_ls_rungekutta.H</includedby>
+    <includedby refid="GEMPIC__time__loop__particles_8H" local="no">/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_particles.H</includedby>
+    <includedby refid="test__H__E__Velocity_8cpp" local="no">/home/marm/Desktop/gempic/src/time_loop/testing/test_H_E_Velocity.cpp</includedby>
+    <incdepgraph>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H</label>
+        <link refid="GEMPIC__particle__groups_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="24">
+        <label>AMReX_ParmParse.H</label>
+      </node>
+      <node id="17">
+        <label>AMReX_Array.H</label>
+      </node>
+      <node id="25">
+        <label>AMReX_Parser.H</label>
+      </node>
+      <node id="19">
+        <label>GEMPIC_Config.H</label>
+      </node>
+      <node id="6">
+        <label>AMReX_CoordSys.H</label>
+      </node>
+      <node id="16">
+        <label>GEMPIC_computational_domain.H</label>
+        <link refid="GEMPIC__computational__domain_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+      </node>
+      <node id="11">
+        <label>AMReX_Particles.H</label>
+      </node>
+      <node id="20">
+        <label>GEMPIC_Params.H</label>
+        <link refid="GEMPIC__Params_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>AMReX_ArrayOfStructs.H</label>
+      </node>
+      <node id="26">
+        <label>AMReX_Periodicity.H</label>
+      </node>
+      <node id="10">
+        <label>AMReX_Particle.H</label>
+      </node>
+      <node id="5">
+        <label>AMReX_BoxArray.H</label>
+      </node>
+      <node id="15">
+        <label>AMReX_StructOfArrays.H</label>
+      </node>
+      <node id="12">
+        <label>AMReX_Print.H</label>
+      </node>
+      <node id="14">
+        <label>AMReX_RealBox.H</label>
+      </node>
+      <node id="13">
+        <label>AMReX_REAL.H</label>
+      </node>
+      <node id="22">
+        <label>AMReX_IndexType.H</label>
+      </node>
+      <node id="7">
+        <label>AMReX_DistributionMapping.H</label>
+      </node>
+      <node id="23">
+        <label>AMReX_MultiFab.H</label>
+      </node>
+      <node id="21">
+        <label>AMReX_FillPatchUtil.H</label>
+      </node>
+      <node id="8">
+        <label>AMReX_Geometry.H</label>
+      </node>
+      <node id="9">
+        <label>AMReX_IntVect.H</label>
+      </node>
+      <node id="27">
+        <label>AMReX_PlotFileUtil.H</label>
+      </node>
+      <node id="18">
+        <label>AMReX_BLProfiler.H</label>
+      </node>
+      <node id="4">
+        <label>AMReX_Box.H</label>
+      </node>
+      <node id="2">
+        <label>AMReX.H</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="1">
+        <label>/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H</label>
+        <link refid="GEMPIC__particle__groups_8H"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="46" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="52" relation="include">
+        </childnode>
+        <childnode refid="55" relation="include">
+        </childnode>
+        <childnode refid="54" relation="include">
+        </childnode>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+        <childnode refid="50" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="51" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+      </node>
+      <node id="44">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/Momentum.H</label>
+        <link refid="Momentum_8H"/>
+        <childnode refid="41" relation="include">
+        </childnode>
+      </node>
+      <node id="46">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_PlotFile.H</label>
+        <link refid="GEMPIC__PlotFile_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+      </node>
+      <node id="38">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/GEMPIC_diagnostics.H</label>
+        <link refid="GEMPIC__diagnostics_8H"/>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+      </node>
+      <node id="21">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_by_lower.cpp</label>
+        <link refid="test__vlasov__maxwell__by__lower_8cpp"/>
+      </node>
+      <node id="16">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_all.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__all_8cpp"/>
+      </node>
+      <node id="29">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag_C2.H</label>
+        <link refid="GEMPIC__time__loop__hs__zigzag__C2_8H"/>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+      </node>
+      <node id="22">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_all_lower.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__all__lower_8cpp"/>
+      </node>
+      <node id="4">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_AMReX_atomic_add.cpp</label>
+        <link refid="test__AMReX__atomic__add_8cpp"/>
+      </node>
+      <node id="47">
+        <label>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_AMReX_NormMasks.cpp</label>
+        <link refid="test__AMReX__NormMasks_8cpp"/>
+      </node>
+      <node id="51">
+        <label>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_splines.cpp</label>
+        <link refid="test__splines_8cpp"/>
+      </node>
+      <node id="2">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/GEMPIC_maxwell_yee.H</label>
+        <link refid="GEMPIC__maxwell__yee_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="36" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="46" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+        <childnode refid="50" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="51" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+      </node>
+      <node id="43">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/MagFieldEnergy.H</label>
+        <link refid="MagFieldEnergy_8H"/>
+        <childnode refid="41" relation="include">
+        </childnode>
+      </node>
+      <node id="8">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_poisson_CG.cpp</label>
+        <link refid="test__poisson__CG_8cpp"/>
+      </node>
+      <node id="24">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_multispecies.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__multispecies_8cpp"/>
+      </node>
+      <node id="50">
+        <label>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_initialize.cpp</label>
+        <link refid="test__initialize_8cpp"/>
+      </node>
+      <node id="3">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_ampere_faraday.cpp</label>
+        <link refid="test__ampere__faraday_8cpp"/>
+      </node>
+      <node id="27">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_deRham.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__deRham_8cpp"/>
+      </node>
+      <node id="17">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_zigzag_C2.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__zigzag__C2_8cpp"/>
+      </node>
+      <node id="42">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/GaussError.H</label>
+        <link refid="GaussError_8H"/>
+        <childnode refid="41" relation="include">
+        </childnode>
+      </node>
+      <node id="35">
+        <label>/home/marm/Desktop/gempic/src/forms/testing/test_gempic_norm.cpp</label>
+        <link refid="test__gempic__norm_8cpp"/>
+      </node>
+      <node id="5">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_ihodge_CG.cpp</label>
+        <link refid="test__ihodge__CG_8cpp"/>
+      </node>
+      <node id="6">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee.cpp</label>
+        <link refid="test__maxwell__yee_8cpp"/>
+      </node>
+      <node id="26">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_zigzag.H</label>
+        <link refid="GEMPIC__time__loop__hs__zigzag_8H"/>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+      </node>
+      <node id="15">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs.cpp</label>
+        <link refid="test__vlasov__maxwell__hs_8cpp"/>
+      </node>
+      <node id="30">
+        <label>/home/marm/Desktop/gempic/src/time_loop/testing/test_H_E_Velocity.cpp</label>
+        <link refid="test__H__E__Velocity_8cpp"/>
+      </node>
+      <node id="11">
+        <label>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_one_part.cpp</label>
+        <link refid="test__one__part_8cpp"/>
+      </node>
+      <node id="10">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_boris_fd.H</label>
+        <link refid="GEMPIC__time__loop__boris__fd_8H"/>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+      </node>
+      <node id="54">
+        <label>/home/marm/Desktop/gempic/src/particle/testing/test_sampler.cpp</label>
+        <link refid="test__sampler_8cpp"/>
+      </node>
+      <node id="55">
+        <label>/home/marm/Desktop/gempic/src/particle/GEMPIC_sampler.H</label>
+        <link refid="GEMPIC__sampler_8H"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="56" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+        <childnode refid="54" relation="include">
+        </childnode>
+        <childnode refid="47" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+      </node>
+      <node id="36">
+        <label>/home/marm/Desktop/gempic/src/io/checkpointing/GEMPIC_checkpoint.H</label>
+        <link refid="GEMPIC__checkpoint_8H"/>
+        <childnode refid="37" relation="include">
+        </childnode>
+        <childnode refid="38" relation="include">
+        </childnode>
+        <childnode refid="40" relation="include">
+        </childnode>
+        <childnode refid="42" relation="include">
+        </childnode>
+        <childnode refid="43" relation="include">
+        </childnode>
+        <childnode refid="44" relation="include">
+        </childnode>
+        <childnode refid="45" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>/home/marm/Desktop/gempic/src/field_solvers/testing/test_maxwell_yee_order.cpp</label>
+        <link refid="test__maxwell__yee__order_8cpp"/>
+      </node>
+      <node id="28">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_qn_e_adiabatic.cpp</label>
+        <link refid="test__vlasov__qn__e__adiabatic_8cpp"/>
+      </node>
+      <node id="34">
+        <label>/home/marm/Desktop/gempic/src/forms/testing/test_AMReX_Dot.cpp</label>
+        <link refid="test__AMReX__Dot_8cpp"/>
+      </node>
+      <node id="49">
+        <label>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_particle_groups.cpp</label>
+        <link refid="test__particle__groups_8cpp"/>
+      </node>
+      <node id="45">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ParticleEnergy.H</label>
+        <link refid="ParticleEnergy_8H"/>
+        <childnode refid="41" relation="include">
+        </childnode>
+      </node>
+      <node id="53">
+        <label>/home/marm/Desktop/gempic/src/io/parameters/testing/test_parser.cpp</label>
+        <link refid="test__parser_8cpp"/>
+      </node>
+      <node id="37">
+        <label>/home/marm/Desktop/gempic/src/io/checkpointing/testing/test_checkpoint.cpp</label>
+        <link refid="test__checkpoint_8cpp"/>
+      </node>
+      <node id="25">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hs_fem.H</label>
+        <link refid="GEMPIC__time__loop__hs__fem_8H"/>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+      </node>
+      <node id="39">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_loop_preparation.H</label>
+        <link refid="GEMPIC__loop__preparation_8H"/>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+      </node>
+      <node id="33">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_particles.H</label>
+        <link refid="GEMPIC__time__loop__particles_8H"/>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+      <node id="14">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_by.cpp</label>
+        <link refid="test__vlasov__maxwell__by_8cpp"/>
+      </node>
+      <node id="52">
+        <label>/home/marm/Desktop/gempic/src/io/parameters/GEMPIC_parameters.H</label>
+        <link refid="GEMPIC__parameters_8H"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+        <childnode refid="34" relation="include">
+        </childnode>
+        <childnode refid="35" relation="include">
+        </childnode>
+        <childnode refid="37" relation="include">
+        </childnode>
+        <childnode refid="53" relation="include">
+        </childnode>
+        <childnode refid="54" relation="include">
+        </childnode>
+        <childnode refid="48" relation="include">
+        </childnode>
+        <childnode refid="50" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="49" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="27" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+        <childnode refid="28" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="30" relation="include">
+        </childnode>
+      </node>
+      <node id="48">
+        <label>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing/test_deposit_rho.cpp</label>
+        <link refid="test__deposit__rho_8cpp"/>
+      </node>
+      <node id="40">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/ElecFieldEnergy.H</label>
+        <link refid="ElecFieldEnergy_8H"/>
+        <childnode refid="41" relation="include">
+        </childnode>
+      </node>
+      <node id="18">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_ls_rungekutta.cpp</label>
+        <link refid="test__vlasov__maxwell__ls__rungekutta_8cpp"/>
+      </node>
+      <node id="23">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_hs_lower.cpp</label>
+        <link refid="test__vlasov__maxwell__hs__lower_8cpp"/>
+      </node>
+      <node id="32">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_ls_rungekutta.H</label>
+        <link refid="GEMPIC__time__loop__ls__rungekutta_8H"/>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+      <node id="19">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_simulation.cpp</label>
+        <link refid="test__simulation_8cpp"/>
+      </node>
+      <node id="13">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/GEMPIC_vlasov_maxwell_ctest.H</label>
+        <link refid="GEMPIC__vlasov__maxwell__ctest_8H"/>
+        <childnode refid="14" relation="include">
+        </childnode>
+        <childnode refid="15" relation="include">
+        </childnode>
+        <childnode refid="16" relation="include">
+        </childnode>
+        <childnode refid="17" relation="include">
+        </childnode>
+        <childnode refid="18" relation="include">
+        </childnode>
+      </node>
+      <node id="56">
+        <label>/home/marm/Desktop/gempic/src/forms/testing/test_AMReX_SumBoundary.cpp</label>
+        <link refid="test__AMReX__SumBoundary_8cpp"/>
+      </node>
+      <node id="20">
+        <label>/home/marm/Desktop/gempic/src/simulations/testing/test_vlasov_maxwell_input.cpp</label>
+        <link refid="test__vlasov__maxwell__input_8cpp"/>
+      </node>
+      <node id="12">
+        <label>/home/marm/Desktop/gempic/src/simulations/GEMPIC_vlasov_maxwell.H</label>
+        <link refid="GEMPIC__vlasov__maxwell_8H"/>
+        <childnode refid="13" relation="include">
+        </childnode>
+        <childnode refid="19" relation="include">
+        </childnode>
+        <childnode refid="20" relation="include">
+        </childnode>
+      </node>
+      <node id="31">
+        <label>/home/marm/Desktop/gempic/src/time_loop/GEMPIC_time_loop_hsall_fem.H</label>
+        <link refid="GEMPIC__time__loop__hsall__fem_8H"/>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="21" relation="include">
+        </childnode>
+        <childnode refid="22" relation="include">
+        </childnode>
+        <childnode refid="23" relation="include">
+        </childnode>
+        <childnode refid="24" relation="include">
+        </childnode>
+      </node>
+      <node id="41">
+        <label>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags/MultiReducedDiags.H</label>
+        <link refid="MultiReducedDiags_8H"/>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="39" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+      </node>
+      <node id="9">
+        <label>/home/marm/Desktop/gempic/src/forms/GEMPIC_SumBoundary.H</label>
+        <link refid="GEMPIC__SumBoundary_8H"/>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="25" relation="include">
+        </childnode>
+        <childnode refid="26" relation="include">
+        </childnode>
+        <childnode refid="29" relation="include">
+        </childnode>
+        <childnode refid="31" relation="include">
+        </childnode>
+        <childnode refid="32" relation="include">
+        </childnode>
+        <childnode refid="33" relation="include">
+        </childnode>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell" prot="public">Gempic::Vlasov_Maxwell::vlasov_maxwell</innerclass>
+    <innerclass refid="classGempic_1_1Particles_1_1particle__groups" prot="public">Gempic::Particles::particle_groups</innerclass>
+    <innernamespace refid="namespaceGempic">Gempic</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Vlasov__Maxwell">Gempic::Vlasov_Maxwell</innernamespace>
+    <innernamespace refid="namespaceGempic_1_1Particles">Gempic::Particles</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="preprocessor">#ifndef<sp/>PARTICLE_GROUPS_H_</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="2"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>PARTICLE_GROUPS_H_</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="3"><highlight class="normal"></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_ArrayOfStructs.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Box.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_BoxArray.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_CoordSys.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_DistributionMapping.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="10"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Geometry.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="11"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_IntVect.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="12"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Particle.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="13"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Particles.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="14"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_Print.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="15"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_REAL.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_RealBox.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;AMReX_StructOfArrays.H&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__computational__domain_8H" kindref="compound">GEMPIC_computational_domain.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="19"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;<ref refid="GEMPIC__Params_8H" kindref="compound">GEMPIC_Params.H</ref>&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref></highlight></codeline>
+<codeline lineno="22"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="23" refid="namespaceGempic_1_1Vlasov__Maxwell" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">Vlasov_Maxwell</highlight></codeline>
+<codeline lineno="24"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="25"><highlight class="normal"></highlight><highlight class="keyword">template</highlight><highlight class="normal"><sp/>&lt;</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>numspec&gt;</highlight></codeline>
+<codeline lineno="26" refid="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell" kindref="compound">vlasov_maxwell</ref>;<sp/><sp/></highlight><highlight class="comment">//<sp/>forward<sp/>declaration</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="28"><highlight class="normal">}<sp/><sp/></highlight><highlight class="comment">//<sp/>namespace<sp/>Gempic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref>;</highlight></codeline>
+<codeline lineno="31"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">CompDom;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight><highlight class="keyword">using<sp/>namespace<sp/></highlight><highlight class="normal">Vlasov_Maxwell;</highlight></codeline>
+<codeline lineno="33"><highlight class="normal"></highlight></codeline>
+<codeline lineno="34"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal"><ref refid="namespaceGempic" kindref="compound">Gempic</ref></highlight></codeline>
+<codeline lineno="35"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="36" refid="namespaceGempic_1_1Particles" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">namespace<sp/></highlight><highlight class="normal">Particles</highlight></codeline>
+<codeline lineno="37"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="44"><highlight class="keyword">template</highlight><highlight class="normal"><sp/>&lt;</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>vdim,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>ndata<sp/>=<sp/>1&gt;</highlight></codeline>
+<codeline lineno="45" refid="classGempic_1_1Particles_1_1particle__groups" refkind="compound"><highlight class="normal"></highlight><highlight class="keyword">class<sp/></highlight><highlight class="normal"><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref><sp/>:<sp/></highlight><highlight class="keyword">public</highlight><highlight class="normal"><sp/>amrex::ParticleContainer&lt;0,<sp/>0,<sp/>vdim<sp/>+<sp/>ndata,<sp/>0&gt;</highlight></codeline>
+<codeline lineno="46"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="47"><highlight class="normal"></highlight><highlight class="keyword">private</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="48"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::ParticleReal<sp/>m_charge<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::ParticleReal<sp/>m_mass<sp/>=<sp/>1;</highlight></codeline>
+<codeline lineno="50"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>m_name<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;electrons&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight></codeline>
+<codeline lineno="52"><highlight class="normal"></highlight><highlight class="keyword">public</highlight><highlight class="normal">:</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::ParticleReal<sp/>getCharge()<sp/>{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_charge;<sp/>}</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/><sp/><sp/>amrex::ParticleReal<sp/>getMass()<sp/>{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_mass;<sp/>}</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/><sp/><sp/>std::string<sp/>getName()<sp/>{<sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>m_name;<sp/>}</highlight></codeline>
+<codeline lineno="56"><highlight class="normal"></highlight></codeline>
+<codeline lineno="60"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref>()<sp/>{}</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref>(amrex::Geometry<sp/>geom,<sp/>amrex::DistributionMapping<sp/>distriMap,</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::BoxArray<sp/>grid)<sp/>:</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::ParticleContainer&lt;0,<sp/>0,<sp/>vdim<sp/>+<sp/>ndata,<sp/>0&gt;(geom,<sp/>distriMap,<sp/>grid)</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="66"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Explicit<sp/>const</highlight></codeline>
+<codeline lineno="73"><highlight class="comment"></highlight><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>particle_groups<sp/>(amrex::GpuArray&lt;amrex::Real,<sp/>numspec&gt;<sp/>charge_in,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="74"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;amrex::Real,<sp/>numspec&gt;<sp/>mass_in,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="75"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref>(amrex::Real<sp/>charge,<sp/>amrex::Real<sp/>mass,<sp/>std::string&amp;<sp/>name,</highlight></codeline>
+<codeline lineno="76"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>computational_domain<sp/>ifr)<sp/>:</highlight></codeline>
+<codeline lineno="77"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::ParticleContainer&lt;0,<sp/>0,<sp/>vdim<sp/>+<sp/>ndata,<sp/>0&gt;(ifr.geom,<sp/>ifr.distriMap,<sp/>ifr.grid),</highlight></codeline>
+<codeline lineno="78"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_charge(charge),</highlight></codeline>
+<codeline lineno="79"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_mass(mass),</highlight></codeline>
+<codeline lineno="80"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_name(name)</highlight></codeline>
+<codeline lineno="81"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="82"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="83"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref>(amrex::Real<sp/>charge,<sp/>amrex::Real<sp/>mass,<sp/>computational_domain<sp/>ifr)<sp/>:</highlight></codeline>
+<codeline lineno="84"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::ParticleContainer&lt;0,<sp/>0,<sp/>vdim<sp/>+<sp/>ndata,<sp/>0&gt;(ifr.geom,<sp/>ifr.distriMap,<sp/>ifr.grid),</highlight></codeline>
+<codeline lineno="85"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_charge(charge),</highlight></codeline>
+<codeline lineno="86"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_mass(mass)</highlight></codeline>
+<codeline lineno="87"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="88"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="89"><highlight class="normal"></highlight></codeline>
+<codeline lineno="90"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups</ref>(</highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Real&amp;<sp/>charge,<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>amrex::Real&amp;<sp/>mass,<sp/><ref refid="classParameters" kindref="compound">Parameters</ref><sp/>params)<sp/>:</highlight></codeline>
+<codeline lineno="91"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::ParticleContainer&lt;0,<sp/>0,<sp/>vdim<sp/>+<sp/>ndata,<sp/>0&gt;(params.<ref refid="classParameters_1ac5676a6463dbdc406594828966d4a1ad" kindref="member">geometry</ref>(),<sp/>params.<ref refid="classParameters_1ab551dbf94b9cb8e910a2b8fd2d92f81c" kindref="member">distriMap</ref>(),<sp/>params.<ref refid="classParameters_1aa57f51db327369dbe8dae963a52ddce3" kindref="member">grid</ref>()),</highlight></codeline>
+<codeline lineno="92"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_charge(charge),</highlight></codeline>
+<codeline lineno="93"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>m_mass(mass)</highlight></codeline>
+<codeline lineno="94"><highlight class="normal"><sp/><sp/><sp/><sp/>{}</highlight></codeline>
+<codeline lineno="95"><highlight class="normal"></highlight></codeline>
+<codeline lineno="100"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>add_particle(amrex::GpuArray&lt;amrex::Real,<sp/>GEMPIC_SPACEDIM&gt;<sp/>position,</highlight></codeline>
+<codeline lineno="101"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;amrex::Real,<sp/>vdim&gt;<sp/>velocity,<sp/>amrex::Real<sp/>weight,</highlight></codeline>
+<codeline lineno="102"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::ParticleTile&lt;0,<sp/>0,<sp/>vdim<sp/>+<sp/>ndata,<sp/>0&gt;&amp;<sp/>particles)</highlight></codeline>
+<codeline lineno="103"><highlight class="normal"><sp/><sp/><sp/><sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Array<sp/>of<sp/>Structures</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="104"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">using</highlight><highlight class="normal"><sp/><ref refid="namespaceGempic_1_1Sampling_1a93af1c8e20695f268eeb3a5f20afcb35" kindref="member">ParticleType</ref><sp/>=<sp/>amrex::Particle&lt;0,<sp/>0&gt;;<sp/><sp/></highlight><highlight class="comment">//<sp/>SoA<sp/>particle<sp/>type</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="105"><highlight class="normal"></highlight></codeline>
+<codeline lineno="106"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>new<sp/>particle:</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="107"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><ref refid="namespaceGempic_1_1Sampling_1a93af1c8e20695f268eeb3a5f20afcb35" kindref="member">ParticleType</ref><sp/>p;</highlight></codeline>
+<codeline lineno="108"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>p.id()<sp/>=<sp/>ParticleType::NextID();</highlight></codeline>
+<codeline lineno="109"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>p.cpu()<sp/>=<sp/>amrex::ParallelDescriptor::MyProc();</highlight></codeline>
+<codeline lineno="110"><highlight class="normal"></highlight></codeline>
+<codeline lineno="111"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>cc<sp/>=<sp/>0;<sp/>cc<sp/>&lt;<sp/>GEMPIC_SPACEDIM;<sp/>cc++)</highlight></codeline>
+<codeline lineno="112"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="113"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>p.pos(cc)<sp/>=<sp/>position[cc];</highlight></codeline>
+<codeline lineno="114"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="115"><highlight class="normal"></highlight></codeline>
+<codeline lineno="116"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Creating<sp/>attributes<sp/>for<sp/>Structure<sp/>of<sp/>Arrays<sp/>container</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="117"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>amrex::GpuArray&lt;amrex::Real,vdim+1&gt;<sp/>particleAttributes{};</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="118"><highlight class="normal"></highlight></codeline>
+<codeline lineno="119"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>cc<sp/>=<sp/>0;<sp/>cc<sp/>&lt;<sp/>vdim;<sp/>cc++)</highlight></codeline>
+<codeline lineno="120"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="121"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>p.rdata(cc)<sp/>=<sp/>velocity[cc];</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="122"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>particleAttributes[cc]<sp/>=<sp/>velocity[cc];</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="123"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>particles.push_back_real(cc,<sp/>velocity[cc]);</highlight></codeline>
+<codeline lineno="124"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="125"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>p.rdata(vdim)<sp/>=<sp/>weight;<sp/>//weight</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="126"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>particleAttributes[vdim]<sp/>=<sp/>weight;<sp/>//weight</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="127"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>particles.push_back_real(vdim,<sp/>weight);</highlight></codeline>
+<codeline lineno="128"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>nd<sp/>=<sp/>1;<sp/>nd<sp/>&lt;<sp/>ndata;<sp/>nd++)<sp/>particles.push_back_real(vdim<sp/>+<sp/>nd,<sp/>0.0);</highlight></codeline>
+<codeline lineno="129"><highlight class="normal"></highlight></codeline>
+<codeline lineno="130"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>particles.push_back(p);</highlight></codeline>
+<codeline lineno="131"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="132"><highlight class="normal"></highlight></codeline>
+<codeline lineno="133"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>copy(<ref refid="classGempic_1_1Particles_1_1particle__groups" kindref="compound">particle_groups&lt;vdim, ndata&gt;</ref>&amp;<sp/>source,<sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>local<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">)</highlight></codeline>
+<codeline lineno="134"><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline lineno="135"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>this-&gt;charge<sp/>=<sp/>source.<ref refid="classGempic_1_1Particles_1_1particle__groups_1a5b81b51bbf0783bd263b53cde3e5a1fd" kindref="member">getCharge</ref>();</highlight></codeline>
+<codeline lineno="136"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>this-&gt;mass<sp/>=<sp/>source.<ref refid="classGempic_1_1Particles_1_1particle__groups_1aaa5c5e97c9448ce3663e79cbe3d4bab1" kindref="member">getMass</ref>();</highlight></codeline>
+<codeline lineno="137"><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>this-&gt;copyParticles(source,<sp/>local);</highlight></codeline>
+<codeline lineno="138"><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline lineno="139"><highlight class="normal">};</highlight></codeline>
+<codeline lineno="140"><highlight class="normal"></highlight><highlight class="comment">//<sp/>/**</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="141"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/>*<sp/>Method<sp/>adds<sp/>one<sp/>particle<sp/>with<sp/>the<sp/>space<sp/>coordinates<sp/>@p<sp/>position,<sp/>the<sp/>velocity<sp/>coordinates<sp/>@p</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="142"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/>*<sp/>velocity<sp/>and<sp/>the<sp/>weight<sp/>@p<sp/>weight<sp/>to<sp/>the<sp/>Particle<sp/>Tile<sp/>@p<sp/>particles.</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="143"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="144"><highlight class="normal"></highlight><highlight class="comment">//<sp/>template<sp/>&lt;typename<sp/>T,<sp/>int<sp/>vdim&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="145"><highlight class="normal"></highlight><highlight class="comment">//<sp/>void<sp/>add_particle(amrex::GpuArray&lt;amrex::Real,<sp/>GEMPIC_SPACEDIM&gt;<sp/>position,</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="146"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>amrex::GpuArray&lt;amrex::Real,<sp/>vdim&gt;<sp/>velocity,<sp/>amrex::Real<sp/>weight,<sp/>T&amp;<sp/>particles)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="147"><highlight class="normal"></highlight><highlight class="comment">//<sp/>{<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>Array<sp/>of<sp/>Structures</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="148"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>using<sp/>ParticleType<sp/>=<sp/>amrex::Particle&lt;0,<sp/>0&gt;;<sp/><sp/>//<sp/>SoA<sp/>particle<sp/>type</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="149"><highlight class="normal"></highlight></codeline>
+<codeline lineno="150"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>//<sp/>new<sp/>particle:</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="151"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>ParticleType<sp/>p;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="152"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>p.id()<sp/>=<sp/>ParticleType::NextID();</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="153"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>p.cpu()<sp/>=<sp/>amrex::ParallelDescriptor::MyProc();</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="154"><highlight class="normal"></highlight></codeline>
+<codeline lineno="155"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>for<sp/>(int<sp/>cc<sp/>=<sp/>0;<sp/>cc<sp/>&lt;<sp/>GEMPIC_SPACEDIM;<sp/>cc++)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="156"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>{</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="157"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>p.pos(cc)<sp/>=<sp/>position[cc];</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="158"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="159"><highlight class="normal"></highlight></codeline>
+<codeline lineno="160"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>//<sp/>Creating<sp/>attributes<sp/>for<sp/>Structure<sp/>of<sp/>Arrays<sp/>container</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="161"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>//<sp/>amrex::GpuArray&lt;amrex::Real,vdim+1&gt;<sp/>particleAttributes{};</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="162"><highlight class="normal"></highlight></codeline>
+<codeline lineno="163"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>for<sp/>(int<sp/>cc<sp/>=<sp/>0;<sp/>cc<sp/>&lt;<sp/>vdim;<sp/>cc++)</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="164"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>{</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="165"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>p.rdata(cc)<sp/>=<sp/>velocity[cc];</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="166"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>//<sp/>particleAttributes[cc]<sp/>=<sp/>velocity[cc];</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="167"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>particles.push_back_real(cc,<sp/>velocity[cc]);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="168"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="169"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>//<sp/>p.rdata(vdim)<sp/>=<sp/>weight;<sp/>//weight</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="170"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>//<sp/>particleAttributes[vdim]<sp/>=<sp/>weight;<sp/>//weight</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="171"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>particles.push_back_real(vdim,<sp/>weight);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="172"><highlight class="normal"></highlight></codeline>
+<codeline lineno="173"><highlight class="normal"></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/><sp/>particles.push_back(p);</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="174"><highlight class="normal"></highlight><highlight class="comment">//<sp/>}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="175"><highlight class="normal">}<sp/><sp/></highlight><highlight class="comment">//<sp/>namespace<sp/>Particles</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="176"><highlight class="normal">}<sp/><sp/></highlight><highlight class="comment">//<sp/>namespace<sp/>Gempic</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="177"><highlight class="normal"></highlight></codeline>
+<codeline lineno="178"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
+    </programlisting>
+    <location file="/home/marm/Desktop/gempic/src/particle/GEMPIC_particle_groups.H"/>
+  </compounddef>
+</doxygen>

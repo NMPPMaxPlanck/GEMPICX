@@ -1,0 +1,952 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.8.17">
+  <compound refid="classGempic_1_1CompDom_1_1computational__domain" kind="class"><name>Gempic::CompDom::computational_domain</name>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a1729882e23b7927cd1e4bdde26106242" kind="variable"><name>n_cell</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a49ac7fb4be90d26456e87f8052a3aa74" kind="variable"><name>max_grid_size</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a03c4590b559027dd50e4b681aef22911" kind="variable"><name>is_periodic</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a03ca7558523e6575d758bd457237436c" kind="variable"><name>real_box</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1af57313fcdf92a8843eb6e39b702949dd" kind="variable"><name>Length</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a2290c64802bc2b62ffa096ca88799657" kind="variable"><name>grid</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a3d3495717fc66867b463a57f421514be" kind="variable"><name>geom</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1aef80a9ad07de2af8cff369c0f801c415" kind="variable"><name>domain</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a9f73479b251e046dc5579bae8265d1ef" kind="variable"><name>distriMap</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1aa971ce10f7d54563d01626e742413e4c" kind="variable"><name>dx</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a3d2d32ae730fb82c82a68116615ce06c" kind="variable"><name>plo</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a50be998486aeb040d02f1f7c4dec3f33" kind="variable"><name>phi</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a023e01745be915f976cbc00b29539ab8" kind="variable"><name>dxi</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1aa7bddb1204e14388f1980689c328d859" kind="variable"><name>tolerance_particle</name></member>
+    <member refid="classGempic_1_1CompDom_1_1computational__domain_1a429954f363f952fdc4e198952d47f5bf" kind="function"><name>initialize_computational_domain</name></member>
+  </compound>
+  <compound refid="classGEMPIC__Fields_1_1DeRhamComplex" kind="class"><name>GEMPIC_Fields::DeRhamComplex</name>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ae783e08a4ab56626a4c7fbe490329802" kind="variable"><name>realBox</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1af34f229987d4e258929f9b84199b9f3c" kind="variable"><name>nCell</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ae9b392882762e0a16bf30675099e7fd9" kind="variable"><name>isPeriodic</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ab1ddc0ba706bf490217f685109c6ac7a" kind="variable"><name>grid</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a5e24d7a10f303b9fcd952345f2d79dda" kind="variable"><name>distriMap</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a54a3bce7cef501dfc33a118b4f88fa43" kind="variable"><name>geom</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ae530b3acacfbb6aa6382669398bd1a4f" kind="variable"><name>m_hodgeDegree</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ab50c4e7e716292479bf3ca47ccd7c800" kind="variable"><name>nGhost</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a0c3c83bbfb91164458af4dbea493cd0a" kind="variable"><name>primalNodeIndex</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a908717aac0b1698ab4f3e0ef6de34f0e" kind="variable"><name>nodeMask</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a7d382294bc03c0d16e6118ef3905eba7" kind="variable"><name>primalEdgeIndex</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ad1274f4ee0fffa56b4f89b86062bee1f" kind="variable"><name>edgeMask</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a7e99ebe0a1d1065ce802f02b0ea697a8" kind="function"><name>DeRhamComplex</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1af4261e7d2ab32775bf74377e52679cef" kind="function"><name>~DeRhamComplex</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a7df36cc2470c56a2bb14b9677597ddf3" kind="function"><name>getNGhost</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a4f0e491d844bacd6da4b15eee89806ac" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1adea94cd5c0dc3aa3c521c90afa1beb42" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ab2e0bea177ac0107e14bb38cdad04eb4" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a5440127bbbf0fb469af41630058c283a" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a4d8962009905f955076a8b4e895ad896" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1aed9817b4b9c3034aa6b88e5fd37681ac" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ade97099b536baf3bf1e12a31b303ab74" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a427b9c21d09350ce741c0e700c17d9d9" kind="function"><name>initializeField</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a5a49a4cfdb65f62354006979a6b5d7a0" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1afb052e429426dea6663420e8e204a339" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a7337320a373581ea2fb76acb25f3ab02" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a71bd4d66da1d0c15f53d7c34f1ab4927" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a722dfb01dbd7c298d5edce33cb72748d" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ac1d6b1b89c3e8d7ab2563e4772cc2ea0" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ae4bf7a83378d852c7ad8fe62058d8cbb" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ac9e9c3c7a094fad4316cc32eb62ec374" kind="function"><name>fillBoundary</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a5459b349a5121721b709bb01ab51e164" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a689c6747308f873d954a631d26ca872d" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a720b6104a0da908a266badb0b3159052" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ae0c3ed0250f43f2721afd7f3228d6c3f" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a08b279a540ed978c5d9874a740666dfb" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a33c01d72fe9f916e84a264a79c959769" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1abf237a1a8f163af25536233841b9fbc3" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1aee3b2b090777a83ac2713c70e3ade04c" kind="function"><name>averageSync</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1acf3592b1127298eb9f79d91c68327021" kind="function"><name>projection</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a8f4f2b224f05f8cee5195732eebe17b2" kind="function"><name>projection</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1a12a13595f5591a2effe681e1a0c5bd2a" kind="function"><name>projection</name></member>
+    <member refid="classGEMPIC__Fields_1_1DeRhamComplex_1ac5c7c90d9cf20a88b93b75260343200d" kind="function"><name>projection</name></member>
+  </compound>
+  <compound refid="structGEMPIC__Fields_1_1DeRhamField" kind="struct"><name>GEMPIC_Fields::DeRhamField</name>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1aa9a4956490a601e45238fc4cb471b357" kind="variable"><name>deRham</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a3ea34efe48e253266476fc7906e31a38" kind="variable"><name>data</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1ad56e63523b0fb9741031a247520e15bc" kind="function"><name>DeRhamField</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1ae2056b42fe7dbd941580830e0b67fd13" kind="function"><name>fillBoundary</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a6b77c9e52547bc397fc4d37f1126e734" kind="function"><name>overrideSync</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a82ed6031cb3e12d82fb2d544fab97648" kind="function"><name>averageSync</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a9de822f0ee49249432398b37649e0439" kind="function"><name>multEqual</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1aa0873416e105f26c7f87dab5984d030b" kind="function"><name>operator*=</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a6f7aca36bbb82b59227ba3d392e80f9c" kind="function"><name>plusEqual</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1ad546ef4b38c8bd28b45fa7d338c26a8f" kind="function"><name>operator+=</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a83dc77516e7cc215fa50cab7086e095f" kind="function"><name>minusEqual</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_1a2052900d21f84911e2b78653067f2332" kind="function"><name>operator-=</name></member>
+  </compound>
+  <compound refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4" kind="struct"><name>GEMPIC_Fields::DeRhamField&lt; grid, Space::cell &gt;</name>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1aadb79d976f45c8b4afc15c20c55de7eb" kind="variable"><name>data</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a036994c9de3965687c38a5042fbcbbc7" kind="variable"><name>deRham</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a3751d8ab72a252ea68ef49e26c6b315e" kind="function"><name>DeRhamField</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a5e006e613d203d8ec51b45f36608eedb" kind="function"><name>fillBoundary</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1afe89cf9741385bad803834c224d69551" kind="function"><name>averageSync</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1cell_01_4_1a6ec48aa757d0b650227014ebe3f02d88" kind="function"><name>multEqual</name></member>
+  </compound>
+  <compound refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4" kind="struct"><name>GEMPIC_Fields::DeRhamField&lt; grid, Space::node &gt;</name>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1a2e143b7eef8118baba89701df99582cb" kind="variable"><name>data</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1a93abf9983e15698cde0c2ea407af7b6c" kind="variable"><name>deRham</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1a58a1c850098b8e91008f6b0f72c72427" kind="function"><name>DeRhamField</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1a2a3545c91d623cc0f75c34ac3670b215" kind="function"><name>fillBoundary</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1a9fc8f04c3570275ba7059fcda694cfef" kind="function"><name>overrideSync</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1a67c5f47ddf79017f4f8ffe8bfd59fd14" kind="function"><name>averageSync</name></member>
+    <member refid="structGEMPIC__Fields_1_1DeRhamField_3_01grid_00_01Space_1_1node_01_4_1af5b26edb7b78c41f8298d0e469a0ea09" kind="function"><name>multEqual</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Diagnostics__Output_1_1diagnostics" kind="class"><name>Gempic::Diagnostics_Output::diagnostics</name>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a5f62ed789ba32f5808df58359e78d6bb" kind="variable"><name>nSteps</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1afc89ea0414c2c2c357b2d95f18962b8a" kind="variable"><name>Bfield_energy</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aa60245942a24347c76b71cd34eec1be3" kind="variable"><name>Efield_energy</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1abc477612653695fe937f766395921a97" kind="variable"><name>mom</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a30810b467e67220cb4229e610b77a807" kind="variable"><name>kin</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a1cc2da96545617a621a2e2a9d21aa593" kind="variable"><name>gauss_error</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a947aa9e83fc3b2e45dc99ae77348a505" kind="variable"><name>m_init_tot_energy</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aa04c72c829530fa73f8e5965ad66adff" kind="variable"><name>save_fields</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ac192960f8b08c8af4ca45f9420be0608" kind="variable"><name>save_particles</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ab1fda87cddb4d4baebf2d7c6cab58fbc" kind="variable"><name>save_checkpoint</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a6796af16e50af33983cbb210584b72c7" kind="variable"><name>freq_save</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1aaf5e14d760fa441b0a88a110b3426302" kind="variable"><name>lastSaved</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a015ebea00a88a1a663b9681c9bcaf10a" kind="variable"><name>sim_name</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a0b33ceb6c891fdc5e753978d921590c3" kind="variable"><name>domain_volume</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a03b2ea7d1246b2c663b9d5446f0cf4a1" kind="variable"><name>ctest</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a446994b67cbc1d5b1b0a4a8d315e85e6" kind="function"><name>diagnostics</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a1631ffb18519343965825c544dc48c41" kind="function"><name>diagnostics</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a8fff33f93267a0b51a7658bf9c9d81bc" kind="function"><name>reinit</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a0dfa68b36bd3ee26c938eb41938799ac" kind="function"><name>end_of_timestep</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a25664a5771ce77568eed11190e598186" kind="function"><name>ComputeReducedDiag</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a2aad54c98d255caedbffa57957f5e81f" kind="function"><name>save_time_history</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1a2302e05a3c4136ccd56098807b5f58f4" kind="function"><name>ctest_output</name></member>
+    <member refid="classGempic_1_1Diagnostics__Output_1_1diagnostics_1ae59edbd97d6d68344479bdd761b7abcd" kind="function"><name>initialize_diagnostics</name></member>
+  </compound>
+  <compound refid="classElecFieldEnergy" kind="class"><name>ElecFieldEnergy</name>
+    <member refid="classElecFieldEnergy_1a02279dac4a0be073ef952a1f4a558023" kind="function"><name>ElecFieldEnergy</name></member>
+    <member refid="classElecFieldEnergy_1ae8e82cdb501113f6cebcc1a0317a6078" kind="function"><name>ComputeDiags</name></member>
+  </compound>
+  <compound refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex" kind="class"><name>GEMPIC_FDDeRhamComplex::FDDeRhamComplex</name>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a2783bda89ec0b4c7f2065b9fb4ec4cdc" kind="variable"><name>m_dr</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a21cd2ea1b3c39e48e27fb268436e6467" kind="variable"><name>m_geom</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a14686840cad4a69ba4f8509abe9eccdc" kind="variable"><name>m_grid</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a7250fc499774d24dd3dfdf4e47e46bf5" kind="variable"><name>m_distriMap</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a0db89e1f83176c63e8286f189ebd8fa7" kind="variable"><name>m_nGhost</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1adf5ed11dc1101950e1d5f3930574fcc4" kind="variable"><name>m_tempPrimalZeroForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1ac800837118f828f7fdac867099e258b4" kind="variable"><name>m_tempDualZeroForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1ad51078951e0a05935ee1751a3ac7905b" kind="variable"><name>m_tempPrimalOneForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1ae6d437c4b77fefa22b3d27a53ef60690" kind="variable"><name>m_tempDualOneForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a2d3a1a172b6cce8e9bbe8939b5d880cc" kind="variable"><name>m_tempPrimalTwoForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1acfd3e9db2536a4d0a7b4fbde3b02e2ab" kind="variable"><name>m_tempDualTwoForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1aabe399b7f5ad80761cd08906c7b1b2ec" kind="variable"><name>m_tempPrimalThreeForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a36d55363a0cf467bbe81514f2c38f914" kind="variable"><name>m_tempDualThreeForm</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1acd87022a3783e9465e7a7a9f79c43244" kind="function"><name>FDDeRhamComplex</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a42be773140a92d04d697189bb01d72d9" kind="function"><name>~FDDeRhamComplex</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1ace33e645e9b2456f90886fdcf572786d" kind="function"><name>projection</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1add32380bfb163fbf6a54d9e95b14e9ac" kind="function"><name>projection</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a6f1bbc31f312fc57c412cff56bf989c7" kind="function"><name>projection</name></member>
+    <member refid="classGEMPIC__FDDeRhamComplex_1_1FDDeRhamComplex_1a685a7d45bc2dc0c7cd50c5080bc3ad5b" kind="function"><name>projection</name></member>
+  </compound>
+  <compound refid="classGaussError" kind="class"><name>GaussError</name>
+    <member refid="classGaussError_1a18febbec4d3cedb0755d2a738e5cf856" kind="function"><name>GaussError</name></member>
+    <member refid="classGaussError_1a152c6ae4f3b320bdc09e506e86cfa57a" kind="function"><name>ComputeDiags</name></member>
+  </compound>
+  <compound refid="classgempic__parameters" kind="class"><name>gempic_parameters</name>
+    <member refid="classgempic__parameters_1a6648ae91ab49ca16a5db636ec833325c" kind="variable"><name>Nghost</name></member>
+    <member refid="classgempic__parameters_1a76084ff2fa7dcb0762385be762605e8a" kind="variable"><name>sim_name</name></member>
+    <member refid="classgempic__parameters_1a683e4caa3607b82a4df0d2d3bc385d55" kind="variable"><name>real_box</name></member>
+    <member refid="classgempic__parameters_1ab30ca2ba55475bac4f6514de028efdb1" kind="variable"><name>domain_lo</name></member>
+    <member refid="classgempic__parameters_1a1f061a319d89f97127163a91da973460" kind="variable"><name>domain_hi</name></member>
+    <member refid="classgempic__parameters_1add90ce8e64a5bd29d9ea017ea70c55e3" kind="variable"><name>is_periodic</name></member>
+    <member refid="classgempic__parameters_1a5313d160a093248282695377bea8e265" kind="variable"><name>n_cell</name></member>
+    <member refid="classgempic__parameters_1a37ed705ccbd242baac11cdd90bdfe0b6" kind="variable"><name>max_grid_size</name></member>
+    <member refid="classgempic__parameters_1af87357b853862d0207e570725a32f666" kind="variable"><name>k</name></member>
+    <member refid="classgempic__parameters_1a319957b1c80bbea90067abc0cb7fe33b" kind="variable"><name>kx</name></member>
+    <member refid="classgempic__parameters_1a31c5c92a25b2e3d1fd4d7a8f4f77e8bc" kind="variable"><name>ky</name></member>
+    <member refid="classgempic__parameters_1ae2f0e4411b2ebd7163d6aec094d34005" kind="variable"><name>kz</name></member>
+    <member refid="classgempic__parameters_1afdbbab959a9921281839094634f90a00" kind="variable"><name>n_steps</name></member>
+    <member refid="classgempic__parameters_1ad0866f15699d3d192097ae600538ebe7" kind="variable"><name>dt</name></member>
+    <member refid="classgempic__parameters_1a2a17650704dcbfb5e83dbecbc2701fc3" kind="variable"><name>propagator</name></member>
+    <member refid="classgempic__parameters_1a9b2dc799429d9e6e45ec3c239eec374a" kind="variable"><name>strang_order</name></member>
+    <member refid="classgempic__parameters_1a1c7131abac79c0d7d1d9dda14d79e88f" kind="variable"><name>time_staggered</name></member>
+    <member refid="classgempic__parameters_1aed0db18d652dcf8f91e898ab72b80d5f" kind="variable"><name>nPartCellTot</name></member>
+    <member refid="classgempic__parameters_1ad7c7531160126363d328cb874621ded5" kind="variable"><name>n_part_per_cell</name></member>
+    <member refid="classgempic__parameters_1aeb7fe76227773d7d3a164494da607791" kind="variable"><name>charge</name></member>
+    <member refid="classgempic__parameters_1ab1f2fe641e5006609e42892d4b011122" kind="variable"><name>mass</name></member>
+    <member refid="classgempic__parameters_1aba282a77ac4dd6942ca2225d9384d78a" kind="variable"><name>name</name></member>
+    <member refid="classgempic__parameters_1a88b0ba67d675a2da192e26a81a4da7c4" kind="variable"><name>num_gaussians</name></member>
+    <member refid="classgempic__parameters_1a3a0b77310a6ff441d751914cc16f4be8" kind="variable"><name>meanVelocity</name></member>
+    <member refid="classgempic__parameters_1a968c06226e2be7eff514afcd4303aaa9" kind="variable"><name>vThermal</name></member>
+    <member refid="classgempic__parameters_1a333b521eeadfc87ce316ba3cf1b0b420" kind="variable"><name>vWeight</name></member>
+    <member refid="classgempic__parameters_1ac9bc0cb72eab7744fa68ae5c67e66b66" kind="variable"><name>density</name></member>
+    <member refid="classgempic__parameters_1ad1edfdcba5baed2935ae84dca5581290" kind="variable"><name>densityParse</name></member>
+    <member refid="classgempic__parameters_1accd45ebd49dd17491e860818154fda02" kind="variable"><name>densityEval</name></member>
+    <member refid="classgempic__parameters_1a31d1c786cfd1d85552e620dddba11723" kind="variable"><name>Bx</name></member>
+    <member refid="classgempic__parameters_1a17f4a78e4cd95ea777c5b40554858618" kind="variable"><name>BxParse</name></member>
+    <member refid="classgempic__parameters_1a2e0e3014aed4d1abca635efb9bc3fdac" kind="variable"><name>BxEval</name></member>
+    <member refid="classgempic__parameters_1ad649c7310a31a50ad14405be42e7d98c" kind="variable"><name>By</name></member>
+    <member refid="classgempic__parameters_1ac2fd2416af61d9fb4dd9b4a17b9fd5f0" kind="variable"><name>ByParse</name></member>
+    <member refid="classgempic__parameters_1a3b523117a09c05b9aa3f1bfaf4c4f462" kind="variable"><name>ByEval</name></member>
+    <member refid="classgempic__parameters_1a24ce41c0a7f78dc315a6c006384ca8e0" kind="variable"><name>Bz</name></member>
+    <member refid="classgempic__parameters_1a37ae612b31db1dfb532af9e3da78993a" kind="variable"><name>BzParse</name></member>
+    <member refid="classgempic__parameters_1a0f105dd79efbe145b46afda90a0ec522" kind="variable"><name>BzEval</name></member>
+    <member refid="classgempic__parameters_1a56649e803cff59d7bfc469e43ff909b0" kind="variable"><name>Ex</name></member>
+    <member refid="classgempic__parameters_1aa4f34a7243ac5b0364889775a0957a8b" kind="variable"><name>ExParse</name></member>
+    <member refid="classgempic__parameters_1a95085cf4f6041bd46ef12fce72789c26" kind="variable"><name>ExEval</name></member>
+    <member refid="classgempic__parameters_1a0793efaec600822076943f55d19b2033" kind="variable"><name>Ey</name></member>
+    <member refid="classgempic__parameters_1ab64c52b90d881df5d1de110da572a3a3" kind="variable"><name>EyParse</name></member>
+    <member refid="classgempic__parameters_1a766d745c91100448f6c21d666e5c2647" kind="variable"><name>EyEval</name></member>
+    <member refid="classgempic__parameters_1a79f467c3487aabfb8f006abefb197d00" kind="variable"><name>Ez</name></member>
+    <member refid="classgempic__parameters_1a084c8e4469f76ccc80a20a6c8db79ce1" kind="variable"><name>EzParse</name></member>
+    <member refid="classgempic__parameters_1a4d6f350ddeaf6244f45a54be2a3a42a8" kind="variable"><name>EzEval</name></member>
+    <member refid="classgempic__parameters_1a86f52a1800482ddf05c5d5f91bf9f3b5" kind="variable"><name>phi</name></member>
+    <member refid="classgempic__parameters_1a8788d003ba73d6bbe0d54d348b46b02f" kind="variable"><name>phiParse</name></member>
+    <member refid="classgempic__parameters_1a0330db16d53011dc34a0d2cbff4b4ec8" kind="variable"><name>phiEval</name></member>
+    <member refid="classgempic__parameters_1ad65ebb82a01215f50bf82fa6e5b658b5" kind="variable"><name>rho</name></member>
+    <member refid="classgempic__parameters_1aa63e07d30a539bc21e547b9319e85793" kind="variable"><name>rhoParse</name></member>
+    <member refid="classgempic__parameters_1ad8d1154aaf78850c09fa3b5279d0339e" kind="variable"><name>rhoEval</name></member>
+    <member refid="classgempic__parameters_1a75cab95c8a09ddd951f12b1300d1dd81" kind="variable"><name>tolerance_particles</name></member>
+    <member refid="classgempic__parameters_1a3dc6d7ea3897dbcc7897bc15effd3ce0" kind="variable"><name>max_coarsening_level</name></member>
+    <member refid="classgempic__parameters_1af780379694a7185adc493f544cea7d2f" kind="variable"><name>restart</name></member>
+    <member refid="classgempic__parameters_1af17fb7caefd0401bd541a5517c396404" kind="variable"><name>checkpoint_file</name></member>
+    <member refid="classgempic__parameters_1a81bf29e4bfdf899c83672ddb8d55d3c4" kind="variable"><name>curr_step</name></member>
+    <member refid="classgempic__parameters_1a3d061d955d2ef1b4dba3411794883d4a" kind="variable"><name>save_fields</name></member>
+    <member refid="classgempic__parameters_1a4ce2304379879ad68ca4be4b4c445c49" kind="variable"><name>save_particles</name></member>
+    <member refid="classgempic__parameters_1a0a293cd89e9bc8ebfa6aa565b8da2b21" kind="variable"><name>save_checkpoint</name></member>
+    <member refid="classgempic__parameters_1acefca6ea135a994b8755ab3fd57f5082" kind="variable"><name>curlB_scaling</name></member>
+    <member refid="classgempic__parameters_1ac3c9ed94e12865b6115ddcb6293c8542" kind="variable"><name>epref_ep0</name></member>
+    <member refid="classgempic__parameters_1a9f8fe5d25fb2b39d58b29d9eec9042cf" kind="variable"><name>energy_b_scaling</name></member>
+    <member refid="classgempic__parameters_1ae01b7553d751bcef75c95fd4953314e4" kind="function"><name>gempic_parameters</name></member>
+    <member refid="classgempic__parameters_1acb9a698d80c62004884737b6ac2f501d" kind="function"><name>init_Nghost</name></member>
+    <member refid="classgempic__parameters_1a6e37265b90d5237e9121e57cec1642bf" kind="function"><name>read_pp_params</name></member>
+    <member refid="classgempic__parameters_1a05ae18f89e7e18a10898a835e682cd4e" kind="function"><name>set_params</name></member>
+    <member refid="classgempic__parameters_1a8c4cf761626c171b348c03a6fb8b500a" kind="function"><name>set_params_Weibel</name></member>
+    <member refid="classgempic__parameters_1a5b2ebe512657f31400f3a7a65f9b1675" kind="function"><name>set_computed_params</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Time__Loop_1_1ls__rungekutta" kind="class"><name>Gempic::Time_Loop::ls_rungekutta</name>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1ae35eaeb0926efc24298fa8e71d48b6c8" kind="variable"><name>m_coeffs_a</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1a789831f2406aee27bdcaeab4acb3927d" kind="variable"><name>m_coeffs_b</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1a62efc85b65df423c5fd7982bf99ec3d3" kind="variable"><name>m_E_stage</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1aae31c826a818ea2200f58f3529e8de63" kind="variable"><name>m_B_stage</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1a7ec9e2768668764b07d0fccdfc9eb633" kind="function"><name>ls_rungekutta</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1a3987f2ce166d8342797d14b88f3b1069" kind="function"><name>ls_rungekutta</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1a61187d7cc8d5fbd9c3be5df07f9b2198" kind="function"><name>time_loop_step</name></member>
+    <member refid="classGempic_1_1Time__Loop_1_1ls__rungekutta_1a3e5c98cc72731d86d0a254fc98ed926b" kind="function"><name>time_loop</name></member>
+  </compound>
+  <compound refid="classMagFieldEnergy" kind="class"><name>MagFieldEnergy</name>
+    <member refid="classMagFieldEnergy_1ae53f300c0fa48da9a9f1eab8dc2a5227" kind="function"><name>MagFieldEnergy</name></member>
+    <member refid="classMagFieldEnergy_1a255fd6c727bddfa9397aa49362d64da2" kind="function"><name>ComputeDiags</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Field__solvers_1_1maxwell__yee" kind="class"><name>Gempic::Field_solvers::maxwell_yee</name>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a395d727ea09a69f101aee26d46b0eb0b" kind="variable"><name>nsteps</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a481a8a0808cafe2f8812ff0c3e672469" kind="variable"><name>dt</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8b541aac95b174be9db46140b6d566ab" kind="variable"><name>E_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af4f65295795c53e2ac939a8009e15203" kind="variable"><name>Alfven_Tensor</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a96fe0145ffe02c014633545ac27de8f1" kind="variable"><name>HE_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a713338fcfe69e099afbc891a0b94fbda" kind="variable"><name>J_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a040acf4b76cfdb9f6a03741f872afc03" kind="variable"><name>B_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8026b67489ba54a0974832eb3f945349" kind="variable"><name>HB_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ae53845aa8872d103e0fc4eece45cca21" kind="variable"><name>E_sol_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1abdc0f08447f19a6ca2be9e73e762db19" kind="variable"><name>B_sol_Array</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a37ad138cd451dcc47fef05620425e77a" kind="variable"><name>E_Index</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a580db5a016d0b5a4f43c872faad61acd" kind="variable"><name>B_Index</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5cb9effa70bc24cd83419208f417f11e" kind="variable"><name>E_Masks</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a660519d6085effa7b0dd4fd76cc576c5" kind="variable"><name>B_Masks</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1abffbf4b1c3ec8c33bd07fb1c34f1375e" kind="variable"><name>nodal_Mask</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a6fa6044b745f7c1fcc7314b5127301a3" kind="variable"><name>phi_init</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a47b7679153c012b951d69e93e14bcb65" kind="variable"><name>rho</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a54e935a61e0983594d6288a1e77ee927" kind="variable"><name>rho_gauss_law</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a55bc3a0a30c74406ec8192e39e2248f4" kind="variable"><name>Nghost</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a851c8c2340a2c1b37009e7591096e18b" kind="variable"><name>phi</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af6299d127c46461e027f0a1e2d9783c1" kind="variable"><name>epref_ep0</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab92b7d6b6442dfa95ae734690d8f38fd" kind="variable"><name>curlB_scaling</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af83c82811c12075491592a5c21234377" kind="variable"><name>energy_b_scaling</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af7a683e9ca4c16cb4dfefa8b8073f40d" kind="variable"><name>Ncomp</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aaec84e463fc0509d6993970b6c5c8653" kind="variable"><name>time</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afd5d87927908f6076124e91b8257f80c" kind="variable"><name>sigma</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a01577e3de1369cf753e0e343cb650ac1" kind="function"><name>maxwell_yee</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a06d55ebb4d69096b5545c01b66bc933c" kind="function"><name>maxwell_yee</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a4d45222ebf675a986e77a94f030c33b5" kind="function"><name>~maxwell_yee</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afd83a2a2a8b89c21d658ee72c8709265" kind="function"><name>reinit</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab4a44d41e71f9b3c8068ac2905b5defb" kind="function"><name>initialize</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afc44cd7fca084b5e63d00ae06440766b" kind="function"><name>projection</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5d97d43895a2724b434565905f7dd2a8" kind="function"><name>projection</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1afec26769c1d74fd183991407258f6059" kind="function"><name>projection</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a872fbd36a52364f614c1fec68d1c78b3" kind="function"><name>projection</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a70243deab7fb36342d229af0778b3fd8" kind="function"><name>initE</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1acb9da503b30c6c582fea05e8507c2749" kind="function"><name>initE</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ad217252ac082ee8dee13ac797cd26244" kind="function"><name>initE</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab0fbc316e384d5a97c283679704ae1b3" kind="function"><name>initB</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa141d69fa17d749a57d19eeb08fdd31c" kind="function"><name>initB</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1abedc73dc047bd59a6c791a31949a95ff" kind="function"><name>initB</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a89ce2e0d933a173accbab93661b463be" kind="function"><name>initB</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a0794eb2ee888636409ae7d9a73da42cb" kind="function"><name>FillBD</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a40570352b6f70a49ed141a3aae3362b9" kind="function"><name>advance_time</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af7ec9ac637ea49e502488b8b4124c65a" kind="function"><name>advance_E</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aaaeb43a8c90a8185beb6ce5a8592ae00" kind="function"><name>advance_E</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a5aa8132073ef2fd242fd44dec7416c92" kind="function"><name>advance_B</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a073d3dccbcae66bdaf86aa5d937e05b0" kind="function"><name>hodge</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a98455e934b5dbefb9dcb8adb32ac3ae8" kind="function"><name>advance</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a22f2991b6a8e33d881e7f62e6a94d6ae" kind="function"><name>init_rho_phi</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa5332ee27f9214a224f2b9d15f042e23" kind="function"><name>init_rho_phi</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1af8093be8f99ffea519a6b16e23a27860" kind="function"><name>init_rho_phi</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ab1a16cb3516ca23190368f81a0c351b9" kind="function"><name>matrix_mult</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a8d2cc4b6de60684f1ac8543273914448" kind="function"><name>solve_stencil_CG</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1ad479a9f6269cdabe2330cf74b2c01701" kind="function"><name>solve_hodge_CG</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a319a4c19f1c5048e6f3d098dbf0bf13b" kind="function"><name>poisson_operator</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a78cecbbd669c3f708c7e5014ef8ad73f" kind="function"><name>solve_poisson_CG</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a014ccd5597c517dc2fb010967588e3ad" kind="function"><name>D_from_phi</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a4c41f269391814a2dc7ce8b96c3c9360" kind="function"><name>solve_poisson</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a94bb42bea955772f3ed0c4ed4f68a3ba" kind="function"><name>rho_from_E</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aa50ad1dddafec8f9dde3fad47cad42f2" kind="function"><name>compute_gauss_error</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a96d1d685de1f3686599a14ac024600fb" kind="function"><name>computeError</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a06fb043d497a5488739a2913c7ff3e25" kind="function"><name>computeError</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a7242d5c8826e849d7a3702ca51243622" kind="function"><name>computeError</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1a6bbd424a405bce025b1f9a7756c5dd43" kind="function"><name>exactSolution</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1add0b19c557881be51c85acb3df46b67a" kind="function"><name>exactSolution</name></member>
+    <member refid="classGempic_1_1Field__solvers_1_1maxwell__yee_1aee6bd18dc1f1156f67282e46b1bb85d5" kind="function"><name>exactSolution</name></member>
+  </compound>
+  <compound refid="classMomentum" kind="class"><name>Momentum</name>
+    <member refid="classMomentum_1ad32fa2c10fb8fd25a2ea8e2379eefb9d" kind="function"><name>Momentum</name></member>
+    <member refid="classMomentum_1aa44e077c97f7efa31ca9300eea7f6d8c" kind="function"><name>ComputeDiags</name></member>
+  </compound>
+  <compound refid="classMultiReducedDiags" kind="class"><name>MultiReducedDiags</name>
+    <member refid="classMultiReducedDiags_1a9603140cc67529dfab920e4e26a8442a" kind="variable"><name>m_plot_rd</name></member>
+    <member refid="classMultiReducedDiags_1a59ce4ef93555ca904739d70e48b8d758" kind="variable"><name>m_rd_names</name></member>
+    <member refid="classMultiReducedDiags_1ab6f5a4e5b8728029a12bdd25cd7109a3" kind="variable"><name>save_reduced</name></member>
+    <member refid="classMultiReducedDiags_1aa714de2e01fab4d5fde3aeed114d292b" kind="variable"><name>m_multi_rd</name></member>
+    <member refid="classMultiReducedDiags_1a25d038a5c541ab5b4e85528591e358f3" kind="function"><name>MultiReducedDiags</name></member>
+    <member refid="classMultiReducedDiags_1a8d9f882112bbf43ff873fe8e7f1ef41b" kind="function"><name>InitData</name></member>
+    <member refid="classMultiReducedDiags_1adfb68af38950b7d606cf3ae5f10eb242" kind="function"><name>LoadBalance</name></member>
+    <member refid="classMultiReducedDiags_1a71ca796cf157b390ee38287704644f43" kind="function"><name>ComputeDiags</name></member>
+    <member refid="classMultiReducedDiags_1a1a37fe7ae612d8eebb826fd6bcd57f96" kind="function"><name>WriteToFile</name></member>
+  </compound>
+  <compound refid="classParameters" kind="class"><name>Parameters</name>
+    <member refid="classParameters_1aead3ab6f97afd4e48b70aafeafe003b5" kind="variable"><name>m_realBox</name></member>
+    <member refid="classParameters_1a23339e2bee346eca86e987c33ae2158d" kind="variable"><name>m_nCell</name></member>
+    <member refid="classParameters_1ab19524bf30af76d2648b903b9f8ae5c4" kind="variable"><name>m_maxGridSize</name></member>
+    <member refid="classParameters_1a71537a4f02fcc735b470193e4fb5924a" kind="variable"><name>m_isPeriodic</name></member>
+    <member refid="classParameters_1a89c43d3c2436146092caf923b51ddf50" kind="variable"><name>m_length</name></member>
+    <member refid="classParameters_1a64b8837f2494b5598f76eaa3a0227fa4" kind="variable"><name>m_grid</name></member>
+    <member refid="classParameters_1aa17e645b1322d40670ea83fe44a90b54" kind="variable"><name>m_domain</name></member>
+    <member refid="classParameters_1a61cadeff4bfeaced94d613c18c4acd81" kind="variable"><name>m_geometry</name></member>
+    <member refid="classParameters_1a031c863c3e5b74bebc05c08c480d4aba" kind="variable"><name>m_distriMap</name></member>
+    <member refid="classParameters_1a921f1a7a13508667b93f36365c2f2289" kind="variable"><name>m_degree</name></member>
+    <member refid="classParameters_1af4d94ee360ac0157d9065f78797fe9a1" kind="function"><name>Parameters</name></member>
+    <member refid="classParameters_1a7ad4f45741357dd2bb24969827cac034" kind="function"><name>Parameters</name></member>
+    <member refid="classParameters_1a6f74ba254704fd9fe64eb24b70a77e34" kind="function"><name>realBox</name></member>
+    <member refid="classParameters_1ac7830e2b763f8ab6badbf013115161f9" kind="function"><name>nCell</name></member>
+    <member refid="classParameters_1a408b83d177e3933e48b83990bce6b38d" kind="function"><name>isPeriodic</name></member>
+    <member refid="classParameters_1aa57f51db327369dbe8dae963a52ddce3" kind="function"><name>grid</name></member>
+    <member refid="classParameters_1ac5676a6463dbdc406594828966d4a1ad" kind="function"><name>geometry</name></member>
+    <member refid="classParameters_1ab551dbf94b9cb8e910a2b8fd2d92f81c" kind="function"><name>distriMap</name></member>
+    <member refid="classParameters_1a00cbaa1b786db5a9fbc6cc02031cc276" kind="function"><name>domain</name></member>
+    <member refid="classParameters_1a71c4719b0b7fc22538b60f45be570788" kind="function"><name>dr</name></member>
+    <member refid="classParameters_1a85c46de3017eb2f89851eeccee9cce70" kind="function"><name>degree</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Particles_1_1particle__groups" kind="class"><name>Gempic::Particles::particle_groups</name>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a45e4108cf127a0ae7e7f7e1014e4b145" kind="variable"><name>m_charge</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a26208171a0738eed254f400cc1745dc3" kind="variable"><name>m_mass</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a122770ffb5f531175cd618a09d9a8047" kind="variable"><name>m_name</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a5b81b51bbf0783bd263b53cde3e5a1fd" kind="function"><name>getCharge</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1aaa5c5e97c9448ce3663e79cbe3d4bab1" kind="function"><name>getMass</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1af0c73d4ddab58e99ce48b598ea2fe1fb" kind="function"><name>getName</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a7b3cd26512144c24a44433e342c853d4" kind="function"><name>particle_groups</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a642258779a64277aebc2ba000e561d1d" kind="function"><name>particle_groups</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a0eec783bdaa586447eaa310fd0bbaa26" kind="function"><name>particle_groups</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1ae254b4e701189b3fb8ff93b1d8f0fe52" kind="function"><name>particle_groups</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1aade59410b2d89581f3a1313be225fbe7" kind="function"><name>particle_groups</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1a2d31c0b52f372f9609f3544795cf1111" kind="function"><name>add_particle</name></member>
+    <member refid="classGempic_1_1Particles_1_1particle__groups_1af2ccfc30ce92c26c524c22a8432e8718" kind="function"><name>copy</name></member>
+  </compound>
+  <compound refid="classParticleEnergy" kind="class"><name>ParticleEnergy</name>
+    <member refid="classParticleEnergy_1a204bc34d9ea690afc5648397a8535398" kind="function"><name>ParticleEnergy</name></member>
+    <member refid="classParticleEnergy_1ad8b9e6a9980cc08fa8221bb8da14f17b" kind="function"><name>ComputeDiags</name></member>
+  </compound>
+  <compound refid="classGEMPIC__PoissonSolver_1_1PoissonSolver" kind="class"><name>GEMPIC_PoissonSolver::PoissonSolver</name>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1aceccd7096ae068757a3a4079e885755c" kind="variable"><name>m_maxIter</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a505649d7a1c4930cfbe533923caeead3" kind="variable"><name>m_maxCoarseningLevel</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a7f0e03674ba787015170a7cb90ed49c7" kind="variable"><name>m_maxFmgIter</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a76a6da160677a7e0415c29d6991bd380" kind="variable"><name>m_mgBottomMaxIter</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a5a0cd61338ccaf5c9caf8235262b2d99" kind="variable"><name>m_verbose</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a5fc861d309715d5cb2262859f27051b4" kind="variable"><name>m_bottomVerbose</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a0fec48de2bd0d3a34dd1b6e2d3448659" kind="variable"><name>m_sigma</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac65e4d2bf3ba90f8d3a12d07f161779d" kind="function"><name>PoissonSolver</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ac969904c4056a9dae2c60a39d44f1a55" kind="function"><name>~PoissonSolver</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1ab2cb88735ba63e70e42d55cf05f256ff" kind="function"><name>solve</name></member>
+    <member refid="classGEMPIC__PoissonSolver_1_1PoissonSolver_1a8fa66479b9cfc0fbb015093581d73df2" kind="function"><name>subtractConstantPart</name></member>
+  </compound>
+  <compound refid="classReducedDiags" kind="class"><name>ReducedDiags</name>
+    <member refid="classReducedDiags_1aacd7edbb7528fe27bc60640a195c4e7e" kind="variable"><name>m_path</name></member>
+    <member refid="classReducedDiags_1af5b99f1420d969465129d3a0dbe90c20" kind="variable"><name>m_extension</name></member>
+    <member refid="classReducedDiags_1a03a7f68023666990c36cf3833706a6c4" kind="variable"><name>m_rd_name</name></member>
+    <member refid="classReducedDiags_1a36cc2444a258678abf3d43faa271f761" kind="variable"><name>m_IsNotRestart</name></member>
+    <member refid="classReducedDiags_1a7659dff387d977b05d96005daa75f7c9" kind="variable"><name>m_sep</name></member>
+    <member refid="classReducedDiags_1aa333455a99f0f72f15778b96ee51e6f5" kind="variable"><name>m_data</name></member>
+    <member refid="classReducedDiags_1a250b345247a507adee447227d6a812c0" kind="variable"><name>vol</name></member>
+    <member refid="classReducedDiags_1a629e3617893eb55b1eebb9c427973ac3" kind="function"><name>ReducedDiags</name></member>
+    <member refid="classReducedDiags_1a2c5f2911e7273143d38ef786c7ffca3d" kind="function"><name>~ReducedDiags</name></member>
+    <member refid="classReducedDiags_1a6afa91dcfbcdf14055e42021f10edff6" kind="function"><name>InitData</name></member>
+    <member refid="classReducedDiags_1a59b4c750758f429b569e167c349ae453" kind="function"><name>LoadBalance</name></member>
+    <member refid="classReducedDiags_1a6b3655d6249fd27db860f238478f4dca" kind="function"><name>ComputeDiags</name></member>
+    <member refid="classReducedDiags_1aa36da16e3f238531c9f6a0233b7e84dc" kind="function"><name>WriteToFile</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Particles_1_1spline1d__at__particles" kind="class"><name>Gempic::Particles::spline1d_at_particles</name>
+    <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1abe66ce215974725ba65b14c2a58334e4" kind="variable"><name>spline</name></member>
+    <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a0f5caa6acd4e53d8f43b545fea2688a2" kind="variable"><name>primitive</name></member>
+    <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a208821628b34d05c00515eca1bfbbd01" kind="variable"><name>box</name></member>
+    <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1af34b6491385979599b4acea0f46c8ab8" kind="function"><name>init_position</name></member>
+    <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a629afe13490f66ae06303c804d1c6d06" kind="function"><name>spline_eval</name></member>
+    <member refid="classGempic_1_1Particles_1_1spline1d__at__particles_1a3f6bc1e9e1457a4a137ed4fbb81e95ad" kind="function"><name>spline_eval_primitive</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Particles_1_1splines" kind="class"><name>Gempic::Particles::splines</name>
+    <member refid="classGempic_1_1Particles_1_1splines_1a745b970f625e970d6e88862e86cb17f9" kind="variable"><name>centered_evaluation</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1ae27e96d569476454cf82df43b963c399" kind="variable"><name>integral_evaluation</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1af5c811f62d9ef69d51cca4b1a664aabb" kind="function"><name>splines</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1a9c57cba24cec9a4a7ba04373e46aad83" kind="function"><name>splines</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1a85483b4a6246a7b6c8d08dc74fee96f3" kind="function"><name>spline_eval_vec</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1a816a0cf094068971824ea829bf1750e8" kind="function"><name>spline_eval_prim_vec</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1ac37ba57b96edf11beccd20a16effd012" kind="function"><name>spline_eval_vec_back</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1a139278ad83e3421083cce07f7150074d" kind="function"><name>shifted_x</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines_1ad414db125e184495ea354bab8fcbbd24" kind="function"><name>compute_cell_index</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Particles_1_1splines__at__particles" kind="class"><name>Gempic::Particles::splines_at_particles</name>
+    <member refid="classGempic_1_1Particles_1_1splines__at__particles_1a6102a6fea790847f72ddace1fa0b3185" kind="variable"><name>spline_cell</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines__at__particles_1a487bbeb0f2d0f88feeef87672a7d0df0" kind="variable"><name>spline_node</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines__at__particles_1a86c05c774ad90b3f3cd01764bb094b3d" kind="variable"><name>box</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines__at__particles_1a443c8c01621209cbbffa8ceb5f53979e" kind="function"><name>init_position</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines__at__particles_1a5017afc79442b6878bbec20d7947b6de" kind="function"><name>init_particles</name></member>
+    <member refid="classGempic_1_1Particles_1_1splines__at__particles_1aaf5d2aa6d0f085af68b619a834985649" kind="function"><name>spline_eval</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Profiling_1_1timers" kind="class"><name>Gempic::Profiling::timers</name>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a324a91814399182fad04d520bbcfc876" kind="variable"><name>profiling</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a11cc9a05bf08f46602ae86d02f748403" kind="variable"><name>counter_deposition</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a57a5288f3f9139af7ee47122face6ff1" kind="variable"><name>counter_redistribute</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a53e7ffb21bbee1ae5ad8f5cae506b681" kind="variable"><name>counter_jboundary</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a945b0e7631c57cfb55d6f305fd084638" kind="variable"><name>counter_fields</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a40e353560216eedc0bf4997237118fce" kind="variable"><name>counter_diagnostics</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a473d83223739ae348f2be9dbdc5434d5" kind="variable"><name>counter_all</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1a8cbcaddfc91cd95da7df07b6384d5678" kind="function"><name>timers</name></member>
+    <member refid="classGempic_1_1Profiling_1_1timers_1aeac43e75c9be376041bfe5204d91b7e0" kind="function"><name>timers</name></member>
+  </compound>
+  <compound refid="classGempic_1_1Vlasov__Maxwell_1_1vlasov__maxwell" kind="class"><name>Gempic::Vlasov_Maxwell::vlasov_maxwell</name>
+  </compound>
+  <compound refid="classvlasov__maxwell__simulation" kind="class"><name>vlasov_maxwell_simulation</name>
+    <member refid="classvlasov__maxwell__simulation_1a4489721118e2e45b195055b8c402eaec" kind="variable"><name>params</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a4a927612c2a11109f4dc86e41cc1957d" kind="variable"><name>domain</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a1236faa4f2f5f5458a76338738af4019" kind="variable"><name>mw_yee</name></member>
+    <member refid="classvlasov__maxwell__simulation_1aa786c419a576bc69c4f9b02a9cf8c5f8" kind="variable"><name>part_gr</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a27ee2fa09280bd52b3ec45fba06fa0c2" kind="variable"><name>diagn</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a377de5afbe7a1697555bd06ba9d0acf8" kind="variable"><name>redDiagn</name></member>
+    <member refid="classvlasov__maxwell__simulation_1ab9b33ecaa1d326d0601fc1557d527606" kind="variable"><name>readinfile</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a244eac0d940c94bf7f0d0991595e445f" kind="variable"><name>ctest</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a993fb9c52a664f56eecf4b17bf91ca87" kind="function"><name>initialize_vlasov_maxwell_from_file</name></member>
+    <member refid="classvlasov__maxwell__simulation_1af523519bb451571091a189ee0994e5d8" kind="function"><name>initialize_gempic_structures</name></member>
+    <member refid="classvlasov__maxwell__simulation_1afb6d6e364bc39e1a9f24ae00f07c4395" kind="function"><name>initialize_gempic_structures</name></member>
+    <member refid="classvlasov__maxwell__simulation_1a646e5fa491cfa54649b869e6adf1cc1e" kind="function"><name>run_time_loop</name></member>
+  </compound>
+  <compound refid="namespaceamrex" kind="namespace"><name>amrex</name>
+  </compound>
+  <compound refid="namespaceCompDom" kind="namespace"><name>CompDom</name>
+  </compound>
+  <compound refid="namespaceDiagnostics__Output" kind="namespace"><name>Diagnostics_Output</name>
+  </compound>
+  <compound refid="namespaceField__solvers" kind="namespace"><name>Field_solvers</name>
+  </compound>
+  <compound refid="namespaceGempic" kind="namespace"><name>Gempic</name>
+    <member refid="namespaceGempic_1a3a730df9bb861d0905cd1411f02cf67d" kind="function"><name>overwrite_amrex_parser_defaults</name></member>
+    <member refid="namespaceGempic_1adff35f05c59033147852be6854f5fbf0" kind="function"><name>gempic_assert</name></member>
+    <member refid="namespaceGempic_1a761bd218ae44fc444e14e49e5395ea85" kind="function"><name>gempic_assert_err</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1CompDom" kind="namespace"><name>Gempic::CompDom</name>
+  </compound>
+  <compound refid="namespaceGempic_1_1Diagnostics__Output" kind="namespace"><name>Gempic::Diagnostics_Output</name>
+    <member refid="namespaceGempic_1_1Diagnostics__Output_1ac57d4c58bdcf44e606775ba3b5f60f58" kind="function"><name>computeDotProd</name></member>
+    <member refid="namespaceGempic_1_1Diagnostics__Output_1af249107a4c299ab2d44f97a7ae782bc0" kind="function"><name>Gempic_WritePlotFile</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1Field__solvers" kind="namespace"><name>Gempic::Field_solvers</name>
+  </compound>
+  <compound refid="namespaceGempic_1_1FieldSolvers" kind="namespace"><name>Gempic::FieldSolvers</name>
+    <member refid="namespaceGempic_1_1FieldSolvers_1ae326a1697c1331b2c28572003cdedf5e" kind="function"><name>initConst</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1Particles" kind="namespace"><name>Gempic::Particles</name>
+    <member refid="namespaceGempic_1_1Particles_1ac324747bb5437325b5fa89dcfd3d9e0f" kind="function"><name>mod_dom</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a6f1a1ddcea1af5fe9afabcb26f70179f" kind="function"><name>gempic_deposit_rho</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a4ec4c99539f3268be6d221d305790ec5" kind="function"><name>evaluate_fem_efield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a378ab477834d779202b157eb552d182f" kind="function"><name>accumulate_j_fem_integral_point</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a37e59afa74cf38835d41ea57f00fdcb4" kind="function"><name>accumulate_j_fem_integral</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a05af64fe5d5cac5a05a741e257cf235e" kind="function"><name>accumulate_j_update_v_fem_integral</name></member>
+    <member refid="namespaceGempic_1_1Particles_1ae5731e62c88203d097781e0b7480f841" kind="function"><name>accumulate_j_fem_integral</name></member>
+    <member refid="namespaceGempic_1_1Particles_1ae245c2b0f2b088286697db955c51792e" kind="function"><name>evaluate_fem_bfield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1af53394c09c24bafd14028e608dd8b1aa" kind="function"><name>gempic_deposit_J_and_interpolate</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a73568c918197382a70fe43d671f121af" kind="function"><name>gempic_deposit_charge_indextype</name></member>
+    <member refid="namespaceGempic_1_1Particles_1ae7f538f7f8f66613a9e740ba3fa4efbd" kind="function"><name>push_v_efield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1af05ad07272285de864a0bcf92fd39cd1" kind="function"><name>push_x_v_bfield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1aa29df01fa6850bef6a9b7e8b891c6272" kind="function"><name>push_particle</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a20b5b8a01b06d4b1e85670c98567b02b" kind="function"><name>push_particle_pos</name></member>
+    <member refid="namespaceGempic_1_1Particles_1afbca713678fa433b0a4767a728923caa" kind="function"><name>push_particle_boris</name></member>
+    <member refid="namespaceGempic_1_1Particles_1ae9bdd7e504396881430942118b73e078" kind="function"><name>gempic_deposit_magnetization</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a64d8fa88096ea36475a01f0b00e0ce8c" kind="function"><name>evaluate_grad_mod_bfield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a60bce82f67084cbc9de719926e7606d5" kind="function"><name>evaluate_efield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1ac27e5dc1e46ef50541ab175d4bd6e1e2" kind="function"><name>evaluate_bfield</name></member>
+    <member refid="namespaceGempic_1_1Particles_1aa7eaa53ae3c184aa7aa993a4b5b7fd05" kind="function"><name>gempic_deposit_rho_C3</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a2d76f82f0fbb303aae04f92efddc6b18" kind="function"><name>accumulate_j_update_v_C2</name></member>
+    <member refid="namespaceGempic_1_1Particles_1a32070da2e48e64341329b7c7bd1237b1" kind="function"><name>gempic_accumulate_j</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1Profiling" kind="namespace"><name>Gempic::Profiling</name>
+  </compound>
+  <compound refid="namespaceGempic_1_1Sampling" kind="namespace"><name>Gempic::Sampling</name>
+    <member refid="namespaceGempic_1_1Sampling_1a93af1c8e20695f268eeb3a5f20afcb35" kind="typedef"><name>ParticleType</name></member>
+    <member refid="namespaceGempic_1_1Sampling_1a08243d2302da9aa60d071e2904c91e59" kind="function"><name>init_particles_cellwise</name></member>
+    <member refid="namespaceGempic_1_1Sampling_1a04a4c585839a3df602f7c896c781c130" kind="function"><name>init_particles_full_domain_gpu</name></member>
+    <member refid="namespaceGempic_1_1Sampling_1a17493a4b06a2bef420a469b2bca73a1b" kind="function"><name>init_particles_full_domain</name></member>
+    <member refid="namespaceGempic_1_1Sampling_1a9447edcba972c956d54c8c6cd0eec719" kind="function"><name>init_particles_full_domain</name></member>
+    <member refid="namespaceGempic_1_1Sampling_1a57557be67ab999cdb11f0df6b531face" kind="function"><name>init_one_particle_cellwise</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1Time__Loop" kind="namespace"><name>Gempic::Time_Loop</name>
+    <member refid="namespaceGempic_1_1Time__Loop_1ad61acb197620bc5adc99ecf34fb31f17" kind="function"><name>loop_preparation_init</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1ae272863babf8f1fb70df1fce6357e87e" kind="function"><name>loop_staggering</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a2064f7e108f6857ddaf826ae473bb36d" kind="function"><name>loop_preparation</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1aeec6d64053655b85bb6098403e60ffea" kind="function"><name>loop_preparation</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a2fbf3b9b9596ccdb4262e43764f29a06" kind="function"><name>loop_preparation</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a25321a02876e1ecc71f3d41baad19805" kind="function"><name>loop_preparation</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1ac6e20a1ab27be74b244127e0578ee224" kind="function"><name>time_loop_boris_fd_step</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1ac44d85f30f75ebd84f60d4594f69afd7" kind="function"><name>time_loop_boris_fd</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a5ac17b3923c7ccfe3f7708558556af4e" kind="function"><name>time_loop_hs_fem_step</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a2efbe434baaab8ec4135f0a4aa5348db" kind="function"><name>time_loop_hs_fem</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a3a40fb42caa472ad3c00b28e80d95ca4" kind="function"><name>time_loop_hs_zigzag_step</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1ae2df128253e4fd0af6768dfd7ad52804" kind="function"><name>time_loop_hs_zigzag</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1ab2cfd3396cdd4cfe66dafe42c45fd9d2" kind="function"><name>time_loop_hs_zigzag_C2_step</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a1a2d479434df2bd5d03ad85a134f3a57" kind="function"><name>time_loop_hs_zigzag_C2</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a4d0f7d38e26be8dd9dd834cb0efde380" kind="function"><name>time_loop_hsall_fem_step</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a7a240e9d0f95b2ac25d5e36eab07af8b" kind="function"><name>time_loop_hsall_fem</name></member>
+    <member refid="namespaceGempic_1_1Time__Loop_1a43c71961e7f77281b719c724b49802e8" kind="function"><name>time_loop_particles</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1Utils" kind="namespace"><name>Gempic::Utils</name>
+    <member refid="namespaceGempic_1_1Utils_1a317e5f0fefa3fe0902a73d22807a6817" kind="function"><name>gempic_norm</name></member>
+    <member refid="namespaceGempic_1_1Utils_1a29966d3095d0d987a6f5424ac8c4586c" kind="function"><name>Gempic_SumBoundary</name></member>
+    <member refid="namespaceGempic_1_1Utils_1a59d1d3886f7cded1f2438fa557efd126" kind="function"><name>Gempic_GotoNextLine</name></member>
+    <member refid="namespaceGempic_1_1Utils_1a13c79df3da33fb9367316dc9f23a678c" kind="function"><name>Gempic_WriteCheckpointFile_Field</name></member>
+    <member refid="namespaceGempic_1_1Utils_1a59188836cfe5063a586153718e96eaf1" kind="function"><name>Gempic_WriteCheckpointFile</name></member>
+    <member refid="namespaceGempic_1_1Utils_1af4bbb88b6c47df8c656939435d451850" kind="function"><name>Gempic_ReadCheckpointFile_Field</name></member>
+    <member refid="namespaceGempic_1_1Utils_1a487ebdad11d5dacde441046eed781201" kind="function"><name>Gempic_ReadCheckpointFile</name></member>
+  </compound>
+  <compound refid="namespaceGempic_1_1Vlasov__Maxwell" kind="namespace"><name>Gempic::Vlasov_Maxwell</name>
+  </compound>
+  <compound refid="namespaceGEMPIC__FDDeRhamComplex" kind="namespace"><name>GEMPIC_FDDeRhamComplex</name>
+    <member refid="namespaceGEMPIC__FDDeRhamComplex_1a66f24e75179331784c335663f70b4275" kind="function"><name>getStencils</name></member>
+  </compound>
+  <compound refid="namespaceGEMPIC__Fields" kind="namespace"><name>GEMPIC_Fields</name>
+    <member refid="namespaceGEMPIC__Fields_1a9b71246d5f60bd4d5c8dd4070f23de59" kind="enum"><name>Grid</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a9b71246d5f60bd4d5c8dd4070f23de59a4cee299788920fc56b729258c2dedb9b" kind="enumvalue"><name>primal</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a9b71246d5f60bd4d5c8dd4070f23de59a64d27abb5e72b32ad34185caa7690238" kind="enumvalue"><name>dual</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a12169514a39d688b0c325e774e5fc894" kind="enum"><name>Space</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a12169514a39d688b0c325e774e5fc894a22aee88f6c359af1f32a67fd70b218a8" kind="enumvalue"><name>node</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a12169514a39d688b0c325e774e5fc894a9c513c47f642f5858bd6067405aeebe9" kind="enumvalue"><name>edge</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a12169514a39d688b0c325e774e5fc894ac69d32d710c01f41606568e026de7dde" kind="enumvalue"><name>face</name></member>
+    <member refid="namespaceGEMPIC__Fields_1a12169514a39d688b0c325e774e5fc894a35f5cd93e1809d35639c17c5659151e2" kind="enumvalue"><name>cell</name></member>
+  </compound>
+  <compound refid="namespaceGEMPIC__PoissonSolver" kind="namespace"><name>GEMPIC_PoissonSolver</name>
+  </compound>
+  <compound refid="namespaceParticles" kind="namespace"><name>Particles</name>
+  </compound>
+  <compound refid="namespaceProfiling" kind="namespace"><name>Profiling</name>
+  </compound>
+  <compound refid="namespaceSampling" kind="namespace"><name>Sampling</name>
+  </compound>
+  <compound refid="namespaceTime__Loop" kind="namespace"><name>Time_Loop</name>
+  </compound>
+  <compound refid="namespaceUtils" kind="namespace"><name>Utils</name>
+  </compound>
+  <compound refid="namespaceVlasov__Maxwell" kind="namespace"><name>Vlasov_Maxwell</name>
+  </compound>
+  <compound refid="GEMPIC__initMF_8H" kind="file"><name>GEMPIC_initMF.H</name>
+  </compound>
+  <compound refid="GEMPIC__maxwell__yee_8H" kind="file"><name>GEMPIC_maxwell_yee.H</name>
+    <member refid="GEMPIC__maxwell__yee_8H_1a4a457637d23010c3772d8f461dea046e" kind="function"><name>function_to_project</name></member>
+  </compound>
+  <compound refid="GEMPIC__PoissonSolver_8cpp" kind="file"><name>GEMPIC_PoissonSolver.cpp</name>
+  </compound>
+  <compound refid="GEMPIC__PoissonSolver_8H" kind="file"><name>GEMPIC_PoissonSolver.H</name>
+  </compound>
+  <compound refid="test__ampere__faraday_8cpp" kind="file"><name>test_ampere_faraday.cpp</name>
+    <member refid="test__ampere__faraday_8cpp_1aabfaca0fce998cdfcf713a6d39797bfd" kind="define"><name>AMPERE_FARADAY_ZERO</name></member>
+    <member refid="test__ampere__faraday_8cpp_1a8c9e818dc748accfd814eb66b3831036" kind="define"><name>AMPERE_FARADAY_E0_SIN</name></member>
+    <member refid="test__ampere__faraday_8cpp_1a6e0803eab6cc88f9f54afea91ce6717b" kind="define"><name>AMPERE_FARADAY_B1_SIN</name></member>
+    <member refid="test__ampere__faraday_8cpp_1ab816c3f2507d2b7dc5abd7fc06889746" kind="define"><name>AMPERE_FARADAY_OMEGA</name></member>
+    <member refid="test__ampere__faraday_8cpp_1a9653aa107a51ff377ce53657454c482e" kind="function"><name>function_to_project</name></member>
+    <member refid="test__ampere__faraday_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__ampere__faraday_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__AMReX__atomic__add_8cpp" kind="file"><name>test_AMReX_atomic_add.cpp</name>
+    <member refid="test__AMReX__atomic__add_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__AMReX__atomic__add_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__constval_8cpp" kind="file"><name>test_constval.cpp</name>
+    <member refid="test__constval_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__constval_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__ihodge__CG_8cpp" kind="file"><name>test_ihodge_CG.cpp</name>
+    <member refid="test__ihodge__CG_8cpp_1a052a21bd901698875822852ae0077719" kind="define"><name>IHODGE_CG_ZERO</name></member>
+    <member refid="test__ihodge__CG_8cpp_1abb60cab19960f51f36a7419f08f316fa" kind="define"><name>IHODGE_CG_E0</name></member>
+    <member refid="test__ihodge__CG_8cpp_1ab2a7a9f664daa47f93c215c8977bcefe" kind="define"><name>IHODGE_CG_E1</name></member>
+    <member refid="test__ihodge__CG_8cpp_1a87ee030cb22e4d546983144703066f70" kind="define"><name>IHODGE_CG_E2</name></member>
+    <member refid="test__ihodge__CG_8cpp_1a6e7c815f40eafeaecf116efa67626d71" kind="define"><name>IHODGE_CG_B0</name></member>
+    <member refid="test__ihodge__CG_8cpp_1a5a229739452d0b5ebf2e60a88ac2e280" kind="define"><name>IHODGE_CG_B2</name></member>
+    <member refid="test__ihodge__CG_8cpp_1a5fc59e54e297500e68ce09f4ce3b3820" kind="function"><name>function_to_project</name></member>
+    <member refid="test__ihodge__CG_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__ihodge__CG_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__maxwell__solver_8cpp" kind="file"><name>test_maxwell_solver.cpp</name>
+    <member refid="test__maxwell__solver_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__maxwell__yee_8cpp" kind="file"><name>test_maxwell_yee.cpp</name>
+    <member refid="test__maxwell__yee_8cpp_1a60951d7cf53ae15234d2af28680e84c8" kind="define"><name>MAXWELL_YEE_ZERO</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a2c880281fe5942842b19e3d6bce7663f" kind="define"><name>MAXWELL_YEE_E1</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a081e8db681aacda6e92521e26bb6ab5c" kind="define"><name>MAXWELL_YEE_E2</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a49c704dbf3a9a3848f9f9d15a99c108b" kind="define"><name>MAXWELL_YEE_B0</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a59dde5080db907fcd72935874cd9e616" kind="define"><name>MAXWELL_YEE_B2</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a51734b6983a8f8f02fbfeb852e509aaf" kind="define"><name>MAXWELL_YEE_PHI</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a4ca1c3c86621cd62c812661f43f9d0f7" kind="define"><name>MAXWELL_YEE_RHO</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a671f266d8d199dac63f430ac89d2c08b" kind="define"><name>MAXWELL_YEE_E0_1</name></member>
+    <member refid="test__maxwell__yee_8cpp_1adfd83cdef1f18fa466273787ede7cbb7" kind="define"><name>MAXWELL_YEE_E1_1</name></member>
+    <member refid="test__maxwell__yee_8cpp_1aaa2af4a295ac31a11f8e7dbecab75d48" kind="define"><name>MAXWELL_YEE_E2_1</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a5fc59e54e297500e68ce09f4ce3b3820" kind="function"><name>function_to_project</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__maxwell__yee_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__maxwell__yee__order_8cpp" kind="file"><name>test_maxwell_yee_order.cpp</name>
+    <member refid="test__maxwell__yee__order_8cpp_1a6868bdd79b0cf08ad538cab6eb5bbe2b" kind="function"><name>funct_e1</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a62a2c0eff0f1edbd8853e9cab9e602b8" kind="function"><name>funct_e2</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1ad950b2c9f3590b7c6df1d1bec324a607" kind="function"><name>funct_b0</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1adb8eb1cf22827c1dc562ea457d5d6933" kind="function"><name>funct_b2</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kind="function"><name>zero</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a2fb60dad89cee592628ed0283c2b7097" kind="function"><name>func_phi</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a91039dbabf48d4d32ce922ff48b969a6" kind="function"><name>func_rho</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a372b4cbc5ebb9f2aa703280409b437e3" kind="function"><name>func_e0</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a460e53df6a719d95fbb80c9fa186e021" kind="function"><name>func_e1</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a037c29ade20fa727aa3b4b42c43ace97" kind="function"><name>func_e2</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__maxwell__yee__order_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__Poisson_8cpp" kind="file"><name>test_Poisson.cpp</name>
+    <member refid="test__Poisson_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__poisson__CG_8cpp" kind="file"><name>test_poisson_CG.cpp</name>
+    <member refid="test__poisson__CG_8cpp_1a324754a52c9c96663ba34e5ad176c40d" kind="define"><name>POISSON_CG_PHI</name></member>
+    <member refid="test__poisson__CG_8cpp_1ac8f0201a2e1b7d5fc93c449b35415c71" kind="define"><name>POISSON_CG_RHO</name></member>
+    <member refid="test__poisson__CG_8cpp_1a5fc59e54e297500e68ce09f4ce3b3820" kind="function"><name>function_to_project</name></member>
+    <member refid="test__poisson__CG_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__poisson__CG_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__FDDeRhamComplex_8cpp" kind="file"><name>GEMPIC_FDDeRhamComplex.cpp</name>
+  </compound>
+  <compound refid="GEMPIC__FDDeRhamComplex_8H" kind="file"><name>GEMPIC_FDDeRhamComplex.H</name>
+  </compound>
+  <compound refid="GEMPIC__computational__domain_8H" kind="file"><name>GEMPIC_computational_domain.H</name>
+  </compound>
+  <compound refid="GEMPIC__extDerivatives_8cpp" kind="file"><name>GEMPIC_extDerivatives.cpp</name>
+  </compound>
+  <compound refid="GEMPIC__Fields_8H" kind="file"><name>GEMPIC_Fields.H</name>
+  </compound>
+  <compound refid="GEMPIC__gempic__norm_8H" kind="file"><name>GEMPIC_gempic_norm.H</name>
+  </compound>
+  <compound refid="GEMPIC__SumBoundary_8H" kind="file"><name>GEMPIC_SumBoundary.H</name>
+  </compound>
+  <compound refid="test__AMReX__Dot_8cpp" kind="file"><name>test_AMReX_Dot.cpp</name>
+    <member refid="test__AMReX__Dot_8cpp_1aa4d087ba1f6584649a5b042cf8c76ef1" kind="function"><name>initial_bfield</name></member>
+    <member refid="test__AMReX__Dot_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__AMReX__Dot_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__AMReX__FillBoundary_8cpp" kind="file"><name>test_AMReX_FillBoundary.cpp</name>
+    <member refid="test__AMReX__FillBoundary_8cpp_1a2617735345dc4138c104c212bd826f5d" kind="function"><name>main_main</name></member>
+    <member refid="test__AMReX__FillBoundary_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__AMReX__OverrideSync_8cpp" kind="file"><name>test_AMReX_OverrideSync.cpp</name>
+    <member refid="test__AMReX__OverrideSync_8cpp_1a2617735345dc4138c104c212bd826f5d" kind="function"><name>main_main</name></member>
+    <member refid="test__AMReX__OverrideSync_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__AMReX__SumBoundary_8cpp" kind="file"><name>test_AMReX_SumBoundary.cpp</name>
+    <member refid="test__AMReX__SumBoundary_8cpp_1a0d09b6d094ff85a4a5e0d38fa0c4af90" kind="function"><name>main_main</name></member>
+    <member refid="test__AMReX__SumBoundary_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__boundaries__sync_8cpp" kind="file"><name>test_boundaries_sync.cpp</name>
+    <member refid="test__boundaries__sync_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__curl__projection_8cpp" kind="file"><name>test_curl_projection.cpp</name>
+    <member refid="test__curl__projection_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__div__projection_8cpp" kind="file"><name>test_div_projection.cpp</name>
+    <member refid="test__div__projection_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__gempic__norm_8cpp" kind="file"><name>test_gempic_norm.cpp</name>
+    <member refid="test__gempic__norm_8cpp_1a72e1476410f8da1d021c5df904734474" kind="function"><name>func</name></member>
+    <member refid="test__gempic__norm_8cpp_1a7759acfa3ca9228b934f3dc8d71eabf3" kind="function"><name>main_main</name></member>
+    <member refid="test__gempic__norm_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__grad__projection_8cpp" kind="file"><name>test_grad_projection.cpp</name>
+    <member refid="test__grad__projection_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__gtest_8cpp" kind="file"><name>test_gtest.cpp</name>
+    <member refid="test__gtest_8cpp_1a5b3a8286db427aa68baa7275e514b9a1" kind="function"><name>TEST</name></member>
+    <member refid="test__gtest_8cpp_1acf75f18580a17e5c5f22706967810424" kind="function"><name>TEST</name></member>
+  </compound>
+  <compound refid="test__hodge__sinusoidal__degree__2_8cpp" kind="file"><name>test_hodge_sinusoidal_degree_2.cpp</name>
+    <member refid="test__hodge__sinusoidal__degree__2_8cpp_1a9a81c43ed1fc39286315c3d9ec6a26be" kind="function"><name>hodgeC2ToC1</name></member>
+    <member refid="test__hodge__sinusoidal__degree__2_8cpp_1a02ef3c300d27f6de50fe6027e2e622da" kind="function"><name>hodgeC1ToC2</name></member>
+    <member refid="test__hodge__sinusoidal__degree__2_8cpp_1ae554f8b029a15a728d90efc9d770934e" kind="function"><name>hodgeC3ToC0</name></member>
+    <member refid="test__hodge__sinusoidal__degree__2_8cpp_1ae01c3c96d11f8e42f4f8f3604b3b6eaf" kind="function"><name>hodgeC0ToC3</name></member>
+    <member refid="test__hodge__sinusoidal__degree__2_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__hodge__sinusoidal__degree__4_8cpp" kind="file"><name>test_hodge_sinusoidal_degree_4.cpp</name>
+    <member refid="test__hodge__sinusoidal__degree__4_8cpp_1a9a81c43ed1fc39286315c3d9ec6a26be" kind="function"><name>hodgeC2ToC1</name></member>
+    <member refid="test__hodge__sinusoidal__degree__4_8cpp_1a02ef3c300d27f6de50fe6027e2e622da" kind="function"><name>hodgeC1ToC2</name></member>
+    <member refid="test__hodge__sinusoidal__degree__4_8cpp_1ae554f8b029a15a728d90efc9d770934e" kind="function"><name>hodgeC3ToC0</name></member>
+    <member refid="test__hodge__sinusoidal__degree__4_8cpp_1ae01c3c96d11f8e42f4f8f3604b3b6eaf" kind="function"><name>hodgeC0ToC3</name></member>
+    <member refid="test__hodge__sinusoidal__degree__4_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__hodge__sinusoidal__degree__6_8cpp" kind="file"><name>test_hodge_sinusoidal_degree_6.cpp</name>
+    <member refid="test__hodge__sinusoidal__degree__6_8cpp_1a9a81c43ed1fc39286315c3d9ec6a26be" kind="function"><name>hodgeC2ToC1</name></member>
+    <member refid="test__hodge__sinusoidal__degree__6_8cpp_1a02ef3c300d27f6de50fe6027e2e622da" kind="function"><name>hodgeC1ToC2</name></member>
+    <member refid="test__hodge__sinusoidal__degree__6_8cpp_1ae554f8b029a15a728d90efc9d770934e" kind="function"><name>hodgeC3ToC0</name></member>
+    <member refid="test__hodge__sinusoidal__degree__6_8cpp_1ae01c3c96d11f8e42f4f8f3604b3b6eaf" kind="function"><name>hodgeC0ToC3</name></member>
+    <member refid="test__hodge__sinusoidal__degree__6_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__plus__minus__mult_8cpp" kind="file"><name>test_plus_minus_mult.cpp</name>
+    <member refid="test__plus__minus__mult_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__projection_8cpp" kind="file"><name>test_projection.cpp</name>
+    <member refid="test__projection_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__projection__dual_8cpp" kind="file"><name>test_projection_dual.cpp</name>
+    <member refid="test__projection__dual_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__projection__polynomial_8cpp" kind="file"><name>test_projection_polynomial.cpp</name>
+    <member refid="test__projection__polynomial_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__projection__zero__three__forms_8cpp" kind="file"><name>test_projection_zero_three_forms.cpp</name>
+    <member refid="test__projection__zero__three__forms_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__checkpoint_8H" kind="file"><name>GEMPIC_checkpoint.H</name>
+  </compound>
+  <compound refid="test__checkpoint_8cpp" kind="file"><name>test_checkpoint.cpp</name>
+    <member refid="test__checkpoint_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" kind="function"><name>wave_function</name></member>
+    <member refid="test__checkpoint_8cpp_1ad947de9a717976928e49150934f0d110" kind="function"><name>zero</name></member>
+    <member refid="test__checkpoint_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__checkpoint_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__diagnostics_8H" kind="file"><name>GEMPIC_diagnostics.H</name>
+  </compound>
+  <compound refid="GEMPIC__PlotFile_8H" kind="file"><name>GEMPIC_PlotFile.H</name>
+  </compound>
+  <compound refid="ElecFieldEnergy_8H" kind="file"><name>ElecFieldEnergy.H</name>
+  </compound>
+  <compound refid="GaussError_8H" kind="file"><name>GaussError.H</name>
+  </compound>
+  <compound refid="MagFieldEnergy_8H" kind="file"><name>MagFieldEnergy.H</name>
+  </compound>
+  <compound refid="Momentum_8H" kind="file"><name>Momentum.H</name>
+  </compound>
+  <compound refid="MultiReducedDiags_8H" kind="file"><name>MultiReducedDiags.H</name>
+  </compound>
+  <compound refid="ParticleEnergy_8H" kind="file"><name>ParticleEnergy.H</name>
+  </compound>
+  <compound refid="ReducedDiags_8H" kind="file"><name>ReducedDiags.H</name>
+  </compound>
+  <compound refid="GEMPIC__amrex__init_8H" kind="file"><name>GEMPIC_amrex_init.H</name>
+  </compound>
+  <compound refid="GEMPIC__parameters_8H" kind="file"><name>GEMPIC_parameters.H</name>
+    <member refid="GEMPIC__parameters_8H_1adc2b72fa182ad0ce9adb483ebbf47cb0" kind="function"><name>parseErrorMessage</name></member>
+  </compound>
+  <compound refid="GEMPIC__Params_8cpp" kind="file"><name>GEMPIC_Params.cpp</name>
+  </compound>
+  <compound refid="GEMPIC__Params_8H" kind="file"><name>GEMPIC_Params.H</name>
+  </compound>
+  <compound refid="test__Parameters_8cpp" kind="file"><name>test_Parameters.cpp</name>
+    <member refid="test__Parameters_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__parser_8cpp" kind="file"><name>test_parser.cpp</name>
+    <member refid="test__parser_8cpp_1a406781ee7441be4adc6e567d0f8d52d7" kind="function"><name>test_Weibel</name></member>
+    <member refid="test__parser_8cpp_1a181d49d2417ea4c0da2ddbc2983fd91d" kind="function"><name>test_read</name></member>
+    <member refid="test__parser_8cpp_1a870b022e3030a05c3cab89183bc8a125" kind="function"><name>print_param</name></member>
+    <member refid="test__parser_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__profiling_8H" kind="file"><name>GEMPIC_profiling.H</name>
+  </compound>
+  <compound refid="GEMPIC__particle__groups_8H" kind="file"><name>GEMPIC_particle_groups.H</name>
+  </compound>
+  <compound refid="GEMPIC__sampler_8H" kind="file"><name>GEMPIC_sampler.H</name>
+  </compound>
+  <compound refid="test__sampler_8cpp" kind="file"><name>test_sampler.cpp</name>
+    <member refid="test__sampler_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" kind="function"><name>wave_function</name></member>
+    <member refid="test__sampler_8cpp_1ad5b52ececb2fa907a5afb745550c03c3" kind="function"><name>print_particles</name></member>
+    <member refid="test__sampler_8cpp_1a6bd5114a2eb3f7200668cbf52b47461c" kind="function"><name>print_vMoments</name></member>
+    <member refid="test__sampler_8cpp_1a7759acfa3ca9228b934f3dc8d71eabf3" kind="function"><name>main_main</name></member>
+    <member refid="test__sampler_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__particle__mesh__coupling_8H" kind="file"><name>GEMPIC_particle_mesh_coupling.H</name>
+  </compound>
+  <compound refid="GEMPIC__particle__mesh__coupling__C2_8H" kind="file"><name>GEMPIC_particle_mesh_coupling_C2.H</name>
+  </compound>
+  <compound refid="GEMPIC__splines_8H" kind="file"><name>GEMPIC_splines.H</name>
+  </compound>
+  <compound refid="test__AMReX__NormMasks_8cpp" kind="file"><name>test_AMReX_NormMasks.cpp</name>
+    <member refid="test__AMReX__NormMasks_8cpp_1a2617735345dc4138c104c212bd826f5d" kind="function"><name>main_main</name></member>
+    <member refid="test__AMReX__NormMasks_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__deposit__rho_8cpp" kind="file"><name>test_deposit_rho.cpp</name>
+    <member refid="test__deposit__rho_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" kind="function"><name>wave_function</name></member>
+    <member refid="test__deposit__rho_8cpp_1a172678731f68661b823d80f5dd9ef2fb" kind="function"><name>funct_rho_phi</name></member>
+    <member refid="test__deposit__rho_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__deposit__rho_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__initialize_8cpp" kind="file"><name>test_initialize.cpp</name>
+    <member refid="test__initialize_8cpp_1a7759acfa3ca9228b934f3dc8d71eabf3" kind="function"><name>main_main</name></member>
+    <member refid="test__initialize_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__one__part_8cpp" kind="file"><name>test_one_part.cpp</name>
+    <member refid="test__one__part_8cpp_1a2aab9273cee438b002d2d28cc7c924f0" kind="function"><name>cosine</name></member>
+    <member refid="test__one__part_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kind="function"><name>zero</name></member>
+    <member refid="test__one__part_8cpp_1a2fb60dad89cee592628ed0283c2b7097" kind="function"><name>func_phi</name></member>
+    <member refid="test__one__part_8cpp_1a5ce40d28e85ba3fc6b926f9fbbc49241" kind="function"><name>main_main</name></member>
+    <member refid="test__one__part_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__particle__groups_8cpp" kind="file"><name>test_particle_groups.cpp</name>
+    <member refid="test__particle__groups_8cpp_1aa36b8b0a08ad3cc9a8a9ba22c0bbfa1b" kind="function"><name>wave_function</name></member>
+    <member refid="test__particle__groups_8cpp_1ac563faa02321abb1b0591157c164b784" kind="function"><name>funct_Bz</name></member>
+    <member refid="test__particle__groups_8cpp_1ad947de9a717976928e49150934f0d110" kind="function"><name>zero</name></member>
+    <member refid="test__particle__groups_8cpp_1a7759acfa3ca9228b934f3dc8d71eabf3" kind="function"><name>main_main</name></member>
+    <member refid="test__particle__groups_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__splines_8cpp" kind="file"><name>test_splines.cpp</name>
+    <member refid="test__splines_8cpp_1a2617735345dc4138c104c212bd826f5d" kind="function"><name>main_main</name></member>
+    <member refid="test__splines_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__vlasov__maxwell_8H" kind="file"><name>GEMPIC_vlasov_maxwell.H</name>
+    <member refid="GEMPIC__vlasov__maxwell_8H_1a068bf17babb7471f39508638688406ab" kind="function"><name>wave_function</name></member>
+  </compound>
+  <compound refid="GEMPIC__vlasov__maxwell__ctest_8H" kind="file"><name>GEMPIC_vlasov_maxwell_ctest.H</name>
+    <member refid="GEMPIC__vlasov__maxwell__ctest_8H_1aabf3e34b20e46aabb3eb8a7e8bea6c02" kind="define"><name>VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO</name></member>
+    <member refid="GEMPIC__vlasov__maxwell__ctest_8H_1ab84e2a57e335215837f3724d41c897fb" kind="define"><name>VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION</name></member>
+    <member refid="GEMPIC__vlasov__maxwell__ctest_8H_1a5fc59e54e297500e68ce09f4ce3b3820" kind="function"><name>function_to_project</name></member>
+    <member refid="GEMPIC__vlasov__maxwell__ctest_8H_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kind="function"><name>zero</name></member>
+    <member refid="GEMPIC__vlasov__maxwell__ctest_8H_1a2de867f99cdb0e995c943c973ac1677e" kind="function"><name>vlasov_maxwell_ctest</name></member>
+  </compound>
+  <compound refid="test__simulation_8cpp" kind="file"><name>test_simulation.cpp</name>
+    <member refid="test__simulation_8cpp_1aabf3e34b20e46aabb3eb8a7e8bea6c02" kind="define"><name>VLASOV_MAXWELL_HS_ZIGZAH_C2_ZERO</name></member>
+    <member refid="test__simulation_8cpp_1ab84e2a57e335215837f3724d41c897fb" kind="define"><name>VLASOV_MAXWELL_HS_ZIGZAH_C2_WAVE_FUNCTION</name></member>
+    <member refid="test__simulation_8cpp_1a5bd011a9d7b29eb14670c048ec154adc" kind="define"><name>VLASOV_MAXWELL_HS_ZIGZAG_C2_BZ</name></member>
+    <member refid="test__simulation_8cpp_1a5fc59e54e297500e68ce09f4ce3b3820" kind="function"><name>function_to_project</name></member>
+    <member refid="test__simulation_8cpp_1ac3a1d271fc6bc62b3b8184d4ec91b9a9" kind="function"><name>zero</name></member>
+    <member refid="test__simulation_8cpp_1a823caf2e36228ee08cdbeab68ecccaec" kind="function"><name>vlasov_maxwell_run</name></member>
+    <member refid="test__simulation_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__by_8cpp" kind="file"><name>test_vlasov_maxwell_by.cpp</name>
+    <member refid="test__vlasov__maxwell__by_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__by__lower_8cpp" kind="file"><name>test_vlasov_maxwell_by_lower.cpp</name>
+    <member refid="test__vlasov__maxwell__by__lower_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__vlasov__maxwell__by__lower_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs_8cpp" kind="file"><name>test_vlasov_maxwell_hs.cpp</name>
+    <member refid="test__vlasov__maxwell__hs_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs__all_8cpp" kind="file"><name>test_vlasov_maxwell_hs_all.cpp</name>
+    <member refid="test__vlasov__maxwell__hs__all_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs__all__lower_8cpp" kind="file"><name>test_vlasov_maxwell_hs_all_lower.cpp</name>
+    <member refid="test__vlasov__maxwell__hs__all__lower_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__vlasov__maxwell__hs__all__lower_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs__deRham_8cpp" kind="file"><name>test_vlasov_maxwell_hs_deRham.cpp</name>
+    <member refid="test__vlasov__maxwell__hs__deRham_8cpp_1ac349f4f2f4579fc154178147da4ad12f" kind="function"><name>main_main</name></member>
+    <member refid="test__vlasov__maxwell__hs__deRham_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs__lower_8cpp" kind="file"><name>test_vlasov_maxwell_hs_lower.cpp</name>
+    <member refid="test__vlasov__maxwell__hs__lower_8cpp_1a833e1c4fe07cec871bc7fefd04480fa1" kind="function"><name>main_main</name></member>
+    <member refid="test__vlasov__maxwell__hs__lower_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs__multispecies_8cpp" kind="file"><name>test_vlasov_maxwell_hs_multispecies.cpp</name>
+    <member refid="test__vlasov__maxwell__hs__multispecies_8cpp_1ac349f4f2f4579fc154178147da4ad12f" kind="function"><name>main_main</name></member>
+    <member refid="test__vlasov__maxwell__hs__multispecies_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__hs__zigzag__C2_8cpp" kind="file"><name>test_vlasov_maxwell_hs_zigzag_C2.cpp</name>
+    <member refid="test__vlasov__maxwell__hs__zigzag__C2_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__input_8cpp" kind="file"><name>test_vlasov_maxwell_input.cpp</name>
+    <member refid="test__vlasov__maxwell__input_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__maxwell__ls__rungekutta_8cpp" kind="file"><name>test_vlasov_maxwell_ls_rungekutta.cpp</name>
+    <member refid="test__vlasov__maxwell__ls__rungekutta_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="test__vlasov__qn__e__adiabatic_8cpp" kind="file"><name>test_vlasov_qn_e_adiabatic.cpp</name>
+    <member refid="test__vlasov__qn__e__adiabatic_8cpp_1ac349f4f2f4579fc154178147da4ad12f" kind="function"><name>main_main</name></member>
+    <member refid="test__vlasov__qn__e__adiabatic_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__loop__preparation_8H" kind="file"><name>GEMPIC_loop_preparation.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__boris__fd_8H" kind="file"><name>GEMPIC_time_loop_boris_fd.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__hs__fem_8H" kind="file"><name>GEMPIC_time_loop_hs_fem.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__hs__zigzag_8H" kind="file"><name>GEMPIC_time_loop_hs_zigzag.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__hs__zigzag__C2_8H" kind="file"><name>GEMPIC_time_loop_hs_zigzag_C2.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__hsall__fem_8H" kind="file"><name>GEMPIC_time_loop_hsall_fem.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__ls__rungekutta_8H" kind="file"><name>GEMPIC_time_loop_ls_rungekutta.H</name>
+  </compound>
+  <compound refid="GEMPIC__time__loop__particles_8H" kind="file"><name>GEMPIC_time_loop_particles.H</name>
+  </compound>
+  <compound refid="test__H__E__Velocity_8cpp" kind="file"><name>test_H_E_Velocity.cpp</name>
+    <member refid="test__H__E__Velocity_8cpp_1a47310e483f12b93320d2f0950ab51256" kind="function"><name>main_main</name></member>
+    <member refid="test__H__E__Velocity_8cpp_1a0ddf1224851353fc92bfbff6f499fa97" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="GEMPIC__assertion_8H" kind="file"><name>GEMPIC_assertion.H</name>
+  </compound>
+  <compound refid="dir_86fc81e0b128a952371f20e3227399ae" kind="dir"><name>/home/marm/Desktop/gempic/src/io/checkpointing</name>
+  </compound>
+  <compound refid="dir_f5ab12aceed357ba4e839b3eb79756bd" kind="dir"><name>/home/marm/Desktop/gempic/src/io/diagnostics</name>
+  </compound>
+  <compound refid="dir_93990bd32e09e68e7864821413592ef2" kind="dir"><name>/home/marm/Desktop/gempic/src/forms/FDDeRhamComplex</name>
+  </compound>
+  <compound refid="dir_47c8fe4489760c2d787512e731d6bb81" kind="dir"><name>/home/marm/Desktop/gempic/src/field_solvers</name>
+  </compound>
+  <compound refid="dir_7643bd7d4a8024a9b1630780c1955b92" kind="dir"><name>/home/marm/Desktop/gempic/src/forms</name>
+  </compound>
+  <compound refid="dir_c184e51c84f2c3f0345bbc8a0d75d3e1" kind="dir"><name>/home/marm/Desktop/gempic/src/io</name>
+  </compound>
+  <compound refid="dir_006fe2222175f7c32fc72c3c537dd212" kind="dir"><name>/home/marm/Desktop/gempic/src/io/parameters</name>
+  </compound>
+  <compound refid="dir_ef4b772e52a9cad7a4172eb446d02024" kind="dir"><name>/home/marm/Desktop/gempic/src/particle</name>
+  </compound>
+  <compound refid="dir_789c0f765f8667b3c4f4fbb485dec701" kind="dir"><name>/home/marm/Desktop/gempic/src/particle_mesh_coupling</name>
+  </compound>
+  <compound refid="dir_6522a8c24eb142d93c95de0dfaf6b1e6" kind="dir"><name>/home/marm/Desktop/gempic/src/field_solvers/Poisson</name>
+  </compound>
+  <compound refid="dir_d4c17c16e9eaab63d3168b75fa38dbd1" kind="dir"><name>/home/marm/Desktop/gempic/src/io/profiling</name>
+  </compound>
+  <compound refid="dir_68a6be0ab1a4cd7bd19b4064b308c14c" kind="dir"><name>/home/marm/Desktop/gempic/src/io/diagnostics/ReducedDiags</name>
+  </compound>
+  <compound refid="dir_560d1968dd50479acb5b5172d11ef83b" kind="dir"><name>/home/marm/Desktop/gempic/src/simulations</name>
+  </compound>
+  <compound refid="dir_68267d1309a1af8e8297ef4c3efbcdba" kind="dir"><name>/home/marm/Desktop/gempic/src</name>
+  </compound>
+  <compound refid="dir_50136f2b97f4f67f01f502fbd61b6405" kind="dir"><name>/home/marm/Desktop/gempic/src/particle/testing</name>
+  </compound>
+  <compound refid="dir_69bc9c876a5b52ed61f72bba3c16698b" kind="dir"><name>/home/marm/Desktop/gempic/src/simulations/testing</name>
+  </compound>
+  <compound refid="dir_7d1df9f8afaa81153645cda58166d4f1" kind="dir"><name>/home/marm/Desktop/gempic/src/field_solvers/testing</name>
+  </compound>
+  <compound refid="dir_3d39fd699dbd1bfbff233af9fd712628" kind="dir"><name>/home/marm/Desktop/gempic/src/time_loop/testing</name>
+  </compound>
+  <compound refid="dir_5773b4b4a6e1d3500bc3b18e39e89bde" kind="dir"><name>/home/marm/Desktop/gempic/src/io/parameters/testing</name>
+  </compound>
+  <compound refid="dir_873bdc688add3d21b00e05bf856b0a04" kind="dir"><name>/home/marm/Desktop/gempic/src/particle_mesh_coupling/testing</name>
+  </compound>
+  <compound refid="dir_f64659623882fe403d5dc8e0b1fb22b9" kind="dir"><name>/home/marm/Desktop/gempic/src/io/checkpointing/testing</name>
+  </compound>
+  <compound refid="dir_86dae66d0a0fdf88de2eacd293cadc88" kind="dir"><name>/home/marm/Desktop/gempic/src/forms/testing</name>
+  </compound>
+  <compound refid="dir_dffbad135651cd79a433355af1b1c21f" kind="dir"><name>/home/marm/Desktop/gempic/src/time_loop</name>
+  </compound>
+  <compound refid="dir_313caf1132e152dd9b58bea13a4052ca" kind="dir"><name>/home/marm/Desktop/gempic/src/utils</name>
+  </compound>
+</doxygenindex>
