@@ -128,7 +128,6 @@ TEST_P(SplineTest, NullTest) {
     //EXPECT_EQ(1, degz);
 }
 
-/*
 INSTANTIATE_TEST_SUITE_P(
     Low3Degs, SplineTest,
     //::testing::Combine(::testing::Range(1,3), ::testing::Range(1,3), ::testing::Range(1,3)));
