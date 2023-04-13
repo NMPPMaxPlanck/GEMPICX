@@ -25,7 +25,10 @@ namespace {
         const long np{pti.numParticles()};
         const auto& particles{pti.GetArrayOfStructs()};
         const auto partData{particles().data()};
-        std::shared_ptr<amrex::GpuArray<amrex::Real, vDim>[]> efields(new amrex::GpuArray<amrex::Real, vDim>[np]);
+        amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> efieldsPtr(2);
+        amrex::GpuArray<amrex::Real, vDim>* efields = efieldsPtr.data();
+//        amrex::GpuArray<amrex::GpuArray<amrex::Real, vDim>, 2> efields;
+//        std::shared_ptr<amrex::GpuArray<amrex::Real, vDim>[]> efieldsSp(new amrex::GpuArray<amrex::Real, vDim>[np]);
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
         for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.data[cc])[pti].array();
@@ -40,8 +43,7 @@ namespace {
             }
             spline.init_particles(position, infra.plo, infra.dxi);
 
-            amrex::GpuArray<amrex::Real, vDim> efield = evaluate_efield<vDim, degX, degY, degZ>(spline, eArray);
-            efields[pp] = efield;
+            efields[pp] = evaluate_efield<vDim, degX, degY, degZ>(spline, eArray);
         });
                     
         EXPECT_EQ(efields[0][0], 1.0);
