@@ -239,18 +239,18 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
         }
     }
 
-    inline void apply_H_e_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
-                                   amrex::Particle<0, 0>* AMREX_RESTRICT particles,
-                                   computational_domain const &infra,
-                                   amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eA,
-                                   splines_at_particles<degx, degy, degz> &spline,
-                                   amrex::GpuArray<amrex::Real, vdim> vel,
-                                   amrex::ParticleReal* const AMREX_RESTRICT velx,
-                                   amrex::ParticleReal* const AMREX_RESTRICT vely,
-                                   amrex::ParticleReal* const AMREX_RESTRICT velz,
-                                   amrex::Real const chargemass,
-                                   amrex::Real const dt,
-                                   const long pp
+    AMREX_GPU_HOST_DEVICE inline void apply_H_e_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
+                                                         amrex::Particle<0, 0>* AMREX_RESTRICT particles,
+                                                         computational_domain const &infra,
+                                                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eA,
+                                                         splines_at_particles<degx, degy, degz> &spline,
+                                                         amrex::GpuArray<amrex::Real, vdim> vel,
+                                                         amrex::ParticleReal* const AMREX_RESTRICT velx,
+                                                         amrex::ParticleReal* const AMREX_RESTRICT vely,
+                                                         amrex::ParticleReal* const AMREX_RESTRICT velz,
+                                                         amrex::Real const chargemass,
+                                                         amrex::Real const dt,
+                                                         const long pp
     )
     {
         // evaluate the spline
@@ -270,7 +270,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
     }
 
     template<int xidx>
-    inline void apply_H_p_i(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
+    AMREX_GPU_HOST_DEVICE inline void apply_H_p_i(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
                             amrex::GpuArray<amrex::Real, vdim> &vel,
                             computational_domain const &infra,
                             amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> &primitive,
