@@ -14,7 +14,8 @@
 //#include <GEMPIC_PlotFile.H>
 //#include <GEMPIC_profiling.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_time_loop_hs_zigzag.H>
+//#include <GEMPIC_time_loop_hs_zigzag.H>
+#include <GEMPIC_hs_zigzag.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_PoissonSolver.H>
@@ -51,8 +52,6 @@ void main_main()
     const amrex::Real dt = 0.02;
 
     /* Initialize particle parameters */
-    const int strang_order = 2;
-    bool ctest = true;
     gempic_parameters<vdim, numspec> VlMa;
     amrex::GpuArray<std::string, numspec> partDensity; // species density, to be used in the sampler
     //partDensity[0] = "1.0";                         // first species
@@ -149,10 +148,6 @@ void main_main()
             std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
 
-    amrex::Real vol = (params.geometry().ProbHi(0) - params.geometry().ProbLo(0)) *
-                      (params.geometry().ProbHi(1) - params.geometry().ProbLo(1)) *
-                      (params.geometry().ProbHi(2) - params.geometry().ProbLo(2));
-
     // initialize particles & loop preparation:
     // FIRST SPECIES
     amrex::Vector<amrex::Vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
@@ -241,7 +236,10 @@ void main_main()
     // Call time_loop
     const int nSteps = 300;
     const int strangOrder = 2;
-    time_loop_hs_zigzag<vdim, numspec, degx, degy, degz, degmw, ndata>(deRham, rho, E, B, D, H, J, infra, dt, partGr, nSteps, strangOrder);
+
+    HSZigZagC2<vdim, numspec, degx, degy, degz, degmw, ndata> time_looper;
+    time_looper.time_loop(deRham, rho, E, B, D, H, J, infra, dt, partGr, nSteps, strangOrder);
+//    time_loop_hs_zigzag<vdim, numspec, degx, degy, degz, degmw, ndata>(deRham, rho, E, B, D, H, J, infra, dt, partGr, nSteps, strangOrder);
     /*
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -266,7 +264,6 @@ void main_main()
 
 int main(int argc, char *argv[])
 {
-    const bool build_parm_parse = true;
     /*
     amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
                       overwrite_amrex_parser_defaults);
