@@ -42,104 +42,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int nda
          bool electromagnetic = true, bool profiling = true, bool output = true>
 class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, degmw, ndata, electromagnetic, profiling>
 {
-    private:
-    inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
-                          DeRhamField<Grid::primal, Space::face>& B,
-                          DeRhamField<Grid::dual, Space::face>& D,
-                          DeRhamField<Grid::dual, Space::edge>& H,
-                          DeRhamField<Grid::dual, Space::face>& auxDualF2,
-                          const amrex::Real dt
-    )
-    {
-        // Operator H_B for dt/2
-        // Solve Ampere-Maxwell
-        deRham -> hodgeFD<degmw>(B, H);
-        deRham -> curl(H, auxDualF2);
-        auxDualF2 *= 0.5*dt;
-        D += auxDualF2;
-    }
-
-    inline void apply_H_e_field(std::shared_ptr<FDDeRhamComplex> deRham,
-                                DeRhamField<Grid::primal, Space::edge>& E,
-                                DeRhamField<Grid::primal, Space::face>& B,
-                                DeRhamField<Grid::dual, Space::face>& D,
-                                DeRhamField<Grid::primal, Space::face>& auxPrimalF2,
-                                const amrex::Real dt
-    )
-    {
-        deRham -> hodgeFD<degmw>(D, E);
-        // Operator H_E for dt/2
-        deRham -> curl(E, auxPrimalF2);
-        auxPrimalF2 *= 0.5*dt;
-        B -= auxPrimalF2;
-    }
-
-    inline void apply_H_e_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
-                                   amrex::Particle<0, 0>* AMREX_RESTRICT particles,
-                                   computational_domain const &infra,
-                                   amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eA,
-                                   splines_at_particles<degx, degy, degz> &spline,
-                                   amrex::GpuArray<amrex::Real, vdim> vel,
-                                   amrex::ParticleReal* const AMREX_RESTRICT velx,
-                                   amrex::ParticleReal* const AMREX_RESTRICT vely,
-                                   amrex::ParticleReal* const AMREX_RESTRICT velz,
-                                   amrex::Real const chargemass,
-                                   amrex::Real const dt,
-                                   const long pp
-    )
-    {
-        // evaluate the spline
-        spline.init_particles(pos, infra.plo, infra.dxi);
-        // evaluate the electric field
-
-        amrex::GpuArray<amrex::Real, vdim> efield =
-            evaluate_efield<vdim, degx, degy, degz>(spline, eA);
-
-        // push v with the electric field
-        amrex::GpuArray<amrex::Real, vdim> newPosE =
-            push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
-
-        velx[pp] = newPosE[0];
-        vely[pp] = newPosE[1];
-        velz[pp] = newPosE[2];
-    }
-
-    template<int xidx>
-    inline void apply_H_p_i(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
-                            amrex::GpuArray<amrex::Real, vdim> &vel,
-                            computational_domain const &infra,
-                            amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> &primitive,
-                            splines_at_particles<degx, degy, degz> &spline,amrex::GpuArray<amrex::Real, 2> bfields,
-                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx, 
-                            amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jA,
-                            amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bA,
-                            amrex::Real const chargemass,
-                            amrex::Real const weight, 
-                            amrex::Real const dt
-    )
-    {
-        constexpr int degrees[3] = {degx, degy, degz};
-
-        amrex::Real x_new = pos[xidx] + dt * 0.5 * vel[xidx];
-
-        spline1d_at_particles<degrees[xidx]> spline_new;
-        spline1d_at_particles<degrees[xidx]> spline_old;
-
-        spline_new.init_position(x_new, infra.plo[xidx], infra.dxi[xidx]);
-        spline_old.init_position(pos[xidx], infra.plo[xidx], infra.dxi[xidx]);
-        spline.template init_position<xidx, degrees[xidx]>(x_new, infra.plo[xidx], infra.dxi[xidx]);
-
-        accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>,
-                                    vdim, degrees[xidx], degrees[(xidx+1)%3],
-                                    degrees[(xidx+2)%3], xidx, std::max(degx, std::max(degy, degz)) + 4>
-                                    (spline, spline_new, spline_old, weight, dx, bA, jA, bfields, primitive);
-
-
-        if (vdim > 1) vel[(xidx+1)%3] = vel[(xidx+1)%3] - chargemass * bfields[0];
-        if (vdim > 2) vel[(xidx+2)%3] = vel[(xidx+2)%3] + chargemass * bfields[1];
-        pos[xidx] = x_new;
-    }
-
+    public:
     inline void treat_particles(std::shared_ptr<FDDeRhamComplex> deRham,
                                 DeRhamField<Grid::primal, Space::edge>& E,
                                 DeRhamField<Grid::primal, Space::face>& B,
@@ -334,6 +237,104 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
             }
             partGr[spec] -> Redistribute();
         }
+    }
+
+    private:
+    inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
+                          DeRhamField<Grid::primal, Space::face>& B,
+                          DeRhamField<Grid::dual, Space::face>& D,
+                          DeRhamField<Grid::dual, Space::edge>& H,
+                          DeRhamField<Grid::dual, Space::face>& auxDualF2,
+                          const amrex::Real dt
+    )
+    {
+        // Operator H_B for dt/2
+        // Solve Ampere-Maxwell
+        deRham -> hodgeFD<degmw>(B, H);
+        deRham -> curl(H, auxDualF2);
+        auxDualF2 *= 0.5*dt;
+        D += auxDualF2;
+    }
+
+    inline void apply_H_e_field(std::shared_ptr<FDDeRhamComplex> deRham,
+                                DeRhamField<Grid::primal, Space::edge>& E,
+                                DeRhamField<Grid::primal, Space::face>& B,
+                                DeRhamField<Grid::dual, Space::face>& D,
+                                DeRhamField<Grid::primal, Space::face>& auxPrimalF2,
+                                const amrex::Real dt
+    )
+    {
+        deRham -> hodgeFD<degmw>(D, E);
+        // Operator H_E for dt/2
+        deRham -> curl(E, auxPrimalF2);
+        auxPrimalF2 *= 0.5*dt;
+        B -= auxPrimalF2;
+    }
+
+    inline void apply_H_e_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
+                                   amrex::Particle<0, 0>* AMREX_RESTRICT particles,
+                                   computational_domain const &infra,
+                                   amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eA,
+                                   splines_at_particles<degx, degy, degz> &spline,
+                                   amrex::GpuArray<amrex::Real, vdim> vel,
+                                   amrex::ParticleReal* const AMREX_RESTRICT velx,
+                                   amrex::ParticleReal* const AMREX_RESTRICT vely,
+                                   amrex::ParticleReal* const AMREX_RESTRICT velz,
+                                   amrex::Real const chargemass,
+                                   amrex::Real const dt,
+                                   const long pp
+    )
+    {
+        // evaluate the spline
+        spline.init_particles(pos, infra.plo, infra.dxi);
+        // evaluate the electric field
+
+        amrex::GpuArray<amrex::Real, vdim> efield =
+            evaluate_efield<vdim, degx, degy, degz>(spline, eA);
+
+        // push v with the electric field
+        amrex::GpuArray<amrex::Real, vdim> newPosE =
+            push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
+
+        velx[pp] = newPosE[0];
+        vely[pp] = newPosE[1];
+        velz[pp] = newPosE[2];
+    }
+
+    template<int xidx>
+    inline void apply_H_p_i(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
+                            amrex::GpuArray<amrex::Real, vdim> &vel,
+                            computational_domain const &infra,
+                            amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> &primitive,
+                            splines_at_particles<degx, degy, degz> &spline,amrex::GpuArray<amrex::Real, 2> bfields,
+                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx, 
+                            amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jA,
+                            amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bA,
+                            amrex::Real const chargemass,
+                            amrex::Real const weight, 
+                            amrex::Real const dt
+    )
+    {
+        constexpr int degrees[3] = {degx, degy, degz};
+
+        amrex::Real x_new = pos[xidx] + dt * 0.5 * vel[xidx];
+
+        spline1d_at_particles<degrees[xidx]> spline_new;
+        spline1d_at_particles<degrees[xidx]> spline_old;
+
+        spline_new.init_position(x_new, infra.plo[xidx], infra.dxi[xidx]);
+        spline_old.init_position(pos[xidx], infra.plo[xidx], infra.dxi[xidx]);
+        spline.template init_position<xidx, degrees[xidx]>(x_new, infra.plo[xidx], infra.dxi[xidx]);
+
+        accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>,
+                                    vdim, degrees[xidx], degrees[(xidx+1)%3],
+                                    degrees[(xidx+2)%3], xidx, std::max(degx, std::max(degy, degz)) + 4>
+                                    (spline, spline_new, spline_old, weight, dx, bA, jA, bfields, primitive);
+
+
+        if (vdim > 1) vel[(xidx+1)%3] = vel[(xidx+1)%3] - chargemass * bfields[0];
+        if (vdim > 2) vel[(xidx+2)%3] = vel[(xidx+2)%3] + chargemass * bfields[1];
+        pos[xidx] = x_new;
     }
 
     virtual void time_step(std::shared_ptr<FDDeRhamComplex> deRham,

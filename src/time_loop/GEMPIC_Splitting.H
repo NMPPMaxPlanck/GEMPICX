@@ -103,6 +103,52 @@ class Splitting
 
         
     }
+        
+        /**
+        * @brief Apply the Strang splitting to the Hamiltonian H_p.
+        * 
+        * Description:
+        * ----------
+        * Deconstruct the Hamiltonian H_p into
+        * 
+        * H_b * H_e * H_p1 * H_p2 * H_p3 * H_p3 * H_p2 * H_p1 * H_e * H_b
+        * 
+        * Parameters:
+        * ----------
+        * @tparam vdim: int, the number of dimensions of the velocity space v
+        * @tparam numspec: int,
+        * @tparam degx: int, polynomial degree of the kernel in x-dimension
+        * @tparam degy: int, polynomial degree of the kernel in y-dimension
+        * @tparam degz: int, polynomial degree of the kernel in z-dimension
+        * @tparam degmw: int, the degree of the Maxwell-Yee approximation
+        * @tparam ndata: int,
+        * @tparam electromagnetic: bool, 
+        * @tparam profiling: bool,
+        * @param infra: computational_domain, object representing the 
+        *               computational domain
+        * @param mw_yee: maxwell_yee, object representing the Maxwell-Yee solver
+        * @param coeff: amrex::Real, coefficient adjusting the time step size
+        *               for different splitting methods
+        * @param profiling_timers: timers, contains all timers for profiling the code
+        * @param profiling_count: bool, indicate if it's the first time step or not
+        * 
+        * Returns:
+        * ----------
+        * Returns void
+        * 
+        * Raises:
+        * ----------
+        * Does not raise any exceptions 
+        */
+
+        virtual void treat_particles(std::shared_ptr<FDDeRhamComplex> deRham,
+                                     DeRhamField<Grid::primal, Space::edge>& E,
+                                     DeRhamField<Grid::primal, Space::face>& B,
+                                     DeRhamField<Grid::dual, Space::face>& D,
+                                     DeRhamField<Grid::dual, Space::face>& J,
+                                     computational_domain infra,
+                                     const amrex::Real dt,
+                                     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr) = 0;
 
     private:
         /**
@@ -159,52 +205,6 @@ class Splitting
                                computational_domain infra,
                                const amrex::Real dt,
                                amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr) = 0;
-        
-        /**
-        * @brief Apply the Strang splitting to the Hamiltonian H_p.
-        * 
-        * Description:
-        * ----------
-        * Deconstruct the Hamiltonian H_p into
-        * 
-        * H_b * H_e * H_p1 * H_p2 * H_p3 * H_p3 * H_p2 * H_p1 * H_e * H_b
-        * 
-        * Parameters:
-        * ----------
-        * @tparam vdim: int, the number of dimensions of the velocity space v
-        * @tparam numspec: int,
-        * @tparam degx: int, polynomial degree of the kernel in x-dimension
-        * @tparam degy: int, polynomial degree of the kernel in y-dimension
-        * @tparam degz: int, polynomial degree of the kernel in z-dimension
-        * @tparam degmw: int, the degree of the Maxwell-Yee approximation
-        * @tparam ndata: int,
-        * @tparam electromagnetic: bool, 
-        * @tparam profiling: bool,
-        * @param infra: computational_domain, object representing the 
-        *               computational domain
-        * @param mw_yee: maxwell_yee, object representing the Maxwell-Yee solver
-        * @param coeff: amrex::Real, coefficient adjusting the time step size
-        *               for different splitting methods
-        * @param profiling_timers: timers, contains all timers for profiling the code
-        * @param profiling_count: bool, indicate if it's the first time step or not
-        * 
-        * Returns:
-        * ----------
-        * Returns void
-        * 
-        * Raises:
-        * ----------
-        * Does not raise any exceptions 
-        */
-
-        virtual void treat_particles(std::shared_ptr<FDDeRhamComplex> deRham,
-                                     DeRhamField<Grid::primal, Space::edge>& E,
-                                     DeRhamField<Grid::primal, Space::face>& B,
-                                     DeRhamField<Grid::dual, Space::face>& D,
-                                     DeRhamField<Grid::dual, Space::face>& J,
-                                     computational_domain infra,
-                                     const amrex::Real dt,
-                                     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr) = 0;
 
 };
 

@@ -327,7 +327,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
             pos[xidx] = x_new;
         }
 
-        inline void particle_loops(
+        inline void treat_particles(
             computational_domain &infra, maxwell_yee<vdim>* mw_yee, amrex::Real const coeff,
             amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& part_gr,
             timers* profiling_timers, bool profiling_count

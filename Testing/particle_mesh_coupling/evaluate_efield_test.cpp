@@ -27,8 +27,6 @@ namespace {
         const auto partData{particles().data()};
         amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> efieldsPtr(2);
         amrex::GpuArray<amrex::Real, vDim>* efields = efieldsPtr.data();
-//        amrex::GpuArray<amrex::GpuArray<amrex::Real, vDim>, 2> efields;
-//        std::shared_ptr<amrex::GpuArray<amrex::Real, vDim>[]> efieldsSp(new amrex::GpuArray<amrex::Real, vDim>[np]);
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
         for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.data[cc])[pti].array();
