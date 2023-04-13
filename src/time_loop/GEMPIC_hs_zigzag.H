@@ -239,38 +239,6 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
         }
     }
 
-    private:
-    inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
-                          DeRhamField<Grid::primal, Space::face>& B,
-                          DeRhamField<Grid::dual, Space::face>& D,
-                          DeRhamField<Grid::dual, Space::edge>& H,
-                          DeRhamField<Grid::dual, Space::face>& auxDualF2,
-                          const amrex::Real dt
-    )
-    {
-        // Operator H_B for dt/2
-        // Solve Ampere-Maxwell
-        deRham -> hodgeFD<degmw>(B, H);
-        deRham -> curl(H, auxDualF2);
-        auxDualF2 *= 0.5*dt;
-        D += auxDualF2;
-    }
-
-    inline void apply_H_e_field(std::shared_ptr<FDDeRhamComplex> deRham,
-                                DeRhamField<Grid::primal, Space::edge>& E,
-                                DeRhamField<Grid::primal, Space::face>& B,
-                                DeRhamField<Grid::dual, Space::face>& D,
-                                DeRhamField<Grid::primal, Space::face>& auxPrimalF2,
-                                const amrex::Real dt
-    )
-    {
-        deRham -> hodgeFD<degmw>(D, E);
-        // Operator H_E for dt/2
-        deRham -> curl(E, auxPrimalF2);
-        auxPrimalF2 *= 0.5*dt;
-        B -= auxPrimalF2;
-    }
-
     inline void apply_H_e_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
                                    amrex::Particle<0, 0>* AMREX_RESTRICT particles,
                                    computational_domain const &infra,
@@ -335,6 +303,38 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
         if (vdim > 1) vel[(xidx+1)%3] = vel[(xidx+1)%3] - chargemass * bfields[0];
         if (vdim > 2) vel[(xidx+2)%3] = vel[(xidx+2)%3] + chargemass * bfields[1];
         pos[xidx] = x_new;
+    }
+
+    private:
+    inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
+                          DeRhamField<Grid::primal, Space::face>& B,
+                          DeRhamField<Grid::dual, Space::face>& D,
+                          DeRhamField<Grid::dual, Space::edge>& H,
+                          DeRhamField<Grid::dual, Space::face>& auxDualF2,
+                          const amrex::Real dt
+    )
+    {
+        // Operator H_B for dt/2
+        // Solve Ampere-Maxwell
+        deRham -> hodgeFD<degmw>(B, H);
+        deRham -> curl(H, auxDualF2);
+        auxDualF2 *= 0.5*dt;
+        D += auxDualF2;
+    }
+
+    inline void apply_H_e_field(std::shared_ptr<FDDeRhamComplex> deRham,
+                                DeRhamField<Grid::primal, Space::edge>& E,
+                                DeRhamField<Grid::primal, Space::face>& B,
+                                DeRhamField<Grid::dual, Space::face>& D,
+                                DeRhamField<Grid::primal, Space::face>& auxPrimalF2,
+                                const amrex::Real dt
+    )
+    {
+        deRham -> hodgeFD<degmw>(D, E);
+        // Operator H_E for dt/2
+        deRham -> curl(E, auxPrimalF2);
+        auxPrimalF2 *= 0.5*dt;
+        B -= auxPrimalF2;
     }
 
     virtual void time_step(std::shared_ptr<FDDeRhamComplex> deRham,
