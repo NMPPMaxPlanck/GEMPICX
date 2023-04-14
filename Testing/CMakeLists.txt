@@ -7,6 +7,7 @@ target_include_directories(GtestTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory( test_utils )
 add_subdirectory( particle_mesh_coupling )
+add_subdirectory( time_loops )
 
 include(GoogleTest)
 # Setup target to be compiled with CUDA and be linked against CUDA-enabled AMReX
@@ -19,6 +20,7 @@ target_link_libraries(
   GtestTests
   PUBLIC AMReX::amrex AMReX::Flags_CXX
   GTest::gtest_main
+  GTest::gmock
   )
 
 gtest_discover_tests(
