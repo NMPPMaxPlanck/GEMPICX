@@ -34,7 +34,6 @@ using namespace Profiling;
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_PoissonSolver;
-
 namespace Gempic
 {
 namespace Time_Loop
@@ -308,7 +307,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
     private:
     inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
-                          DeRhamField<Grid::primal, Space::face>& B,
+                          const DeRhamField<Grid::primal, Space::face>& B,
                           DeRhamField<Grid::dual, Space::face>& D,
                           DeRhamField<Grid::dual, Space::edge>& H,
                           DeRhamField<Grid::dual, Space::face>& auxDualF2,

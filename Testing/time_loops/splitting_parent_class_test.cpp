@@ -16,6 +16,7 @@ using namespace Time_Loop;
 
 using ::testing::Mock;
 using ::testing::Exactly;
+using ::testing::_;
 
 namespace {
 
@@ -35,8 +36,8 @@ namespace {
             (DeRhamField<Grid::dual, Space::face>& J),
             computational_domain infra,
             const amrex::Real dt,
-            (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)
-        ));
+            (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)),
+            (override));
 
         MOCK_METHOD(void, time_step, (
             (std::shared_ptr<FDDeRhamComplex> deRham),
@@ -52,7 +53,8 @@ namespace {
             (DeRhamField<Grid::dual, Space::face>& auxDualF2_2),
             (computational_domain infra),
             (const amrex::Real dt),
-            (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)));
+            (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)),
+            (override));
     };
 
     class SplittingTest : public testing::Test {
@@ -70,7 +72,6 @@ namespace {
         static const int vDim{3};
 
         static const int nData{1};
-        const int nSteps{1};
         const int strangOrder{2};
         const amrex::Real dt{1};
 
@@ -99,6 +100,7 @@ namespace {
     };
 
     TEST_F(SplittingTest, NullTest) {
+        const int nSteps{1};
         MockSplitting<vDim, numSpec, degX, degY, degZ, degmw, nData, electromagnetic, profiling> mockSplitting;
 
         EXPECT_CALL(mockSplitting, time_step).Times(Exactly(1));
@@ -110,6 +112,30 @@ namespace {
         DeRhamField<Grid::dual, Space::edge> H(deRham);
         DeRhamField<Grid::dual, Space::face> J(deRham);
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
+/*
+        DeRhamField<Grid::primal, Space::face> auxPrimalF2(deRham);
+        DeRhamField<Grid::primal, Space::face> auxPrimalF2_2(deRham);
+        DeRhamField<Grid::dual, Space::face> auxDualF2(deRham);
+        DeRhamField<Grid::dual, Space::face> auxDualF2_2(deRham);
+*/
+        mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
+
+        //EXPECT_TRUE(mockSplitting.time_step(deRham, rho, E, B, D, H, J, auxPrimalF2, auxPrimalF2_2, auxDualF2, auxDualF2_2, infra, dt, particleGroup));
+    }
+
+    TEST_F(SplittingTest, FiveSteps) {
+        const int nSteps{5};
+        MockSplitting<vDim, numSpec, degX, degY, degZ, degmw, nData, electromagnetic, profiling> mockSplitting;
+
+        // Declare the fields 
+        DeRhamField<Grid::primal, Space::edge> E(deRham);
+        DeRhamField<Grid::primal, Space::face> B(deRham);
+        DeRhamField<Grid::dual, Space::face> D(deRham);
+        DeRhamField<Grid::dual, Space::edge> H(deRham);
+        DeRhamField<Grid::dual, Space::face> J(deRham);
+        DeRhamField<Grid::dual, Space::cell> rho(deRham);
+
+        EXPECT_CALL(mockSplitting, time_step(deRham, _, _, _, _, _, _, _, _, _, _, _, 1, _)).Times(Exactly(5));
 
         mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
     }
