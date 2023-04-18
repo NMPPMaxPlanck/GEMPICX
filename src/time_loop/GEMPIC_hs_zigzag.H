@@ -308,7 +308,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
     private:
     inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
-                          const DeRhamField<Grid::primal, Space::face>& B,
+                          DeRhamField<Grid::primal, Space::face>& B,
                           DeRhamField<Grid::dual, Space::face>& D,
                           DeRhamField<Grid::dual, Space::edge>& H,
                           DeRhamField<Grid::dual, Space::face>& auxDualF2,

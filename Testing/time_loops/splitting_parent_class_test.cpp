@@ -7,7 +7,7 @@
 #include "test_utils/GEMPIC_test_utils.H"
 #include "gmock/gmock.h"
 
-#include "GEMPIC_hs_zigzag.H"
+#include "GEMPIC_Splitting.H"
 
 using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
@@ -15,28 +15,44 @@ using namespace GEMPIC_Fields;
 using namespace Time_Loop;
 
 using ::testing::Mock;
+using ::testing::Exactly;
 
 namespace {
 
     template<int vdim, int numspec, int degx, int degy, int degz, int degmw,
          int ndata, bool electromagnetic, bool profiling>
-    class MockSplitting : public Time_Loop::HSZigZagC2<vdim, numspec, degx, degy, degz, degmw, ndata, electromagnetic, profiling> {
+    class MockSplitting : public Time_Loop::Splitting<vdim, numspec, degx, degy, degz, degmw, ndata, electromagnetic, profiling> {
         public:
 
-        MOCK_METHOD(void, time_step, ((std::shared_ptr<FDDeRhamComplex> deRham),
-                           (DeRhamField<Grid::dual, Space::cell>& rho),
-                           (DeRhamField<Grid::primal, Space::edge>& E),
-                           (DeRhamField<Grid::primal, Space::face>& B),
-                           (DeRhamField<Grid::dual, Space::face>& D),
-                           (DeRhamField<Grid::dual, Space::edge>& H),
-                           (DeRhamField<Grid::dual, Space::face>& J),
-                           (DeRhamField<Grid::primal, Space::face>& auxPrimalF2),
-                           (DeRhamField<Grid::primal, Space::face>& auxPrimalF2_2),
-                           (DeRhamField<Grid::dual, Space::face>& auxDualF2),
-                           (DeRhamField<Grid::dual, Space::face>& auxDualF2_2),
-                           (computational_domain infra),
-                           (const amrex::Real dt),
-                           (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)));
+        // This mock of the treat_partiles method is not used in the tests. It is needed 
+        // because treat_particles is virtual and if it is not implemented we can not 
+        // instantiate the Splitting mock.
+        MOCK_METHOD(void, treat_particles, (
+            (std::shared_ptr<FDDeRhamComplex> deRham),
+            (DeRhamField<Grid::primal, Space::edge>& E),
+            (DeRhamField<Grid::primal, Space::face>& B),
+            (DeRhamField<Grid::dual, Space::face>& D),
+            (DeRhamField<Grid::dual, Space::face>& J),
+            computational_domain infra,
+            const amrex::Real dt,
+            (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)
+        ));
+
+        MOCK_METHOD(void, time_step, (
+            (std::shared_ptr<FDDeRhamComplex> deRham),
+            (DeRhamField<Grid::dual, Space::cell>& rho),
+            (DeRhamField<Grid::primal, Space::edge>& E),
+            (DeRhamField<Grid::primal, Space::face>& B),
+            (DeRhamField<Grid::dual, Space::face>& D),
+            (DeRhamField<Grid::dual, Space::edge>& H),
+            (DeRhamField<Grid::dual, Space::face>& J),
+            (DeRhamField<Grid::primal, Space::face>& auxPrimalF2),
+            (DeRhamField<Grid::primal, Space::face>& auxPrimalF2_2),
+            (DeRhamField<Grid::dual, Space::face>& auxDualF2),
+            (DeRhamField<Grid::dual, Space::face>& auxDualF2_2),
+            (computational_domain infra),
+            (const amrex::Real dt),
+            (amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& partGr)));
     };
 
     class SplittingTest : public testing::Test {
@@ -59,6 +75,7 @@ namespace {
         const amrex::Real dt{1};
 
         Parameters params;
+        std::shared_ptr<FDDeRhamComplex> deRham;
 
         static const bool electromagnetic{true};
         static const bool profiling{false};
@@ -77,26 +94,23 @@ namespace {
             infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-
+            deRham = std::make_shared<FDDeRhamComplex>(params);
         }
     };
 
     TEST_F(SplittingTest, NullTest) {
         MockSplitting<vDim, numSpec, degX, degY, degZ, degmw, nData, electromagnetic, profiling> mockSplitting;
 
-        // Initialize the De Rham Complex
-        std::shared_ptr<FDDeRhamComplex> deRham = std::make_shared<FDDeRhamComplex>(params);
+        EXPECT_CALL(mockSplitting, time_step).Times(Exactly(1));
 
         // Declare the fields 
-        DeRhamField<Grid::dual, Space::face> D(deRham);
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        DeRhamField<Grid::primal, Space::face> B(deRham);
         DeRhamField<Grid::primal, Space::edge> E(deRham);
+        DeRhamField<Grid::primal, Space::face> B(deRham);
+        DeRhamField<Grid::dual, Space::face> D(deRham);
         DeRhamField<Grid::dual, Space::edge> H(deRham);
+        DeRhamField<Grid::dual, Space::face> J(deRham);
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
-        DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-        HSZigZagC2<vDim, numSpec, degX, degY, degZ, degmw, nData> time_looper;
-        time_looper.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
+        mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
     }
 }
