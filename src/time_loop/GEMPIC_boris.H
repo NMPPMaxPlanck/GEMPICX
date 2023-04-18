@@ -209,20 +209,20 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
         
             amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> primitive;
             // push x1
-            x_push_and_J_deposit<0>(pos, vel, infra, primitive, spline, dx, jA, chargemass, weight, dt);
+            x_push_and_J_deposit_1di<0>(pos, vel, infra, primitive, spline, dx, jA, chargemass, weight, dt);
 
             if (vdim > 1)
             {
 #if GEMPIC_SPACEDIM > 1
             // push x2
-            x_push_and_J_deposit<1>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+            x_push_and_J_deposit_1di<1>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
 #endif
             }
             if (vdim > 2)
             {
 #if GEMPIC_SPACEDIM == 3
             // push x3
-            x_push_and_J_deposit<2>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+            x_push_and_J_deposit_1di<2>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
 #endif
             }
         }
@@ -230,9 +230,9 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
     /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     *
-    * x_push_and_J_deposit 
+    * x_push_and_J_deposit_1di
     * 
-    * update single particle position along 1 direction 
+    * update single particle position along 1 arbitrary direction 
     * and deposit charge-conserving current
     * 
     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -240,7 +240,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
     // mcp: modified from apply_H_p_i
     template<int xidx>
-    AMREX_GPU_HOST_DEVICE inline void x_push_and_J_deposit(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
+    AMREX_GPU_HOST_DEVICE inline void x_push_and_J_deposit_1di(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
                             amrex::GpuArray<amrex::Real, vdim> &vel,
                             computational_domain const &infra,
                             amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> &primitive,
