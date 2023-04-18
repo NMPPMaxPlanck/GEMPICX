@@ -112,7 +112,7 @@ namespace {
 
         computational_domain infra;
         amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
-        amrex::MultiFab rho; 
+        amrex::MultiFab rho;
 
         // virtual void SetUp() will be called before each test is run.
         void SetUp() override {
