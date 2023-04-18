@@ -112,15 +112,8 @@ namespace {
         DeRhamField<Grid::dual, Space::edge> H(deRham);
         DeRhamField<Grid::dual, Space::face> J(deRham);
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
-/*
-        DeRhamField<Grid::primal, Space::face> auxPrimalF2(deRham);
-        DeRhamField<Grid::primal, Space::face> auxPrimalF2_2(deRham);
-        DeRhamField<Grid::dual, Space::face> auxDualF2(deRham);
-        DeRhamField<Grid::dual, Space::face> auxDualF2_2(deRham);
-*/
-        mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
 
-        //EXPECT_TRUE(mockSplitting.time_step(deRham, rho, E, B, D, H, J, auxPrimalF2, auxPrimalF2_2, auxDualF2, auxDualF2_2, infra, dt, particleGroup));
+        mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
     }
 
     TEST_F(SplittingTest, FiveSteps) {
