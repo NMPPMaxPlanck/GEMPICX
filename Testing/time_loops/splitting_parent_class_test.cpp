@@ -66,8 +66,7 @@ namespace {
         static const int degZ{1};
         static const int degmw{2};
 
-        // Number of species (second species only used for DoubleParticleMultipleSpecies)
-        static const int numSpec{2};
+        static const int numSpec{1};
         // Number of velocity dimensions.
         static const int vDim{3};
 
