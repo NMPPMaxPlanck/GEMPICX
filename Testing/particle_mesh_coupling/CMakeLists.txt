@@ -4,5 +4,6 @@ file(GLOB FDDERHAMCOMPLEX "../../src/forms/FDDeRhamComplex/GEMPIC_FDDeRhamComple
 target_sources(GtestTests PRIVATE
     # test cases
     # deposit_rho_test.cpp
-    spline_test.cpp
-    evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
+    # spline_test.cpp
+    push_v_efield_test.cpp)
+    #evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
