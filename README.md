@@ -115,3 +115,6 @@ Documentation
 =====================
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
 
+Coding style and conventions
+=====================
+- we follow the [WarpX style convention](https://warpx.readthedocs.io/en/latest/developers/contributing.html#style-and-conventions)
