@@ -4,18 +4,18 @@
 #include "test_utils/GEMPIC_test_utils.H"
 
 namespace {
-class PushVTest : public testing::Test {
-    protected:
+    class PushVTest : public testing::Test {
+        protected:
 
-    static const int vDim{3};
-    
-    amrex::Real dt{1};
-    amrex::Real chargemass{1};
-    
-    amrex::GpuArray<amrex::Real, 3> vel{1, 1, 1};
-    amrex::GpuArray<amrex::Real, 3> Ep{1, 1, 1};
+        static const int vDim{3};
+        
+        amrex::Real dt{1};
+        amrex::Real chargemass{1};
+        
+        amrex::GpuArray<amrex::Real, 3> vel{1, 1, 1};
+        amrex::GpuArray<amrex::Real, 3> Ep{1, 1, 1};
 
-};
+    };
 
     TEST_F(PushVTest, NullTest) {
 

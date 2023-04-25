@@ -5,5 +5,6 @@ target_sources(GtestTests PRIVATE
     # test cases
     # deposit_rho_test.cpp
     # spline_test.cpp
-    push_v_efield_test.cpp)
-    #evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
+    # evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
+    # push_v_efield_test.cpp
+    accumulate_j_update_v_C2_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
