@@ -45,9 +45,6 @@ namespace {
         spline1d_at_particles<degP1> spline_new;
         spline1d_at_particles<degP2> spline_old;
 
-        amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
-        amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bA;
-
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
         amrex::GpuArray<amrex::Real, std::max(degX, std::max(degY, degZ)) + 4> primitive;
 
@@ -125,8 +122,20 @@ namespace {
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
 
+        bool particleLoopRun{false};
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
         {
+            particleLoopRun = true;
+
+            const long np{pti.numParticles()};
+            EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
+
+            const auto& particles{pti.GetArrayOfStructs()};
+            const auto partData{particles().data()};
+
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bA;
+
             for (int cc = 0; cc < vDim; cc++)
             {
                 jA[cc] = (J.data[cc])[pti].array();
@@ -136,17 +145,22 @@ namespace {
                 bA[cc] = (B.data[cc])[pti].array();
             }
 
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+            for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+                position[d] = partData[0].pos(d);
+
             amrex::Real x_new = 0;
 
             spline_new.init_position(x_new, infra.plo[0], infra.dxi[0]);
-            spline_old.init_position(0, infra.plo[0], infra.dxi[0]);
-            spline.template init_position<0, 1>(x_new, infra.plo[0], infra.dxi[0]);
+            spline_old.init_position(position[0], infra.plo[0], infra.dxi[0]);
+            spline.init_particles(position, infra.plo, infra.dxi);
 
             accumulate_j_update_v_C2<splines_at_particles<1, 1, 1>, vDim, degP, degP1, degP2, pDim, pLength>(spline, spline_new, spline_old, weight, dx, bA, jA, bfields, primitive);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[1], 0);
         }
+        ASSERT_TRUE(particleLoopRun);
     }
 /*
     TEST_F(AccumulateJUpdateVC2Test, ConstantTest) {
