@@ -109,7 +109,7 @@ namespace {
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
 
-        // (default) charge correctly transferred from addSinglePparticles
+        // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge()); 
 
         // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
