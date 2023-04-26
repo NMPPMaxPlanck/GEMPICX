@@ -292,6 +292,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
         spline_new.init_position(x_new, infra.plo[xidx], infra.dxi[xidx]);
         spline_old.init_position(pos[xidx], infra.plo[xidx], infra.dxi[xidx]);
+        spline.init_particles(pos, infra.plo, infra.dxi);
         spline.template init_position<xidx, degrees[xidx]>(x_new, infra.plo[xidx], infra.dxi[xidx]);
 
         accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>,

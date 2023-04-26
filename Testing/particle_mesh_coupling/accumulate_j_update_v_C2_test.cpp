@@ -131,7 +131,7 @@ namespace {
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
 
-        // (default) charge correctly transferred from addSinglePparticles
+        // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge()); 
 
         const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", 
@@ -253,7 +253,6 @@ namespace {
         }
     }
 
-
     TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -316,6 +315,142 @@ namespace {
 
             EXPECT_EQ(bfields[0], -4.75);
             EXPECT_EQ(bfields[1], -4.75);
+        }
+    }
+
+    TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate) {
+        const int numParticles{2};
+        // Particles in different cells to check that they don't interfere with each other
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{
+            AMREX_D_DECL(0, 0, 0)},
+            {AMREX_D_DECL(
+            infra.geom.ProbLo(0) + 5.5*infra.dx[0],
+            infra.geom.ProbLo(1) + 5.5*infra.dx[1],
+            infra.geom.ProbLo(2) + 5.5*infra.dx[2])}}};
+        amrex::Array<amrex::Real, numParticles> weights{1, 1};
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+
+        // (default) charge correctly transferred from addSingleParticles
+        EXPECT_EQ(1, particleGroup[0]->getCharge()); 
+
+        const amrex::Array<std::string, 3> analyticalFuncB = {"1.0", 
+                                                              "1.0",
+                                                              "1.0"};
+
+        const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", 
+                                                              "1.0",
+                                                              "1.0"};
+
+        const int nVar{4}; //x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
+        amrex::Parser parser;
+
+        for (int i{0}; i<3; ++i)
+        {
+            parser.define(analyticalFuncB[i]);
+            parser.registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser.compile<4>();
+        }
+
+        for (int i{0}; i<3; ++i)
+        {
+            parser.define(analyticalFuncJ[i]);
+            parser.registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser.compile<4>();
+        }
+
+        // Initialize the De Rham Complex
+        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
+
+        DeRhamField<Grid::primal, Space::face> B(deRham);
+        deRham -> projection(funcB, 0.0, B);
+
+        DeRhamField<Grid::dual, Space::face> J(deRham);
+        deRham -> projection(funcJ, 0.0, J);
+
+        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+        // Particle iteration ... over one particle. Hopefully.
+
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
+        {
+            const long np{pti.numParticles()};
+            EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
+
+            amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
+
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+
+            EXPECT_EQ(bfields[0], 0);
+            EXPECT_EQ(bfields[0], 0);
+        }
+    }
+
+    TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap) {
+        const int numParticles{2};
+        // Particles in different cells to check that they don't interfere with each other
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{
+            AMREX_D_DECL(0, 0, 0)},
+            {AMREX_D_DECL(
+            infra.geom.ProbLo(0) + 0.5*infra.dx[0],
+            infra.geom.ProbLo(1) + 0.5*infra.dx[1],
+            infra.geom.ProbLo(2) + 0.5*infra.dx[2])}}};
+        amrex::Array<amrex::Real, numParticles> weights{1, 1};
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+
+        // (default) charge correctly transferred from addSingleParticles
+        EXPECT_EQ(1, particleGroup[0]->getCharge()); 
+
+        const amrex::Array<std::string, 3> analyticalFuncB = {"1.0", 
+                                                              "1.0",
+                                                              "1.0"};
+
+        const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", 
+                                                              "1.0",
+                                                              "1.0"};
+
+        const int nVar{4}; //x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
+        amrex::Parser parser;
+
+        for (int i{0}; i<3; ++i)
+        {
+            parser.define(analyticalFuncB[i]);
+            parser.registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser.compile<4>();
+        }
+
+        for (int i{0}; i<3; ++i)
+        {
+            parser.define(analyticalFuncJ[i]);
+            parser.registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser.compile<4>();
+        }
+
+        // Initialize the De Rham Complex
+        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
+
+        DeRhamField<Grid::primal, Space::face> B(deRham);
+        deRham -> projection(funcB, 0.0, B);
+
+        DeRhamField<Grid::dual, Space::face> J(deRham);
+        deRham -> projection(funcJ, 0.0, J);
+
+        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+        // Particle iteration ... over one particle. Hopefully.
+
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
+        {
+            const long np{pti.numParticles()};
+            EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
+
+            amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
+
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+
+            EXPECT_EQ(bfields[0], 0);
+            EXPECT_EQ(bfields[0], 0);
         }
     }
 
