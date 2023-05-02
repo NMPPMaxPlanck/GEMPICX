@@ -199,7 +199,7 @@ namespace {
             amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
             updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
                         
-            EXPECT_EQ(bfields[0][0], 4.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
             EXPECT_EQ(bfields[0][1], 1.0);
             EXPECT_EQ(bfields[0][2], 1.0);
         }
@@ -247,7 +247,7 @@ namespace {
             amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
             updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
                         
-            EXPECT_EQ(bfields[0][0], 1.5);
+            EXPECT_EQ(bfields[0][0], 1.0);
             EXPECT_EQ(bfields[0][1], 1.0);
             EXPECT_EQ(bfields[0][2], 1.0);
         }
@@ -295,7 +295,7 @@ namespace {
             amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
             updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
                         
-            EXPECT_EQ(bfields[0][0], 0.625);
+            EXPECT_EQ(bfields[0][0], 1.0);
             EXPECT_EQ(bfields[0][1], 1.0);
             EXPECT_EQ(bfields[0][2], 1.0);
         }
@@ -345,11 +345,11 @@ namespace {
             amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
             updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
                         
-            EXPECT_EQ(bfields[0][0], 4.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
             EXPECT_EQ(bfields[0][1], 1.0);
             EXPECT_EQ(bfields[0][2], 1.0);
                         
-            EXPECT_EQ(bfields[1][0], 1.5);
+            EXPECT_EQ(bfields[1][0], 1.0);
             EXPECT_EQ(bfields[1][1], 1.0);
             EXPECT_EQ(bfields[1][2], 1.0);
         }
@@ -399,11 +399,11 @@ namespace {
             amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
             updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
                         
-            EXPECT_EQ(bfields[0][0], 4.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
             EXPECT_EQ(bfields[0][1], 1.0);
             EXPECT_EQ(bfields[0][2], 1.0);
                         
-            EXPECT_EQ(bfields[1][0], 1.5);
+            EXPECT_EQ(bfields[1][0], 1.0);
             EXPECT_EQ(bfields[1][1], 1.0);
             EXPECT_EQ(bfields[1][2], 1.0);
         }

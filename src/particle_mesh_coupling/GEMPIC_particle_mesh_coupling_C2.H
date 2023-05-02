@@ -464,8 +464,8 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_bfield(
                     AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
                 if (ii < degx)
                 {
-                    double s_coeff = spline.spline_node[0][ii] * spline.spline_cell[1][jj] *
-                                     spline.spline_cell[2][kk];
+                    double s_coeff = spline.spline_cell[0][ii] * spline.spline_node[1][jj] *
+                                     spline.spline_node[2][kk];
                     fields[0] +=
                         s_coeff *
                         (bArray[0])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
