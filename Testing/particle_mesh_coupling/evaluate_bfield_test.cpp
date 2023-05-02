@@ -21,11 +21,12 @@ namespace {
     template <int vDim, int degX, int degY, int degZ>
     void updateBFieldParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                  DeRhamField<Grid::primal, Space::edge>& B,
-                                 computational_domain& infra,
-                                 amrex::GpuArray<amrex::Real, vDim>* bfields) {
+                                 computational_domain& infra) {
         const long np{pti.numParticles()};
         const auto& particles{pti.GetArrayOfStructs()};
         const auto partData{particles().data()};
+        amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
+        amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> bArray;
         for (int cc{0}; cc < vDim; cc++) bArray[cc] = (B.data[cc])[pti].array();
@@ -42,6 +43,17 @@ namespace {
 
             bfields[pp] = evaluate_bfield<vDim, degX, degY, degZ>(spline, bArray);
         });
+                        
+        EXPECT_EQ(bfields[0][0], 1.0);
+        EXPECT_EQ(bfields[0][1], 1.0);
+        EXPECT_EQ(bfields[0][2], 1.0);
+                        
+        if (np == 2)
+        {
+            EXPECT_EQ(bfields[1][0], 1.0);
+            EXPECT_EQ(bfields[1][1], 1.0);
+            EXPECT_EQ(bfields[1][2], 1.0);
+        }
     }
 
     // Test fixture
@@ -195,13 +207,7 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
 
-            amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
-            amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
-                        
-            EXPECT_EQ(bfields[0][0], 1.0);
-            EXPECT_EQ(bfields[0][1], 1.0);
-            EXPECT_EQ(bfields[0][2], 1.0);
+            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
         }
     }
 
@@ -242,14 +248,8 @@ namespace {
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
-
-            amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
-            amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
-                        
-            EXPECT_EQ(bfields[0][0], 1.0);
-            EXPECT_EQ(bfields[0][1], 1.0);
-            EXPECT_EQ(bfields[0][2], 1.0);
+            
+            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
         }
     }
 
@@ -290,14 +290,8 @@ namespace {
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
-
-            amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
-            amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
-                        
-            EXPECT_EQ(bfields[0][0], 1.0);
-            EXPECT_EQ(bfields[0][1], 1.0);
-            EXPECT_EQ(bfields[0][2], 1.0);
+            
+            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
         }
     }
 
@@ -341,17 +335,7 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
 
-            amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
-            amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
-                        
-            EXPECT_EQ(bfields[0][0], 1.0);
-            EXPECT_EQ(bfields[0][1], 1.0);
-            EXPECT_EQ(bfields[0][2], 1.0);
-                        
-            EXPECT_EQ(bfields[1][0], 1.0);
-            EXPECT_EQ(bfields[1][1], 1.0);
-            EXPECT_EQ(bfields[1][2], 1.0);
+            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
         }
     }
 
@@ -395,17 +379,7 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
 
-            amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
-            amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra, bfields);
-                        
-            EXPECT_EQ(bfields[0][0], 1.0);
-            EXPECT_EQ(bfields[0][1], 1.0);
-            EXPECT_EQ(bfields[0][2], 1.0);
-                        
-            EXPECT_EQ(bfields[1][0], 1.0);
-            EXPECT_EQ(bfields[1][1], 1.0);
-            EXPECT_EQ(bfields[1][2], 1.0);
+            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
         }
     }
 }
