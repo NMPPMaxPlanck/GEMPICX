@@ -46,8 +46,8 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(8, 8, 8)};
 
     // Weibel parameters
     amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{
@@ -69,7 +69,7 @@ void main_main()
     VlMa.init_Nghost(degx, degy, degz);
     const int NS = 0, FX = 2, FV = 2, FS = 2;
     VlMa.set_params("test_deposit_rho", n_cell, {1000}, NS, FX, FV, FS, is_periodic,
-                    {AMREX_D_DECL(4, 4, 4)}, 0.02, {-1.0}, {1.0}, k, {"0"});
+                    amrex::IntVect{AMREX_D_DECL(4, 4, 4)}, 0.02, {-1.0}, {1.0}, k, {"0"});
 
     VlMa.meanVelocity = meanVelocity;
     VlMa.vThermal = vThermal;
@@ -140,9 +140,11 @@ void main_main()
         }
     }
 
+#if (GEMPIC_SPACEDIM == 3)
     mw_yee.rho.SumBoundary(0, 1, {mw_yee.Nghost, mw_yee.Nghost, mw_yee.Nghost}, {0, 0, 0},
                            infra.geom.periodicity());
     mw_yee.rho.FillBoundary(infra.geom.periodicity());
+#endif
 
     //------------------------------------------------------------------------------
     // Compute difference and store in phi:

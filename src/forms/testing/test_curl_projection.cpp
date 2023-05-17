@@ -1,3 +1,12 @@
+/*------------------------------------------------------------------------------
+ Test the discrete curl C on both primal and dual grid for
+ periodic boundary conditions.
+    The following errors are computed: max |R_2 curl f - C R_1 f|, i.e. the 
+    analytical f is projected to a discrete 1-form followed by the discrete
+    curl. The result is compared with the restriction of the analytical
+    curl of f to a discrete 2-form.
+    Test passes if all projected DOFs are within 1e-15 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -7,11 +16,17 @@ using namespace GEMPIC_FDDeRhamComplex;
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv); 
+	amrex::Initialize(argc, argv);
+
+    // error tolerance
+    const amrex::Real tol = 1e-15;
+
+    // number of quadrature points
+    int gaussNodes = 6;
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(19, 15, 17)};
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
@@ -54,10 +69,10 @@ int main (int argc, char *argv[])
     }
 
     // Compute the projection of the field
-    deRham -> projection(func, 0.0, E);
+    deRham->projection(func, 0.0, E, gaussNodes);
 
     // Calculate curlE from E
-    deRham -> curl(E, curlE);
+    deRham->curl(E, curlE);
 
     // Analytical curlE
 #if (GEMPIC_SPACEDIM == 1)
@@ -85,7 +100,7 @@ int main (int argc, char *argv[])
 	
     // Declare B field
     DeRhamField<Grid::primal, Space::face> B(deRham);
-    deRham -> projection(func, 0.0, B);
+    deRham->projection(func, 0.0, B, gaussNodes);
 
     // Calculate errorE
     bool passE{false};
@@ -139,10 +154,10 @@ int main (int argc, char *argv[])
     }
 
     // Compute the projection of the field
-    deRham -> projection(func, 0.0, H);
+    deRham->projection(func, 0.0, H, gaussNodes);
 
     // Calculate curlH from H
-    deRham -> curl(H, curlH);
+    deRham->curl(H, curlH);
 
     // Analytical curlH
     #if (GEMPIC_SPACEDIM == 1)
@@ -170,7 +185,7 @@ int main (int argc, char *argv[])
 	
     // Declare D field
     DeRhamField<Grid::dual, Space::face> D(deRham);
-    deRham -> projection(func, 0.0, D);
+    deRham->projection(func, 0.0, D, gaussNodes);
 
     // Calculate errorH
     bool passH{false};
@@ -188,16 +203,7 @@ int main (int argc, char *argv[])
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             { 
                 errorHMF(i, j, k) = std::abs(DMF(i, j, k) - curlHMF(i, j, k));
-            }); 
-
-            // Visualization only suitable for CPU
-            /*
-            if (comp == 0)
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-            { 
-                amrex::Print() << "(" << i << ", " << j << ", " << k << ") D: " << DMF(i, j, k) << " curlH: " << curlHMF(i, j, k) << " error: " << errorHMF(i, j, k) << std::endl;
             });
-            */
         }
     }
 
@@ -218,9 +224,9 @@ int main (int argc, char *argv[])
     amrex::Print() << "errorCurlHz_norm0: " << errorCurlHz_norm0 << std::endl;
     */
 
-    if (std::max({errorCurlEx_norm0, errorCurlEy_norm0, errorCurlEz_norm0}) < 1e-6)
+    if (std::max({errorCurlEx_norm0, errorCurlEy_norm0, errorCurlEz_norm0}) < tol)
         passE = true;
-    if (std::max({errorCurlHx_norm0, errorCurlHy_norm0, errorCurlHz_norm0}) < 1e-6)
+    if (std::max({errorCurlHx_norm0, errorCurlHy_norm0, errorCurlHz_norm0}) < tol)
         passH = true;
 
     if (passE == true && passH == true)
@@ -234,23 +240,16 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_curl_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
 
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[0] = " << errorCurlEx_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[1] = " << errorCurlEy_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[2] = " << errorCurlEz_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[0] = " << errorCurlHx_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[1] = " << errorCurlHy_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[2] = " << errorCurlHz_norm0 << std::endl;
+
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_curl_projection.output.0", "test_curl_projection.output");
     amrex::Print() << "IOProcessorNumber " << amrex::ParallelDescriptor::IOProcessorNumber() << std::endl;
-
-
-    // Visualize errorE 
-    /*
-    for (int comp = 0; comp < 3; ++comp)
-    for (amrex::MFIter mfi(errorE.data[comp]); mfi.isValid(); ++mfi)
-    {
-        const amrex::Box &bx = mfi.validbox();
-        amrex::Array4<amrex::Real> const &errorEMF = (errorE.data[1])[mfi].array();
-
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) { amrex::Print() << "comp: " << comp << " ,("<< i << "," << j << "," << k <<
-                 ") errorE: " << errorEMF(i, j, k) << std::endl; });
-    }
-    */
 
     amrex::Finalize();
 }

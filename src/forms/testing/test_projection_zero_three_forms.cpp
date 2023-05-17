@@ -1,3 +1,10 @@
+/*------------------------------------------------------------------------------
+ Test the restriction operators R_0, R_3 on both primal and dual grid for
+ periodic boundary conditions.
+    Integration uses enough Gauss nodes so that the quadrature error can be
+    smaller thant 1e-15.
+    Test passes if all projected DOFs are within 1e-15 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -10,7 +17,10 @@ int main (int argc, char *argv[])
 	amrex::Initialize(argc, argv);
 
     // error tolerance
-    const amrex::Real tol = 1e-5;
+    const amrex::Real tol = 1e-15;
+
+    // number of quadrature points
+    int gaussNodes = 6;
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
@@ -170,7 +180,7 @@ int main (int argc, char *argv[])
     func = parser.compile<nVar>();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, rho);
+    deRham->projection(func, 0.0, rho, gaussNodes);
 
     // Compute the analytical result of the field
     DeRhamField<Grid::primal, Space::cell> rhoAn(deRham);
@@ -231,7 +241,7 @@ int main (int argc, char *argv[])
     func = parser.compile<nVar>();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, rhoDual);
+    deRham->projection(func, 0.0, rhoDual, gaussNodes);
 
     // Compute the analytical result of the field
     DeRhamField<Grid::dual, Space::cell> rhoAnDual(deRham);
@@ -307,6 +317,11 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_projection_zero_three_forms.output") << std::endl;
         amrex::PrintToFile("test_projection_zero_three_forms.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
+
+    amrex::PrintToFile("test_projection_zero_three_forms.output") << "max Error Q = " << errorQ_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_zero_three_forms.output") << "max Error QDual = " << errorQDual_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_zero_three_forms.output") << "max Error Rho = " << errorRho_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_zero_three_forms.output") << "max Error RhoDual = " << errorRhoDual_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_projection_zero_three_forms.output.0", "test_projection_zero_three_forms.output");

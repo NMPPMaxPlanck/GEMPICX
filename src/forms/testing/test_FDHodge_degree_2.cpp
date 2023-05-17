@@ -298,31 +298,31 @@ int main (int argc, char *argv[])
     {
         const int coarse = 16;
         const int fine = 32;
-        amrex::Real error_coarse;
-        amrex::Real error_fine;
+        amrex::Real errorCoarse;
+        amrex::Real errorFine;
 
         const int len = 4;
         amrex::GpuArray<amrex::Real, len> rate;
 
-        error_coarse = test12(coarse);
-        error_fine = test12(fine);
-        rate[0] = std::log2(error_coarse / error_fine);
+        errorCoarse = test12(coarse);
+        errorFine = test12(fine);
+        rate[0] = std::log2(errorCoarse / errorFine);
 
-        error_coarse = test21(coarse);
-        error_fine = test21(fine);
-        rate[1] = std::log2(error_coarse / error_fine);
+        errorCoarse = test21(coarse);
+        errorFine = test21(fine);
+        rate[1] = std::log2(errorCoarse / errorFine);
 
-        error_coarse = test03(coarse);
-        error_fine = test03(fine);
-        rate[2] = std::log2(error_coarse / error_fine);
-        if (error_coarse < 1e-15 || error_fine < 1e-15) // this happens..
+        errorCoarse = test03(coarse);
+        errorFine = test03(fine);
+        rate[2] = std::log2(errorCoarse / errorFine);
+        if (errorCoarse < 1e-15 || errorFine < 1e-15) // this happens..
             rate[2] = 2;
         else
-            rate[2] = std::log2(error_coarse / error_fine);
+            rate[2] = std::log2(errorCoarse / errorFine);
 
-        error_coarse = test30(coarse);
-        error_fine = test30(fine);
-        rate[3] = std::log2(error_coarse / error_fine);
+        errorCoarse = test30(coarse);
+        errorFine = test30(fine);
+        rate[3] = std::log2(errorCoarse / errorFine);
 
         amrex::PrintToFile("test_FDHodge_degree_2.output") << std::endl;
         amrex::PrintToFile("test_FDHodge_degree_2.output") << GEMPIC_SPACEDIM << "D Finite Difference Hodge degree 2 convergence test:" << std::endl;

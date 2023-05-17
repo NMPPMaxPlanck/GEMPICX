@@ -36,22 +36,23 @@ enum Space
 };
 
 class DeRhamComplex;
-/// DeRhamField
-///
-/// Stores a specific element of a deRham complex
-///
-/// @p gridType: Grid::primal or Grid::dual grid
-///
-/// @p spaceType: Space::node, Space::edge, Space::face or Space::cell.
-///
-/// spaceType is defined on primal grid:
-/// e.g. DeRhamField<dual, node> is the cell based complex dual to DeRhamField<primal, node>
-///
-/// In 1D only Space::node and Space::cell exist.
-///
-/// In 2D there are 4 complexes because of the two different deRham sequences
-///
-/// For node and cell only scalarData will be allocated, for edge and face only vector data
+/** DeRhamField
+ * 
+* 
+* Stores a specific element of a deRham complex
+*
+* @p gridType: Grid::primal or Grid::dual grid
+*
+* @p spaceType: Space::node, Space::edge, Space::face or Space::cell.
+*
+* spaceType is defined on primal grid:
+* e.g. DeRhamField<dual, node> is the cell based complex dual to DeRhamField<primal, node>
+*
+* In 1D only Space::node and Space::cell exist. 
+* In 2D there are 4 complexes because of the two different deRham sequences
+*
+* For node and cell only scalarData will be allocated, for edge and face only vector data
+*/
 
 template <int grid, int space>
 struct DeRhamField
@@ -163,13 +164,13 @@ public:
         switch (m_hodgeDegree)
         {
             case 2:
-                nGhost = {AMREX_D_DECL(1,1,1)}; // one ghost cell always needed for differential operators
+                nGhost = {AMREX_D_DECL(1, 1, 1)};
                 break;
             case 4:
-                nGhost = {AMREX_D_DECL(2,2,2)};
+                nGhost = {AMREX_D_DECL(2, 2, 2)};
                 break;
             case 6:
-                nGhost = {AMREX_D_DECL(3,3,3)};
+                nGhost = {AMREX_D_DECL(3, 3, 3)};
                 break;
         }
 
@@ -521,20 +522,20 @@ public:
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<primal, Space::node>&) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<primal, Space::cell>&) = 0;
+                    DeRhamField<primal, Space::cell>&, int) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<dual, Space::node>&) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<dual, Space::cell>&) = 0;
+                    DeRhamField<dual, Space::cell>&, int) = 0;
                     
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<dual, Space::edge>&) = 0;
+                    amrex::Real t, DeRhamField<dual, Space::edge>&, int) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<primal, Space::face>&) = 0;
+                    amrex::Real t, DeRhamField<primal, Space::face>&, int) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<primal, Space::edge>&) = 0;
+                    amrex::Real t, DeRhamField<primal, Space::edge>&, int) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<dual, Space::face>&) = 0;
+                    amrex::Real t, DeRhamField<dual, Space::face>&, int) = 0;
                     
 
     //------------------

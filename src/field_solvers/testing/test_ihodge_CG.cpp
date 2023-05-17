@@ -82,10 +82,10 @@ void main_main()
     double twopi = 4 * asin(1.0);  // 2.0*3.14159265359;
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    // std::array<int,GEMPIC_SPACEDIM> n_cell = {AMREX_D_DECL(32,32,32)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(32, 32, 32)};
-    amrex::IntVect mx_grid = {AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    // std::array<int,GEMPIC_SPACEDIM> n_cell{AMREX_D_DECL(32,32,32)};
+    amrex::IntVect n_cell{AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect mx_grid{AMREX_D_DECL(32, 32, 32)};
 
     amrex::Real boxLo[GEMPIC_SPACEDIM] = {AMREX_D_DECL(0, 0, 0)};
     amrex::Real boxHi[GEMPIC_SPACEDIM] = {AMREX_D_DECL(twopi / 0.5, twopi / 0.5, twopi / 0.5)};
@@ -109,15 +109,19 @@ void main_main()
     funcSelectB[0] = IHODGE_CG_B0;
     funcSelectB[1] = IHODGE_CG_ZERO;
     funcSelectB[2] = IHODGE_CG_B2;
+#if (GEMPIC_SPACEDIM == 3)
     mw_yee.template initB<degree>(infra, funcSelectB);
+#endif
 
     amrex::GpuArray<int, vdim> funcSelectE;
     funcSelectE[0] = IHODGE_CG_E0;
     funcSelectE[1] = IHODGE_CG_E1;
     funcSelectE[2] = IHODGE_CG_E2;
+#if (GEMPIC_SPACEDIM == 3)
     mw_yee.template initE<degree>(infra, funcSelectE);
 
     mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
+#endif
 
     for (int dim = 0; dim < vdim; dim++)
     {

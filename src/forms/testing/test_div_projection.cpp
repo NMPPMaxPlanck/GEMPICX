@@ -1,3 +1,12 @@
+/*------------------------------------------------------------------------------
+ Test the discrete div D on both primal and dual grid for
+ periodic boundary conditions.
+    The following errors are computed: max |R_3 div f - D R_2 f|, i.e. the 
+    analytical f is projected to a discrete 2-form followed by the discrete
+    divergence. The result is compared with the restriction of the analytical
+    divergence of f to a discrete 3-form.
+    Test passes if all projected DOFs are within 1e-15 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -7,11 +16,17 @@ using namespace GEMPIC_FDDeRhamComplex;
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv); 
+	amrex::Initialize(argc, argv);
+
+    // error tolerance
+    const amrex::Real tol = 1e-15;
+
+    // number of quadrature points
+    int gaussNodes = 6;
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(19, 15, 17)};
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
@@ -53,10 +68,10 @@ int main (int argc, char *argv[])
     }
 
     // Compute the projection of the field
-    deRham -> projection(funcB, 0.0, B);
+    deRham->projection(funcB, 0.0, B, gaussNodes);
 
     // Calculate divB from B
-    deRham -> div(B, divB);
+    deRham->div(B, divB);
 
     // Analytical divB
 #if (GEMPIC_SPACEDIM == 1)
@@ -78,7 +93,7 @@ int main (int argc, char *argv[])
 	
     // Declare rho
     DeRhamField<Grid::primal, Space::cell> rho(deRham);
-    deRham -> projection(funcDivB, 0.0, rho);
+    deRham->projection(funcDivB, 0.0, rho, gaussNodes);
 
     // Calculate errorE
     bool passRho{false};
@@ -97,8 +112,6 @@ int main (int argc, char *argv[])
         }); 
         
     }
-
-    //amrex::Print() << errorRho.data.norm0() << std::endl;
 
     // Test div projection for Dual
     // Declare the fields 
@@ -132,10 +145,10 @@ int main (int argc, char *argv[])
     }
 
     // Compute the projection of the field
-    deRham -> projection(funcD, 0.0, D);
+    deRham->projection(funcD, 0.0, D, gaussNodes);
 
     // Calculate divB from B
-    deRham -> div(D, divD);
+    deRham->div(D, divD);
 
     // Analytical divB
 #if (GEMPIC_SPACEDIM == 1)
@@ -157,7 +170,7 @@ int main (int argc, char *argv[])
 	
     // Declare rho
     DeRhamField<Grid::dual, Space::cell> rhoDual(deRham);
-    deRham -> projection(funcDivD, 0.0, rhoDual);
+    deRham->projection(funcDivD, 0.0, rhoDual, gaussNodes);
 
     // Calculate errorE
     bool passRhoDual{false};
@@ -186,8 +199,8 @@ int main (int argc, char *argv[])
     amrex::Print() << "errorRhoDual_norm0 = " << errorRhoDual_norm0 << std::endl;
     */
 
-    passRho = (errorRho_norm0 < 1e-6);
-    passRhoDual = (errorRhoDual_norm0 < 1e-6);
+    passRho = (errorRho_norm0 < tol);
+    passRhoDual = (errorRhoDual_norm0 < tol);
 
     if (passRho == true && passRhoDual == true)
     {
@@ -199,6 +212,9 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_div_projection.output") << std::endl;
         amrex::PrintToFile("test_div_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
+
+    amrex::PrintToFile("test_div_projection.output") << "max Error divB = " << errorRho_norm0 << std::endl;
+    amrex::PrintToFile("test_div_projection.output") << "max Error divD = " << errorRhoDual_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_div_projection.output.0", "test_div_projection.output");
