@@ -1,3 +1,12 @@
+/*------------------------------------------------------------------------------
+ Test the discrete gradient G on both primal and dual grid for
+ periodic boundary conditions.
+    The following errors are computed: max |R_1 grad f - G R_0 f|, i.e. the 
+    analytical f is projected to a discrete 0-form followed by the discrete
+    gradient. The result is compared with the restriction of the analytical
+    gradient of f to a discrete 1-form.
+    Test passes if all projected DOFs are within 1e-14 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -7,11 +16,17 @@ using namespace GEMPIC_FDDeRhamComplex;
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv); 
+	amrex::Initialize(argc, argv);
+
+    // error tolerance
+    const amrex::Real tol = 1e-14;
+
+    // number of quadrature points
+    int gaussNodes = 6;
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(19, 15, 17)};
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
@@ -45,10 +60,10 @@ int main (int argc, char *argv[])
     funcQ = parserQ.compile<nVar>();
 
     // Compute the projection of the field
-    deRham -> projection(funcQ, 0.0, Q);
+    deRham->projection(funcQ, 0.0, Q);
 
     // Calculate gradQ from Q
-    deRham -> grad(Q, gradQ);
+    deRham->grad(Q, gradQ);
 
     // Analytical gradQ
 #if (GEMPIC_SPACEDIM == 1)
@@ -78,7 +93,7 @@ int main (int argc, char *argv[])
 	
     // Declare E field
     DeRhamField<Grid::primal, Space::edge> E(deRham);
-    deRham -> projection(funcGradQ, 0.0, E);
+    deRham->projection(funcGradQ, 0.0, E, gaussNodes);
 
     // Calculate errorQ
     bool passQ{false};
@@ -127,10 +142,10 @@ int main (int argc, char *argv[])
     funcDualQ = parserDualQ.compile<nVar>();
 
     // Compute the projection of the field
-    deRham -> projection(funcDualQ, 0.0, QDual);
+    deRham->projection(funcDualQ, 0.0, QDual);
 
     // Calculate gradQ from Q
-    deRham -> grad(QDual, gradDualQ);
+    deRham->grad(QDual, gradDualQ);
 
     // Analytical gradE
  #if (GEMPIC_SPACEDIM == 1)
@@ -160,7 +175,7 @@ int main (int argc, char *argv[])
 	
     // Declare H field
     DeRhamField<Grid::dual, Space::edge> H(deRham);
-    deRham -> projection(funcGradDualQ, 0.0, H);
+    deRham->projection(funcGradDualQ, 0.0, H, gaussNodes);
 
     // Calculate errorQDual
     bool passDualQ{false};
@@ -201,9 +216,9 @@ int main (int argc, char *argv[])
     amrex::Print() << "errorGradQDualz_norm0 = " << errorGradQDualz_norm0 << std::endl;
     */
 
-    if (std::max({errorGradQx_norm0, errorGradQy_norm0, errorGradQz_norm0}) < 1e-6)
+    if (std::max({errorGradQx_norm0, errorGradQy_norm0, errorGradQz_norm0}) < tol)
         passQ = true;
-    if (std::max({errorGradQDualx_norm0, errorGradQDualy_norm0, errorGradQDualz_norm0}) < 1e-6)
+    if (std::max({errorGradQDualx_norm0, errorGradQDualy_norm0, errorGradQDualz_norm0}) < tol)
         passDualQ = true;
     
     if (passQ == true && passDualQ == true)
@@ -216,6 +231,13 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_grad_projection.output") << std::endl;
         amrex::PrintToFile("test_grad_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
+
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[0] = " << errorGradQx_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[1] = " << errorGradQy_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[2] = " << errorGradQz_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[0] = " << errorGradQDualx_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[1] = " << errorGradQDualy_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[2] = " << errorGradQDualz_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_grad_projection.output.0", "test_grad_projection.output");

@@ -1,1 +1,13 @@
 2D test passed
+max Error E[0] = 2.22045e-16
+max Error E[1] = 2.22045e-16
+max Error E[2] = 0
+max Error B[0] = 2.22045e-16
+max Error B[1] = 2.22045e-16
+max Error B[2] = 3.33067e-16
+max Error H[0] = 2.22045e-16
+max Error H[1] = 1.11022e-16
+max Error H[2] = 0
+max Error D[0] = 1.11022e-16
+max Error D[1] = 2.22045e-16
+max Error D[2] = 2.22045e-16

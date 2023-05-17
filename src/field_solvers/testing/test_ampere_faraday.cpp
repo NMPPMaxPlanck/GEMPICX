@@ -60,7 +60,7 @@ void main_main()
     //------------------------------------------------------------------------------
     // Parameters that could be relevant for you:
 
-    amrex::IntVect n_cell = {AMREX_D_DECL(
+    amrex::IntVect n_cell{AMREX_D_DECL(
         16, 16,
         16)};  // spatial discretization: number of cells in each direction, currently: 128x128x128
     int numstep = 2;        // number of timesteps
@@ -72,11 +72,11 @@ void main_main()
     const int degree = 2;
     amrex::GpuArray<Real, vdim + int(vdim / 2.5) * 2 + 1> E_B_error;  // array for storing errors
 
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_ampere_faraday", n_cell, {1}, numstep, 100000, 100000, 100000,
-                    is_periodic, {AMREX_D_DECL(4, 4, 4)}, dt, {-1.0}, {1.0}, 1.0);
+                    is_periodic, amrex::IntVect{AMREX_D_DECL(4, 4, 4)}, dt, {-1.0}, {1.0}, 1.0);
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic,
@@ -89,6 +89,7 @@ void main_main()
 
     // mw_yee.template init_E_B<degree>(fields_E, fields_B, VlMa.k, infra);
     amrex::GpuArray<int, vdim> funcSelectE;
+#if (GEMPIC_SPACEDIM == 3)
     funcSelectE[0] = AMPERE_FARADAY_E0_SIN;
     funcSelectE[1] = AMPERE_FARADAY_ZERO;
     funcSelectE[2] = AMPERE_FARADAY_ZERO;
@@ -101,15 +102,17 @@ void main_main()
     for (int comp = 0; comp < 3; comp++)
     {
         mw_yee.template projection<degree>(0.0, infra, {false, false, false}, *mw_yee.E_Index[comp],
-                                           *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
+                                *mw_yee.Alfven_Tensor[comp], AMPERE_FARADAY_OMEGA);
     }
-
+#endif
     //------------------------------------------------------------------------------
     // This generates error output: comparing current E and B to the analytical solution
     // This output will be stored in a file test_ampere_faraday.output -- you can ignore the Code
 
+#if (GEMPIC_SPACEDIM == 3)
     std::cout << "step: " << 0 << std::endl;
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+#endif
     PrintToFile("test_ampere_faraday.output") << std::endl;
     PrintToFile("test_ampere_faraday.output") << "Maxwell" << std::endl;
     PrintToFile("test_ampere_faraday.output") << "step " << 0 << std::endl;
@@ -135,7 +138,7 @@ void main_main()
 
         //------------------------------------------------------------------------------
         // Ampere
-
+#if (GEMPIC_SPACEDIM == 3)
         mw_yee.template hodge_full<degree>(infra, mw_yee.B_Array, mw_yee.HB_Array,
                                            false);  // we apply the hodge to B (you can ignore this,
                                                     // when degree=2, this is the identity)
@@ -159,6 +162,7 @@ void main_main()
         // solution -- you can ignore the code
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+#endif
         PrintToFile("test_ampere_faraday.output") << "step " << n << std::endl;
         PrintToFile("test_ampere_faraday.output").SetPrecision(5)
             << "Ex error: " << E_B_error[0] << " |Ey error: " << E_B_error[1]

@@ -44,13 +44,13 @@ public:
     std::string sim_name = "simulation";
     // grid
     amrex::RealBox real_box;
-    amrex::Vector<amrex::Real> domain_lo = {AMREX_D_DECL(0.0, 0.0, 0.0)};
-    amrex::Vector<amrex::Real> domain_hi = {AMREX_D_DECL(1.0, 1.0, 1.0)};
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect max_grid_size = {AMREX_D_DECL(4, 4, 4)};  // for parallelisation
+    amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Vector<amrex::Real> domain_hi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(8, 8, 8)};
+    amrex::IntVect max_grid_size{AMREX_D_DECL(4, 4, 4)};  // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
-    amrex::Vector<amrex::Real> k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
+    amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.25, 1.25, 1.25)};
     amrex::Real kx, ky, kz;
 
     // time discretisation
@@ -360,12 +360,12 @@ public:
 
     void set_params(
         std::string sm = "Weibel",
-        amrex::IntVect n_cell_vector = {AMREX_D_DECL(
+        amrex::IntVect n_cell_vector = amrex::IntVect{AMREX_D_DECL(
             24, 8,
             8)},  // std::array<int,GEMPIC_SPACEDIM> n_cell_vector = {AMREX_D_DECL(24, 8, 8)},
         amrex::GpuArray<int, numspec> n_part_per_cell_in = {100}, int NS = 10, int FX = 12,
-        int FV = 12, int FS = 12, amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)},
-        amrex::IntVect max_grid_size_vector = {AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
+        int FV = 12, int FS = 12, amrex::IntVect is_periodic_vector = amrex::IntVect{AMREX_D_DECL(1, 1, 1)},
+        amrex::IntVect max_grid_size_vector = amrex::IntVect{AMREX_D_DECL(4, 4, 4)}, amrex::Real DT = 0.02,
         amrex::GpuArray<amrex::Real, numspec> C = {-1.0},
         amrex::GpuArray<amrex::Real, numspec> M = {1.0}, amrex::Real K = 1.25,
         amrex::GpuArray<std::string, numspec> wf = {"1.0"}, std::string BX = "0.0",
@@ -426,7 +426,7 @@ public:
     }
 
     void set_params_Weibel(std::string sim_name_in = "Weibel", int propagatorIn = 3,
-                           int nStepsIn = 10, amrex::IntVect nCellIn = {AMREX_D_DECL(12, 8, 8)},
+                           int nStepsIn = 10, amrex::IntVect nCellIn = amrex::IntVect{AMREX_D_DECL(12, 8, 8)},
                            amrex::Array<int, numspec> nPartPerCellIn = {100},
                            amrex::Real dtIn = 0.02, int freqSliceIn = 100)
     {
@@ -437,7 +437,7 @@ public:
         dt = dtIn;
         save_checkpoint = freqSliceIn;
         assert(numspec == 1);  // Only electrons
-        n_part_per_cell[0] = nPartPerCellIn[0];
+        n_part_per_cell[0] = nPartPerCellIn[0]; 
         charge[0] = -1.0;
         mass[0] = 1.0;
         density[0] = "1.0";
@@ -448,8 +448,8 @@ public:
         Ey = "0.0";
         Ez = "1e-3 * cos(kvarx * x)";
         phi = "4 * 0.5 * cos(0.5 * x)";
-        is_periodic = {AMREX_D_DECL(1, 1, 1)};
-        max_grid_size = {AMREX_D_DECL(4, 4, 4)};
+        is_periodic = amrex::IntVect{AMREX_D_DECL(1, 1, 1)};
+        max_grid_size = amrex::IntVect{AMREX_D_DECL(4, 4, 4)};
         k = {AMREX_D_DECL(1.25, 1.25, 1.25)};
         num_gaussians[0] = 1;
         meanVelocity = {{{0.0, 0.0, 0.0}}};

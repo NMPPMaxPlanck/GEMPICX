@@ -160,6 +160,7 @@ void init_particles_cellwise(
 
                         // TODOrefine
                         // const double result = densityEval(density_parse);
+#if (GEMPIC_SPACEDIM == 3)
                         amrex::Real result = wave_function(x, y, z, 0.);
                         weight = result / n_part_per_cell[species] * infra.dx[0]
 #if (GEMPIC_SPACEDIM > 1)
@@ -169,7 +170,7 @@ void init_particles_cellwise(
                                  * infra.dx[2]
 #endif
                             ;
-
+#endif
                         ppg[species]->add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight,
                                                    particles);
                     }
@@ -218,6 +219,7 @@ void init_particles_full_domain_gpu(
     amrex::GpuArray<amrex::Real, MAXGAUSS> vel_cum;
     std::partial_sum(Vweight.begin(), Vweight.end(), vel_cum.begin());
 
+#if (GEMPIC_SPACEDIM == 3)
     // MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
@@ -346,6 +348,7 @@ void init_particles_full_domain_gpu(
                 }
             });
     }
+#endif
     amrex::Print() << "init_full_domain_gpu OK\n";
 }
 

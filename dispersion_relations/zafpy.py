@@ -37,14 +37,14 @@ class zafpy:
         """
         k=self.kmode
 
-        s1r,err1r=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z0 + t*z1)*(z1-z0)).real),0,1,epsrel=tol)
-        s1i,err1i=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z0 + t*z1)*(z1-z0)).imag),0,1,epsrel=tol)
-        s2r,err2r=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z1 + t*z2)*(z2-z1)).real),0,1,epsrel=tol)
-        s2i,err2i=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z1 + t*z2)*(z2-z1)).imag),0,1,epsrel=tol)
-        s3r,err3r=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z2 + t*z3)*(z3-z2)).real),0,1,epsrel=tol)
-        s3i,err3i=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z2 + t*z3)*(z3-z2)).imag),0,1,epsrel=tol)
-        s4r,err4r=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z3 + t*z0)*(z0-z3)).real),0,1,epsrel=tol)
-        s4i,err4i=quad(lambda t: np.float((self.Dprime_over_D((1-t)*z3 + t*z0)*(z0-z3)).imag),0,1,epsrel=tol)
+        s1r,err1r=quad(lambda t: float((self.Dprime_over_D((1-t)*z0 + t*z1)*(z1-z0)).real),0,1,epsrel=tol)
+        s1i,err1i=quad(lambda t: float((self.Dprime_over_D((1-t)*z0 + t*z1)*(z1-z0)).imag),0,1,epsrel=tol)
+        s2r,err2r=quad(lambda t: float((self.Dprime_over_D((1-t)*z1 + t*z2)*(z2-z1)).real),0,1,epsrel=tol)
+        s2i,err2i=quad(lambda t: float((self.Dprime_over_D((1-t)*z1 + t*z2)*(z2-z1)).imag),0,1,epsrel=tol)
+        s3r,err3r=quad(lambda t: float((self.Dprime_over_D((1-t)*z2 + t*z3)*(z3-z2)).real),0,1,epsrel=tol)
+        s3i,err3i=quad(lambda t: float((self.Dprime_over_D((1-t)*z2 + t*z3)*(z3-z2)).imag),0,1,epsrel=tol)
+        s4r,err4r=quad(lambda t: float((self.Dprime_over_D((1-t)*z3 + t*z0)*(z0-z3)).real),0,1,epsrel=tol)
+        s4i,err4i=quad(lambda t: float((self.Dprime_over_D((1-t)*z3 + t*z0)*(z0-z3)).imag),0,1,epsrel=tol)
         
         assert(s1r+s2r+s3r+s4r<tol)
         return (s1i + s2i + s3i + s4i)/(2*np.pi)

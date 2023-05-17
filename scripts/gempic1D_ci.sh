@@ -45,7 +45,8 @@ cmake $GEMPIC_BASE \
       -D CMAKE_C_COMPILER=mpicc \
       -D CMAKE_CXX_COMPILER=mpicxx \
       -D CMAKE_CXX_FLAGS="-std=c++11" \
-      -D CMAKE_FC_COMPILER=mpif95
+      -D CMAKE_FC_COMPILER=mpif95 \
+      -D AMReX_SPACEDIM=1
 
 make -j $MAKE_NPROCS
 

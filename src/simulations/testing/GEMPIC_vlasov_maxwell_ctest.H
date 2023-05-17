@@ -50,7 +50,7 @@ void vlasov_maxwell_ctest(std::string test_name, int propagator)
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
-    amrex::IntVect nCell = {AMREX_D_DECL(12, 8, 8)};
+    amrex::IntVect nCell{AMREX_D_DECL(12, 8, 8)};
     amrex::Array<int, numspec> nPartPerCell = {100};
     amrex::Real dt = 0.02;
     if (propagator == 4) dt = 0.005;

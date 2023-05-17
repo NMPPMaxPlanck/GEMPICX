@@ -65,14 +65,14 @@ void main_main()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(128, 128, 128)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(128, 128, 128)};
 
     gempic_parameters<vdim, numspec> VlMa;
 
     const int Nghostx = 1, Nghosty = 1, Nghostz = 1;
     VlMa.init_Nghost(Nghostx, Nghosty, Nghostz);
-    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, {AMREX_D_DECL(64, 64, 64)});
+    VlMa.set_params("norm_ctest", n_cell, {1}, 1, 3, 3, 3, is_periodic, amrex::IntVect{AMREX_D_DECL(64, 64, 64)});
     VlMa.set_computed_params();
 
     computational_domain infra;
@@ -118,21 +118,21 @@ void main_main()
     PrintToFile("test_gempic_norm_additional.tmp") << "Linear case: " << std::endl;
 #if (GEMPIC_SPACEDIM == 1)
     PrintToFile("test_gempic_norm.tmp").SetPrecision(5)
-        << "0-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 0) - a * infra.Length[0])
+        << "0-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 0) - a * infra.Length[0])
         << std::endl;
     double Lx = infra.Length[0];
     double norm1 = 1. / 2. * Lx * a;
     double norm2 = sqrt(1. / 3. * pow(Lx, 2.) * pow(a, 2.));
     PrintToFile("test_gempic_norm.tmp")
-        << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << std::endl;
+        << "1-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 1) - norm1) << std::endl;
     PrintToFile("test_gempic_norm.tmp").SetPrecision(3)
-        << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2) * 1000)
+        << "2-norm error: " << floor(fabs(gempic_norm(mw_yee.rho, infra, 2) - norm2) * 1000)
         << std::endl;
 #endif
 #if (GEMPIC_SPACEDIM == 2)
     PrintToFile("test_gempic_norm.tmp").SetPrecision(5)
         << "0-norm error: "
-        << fabs(gempic_norm(&mw_yee.rho, infra, 0) - (a * infra.Length[0] + b * infra.Length[1]))
+        << fabs(gempic_norm(mw_yee.rho, infra, 0) - (a * infra.Length[0] + b * infra.Length[1]))
         << std::endl;
     double Lx = infra.Length[0];
     double Ly = infra.Length[1];
@@ -141,9 +141,9 @@ void main_main()
         1. / 6. *
         (2. * pow(a, 2.) * pow(Lx, 2.) + 3. * a * b * Lx * Ly + 2. * pow(b, 2.) * pow(Ly, 2.)));
     PrintToFile("test_gempic_norm.tmp")
-        << "1-norm error: " << fabs(gempic_norm(&mw_yee.rho, infra, 1) - norm1) << endl;
+        << "1-norm error: " << fabs(gempic_norm(mw_yee.rho, infra, 1) - norm1) << std::endl;
     PrintToFile("test_gempic_norm.tmp").SetPrecision(1)
-        << "2-norm error: " << floor(fabs(gempic_norm(&mw_yee.rho, infra, 2) - norm2) * 1000)
+        << "2-norm error: " << floor(fabs(gempic_norm(mw_yee.rho, infra, 2) - norm2) * 1000)
         << std::endl;
 #endif
 #if (GEMPIC_SPACEDIM == 3)

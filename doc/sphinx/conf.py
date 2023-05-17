@@ -221,7 +221,7 @@ breathe_projects = { "gempic": "../doxygen/xml/"}
 #breathe_projects = {}
 breathe_default_project = "gempic"
 breathe_default_members = ('members', 'undoc-members')
-breathe_implementation_filename_extensions = ['.cpp', '.H', '.h']
+breathe_implementation_filename_extensions = ['.cpp']
 if read_the_docs_build:
     input_dir = '../../src'
     output_dir = '_build'

@@ -5,7 +5,7 @@
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 
-FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamComplex(params) 
+FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamComplex(params)
 {
     // Parameters used in the projection and hodge
     m_dr = params.dr();
@@ -38,15 +38,73 @@ FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamCompl
     m_tempPrimalThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)})), m_distriMap, 1, m_nGhost);
     m_tempDualThreeForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)})), m_distriMap, 1, m_nGhost);
 
+
+    m_quadPoints[0] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.});
+    m_quadPoints[1] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.5773502691896257, 0.5773502691896257});
+    m_quadPoints[2] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.7745966692414834, 0., 0.7745966692414834});
+    m_quadPoints[3] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.8611363115940526, -0.3399810435848563, 0.3399810435848563,
+                                                                    0.8611363115940526});
+    m_quadPoints[4] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.9061798459386640, -0.5384693101056831, 0., 0.5384693101056831,
+                                                                    0.9061798459386640});
+    m_quadPoints[5] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.9324695142031521, -0.6612093864662645, -0.2386191860831969,
+                                                                    0.2386191860831969, 0.6612093864662645, 0.9324695142031521});
+    m_quadPoints[6] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.9491079123427585, -0.7415311855993945, -0.4058451513773972,
+                                                                    0., 0.4058451513773972, 0.7415311855993945, 0.9491079123427585});
+    m_quadPoints[7] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.9602898564975363, -0.7966664774136267, -0.5255324099163290,
+                                                                    -0.1834346424956498, 0.1834346424956498, 0.5255324099163290,
+                                                                    0.7966664774136267, 0.9602898564975363});
+    m_quadPoints[8] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.9681602395076261, -0.8360311073266358, -0.6133714327005904,
+                                                                    -0.3242534234038089, 0., 0.3242534234038089, 0.6133714327005904,
+                                                                    0.8360311073266358, 0.9681602395076261});
+    m_quadPoints[9] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({-0.9739065285171717, -0.8650633666889845, -0.6794095682990244,
+                                                                    -0.4333953941292472, -0.1488743389816312, 0.1488743389816312,
+                                                                    0.4333953941292472, 0.6794095682990244, 0.8650633666889845,
+                                                                    0.9739065285171717});
+
+    m_quadWeights[0] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({2.});
+    m_quadWeights[1] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({1., 1.});
+    m_quadWeights[2] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.5555555555555556, 0.8888888888888888, 0.5555555555555556});
+    m_quadWeights[3] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.3478548451374538, 0.6521451548625461, 0.6521451548625461,
+                                                                    0.3478548451374538});
+    m_quadWeights[4] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.2369268850561891, 0.4786286704993665, 0.5688888888888889,
+                                                                    0.4786286704993665, 0.2369268850561891});
+    m_quadWeights[5] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.1713244923791704, 0.3607615730481386, 0.4679139345726910,
+                                                                    0.4679139345726910, 0.3607615730481386, 0.1713244923791704});
+    m_quadWeights[6] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.1294849661688697, 0.2797053914892766, 0.3818300505051189,
+                                                                    0.4179591836734694, 0.3818300505051189, 0.2797053914892766,
+                                                                    0.1294849661688697});
+    m_quadWeights[7] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.1012285362903763, 0.2223810344533745, 0.3137066458778873,
+                                                                    0.3626837833783620, 0.3626837833783620, 0.3137066458778873,
+                                                                    0.2223810344533745, 0.1012285362903763});
+    m_quadWeights[8] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.0812743883615744, 0.1806481606948574, 0.2606106964029354,
+                                                                    0.3123470770400029, 0.3302393550012598, 0.3123470770400029,
+                                                                    0.2606106964029354, 0.1806481606948574, 0.0812743883615744});
+    m_quadWeights[9] = amrex::GpuArray<amrex::Real, m_maxGaussNodes>({0.0666713443086881, 0.1494513491505806, 0.2190863625159820,
+                                                                    0.2692667193099963, 0.2955242247147529, 0.2955242247147529,
+                                                                    0.2692667193099963, 0.2190863625159820, 0.1494513491505806,
+                                                                    0.0666713443086881});
 }
 
 FDDeRhamComplex::~FDDeRhamComplex() {}
 
-
+/**
+* @brief Computes the Restriction operator \f$R_0\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Evaluates func at time t on the nodes of the primal grid
+* 
+* For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                                       DeRhamField<Grid::primal, Space::node>& field)
 {
-    // Point values on the primal grid.
     for (amrex::MFIter mfi(field.data, true); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
@@ -76,12 +134,30 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 
 }
 
+/**
+* @brief Computes the Restriction operator \f$R_3\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Integrates func at time t over the cells of the primal grid by using a Gauss quadrature rule
+* 
+* For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
+* @param gaussNodes: int, number of Gauss nodes to be used for quadratue
+*
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                                      DeRhamField<Grid::primal, Space::cell>& field)
+                                      DeRhamField<Grid::primal, Space::cell>& field, int gaussNodes)
 {
-    const int nQuad = 3;
-    const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
+    const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
+    if (nQuad != gaussNodes)
+        amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using " << nQuad << " nodes instead!" << std::endl;
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadPoints = m_quadPoints[nQuad-1];
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadWeights = m_quadWeights[nQuad-1];
 
     // Volume integral 
     for (amrex::MFIter mfi(field.data, true); mfi.isValid(); ++mfi)
@@ -135,10 +211,25 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
     field.fillBoundary();
 }
 
+/**
+* @brief Computes the Restriction operator \f$\tilde{R}_0\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Evaluates func at time t on the nodes of the dual grid
+* 
+* For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
+* 
+
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                                       DeRhamField<Grid::dual, Space::node>& field)
 {
-    // Point values on the dual grid.
     for (amrex::MFIter mfi(field.data, true); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
@@ -168,13 +259,30 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 
 }
 
-
+/**
+* @brief Computes the Restriction operator \f$\tilde{R}_3\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Integrates func at time t over the cells of the dual grid by using a Gauss quadrature rule
+* 
+* For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$ holding the cell integrals
+* @param gaussNodes: int, number of Gauss nodes to be used for quadratue
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                                      DeRhamField<Grid::dual, Space::cell>& field)
+                                      DeRhamField<Grid::dual, Space::cell>& field, int gaussNodes)
 {
-    const int nQuad = 3;
-    const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
+    const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
+    if (nQuad != gaussNodes)
+        amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using " << nQuad << " nodes instead!" << std::endl;
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadPoints = m_quadPoints[nQuad-1];
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadWeights = m_quadWeights[nQuad-1];
 
     // Volume integral 
     for (amrex::MFIter mfi(field.data, true); mfi.isValid(); ++mfi)
@@ -230,14 +338,30 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 
 }
 
-
+/**
+* @brief Computes the Restriction operator \f$\tilde{R}_1\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Integrates func at time t over the edges of the dual grid by using a Gauss quadrature rule
+* 
+* For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge integrals
+* @param gaussNodes: int, number of Gauss nodes to be used for quadratue
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                                      DeRhamField<Grid::dual, Space::edge>& field) 
+                                      DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes) 
 {
-    // Gauss quadrature
-    const int nQuad = 3;
-    const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
+    const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
+    if (nQuad != gaussNodes)
+        amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using " << nQuad << " nodes instead!" << std::endl;
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadPoints = m_quadPoints[nQuad-1];
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadWeights = m_quadWeights[nQuad-1];
 
     // Do the loop over comp-direction
     for (int comp = 0; comp < 3; ++comp)
@@ -297,13 +421,32 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     field.averageSync();
 }
 
+/**
+* @brief Computes the Restriction operator \f$R_2\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Integrates func at time t over the faces of the primal grid by using a Gauss quadrature rule
+* 
+* For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
+* @param gaussNodes: int, number of Gauss nodes to be used for quadratue
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                                      DeRhamField<Grid::primal, Space::face>& field)
+                                      DeRhamField<Grid::primal, Space::face>& field, int gaussNodes)
 {
-    // Gauss quadrature
-    const int nQuad = 3;
-    const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
+    
+
+    const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
+    if (nQuad != gaussNodes)
+        amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using " << nQuad << " nodes instead!" << std::endl;
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadPoints = m_quadPoints[nQuad-1];
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadWeights = m_quadWeights[nQuad-1];
 
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.data[0], true); mfi.isValid(); ++mfi)
@@ -451,14 +594,33 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 
 }
 
+/**
+* @brief Computes the Restriction operator \f$R_1\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Integrates func at time t over the edges of the primal grid by using a Gauss quadrature rule
+* 
+* For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
+* @param gaussNodes: int, number of Gauss nodes to be used for quadratue
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                                      DeRhamField<Grid::primal, Space::edge>& field)
+                                      DeRhamField<Grid::primal, Space::edge>& field, int gaussNodes)
 
 {
-    // Gauss quadrature
-    const int nQuad = 3;
-    const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
+    
+
+    const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
+    if (nQuad != gaussNodes)
+        amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using " << nQuad << " nodes instead!" << std::endl;
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadPoints = m_quadPoints[nQuad-1];
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadWeights = m_quadWeights[nQuad-1];
 
     // Do the loop over comp-direction
     for (int comp = 0; comp < 3; ++comp)
@@ -519,14 +681,30 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     field.averageSync();
 }
 
-
+/**
+* @brief Computes the Restriction operator \f$\tilde{R}_2\f$
+* 
+* Description:
+* Using the geometric degrees of freedeom:
+* Integrates func at time t over the faces of the dual grid by using a Gauss quadrature rule
+* 
+* For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
+* 
+* @param func : ParserExecutor, function to be projected
+* @param t : Real, time at which func is to be evaluated
+* @param field : DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$ holding the face integrals
+* @param gaussNodes: int, number of Gauss nodes to be used for quadratue
+* 
+* @return void
+*/
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                                      DeRhamField<Grid::dual, Space::face>& field)
+                                      DeRhamField<Grid::dual, Space::face>& field, int gaussNodes)
 {
-    // Gauss quadrature 
-    const int nQuad = 3;
-    const amrex::GpuArray<amrex::Real, nQuad> quadPoints = {-0.7745966692414834, 0.0, 0.7745966692414834};
-    const amrex::GpuArray<amrex::Real, nQuad> quadWeights = {5./9., 8./9., 5./9.}; // Can be initialized somewhere else
+    const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
+    if (nQuad != gaussNodes)
+        amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using " << nQuad << " nodes instead!" << std::endl;
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadPoints = m_quadPoints[nQuad-1];
+    const amrex::GpuArray<amrex::Real, m_maxGaussNodes> quadWeights = m_quadWeights[nQuad-1];
 
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.data[0], true); mfi.isValid(); ++mfi)

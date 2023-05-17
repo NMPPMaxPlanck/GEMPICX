@@ -254,7 +254,7 @@ void Gempic_ReadCheckpointFile(
 {
     const std::string &dirname = name + "/" + simulationName;
     amrex::Print() << "Reading checkpoint folders " << amrex::Concatenate(dirname, step) << "\n";
-
+#if (GEMPIC_SPACEDIM == 3)
     // J
     Gempic_ReadCheckpointFile_Field<vdim, field_dim, field_dim>(mw_yee, dirname, 0, step);
     Gempic_ReadCheckpointFile_Field<vdim, field_dim, field_dim>(mw_yee, dirname, 1, step);
@@ -271,7 +271,7 @@ void Gempic_ReadCheckpointFile(
     Gempic_ReadCheckpointFile_Field<vdim, field_dim, field_dim>(mw_yee, dirname, 8, step);
 
     mw_yee->FillBD(*infra);
-
+#endif
     // Particles
     if (particles)
     {

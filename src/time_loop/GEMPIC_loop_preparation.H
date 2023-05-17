@@ -92,6 +92,7 @@ void loop_preparation_init(
     }
 
     // add values from ghost cells and periodic boundary
+#if (GEMPIC_SPACEDIM == 3)
     mw_yee->rho.SumBoundary(0, 1, {mw_yee->Nghost, mw_yee->Nghost, mw_yee->Nghost}, {0, 0, 0},
                             infra.geom.periodicity());
     mw_yee->rho.OverrideSync(*(mw_yee->nodal_Mask), infra.geom.periodicity());
@@ -118,6 +119,7 @@ void loop_preparation_init(
 
     mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
     mw_yee->template hodge_full<degmw>(infra, (mw_yee->E_Array), mw_yee->HE_Array, true);
+#endif
 }
 
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata, bool output,
@@ -135,8 +137,10 @@ void loop_staggering(
         amrex::Print() << "ATTENTION: method is time staggered" << std::endl;
         //------------------------------------------------------------------------------
         // approximate e^1/2
+#if (GEMPIC_SPACEDIM == 3)
         mw_yee->template hodge_full<degmw>(infra, mw_yee->B_Array, mw_yee->HB_Array, false);
         mw_yee->advance_E(infra, 0.5 * mw_yee->dt, true, true, mw_yee->HB_Array, mw_yee->E_Array);
+#endif
         //------------------------------------------------------------------------------
         // approximate x^1/2
         for (int spec = 0; spec < numspec; spec++)
@@ -179,9 +183,11 @@ void loop_staggering(
     //------------------------------------------------------------------------------
     // Initialize reduced diagnostics
     int t_step = 0;
+#if (GEMPIC_SPACEDIM == 3)
     diagn->ComputeReducedDiag(t_step, infra, mw_yee, part_gr);
     redDiagn->ComputeDiags(0, infra, mw_yee, part_gr);
     redDiagn->WriteToFile(0, mw_yee);
+#endif
     
     // Save "step 0" data
     if (diagn->save_particles < diagn->nSteps)

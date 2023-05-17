@@ -1,3 +1,10 @@
+/*------------------------------------------------------------------------------
+ Test the restriction operators R_1, R_2 on both primal and dual grid for
+ periodic boundary conditions.
+    Integration uses enough Gauss nodes so that the quadrature error can be
+    smaller thant 1e-15.
+    Test passes if all projected DOFs are within 1e-15 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -10,7 +17,10 @@ int main (int argc, char *argv[])
 	amrex::Initialize(argc, argv);
 
     // error tolerance
-    const amrex::Real tol = 1e-5;
+    const amrex::Real tol = 1e-15;
+
+    // number of quadrature points
+    int gaussNodes = 6;
     
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
@@ -93,7 +103,7 @@ int main (int argc, char *argv[])
     lineIntegral.fillBoundary(); 
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, E);
+    deRham->projection(func, 0.0, E, gaussNodes);
 
 
     // Test passes if error < GEMPIC_CTEST_TOL
@@ -187,7 +197,7 @@ int main (int argc, char *argv[])
     faceIntegral.fillBoundary(); 
 
     // Compute the projection of B
-    deRham->projection(func, 0.0, B);
+    deRham->projection(func, 0.0, B, gaussNodes);
 
     // Test passes if error < GEMPIC_CTEST_TOL
     bool passB = false;
@@ -244,7 +254,7 @@ int main (int argc, char *argv[])
     }
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, H);
+    deRham->projection(func, 0.0, H, gaussNodes);
 
     // Compute the analytical solution
     DeRhamField<Grid::dual, Space::edge> lineIntegralDual(deRham);
@@ -337,7 +347,7 @@ int main (int argc, char *argv[])
     }
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, D);
+    deRham->projection(func, 0.0, D, gaussNodes);
 
     // Compute the analytical solution
     DeRhamField<Grid::dual, Space::face> faceIntegralDual(deRham);
@@ -420,6 +430,19 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_projection_one_two_forms.output") << std::endl;
         amrex::PrintToFile("test_projection_one_two_forms.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
+
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[0] = " << errorEx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[1] = " << errorEy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[2] = " << errorEz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[0] = " << errorBx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[1] = " << errorBy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[2] = " << errorBz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[0] = " << errorHx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[1] = " << errorHy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[2] = " << errorHz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[0] = " << errorDx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[1] = " << errorDy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[2] = " << errorDz_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_projection_one_two_forms.output.0", "test_projection_one_two_forms.output");

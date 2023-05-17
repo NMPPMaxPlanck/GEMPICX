@@ -22,9 +22,9 @@ int main(int argc, char *argv[])
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(64, 64, 64)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(64, 64, 64)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {1, 1, 1};
+	const amrex::IntVect nCell{AMREX_D_DECL(64, 64, 64)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(64, 64, 64)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
 
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
@@ -41,13 +41,13 @@ int main(int argc, char *argv[])
     //const std::string analyticalRho = "3.0*cos(x)*cos(y)*cos(z) + (3.0)*cos(2*x)*cos(2*y)*cos(2*z)";
     const std::string analyticalRho = "1.0 + cos(x)";
 
-    const int nVar = 4; //x, y, z, t
+    const int nVar = GEMPIC_SPACEDIM + 1; //x, y, z, t
     amrex::ParserExecutor<nVar> func; 
     amrex::Parser parser;
 
     parser.define(analyticalRho);
-    parser.registerVariables({"x", "y", "z", "t"});
-    func = parser.compile<4>();
+    parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    func = parser.compile<nVar>();
 
     // Compute the projection of the field
     deRham -> projection(func, 0.0, rho);
@@ -62,20 +62,20 @@ int main(int argc, char *argv[])
         amrex::Array4<amrex::Real> const &phiMF = (phi.data)[mfi].array();
         amrex::Array4<amrex::Real> const &anPhiMF = (anPhi.data)[mfi].array();
         const amrex::RealVect dr = params.dr();
-        const amrex::GpuArray<amrex::Real, 3> r0 = params.geometry().ProbLoArray();
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                 r0[0] + i*dr[0],
+                 AMREX_D_DECL(r0[0] + i*dr[0],
                  r0[1] + j*dr[1],
-                 r0[2] + k*dr[2]
+                 r0[2] + k*dr[2])
                 };
 
                 // Right mathematically. Rho is a volume integral of analyticalRho in the dual grid.
                 // But it doesn't use our Hodge, nor it is the exact analytical function to which it should compare. Change later.
-                anPhiMF(i, j, k) =  (dr[0]*dr[1]*dr[2])*((std::cos(r[0])*std::cos(r[1])*std::cos(r[2]) + (1./4.)*std::cos(2*r[0])*std::cos(2*r[1])*std::cos(2*r[2])));
+                anPhiMF(i, j, k) =  (GEMPIC_D_MULT(dr[0],dr[1],dr[2]))*((GEMPIC_D_MULT(std::cos(r[0]),std::cos(r[1]),std::cos(r[2])) + (1./4.)*GEMPIC_D_MULT(std::cos(2*r[0]),std::cos(2*r[1]),std::cos(2*r[2]))));
 
         });
     }

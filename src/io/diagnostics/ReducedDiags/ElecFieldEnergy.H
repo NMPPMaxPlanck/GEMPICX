@@ -77,7 +77,9 @@ public:
         //if (!m_intervals.contains(step+1)) { return; }
 
         // E field
+#if (GEMPIC_SPACEDIM == 3)
         mw_yee->template hodge_full<degree>(infra, mw_yee->E_Array, mw_yee->HE_Array, true);
+#endif
         for (int cc = 0; cc < vdim; cc++)
         {
             amrex::Real val = amrex::MultiFab::Dot(*(mw_yee->E_Masks[cc]), *(mw_yee->E_Array[cc]),

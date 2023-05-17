@@ -710,6 +710,7 @@ AMREX_GPU_HOST_DEVICE void gempic_accumulate_j(
                         {
                             s_coeff = spline.spline_node[0][ii];
                         }
+#if (GEMPIC_SPACEDIM > 1)
                         if (cc % 3 == 1)
                         {
                             s_coeff *= spline.spline_cell[1][jj];
@@ -718,6 +719,7 @@ AMREX_GPU_HOST_DEVICE void gempic_accumulate_j(
                         {
                             s_coeff *= spline.spline_node[1][jj];
                         }
+#endif
 #if (GEMPIC_SPACEDIM > 2)
                         if (cc % 3 == 2)
                         {

@@ -384,6 +384,7 @@ public:
                     amrex::GpuArray<bool, GEMPIC_SPACEDIM> integrate, amrex::IndexType IndVect,
                     amrex::MultiFab &MultiF)
     {
+#if (GEMPIC_SPACEDIM == 3)
         amrex::GpuArray<int, GEMPIC_SPACEDIM> IndexVect{IndVect[0], IndVect[1], IndVect[2]};
         amrex::GpuArray<amrex::Real, degree - 1> stencil;
         switch (degree)
@@ -480,6 +481,7 @@ public:
                 });
         }
         MultiF.FillBoundary(ifr.geom.periodicity());
+#endif
     }
 
     template <int degree>
@@ -1966,7 +1968,9 @@ public:
             }
         }
 
+#if (GEMPIC_SPACEDIM == 3)
         rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, ifr.geom.periodicity());
+#endif
         rho.OverrideSync(*nodal_Mask, ifr.geom.periodicity());
         rho.FillBoundary(ifr.geom.periodicity());
 
@@ -2142,6 +2146,7 @@ private:
         amrex::Real btime = time + dt / 2.0;
 
         // E-field
+#if (GEMPIC_SPACEDIM == 3)
         projection<degree>(function_to_project_E0, time, ifr, {false, true, true}, *E_Index[0],
                            *E_sol_Array[0]);
         projection<degree>(function_to_project_E1, time, ifr, {true, false, true}, *E_Index[1],
@@ -2159,6 +2164,7 @@ private:
             projection<degree>(function_to_project_B2, btime, ifr, {true, true, false}, *B_Index[2],
                                *B_sol_Array[2]);
         }
+#endif
     }
 
     template <int degree>
