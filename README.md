@@ -26,7 +26,7 @@ Installing manually
 2.) git submodule init; git submodule update  
 3.) cd gempic; mkdir build; cd build  
 4.) cmake ..   
-5.) make 
+5.) make
 
 Main executable vlasov_maxwell is in build/simulation/vlasov_maxwell  
 
