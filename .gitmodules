@@ -1,3 +1,3 @@
 [submodule "third_party/amrex"]
 	path = third_party/amrex
-	url = https://github.com/AMReX-Codes/amrex.git
+	url = https://github.com/AMReX-Codes/amrex/tree/5bbb63f24753353bdcbb8c439fedbc3dfc11d15e

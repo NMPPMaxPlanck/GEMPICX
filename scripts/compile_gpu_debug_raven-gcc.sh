@@ -1,8 +1,7 @@
 source /etc/profile.d/modules.sh
 SOURCE_DIRECTORY=`pwd`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
-AMREX_DIRECTORY=`pwd`/../third_party/amrex
-AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
+AMREX_DIRECTORY=$SOURCE_DIRECTORY/third_party/amrex
 
 echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
@@ -34,6 +33,7 @@ export AMREX_CUDA_ARCH=Ampere
 
 BUILD_DIR=~/gempic_gpu_obj
 
+
 # comment this in if you want to switch modules or compilers, so CMake
 # configures the build again from scratch instead of reusing the previous one
 #rm -rf $BUILD_DIR
@@ -45,12 +45,12 @@ cd amrex
 
 cmake -D AMReX_GPU_BACKEND=CUDA -D CMAKE_BUILD_TYPE=Debug -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D AMReX_TINY_PROFILE=ON $AMREX_DIRECTORY
 
-make -j $MAKE_NPROCS install
+make -j $MAKE_NRPOCS install
 
 cd ..
 mkdir -p gempic
 cd gempic
 
-cmake -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D USE_CUDA=ON -D CMAKE_CUDA_ARCHITECTURES=80 -D CMAKE_BUILD_TYPE=Debug $SOURCE_DIRECTORY
+cmake -D AMReX_DIR=$AMREX_DIRECTORY/installdir -D GEMPIC_USE_CUDA=ON -D CMAKE_CUDA_ARCHITECTURES=80 -D CMAKE_BUILD_TYPE=Debug $SOURCE_DIRECTORY
 make -j $MAKE_NPROCS 
 #make VERBOSE=1 -j $MAKE_NPROCS
