@@ -3,9 +3,11 @@ file(GLOB FDDERHAMCOMPLEX "../../src/forms/FDDeRhamComplex/GEMPIC_FDDeRhamComple
 
 target_sources(GtestTests PRIVATE
     # test cases
-    # deposit_rho_test.cpp)
-    # spline_test.cpp)
-    # evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
-    evaluate_bfield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
-    # push_v_efield_test.cpp)
-    # accumulate_j_update_v_C2_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX})
+    # deposit_rho_test.cpp
+    # push_v_efield_test.cpp
+    evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX}
+    evaluate_bfield_test.cpp
+    # spline_test.cpp
+    accumulate_j_update_v_C2_test.cpp
+    SplineBase_test.cpp
+    SplineWithPrimitive_test.cpp)

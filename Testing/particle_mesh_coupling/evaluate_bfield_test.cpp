@@ -10,6 +10,7 @@
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
+#include "GEMPIC_Spline_Class.H"
 
 using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
@@ -19,7 +20,7 @@ using namespace GEMPIC_Fields;
 namespace {
     // When using amrex::ParallelFor you have to create a standalone helper function that does the execution on GPU and call that function from the unit test because of how GTest creates tests within a TEST_F fixture.
     template <int vDim, int degX, int degY, int degZ>
-    void updateBFieldParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
+    amrex::GpuArray<amrex::Real, vDim>* updateBFieldParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                  DeRhamField<Grid::primal, Space::edge>& B,
                                  computational_domain& infra) {
         const long np{pti.numParticles()};
@@ -33,27 +34,15 @@ namespace {
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
         {
-            splines_at_particles<degX, degY, degZ> spline;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
-            {
-                position[d] = partData[pp].pos(d);
-            }
-            spline.init_particles(position, infra.plo, infra.dxi);
+                position[d] = partData[0].pos(d);
+            Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            bfields[pp] = evaluate_bfield<vDim, degX, degY, degZ>(spline, bArray);
+            bfields[pp] = spline.template evalField<vDim, 2>(bArray);
         });
-                        
-        EXPECT_EQ(bfields[0][0], 1.0);
-        EXPECT_EQ(bfields[0][1], 1.0);
-        EXPECT_EQ(bfields[0][2], 1.0);
-                        
-        if (np == 2)
-        {
-            EXPECT_EQ(bfields[1][0], 1.0);
-            EXPECT_EQ(bfields[1][1], 1.0);
-            EXPECT_EQ(bfields[1][2], 1.0);
-        }
+
+        return bfields;
     }
 
     // Test fixture
@@ -113,13 +102,10 @@ namespace {
         // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge());
 
+        // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz
         const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", 
                                                               "0.0",
                                                               "0.0"};
-
-        // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
-        // Ey, Ez
-        const amrex::Array<std::string, 3> analyticalFuncE{"0.0", "0.0", "0.0"};
 
         const int nVar{4};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
@@ -155,14 +141,14 @@ namespace {
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> bArray;
             for (int cc{0}; cc < vDim; cc++) bArray[cc] = (B.data[cc])[pti].array();
 
-            splines_at_particles<degX, degY, degZ> spline;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
                 position[d] = partData[0].pos(d);
-            spline.init_particles(position, infra.plo, infra.dxi);
+            Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
+            
             amrex::GpuArray<amrex::Real, vDim> bfield =
-                evaluate_bfield<vDim, degX, degY, degZ>(spline, bArray);
+                spline.template evalField<vDim, 2>(bArray);
 
             EXPECT_EQ(bfield[0], 0);
             EXPECT_EQ(bfield[1], 0);
@@ -207,7 +193,11 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
 
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+            amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+                        
+            EXPECT_EQ(bfields[0][0], 4.0);
+            EXPECT_EQ(bfields[0][1], 4.0);
+            EXPECT_EQ(bfields[0][2], 4.0);
         }
     }
 
@@ -249,7 +239,11 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
             
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+            amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+                        
+            EXPECT_EQ(bfields[0][0], 1.5);
+            EXPECT_EQ(bfields[0][1], 1.5);
+            EXPECT_EQ(bfields[0][2], 2.0);
         }
     }
 
@@ -291,7 +285,11 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
             
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+            amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+                        
+            EXPECT_EQ(bfields[0][0], 0.625);
+            EXPECT_EQ(bfields[0][1], 0.625);
+            EXPECT_EQ(bfields[0][2], 1.0);
         }
     }
 
@@ -335,7 +333,15 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
 
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+            amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+                        
+            EXPECT_EQ(bfields[0][0], 4.0);
+            EXPECT_EQ(bfields[0][1], 4.0);
+            EXPECT_EQ(bfields[0][2], 4.0);
+                        
+            EXPECT_EQ(bfields[1][0], 4.0);
+            EXPECT_EQ(bfields[1][1], 4.0);
+            EXPECT_EQ(bfields[1][2], 4.0);
         }
     }
 
@@ -379,7 +385,15 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);
 
-            updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+            amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
+                        
+            EXPECT_EQ(bfields[0][0], 4.0);
+            EXPECT_EQ(bfields[0][1], 4.0);
+            EXPECT_EQ(bfields[0][2], 4.0);
+                        
+            EXPECT_EQ(bfields[1][0], 4.0);
+            EXPECT_EQ(bfields[1][1], 4.0);
+            EXPECT_EQ(bfields[1][2], 4.0);
         }
     }
 }

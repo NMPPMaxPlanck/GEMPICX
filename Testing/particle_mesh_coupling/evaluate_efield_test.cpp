@@ -10,6 +10,7 @@
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
+#include "GEMPIC_Spline_Class.H"
 
 using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
@@ -33,17 +34,14 @@ namespace {
 
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
         {
-            splines_at_particles<degX, degY, degZ> spline;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
-            {
-                position[d] = partData[pp].pos(d);
-            }
-            spline.init_particles(position, infra.plo, infra.dxi);
-
-            efields[pp] = evaluate_efield<vDim, degX, degY, degZ>(spline, eArray);
+                position[d] = partData[0].pos(d);
+            Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
+        
+            efields[pp] = spline.template evalField<vDim, 1>(eArray);
         });
-                    
+
         EXPECT_EQ(efields[0][0], 1.0);
         EXPECT_EQ(efields[0][1], 1.0);
         EXPECT_EQ(efields[0][2], 1.0);
@@ -84,7 +82,6 @@ namespace {
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
             const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
             const int hodgeDegree{2};
-
 
             // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
             // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
@@ -150,14 +147,13 @@ namespace {
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
             for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.data[cc])[pti].array();
 
-            splines_at_particles<degX, degY, degZ> spline;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
                 position[d] = partData[0].pos(d);
-            spline.init_particles(position, infra.plo, infra.dxi);
-
+            Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
+            
             amrex::GpuArray<amrex::Real, vDim> efield =
-                evaluate_efield<vDim, degX, degY, degZ>(spline, eArray);
+                spline.template evalField<vDim, 1>(eArray);
 
             EXPECT_EQ(efield[0], 0);
             EXPECT_EQ(efield[1], 0);
@@ -170,7 +166,8 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Particle at position (0,0,0) in box (0,0,0)
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{0, 0, 0};
+        EXPECT_EQ(*infra.geom.ProbLo(), 0.0);
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
 

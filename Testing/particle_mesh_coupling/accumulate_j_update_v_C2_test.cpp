@@ -4,6 +4,7 @@
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
+#include "GEMPIC_Spline_Class.H"
 
 using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
@@ -11,7 +12,7 @@ using namespace GEMPIC_Fields;
 
 namespace {
     // When using amrex::ParallelFor you have to create a standalone helper function that does the execution on GPU and call that function from the unit test because of how GTest creates tests within a TEST_F fixture.
-    template <int vDim, int degX, int degY, int degZ, int degP, int degP1, int degP2, int pDim, int pLength>
+    template <int vDim, int degX, int degY, int degZ, int degP, int degP1, int degP2, int pDim>
     void accumulateJUpdateVC2ParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                  DeRhamField<Grid::primal, Space::face>& B,
                                  DeRhamField<Grid::dual, Space::face>& J,
@@ -37,23 +38,18 @@ namespace {
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
         {
 
-
-            amrex::GpuArray<amrex::Real, std::max(degX, std::max(degY, degZ)) + 4> primitive;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
                 position[d] = partData[0].pos(d);
 
             amrex::Real x_new = 0;
 
-            splines_at_particles<degX, degY, degZ> spline;
-            spline1d_at_particles<degP1> spline_new;
-            spline1d_at_particles<degP2> spline_old;
+            Spline::SplineWithPrimitive<degX, degY, degZ> splineNew(position, infra.plo, infra.dxi);
 
-            spline_new.init_position(x_new, infra.plo[0], infra.dxi[0]);
-            spline_old.init_position(position[0], infra.plo[0], infra.dxi[0]);
-            spline.init_particles(position, infra.plo, infra.dxi);
+            splineNew.template update1DSplines<pDim, degP>(x_new, infra.plo[0], infra.dxi[0]);
+            splineNew.template update1DPrimitive<pDim, degP>(x_new, infra.plo[0], infra.dxi[0]);
 
-            accumulate_j_update_v_C2<splines_at_particles<1, 1, 1>, vDim, degP, degP1, degP2, pDim, pLength>(spline, spline_new, spline_old, weight, dx, bA, jA, bFields[0], primitive);
+            accumulate_j_update_v_C2<Spline::SplineWithPrimitive<1, 1, 1>, vDim, degP, degP1, degP2, pDim>(splineNew, weight, dx, bA, jA, bFields[0]);
         });
 
         bfields = bFields[0];
@@ -88,14 +84,9 @@ namespace {
         static const int numParticles{1};
 
         static const int pDim{1};
-        static const int pLength{5};
-        
+
         amrex::Real weight = 1.0;
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx = {1.0, 1.0, 1.0};
-
-        splines_at_particles<degX, degY, degZ> spline;
-        spline1d_at_particles<degP1> spline_new;
-        spline1d_at_particles<degP2> spline_old;
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
         amrex::GpuArray<amrex::Real, std::max(degX, std::max(degY, degZ)) + 4> primitive;
@@ -181,7 +172,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[1], 0);
@@ -246,7 +237,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
             EXPECT_EQ(bfields[0], -4.5);
             EXPECT_EQ(bfields[1], -4.5);
@@ -311,11 +302,9 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
-            EXPECT_EQ(bfields[0], -4.75
-            0
-            );
+            EXPECT_EQ(bfields[0], -4.75);
             EXPECT_EQ(bfields[1], -4.75);
         }
     }
@@ -381,7 +370,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[0], 0);
@@ -449,7 +438,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim, pLength>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[0], 0);

@@ -25,6 +25,7 @@
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_PoissonSolver.H>
 #include <GEMPIC_Splitting.H>
+#include <GEMPIC_Spline_Class.H>
 
 using namespace Diagnostics_Output;
 using namespace Field_solvers;
@@ -58,7 +59,6 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                     (J.data[comp]).setVal(0.0, 0);
 
         J.fillBoundary();
-
 
         for (int spec = 0; spec < numspec; spec++)
         {
@@ -109,11 +109,12 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                 {
                     amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
-                    splines_at_particles<degx, degy, degz> spline;
                     // Read out particle position
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
                     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
                         pos[d] = particles[pp].pos(d);
+                    
+                    Spline::SplineWithPrimitive<degx, degy, degz> spline(pos, infra.plo, infra.dxi);
 
                     apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, dt, pp);
 
@@ -130,23 +131,21 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
                         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-                        amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4>
-                            primitive;
                         // push x1
-                        apply_H_p_i<0>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                        apply_H_p_i<0>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
 
                         if (vdim > 1)
                         {
     #if GEMPIC_SPACEDIM > 1
                             // push x2
-                            apply_H_p_i<1>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                            apply_H_p_i<1>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
     #endif
                         }
                         if (vdim > 2)
                         {
     #if GEMPIC_SPACEDIM == 3
                             // push x3
-                            apply_H_p_i<2>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                            apply_H_p_i<2>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
     #endif
                         }
 
@@ -154,12 +153,12 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                         {
     #if GEMPIC_SPACEDIM > 1
                             // push x2
-                            apply_H_p_i<1>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                            apply_H_p_i<1>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
     #endif
                         }
 
                         // second half step of Hp1
-                        apply_H_p_i<0>(pos, vel, infra, primitive, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                        apply_H_p_i<0>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
 
                         for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
                         // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
@@ -178,7 +177,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
 
         // Sum boundary of J and overwrite overlap with averageSync
                     // evaluate the spline
-        
+
         // Then Fill Boundary of J
         auto nGhost = deRham -> getNGhost();
         for (int comp = 0; comp < 3; ++comp)
@@ -228,8 +227,8 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                         pos[d] = particles[pp].pos(d);
 
                     amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
-
-                    splines_at_particles<degx, degy, degz> spline;
+                    
+                    Spline::SplineBase<degx, degy, degz> spline(pos, infra.plo, infra.dxi);
 
                     apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, dt, pp);
 
@@ -243,7 +242,7 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                                                          amrex::Particle<0, 0>* AMREX_RESTRICT particles,
                                                          computational_domain const &infra,
                                                          amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eA,
-                                                         splines_at_particles<degx, degy, degz> &spline,
+                                                         Spline::SplineBase<degx, degy, degz> &spline,
                                                          amrex::GpuArray<amrex::Real, vdim> vel,
                                                          amrex::ParticleReal* const AMREX_RESTRICT velx,
                                                          amrex::ParticleReal* const AMREX_RESTRICT vely,
@@ -253,12 +252,9 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                                                          const long pp
     )
     {
-        // evaluate the spline
-        spline.init_particles(pos, infra.plo, infra.dxi);
         // evaluate the electric field
-
         amrex::GpuArray<amrex::Real, vdim> efield =
-            evaluate_efield<vdim, degx, degy, degz>(spline, eA);
+            spline.template evalField<vdim, 1>(eA);
 
         // push v with the electric field
         amrex::GpuArray<amrex::Real, vdim> newPosE =
@@ -269,12 +265,12 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
         velz[pp] = newPosE[2];
     }
 
-    template<int xidx>
+    template<int dim>
     AMREX_GPU_HOST_DEVICE inline void apply_H_p_i(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
                             amrex::GpuArray<amrex::Real, vdim> &vel,
                             computational_domain const &infra,
-                            amrex::GpuArray<amrex::Real, std::max(degx, std::max(degy, degz)) + 4> &primitive,
-                            splines_at_particles<degx, degy, degz> &spline,amrex::GpuArray<amrex::Real, 2> bfields,
+                            Spline::SplineWithPrimitive<degx, degy, degz> &spline,
+                            amrex::GpuArray<amrex::Real, 2> bfields,
                             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx, 
                             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jA,
                             amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bA,
@@ -285,25 +281,20 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
     {
         constexpr int degrees[3] = {degx, degy, degz};
 
-        amrex::Real x_new = pos[xidx] + dt * 0.5 * vel[xidx];
+        amrex::Real x_new = pos[dim] + dt * 0.5 * vel[dim];
 
-        spline1d_at_particles<degrees[xidx]> spline_new;
-        spline1d_at_particles<degrees[xidx]> spline_old;
+        
+        spline.template update1DSplines<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
+        spline.template update1DPrimitive<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
 
-        spline_new.init_position(x_new, infra.plo[xidx], infra.dxi[xidx]);
-        spline_old.init_position(pos[xidx], infra.plo[xidx], infra.dxi[xidx]);
-        spline.init_particles(pos, infra.plo, infra.dxi);
-        spline.template init_position<xidx, degrees[xidx]>(x_new, infra.plo[xidx], infra.dxi[xidx]);
+        accumulate_j_update_v_C2<Spline::SplineWithPrimitive<degx, degy, degz>,
+                                    vdim, degrees[dim], degrees[(dim+1)%3],
+                                    degrees[(dim+2)%3], dim>
+                                    (spline, weight, dx, bA, jA, bfields);
 
-        accumulate_j_update_v_C2<splines_at_particles<degx, degy, degz>,
-                                    vdim, degrees[xidx], degrees[(xidx+1)%3],
-                                    degrees[(xidx+2)%3], xidx, std::max(degx, std::max(degy, degz)) + 4>
-                                    (spline, spline_new, spline_old, weight, dx, bA, jA, bfields, primitive);
-
-
-        if (vdim > 1) vel[(xidx+1)%3] = vel[(xidx+1)%3] - chargemass * bfields[0];
-        if (vdim > 2) vel[(xidx+2)%3] = vel[(xidx+2)%3] + chargemass * bfields[1];
-        pos[xidx] = x_new;
+        if (vdim > 1) vel[(dim+1)%3] = vel[(dim+1)%3] - chargemass * bfields[0];
+        if (vdim > 2) vel[(dim+2)%3] = vel[(dim+2)%3] + chargemass * bfields[1];
+        pos[dim] = x_new;
     }
 
     private:

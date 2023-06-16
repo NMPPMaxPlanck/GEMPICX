@@ -22,6 +22,194 @@ namespace Gempic
 {
 namespace Particles
 {
+/**
+ * @brief Evaluate all 1D splines and spline primitives at a given particle position
+ *
+ * @tparam deg spline degree
+ */
+template <int deg>
+class spline1d_at_particles
+{
+public:
+    amrex::GpuArray<amrex::Real, deg + 1> spline; // deg+1 non zero contributions
+    amrex::GpuArray<amrex::Real, deg> primitive; // non vanishing primitives for splines of deg-1
+    int box;
+    /**
+     * @brief Find the 1D cell in which the particle is
+     *
+     * @param position position of particle
+     * @param plo left extremity of 1D grid
+     * @param dxi cell size
+     */
+    AMREX_GPU_HOST_DEVICE void init_position(amrex::Real position, amrex::Real plo, amrex::Real dxi)
+    {
+        // Compute normalized position xint and box
+        amrex::Real xint = (position - plo) * dxi;
+        box = std::floor(xint);
+        xint = xint - box;
+
+        if (deg % 2 == 0)
+        {
+            if (xint < 0.5)
+            {
+                box -= deg / 2;
+                xint = 0.5 - xint;
+            }
+            else
+            {
+                box += -deg / 2 + 1;
+                xint = 1.5 - xint;
+            }
+        }
+        else
+        {
+            box -= (deg - 1) / 2;
+            xint = 1. - xint;
+        }
+        primitive = spline_eval_primitive<deg - 1>(xint);
+        spline = spline_eval<deg>(xint);
+    }
+
+private:
+    /**
+     * @brief Computes the values of the (degree + 1) splines that are not zero at any given point x
+     * in [0,1]
+     *
+     * @tparam degree Spline degree
+     * @param x Position at which splines are evaluated
+     * @return s Array of spline values at x
+     */
+    template <int degree>
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> spline_eval(amrex::Real x)
+    {
+        amrex::GpuArray<amrex::Real, degree + 1> s;  // there are degree + 1 splines which are
+        switch (degree)
+        {
+            case 0:
+                s[0] = 1;
+                break;
+            case 1:
+                s[0] = x;
+                s[1] = 1 - x;
+                break;
+            case 2:
+                s[0] = pow(x, 2) / 2.;
+                s[1] = 1. / 2. + x - pow(x, 2);
+                s[2] = 1. / 2. - x + pow(x, 2) / 2.;
+                break;
+            case 3:
+                s[0] = pow(x, 3) / 6.;
+                s[1] = 1. / 6. * (1. + 3. * x + 3. * pow(x, 2) - 3. * pow(x, 3));
+                s[2] = 1. / 6. * (4. - 6. * pow(x, 2) + 3. * pow(x, 3));
+                s[3] = 1. / 6. * pow((1. - x), 3);
+                break;
+            case 4:
+                s[0] = pow(x, 4) / 24.;
+                s[1] = ((((-x + 1.) * 4. * x + 6.) * x + 4.) * x + 1.) / 24.;
+                s[2] = ((((6. * x - 12.) * x - 6.) * x + 12.) * x + 11.) / 24.;
+                s[3] = ((((-4. * x + 12.) * x - 6.) * x - 12.) * x + 11.) / 24.;
+                s[4] = pow(1. - x, 4) / 24.;
+                break;
+            case 5:
+                s[0] = pow(x, 5) / 120.;
+                s[1] = (((((-x + 1.) * x + 2.) * x + 2.) * x + 1.) * 5. * x + 1.) / 120.;
+                s[2] = (((((x - 2.) * x - 2.) * x + 2.) * x + 5.) * 10. * x + 26.) / 120.;
+                s[3] = (((-x + 3.) * x * x - 6.) * x * 10. * x + 66.) / 120.;
+                s[4] = (((((x - 4.) * x + 4.) * x + 4.) * x - 10.) * 5. * x + 26.) / 120.;
+                s[5] = (((((-x + 5.) * x - 10.) * x + 10.) * x - 5.) * x + 1.) / 120.;
+                break;
+            case 6:
+                s[0] = pow(x, 6) / 720.;
+                s[1] = -pow(x, 6) / 120. + pow(x, 5) / 120. + pow(x, 4) / 48. + pow(x, 3) / 36. +
+                       pow(x, 2) / 48. + x / 120. + 1. / 720.;
+                s[2] = pow(x, 6) / 48. - pow(x, 5) / 24. - pow(x, 4) / 16. + pow(x, 3) / 36. +
+                       3. * pow(x, 2) / 16. + 5. * x / 24. + 19. / 240.;
+                s[3] = -pow(x, 6) / 36. + pow(x, 5) / 12. + pow(x, 4) / 24. - 2. * pow(x, 3) / 9. -
+                       5. * pow(x, 2) / 24. + 1. * x / 3. + 151. / 360.;
+                s[4] = pow(x, 6) / 48. - pow(x, 5) / 12. + pow(x, 4) / 24. + 2. * pow(x, 3) / 9. -
+                       5. * pow(x, 2) / 24. - x / 3. + 151. / 360.;
+                s[5] = -pow(x, 6) / 120. + pow(x, 5) / 24. - pow(x, 4) / 16. - pow(x, 3) / 36. +
+                       3. * pow(x, 2) / 16. - 5. * x / 24. + 19. / 240.;
+                s[6] = pow(x, 6) / 720. - pow(x, 5) / 120. + pow(x, 4) / 48. - pow(x, 3) / 36. +
+                       pow(x, 2) / 48. - x / 120. + 1. / 720.;
+                break;
+        }
+        return (s);
+    }
+    /**
+     * @brief Evaluate primitives of splines of a given degree at given point x
+     *
+     * @tparam degree
+     * @param x
+     */
+    template <int degree>
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> spline_eval_primitive(
+        amrex::Real x)
+    {
+        amrex::GpuArray<amrex::Real, degree + 1> s;
+        switch (degree)
+        {
+            case -1:
+                s[0] = 1;
+                break;
+            case 0:
+                s[0] = x;
+                break;
+            case 1:
+                s[0] = pow(x, 2) / 2.;
+                s[1] = 1. - pow(x - 1., 2) / 2.;
+                break;
+            case 2:
+                s[0] = pow(x, 3) / 6.;
+                s[1] = (((-2. * x + 3) * x + 3.) * x + 1.) / 6.;
+                s[2] = pow(x - 1., 3) / 6. + 1.;
+                break;
+            case 3:
+                s[0] = pow(x, 4) / 24.;
+                s[1] = -pow(x, 4) / 8. + pow(x, 3) / 6. + pow(x, 2) / 4. + x / 6. + 1. / 24.;
+                s[2] = pow(x, 4) / 8. - pow(x, 3) / 3. + x * 2. / 3. + 0.5;
+                s[3] = -pow((1. - x), 4) / 24. + 1.;
+                break;
+            case 4:
+                s[0] = pow(x, 5) / 120.;
+                s[1] = (((((-4. * x + 5.) * x + 10.) * x + 10.) * x + 5.) * x + 1.) / 120.;
+                s[2] = (((((6. * x - 15.) * x - 10.) * x + 30.) * x + 55.) * x + 27.) / 120.;
+                s[3] = (((((-4. * x + 15.) * x - 10.) * x - 30.) * x + 55.) * x + 93.) / 120.;
+                s[4] = -pow(1. - x, 5) / 120. + 1.;
+                break;
+            case 5:
+                s[0] = pow(x, 6) / 720.;
+                s[1] =
+                    ((((((-5. * x + 6.) * x + 15.) * x + 20.) * x + 15.) * x + 6.) * x + 1.) / 720.;
+                s[2] =
+                    ((((((10. * x - 24.) * x - 30.) * x + 40.) * x + 150.) * x + 156.) * x + 58.) /
+                    720.;
+                s[3] = ((((-10. * x + 36.) * x * x - 120.) * x * x + 396.) * x + 360.) / 720.;
+                s[4] =
+                    ((((((5. * x - 24.) * x + 30.) * x + 40.) * x - 150.) * x + 156.) * x + 662.) /
+                    720.;
+                s[5] = ((((((-x + 6.) * x - 15.) * x + 20.) * x - 15.) * x + 6.) * x + 719.) / 720.;
+                break;
+            case 6:
+                s[0] = pow(x, 7) / 5040.;
+                s[1] = -pow(x, 7) / 840. + pow(x, 6) / 720. + pow(x, 5) / 240. + pow(x, 4) / 144. +
+                       pow(x, 3) / 144. + pow(x, 2) / 240. + x / 720. + 1. / 5040.;
+                s[2] = pow(x, 7) / 336. - pow(x, 6) / 144. - pow(x, 5) / 80. + pow(x, 4) / 144. +
+                       pow(x, 3) / 16. + 5. * pow(x, 2) / 48. + 19. * x / 240. + 121. / 5040.;
+                s[3] = -pow(x, 7) / 252. + pow(x, 6) / 72. + pow(x, 5) / 120. - pow(x, 4) / 18. -
+                       5. * pow(x, 3) / 72. + pow(x, 2) / 6. + 151. * x / 360. + 82. / 315.;
+                s[4] = pow(x, 7) / 336. - pow(x, 6) / 72. + pow(x, 5) / 120. + pow(x, 4) / 18. -
+                       5. * pow(x, 3) / 72. - pow(x, 2) / 6. + 151. * x / 360. + 233. / 315.;
+                s[5] = -pow(x, 7) / 840. + pow(x, 6) / 144. - pow(x, 5) / 80. - pow(x, 4) / 144. +
+                       pow(x, 3) / 16. - 5. * pow(x, 2) / 48. + 19. * x / 240. + 691. / 5040.;
+                s[6] = pow(x, 7) / 5040. - pow(x, 6) / 720. + pow(x, 5) / 240. - pow(x, 4) / 144. +
+                       pow(x, 3) / 144. - pow(x, 2) / 240. + x / 720. + 811. / 5040.;
+                break;
+        }
+        return (s);
+    }
+};
+
 // we don't use fmod, because fmod(-0.2,1)=-0.2
 AMREX_GPU_HOST_DEVICE amrex::Real mod_dom(amrex::Real val, amrex::Real upper, amrex::Real lower)
 {

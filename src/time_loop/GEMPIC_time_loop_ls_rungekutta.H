@@ -189,12 +189,13 @@ public:
                                 vels[2] = velsz[pp];
                             }
 
-                            spline.init_particles(pos, plo, dxi);
+                            // spline.init_particles(pos, plo, dxi);
+                            Spline::SplineBase<degx, degy, degz> splineNew(pos, plo, dxi);
                             // evaluate the electric field
                             amrex::GpuArray<amrex::Real, vdim> efield =
-                                evaluate_efield<vdim, degx, degy, degz>(spline, eA);
+                                splineNew.template evalField<vdim, 1>(eA);
                             amrex::GpuArray<amrex::Real, vdim> bfield =
-                                evaluate_efield<vdim, degx, degy, degz>(spline, bA);
+                                splineNew.template evalField<vdim, 2>(bA);
                             // push v with the electric field
 
                             //   Accumulation of j
