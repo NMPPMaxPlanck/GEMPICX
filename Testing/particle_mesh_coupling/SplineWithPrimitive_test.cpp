@@ -188,7 +188,6 @@ namespace {
 
             primitiveDifference = spline.template computePrimitiveDifference<1, 1>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
-
         }
         ASSERT_TRUE(particleLoopRun);
     }
