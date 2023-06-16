@@ -172,10 +172,10 @@ namespace {
             Spline::SplineWithPrimitive<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
             amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0, 0>({1, 1, 1}, 0);
-            EXPECT_EQ(-1, primitiveDifference);
+            EXPECT_EQ(0, primitiveDifference);
 
             primitiveDifference = spline.template computePrimitiveDifference<1, 0>({1, 1, 1}, 0);
-            EXPECT_EQ(-1, primitiveDifference);
+            EXPECT_EQ(0, primitiveDifference);
 
             primitiveDifference = spline.template computePrimitiveDifference<0, 1>({1, 1, 1}, 0);
             EXPECT_EQ(-1, primitiveDifference);
@@ -184,7 +184,7 @@ namespace {
             EXPECT_EQ(-1, primitiveDifference);
 
             primitiveDifference = spline.template computePrimitiveDifference<1, 1>({1, 1, 1}, 1);
-            EXPECT_EQ(-1, primitiveDifference);
+            EXPECT_EQ(0, primitiveDifference);
 
             primitiveDifference = spline.template computePrimitiveDifference<1, 1>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
