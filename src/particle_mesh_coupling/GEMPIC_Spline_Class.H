@@ -33,10 +33,6 @@ public:
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
-        AMREX_D_TERM(this->span[0] = 0;,
-                     this->span[1] = 0;,
-                     this->span[2] = 0;);
-
         AMREX_D_TERM((update1DSplines<0, degX>(position[0], plo[0], dxInverse[0]));,
                      (update1DSplines<1, degY>(position[1], plo[1], dxInverse[1]));,
                      (update1DSplines<2, degZ>(position[2], plo[2], dxInverse[2])););
@@ -48,13 +44,6 @@ public:
      * @details At the end of the function initBSplinesAtPositions, span is the index of the first field-coefficient corresponding to a non-zero spline at the particle location.
     */
     amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
-
-    /**
-     * @brief An array of indices
-     * 
-     * @details At the end of the function initBSplinesAtPositions, span is the index of the first field-coefficient corresponding to a non-zero spline at the particle location.
-    */
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> spanOld;
 
     /**
      * @brief Cell centered spline
@@ -121,7 +110,6 @@ public:
     template<int dim, int deg>
     void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
-        spanOld[dim] = std::move(this->span[dim]);
         const amrex::Real xint = initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
 
         splineEval<deg - 1, std::max(std::max(degX, degY), degZ)>(xint, splineCell[dim]);
@@ -346,10 +334,19 @@ public:
                         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse
                         ) : SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
+        this->spanOld = std::move(this->span);
+
         AMREX_D_TERM((update1DPrimitive<0, degX>(position[0], plo[0], dxInverse[0]));,
                      (update1DPrimitive<1, degY>(position[1], plo[1], dxInverse[1]));,
                      (update1DPrimitive<2, degZ>(position[2], plo[2], dxInverse[2])););
     }
+
+    /**
+     * @brief An array of indices
+     * 
+     * @details At the end of the function initBSplinesAtPositions, span is the index of the first field-coefficient corresponding to a non-zero spline at the particle location.
+    */
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> spanOld;
 
     /**
      * @brief primitive of the new spline
