@@ -14,6 +14,9 @@ using namespace GEMPIC_Fields;
 using ::testing::Mock;
 
 namespace {
+    /**
+     * @brief Provide mocks for the initBSplinesAtPositions and evalBSpline methods
+    */
     template<int degX, int degY, int degZ>
     class MockSpline : public Spline::SplineBase<degX, degY, degZ> {
         public:
@@ -32,7 +35,10 @@ namespace {
             (int j),
             (int k)));
     };
-    // Test fixture. Sets up clean environment before each test.
+    
+    /**
+     * @brief Test fixture. Sets up clean environment before each test of the SplineBase class
+     */
     class SplineBaseTest : public testing::Test {
         protected:
 
@@ -74,6 +80,10 @@ namespace {
         }
     };
 
+    /**
+     * @brief Test the constructor of the SplineBase class
+     * @details Make sure that all values are initialized
+    */
     TEST_F(SplineBaseTest, SplineConstructorTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -110,6 +120,10 @@ namespace {
         ASSERT_TRUE(particleLoopRun);
     }
 
+    /**
+     * @brief Test the initBSplinesAtPositions method
+     * @details Verify values for different degrees and positions
+    */
     TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -147,6 +161,10 @@ namespace {
         ASSERT_TRUE(particleLoopRun);
     }
     
+    /**
+     * @brief Test the update1DSplines method
+     * @details Verify that splineCell and splineNode get assigned the correct values
+    */
     TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -181,7 +199,11 @@ namespace {
         }
         ASSERT_TRUE(particleLoopRun);
     }
-
+    
+    /**
+     * @brief Test the evalField method
+     * @details Verify that sCoeff's get assigned the correct values
+    */
     TEST_F(SplineBaseTest, SplineEvalBSplineTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -222,7 +244,11 @@ namespace {
         }
         ASSERT_TRUE(particleLoopRun);
     }
-
+    
+    /**
+     * @brief Test the splineEval method
+     * @details Verify that splineEval returns the correct values
+    */
     TEST_F(SplineBaseTest, SplineSplineEvalTest) {
         // Adding particle to one cell
         const int numParticles{1};
