@@ -438,7 +438,7 @@ public:
                 primitiveDifference += this->primitiveOld[dim][index + deg - local_size] * dx[dim];
             }
         }
-        
+
         return primitiveDifference;
     }
 
