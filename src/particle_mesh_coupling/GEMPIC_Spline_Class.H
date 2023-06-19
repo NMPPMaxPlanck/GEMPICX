@@ -33,6 +33,10 @@ public:
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
+        AMREX_D_TERM(this->span[0] = 0;,
+                     this->span[1] = 0;,
+                     this->span[2] = 0;);
+                     
         AMREX_D_TERM((update1DSplines<0, degX>(position[0], plo[0], dxInverse[0]));,
                      (update1DSplines<1, degY>(position[1], plo[1], dxInverse[1]));,
                      (update1DSplines<2, degZ>(position[2], plo[2], dxInverse[2])););
