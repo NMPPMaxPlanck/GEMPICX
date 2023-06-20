@@ -1,12 +1,12 @@
 ######## Ctest
-FILE(GLOB _tests *.expected_output)
+file(GLOB _tests *.expected_output)
 
-LIST(SORT _tests)
+list(SORT _tests)
 
-FOREACH(_test ${_tests})
-  GET_FILENAME_COMPONENT( _test ${_test} NAME_WE )
+foreach(_test ${_tests})
+  get_filename_component( _test ${_test} NAME_WE )
 
   _CTEST_FILE_CMP(${_test})
 
 
-ENDFOREACH()
+endforeach()

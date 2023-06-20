@@ -1,3 +1,12 @@
+/*------------------------------------------------------------------------------
+ Test the discrete curl C on both primal and dual grid for
+ periodic boundary conditions.
+    The following errors are computed: max |R_2 curl f - C R_1 f|, i.e. the 
+    analytical f is projected to a discrete 1-form followed by the discrete
+    curl. The result is compared with the restriction of the analytical
+    curl of f to a discrete 2-form.
+    Test passes if all projected DOFs are within 1e-15 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -7,13 +16,19 @@ using namespace GEMPIC_FDDeRhamComplex;
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv); 
+	amrex::Initialize(argc, argv);
+
+    // error tolerance
+    const amrex::Real tol = 1e-15;
+
+    // number of quadrature points
+    int gaussNodes = 6;
 
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {1, 1, 1};
+    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
 
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
@@ -26,46 +41,72 @@ int main (int argc, char *argv[])
 	DeRhamField<Grid::primal, Space::face> curlE(deRham);
     
     // Parse analytical fields and and initialize func
-    const amrex::Array<std::string, 3> analyticalE = {"-cos(x)*sin(y)*sin(z)", 
+#if (GEMPIC_SPACEDIM == 1)
+    const amrex::Array<std::string, 3> analyticalE = {"-cos(x)",
+                                                      "sin(x)",
+                                                      "-sin(x)"};
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const amrex::Array<std::string, 3> analyticalE = {"-cos(x)*cos(y)",
+                                                      "sin(x)*cos(y)",
+                                                      "-sin(x)*sin(y)"};
+#endif
+
+#if (GEMPIC_SPACEDIM == 3)
+    const amrex::Array<std::string, 3> analyticalE = {"-cos(x)*cos(y)*sin(z)",
                                                       "sin(x)*cos(y)*sin(z)",
                                                       "-sin(x)*sin(y)*cos(z)"};
-    const int nVar = 4; //x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> func; 
-    amrex::Array<amrex::Parser, GEMPIC_SPACEDIM> parser;
-    for (int i=0; i<3; ++i)
+#endif
+
+    const int nVar = GEMPIC_SPACEDIM + 1; //x, y, z, t
+    amrex::Array<amrex::ParserExecutor<nVar>, 3> func; 
+    amrex::Array<amrex::Parser, 3> parser;
+    for (int i = 0; i < 3; ++i)
     {
         parser[i].define(analyticalE[i]);
-        parser[i].registerVariables({"x", "y", "z", "t"});
-        func[i] = parser[i].compile<4>();
+        parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func[i] = parser[i].compile<nVar>();
     }
 
     // Compute the projection of the field
-    deRham -> projection(func, 0.0, E);
+    deRham->projection(func, 0.0, E, gaussNodes);
 
     // Calculate curlE from E
-    deRham -> curl(E, curlE);
+    deRham->curl(E, curlE);
 
     // Analytical curlE
-    const amrex::Array<std::string, 3> analyticalCurlE = {"-2*sin(x)*cos(y)*cos(z)", 
-                                                          "0.0",
-                                                          "2*cos(x)*cos(y)*sin(z)"};
+#if (GEMPIC_SPACEDIM == 1)
+    const amrex::Array<std::string, 3> analyticalCurlE = {"0.",
+                                                          "cos(x)",
+                                                          "cos(x)"};
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const amrex::Array<std::string, 3> analyticalCurlE = {"-sin(x)*cos(y)",
+                                                          "cos(x)*sin(y)",
+                                                          "cos(x)*cos(y) - cos(x)*sin(y)"};
+#endif
+#if (GEMPIC_SPACEDIM == 3)
+    const amrex::Array<std::string, 3> analyticalCurlE = {"-2*sin(x)*cos(y)*cos(z)",
+                                                          "-cos(x)*cos(y)*cos(z) + cos(x)*sin(y)*cos(z)",
+                                                          "cos(x)*cos(y)*sin(z) - cos(x)*sin(y)*sin(z)"};
+#endif
     
-    for (int i=0; i<3; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         parser[i].define(analyticalCurlE[i]);
-        parser[i].registerVariables({"x", "y", "z", "t"});
-        func[i] = parser[i].compile<4>();
+        parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func[i] = parser[i].compile<nVar>();
     }
 	
     // Declare B field
     DeRhamField<Grid::primal, Space::face> B(deRham);
-    deRham -> projection(func, 0.0, B);
+    deRham->projection(func, 0.0, B, gaussNodes);
 
     // Calculate errorE
-    bool passE = false;
+    bool passE{false};
     DeRhamField<Grid::primal, Space::face> errorE(deRham);
 
-    for (int comp = 0; comp < GEMPIC_SPACEDIM; ++comp)
+    for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(B.data[comp]); mfi.isValid(); ++mfi)
         {
@@ -89,43 +130,68 @@ int main (int argc, char *argv[])
 	DeRhamField<Grid::dual, Space::face> curlH(deRham);
     
     // Parse analytical fields and and initialize parserEval
-    const amrex::Array<std::string, 3> analyticalH = {"-cos(x)*sin(y)*sin(z)", 
+#if (GEMPIC_SPACEDIM == 1)
+    const amrex::Array<std::string, 3> analyticalH = {"-cos(x)",
+                                                      "sin(x)",
+                                                      "-sin(x)"};
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const amrex::Array<std::string, 3> analyticalH = {"-cos(x)*cos(y)",
+                                                      "sin(x)*cos(y)",
+                                                      "-sin(x)*sin(y)"};
+#endif
+
+#if (GEMPIC_SPACEDIM == 3)
+    const amrex::Array<std::string, 3> analyticalH = {"-cos(x)*cos(y)*sin(z)",
                                                       "sin(x)*cos(y)*sin(z)",
                                                       "-sin(x)*sin(y)*cos(z)"};
-    for (int i=0; i<3; ++i)
+#endif
+    for (int i = 0; i < 3; ++i)
     {
         parser[i].define(analyticalH[i]);
-        parser[i].registerVariables({"x", "y", "z", "t"});
-        func[i] = parser[i].compile<4>();
+        parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func[i] = parser[i].compile<nVar>();
     }
 
     // Compute the projection of the field
-    deRham -> projection(func, 0.0, H);
+    deRham->projection(func, 0.0, H, gaussNodes);
 
     // Calculate curlH from H
-    deRham -> curl(H, curlH);
+    deRham->curl(H, curlH);
 
     // Analytical curlH
-    const amrex::Array<std::string, 3> analyticalCurlH = {"-2*sin(x)*cos(y)*cos(z)", 
-                                                          "0.0",
-                                                          "2*cos(x)*cos(y)*sin(z)"};
+    #if (GEMPIC_SPACEDIM == 1)
+    const amrex::Array<std::string, 3> analyticalCurlH = {"0.",
+                                                          "cos(x)",
+                                                          "cos(x)"};
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const amrex::Array<std::string, 3> analyticalCurlH = {"-sin(x)*cos(y)",
+                                                          "cos(x)*sin(y)",
+                                                          "cos(x)*cos(y) - cos(x)*sin(y)"};
+#endif
+#if (GEMPIC_SPACEDIM == 3)
+    const amrex::Array<std::string, 3> analyticalCurlH = {"-2*sin(x)*cos(y)*cos(z)",
+                                                          "-cos(x)*cos(y)*cos(z) + cos(x)*sin(y)*cos(z)",
+                                                          "cos(x)*cos(y)*sin(z) - cos(x)*sin(y)*sin(z)"};
+#endif
     
-    for (int i=0; i<3; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         parser[i].define(analyticalCurlH[i]);
-        parser[i].registerVariables({"x", "y", "z", "t"});
-        func[i] = parser[i].compile<4>();
+        parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func[i] = parser[i].compile<nVar>();
     }
 	
     // Declare D field
     DeRhamField<Grid::dual, Space::face> D(deRham);
-    deRham -> projection(func, 0.0, D);
+    deRham->projection(func, 0.0, D, gaussNodes);
 
     // Calculate errorH
-    bool passH = false;
+    bool passH{false};
     DeRhamField<Grid::dual, Space::face> errorH(deRham);
 
-    for (int comp = 0; comp < GEMPIC_SPACEDIM; ++comp)
+    for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(D.data[comp]); mfi.isValid(); ++mfi)
         {
@@ -137,92 +203,53 @@ int main (int argc, char *argv[])
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             { 
                 errorHMF(i, j, k) = std::abs(DMF(i, j, k) - curlHMF(i, j, k));
-            }); 
-
-            // Visualization only suitable for CPU
-            /*
-            if (comp == 0)
-            ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-            { 
-                amrex::Print() << "(" << i << ", " << j << ", " << k << ") D: " << DMF(i, j, k) << " curlH: " << curlHMF(i, j, k) << " error: " << errorHMF(i, j, k) << std::endl;
             });
-            */
         }
     }
 
-    //amrex::Print() << "errorEx: " << errorE.data[0].norm0() << std::endl;
-    //amrex::Print() << "errorEy: " << errorE.data[1].norm0() << std::endl;
-    //amrex::Print() << "errorEz: " << errorE.data[2].norm0() << std::endl;
-    //amrex::Print() << "errorHx: " << errorH.data[0].norm0() << std::endl;
-    //amrex::Print() << "errorHy: " << errorH.data[1].norm0() << std::endl;
-    //amrex::Print() << "errorHz: " << errorH.data[2].norm0() << std::endl;
+    amrex::Real errorCurlEx_norm0 = errorE.data[0].norm0();
+    amrex::Real errorCurlEy_norm0 = errorE.data[1].norm0();
+    amrex::Real errorCurlEz_norm0 = errorE.data[2].norm0();
 
-    passE = ((errorE.data[0].norm0() < GEMPIC_CTEST_TOL) && (errorE.data[1].norm0() < GEMPIC_CTEST_TOL) && (errorE.data[2].norm0() < GEMPIC_CTEST_TOL));
-    passH = ((errorH.data[0].norm0() < GEMPIC_CTEST_TOL) && (errorH.data[1].norm0() < GEMPIC_CTEST_TOL) && (errorH.data[2].norm0() < GEMPIC_CTEST_TOL));
+    amrex::Real errorCurlHx_norm0 = errorH.data[0].norm0();
+    amrex::Real errorCurlHy_norm0 = errorH.data[1].norm0();
+    amrex::Real errorCurlHz_norm0 = errorH.data[2].norm0();
 
-    if (passE == true)
+    /*
+    amrex::Print() << "errorCurlEx_norm0: " << errorCurlEx_norm0 << std::endl;
+    amrex::Print() << "errorCurlEy_norm0: " << errorCurlEy_norm0 << std::endl;
+    amrex::Print() << "errorCurlEz_norm0: " << errorCurlEz_norm0 << std::endl;
+    amrex::Print() << "errorCurlHx_norm0: " << errorCurlHx_norm0 << std::endl;
+    amrex::Print() << "errorCurlHy_norm0: " << errorCurlHy_norm0 << std::endl;
+    amrex::Print() << "errorCurlHz_norm0: " << errorCurlHz_norm0 << std::endl;
+    */
+
+    if (std::max({errorCurlEx_norm0, errorCurlEy_norm0, errorCurlEz_norm0}) < tol)
+        passE = true;
+    if (std::max({errorCurlHx_norm0, errorCurlHy_norm0, errorCurlHz_norm0}) < tol)
+        passH = true;
+
+    if (passE == true && passH == true)
     {
         amrex::PrintToFile("test_curl_projection.output") << std::endl;
-        amrex::PrintToFile("test_curl_projection.output") << true << std::endl;
-        amrex::PrintToFile("test_curl_projection.output") << std::endl;
-        for (int comp = 0; comp < 3; ++comp)
-            for (amrex::MFIter mfi(errorE.data[comp]); mfi.isValid(); ++mfi)
-            {
-                const amrex::Box &bx = mfi.validbox();
-                const auto lo = lbound(bx);
-                const auto hi = ubound(bx);
-
-                amrex::Array4<amrex::Real> const &errorEMF = (errorE.data[0])[mfi].array();
-
-                for (int i = lo.x; i < hi.x; ++i)
-                {
-                    amrex::PrintToFile("test_curl_projection.output") << "(" << i << "," << 0 << "," << "0) errorE(curl.proj(E) - proj.curl(E)) [" << comp << "] = "
-                        << errorEMF(i, 0, 0) << std::endl;
-                }
-
-            }
+        amrex::PrintToFile("test_curl_projection.output") << GEMPIC_SPACEDIM << "D test passed" << std::endl;
     }
-
-    if (passH == true)
+    else
     {
         amrex::PrintToFile("test_curl_projection.output") << std::endl;
-        amrex::PrintToFile("test_curl_projection.output") << true << std::endl;
-        amrex::PrintToFile("test_curl_projection.output") << std::endl;
-        for (int comp = 0; comp < 3; ++comp)
-            for (amrex::MFIter mfi(errorH.data[comp]); mfi.isValid(); ++mfi)
-            {
-                const amrex::Box &bx = mfi.validbox();
-                const auto lo = lbound(bx);
-                const auto hi = ubound(bx);
-
-                amrex::Array4<amrex::Real> const &errorHMF = (errorH.data[0])[mfi].array();
-
-                for (int i = lo.x; i < hi.x; ++i)
-                {
-                    amrex::PrintToFile("test_curl_projection.output") << "(" << i << "," << 0 << "," << "0) errorH(curl.proj(H) - proj.curl(H)) [" << comp << "] = "
-                        << errorHMF(i, 0, 0) << std::endl;
-                }
-
-            }
+        amrex::PrintToFile("test_curl_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
+
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[0] = " << errorCurlEx_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[1] = " << errorCurlEy_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[2] = " << errorCurlEz_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[0] = " << errorCurlHx_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[1] = " << errorCurlHy_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[2] = " << errorCurlHz_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_curl_projection.output.0", "test_curl_projection.output");
     amrex::Print() << "IOProcessorNumber " << amrex::ParallelDescriptor::IOProcessorNumber() << std::endl;
-
-
-    // Visualize errorE 
-    /*
-    for (int comp = 0; comp < 3; ++comp)
-    for (amrex::MFIter mfi(errorE.data[comp]); mfi.isValid(); ++mfi)
-    {
-        const amrex::Box &bx = mfi.validbox();
-        amrex::Array4<amrex::Real> const &errorEMF = (errorE.data[1])[mfi].array();
-
-        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) { amrex::Print() << "comp: " << comp << " ,("<< i << "," << j << "," << k <<
-                 ") errorE: " << errorEMF(i, j, k) << std::endl; });
-    }
-    */
 
     amrex::Finalize();
 }

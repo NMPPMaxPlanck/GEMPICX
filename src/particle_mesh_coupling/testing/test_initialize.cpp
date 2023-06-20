@@ -23,13 +23,13 @@ void main_main()
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
 
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(64, 64, 64)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(64, 64, 64)};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(1, 1, 1);
     VlMa.set_params("initialize_ctest", n_cell, {1000}, 5, 10, 10, 10, is_periodic,
-                    {AMREX_D_DECL(32, 32, 32)}, 0.01, {1.0}, {1.0}, 1);
+                    amrex::IntVect{AMREX_D_DECL(32, 32, 32)}, 0.01, {1.0}, {1.0}, 1);
     VlMa.set_computed_params();
 
     computational_domain infra;

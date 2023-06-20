@@ -19,10 +19,10 @@ using namespace Sampling;
 template <int vdim, int numspec, int degx, int degy, int degz>
 void main_main()
 {
-    amrex::IntVect n_cell = {AMREX_D_DECL(8, 10, 12)};
+    amrex::IntVect n_cell{AMREX_D_DECL(8, 10, 12)};
     gempic_parameters<vdim, numspec> VlMa;
-    VlMa.set_params("test_AMReX_atomic_add", n_cell, {1}, 10, 12, 12, 12, {AMREX_D_DECL(1, 1, 1)},
-                    {AMREX_D_DECL(8, 10, 12)});
+    VlMa.set_params("test_AMReX_atomic_add", n_cell, {1}, 10, 12, 12, 12, amrex::IntVect{AMREX_D_DECL(1, 1, 1)},
+                    amrex::IntVect{AMREX_D_DECL(8, 10, 12)});
     VlMa.set_computed_params();
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic,
@@ -35,10 +35,12 @@ void main_main()
             std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
 
-    const amrex::GpuArray<amrex::Real, 3>& dx = {AMREX_D_DECL(0.6283, 0.5026, 0.4188)};
-    const amrex::GpuArray<amrex::Real, 3>& plo = {AMREX_D_DECL(0.0, 0.0, 0.0)};
-    amrex::GpuArray<amrex::Real, 3> x = {AMREX_D_DECL(0.2, 0.2, 0.2)};
+    const amrex::GpuArray<amrex::Real, 3>& dx{AMREX_D_DECL(0.6283, 0.5026, 0.4188)};
+    const amrex::GpuArray<amrex::Real, 3>& plo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::GpuArray<amrex::Real, 3> x{AMREX_D_DECL(0.2, 0.2, 0.2)};
+#if (GEMPIC_SPACEDIM == 3)
     init_one_particle_cellwise<vdim>(dx, plo, *part_gr[0], x);
+#endif
 
     //------------------------------------------------------------------------------
     amrex::MultiFab rho;  // for Poisson
@@ -54,7 +56,7 @@ void main_main()
 
         amrex::HostDevice::Atomic::Add(&(rhoarr)(5, 6, 7, 0), testval);
     }
-    rho.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)},
+    rho.SumBoundary(0, 1, amrex::IntVect{AMREX_D_DECL(Nghost, Nghost, Nghost)}, amrex::IntVect{AMREX_D_DECL(0, 0, 0)},
                     infra.geom.periodicity());
 
     amrex::Real readval[1];

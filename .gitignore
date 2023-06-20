@@ -21,3 +21,6 @@ build/**/*
 runs/**/*
 **/dispersion_relations/__pycache__
 **/dispersion_relations/.ipynb_checkpoints
+doc/doxygen/xml/**
+doc/doxygen/html/**
+**/Plotfiles/**/*

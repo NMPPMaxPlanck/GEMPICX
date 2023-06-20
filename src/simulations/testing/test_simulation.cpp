@@ -52,7 +52,7 @@ void vlasov_maxwell_run(std::string test_name, int propagator)
     sim.params.init_Nghost(degx, degy, degz);
 
     const int nSteps = 5;
-    amrex::IntVect nCell = {AMREX_D_DECL(20, 20, 20)};
+    amrex::IntVect nCell{AMREX_D_DECL(20, 20, 20)};
     std::array<int, 1> nPartPerCell = {2000};
     const amrex::Real dt = 0.01;
     sim.params.set_params_Weibel(test_name, propagator, nSteps, nCell, nPartPerCell, dt);

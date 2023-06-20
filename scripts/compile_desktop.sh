@@ -1,13 +1,10 @@
 # Compile script for ubuntu desktop
 
 
-SOURCE_DIRECTORY=`pwd`/../
+SOURCE_DIRECTORY=`dirname $0`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
 
 echo $SOURCE_DIRECTORY
-
-git submodule init
-git submodule update
 
 BUILD_DIR=$HOME/gempic_obj
 

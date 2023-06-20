@@ -33,11 +33,11 @@ void main_main()
     // ------------PARAMETERS--------------------------------------------------------
 
     // initialize parameters
-    amrex::IntVect n_cell_vector = {AMREX_D_DECL(4, 4, 4)};
+    amrex::IntVect n_cell_vector{AMREX_D_DECL(4, 4, 4)};
     amrex::GpuArray<int, numspec> n_part_per_cell = {1};
     int n_steps = 2;
-    amrex::IntVect is_periodic_vector = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect max_grid_size = {AMREX_D_DECL(2, 2, 2)};
+    amrex::IntVect is_periodic_vector{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect max_grid_size{AMREX_D_DECL(2, 2, 2)};
     amrex::Real dt = 0.1;
     amrex::GpuArray<amrex::Real, numspec> charge = {-1.0};
     amrex::GpuArray<amrex::Real, numspec> mass = {1.0};
@@ -107,8 +107,10 @@ void main_main()
 
     mw_yee.J_Array[0]->setVal(1.0);
     amrex::Real old_val = gempic_norm(*mw_yee.J_Array[0], infra, 0);
+#if (GEMPIC_SPACEDIM == 3)
     Gempic_WriteCheckpointFile<vdim, vdim, vdim, numspec>(&mw_yee, part_gr, &infra, "Checkpoint",
                                                           "test", 0, 20);
+#endif
 
     mw_yee.J_Array[0]->setVal(2.0);
     amrex::Real new_val = gempic_norm(*mw_yee.J_Array[0], infra, 0);

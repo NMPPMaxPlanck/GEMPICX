@@ -1,9 +1,8 @@
 #!/bin/bash
 
-SOURCE_DIRECTORY=`pwd`/../
+SOURCE_DIRECTORY=`dirname $0`/../
 SOURCE_DIRECTORY=`readlink -f $SOURCE_DIRECTORY`
-AMREX_DIRECTORY=`pwd`/../third_party/amrex
-AMREX_DIRECTORY=`readlink -f $AMREX_DIRECTORY`
+AMREX_DIRECTORY=$SOURCE_DIRECTORY/third_party/amrex
 
 echo $SOURCE_DIRECTORY
 echo $AMREX_DIRECTORY
@@ -26,9 +25,6 @@ echo $CXX
 echo $MPICXX
 echo
 
-git submodule init
-git submodule update
-
 BUILD_DIR=$HOME/gempic_obj
 
 mkdir -p $BUILD_DIR
@@ -37,9 +33,9 @@ cd $BUILD_DIR
 mkdir -p amrex
 cd amrex
 
-cmake -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D AMReX_TINY_PROFILE=ON -D CMAKE_BUILD_TYPE=Release $AMREX_DIRECTORY
+cmake -D AMReX_GPU_BACKEND=CUDA -D AMReX_SPACEDIM=3 -D AMReX_PARTICLES=ON -D AMReX_TINY_PROFILE=ON $AMREX_DIRECTORY
 
-make -j 10 install
+make -j $MAKE_NRPOCS install
 
 cd ..
 mkdir -p gempic

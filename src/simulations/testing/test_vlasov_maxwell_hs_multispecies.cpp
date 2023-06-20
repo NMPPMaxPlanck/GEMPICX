@@ -31,6 +31,7 @@ using namespace Profiling;
 template <int vdim, int numspec, int degx, int degy, int degz, int degmw, int propagator>
 void main_main()
 {
+#if (GEMPIC_SPACEDIM == 3)
     const int strang_order = 2;
     bool ctest = true;
     gempic_parameters<vdim, numspec> VlMa;
@@ -143,6 +144,7 @@ void main_main()
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_vlasov_maxwell_hs_multispecies.output.0",
                     "test_vlasov_maxwell_hs_multispecies.output");
+#endif
 }
 
 int main(int argc, char *argv[])

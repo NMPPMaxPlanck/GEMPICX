@@ -51,9 +51,9 @@ void main_main()
     //------------------------------------------------------------------------------
     // build objects:
 
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(32, 32, 32)};
-    amrex::IntVect max_grid_size = {AMREX_D_DECL(2, 2, 2)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect max_grid_size{AMREX_D_DECL(2, 2, 2)};
 
     // Weibel parameters
     amrex::Vector<amrex::Vector<amrex::Vector<amrex::Real>>> meanVelocity{

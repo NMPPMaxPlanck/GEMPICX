@@ -154,13 +154,13 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(32, 32, 32)};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.set_params("test_maxwell_yee", n_cell, {1}, 5, 10, 10, 10, is_periodic,
-                    {AMREX_D_DECL(32, 32, 32)}, 0.01, {1.0}, {1.0}, 0.5);
+                    amrex::IntVect{AMREX_D_DECL(32, 32, 32)}, 0.01, {1.0}, {1.0}, 0.5);
 
     CompDom::computational_domain infra;
     infra.initialize_computational_domain(VlMa.n_cell, VlMa.max_grid_size, VlMa.is_periodic,
@@ -179,7 +179,9 @@ void main_main()
     funcSelectB[0] = MAXWELL_YEE_B0;
     funcSelectB[1] = MAXWELL_YEE_ZERO;
     funcSelectB[2] = MAXWELL_YEE_B2;
+#if (GEMPIC_SPACEDIM == 3)
     mw_yee.template initB<degree>(infra, funcSelectB);
+#endif
     amrex::GpuArray<int, vdim> funcSelectE;
     funcSelectE[0] = MAXWELL_YEE_E2;
     funcSelectE[1] = MAXWELL_YEE_E1;
@@ -187,7 +189,9 @@ void main_main()
     mw_yee.template initE<degree>(infra, funcSelectE);
 
     amrex::Print() << "step: " << 0 << std::endl;
+#if (GEMPIC_SPACEDIM == 3)
     E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+#endif
 
     PrintToFile("test_maxwell_yee.output") << std::endl;
     PrintToFile("test_maxwell_yee.output") << "Maxwell" << std::endl;
@@ -202,12 +206,14 @@ void main_main()
     for (int n = 1; n <= mw_yee.nsteps; n++)
     {
         amrex::Print() << "step: " << n << std::endl;
+#if (GEMPIC_SPACEDIM == 3)
         mw_yee.template hodge_full<degree>(infra, mw_yee.B_Array, mw_yee.HB_Array, false);
         mw_yee.advance_E(infra, VlMa.dt, true, true, mw_yee.HB_Array, mw_yee.E_Array);
         mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
         mw_yee.advance_B(infra, VlMa.dt, mw_yee.HE_Array, mw_yee.B_Array);
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+#endif
 
         PrintToFile("test_maxwell_yee.output") << "step " << n << std::endl;
         PrintToFile("test_maxwell_yee.output").SetPrecision(5)
@@ -226,7 +232,7 @@ void main_main()
     {
         mw_yee_2.J_Array[i]->setVal(0.0);
     }
-
+#if (GEMPIC_SPACEDIM == 3)
     funcSelectB[0] = MAXWELL_YEE_B0;
     funcSelectB[1] = MAXWELL_YEE_ZERO;
     funcSelectB[2] = MAXWELL_YEE_B2;
@@ -235,9 +241,12 @@ void main_main()
     funcSelectE[1] = MAXWELL_YEE_E1;
     funcSelectE[2] = MAXWELL_YEE_E2;
     mw_yee_2.template initE<degree>(infra, funcSelectE);
+#endif
 
     amrex::Print() << "step: " << 0 << std::endl;
+#if (GEMPIC_SPACEDIM == 3)
     E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+#endif
 
     PrintToFile("test_maxwell_yee.output") << std::endl;
     PrintToFile("test_maxwell_yee.output") << "Maxwell" << std::endl;
@@ -252,6 +261,7 @@ void main_main()
     for (int n = 1; n <= mw_yee_2.nsteps; n++)
     {
         amrex::Print() << "step: " << n << std::endl;
+#if (GEMPIC_SPACEDIM == 3)
         mw_yee_2.advance_time();
         mw_yee_2.template hodge_full<degree>(infra, mw_yee_2.B_Array, mw_yee_2.HB_Array, false);
         mw_yee_2.advance_E(infra, mw_yee_2.dt, true, false, mw_yee_2.HB_Array, mw_yee_2.E_Array);
@@ -259,6 +269,7 @@ void main_main()
         mw_yee_2.template hodge_full<degree>(infra, mw_yee_2.E_Array, mw_yee_2.HE_Array, true);
         mw_yee_2.advance_B(infra, mw_yee_2.dt, mw_yee_2.HE_Array, mw_yee_2.B_Array);
         E_B_error = mw_yee_2.template computeError<degree>(true, infra, funcSelectE, funcSelectB);
+#endif
 
         PrintToFile("test_maxwell_yee.output") << "step " << n << std::endl;
         PrintToFile("test_maxwell_yee.output").SetPrecision(5)
@@ -275,6 +286,7 @@ void main_main()
     amrex::GpuArray<int, 2> funcSelectRhoPhi;
     funcSelectRhoPhi[0] = MAXWELL_YEE_RHO;
     funcSelectRhoPhi[1] = MAXWELL_YEE_PHI;
+#if (GEMPIC_SPACEDIM == 3)
     mw_yee.template init_rho_phi<degree>(infra, funcSelectRhoPhi);
     mw_yee.solve_poisson(infra);
     funcSelectE[0] = MAXWELL_YEE_E0_1;
@@ -284,6 +296,7 @@ void main_main()
     funcSelectB[1] = MAXWELL_YEE_ZERO;
     funcSelectB[2] = MAXWELL_YEE_B2;
     E_B_error = mw_yee.template computeError<degree>(false, infra, funcSelectE, funcSelectB);
+#endif
 
     PrintToFile("test_maxwell_yee.output") << std::endl;
     PrintToFile("test_maxwell_yee.output") << "Poisson" << std::endl;

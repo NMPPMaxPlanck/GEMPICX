@@ -3,34 +3,41 @@
 
 using namespace GEMPIC_Fields;
 
-/** 
- * @brief Implementation of the differential operators of a de Rham Complex: grad, curl and div
- *
- * 
- */
-
-// Beware of the indexing on Amrex. For a derivative that goes to the ghost region
-// df = f[i+1] - f[i], going to -1 breaks centeredness of the differential form
+/**
+* @brief Computes the discrete curl \f$\mathbb{C}\f$ on the primal grid
+* 
+* Description:
+* Using the geometric degrees of freedom. No approximations involved.
+* 
+* For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+* 
+* @param oneForm : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
+* @param twoForm : DeRhamField<primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding the resulting face integrals
+* 
+* @return void
+*/
 void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
                                DeRhamField<Grid::primal, Space::face>& twoForm)
 {
-
    // Component-0 of curl
    for (amrex::MFIter mfi(twoForm.data[0]); mfi.isValid(); ++mfi)
    {
        const amrex::Box &bx = mfi.validbox();
 
        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.data[0])[mfi].array();
+#if (GEMPIC_SPACEDIM > 2)
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
+#endif
+#if (GEMPIC_SPACEDIM > 1)
        amrex::Array4<amrex::Real const> const &oneForm2 = (oneForm.data[2])[mfi].const_array();
+#endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = oneForm2(i, j + 1, k) - oneForm2(i, j, k) 
-                            - oneForm1(i, j, k + 1) + oneForm1(i, j, k); 
+          twoForm0(i, j, k) = GEMPIC_D_ADD(0., oneForm2(i, j + 1, k) - oneForm2(i, j, k), - oneForm1(i, j, k + 1) + oneForm1(i, j, k));
        });
    }
    twoForm.data[0].AverageSync(geom.periodicity());
-   (twoForm.data[0]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[0].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-1 of curl
@@ -40,16 +47,16 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
 
        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.data[1])[mfi].array();
        amrex::Array4<amrex::Real const> const &oneForm2 = (oneForm.data[2])[mfi].const_array();
+#if (GEMPIC_SPACEDIM > 2)
        amrex::Array4<amrex::Real const> const &oneForm0 = (oneForm.data[0])[mfi].const_array();
+#endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm1(i, j, k) = oneForm0(i, j, k + 1) - oneForm0(i, j, k)
-                            - oneForm2(i + 1, j, k) + oneForm2(i, j, k); 
-          
+          twoForm1(i, j, k) = GEMPIC_D_ADD(- oneForm2(i + 1, j, k) + oneForm2(i, j, k), 0., oneForm0(i, j, k + 1) - oneForm0(i, j, k));
        });
    }
    twoForm.data[1].AverageSync(geom.periodicity());
-   (twoForm.data[1]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[1].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-2 of curl
@@ -58,24 +65,37 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
        const amrex::Box &bx = mfi.validbox();
 
        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.data[2])[mfi].array();
+#if (GEMPIC_SPACEDIM > 1)
        amrex::Array4<amrex::Real const> const &oneForm0 = (oneForm.data[0])[mfi].const_array();
+#endif
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm2(i, j, k) = oneForm1(i + 1, j, k) - oneForm1(i, j, k) 
-                            - oneForm0(i, j + 1, k) + oneForm0(i, j, k); 
+          twoForm2(i, j, k) = GEMPIC_D_ADD(oneForm1(i + 1, j, k) - oneForm1(i, j, k), - oneForm0(i, j + 1, k) + oneForm0(i, j, k), 0.);                                                                        ;
        });
    }
    twoForm.data[2].AverageSync(geom.periodicity());
-   (twoForm.data[2]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[2].FillBoundary_nowait(geom.periodicity());
 
    // Wait for completed communication of guard data
-   (twoForm.data[0]).FillBoundary_finish();
-   (twoForm.data[1]).FillBoundary_finish();
-   (twoForm.data[2]).FillBoundary_finish();
+   twoForm.data[0].FillBoundary_finish();
+   twoForm.data[1].FillBoundary_finish();
+   twoForm.data[2].FillBoundary_finish();
 }
 
-
+/**
+* @brief Computes the discrete curl \f$\mathbb{C}\f$ on the dual grid
+* 
+* Description:
+* Using the geometric degrees of freedom. No approximations involved.
+* 
+* For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+* 
+* @param oneForm : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge integrals
+* @param twoForm : DeRhamField<dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$ holding the resulting face integrals
+* 
+* @return void
+*/
 void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
                                DeRhamField<Grid::dual, Space::face>& twoForm)
 {
@@ -85,17 +105,20 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
        const amrex::Box &bx = mfi.validbox();
 
        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.data[0])[mfi].array();
+#if (GEMPIC_SPACEDIM > 2)
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
+#endif
+#if (GEMPIC_SPACEDIM > 1)
        amrex::Array4<amrex::Real const> const &oneForm2 = (oneForm.data[2])[mfi].const_array();
+#endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm0(i, j, k) = oneForm2(i, j, k) - oneForm2(i, j - 1, k) 
-                            - oneForm1(i, j, k) + oneForm1(i, j, k - 1); 
+          twoForm0(i, j, k) = GEMPIC_D_ADD(0., oneForm2(i, j, k) - oneForm2(i, j - 1, k), - oneForm1(i, j, k) + oneForm1(i, j, k - 1));
        });
    }
 
    twoForm.data[0].AverageSync(geom.periodicity());
-   (twoForm.data[0]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[0].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-1 of curl
@@ -105,17 +128,17 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 
        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.data[1])[mfi].array();
        amrex::Array4<amrex::Real const> const &oneForm2 = (oneForm.data[2])[mfi].const_array();
+#if (GEMPIC_SPACEDIM > 2)
        amrex::Array4<amrex::Real const> const &oneForm0 = (oneForm.data[0])[mfi].const_array();
+#endif
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm1(i, j, k) = oneForm0(i, j, k) - oneForm0(i, j, k - 1)
-                            - oneForm2(i, j, k) + oneForm2(i - 1, j, k); 
-          
+          twoForm1(i, j, k) = GEMPIC_D_ADD(- oneForm2(i, j, k) + oneForm2(i - 1, j, k), 0., oneForm0(i, j, k) - oneForm0(i, j, k - 1));          
        });
    }
 
    twoForm.data[1].AverageSync(geom.periodicity());
-   (twoForm.data[1]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[1].FillBoundary_nowait(geom.periodicity());
 
 
    // Component-2 of curl
@@ -124,29 +147,44 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
        const amrex::Box &bx = mfi.validbox();
 
        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.data[2])[mfi].array();
+#if (GEMPIC_SPACEDIM > 1)
        amrex::Array4<amrex::Real const> const &oneForm0 = (oneForm.data[0])[mfi].const_array();
+#endif
        amrex::Array4<amrex::Real const> const &oneForm1 = (oneForm.data[1])[mfi].const_array();
 
        ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
        {
-          twoForm2(i, j, k) = oneForm1(i, j, k) - oneForm1(i - 1, j, k) 
-                            - oneForm0(i, j, k) + oneForm0(i, j - 1, k); 
+          twoForm2(i, j, k) = GEMPIC_D_ADD(oneForm1(i, j, k) - oneForm1(i - 1, j, k), - oneForm0(i, j, k) + oneForm0(i, j - 1, k), 0.);
        });
    }
 
    twoForm.data[2].AverageSync(geom.periodicity());
-   (twoForm.data[2]).FillBoundary_nowait(geom.periodicity());
+   twoForm.data[2].FillBoundary_nowait(geom.periodicity());
 
    // Wait for completed communication of guard data
-   (twoForm.data[0]).FillBoundary_finish();
-   (twoForm.data[1]).FillBoundary_finish();
-   (twoForm.data[2]).FillBoundary_finish();
+   twoForm.data[0].FillBoundary_finish();
+   twoForm.data[1].FillBoundary_finish();
+   twoForm.data[2].FillBoundary_finish();
 }
 
-
+/**
+* @brief Computes the discrete gradient \f$\mathbb{G}\f$ on the primal grid
+* 
+* Description:
+* Using the geometric degrees of freedom. No approximations involved.
+* 
+* For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+* 
+* @param zeroForm : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
+* @param oneForm : DeRhamField<primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding the resulting edge integrals
+* 
+* @return void
+*/
 void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                                DeRhamField<Grid::primal, Space::edge>& oneForm)
 {
+   
+
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(oneForm.data[comp]); mfi.isValid(); ++mfi)
@@ -169,7 +207,7 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k);
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k), 0.);
                 });
             }
             
@@ -177,22 +215,36 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k);
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., 0., zeroFormMF(i, j, k + 1) - zeroFormMF(i, j, k));
                 });
             }
         }
         oneForm.data[comp].AverageSync(geom.periodicity());
-        (oneForm.data[comp]).FillBoundary_nowait(geom.periodicity());
+        oneForm.data[comp].FillBoundary_nowait(geom.periodicity());
     }
-    (oneForm.data[0]).FillBoundary_finish();
-    (oneForm.data[1]).FillBoundary_finish();
-    (oneForm.data[2]).FillBoundary_finish();
+    oneForm.data[0].FillBoundary_finish();
+    oneForm.data[1].FillBoundary_finish();
+    oneForm.data[2].FillBoundary_finish();
 }
 
-
+/**
+* @brief Computes the discrete gradient \f$\mathbb{G}\f$ on the dual grid
+* 
+* Description:
+* Using the geometric degrees of freedom. No approximations involved.
+* 
+* For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+* 
+* @param zeroForm : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
+* @param oneForm : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$ holding the resulting edge integrals
+* 
+* @return void
+*/
 void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
                                DeRhamField<Grid::dual, Space::edge>& oneForm)
 {
+    
+
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(oneForm.data[comp]); mfi.isValid(); ++mfi)
@@ -215,7 +267,7 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k);
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., zeroFormMF(i, j, k) - zeroFormMF(i, j - 1, k), 0.);
                 });
             }
             
@@ -223,20 +275,32 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    oneFormMF(i, j, k) = zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1);
+                    oneFormMF(i, j, k) = GEMPIC_D_ADD(0., 0., zeroFormMF(i, j, k) - zeroFormMF(i, j, k - 1));
                 });
             }
         }
         oneForm.data[comp].AverageSync(geom.periodicity());
-        (oneForm.data[comp]).FillBoundary_nowait(geom.periodicity());
+        oneForm.data[comp].FillBoundary_nowait(geom.periodicity());
     }
     
-    (oneForm.data[0]).FillBoundary_finish();
-    (oneForm.data[1]).FillBoundary_finish();
-    (oneForm.data[2]).FillBoundary_finish();
+    oneForm.data[0].FillBoundary_finish();
+    oneForm.data[1].FillBoundary_finish();
+    oneForm.data[2].FillBoundary_finish();
 }
 
-
+/**
+* @brief Computes the discrete divergence \f$\mathbb{D}\f$ on the primal grid
+* 
+* Description:
+* Using the geometric degrees of freedom. No approximations involved.
+* 
+* For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+* 
+* @param twoForm : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
+* @param threeForm : DeRhamField<primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$ holding the resulting cell integrals
+* 
+* @return void
+*/
 void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
                               DeRhamField<primal, Space::cell>& threeForm)
 {
@@ -245,40 +309,57 @@ void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real const> const &twoFormMF0 = (twoForm.data[0])[mfi].const_array();
+#if (GEMPIC_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &twoFormMF1 = (twoForm.data[1])[mfi].const_array();
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &twoFormMF2 = (twoForm.data[2])[mfi].const_array();
+#endif
         amrex::Array4<amrex::Real> const &threeFormMF = (threeForm.data)[mfi].array();
         
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            threeFormMF(i, j, k) = (twoFormMF0(i + 1, j, k) - twoFormMF0(i, j, k))
-                                 + (twoFormMF1(i, j + 1, k) - twoFormMF1(i, j, k))
-                                 + (twoFormMF2(i, j, k + 1) - twoFormMF2(i, j, k));
+            threeFormMF(i, j, k) = GEMPIC_D_ADD(twoFormMF0(i + 1, j, k) - twoFormMF0(i, j, k), twoFormMF1(i, j + 1, k) - twoFormMF1(i, j, k), twoFormMF2(i, j, k + 1) - twoFormMF2(i, j, k));
         });
     }
     threeForm.averageSync();
     threeForm.fillBoundary();
 }
 
-
+/**
+* @brief Computes the discrete divergence \f$\mathbb{D}\f$ on the dual grid
+* 
+* Description:
+* Using the geometric degrees of freedom. No approximations involved.
+* 
+* For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+* 
+* @param twoForm : DeRhamField<primal, Space::dual>, 2-form \f$\tilde{u}^2\f$ holding the face integrals
+* @param threeForm : DeRhamField<primal, Space::dual>, 3-form \f$\tilde{D} \tilde{u}^2\f$ holding the resulting cell integrals
+* 
+* @return void
+*/
 void DeRhamComplex::div(const DeRhamField<dual, Space::face>& twoForm,
                               DeRhamField<dual, Space::cell>& threeForm)
 {
+    
+
     for (amrex::MFIter mfi(threeForm.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real const> const &twoFormMF0 = (twoForm.data[0])[mfi].const_array();
+#if (GEMPIC_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &twoFormMF1 = (twoForm.data[1])[mfi].const_array();
+#endif
+#if (GEMPIC_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &twoFormMF2 = (twoForm.data[2])[mfi].const_array();
+#endif
         amrex::Array4<amrex::Real> const &threeFormMF = (threeForm.data)[mfi].array();
         
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            threeFormMF(i, j, k) = (twoFormMF0(i, j, k) - twoFormMF0(i - 1, j, k))
-                                 + (twoFormMF1(i, j, k) - twoFormMF1(i, j - 1, k))
-                                 + (twoFormMF2(i, j, k) - twoFormMF2(i, j, k - 1));
-
+            threeFormMF(i, j, k) = GEMPIC_D_ADD(twoFormMF0(i, j, k) - twoFormMF0(i - 1, j, k), twoFormMF1(i, j, k) - twoFormMF1(i, j - 1, k), twoFormMF2(i, j, k) - twoFormMF2(i, j, k - 1));
         });
     }
     threeForm.averageSync();

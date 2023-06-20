@@ -1,20 +1,3 @@
-1
-
-(0,0,0) errorQ(div.proj(B) - proj.div(B)): = 2.16395e-08
-(1,0,0) errorQ(div.proj(B) - proj.div(B)): = 3.7816e-08
-(2,0,0) errorQ(div.proj(B) - proj.div(B)): = 3.18404e-08
-(3,0,0) errorQ(div.proj(B) - proj.div(B)): = 7.21316e-09
-(4,0,0) errorQ(div.proj(B) - proj.div(B)): = 2.16395e-08
-(5,0,0) errorQ(div.proj(B) - proj.div(B)): = 3.7816e-08
-(6,0,0) errorQ(div.proj(B) - proj.div(B)): = 3.18404e-08
-
-1
-
-(0,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 6.92154e-19
-(1,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 2.66564e-08
-(2,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 3.76978e-08
-(3,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 2.66564e-08
-(4,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 1.52878e-18
-(5,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 2.66564e-08
-(6,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 3.76978e-08
-(7,7,0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = 2.66564e-08
+3D test passed
+max Error divB = 6.10623e-16
+max Error divD = 6.10623e-16

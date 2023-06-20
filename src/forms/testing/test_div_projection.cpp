@@ -1,3 +1,12 @@
+/*------------------------------------------------------------------------------
+ Test the discrete div D on both primal and dual grid for
+ periodic boundary conditions.
+    The following errors are computed: max |R_3 div f - D R_2 f|, i.e. the 
+    analytical f is projected to a discrete 2-form followed by the discrete
+    divergence. The result is compared with the restriction of the analytical
+    divergence of f to a discrete 3-form.
+    Test passes if all projected DOFs are within 1e-15 of the analytical value.
+------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -7,13 +16,19 @@ using namespace GEMPIC_FDDeRhamComplex;
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv); 
+	amrex::Initialize(argc, argv);
+
+    // error tolerance
+    const amrex::Real tol = 1e-15;
+
+    // number of quadrature points
+    int gaussNodes = 6;
 
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {1, 1, 1};
+    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+	const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
 
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
@@ -26,41 +41,62 @@ int main (int argc, char *argv[])
 	DeRhamField<Grid::primal, Space::cell> divB(deRham);
     
     // Parse analytical fields and and initialize func
-    const amrex::Array<std::string, 3> analyticalB = {"sin(x)*sin(y)*sin(z)", 
-                                                      "sin(x)*sin(y)*sin(z)",
-                                                      "sin(x)*sin(y)*sin(z)"};
-    const int nVar = 4; //x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB; 
-    amrex::Array<amrex::Parser, GEMPIC_SPACEDIM> parserB;
-    for (int i=0; i<3; ++i)
+#if (GEMPIC_SPACEDIM == 1)
+    const amrex::Array<std::string, 3> analyticalB = {"-cos(x)",
+                                                      "sin(x)",
+                                                      "-sin(x)"};
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const amrex::Array<std::string, 3> analyticalB = {"-cos(x)*cos(y)",
+                                                      "sin(x)*cos(y)",
+                                                      "-sin(x)*sin(y)"};
+#endif
+
+#if (GEMPIC_SPACEDIM == 3)
+    const amrex::Array<std::string, 3> analyticalB = {"-cos(x)*cos(y)*sin(z)",
+                                                      "sin(x)*cos(y)*sin(z)",
+                                                      "-sin(x)*sin(y)*cos(z)"};
+#endif
+    const int nVar = GEMPIC_SPACEDIM + 1; //x, y, z, t
+    amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB; 
+    amrex::Array<amrex::Parser, 3> parserB;
+    for (int i = 0; i < 3; ++i)
     {
         parserB[i].define(analyticalB[i]);
-        parserB[i].registerVariables({"x", "y", "z", "t"});
-        funcB[i] = parserB[i].compile<4>();
+        parserB[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        funcB[i] = parserB[i].compile<nVar>();
     }
 
     // Compute the projection of the field
-    deRham -> projection(funcB, 0.0, B);
+    deRham->projection(funcB, 0.0, B, gaussNodes);
 
     // Calculate divB from B
-    deRham -> div(B, divB);
+    deRham->div(B, divB);
 
     // Analytical divB
-    const std::string analyticalDivB = "sin(z)*sin(x + y) + sin(x)*sin(y)*cos(z)"; 
+#if (GEMPIC_SPACEDIM == 1)
+    const std::string analyticalDivB = "sin(x)";
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const std::string analyticalDivB = "sin(x)*cos(y) - sin(x)*sin(y)";
+#endif
+#if (GEMPIC_SPACEDIM == 3)
+    const std::string analyticalDivB = "sin(x)*cos(y)*sin(z) - sin(x)*sin(y)*sin(z) + sin(x)*sin(y)*sin(z)";
+#endif
     
     amrex::ParserExecutor<nVar> funcDivB; 
     amrex::Parser parserDivB;
 
     parserDivB.define(analyticalDivB);
-    parserDivB.registerVariables({"x", "y", "z", "t"});
-    funcDivB = parserDivB.compile<4>();
+    parserDivB.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    funcDivB = parserDivB.compile<nVar>();
 	
     // Declare rho
     DeRhamField<Grid::primal, Space::cell> rho(deRham);
-    deRham -> projection(funcDivB, 0.0, rho);
+    deRham->projection(funcDivB, 0.0, rho, gaussNodes);
 
     // Calculate errorE
-    bool passRho = false;
+    bool passRho{false};
     DeRhamField<Grid::primal, Space::cell> errorRho(deRham);
 
     for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
@@ -77,48 +113,67 @@ int main (int argc, char *argv[])
         
     }
 
-    //amrex::Print() << errorRho.data.norm0() << std::endl;
-
     // Test div projection for Dual
     // Declare the fields 
 	DeRhamField<Grid::dual, Space::face> D(deRham);
 	DeRhamField<Grid::dual, Space::cell> divD(deRham);
     
     // Parse analytical fields and and initialize func
-    const amrex::Array<std::string, 3> analyticalD = {"sin(x)*sin(y)*sin(z)", 
-                                                      "sin(x)*sin(y)*sin(z)",
-                                                      "sin(x)*sin(y)*sin(z)"};
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcD; 
-    amrex::Array<amrex::Parser, GEMPIC_SPACEDIM> parserD;
-    for (int i=0; i<3; ++i)
+    #if (GEMPIC_SPACEDIM == 1)
+    const amrex::Array<std::string, 3> analyticalD = {"-cos(x)",
+                                                      "sin(x)",
+                                                      "-sin(x)"};
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const amrex::Array<std::string, 3> analyticalD = {"-cos(x)*cos(y)",
+                                                      "sin(x)*cos(y)",
+                                                      "-sin(x)*sin(y)"};
+#endif
+
+#if (GEMPIC_SPACEDIM == 3)
+    const amrex::Array<std::string, 3> analyticalD = {"-cos(x)*cos(y)*sin(z)",
+                                                      "sin(x)*cos(y)*sin(z)",
+                                                      "-sin(x)*sin(y)*cos(z)"};
+#endif
+    amrex::Array<amrex::ParserExecutor<nVar>, 3> funcD; 
+    amrex::Array<amrex::Parser, 3> parserD;
+    for (int i = 0; i < 3; ++i)
     {
         parserD[i].define(analyticalD[i]);
-        parserD[i].registerVariables({"x", "y", "z", "t"});
-        funcD[i] = parserD[i].compile<4>();
+        parserD[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        funcD[i] = parserD[i].compile<nVar>();
     }
 
     // Compute the projection of the field
-    deRham -> projection(funcD, 0.0, D);
+    deRham->projection(funcD, 0.0, D, gaussNodes);
 
     // Calculate divB from B
-    deRham -> div(D, divD);
+    deRham->div(D, divD);
 
     // Analytical divB
-    const std::string analyticalDivD = "sin(z)*sin(x + y) + sin(x)*sin(y)*cos(z)"; 
+#if (GEMPIC_SPACEDIM == 1)
+    const std::string analyticalDivD = "sin(x)";
+#endif
+#if (GEMPIC_SPACEDIM == 2)
+    const std::string analyticalDivD = "sin(x)*cos(y) - sin(x)*sin(y)";
+#endif
+#if (GEMPIC_SPACEDIM == 3)
+    const std::string analyticalDivD = "sin(x)*cos(y)*sin(z) - sin(x)*sin(y)*sin(z) + sin(x)*sin(y)*sin(z)";
+#endif
     
     amrex::ParserExecutor<nVar> funcDivD; 
     amrex::Parser parserDivD;
 
     parserDivD.define(analyticalDivD);
-    parserDivD.registerVariables({"x", "y", "z", "t"});
-    funcDivD = parserDivD.compile<4>();
+    parserDivD.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    funcDivD = parserDivD.compile<nVar>();
 	
     // Declare rho
     DeRhamField<Grid::dual, Space::cell> rhoDual(deRham);
-    deRham -> projection(funcDivD, 0.0, rhoDual);
+    deRham->projection(funcDivD, 0.0, rhoDual, gaussNodes);
 
     // Calculate errorE
-    bool passRhoDual = false;
+    bool passRhoDual{false};
     DeRhamField<Grid::dual, Space::cell> errorRhoDual(deRham);
 
     for (amrex::MFIter mfi(errorRhoDual.data); mfi.isValid(); ++mfi)
@@ -135,52 +190,31 @@ int main (int argc, char *argv[])
         
     }
 
-    passRho = (errorRho.data.norm0() < GEMPIC_CTEST_TOL);
-    passRhoDual = (errorRhoDual.data.norm0() < GEMPIC_CTEST_TOL);
+    
+    amrex::Real errorRho_norm0 = errorRho.data.norm0();
+    amrex::Real errorRhoDual_norm0 = errorRhoDual.data.norm0();
+    
+    /*
+    amrex::Print() << "errorRho_norm0 = " << errorRho_norm0 << std::endl;
+    amrex::Print() << "errorRhoDual_norm0 = " << errorRhoDual_norm0 << std::endl;
+    */
 
-    if (passRho == true)
+    passRho = (errorRho_norm0 < tol);
+    passRhoDual = (errorRhoDual_norm0 < tol);
+
+    if (passRho == true && passRhoDual == true)
     {
         amrex::PrintToFile("test_div_projection.output") << std::endl;
-        amrex::PrintToFile("test_div_projection.output") << true << std::endl;
-        amrex::PrintToFile("test_div_projection.output") << std::endl;
-        for (amrex::MFIter mfi(errorRho.data); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box &bx = mfi.validbox();
-            const auto lo = lbound(bx);
-            const auto hi = ubound(bx);
-
-            amrex::Array4<amrex::Real> const &errorRhoMF = (errorRho.data)[mfi].array();
-
-            for (int i = lo.x; i < hi.x; ++i)
-            {
-                amrex::PrintToFile("test_div_projection.output") << "(" << i << "," << 0 << "," << "0) errorQ(div.proj(B) - proj.div(B)): = "
-                    << errorRhoMF(i, 0, 0) << std::endl;
-            }
-
-        }
+        amrex::PrintToFile("test_div_projection.output") << GEMPIC_SPACEDIM << "D test passed" << std::endl;
     }
-
-    if (passRhoDual == true)
+    else
     {
         amrex::PrintToFile("test_div_projection.output") << std::endl;
-        amrex::PrintToFile("test_div_projection.output") << true << std::endl;
-        amrex::PrintToFile("test_div_projection.output") << std::endl;
-        for (amrex::MFIter mfi(errorRhoDual.data); mfi.isValid(); ++mfi)
-        {
-            const amrex::Box &bx = mfi.validbox();
-            const auto lo = lbound(bx);
-            const auto hi = ubound(bx);
-
-            amrex::Array4<amrex::Real> const &errorRhoDualMF = (errorRhoDual.data)[mfi].array();
-
-            for (int i = lo.x; i < hi.x; ++i)
-            {
-                amrex::PrintToFile("test_div_projection.output") << "(" << i << "," << 7 << "," << "0) errorRhoDual(div.proj(RhoDual) - proj.div(RhoDual)): = "
-                    << errorRhoDualMF(i, 7, 0) << std::endl;
-            }
-
-        }
+        amrex::PrintToFile("test_div_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
+
+    amrex::PrintToFile("test_div_projection.output") << "max Error divB = " << errorRho_norm0 << std::endl;
+    amrex::PrintToFile("test_div_projection.output") << "max Error divD = " << errorRhoDual_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_div_projection.output.0", "test_div_projection.output");

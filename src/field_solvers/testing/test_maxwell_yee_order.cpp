@@ -157,13 +157,13 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(64, 64, 64)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(64, 64, 64)};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);
     VlMa.Nghost++;
-    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic, {32, 32, 32},
+    VlMa.set_params("maxwell_yee_ctest", n_cell, {1}, 5, 10, 10, 10, is_periodic, amrex::IntVect{AMREX_D_DECL(32, 32, 32)},
                     0.01, {1.0}, {1.0}, 0.5);
     VlMa.dt = 0.01;
     VlMa.set_computed_params();
@@ -223,6 +223,7 @@ void main_main()
     for (int n = 1; n <= mw_yee.nsteps; n++)
     {
         std::cout << "step: " << n << std::endl;
+#if (GEMPIC_SPACEDIM == 3)
         mw_yee.template hodge_full<degree>(infra, mw_yee.B_Array, mw_yee.HB_Array, false);
         mw_yee.advance_E(infra, VlMa.dt, true, false, mw_yee.HB_Array, mw_yee.E_Array);
         mw_yee.template hodge_full<degree>(infra, mw_yee.E_Array, mw_yee.HE_Array, true);
@@ -230,7 +231,7 @@ void main_main()
         mw_yee.advance_time();
         E_B_error = mw_yee.template computeError<degree>(funct_e2, funct_e1, funct_e2, funct_b0,
                                                          zero, funct_b2, true, infra);
-
+#endif
         PrintToFile("test_maxwell_yee_order.output") << "step " << n << std::endl;
         switch (vdim)
         {

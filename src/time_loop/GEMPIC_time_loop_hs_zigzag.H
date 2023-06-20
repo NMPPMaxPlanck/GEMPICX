@@ -132,7 +132,7 @@ void time_loop_hs_zigzag_step(std::shared_ptr<FDDeRhamComplex> deRham,
                 bA[cc] = (B.data[cc])[pti].array();
             }
 
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx = {AMREX_D_DECL(infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2])};
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
             {
 
@@ -299,7 +299,9 @@ void time_loop_hs_zigzag_step(std::shared_ptr<FDDeRhamComplex> deRham,
     // Then Fill Boundary of J
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
+#if (GEMPIC_SPACEDIM == 3)
         (J.data[comp]).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0}, infra.geom.periodicity());
+#endif
 
 
     J.averageSync();
@@ -418,7 +420,7 @@ void time_loop_hs_zigzag(std::shared_ptr<FDDeRhamComplex> deRham,
         BL_PROFILE("time_loop_hs_zigzag_C2::step");
 
         // Rescale the fields
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {AMREX_D_DECL(infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2])};
         //(rho.data).mult((dr[0] * dr[1] * dr[2]));
 
         (E.data[0]).mult((1/dr[0]));

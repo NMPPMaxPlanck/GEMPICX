@@ -40,9 +40,9 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Initialize Infrastructure
-    amrex::IntVect is_periodic = {AMREX_D_DECL(1, 1, 1)};
-    amrex::IntVect n_cell = {AMREX_D_DECL(32, 32, 32)};
-    amrex::IntVect mx_grid = {AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect n_cell{AMREX_D_DECL(32, 32, 32)};
+    amrex::IntVect mx_grid{AMREX_D_DECL(32, 32, 32)};
 
     gempic_parameters<vdim, numspec> VlMa;
     VlMa.init_Nghost(degx, degy, degz);

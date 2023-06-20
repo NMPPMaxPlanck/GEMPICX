@@ -56,7 +56,7 @@ void main_main()
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi;
     dxi[GEMPIC_SPACEDIM] = 1.;
-    for (int cc = 0; cc < 3; cc++)
+    for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
     {
         plo[cc] = geom.ProbLo()[cc];
         dxi[cc] = (domain.bigEnd(cc) + 1) / real_box.hi(cc);
@@ -108,7 +108,7 @@ void main_main()
     //-----------------------------------------------------------------------------
     // SumBoundary
 
-    TestMF.SumBoundary(0, 1, {AMREX_D_DECL(Nghost, Nghost, Nghost)}, {AMREX_D_DECL(0, 0, 0)},
+    TestMF.SumBoundary(0, 1, amrex::IntVect{AMREX_D_DECL(Nghost, Nghost, Nghost)}, amrex::IntVect{AMREX_D_DECL(0, 0, 0)},
                        geom.periodicity());
 
     amrex::PrintToFile("test_AMReX_SumBoundary_additional.tmp") << "SUMBOUNDARY" << std::endl;

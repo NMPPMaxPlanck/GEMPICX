@@ -206,7 +206,7 @@ public:
     void run_time_loop()
     {
         BL_PROFILE("vlasov_maxwell_simulation::run_time_loop");
-
+#if (GEMPIC_SPACEDIM == 3)
         amrex::Print() << "Propagator: " << params.propagator << std::endl;
         auto start = std::chrono::high_resolution_clock::now();
         switch (params.propagator)
@@ -259,5 +259,6 @@ public:
             default:
                 break;
         }
+#endif
     }
 };

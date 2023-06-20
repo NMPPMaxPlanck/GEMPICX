@@ -178,6 +178,7 @@ void main_main(bool ctest)
 
 int main(int argc, char* argv[])
 {
+#if (GEMPIC_SPACEDIM == 3)
     const bool build_parm_parse = true;
     amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
                       overwrite_amrex_parser_defaults);
@@ -256,4 +257,5 @@ int main(int argc, char* argv[])
     if (ParallelDescriptor::MyProc() == 0)
         std::rename("test_one_part.output.0", "test_one_part.output");
     amrex::Finalize();
+#endif
 }

@@ -11,15 +11,15 @@ int main (int argc, char *argv[])
 	amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD); 
 
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI,-M_PI,-M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(4, 4, 4)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {1, 1, 1};
+	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
 
     const amrex::Array<std::string, 3> analyticalE = {"0.0", 
                                                       "0.0",
                                                       "cos (x)"};
-	const int nVar = 3;
+	const int nVar = GEMPIC_SPACEDIM;
     amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> func; 
     amrex::Parser parser;
     
@@ -48,20 +48,20 @@ int main (int argc, char *argv[])
             amrex::Array4<amrex::Real> const &oneForm = (field.data[comp])[mfi].array();
 
             const amrex::RealVect dr = params.dr();
-            const amrex::GpuArray<amrex::Real, 3> r0 = params.geometry().ProbLoArray(); // Put ProbLo in parameters as a getter. Domainbounds...
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray(); // Put ProbLo in parameters as a getter. Domainbounds...
 
             // Do the actual writing here
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
 
-                amrex::GpuArray<amrex::Real, 3> r =
+                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                 r0[0] + i*dr[0],
+                 AMREX_D_DECL(r0[0] + i*dr[0],
                  r0[1] + j*dr[1],
-                 r0[2] + k*dr[2]
+                 r0[2] + k*dr[2])
                 };
 
-                oneForm(i, j, k) = func[comp](r[0], r[1], r[2]);
+                oneForm(i, j, k) = func[comp](AMREX_D_DECL(r[0], r[1], r[2]));
             });
 
             // Modify MF boundaries to see whether the value is averaged

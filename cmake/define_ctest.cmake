@@ -1,31 +1,31 @@
-MACRO( _CTEST_FILE_CMP _test )
+macro( _CTEST_FILE_CMP _test )
 
-if (EXISTS  ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
-  message("Input file ${_test}")
-  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    COMMAND mpirun -np 4 --oversubscribe ../${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    # lines if it should pipe the console output (if unit test has print instead of writing into a file)
-    # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
-    # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
-    # ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
-    DEPENDS ${_test}
-    )
-else()
-  message("No input file ${_test}")
-  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    COMMAND mpirun -np 4 --oversubscribe ../${_test}
-    COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-    # lines if it should pipe the console output (if unit test has print instead of writing into a file)
-    # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
-    # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
-    # ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
-    DEPENDS ${_test}
-    )
- endif()
+  if(EXISTS  ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
+    message("Input file ${_test}")
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+      COMMAND mpirun -np 4 --oversubscribe ../${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
+      COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+      # lines if it should pipe the console output (if unit test has print instead of writing into a file)
+      # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
+      # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
+      # ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+      DEPENDS ${_test}
+      )
+  else()
+    message("No input file ${_test}")
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+      COMMAND mpirun -np 4 --oversubscribe ../${_test}
+      COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
+      # lines if it should pipe the console output (if unit test has print instead of writing into a file)
+      # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
+      # COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
+      # ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output
+      DEPENDS ${_test}
+      )
+  endif()
 
   
-  ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff
     COMMAND
     if (${TEST_DIFF} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.expected_output
         ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
@@ -45,12 +45,11 @@ else()
     ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
     )
   # add the target for this output file to the dependencies of this test
-  ADD_CUSTOM_TARGET(${_test}.diff
+  add_custom_target(${_test}.diffFile
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_test}.diff
     )
 
-  #ADD_DEPENDENCIES(_tests ${_test}.diff)
-  ADD_TEST(NAME ${_test}
+  add_test(NAME ${_test}
     COMMAND
     ${CMAKE_COMMAND}
     -DBINARY_DIR=${CMAKE_BINARY_DIR}
@@ -60,40 +59,40 @@ else()
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-ENDMACRO()
+endmacro()
 
 
 # Find diff and numdiff for ctests
-FIND_PROGRAM(DIFF_EXECUTABLE
+find_program(DIFF_EXECUTABLE
   NAMES diff
   HINTS ${DIFF_DIR}
   PATH_SUFFIXES bin
   )
 
-FIND_PROGRAM(NUMDIFF_EXECUTABLE
+find_program(NUMDIFF_EXECUTABLE
   NAMES numdiff
   HINTS ${NUMDIFF_DIR}
   PATH_SUFFIXES bin
   )
   
-MARK_AS_ADVANCED(DIFF_EXECUTABLE NUMDIFF_EXECUTABLE)
+mark_as_advanced(DIFF_EXECUTABLE NUMDIFF_EXECUTABLE)
 
-IF("${TEST_DIFF}" STREQUAL "")
-  IF(NOT NUMDIFF_EXECUTABLE MATCHES "-NOTFOUND")
-    SET(TEST_DIFF ${NUMDIFF_EXECUTABLE} -a 1e-5 -r 1e-8 -s ' \\t\\n:,')
-    IF(DIFF_EXECUTABLE MATCHES "-NOTFOUND")
-      SET(DIFF_EXECUTABLE ${NUMDIFF_EXECUTABLE})
-    ENDIF()
-  ELSEIF(NOT DIFF_EXECUTABLE MATCHES "-NOTFOUND")
-    SET(TEST_DIFF ${DIFF_EXECUTABLE})
-    MESSAGE(
+if("${TEST_DIFF}" STREQUAL "")
+  if(NOT NUMDIFF_EXECUTABLE MATCHES "-NOTFOUND")
+    set(TEST_DIFF ${NUMDIFF_EXECUTABLE} -a 1e-5 -r 1e-8 -s ' \\t\\n:,')
+    if(DIFF_EXECUTABLE MATCHES "-NOTFOUND")
+      set(DIFF_EXECUTABLE ${NUMDIFF_EXECUTABLE})
+    endif()
+  elseif(NOT DIFF_EXECUTABLE MATCHES "-NOTFOUND")
+    set(TEST_DIFF ${DIFF_EXECUTABLE})
+    message(
       "######### Could not find numdiff. This will cause a number of ctests to fail. \n"
       )
-  ELSE()
-    MESSAGE(FATAL_ERROR
+  else()
+    message(FATAL_ERROR
       "Could not find diff or numdiff. One of those are required for running the tests.\n"
       "Please specify TEST_DIFF by hand."
       )
-  ENDIF()
-ENDIF()
+  endif()
+endif()
 ##############

@@ -399,11 +399,11 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral_point(
 #endif
                             ;
 #else
-            double s_coeff = sx_node[ii];
+            double s_coeff = 0.;//sx_node[ii];
 #endif
 #if (GEMPIC_SPACEDIM == 1)
-                        amrex::HostDevice::Atomic::Add(jArray[1].ptr(cell_index[0], 0, 0, 0),
-                                                       s_coeff * weight[1]);
+                        //amrex::HostDevice::Atomic::Add(jArray[1].ptr(cell_index[0], 0, 0, 0),
+                        //                               s_coeff * weight[1]);
 #else
             amrex::HostDevice::Atomic::Add(
                 jArray[1].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
@@ -1574,6 +1574,7 @@ gempic_deposit_J_and_interpolate(
                         {
                             s_coeff = spline.spline_node[0][ii];
                         }
+#if (GEMPIC_SPACEDIM > 1)
                         if (cc % 3 == 1)
                         {
                             s_coeff *= spline.spline_cell[1][jj];
@@ -1582,6 +1583,7 @@ gempic_deposit_J_and_interpolate(
                         {
                             s_coeff *= spline.spline_node[1][jj];
                         }
+#endif
 #if (GEMPIC_SPACEDIM > 2)
                         if (cc % 3 == 2)
                         {
@@ -1596,8 +1598,8 @@ gempic_deposit_J_and_interpolate(
                             spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
 
 #if (GEMPIC_SPACEDIM == 1)
-                        amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0),
-                                                       s_coeff * particle_coeff * p.rdata(cc));
+                        //amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0),
+                        //                              s_coeff * particle_coeff * p.rdata(cc));
 #else
                 amrex::HostDevice::Atomic::Add(
                     jArray[cc].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
@@ -1639,14 +1641,17 @@ gempic_deposit_J_and_interpolate(
                             {
                                 s_coeff = spline.spline_cell[0][ii];
                             }
+#if (GEMPIC_SPACEDIM > 1)
                             if (cc % 3 == 1)
                             {
                                 s_coeff *= spline.spline_node[1][jj];
                             }
                             else
                             {
-                                s_coeff *= spline.spline_cell[1][jj];
+                                s_coeff *= 
+                                spline.spline_cell[1][jj];
                             }
+#endif
 #if (GEMPIC_SPACEDIM > 2)
                             if (cc % 3 == 2)
                             {
@@ -1722,8 +1727,8 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_charge_indextype(
                     AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
 
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::HostDevice::Atomic::Add(jArray.ptr(cell_index[0], 0, 0, 0),
-                                               s_coeff * particle_coeff);
+                //amrex::HostDevice::Atomic::Add(jArray.ptr(cell_index[0], 0, 0, 0),
+                //                               s_coeff * particle_coeff);
 #else
                 amrex::HostDevice::Atomic::Add(
                     jArray.ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
@@ -2049,7 +2054,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_magnetization(
 #endif
                             ;
 #else
-            double s_coeff = sx_cell[ii];
+            double s_coeff = 0;//sx_cell[ii];
 #endif
 
                         amrex::HostDevice::Atomic::Add(

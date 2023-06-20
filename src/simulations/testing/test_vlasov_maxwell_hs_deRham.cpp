@@ -42,9 +42,9 @@ void main_main()
     const amrex::Real k = 1.25;
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},{AMREX_D_DECL(2.0*M_PI/k, 2.0*M_PI/k, 2.0*M_PI/k)});
-	const amrex::IntVect nCell = {AMREX_D_DECL(16, 2, 2)};
-    const amrex::IntVect maxGridSize = {AMREX_D_DECL(16, 2, 2)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {1, 1, 1};
+	const amrex::IntVect nCell{AMREX_D_DECL(16, 2, 2)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(16, 2, 2)};
+    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
     
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
@@ -67,7 +67,7 @@ void main_main()
                     10000,                                  // output freq
                     10000,                                  // output freq
                     10000,                                  // output freq
-                    {AMREX_D_DECL(1, 1, 1)},                // periodicity
+                    amrex::IntVect{AMREX_D_DECL(1, 1, 1)},                // periodicity
                     maxGridSize,                            // max_grid_size
                     dt,                                     // dt
                     {-1.0, 1.0},                            // charge
@@ -109,15 +109,15 @@ void main_main()
                                                           "0.0"};
     
     // Project B and D to a primal and dual two form respectively
-    const int nVar = 4; //x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcD; 
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB; 
+    const int nVar = GEMPIC_SPACEDIM + 1; //x, y, z, t
+    amrex::Array<amrex::ParserExecutor<nVar>, 3> funcD; 
+    amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB; 
     amrex::Parser parser;
     for (int i=0; i<3; ++i)
     {
         parser.define(analyticalFuncD[i]);
-        parser.registerVariables({"x", "y", "z", "t"});
-        funcD[i] = parser.compile<4>();
+        parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        funcD[i] = parser.compile<nVar>();
     }
 
    	deRham -> projection(funcD, 0.0, D);
@@ -125,8 +125,8 @@ void main_main()
     for (int i=0; i<3; ++i)
     {
         parser.define(analyticalFuncB[i]);
-        parser.registerVariables({"x", "y", "z", "t"});
-        funcB[i] = parser.compile<4>();
+        parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        funcB[i] = parser.compile<nVar>();
     }
 
    	deRham -> projection(funcB, 0.0, B);
@@ -202,7 +202,9 @@ void main_main()
     // Needed for SumBoundary 
     auto nGhost = deRham -> getNGhost();
 
+#if (GEMPIC_SPACEDIM == 3)
     (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0}, params.geometry().periodicity());
+#endif
     rho.averageSync();
     rho.fillBoundary();
 

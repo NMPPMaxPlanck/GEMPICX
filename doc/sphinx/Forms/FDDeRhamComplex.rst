@@ -3,7 +3,7 @@ FDDeRhamComplex
 
 Finite-differences De-Rham Complex
 
-.. doxygenclass:: GEMPIC_FDDeRhamComplex::FDDeRhamComplex
+.. doxygenfile:: GEMPIC_FDDeRhamComplex.H
 
 .. toctree::
     :maxdepth: 2
