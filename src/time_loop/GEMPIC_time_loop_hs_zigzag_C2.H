@@ -178,7 +178,9 @@ void time_loop_hs_zigzag_C2_step(
 
                     // amrex::Real weight =
                     // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
-                    amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM]; // why infra.dxi[GEMPIC_SPACEDIM]?
+
+                    // infra.dxi[GEMPIC_SPACEDIM] is the inverse of the cell volume
+                    amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM]; 
 
                     // for (unsigned int d=0;d<vdim;++d)
                     // vel[d] = particles[pp].rdata(d);

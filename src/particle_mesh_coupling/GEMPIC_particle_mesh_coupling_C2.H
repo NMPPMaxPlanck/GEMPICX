@@ -43,11 +43,11 @@ public:
     // splines_at_particles();
 
     /**
-     * @brief Find the 1D cell in which the particle is
+     * @brief Compute splines \f$S_n\f$ and \f$S_c\f$ at particle position in each direction
      *
      * @param position position of particle
      * @param plo left extremity of 1D grid
-     * @param dxi cell size
+     * @param dxi inverse cell size
      */
     template <int dim, int deg>
     AMREX_GPU_HOST_DEVICE void init_position(amrex::Real position, amrex::Real plo, amrex::Real dxi)

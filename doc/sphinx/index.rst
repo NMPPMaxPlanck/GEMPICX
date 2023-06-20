@@ -1,5 +1,5 @@
 GEMPIC
-==================================
+======
 Geometric Electro-Magnetic Particle-In-Cell
 
 .. toctree::
@@ -24,5 +24,6 @@ Table of Contents
    self
    latex/deRham_diagrams
    latex/code_units
+   latex/TimeLoops
    Forms/Forms
    Particles/Particles

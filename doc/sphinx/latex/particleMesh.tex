@@ -24,7 +24,7 @@
     \subsection{Smoothing function}
 
     The Particle-Mesh coupling algorithms are based on a smoothing function which is taken to be a tensor product spline
-    $S_h( \mathbf{x}) = S_{\Delta x}^{d_x-1}(x)S_{\Delta y}^{d_y-1}(y)S_{\Delta z}^{d_z-1}(z)$, where $S_h^d(x)=S^d(\frac {x}{h})$,
+    $S_h( \mathbf{x}) = S_{\Delta x}^{d_x-1}(x)S_{\Delta y}^{d_y-1}(y)S_{\Delta z}^{d_z-1}(z)$, where $S_h^d(x)=\frac 1h S^d(\frac {x}{h})$,
     $S^d$ being the cardinal B-spline defined recursively by 
     $$S^0(x)= 1 \mbox{ if } -\frac{1}{2} \leq x \leq \frac{1}{2}, ~~~ 0 \mbox{ else}.$$
     $$ S^d(x) = S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-y) \dd y.$$
@@ -32,8 +32,8 @@
     \begin{itemize}
         \item The cardinal splines are even $S^d(x) = S^d(-x)$
         \item The support of $S^d$ is $\left[-\frac{d-1}{2},\frac{d-1}{2} \right]$
-        \item The cardinal B-Spline verifies
-        $$\int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = S_h^d(x_i-x_p),$$
+        \item The scaled cardinal B-Spline verifies
+        $$\int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = hS_h^d(x_i-x_p),$$
     \end{itemize}
 
     \subsection{Reduction of the smoothing function at a particle position}
@@ -41,18 +41,19 @@
     The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. This yields
     $$
     \begin{aligned}
-        \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
-        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= \Delta x \,S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
-        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= \Delta y \, S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
-        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= \Delta z \,S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
-        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= \Delta y\, \Delta z  \, S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
-        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= \Delta x\, \Delta z  \, S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
-        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &= \Delta x\, \Delta y  \, S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
-        \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k} &= \Delta x\, \Delta y  \,\Delta z S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p).
+        \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= \frac{1}{\Delta x \Delta y \Delta z}
+        S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
+        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= \frac{1}{\Delta y \Delta z} \,S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
+        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= \frac{1}{\Delta x \Delta z} \, S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
+        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= \frac{1}{\Delta x \Delta y} \,S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
+        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= \frac{1}{\Delta x }  \, S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
+        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= \frac{1}{\Delta y} \, S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
+        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &=\frac{1}{\Delta z}  \, S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
+        \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k} &= S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right).
     \end{aligned}
     $$
-    We observe that the terms of the reduction are products of \textbf{node centered splines} of the form $S_{\Delta x}^{d_x}(x_i-x_p)$ and of
-    \textbf{cell centered splines} of the form $S_{\Delta x}^{d_x-1}(x_\iph-x_p)$.
+    We observe that the terms of the reduction are products of \textbf{node centered splines} of the form $S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)$ and of
+    \textbf{cell centered splines} of the form $S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)$.
 
     \subsection{Smoothed particle quantities}
 
@@ -64,13 +65,13 @@
 
 
     It follows by linearity of the reduction operators that the degrees of freedom (the cell integrals) of $\rho$, which are its coefficients in $\tilde{ \cC}_3$, are 
-    $$\tilde{\rho}_{i,j,k} = \Delta x\, \Delta y  \,\Delta z  \sum_p q_p w_p S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p)$$
+    $$\tilde{\rho}_{i,j,k} = \sum_p q_p w_p S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)$$
     and similarly the coefficients of $ \mathbf{J}$ in $\tilde{ \cC}_2$, are 
     $$
     \begin{aligned}
-    \tilde{J}_{\iph,j,k} &= \Delta y\, \Delta z  \, \sum_p q_p w_p v_{p,x}(t) S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
-    \tilde{J}_{i,\jph,k} &= \Delta x\, \Delta z  \, \sum_p q_p w_p v_{p,y}(t) S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
-    \tilde{J}_{i,j,\kph} &= \Delta x\, \Delta y  \, \sum_p q_p w_p v_{p,z}(t) S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p)
+    \tilde{J}_{\iph,j,k} &= \frac{1}{\Delta x}  \, \sum_p q_p w_p v_{p,x}(t) S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
+    \tilde{J}_{i,\jph,k} &= \frac{1}{\Delta y }  \, \sum_p q_p w_p v_{p,y}(t) S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
+    \tilde{J}_{i,j,\kph} &= \frac{1}{\Delta z} \, \sum_p q_p w_p v_{p,z}(t) S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right)
     \end{aligned}
     $$
     which are the components corresponding respectively to $J_x$, $J_y$, $J_z$ 
@@ -87,9 +88,9 @@ Based on the Finite Difference Lagrangian from which the electric field is deriv
 and the faces of the dual grid. Therefore, the smoothing function is projected on the faces of the dual grid with the $\tcR_2$ reduction operator. This yields the following expression of $\bE$ at the particle positions
 $$
 \begin{aligned}
-    E_x(\mathbf{x}_p) &= \Delta y\, \Delta z  \, \sum_{i,j,k} \arrE_{\iph,j,k} S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p), \\
-    E_y(\mathbf{x}_p) &= \Delta x\, \Delta z  \, \sum_{i,j,k} \arrE_{i,\jph,k} S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p), \\
-    E_z(\mathbf{x}_p) &= \Delta y\, \Delta z  \, \sum_{i,j,k} \arrE_{i,j,\kph} S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p). 
+    E_x(\mathbf{x}_p) &= \frac{1}{\Delta x}  \, \sum_{i,j,k} \arrE_{\iph,j,k} S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right), \\
+    E_y(\mathbf{x}_p) &=\frac{1}{\Delta y} \, \sum_{i,j,k} \arrE_{i,\jph,k} S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right), \\
+    E_z(\mathbf{x}_p) &=\frac{1}{\Delta x} \, \sum_{i,j,k} \arrE_{i,j,\kph} S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right). 
 \end{aligned}
 $$
 
@@ -103,13 +104,13 @@ For the magnetic field, based on the Lagrangian, the smoothing function is proje
 This yields the following expression of $\bB$ at the particle positions
 $$
 \begin{aligned}
-    B_x(\mathbf{x}_p) &= \Delta x \sum_{i,j,k} \arrB_{i,\jph,\kph} \,S_{\Delta x}^{d_x}(x_i-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p), \\
-    B_y(\mathbf{x}_p) &= \Delta y \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p), \\
-    B_z(\mathbf{x}_p) &= \Delta z \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S_{\Delta x}^{d_x-1}(x_\iph-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p). 
+    B_x(\mathbf{x}_p) &= \frac{1}{\Delta y \Delta z} \sum_{i,j,k} \arrB_{i,\jph,\kph} \,S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right), \\
+    B_y(\mathbf{x}_p) &= \frac{1}{\Delta x \Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right), \\
+    B_z(\mathbf{x}_p) &= \frac{1}{\Delta x \Delta y} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right). 
 \end{aligned}
 $$
 
-\subsection{Exact computation of time integrated $\bJ_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
+\subsection{Exact computation of time integrated $J_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
 
 One step of the hamiltonian splitting algorithm, consists in pushing the particles successively in the 3 axis dimensions and updating positions, velocities and electric field leaving the magnetic field constant.
 Let us describe this algorithm when the particles are pushed in the $x$-direction. The two other directions are handled similarly.  
@@ -120,7 +121,8 @@ $$
     \fract{x_p}{t} &= v_{p,x} \\
     \fract{v_{y,p}}{t} &= - v_{p,x}(t)B_z(x_p(t) ,y_p,z_p) \\
     \fract{v_{z,p}}{t} &= v_{p,x}B_y(x_p(t),y_p,z_p) \\
-    \fract{\tilde{\arrD}_{\iph,j,k}}{t} &=  -\arrJ_{\iph,j,k} = -\Delta y\, \Delta z  \, \sum_p q_p w_p v_{p,x}(t) S_{\Delta x}^{d_x-1}(x_\iph-x_p(t))\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p)
+    \fract{\tilde{\arrD}_{\iph,j,k}}{t} &=  -\tilde{\arrJ}_{\iph,j,k} \\ 
+    &= -\frac{1}{\Delta x}  \, \sum_p q_p w_p v_{p,x}(t) \, S^{d_x-1}\left(\frac{x_\iph-x_p(t)}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)
 \end{aligned}
 $$
 while the other variables, not appearing on the left-hand side, stay constant.
@@ -130,23 +132,26 @@ Indeed,
 $$
 \begin{aligned}
     v_{p,x}(t) B_z(x_p(t) ,y_p,z_p) &=   
-    \Delta z \sum_{i,j,k} \arrB_{\iph,\jph,k} \fract{\check{S}_{\Delta x}^{d_x-1}}{t}(x_\iph-x_p)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) \\
+    \frac{1}{\Delta y} \sum_{i,j,k} \arrB_{\iph,\jph,k} \fract{\check{S}^{d_x-1}}{t}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
     v_{p,x}(t)  B_y(x_p(t) ,y_p,z_p) &= 
-    \Delta y \sum_{i,j,k} \arrB_{\iph,j,\kph} \fract{\check{S}_{\Delta x}^{d_x-1}}{t}(x_\iph-x_p)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p), \\
-    v_{p,x}(t) S_{\Delta x}^{d_x-1}(x_\iph-x_p(t)) &\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) = \\ 
-    & \fract{\check{S}_{\Delta x}^{d_x-1}}{t}(x_\iph-x_p(t))\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p) .
+    \frac{1}{\Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph} \fract{\check{S}^{d_x-1}}{t}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right), \\
+    v_{p,x}(t) S_{\Delta x}^{d_x-1}(x_\iph-x_p(t)) &\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) = \\ 
+    & \Delta x \fract{\check{S}^{d_x-1}}{t}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) .
 \end{aligned}
 $$
 Then, integrating the original system in time between $t_0$ and $t_1$ yields without further approximation
 $$
 \begin{aligned}
-    x_p(t_1) &= x_p(t_0) + (t_1-t_0) v_{p,x} \\
-    v_{y,p}(t_1) &= v_{y,p}(t_0) -  \\ 
-    &\Delta z \sum_{i,j,k} \arrB_{\iph,\jph,k} \left(\check{S}_{\Delta x}^{d_x-1}(x_\iph-x_p(t_1))- \check{S}_{\Delta x}^{d_x-1}(x_\iph-x_p(t_0))  \right)\,S_{\Delta y}^{d_y-1}(y_\jph-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p)\\
-    v_{z,p}(t_1) &=  v_{z,p}(t_0) + & \\
-    &\Delta y \sum_{i,j,k} \arrB_{\iph,j,\kph} \left(\check{S}_{\Delta x}^{d_x-1}(x_\iph-x_p(t_1)- \check{S}_{\Delta x}^{d_x-1}(x_\iph-x_p(t_0))\right)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z-1}(z_\kph-z_p) \\
-    \tilde{\arrD}_{\iph,j,k}(t_1) &=  \tilde{\arrD}_{\iph,j,k}(t_0) - \\
-    \Delta y\, \Delta z  &\, \sum_p q_p w_p v_{p,x}(t) \left(\check{S}_{\Delta x}^{d_x-1}(x_\iph-x_p(t_1)) - \check{S}_{\Delta x}^{d_x-1}(x_\iph-x_p(t_0))\right)\,S_{\Delta y}^{d_y}(y_j-y_p)\,S_{\Delta z}^{d_z}(z_k-z_p)
+    x_p&(t_1) = x_p(t_0) + (t_1-t_0) v_{p,x} \\
+    v_{y,p}&(t_1) = v_{y,p}(t_0) -  
+    \frac{1}{\Delta y} \sum_{i,j,k} \arrB_{\iph,\jph,k} \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)  \right) 
+      S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)\\
+    v_{z,p}&(t_1) =  v_{z,p}(t_0) + 
+    \frac{1}{\Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph}  \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right) 
+     S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
+    \tilde{\arrD}_{\iph,j,k} & (t_1) =  \tilde{\arrD}_{\iph,j,k}(t_0) - 
+    \frac{1}{\Delta x}  \, \sum_p q_p w_p   \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right)  
+    S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)
 \end{aligned}
 $$
 \end{document}
