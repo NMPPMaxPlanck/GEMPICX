@@ -18,6 +18,7 @@ CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:="Release"}
 
 GEMPIC_BASE=`readlink -f ..`
 
+git submodule sync
 git submodule init
 git submodule update
 

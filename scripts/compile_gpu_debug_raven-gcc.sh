@@ -26,6 +26,7 @@ echo
 
 MAKE_NPROCS="${MAKE_NPROCS:-16}"
 
+git submodule sync
 git submodule init
 git submodule update
 
