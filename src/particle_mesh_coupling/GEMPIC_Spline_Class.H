@@ -43,17 +43,17 @@ public:
      * 
      * @details At the end of the function initBSplinesAtPositions, span is the index of the first field-coefficient corresponding to a non-zero spline at the particle location.
     */
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
 
     /**
      * @brief Cell centered spline
     */
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> splineCell;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> splineCell;
 
     /**
      * @brief Node centered spline
     */
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ) + 1>, GEMPIC_SPACEDIM> splineNode;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ) + 1>, GEMPIC_SPACEDIM> splineNode;
 
     /**
      * @brief Compute new particle position
@@ -347,17 +347,17 @@ public:
      * 
      * @details At the end of the function initBSplinesAtPositions, span is the index of the first field-coefficient corresponding to a non-zero spline at the particle location.
     */
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<int, GEMPIC_SPACEDIM> spanOld;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> spanOld;
 
     /**
      * @brief primitive of the new spline
     */
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> primitiveNew;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> primitiveNew;
 
     /**
      * @brief primitive of the old spline
     */
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> primitiveOld;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> primitiveOld;
 
     /**
      * @brief Update the basis by evaluating the splines at the new particle position
@@ -512,4 +512,3 @@ public:
 
 }
 #endif
-AMREX_GPU_HOST_DEVICE
