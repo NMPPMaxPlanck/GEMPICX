@@ -69,7 +69,7 @@ public:
      * @details At the end of the function, xint is the distance from the endpoint of the first non-zero spline at the particle location. It is normalized by dx and lies between 0 and 1.
     */
     template<int dim, int deg>
-    amrex::Real initBSplinesAtPositions(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
+    AMREX_GPU_HOST_DEVICE amrex::Real initBSplinesAtPositions(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
         // Compute normalized position xint and span
         amrex::Real xint = (position - plo) * dxInverse;
@@ -185,6 +185,9 @@ public:
                                               splineCell[1][j],
                                               splineCell[2][k]);
                   return base;
+        }
+        else {
+            return 0;
         }
         // error: Device code does not support exception handling
 //        else {
