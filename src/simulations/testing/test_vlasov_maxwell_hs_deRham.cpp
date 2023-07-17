@@ -46,7 +46,7 @@ void main_main()
     const amrex::IntVect maxGridSize{AMREX_D_DECL(16, 2, 2)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
-    
+
 	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
 
     const amrex::Real dt = 0.02;
@@ -58,7 +58,6 @@ void main_main()
     //partDensity[1] = "1.0 + 0.2 * cos(kvarx * x)";  // second species
     partDensity[0] = "1.0";                         // first species
     partDensity[1] = "1.0 + 0.2 * cos(kvarx * x)";  // second species
-    //VlMa.init_Nghost(degx, degy, degz);
     amrex::GpuArray<int, numspec> nParticlesPerCell = {1, 1};
     VlMa.set_params("test_vlasov_maxwell_hs_multispecies",  // sim_name
                     nCell,                                  // n_cell_vector
@@ -131,7 +130,6 @@ void main_main()
 
    	deRham -> projection(funcB, 0.0, B);
 
-   
     // Initialize particle groups
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> partGr;
 
@@ -165,9 +163,8 @@ void main_main()
     init_particles_full_domain<vdim, numspec>(infra, partGr, nParticlesPerCell, meanVelocity,
                                               vThermal, vWeight, 1, VlMa.densityEval[1]);
 
-
     // Deposit rho
-    //rho.fillBoundary(); 
+    //rho.fillBoundary();
     const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
     for (int spec = 0; spec < numspec; spec++)
     {
@@ -199,7 +196,7 @@ void main_main()
         }
     }
 
-    // Needed for SumBoundary 
+    // Needed for SumBoundary
     auto nGhost = deRham -> getNGhost();
 
 #if (GEMPIC_SPACEDIM == 3)
@@ -208,13 +205,12 @@ void main_main()
     rho.averageSync();
     rho.fillBoundary();
 
-
     // Solve Poisson with Linear Laplacian
-    //PoissonSolver poisson;
-    //poisson.solve(params, rho, phi);
+    // PoissonSolver poisson;
+    // poisson.solve(params, rho, phi);
 
     // Visualize rho and phi after particle deposition and solving the Poisson equation
-    /*
+/*
     for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
@@ -229,7 +225,7 @@ void main_main()
                 for (int i = lo.x; i <= hi.x; ++i) 
                     amrex::Print() << "(" << i << "," << j << "," << k << ") rho: " << rhoMF(i, j, k) << " phi: " << phiMF(i, j, k) << std::endl;
     }
-    */
+*/
 
     // Get D from phi
     //deRham -> grad(phi, E);
@@ -239,8 +235,9 @@ void main_main()
     const int nSteps = 300;
     const int strangOrder = 2;
 
+    OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton;
     HSZigZagC2<vdim, numspec, degx, degy, degz, degmw, ndata> time_looper;
-    time_looper.time_loop(deRham, rho, E, B, D, H, J, infra, dt, partGr, nSteps, strangOrder);
+    time_looper.time_loop(deRham, rho, E, B, D, H, J, infra, dt, partGr, nSteps, strangOrder, operatorHamilton);
 //    time_loop_hs_zigzag<vdim, numspec, degx, degy, degz, degmw, ndata>(deRham, rho, E, B, D, H, J, infra, dt, partGr, nSteps, strangOrder);
     /*
     for (int comp = 0; comp < 3; ++comp)

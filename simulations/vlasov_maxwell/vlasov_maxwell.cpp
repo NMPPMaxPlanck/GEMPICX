@@ -4,7 +4,6 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_vlasov_maxwell.H>
 
-
 int main(int argc, char* argv[])
 {
     const bool build_parm_parse = true;
@@ -31,6 +30,3 @@ int main(int argc, char* argv[])
     }
     amrex::Finalize();
 }
-
-
-

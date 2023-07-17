@@ -239,8 +239,8 @@ namespace {
 
             accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
-            EXPECT_EQ(bfields[0], -4.5);
-            EXPECT_EQ(bfields[1], -4.5);
+            EXPECT_NEAR(bfields[0], -4.5, 0.000000000000001);
+            EXPECT_NEAR(bfields[1], -4.5, 0.000000000000001);
         }
     }
 
@@ -304,8 +304,8 @@ namespace {
 
             accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
 
-            EXPECT_EQ(bfields[0], -4.75);
-            EXPECT_EQ(bfields[1], -4.75);
+            EXPECT_NEAR(bfields[0], -4.75, 0.000000000000001);
+            EXPECT_NEAR(bfields[1], -4.75, 0.000000000000001);
         }
     }
 

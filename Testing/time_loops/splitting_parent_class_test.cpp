@@ -73,6 +73,10 @@ namespace {
         static const int nData{1};
         const int strangOrder{2};
         const amrex::Real dt{1};
+        amrex::Real chargemass{1};
+        
+        amrex::GpuArray<amrex::Real, 3> vel{1, 1, 1};
+        amrex::GpuArray<amrex::Real, 3> Ep{1, 1, 1};
 
         Parameters params;
         std::shared_ptr<FDDeRhamComplex> deRham;
@@ -115,7 +119,7 @@ namespace {
         mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
     }
 
-    TEST_F(SplittingTest, FiveSteps) {
+    TEST_F(SplittingTest, SplittingTimeLoopFiveStepsTest) {
         const int nSteps{5};
         MockSplitting<vDim, numSpec, degX, degY, degZ, degmw, nData, electromagnetic, profiling> mockSplitting;
 
@@ -130,5 +134,37 @@ namespace {
         EXPECT_CALL(mockSplitting, time_step(deRham, _, _, _, _, _, _, _, _, _, _, _, 1, _)).Times(Exactly(5));
 
         mockSplitting.time_loop(deRham, rho, E, B, D, H, J, infra, dt, particleGroup, nSteps, strangOrder);
+    }
+
+    TEST_F(SplittingTest, SplittingPushVEFieldTest) {
+
+        amrex::GpuArray<amrex::Real, vDim> newPos = Gempic::Particles::push_v_efield<vDim>(vel, dt, chargemass, Ep);
+
+        EXPECT_EQ(newPos[0], 2);
+        EXPECT_EQ(newPos[1], 2);
+        EXPECT_EQ(newPos[2], 2);
+    }
+
+    TEST_F(SplittingTest, SplittingPushVEFieldVelTest) {
+
+        chargemass = 0;
+
+        amrex::GpuArray<amrex::Real, vDim> newPos = Gempic::Particles::push_v_efield<vDim>(vel, dt, chargemass, Ep);
+
+        EXPECT_EQ(newPos[0], vel[0]);
+        EXPECT_EQ(newPos[1], vel[1]);
+        EXPECT_EQ(newPos[2], vel[2]);
+    }
+
+    TEST_F(SplittingTest, SplittingPushVEFieldEpTest) {
+
+        vel = {0, 0, 0};
+        Ep = {1, 2, 3};
+
+        amrex::GpuArray<amrex::Real, vDim> newPos = Gempic::Particles::push_v_efield<vDim>(vel, dt, chargemass, Ep);
+
+        EXPECT_EQ(newPos[0], 1);
+        EXPECT_EQ(newPos[1], 2);
+        EXPECT_EQ(newPos[2], 3);
     }
 }

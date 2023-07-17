@@ -79,7 +79,7 @@ void main_main()
                     "0.0",                                  // Ex
                     "0.0",                                  // Ey
                     "0.0",                                  // Ez
-                    "4 * 0.5 * cos(x)",                     // phi
+                    "4 * 0.5 * cos(x)",                     // phirho
                     {1},                                    // num_gaussians
                     1);                                     // propagator
     VlMa.set_computed_params();
@@ -125,10 +125,6 @@ void main_main()
         partGr[spec] =
             std::make_unique<particle_groups<vdim>>(VlMa.charge[spec], VlMa.mass[spec], infra);
     }
-
-    amrex::Real vol = (params.geometry().ProbHi(0) - params.geometry().ProbLo(0)) *
-                      (params.geometry().ProbHi(1) - params.geometry().ProbLo(1)) *
-                      (params.geometry().ProbHi(2) - params.geometry().ProbLo(2));
 
     // initialize particles & loop preparation:
     // FIRST SPECIES

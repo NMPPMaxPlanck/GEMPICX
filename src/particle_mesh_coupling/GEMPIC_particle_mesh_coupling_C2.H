@@ -37,7 +37,7 @@ public:
                     GEMPIC_SPACEDIM>
         spline_node;
 
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
 
     // Default constructor
     // splines_at_particles();
@@ -52,27 +52,27 @@ public:
     template <int dim, int deg>
     AMREX_GPU_HOST_DEVICE void init_position(amrex::Real position, amrex::Real plo, amrex::Real dxi)
     {
-        // Compute normalized position xint and box
+        // Compute normalized position xint and span
         amrex::Real xint = (position - plo) * dxi;
-        box[dim] = std::floor(xint);
-        xint = xint - box[dim];
+        span[dim] = std::floor(xint);
+        xint = xint - span[dim];
 
         if (deg % 2 == 0)
         {
             if (xint < 0.5)
             {
-                box[dim] -= deg / 2;
+                span[dim] -= deg / 2;
                 xint = 0.5 - xint;
             }
             else
             {
-                box[dim] += -deg / 2 + 1;
+                span[dim] += -deg / 2 + 1;
                 xint = 1.5 - xint;
             }
         }
         else
         {
-            box[dim] -= (deg - 1) / 2;
+            span[dim] -= (deg - 1) / 2;
             xint = 1. - xint;
         }
 
@@ -187,7 +187,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
             for (int ii = 0; ii <= degx; ++ii)
             {
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                 double s_coeff = spline.spline_node[0][ii]
 #if (GEMPIC_SPACEDIM > 1)
                                  * spline.spline_node[1][jj]
@@ -206,6 +206,44 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
             }
         }
     }
+}
+
+/**
+ * @brief Deposits charge density on cells of dual grid
+ *
+ * Here nodal splines seem to be used for deposition where integral of cell splines are expected
+ *
+ * @tparam degx Spline degree in x
+ * @tparam degy Spline degree in y
+ * @tparam degz Spline degree in z
+ * @param spline Splines evaluated at given particle position
+ * @param weight Particle weight*charge*dx
+ * @param rho charge density to be computed
+ */
+template <int degx, int degy, int degz>
+AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3_new_splines(Spline::SplineBase<degx, degy, degz> &spline,
+                                                 amrex::Real weight,
+                                                 amrex::Array4<amrex::Real> const &rho)
+{
+GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degx; ++ii),
+                    for (int jj = 0; jj <= degy; ++jj),
+                    for (int kk = 0; kk <= degz; ++kk))
+
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
+        AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
+    double s_coeff = GEMPIC_D_MULT(spline.splineNode[0][ii],
+                                   spline.splineNode[1][jj],
+                                   spline.splineNode[2][kk]);
+
+#if (GEMPIC_SPACEDIM == 1)
+                amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff * weight);
+#else
+                amrex::HostDevice::Atomic::Add(
+                    rho.ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
+                    s_coeff * weight);
+#endif
+
+GEMPIC_D_LOOP_END;
 }
 
 /**
@@ -233,9 +271,9 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
  * @param[out] fields Contribution of B (the 2 that are not in integration direction)
  * @param primitive Temporary array for holding difference of primitives (used for each direction)
  */
-template <typename S, int vdim, int degp, int degp1, int degp2, int pdim>
+template <typename SplineType, int vdim, int degp, int degp1, int degp2, int pdim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
-    S &spline,
+    SplineType &spline,
     amrex::Real weight,
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
@@ -249,10 +287,10 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
     // Size of support of difference of primitives
     // check for ghost cells
     int local_size = std::abs(spline.span[pdim] - spline.spanOld[pdim]) + degp;
-    int box_start = spline.spanOld[pdim];
-    if (spline.span[pdim] < spline.spanOld[pdim]) box_start = spline.span[pdim];
+    int span_start = spline.spanOld[pdim];
+    if (spline.span[pdim] < spline.spanOld[pdim]) span_start = spline.span[pdim];
 
-    // Add particle contribution to J
+// Add particle contribution to J
 GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= local_size; ++ii),
                     for (int jj = 0; jj <= degp1; ++jj),
                     for (int kk = 0; kk <= degp2; ++kk));
@@ -262,13 +300,13 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= local_size; ++ii),
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index;
                 if (pdim == 0)
                     cell_index = {
-                        AMREX_D_DECL(box_start + ii, spline.span[1] + jj, spline.span[2] + kk)};
+                        AMREX_D_DECL(span_start + ii, spline.span[1] + jj, spline.span[2] + kk)};
                 else if (pdim == 1)
                     cell_index = {
-                        AMREX_D_DECL(spline.span[0] + kk, box_start + ii, spline.span[2] + jj)};
+                        AMREX_D_DECL(spline.span[0] + kk, span_start + ii, spline.span[2] + jj)};
                 else if (pdim == 2)
                     cell_index = {
-                        AMREX_D_DECL(spline.span[0] + jj, spline.span[1] + kk, box_start + ii)};
+                        AMREX_D_DECL(spline.span[0] + jj, spline.span[1] + kk, span_start + ii)};
                 double s_coeff =
                     primitiveDifference * spline.splineNode[pdim1][jj] * spline.splineNode[pdim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
@@ -369,7 +407,7 @@ AMREX_GPU_HOST_DEVICE void gempic_accumulate_j(
                         }
 #endif
                         amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(
-                            spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                            spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
 
 #if (GEMPIC_SPACEDIM == 1)
                         amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0),

@@ -187,7 +187,7 @@ public:
                   return base;
         }
         else {
-            throw std::runtime_error("The template parameter form must be 1 or 2.");
+            throw std::runtime_error("The template parameter form must be 0, 1, 2 or 3.");
         }
     }
 
@@ -237,6 +237,7 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
                         sCoeff *
                         (fieldArray[2])(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
                 }
+
 GEMPIC_D_LOOP_END;
 
     return (fields);

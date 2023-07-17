@@ -4,6 +4,7 @@ file(GLOB FDDERHAMCOMPLEX "../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cp
 file(GLOB DERIVATIVES "../../forms/GEMPIC_extDerivatives.cpp")
 file(GLOB POISSON "../../field_solvers/Poisson/GEMPIC_PoissonSolver.cpp")
 
+add_executable( test_bernstein_waves test_bernstein_waves.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX} )
 add_executable( test_vlasov_maxwell_by test_vlasov_maxwell_by.cpp )
 #add_executable( test_vlasov_maxwell_by_lower test_vlasov_maxwell_by_lower.cpp )
 add_executable( test_vlasov_maxwell_hs test_vlasov_maxwell_hs.cpp  )
@@ -32,6 +33,7 @@ if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation( test_vlasov_maxwell_hs_deRham )
 endif()
 
+target_link_libraries( test_bernstein_waves  AMReX::amrex AMReX::Flags_CXX  )
 target_link_libraries( test_vlasov_maxwell_by  AMReX::amrex AMReX::Flags_CXX  )
 #target_link_libraries( test_vlasov_maxwell_by_lower  AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 target_link_libraries( test_vlasov_maxwell_hs  AMReX::amrex AMReX::Flags_CXX )

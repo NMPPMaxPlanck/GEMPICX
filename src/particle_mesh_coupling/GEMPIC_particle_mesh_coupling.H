@@ -33,7 +33,7 @@ class spline1d_at_particles
 public:
     amrex::GpuArray<amrex::Real, deg + 1> spline; // deg+1 non zero contributions
     amrex::GpuArray<amrex::Real, deg> primitive; // non vanishing primitives for splines of deg-1
-    int box;
+    int span;
     /**
      * @brief Find the 1D cell in which the particle is
      *
@@ -43,27 +43,27 @@ public:
      */
     AMREX_GPU_HOST_DEVICE void init_position(amrex::Real position, amrex::Real plo, amrex::Real dxi)
     {
-        // Compute normalized position xint and box
+        // Compute normalized position xint and span
         amrex::Real xint = (position - plo) * dxi;
-        box = std::floor(xint);
-        xint = xint - box;
+        span = std::floor(xint);
+        xint = xint - span;
 
         if (deg % 2 == 0)
         {
             if (xint < 0.5)
             {
-                box -= deg / 2;
+                span -= deg / 2;
                 xint = 0.5 - xint;
             }
             else
             {
-                box += -deg / 2 + 1;
+                span += -deg / 2 + 1;
                 xint = 1.5 - xint;
             }
         }
         else
         {
-            box -= (deg - 1) / 2;
+            span -= (deg - 1) / 2;
             xint = 1. - xint;
         }
         primitive = spline_eval_primitive<deg - 1>(xint);
@@ -245,7 +245,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho(
 #endif
                     ;
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0),
                                                s_coeff * particle_coeff);
@@ -290,7 +290,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> evaluate_fem_efield(
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index
                 // needs to be shifted somehow
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                 if (ii < degx)
                 {
                     double s_coeff = spline.spline_cell[0][ii]
@@ -368,7 +368,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral_point(
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index
                 // needs to be shifted somehow
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                 if (ii < degx)
                 {
                     double s_coeff = spline.spline_cell[0][ii]
@@ -449,7 +449,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral_point(
 /*!
  *  Accumulation of the current for a FEM solver with integral over time (line integral)
  *  Currently this is implemented for degree one with two quadrature points in the line
- * integral for each box
+ * integral for each span
  */
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
@@ -468,38 +468,38 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
                                                             (1. + 1. / std::sqrt(3.)) * 0.5};
     amrex::GpuArray<amrex::Real, n_quad_points> q_weights = {0.5, 0.5};
 
-    // 1a. Identify the box and relative position of position old
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box_old;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box_old;
+    // 1a. Identify the span and relative position of position old
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span_old;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span_old;
     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
     {
         amrex::Real pos_norm = (position_old[d] - plo[d]) * dxi[d];
-        box_old[d] = std::floor(pos_norm);
-        position_box_old[d] = pos_norm - box_old[d];
+        span_old[d] = std::floor(pos_norm);
+        position_span_old[d] = pos_norm - span_old[d];
     }
-    // 1b. Identify the box and relative position of position new
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box_new;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box_new;
+    // 1b. Identify the span and relative position of position new
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span_new;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span_new;
     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
     {
         amrex::Real pos_norm = (position_new[d] - plo[d]) * dxi[d];
-        box_new[d] = std::floor(pos_norm);
-        position_box_new[d] = pos_norm - box_new[d];
+        span_new[d] = std::floor(pos_norm);
+        position_span_new[d] = pos_norm - span_new[d];
     }
 
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> boxdiff;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> spandiff;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> xnewtilde;
-    int max_box = 0;
+    int max_span = 0;
     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
     {
-        boxdiff[d] = box_new[d] - box_old[d];
-        xnewtilde[d] = position_box_new[d] + boxdiff[d];
-        if (std::abs(boxdiff[d]) > max_box) max_box = std::abs(boxdiff[d]);
+        spandiff[d] = span_new[d] - span_old[d];
+        xnewtilde[d] = position_span_new[d] + spandiff[d];
+        if (std::abs(spandiff[d]) > max_span) max_span = std::abs(spandiff[d]);
     }
 
-    max_box = max_box + 1;
+    max_span = max_span + 1;
 
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box = box_old;  // We start in the old box
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span = span_old;  // We start in the old span
 
     amrex::GpuArray<int, GEMPIC_SPACEDIM> sigma_counter = {AMREX_D_DECL(0, 0, 0)};
 
@@ -509,24 +509,24 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
 
     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
     {
-        if (boxdiff[d] > 0)
+        if (spandiff[d] > 0)
         {
-            // sigmas[d].resize(boxdiff[d]+1);
-            for (int bl = 0; bl < boxdiff[d]; ++bl)
+            // sigmas[d].resize(spandiff[d]+1);
+            for (int bl = 0; bl < spandiff[d]; ++bl)
                 sigmas[d][bl] =
-                    (bl + 1 - position_box_old[d]) / (xnewtilde[d] - position_box_old[d]);
+                    (bl + 1 - position_span_old[d]) / (xnewtilde[d] - position_span_old[d]);
 
-            sigmas[d][boxdiff[d]] = 1.0;
+            sigmas[d][spandiff[d]] = 1.0;
             sigma_next[d] = sigmas[d][0];
             increment[d] = 1;
         }
-        else if (boxdiff[d] < 0)
+        else if (spandiff[d] < 0)
         {
-            // sigmas[d].resize(-boxdiff[d]+1);
-            for (unsigned int bl = boxdiff[d] + 1; bl <= 0; --bl)
-                sigmas[d][-bl] = (bl - position_box_old[d]) / (xnewtilde[d] - position_box_old[d]);
+            // sigmas[d].resize(-spandiff[d]+1);
+            for (unsigned int bl = spandiff[d] + 1; bl <= 0; --bl)
+                sigmas[d][-bl] = (bl - position_span_old[d]) / (xnewtilde[d] - position_span_old[d]);
 
-            sigmas[d][-boxdiff[d]] = 1.0;
+            sigmas[d][-spandiff[d]] = 1.0;
             sigma_next[d] = sigmas[d][0];
             increment[d] = -1;
         }
@@ -548,15 +548,15 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
         for (unsigned int q = 0; q < n_quad_points; ++q)
         {
             amrex::Real sigma = sigma_l + (sigma_r - sigma_l) * q_points[q];
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box;
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span;
             for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
             {
-                position_box[d] = position_box_old[d] * (1.0 - sigma) + xnewtilde[d] * sigma -
+                position_span[d] = position_span_old[d] * (1.0 - sigma) + xnewtilde[d] * sigma -
                                   sigma_counter[d] * increment[d];
             }
             AMREX_ASSERT_WITH_MESSAGE(
-                (*(std::max_element(position_box.begin(), position_box.end())) < 1.0) &
-                    (*(std::min_element(position_box.begin(), position_box.end())) > 0.0),
+                (*(std::max_element(position_span.begin(), position_span.end())) < 1.0) &
+                    (*(std::min_element(position_span.begin(), position_span.end())) > 0.0),
                 "Position is outside the interval [0,1].");
 
             amrex::Real weight = q_weights[q] * (sigma_r - sigma_l) * charge * dxi[GEMPIC_SPACEDIM];
@@ -564,7 +564,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
             for (unsigned int d = 0; d < vdim; ++d) weight_vec[d] = velocity[d] * weight;
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> ppos;
             for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                ppos[d] = box[d] / dxi[d] + position_box[d] / dxi[d];
+                ppos[d] = span[d] / dxi[d] + position_span[d] / dxi[d];
             spline.init_particles(ppos, plo, dxi);
             accumulate_j_fem_integral_point<vdim, degx, degy, degz>(spline, weight_vec, jArray);
         }
@@ -573,7 +573,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
             // Update the
             sigma_counter[index_is] = sigma_counter[index_is] + 1;
             sigma_next[index_is] = sigmas[index_is][sigma_counter[index_is]];
-            box[index_is] = box[index_is] + increment[index_is];
+            span[index_is] = span[index_is] + increment[index_is];
             sigma_l = sigma_r;
         }
     }
@@ -603,30 +603,30 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
     int pdim2 = (pdim + 2) % 3;
     fields = {0., 0.};
 
-    // 1a. Identify the box and relative position of position old
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
+    // 1a. Identify the span and relative position of position old
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
     {
         amrex::Real pos_norm = (position_old[d] - plo[d]) * dxi[d];
-        box[d] = std::floor(pos_norm);
-        position_box[d] = pos_norm - box[d];
+        span[d] = std::floor(pos_norm);
+        position_span[d] = pos_norm - span[d];
     }
 
-    // 1b. Identify the box and relative position of position new
-    int box_new;
+    // 1b. Identify the span and relative position of position new
+    int span_new;
     amrex::Real pos_norm = (position_new - plo[pdim]) * dxi[pdim];
-    box_new = std::floor(pos_norm);
+    span_new = std::floor(pos_norm);
 
-    int local_size = std::abs(box_new - box[pdim]) + degp;
-    int box_start = box[pdim];
-    if (box_new < box[pdim]) box_start = box_new;
+    int local_size = std::abs(span_new - span[pdim]) + degp;
+    int span_start = span[pdim];
+    if (span_new < span[pdim]) span_start = span_new;
 
     for (unsigned int j = 0; j < plength; j++) primitive[j] = 0.0;
     // 2a. Evaluate the spline for the dimensions other than pdim (happens before fct call now)
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
-    if (box[pdim] < box_new)
+    if (span[pdim] < span_new)
     {
         for (unsigned int j = 0; j < degp; j++)
         {
@@ -665,11 +665,11 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
             {
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index;
                 if (pdim == 0)
-                    cell_index = {AMREX_D_DECL(box_start + ii, box[1] + jj, box[2] + kk)};
+                    cell_index = {AMREX_D_DECL(span_start + ii, span[1] + jj, span[2] + kk)};
                 else if (pdim == 1)
-                    cell_index = {AMREX_D_DECL(box[0] + kk, box_start + ii, box[2] + jj)};
+                    cell_index = {AMREX_D_DECL(span[0] + kk, span_start + ii, span[2] + jj)};
                 else if (pdim == 2)
-                    cell_index = {AMREX_D_DECL(box[0] + jj, box[1] + kk, box_start + ii)};
+                    cell_index = {AMREX_D_DECL(span[0] + jj, span[1] + kk, span_start + ii)};
                 double s_coeff =
                     primitive[ii] * spline_y_node.spline[jj] * spline_z_node.spline[kk];
 #if (GEMPIC_SPACEDIM == 1)
@@ -713,7 +713,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_fem_integral(
 /*
      // Accumulation of the current for a FEM solver with integral over time (line integral)
      // Currently this is implemented for degree one with two quadrature points in the line
-     // integral for each box
+     // integral for each span
 
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE void
@@ -740,45 +740,45 @@ bArray, amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray, amrex::GpuArra
      else if (pdim == 2)
        degpdim = degz;
 
-    // 1a. Identify the box and relative position of position old
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
+    // 1a. Identify the span and relative position of position old
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
     for (unsigned int d=0; d<GEMPIC_SPACEDIM;++d)
     {
         amrex::Real pos_norm = (position_old[d]-plo[d])*dxi[d];
-        box[d] = std::floor(pos_norm);
-        position_box[d] = pos_norm - box[d];
+        span[d] = std::floor(pos_norm);
+        position_span[d] = pos_norm - span[d];
     }
 
-    // 1b. Identify the box and relative position of position new
-    amrex::Real position_box_new;
-    int box_new;
+    // 1b. Identify the span and relative position of position new
+    amrex::Real position_span_new;
+    int span_new;
     amrex::Real pos_norm = (position_new-plo[pdim])*dxi[pdim];
-    box_new = std::floor(pos_norm);
-    position_box_new = pos_norm - box_new;
+    span_new = std::floor(pos_norm);
+    position_span_new = pos_norm - span_new;
 
-    int local_size = std::abs(box_new-box[pdim])+degpdim;
-    int box_start = box[pdim];
-    if (box_new<box[pdim])
-      box_start = box_new;
+    int local_size = std::abs(span_new-span[pdim])+degpdim;
+    int span_start = span[pdim];
+    if (span_new<span[pdim])
+      span_start = span_new;
 
     // 2a. Evaluate the spline for the dimensions other than pdim
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
 #if (GEMPIC_SPACEDIM > 1)
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (position_box[1]);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (position_box[1]);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (position_span[1]);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (position_span[1]);
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (position_box[2]);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> (position_box[2]);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (position_span[2]);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> (position_span[2]);
 #endif
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
-    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degx-1> (position_box[pdim]);
-    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degx-1> (position_box_new);
+    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degx-1> (position_span[pdim]);
+    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degx-1> (position_span_new);
     std::vector<amrex::Real> primitive(local_size+degpdim);
-    if ( box[pdim] < box_new ) {
+    if ( span[pdim] < span_new ) {
         for (unsigned int j =0;j<degpdim; j++) {
             primitive[local_size-degpdim+j] = sx_prim_new[j]*dx[pdim];
           }
@@ -809,8 +809,8 @@ bArray, amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray, amrex::GpuArra
         for (int jj = 0; jj <= degy; ++jj) {
 #endif
             for (int ii = 0; ii <= local_size; ++ii) {
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box_start+ii,
-box[1]+jj, box[2]+kk)}; double s_coeff = primitive[ii] #if(GEMPIC_SPACEDIM > 1) *sy_node[jj] #endif
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(span_start+ii,
+span[1]+jj, span[2]+kk)}; double s_coeff = primitive[ii] #if(GEMPIC_SPACEDIM > 1) *sy_node[jj] #endif
     #if(GEMPIC_SPACEDIM > 2)
                         *sz_node[kk]
     #endif
@@ -872,7 +872,7 @@ cell_index[2]), 0); #endif
 
      //  Accumulation of the current for a FEM solver with integral over time (line integral)
      //  Currently this is implemented for degree one with two quadrature points in the line
-     // integral for each box
+     // integral for each span
 
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE void
@@ -899,43 +899,43 @@ bArray, amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray, amrex::GpuArra
    else if (pdim == 2)
      degpdim = degz;
 
-    // 1a. Identify the box and relative position of position old
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
+    // 1a. Identify the span and relative position of position old
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
     for (unsigned int d=0; d<GEMPIC_SPACEDIM;++d)
     {
         amrex::Real pos_norm = (position_old[d]-plo[d])*dxi[d];
-        box[d] = std::floor(pos_norm);
-        position_box[d] = pos_norm - box[d];
+        span[d] = std::floor(pos_norm);
+        position_span[d] = pos_norm - span[d];
     }
 
-    // 1b. Identify the box and relative position of position new
-    amrex::Real position_box_new;
-    int box_new;
+    // 1b. Identify the span and relative position of position new
+    amrex::Real position_span_new;
+    int span_new;
     amrex::Real pos_norm = (position_new-plo[pdim])*dxi[pdim];
-    box_new = std::floor(pos_norm);
-    position_box_new = pos_norm - box_new;
+    span_new = std::floor(pos_norm);
+    position_span_new = pos_norm - span_new;
 
-    int local_size = std::abs(box_new-box[pdim])+degpdim;
-    int box_start = box[pdim];
-    if (box_new<box[pdim])
-      box_start = box_new;
+    int local_size = std::abs(span_new-span[pdim])+degpdim;
+    int span_start = span[pdim];
+    if (span_new<span[pdim])
+      span_start = span_new;
 
     // 2a. Evaluate the spline for the dimensions other than pdim
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> (position_box[0]);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> (position_box[0]);
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> (position_span[0]);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> (position_span[0]);
 #if (GEMPIC_SPACEDIM > 2)
-    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (position_box[2]);
-    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> (position_box[2]);
+    std::vector<amrex::Real> sz_cell = spl.spline_eval_vec_back<degz-1> (position_span[2]);
+    std::vector<amrex::Real> sz_node = spl.spline_eval_vec_back<degz> (position_span[2]);
 #endif
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
-    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degy-1> (position_box[pdim]);
-    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degy-1> (position_box_new);
+    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degy-1> (position_span[pdim]);
+    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degy-1> (position_span_new);
     std::vector<amrex::Real> primitive(local_size+degpdim);
-    if ( box[pdim] < box_new ) {
+    if ( span[pdim] < span_new ) {
         for (unsigned int j =0;j<degpdim; j++) {
             primitive[local_size-degpdim+j] = sx_prim_new[j]*dx[pdim];
           }
@@ -966,8 +966,8 @@ bArray, amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray, amrex::GpuArra
         for (int jj = 0; jj <= local_size; ++jj) {
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box[0]+ii,
-box_start+jj, box[2]+kk)}; double s_coeff = sx_node[ii] #if(GEMPIC_SPACEDIM > 1) *primitive[jj]
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(span[0]+ii,
+span_start+jj, span[2]+kk)}; double s_coeff = sx_node[ii] #if(GEMPIC_SPACEDIM > 1) *primitive[jj]
     #endif
     #if(GEMPIC_SPACEDIM > 2)
                         *sz_node[kk]
@@ -1025,7 +1025,7 @@ cell_index[2]), 0); #endif
 
      //  Accumulation of the current for a FEM solver with integral over time (line integral)
      //  Currently this is implemented for degree one with two quadrature points in the line
-     // integral for each box
+     // integral for each span
 
 template <int vdim, int degx, int degy, int degz>
 AMREX_GPU_HOST_DEVICE void
@@ -1052,44 +1052,44 @@ bArray, amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray, amrex::GpuArra
      else if (pdim == 2)
        degpdim = degz;
 
-    // 1a. Identify the box and relative position of position old
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
+    // 1a. Identify the span and relative position of position old
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
     for (unsigned int d=0; d<GEMPIC_SPACEDIM;++d)
     {
         amrex::Real pos_norm = (position_old[d]-plo[d])*dxi[d];
-        box[d] = std::floor(pos_norm);
-        position_box[d] = pos_norm - box[d];
+        span[d] = std::floor(pos_norm);
+        position_span[d] = pos_norm - span[d];
     }
 
-    // 1b. Identify the box and relative position of position new
-    amrex::Real position_box_new;
-    int box_new;
+    // 1b. Identify the span and relative position of position new
+    amrex::Real position_span_new;
+    int span_new;
     amrex::Real pos_norm = (position_new-plo[pdim])*dxi[pdim];
-    box_new = std::floor(pos_norm);
-    position_box_new = pos_norm - box_new;
+    span_new = std::floor(pos_norm);
+    position_span_new = pos_norm - span_new;
 
-    int local_size = std::abs(box_new-box[pdim])+degpdim;
-    int box_start = box[pdim];
-    if (box_new<box[pdim])
-      box_start = box_new;
+    int local_size = std::abs(span_new-span[pdim])+degpdim;
+    int span_start = span[pdim];
+    if (span_new<span[pdim])
+      span_start = span_new;
 
     // 2a. Evaluate the spline for the dimensions other than pdim
     splines spl({AMREX_D_DECL(false, false, false)}, {AMREX_D_DECL(false, false, false)});
 
-    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> (position_box[0]);
-    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> (position_box[0]);
+    std::vector<amrex::Real> sx_cell = spl.spline_eval_vec_back<degx-1> (position_span[0]);
+    std::vector<amrex::Real> sx_node = spl.spline_eval_vec_back<degx> (position_span[0]);
 #if (GEMPIC_SPACEDIM > 1)
-    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (position_box[1]);
-    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (position_box[1]);
+    std::vector<amrex::Real> sy_cell = spl.spline_eval_vec_back<degy-1> (position_span[1]);
+    std::vector<amrex::Real> sy_node = spl.spline_eval_vec_back<degy> (position_span[1]);
 #endif
 
 
     // 2b. Evaluate the primitive for dimension pdim (this is hard-coded for order one)
-    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degz-1> (position_box[pdim]);
-    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degz-1> (position_box_new);
+    std::vector<amrex::Real> sx_prim_old = spl.spline_eval_prim_vec<degz-1> (position_span[pdim]);
+    std::vector<amrex::Real> sx_prim_new = spl.spline_eval_prim_vec<degz-1> (position_span_new);
     std::vector<amrex::Real> primitive(local_size+degpdim);
-    if ( box[pdim] < box_new ) {
+    if ( span[pdim] < span_new ) {
         for (unsigned int j =0;j<degpdim; j++) {
             primitive[local_size-degpdim+j] = sx_prim_new[j]*dx[pdim];
           }
@@ -1120,8 +1120,8 @@ bArray, amrex::GpuArray<amrex::Array4<amrex::Real>,vdim>& jArray, amrex::GpuArra
         for (int jj = 0; jj <= degy; ++jj) {
 #endif
             for (int ii = 0; ii <= degx; ++ii) {
-                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(box[0]+ii,
-box[1]+jj, box_start+kk)}; double s_coeff = sx_node[ii] #if(GEMPIC_SPACEDIM > 1) *sy_node[jj] #endif
+                amrex::GpuArray<int,GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(span[0]+ii,
+span[1]+jj, span_start+kk)}; double s_coeff = sx_node[ii] #if(GEMPIC_SPACEDIM > 1) *sy_node[jj] #endif
     #if(GEMPIC_SPACEDIM > 2)
                         *primitive[kk]
     #endif
@@ -1203,7 +1203,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_fem_integral(
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index
                 // needs to be shifted somehow
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                 if (ii < degx)
                 {
                     double s_coeff = spline.spline_cell[0][ii]
@@ -1287,7 +1287,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> eval
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index
                 // needs to be shifted somehow
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                 double s_coeff = spline.spline_node[0][ii]
 #if (GEMPIC_SPACEDIM > 1)
                                  * spline.spline_cell[1][jj]
@@ -1325,7 +1325,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> eval
                     // Compute cell index. TODO: Make this work for order higher than 1 when the
                     // index needs to be shifted somehow
                     amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                        AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                        AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                     double s_coeff = spline.spline_cell[0][ii]
 #if (GEMPIC_SPACEDIM > 1)
                                      * spline.spline_node[1][jj]
@@ -1365,7 +1365,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> eval
                     // Compute cell index. TODO: Make this work for order higher than 1 when the
                     // index needs to be shifted somehow
                     amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                        AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                        AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
                     double s_coeff = spline.spline_cell[0][ii]
 #if (GEMPIC_SPACEDIM > 1)
                                      * spline.spline_cell[1][jj]
@@ -1595,7 +1595,7 @@ gempic_deposit_J_and_interpolate(
                         }
 #endif
                         amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(
-                            spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                            spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
 
 #if (GEMPIC_SPACEDIM == 1)
                         //amrex::HostDevice::Atomic::Add(jArray[cc].ptr(cell_index[0], 0, 0, 0),
@@ -1663,7 +1663,7 @@ gempic_deposit_J_and_interpolate(
                             }
 #endif
                             amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {AMREX_D_DECL(
-                                spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                                spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
 
 #if (GEMPIC_SPACEDIM == 1)
                             fields[cc + vdim] += s_coeff * (bArray[cc])(cell_index[0], 0, 0, 0);
@@ -1724,7 +1724,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_charge_indextype(
                     s_coeff *= spline.spline_node[2][kk];
                 }
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(spline.box[0] + ii, spline.box[1] + jj, spline.box[2] + kk)};
+                    AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
 
 #if (GEMPIC_SPACEDIM == 1)
                 //amrex::HostDevice::Atomic::Add(jArray.ptr(cell_index[0], 0, 0, 0),
@@ -1744,7 +1744,8 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_charge_indextype(
  */
 template <int vdim>
 AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> push_v_efield(
-    amrex::GpuArray<amrex::Real, vdim> vel, amrex::Real dt,
+    amrex::GpuArray<amrex::Real, vdim> vel,
+    amrex::Real dt,
     amrex::Real chargemass,  // charge/mass
     amrex::GpuArray<amrex::Real, vdim> &Ep)
 {
@@ -1845,7 +1846,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> push_
     amrex::GpuArray<amrex::Real, int(vdim / 2.5) * 2 + 1> &Bp)
 {
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos;
-    // new positions (modulo the upper bound of the box)
+    // new positions (modulo the upper bound of the span)
     newPos[0] = mod_dom(pos[0] + vel[0] * dt, phi[0], plo[0]);
 #if (GEMPIC_SPACEDIM > 1)
     newPos[1] = mod_dom(pos[1] + vel[1] * dt, phi[1], plo[1]);
@@ -1880,7 +1881,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> push_
     amrex::Real dt)
 {
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> newPos;
-    // new positions (modulo the upper bound of the box)
+    // new positions (modulo the upper bound of the span)
     newPos[0] = mod_dom(pos[0] + vel[0] * dt, phi[0], plo[0]);
     newPos[GEMPIC_SPACEDIM] = vel[0];
 #if (GEMPIC_SPACEDIM > 1)
@@ -1963,7 +1964,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + vdim> push_
         newPos[GEMPIC_SPACEDIM + 2] = vp[2] + dt * chargemass / 2 * Ep[2];
     }
 
-    // new positions (modulo the upper bound of the box)
+    // new positions (modulo the upper bound of the span)
     newPos[0] = mod_dom(pos[0] + newPos[GEMPIC_SPACEDIM] * dt, phi[0], plo[0]);
 #if (GEMPIC_SPACEDIM > 1)
     newPos[1] = mod_dom(pos[1] + newPos[GEMPIC_SPACEDIM + 1] * dt, phi[1], plo[1]);
@@ -1985,14 +1986,14 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_magnetization(
     splines_at_particles<degx, degy, degz> &spline)
 
 {
-    // 1. Identify the box and relative position of position old
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_box;
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> box;
+    // 1. Identify the span and relative position of position old
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position_span;
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> span;
     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
     {
         amrex::Real pos_norm = (position[d] - plo[d]) * dxi[d];
-        box[d] = std::floor(pos_norm);
-        position_box[d] = pos_norm - box[d];
+        span[d] = std::floor(pos_norm);
+        position_span[d] = pos_norm - span[d];
     }
 
     // 2. Evaluate the splines at the particle position (done before call now)
@@ -2023,7 +2024,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_magnetization(
                 // Compute cell index. TODO: Make this work for order higher than 1 when the index
                 // needs to be shifted somehow
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-                    AMREX_D_DECL(box[0] + ii, box[1] + jj, box[2] + kk)};
+                    AMREX_D_DECL(span[0] + ii, span[1] + jj, span[2] + kk)};
                 if (ii < degx)
                 {
                     double s_coeff = spline.spline_node[0][ii]
