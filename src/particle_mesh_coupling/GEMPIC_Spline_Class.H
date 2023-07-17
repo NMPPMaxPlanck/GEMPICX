@@ -186,9 +186,9 @@ public:
                                               splineCell[2][k]);
                   return base;
         }
-        else {
-            return 0;
-        }
+        
+        return 0;
+
         // error: Device code does not support exception handling
 //        else {
 //            throw std::runtime_error("The template parameter form must be 0, 1, 2 or 3.");
