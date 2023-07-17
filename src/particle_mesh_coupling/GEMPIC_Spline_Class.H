@@ -29,7 +29,7 @@ public:
      *  - (Potentially dim < 3)
      *  - dxInverse[dim] == 1/(dx * dy * dz)
     */
-    SplineBase(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
+    AMREX_GPU_HOST_DEVICE SplineBase(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
@@ -108,7 +108,7 @@ public:
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
     */
     template<int dim, int deg>
-    void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
+    AMREX_GPU_HOST_DEVICE void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
         const amrex::Real xint = initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
 
@@ -129,7 +129,7 @@ public:
      * @return base The value of the calculated coefficient
     */
     template<int dim, int form>
-    amrex::Real evalBSpline(int i, int j, int k) const
+    AMREX_GPU_HOST_DEVICE amrex::Real evalBSpline(int i, int j, int k) const
     {
         if (form == 0) {
                   double base = GEMPIC_D_MULT(splineNode[0][i],
@@ -330,7 +330,7 @@ public:
      *  - (Potentially dim < 3)
      *  - dxInverse[dim] == 1/(dx * dy * dz)
     */
-    SplineWithPrimitive(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
+    AMREX_GPU_HOST_DEVICE SplineWithPrimitive(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
                         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse
                         ) : SplineBase<degX, degY, degZ>(position, plo, dxInverse)
@@ -370,7 +370,7 @@ public:
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
     */
     template<int dim, int deg>
-    void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
+    AMREX_GPU_HOST_DEVICE void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
         this->spanOld[dim] = std::move(this->span[dim]);
         const amrex::Real xint = this->template initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
@@ -390,7 +390,7 @@ public:
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
     */
     template<int dim, int deg>
-    void update1DPrimitive(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
+    AMREX_GPU_HOST_DEVICE void update1DPrimitive(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
         const amrex::Real xint = this->template initBSplinesAtPositions<dim, deg>(position, plo, dxInverse);
 
@@ -410,7 +410,7 @@ public:
      * @return primitiveDifference The difference between primitives of the old spline and the new spline
     */
     template<int dim, int deg>
-    amrex::Real computePrimitiveDifference(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
+    AMREX_GPU_HOST_DEVICE amrex::Real computePrimitiveDifference(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
     {
         // Size of support of difference of primitives
         const int local_size = std::abs(this->span[dim] - this->spanOld[dim]) + deg;
@@ -512,3 +512,4 @@ public:
 
 }
 #endif
+AMREX_GPU_HOST_DEVICE
