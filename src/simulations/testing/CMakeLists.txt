@@ -19,6 +19,7 @@ add_executable( test_vlasov_maxwell_ls_rungekutta test_vlasov_maxwell_ls_rungeku
 add_executable( test_vlasov_maxwell_hs_deRham ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} ${POISSON} test_vlasov_maxwell_hs_deRham.cpp )
 
 if(GEMPIC_USE_CUDA) 
+  setup_target_for_cuda_compilation( test_bernstein_waves )       
   setup_target_for_cuda_compilation( test_vlasov_maxwell_by )       
   #	setup_target_for_cuda_compilation( test_vlasov_maxwell_by_lower )
   setup_target_for_cuda_compilation( test_vlasov_maxwell_hs )

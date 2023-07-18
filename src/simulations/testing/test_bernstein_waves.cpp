@@ -119,7 +119,6 @@ int main(int argc, char* argv[])
                                               meanVelocity,
                                               vThermal, vWeight, 0,
                                               parametersBernstein.densityEval[0]);
-    
 
     const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
 
@@ -152,9 +151,9 @@ int main(int argc, char* argv[])
     }
 
     // Needed for SumBoundary
-    auto nGhost = deRham->getNGhost();
+   auto nGhost = deRham->getNGhost();
 
-    (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
+   (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
     rho.averageSync();
     rho.fillBoundary();
@@ -168,7 +167,8 @@ int main(int argc, char* argv[])
         {
             amrex::Real charge = ions[spec]->getCharge();
             amrex::Real chargemass = charge / ions[spec]->getMass();
-            amrex::Real a = 0.5 * chargemass * dt;
+            amrex::Real Bz = 1.0;
+            amrex::Real a = 0.5 * chargemass * dt * Bz;
 
             for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
             {
@@ -184,9 +184,6 @@ int main(int argc, char* argv[])
 
                 const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
-                amrex::Real Bz = 1.0;
-                amrex::Real a = a * Bz;
-
                 amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
 
                 amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
@@ -200,10 +197,10 @@ int main(int argc, char* argv[])
                     amrex::Real vy = vely[pp];
 
                     velx[pp] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
-                    vely[pp] = (vy*(1.-a*a) - 2.*a*vx)/(1+a*a);
+                    vely[pp] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
 
                     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) {
-                        positionParticle[d] = positionParticle[d] + dt * 0.5 * velx[pp];
+                        positionParticle[d] = positionParticle[d] + dt * velx[pp];
                         particles[pp].pos(d) = positionParticle[d];
                     }
 
@@ -215,8 +212,20 @@ int main(int argc, char* argv[])
             }
             ions[spec] -> Redistribute();
         }
-        if (tStep%parametersBernstein.save_particles == 0) {
+
+        auto nGhost = deRham->getNGhost();
+
+        (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
+                               params.geometry().periodicity());
+
+        rho.averageSync();
+        rho.fillBoundary();
+
+        if (tStep%parametersBernstein.save_fields == 0) {
             write_rho(rho, infra, tStep*parametersBernstein.dt, tStep);
+        }
+        if (tStep%5000 == 0) {
+            std::cout << "Time Step: " << tStep << std::endl;
         }
     }
 }
