@@ -2,7 +2,7 @@
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
-#include <GEMPIC_particle_groups.H>
+#include "GEMPIC_particle_groups.H"
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
 #include "GEMPIC_Spline_Class.H"
@@ -201,7 +201,7 @@ namespace {
     }
     
     /**
-     * @brief Test the evalField method
+     * @brief Test the evalBSpline method
      * @details Verify that sCoeff's get assigned the correct values
     */
     TEST_F(SplineBaseTest, SplineEvalBSplineTest) {

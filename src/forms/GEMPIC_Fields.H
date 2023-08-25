@@ -17,7 +17,7 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-#include <GEMPIC_Params.H>
+#include "GEMPIC_Params.H"
 
 namespace GEMPIC_Fields
 {
@@ -37,7 +37,7 @@ enum Space
 
 class DeRhamComplex;
 /** DeRhamField
- * 
+* 
 * 
 * Stores a specific element of a deRham complex
 *
@@ -61,6 +61,7 @@ struct DeRhamField
     amrex::Array<amrex::MultiFab, 3> data;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, GEMPIC_SPACEDIM> func);
 
     void fillBoundary();
     void overrideSync();
@@ -80,6 +81,8 @@ struct DeRhamField <grid, Space::node>
     std::shared_ptr<DeRhamComplex> deRham;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
+
     void fillBoundary();
     void overrideSync();
     void averageSync();
@@ -93,6 +96,9 @@ struct DeRhamField <grid, Space::cell>
     std::shared_ptr<DeRhamComplex> deRham;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const 
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
+
     void fillBoundary();
     void averageSync();
     void multEqual(const amrex::Real& dt);
@@ -313,7 +319,7 @@ public:
         field.data.define(amrex::convert(grid, primalNodeIndex) , distriMap, 1, nGhost[0]);
     }
 
-    
+
 
 
     // Function overloads for fill boundary
@@ -431,7 +437,6 @@ public:
         field.data[2].AverageSync(geom.periodicity());
     }
 
-
     void averageSync(DeRhamField<primal, Space::face>& field)
     {
         field.data[0].AverageSync(geom.periodicity());
@@ -469,7 +474,6 @@ public:
     {
         field.data.AverageSync(geom.periodicity());
     }
-
 
 //---------------------
 // exterior derivatives
@@ -518,25 +522,25 @@ public:
     //------------
     // Projections
     //------------
-    
+
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<primal, Space::node>&) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<primal, Space::cell>&, int) = 0;
+                    DeRhamField<primal, Space::cell>&, int gaussNodes = 6) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
                     DeRhamField<dual, Space::node>&) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<dual, Space::cell>&, int) = 0;
-                    
+                    DeRhamField<dual, Space::cell>&, int gaussNodes = 6) = 0;
+
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<dual, Space::edge>&, int) = 0;
+                    amrex::Real t, DeRhamField<dual, Space::edge>&, int gaussNodes = 6) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<primal, Space::face>&, int) = 0;
+                    amrex::Real t, DeRhamField<primal, Space::face>&, int gaussNodes = 6) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<primal, Space::edge>&, int) = 0;
+                    amrex::Real t, DeRhamField<primal, Space::edge>&, int gaussNodes = 6) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<dual, Space::face>&, int) = 0;
-                    
+                    amrex::Real t, DeRhamField<dual, Space::face>&, int gaussNodes = 6) = 0;
+
 
     //------------------
     // Getter for the Masks 
@@ -559,6 +563,21 @@ inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc)
     : deRham{drc}
 {
     deRham -> initializeField(*this);
+
+    const amrex::Array<std::string, 3> analyticalFunc = {"0.0", "0.0", "0.0"};
+
+    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> func;
+    amrex::Parser parser;
+
+    for (int i = 0; i < 3; ++i)
+    {
+        parser.define(analyticalFunc[i]);
+        parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func[i] = parser.compile<4>();
+    }
+
+    deRham->projection(func, 0.0, *this);
 }
 
 template <int grid>
@@ -566,6 +585,18 @@ inline DeRhamField<grid, Space::node>::DeRhamField(std::shared_ptr<DeRhamComplex
     : deRham{drc}
 {
     deRham -> initializeField(*this);
+
+    const std::string analyticalFunc = "0.0";
+
+    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    amrex::ParserExecutor<nVar> func;
+    amrex::Parser parser;
+
+    parser.define(analyticalFunc);
+    parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    func = parser.compile<nVar>();
+
+    deRham -> projection(func, 0.0, *this);
 }
 
 template <int grid>
@@ -573,6 +604,45 @@ inline DeRhamField<grid, Space::cell>::DeRhamField(std::shared_ptr<DeRhamComplex
     : deRham{drc}
 {
     deRham -> initializeField(*this);
+
+    const std::string analyticalFunc = "0.0";
+
+    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    amrex::ParserExecutor<nVar> func;
+    amrex::Parser parser;
+
+    parser.define(analyticalFunc);
+    parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    func = parser.compile<nVar>();
+
+    deRham -> projection(func, 0.0, *this);
+}
+
+// Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type
+template <int grid, int space>
+inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, GEMPIC_SPACEDIM> func)
+    : deRham{drc}
+{
+    deRham -> initializeField(*this);
+    deRham->projection(func, 0.0, *this);
+}
+
+template <int grid>
+inline DeRhamField<grid, Space::node>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, const 
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
+    : deRham{drc}
+{
+    deRham -> initializeField(*this);
+    deRham -> projection(func, 0.0, *this);
+}
+
+template <int grid>
+inline DeRhamField<grid, Space::cell>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, const 
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
+    : deRham{drc}
+{
+    deRham -> initializeField(*this);
+    deRham -> projection(func, 0.0, *this);
 }
 
 // FillBoundary of DeRhamFields following the same logic as above
@@ -695,7 +765,7 @@ inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
         data[comp].minus(form.data[comp], 0, 1, nGhost[0]);
 }
 
-}  
+}
 
 
 // namespace GEMPIC_Fields

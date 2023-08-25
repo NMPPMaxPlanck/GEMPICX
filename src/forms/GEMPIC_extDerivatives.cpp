@@ -39,7 +39,6 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
    twoForm.data[0].AverageSync(geom.periodicity());
    twoForm.data[0].FillBoundary_nowait(geom.periodicity());
 
-
    // Component-1 of curl
    for (amrex::MFIter mfi(twoForm.data[1]); mfi.isValid(); ++mfi)
    {
@@ -183,7 +182,6 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                                DeRhamField<Grid::primal, Space::edge>& oneForm)
 {
-   
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -210,7 +208,7 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                     oneFormMF(i, j, k) = GEMPIC_D_ADD(0., zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k), 0.);
                 });
             }
-            
+
             if (comp == 2)
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -243,7 +241,6 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
 void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
                                DeRhamField<Grid::dual, Space::edge>& oneForm)
 {
-    
 
     for (int comp = 0; comp < 3; ++comp)
     {

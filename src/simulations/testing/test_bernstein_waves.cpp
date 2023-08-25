@@ -36,22 +36,44 @@ void write_rho(DeRhamField<Grid::dual, Space::cell> &rho, computational_domain& 
         amrex::WriteSingleLevelPlotfile(plotfilename, rho.data, varnames, infra.geom, time, 0);
 }
 
+void write_phi(DeRhamField<Grid::primal, Space::node> &phi, computational_domain& infra, double time, int step) {
+        // save fields
+        // MultiFab Info -------------------------------------------------------------
+        std::string plotfilename{"Plotfiles/" + amrex::Concatenate("phi", step)};
+ 
+        amrex::Vector<std::string> varnames{"phi"};
+ 
+        amrex::WriteSingleLevelPlotfile(plotfilename, phi.data, varnames, infra.geom, time, 0);
+}
+
+/*
+void write_E(DeRhamField<Grid::primal, Space::edge> &E, computational_domain& infra, double time, int step) {
+        // save fields
+        // MultiFab Info -------------------------------------------------------------
+        std::string plotfilename{"Plotfiles/" + amrex::Concatenate("E", step)};
+ 
+        amrex::Vector<std::string> varnames{"E"};
+ 
+        amrex::WriteSingleLevelPlotfile(plotfilename, E.data, varnames, infra.geom, time, 0);
+}
+*/
+
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
 
     // Linear splines is ok, and lower dimension Hodge is good enough
-    constexpr int vdim = 3;
-    constexpr int numspec = 1;
+    constexpr int vdim{3};
+    constexpr int numspec{1};
     // Spline degrees
-    constexpr int degx = 1;
-    constexpr int degy = 1;
-    constexpr int degz = 1;
+    constexpr int degx{1};
+    constexpr int degy{1};
+    constexpr int degz{1};
     //
-    constexpr int degmw = 2;
-    constexpr int propagator = 3;
+    constexpr int degmw{2};
+    constexpr int propagator{3};
 
-    const int hodgeDegree = 2;
+    const int hodgeDegree{2};
 
 {
     gempic_parameters<vdim, numspec> parametersBernstein;
@@ -74,12 +96,12 @@ int main(int argc, char* argv[])
 	DeRhamField<Grid::primal, Space::face> B(deRham);
 	DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
-    DeRhamField<Grid::primal, Space::node> phi(deRham); // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
-    // Ey, Ez
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    
+    // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex, Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", "0.0", "1.0"};
 
-    // Project B and D to a primal and dual two form respectively
-    const int nVar = 4;  // x, y, z, t
+    const int nVar = 4;  // x, y, z, t[p
     amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
     amrex::Parser parser;
 
@@ -152,16 +174,39 @@ int main(int argc, char* argv[])
 
     // Needed for SumBoundary
    auto nGhost = deRham->getNGhost();
+//   nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+//   nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+//   nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
    (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
     rho.averageSync();
     rho.fillBoundary();
 
+    deRham->hodgeFD<degmw>(rho, phi);
+
+    deRham->grad(phi, E);
+
+    E *= -1.0;
+
+    // Rescale the fields
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+
+    (E.data[0]).mult((1/dr[0]));
+    (E.data[1]).mult((1/dr[1]));
+    (E.data[2]).mult((1/dr[2]));
+
     amrex::Real dt = parametersBernstein.dt;
     int nSteps = parametersBernstein.n_steps;
 
     for (int tStep = 0; tStep < nSteps; tStep++) {
+
+        if (tStep%parametersBernstein.save_fields == 0) {
+            write_rho(rho, infra, tStep*parametersBernstein.dt, tStep);
+        }
+        if (tStep%1 == 0) {
+            std::cout << "Time Step: " << tStep << std::endl;
+        }
 
         for (int spec = 0; spec < numspec; spec++)
         {
@@ -169,6 +214,8 @@ int main(int argc, char* argv[])
             amrex::Real chargemass = charge / ions[spec]->getMass();
             amrex::Real Bz = 1.0;
             amrex::Real a = 0.5 * chargemass * dt * Bz;
+
+            rho.data.setVal(0.0);
 
             for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
             {
@@ -193,21 +240,107 @@ int main(int argc, char* argv[])
                     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
                         positionParticle[d] = particles[pp].pos(d);
 
+                    positionParticle[0] = positionParticle[0] + 0.5 * dt * velx[pp];
+                    particles[pp].pos(0) = positionParticle[0];
+                    positionParticle[1] = positionParticle[1] + 0.5 * dt * vely[pp];
+                    particles[pp].pos(1) = positionParticle[1];
+                });
+            }
+            ions[spec] -> Redistribute();
+
+            // Needed for SumBoundary
+            auto nGhost = deRham->getNGhost();
+//            nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+//            nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+//            nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+
+            (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
+                           params.geometry().periodicity());
+            rho.averageSync();
+            rho.fillBoundary();
+
+            deRham->hodgeFD<degmw>(rho, phi);
+
+            deRham->grad(phi, E);
+
+            E *= -1.0;
+
+            // Rescale the fields
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+
+            (E.data[0]).mult((1/dr[0]));
+            (E.data[1]).mult((1/dr[1]));
+            (E.data[2]).mult((1/dr[2]));
+
+            rho.data.setVal(0.0);
+
+            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
+            {
+                amrex::Particle<0, 0>* AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
+                const long np = pti.numParticles();
+                auto particle_attributes = &pti.GetStructOfArrays();
+                amrex::ParticleReal* const AMREX_RESTRICT velx =
+                    particle_attributes->GetRealData(0).data();
+                amrex::ParticleReal* const AMREX_RESTRICT vely =
+                    particle_attributes->GetRealData(1).data();
+                amrex::ParticleReal* const AMREX_RESTRICT velz =
+                    particle_attributes->GetRealData(2).data();
+
+                const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+
+                amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
+
+                amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
+
+                // Extract E, not D ?
+                for (int cc = 0; cc < vdim; cc++)
+                {
+                    eA[cc] = (E.data[cc])[pti].array();
+                }
+
+                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
+                {
+                    // Read out particle position
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
+                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        positionParticle[d] = particles[pp].pos(d);
+
+                    amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+
+                    Spline::SplineWithPrimitive<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
+
+                    // evaluate the electric field
+                    amrex::GpuArray<amrex::Real, vdim> efield =
+                        spline.template evalField<vdim, 1>(eA);
+
+                    // push v with the electric field
+                    amrex::GpuArray<amrex::Real, vdim> newPosE =
+                        push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
+
+                    velx[pp] = newPosE[0];
+                    vely[pp] = newPosE[1];
+                    velz[pp] = newPosE[2];
+
                     amrex::Real vx = velx[pp];
                     amrex::Real vy = vely[pp];
 
                     velx[pp] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
                     vely[pp] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
 
-                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d) {
-                        positionParticle[d] = positionParticle[d] + dt * velx[pp];
-                        particles[pp].pos(d) = positionParticle[d];
-                    }
+                    // push v with the electric field
+                    newPosE = push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
 
-                    Spline::SplineBase<degx, degy, degz> splinePos(positionParticle, infra.plo, infra.dxi);
+                    velx[pp] = newPosE[0];
+                    vely[pp] = newPosE[1];
+                    velz[pp] = newPosE[2];
+
+                    positionParticle[0] = positionParticle[0] + 0.5 * dt * velx[pp];
+                    particles[pp].pos(0) = positionParticle[0];
+                    positionParticle[1] = positionParticle[1] + 0.5 * dt * vely[pp];
+                    particles[pp].pos(1) = positionParticle[1];
 
                     gempic_deposit_rho_C3_new_splines<degx, degy, degz>(
-                        splinePos, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
+                        spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }
             ions[spec] -> Redistribute();
@@ -220,13 +353,6 @@ int main(int argc, char* argv[])
 
         rho.averageSync();
         rho.fillBoundary();
-
-        if (tStep%parametersBernstein.save_fields == 0) {
-            write_rho(rho, infra, tStep*parametersBernstein.dt, tStep);
-        }
-        if (tStep%5000 == 0) {
-            std::cout << "Time Step: " << tStep << std::endl;
-        }
     }
 }
     amrex::Finalize();

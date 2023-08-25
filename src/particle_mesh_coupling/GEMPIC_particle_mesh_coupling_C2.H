@@ -221,9 +221,10 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3(splines_at_particles<degx, degy
  * @param rho charge density to be computed
  */
 template <int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3_new_splines(Spline::SplineBase<degx, degy, degz> &spline,
-                                                 amrex::Real weight,
-                                                 amrex::Array4<amrex::Real> const &rho)
+AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3_new_splines(
+    Spline::SplineBase<degx, degy, degz> &spline,
+    amrex::Real weight,
+    amrex::Array4<amrex::Real> const &rho)
 {
 GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degx; ++ii),
                     for (int jj = 0; jj <= degy; ++jj),
@@ -231,9 +232,7 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degx; ++ii),
 
     amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
         AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
-    double s_coeff = GEMPIC_D_MULT(spline.splineNode[0][ii],
-                                   spline.splineNode[1][jj],
-                                   spline.splineNode[2][kk]);
+    double s_coeff = spline.template evalBSpline<-1, 0>(ii, jj, kk); 
 
 #if (GEMPIC_SPACEDIM == 1)
                 amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff * weight);
@@ -247,8 +246,7 @@ GEMPIC_D_LOOP_END;
 }
 
 /**
-     Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the
-   B-splines
+     Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the B-splines
      */
 
 /**

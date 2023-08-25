@@ -4,7 +4,7 @@ file(GLOB FDDERHAMCOMPLEX "../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cp
 file(GLOB DERIVATIVES "../../forms/GEMPIC_extDerivatives.cpp")
 file(GLOB POISSON "../../field_solvers/Poisson/GEMPIC_PoissonSolver.cpp")
 
-add_executable( test_bernstein_waves test_bernstein_waves.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX} )
+add_executable( test_bernstein_waves test_bernstein_waves.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
 add_executable( test_vlasov_maxwell_by test_vlasov_maxwell_by.cpp )
 #add_executable( test_vlasov_maxwell_by_lower test_vlasov_maxwell_by_lower.cpp )
 add_executable( test_vlasov_maxwell_hs test_vlasov_maxwell_hs.cpp  )

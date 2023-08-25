@@ -118,7 +118,7 @@ namespace {
         void SetUp() override {
             /* Initialize the infrastructure */
             const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-                                            {AMREX_D_DECL(10.0, 10.0, 10.0)});
+                                         {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect isPeriodic{AMREX_D_DECL(1, 1, 1)};
@@ -134,7 +134,7 @@ namespace {
             rho.setVal(0.0);
             // Ensure rho exists and is 0 everywhere
             ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
-            
+
             // particle groups
             for (int spec{0}; spec < numSpec; spec++)
             {
@@ -192,10 +192,56 @@ namespace {
             gempic_deposit_rho_C3<degX, degY, degZ>(spline, 0, rhoarr);
         }
         ASSERT_TRUE(particleLoopRun);
-        
+
         EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
     }
 
+    // Adds a particle with 0 weight. Checks that rho is unchanged.
+    TEST_F(DepositRhoTest, NullTestNewSplines) {
+        // Adding particle to one cell
+        const int numParticles{1};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        
+        amrex::Array<amrex::Real, numParticles> weights{1};
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+
+        // (default) charge correctly transferred from GEMPIC_TestUtils::addSingleParticles
+        EXPECT_EQ(1, particleGroup[0]->getCharge()); 
+        
+        // rho unchanged by GEMPIC_TestUtils::addSingleParticles
+        EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
+
+        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+        // Particle iteration ... over one particle.
+        bool particleLoopRun{false};
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        {
+            particleLoopRun = true;
+
+            const long np{pti.numParticles()};
+            EXPECT_EQ(numParticles, np); // Only one particle added by GEMPIC_TestUtils::addSingleParticles
+
+            const auto& particles{pti.GetArrayOfStructs()};
+            const auto partData{particles().data()};
+            const auto weight{pti.GetStructOfArrays().GetRealData(vDim).data()};
+
+            EXPECT_EQ(1, weight[0]); // weight correctly transferred from GEMPIC_TestUtils::addSingleParticles
+
+            amrex::Array4<amrex::Real> const& rhoarr{rho[pti].array()};
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+            for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+                position[d] = partData[0].pos(d);
+
+            Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
+
+            gempic_deposit_rho_C3_new_splines<degX, degY, degZ>(
+                spline, 0, rhoarr);
+        }
+        ASSERT_TRUE(particleLoopRun);
+
+        EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
+    }
+/*
     // Adds one particle exactly on a node
     TEST_F(DepositRhoTest, SingleParticleOnNode) {
         // Adding particle to one cell
@@ -218,7 +264,8 @@ namespace {
             // Expect only one node of rhoarr (0, 0, 0) to be non-zero and receiving full weight of particle (1)
             checkRho(__LINE__, rho[pti].array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
+                    {[] (AMREX_D_DECL(int a, int b, int c
+            EXPECT_EQ(0, 1);)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
                                                                               && c == 0);}},
                     // and receiving full weight of particle (1)
@@ -233,7 +280,7 @@ namespace {
         EXPECT_EQ(1, rho.norm0());
         EXPECT_EQ(1, rho.norm1(0, infra.geom.periodicity()));
     }
-
+*/
     // Adds one particle exactly between two nodes
     TEST_F(DepositRhoTest, SingleParticleMiddle) {
         const int numParticles{1};

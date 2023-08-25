@@ -1,8 +1,9 @@
 #ifndef GEMPIC_FDDERHAMCOMPLEX_H_
 #define GEMPIC_FDDERHAMCOMPLEX_H_
 
-#include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <AMReX_SPACE.H>
+#include "GEMPIC_Fields.H"
+#include "GEMPIC_Params.H"
 
 using namespace GEMPIC_Fields;
 
@@ -235,18 +236,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, m_tempPrimalZeroForm);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, zeroForm.data, m_tempPrimalZeroForm);
-        matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data,
+                                          AMREX_D_PICK(zeroForm.data, m_tempPrimalZeroForm, zeroForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilCellToNode,
+                                          AMREX_D_PICK((void), m_tempPrimalZeroForm, zeroForm.data),
+                                          AMREX_D_PICK((void), zeroForm.data, m_tempPrimalZeroForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data)););
 
         zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[0], dr[1], dr[2]) * weight));
 
@@ -287,18 +285,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, m_tempDualZeroForm);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, zeroForm.data, m_tempDualZeroForm);
-        matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data,
+                                          AMREX_D_PICK(zeroForm.data, m_tempDualZeroForm, zeroForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilCellToNode,
+                                          AMREX_D_PICK((void), m_tempDualZeroForm, zeroForm.data),
+                                          AMREX_D_PICK((void), zeroForm.data, m_tempDualZeroForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data)););
 
         zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[0], dr[1], dr[2]) * weight));
 
@@ -341,24 +336,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], m_tempPrimalOneForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempPrimalOneForm[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         oneForm.data[comp], m_tempPrimalOneForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempPrimalOneForm[comp], oneForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
+                                              AMREX_D_PICK(oneForm.data[comp], m_tempPrimalOneForm[comp], oneForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
+                                              AMREX_D_PICK((void), m_tempPrimalOneForm[comp], oneForm.data[comp]),
+                                              AMREX_D_PICK((void), oneForm.data[comp], m_tempPrimalOneForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
+                                              m_tempPrimalOneForm[comp], oneForm.data[comp])););
 
             if (comp == 0)
                 oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
@@ -409,24 +397,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], m_tempDualOneForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempDualOneForm[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         oneForm.data[comp], m_tempDualOneForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempDualOneForm[comp], oneForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
+                                              AMREX_D_PICK(oneForm.data[comp], m_tempDualOneForm[comp], oneForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
+                                              AMREX_D_PICK((void), m_tempDualOneForm[comp], oneForm.data[comp]),
+                                              AMREX_D_PICK((void), oneForm.data[comp], m_tempDualOneForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
+                                              m_tempDualOneForm[comp], oneForm.data[comp])););
 
             if (comp == 0)
                 oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
@@ -477,24 +458,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], m_tempPrimalTwoForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempPrimalTwoForm[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         twoForm.data[comp], m_tempPrimalTwoForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempPrimalTwoForm[comp], twoForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp],
+                                         AMREX_D_PICK(twoForm.data[comp], m_tempPrimalTwoForm[comp], twoForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
+                                              AMREX_D_PICK((void), m_tempPrimalTwoForm[comp], twoForm.data[comp]),
+                                              AMREX_D_PICK((void), twoForm.data[comp], m_tempPrimalTwoForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
+                                              m_tempPrimalTwoForm[comp], twoForm.data[comp])););
 
             if (comp == 0)
                 twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) /
@@ -547,24 +521,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], m_tempDualTwoForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempDualTwoForm[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         twoForm.data[comp], m_tempDualTwoForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempDualTwoForm[comp], twoForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp], 
+                                              AMREX_D_PICK(twoForm.data[comp], m_tempDualTwoForm[comp], twoForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
+                                              AMREX_D_PICK((void), m_tempDualTwoForm[comp], twoForm.data[comp]),
+                                              AMREX_D_PICK((void), twoForm.data[comp], m_tempDualTwoForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
+                                              m_tempDualTwoForm[comp], twoForm.data[comp])););
 
             if (comp == 0)
                 twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) /
@@ -615,21 +582,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, m_tempPrimalThreeForm);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, m_tempPrimalThreeForm,
-                                     threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, threeForm.data,
-                                     m_tempPrimalThreeForm);
-        matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempPrimalThreeForm,
-                                     threeForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data,
+                                          AMREX_D_PICK(threeForm.data, m_tempPrimalThreeForm, threeForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilNodeToCell,
+                                          AMREX_D_PICK((void), m_tempPrimalThreeForm, threeForm.data),
+                                          AMREX_D_PICK((void), threeForm.data, m_tempPrimalThreeForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempPrimalThreeForm, threeForm.data)););
 
         threeForm.data.mult(GEMPIC_D_MULT(dr[0], dr[1], dr[2]) / weight);
 
@@ -671,18 +632,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, m_tempDualThreeForm);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, threeForm.data, m_tempDualThreeForm);
-        matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data,
+                                          AMREX_D_PICK(threeForm.data, m_tempDualThreeForm, threeForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilNodeToCell,
+                                          AMREX_D_PICK((void), m_tempDualThreeForm, threeForm.data),
+                                          AMREX_D_PICK((void), threeForm.data, m_tempDualThreeForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data)););
 
         threeForm.data.mult(GEMPIC_D_MULT(dr[0], dr[1], dr[2]) / weight);
 

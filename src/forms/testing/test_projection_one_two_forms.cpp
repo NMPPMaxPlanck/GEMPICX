@@ -43,6 +43,7 @@ int main (int argc, char *argv[])
                                                       "cos(x)",
                                                       "cos(x)"};
 #endif
+
 #if (GEMPIC_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalE = {"cos(x) * cos(y)", 
                                                       "cos(x) * cos(y)",
@@ -95,7 +96,6 @@ int main (int argc, char *argv[])
                 if (comp == 2)
                     oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::sin(r[2] + dr[2]) - std::sin(r[2]));
             });
-
         }
     }
 
@@ -288,7 +288,7 @@ int main (int argc, char *argv[])
 
         }
     }
-    
+
     lineIntegralDual.averageSync();
     lineIntegralDual.fillBoundary();
 

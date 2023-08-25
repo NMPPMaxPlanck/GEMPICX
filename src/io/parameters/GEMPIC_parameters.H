@@ -48,7 +48,8 @@ public:
     amrex::Vector<amrex::Real> domain_hi{AMREX_D_DECL(1.0, 1.0, 1.0)};
     amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect n_cell{AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect max_grid_size{AMREX_D_DECL(4, 4, 4)};  // for parallelisation
+    amrex::IntVect max_grid_size{AMREX_D_DECL(4, 4, 4)}; 
+    // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
     amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.25, 1.25, 1.25)};
     amrex::Real kx, ky, kz;

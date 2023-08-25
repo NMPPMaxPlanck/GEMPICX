@@ -1751,15 +1751,10 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> push_v_efield(
 {
     amrex::GpuArray<amrex::Real, vdim> newPos;
 
-    newPos[0] = vel[0] + dt * chargemass * (Ep[0]);
-    if (vdim > 1)
-    {
-        newPos[1] = vel[1] + dt * chargemass * (Ep[1]);
-    }
-    if (vdim > 2)
-    {
-        newPos[2] = vel[2] + dt * chargemass * (Ep[2]);
-    }
+    AMREX_D_TERM((newPos[0] = vel[0] + dt * chargemass * (Ep[0]));,
+                 (newPos[1] = vel[1] + dt * chargemass * (Ep[1]));,
+                 (newPos[2] = vel[2] + dt * chargemass * (Ep[2])););
+                 
     return (newPos);
 }
 
