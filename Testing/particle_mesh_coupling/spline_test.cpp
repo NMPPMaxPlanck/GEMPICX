@@ -66,9 +66,9 @@ class SplineTest : public testing::Test {
             splineZ.init_particles(position, plo, dxi);
             spline1D.init_position(position[0], plo[0], dxi[0]);
             
-AMREX_D_TERM(EXPECT_DOUBLE_EQ(spline1D.box, splineX.box[0]);,
-             EXPECT_DOUBLE_EQ(spline1D.box, splineY.box[1]);,
-             EXPECT_DOUBLE_EQ(spline1D.box, splineZ.box[2]);)
+AMREX_D_TERM(EXPECT_DOUBLE_EQ(spline1D.span, splineX.span[0]);,
+             EXPECT_DOUBLE_EQ(spline1D.span, splineY.span[1]);,
+             EXPECT_DOUBLE_EQ(spline1D.span, splineZ.span[2]);)
 
             std::stringstream tmpSS;
             tmpSS << "Degree " << degx;

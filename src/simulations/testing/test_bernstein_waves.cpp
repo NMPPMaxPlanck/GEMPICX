@@ -31,32 +31,10 @@ void write_rho(DeRhamField<Grid::dual, Space::cell> &rho, computational_domain& 
         // MultiFab Info -------------------------------------------------------------
         std::string plotfilename{"Plotfiles/" + amrex::Concatenate("rho", step)};
  
-        amrex::Vector<std::string> varnames{"rho"};
+        amrex::Vector<std::string> varnames{{"rho"}};
  
         amrex::WriteSingleLevelPlotfile(plotfilename, rho.data, varnames, infra.geom, time, 0);
 }
-
-void write_phi(DeRhamField<Grid::primal, Space::node> &phi, computational_domain& infra, double time, int step) {
-        // save fields
-        // MultiFab Info -------------------------------------------------------------
-        std::string plotfilename{"Plotfiles/" + amrex::Concatenate("phi", step)};
- 
-        amrex::Vector<std::string> varnames{"phi"};
- 
-        amrex::WriteSingleLevelPlotfile(plotfilename, phi.data, varnames, infra.geom, time, 0);
-}
-
-/*
-void write_E(DeRhamField<Grid::primal, Space::edge> &E, computational_domain& infra, double time, int step) {
-        // save fields
-        // MultiFab Info -------------------------------------------------------------
-        std::string plotfilename{"Plotfiles/" + amrex::Concatenate("E", step)};
- 
-        amrex::Vector<std::string> varnames{"E"};
- 
-        amrex::WriteSingleLevelPlotfile(plotfilename, E.data, varnames, infra.geom, time, 0);
-}
-*/
 
 int main(int argc, char* argv[])
 {
@@ -97,7 +75,7 @@ int main(int argc, char* argv[])
 	DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
-    
+
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex, Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", "0.0", "1.0"};
 
@@ -174,14 +152,16 @@ int main(int argc, char* argv[])
 
     // Needed for SumBoundary
    auto nGhost = deRham->getNGhost();
-//   nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-//   nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-//   nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+   //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+   //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+   //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
    (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
     rho.averageSync();
     rho.fillBoundary();
+
+//    amrex::Print() << "rho norm 1: " << rho.data.norm1() << std::endl;
 
     deRham->hodgeFD<degmw>(rho, phi);
 
@@ -199,14 +179,9 @@ int main(int argc, char* argv[])
     amrex::Real dt = parametersBernstein.dt;
     int nSteps = parametersBernstein.n_steps;
 
-    for (int tStep = 0; tStep < nSteps; tStep++) {
+    write_rho(rho, infra, 0, 0);
 
-        if (tStep%parametersBernstein.save_fields == 0) {
-            write_rho(rho, infra, tStep*parametersBernstein.dt, tStep);
-        }
-        if (tStep%1 == 0) {
-            std::cout << "Time Step: " << tStep << std::endl;
-        }
+    for (int tStep = 0; tStep < nSteps; tStep++) {
 
         for (int spec = 0; spec < numspec; spec++)
         {
@@ -244,15 +219,22 @@ int main(int argc, char* argv[])
                     particles[pp].pos(0) = positionParticle[0];
                     positionParticle[1] = positionParticle[1] + 0.5 * dt * vely[pp];
                     particles[pp].pos(1) = positionParticle[1];
+
+                    Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
+
+                    gempic_deposit_rho_C3_new_splines<degx, degy, degz>(
+                        spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
+
             }
+
             ions[spec] -> Redistribute();
 
             // Needed for SumBoundary
             auto nGhost = deRham->getNGhost();
-//            nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-//            nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-//            nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+            //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+            //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+            //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
             (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
@@ -307,7 +289,7 @@ int main(int argc, char* argv[])
 
                     amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
-                    Spline::SplineWithPrimitive<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
+                    Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
 
                     // evaluate the electric field
                     amrex::GpuArray<amrex::Real, vdim> efield =
@@ -339,20 +321,32 @@ int main(int argc, char* argv[])
                     positionParticle[1] = positionParticle[1] + 0.5 * dt * vely[pp];
                     particles[pp].pos(1) = positionParticle[1];
 
+                    Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
+
                     gempic_deposit_rho_C3_new_splines<degx, degy, degz>(
-                        spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
+                        splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }
             ions[spec] -> Redistribute();
         }
 
         auto nGhost = deRham->getNGhost();
+        //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+        //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+        //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
         (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                                params.geometry().periodicity());
 
         rho.averageSync();
         rho.fillBoundary();
+
+        if (tStep%parametersBernstein.save_fields == 0) {
+            write_rho(rho, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
+        }
+        if (tStep%1 == 0) {
+            std::cout << "Time Step: " << tStep+1 << std::endl;
+        }
     }
 }
     amrex::Finalize();

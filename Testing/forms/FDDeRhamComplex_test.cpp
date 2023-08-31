@@ -319,7 +319,6 @@ namespace {
         DeRhamField<Grid::primal, Space::node> phi(deRham, func);
 
         const amrex::BoxArray &nba{amrex::convert(infra.grid, amrex::IntVect::TheNodeVector())};
-        int Ncomp{1};            
 
 //        rho.data.define(nba, infra.distriMap, Ncomp, Nghost);
 

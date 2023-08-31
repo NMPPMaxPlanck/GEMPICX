@@ -9,7 +9,6 @@
 */
 #include <AMReX.H>
 #include <GEMPIC_Config.H>
-#include <GEMPIC_gempic_norm.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 #include "gtest/gtest.h"
@@ -66,7 +65,7 @@ namespace {
                       std::vector<amrex::Real>&& checks,
                       amrex::Real defCheck) {
             // Expect only one node of rhoarr (0, 0, 0) to be non-zero and receiving full weight of particle (1)
-            for (int i{0}; i <= top.x; i++) { 
+            for (int i{0}; i <= top.x; i++) {
                 for (int j{0}; j <= top.y; j++) {
                     for (int k{0}; k <= top.z; k++) {
                         int condNum{0};
@@ -132,7 +131,7 @@ namespace {
             rho.define(nba, infra.distriMap, Ncomp, Nghost);
             rho.setVal(0.0);
             // Ensure rho exists and is 0 everywhere
-            ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
+            ASSERT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
 
             // particle groups
             for (int spec{0}; spec < numSpec; spec++)
@@ -163,7 +162,7 @@ namespace {
         EXPECT_EQ(1, particleGroup[0]->getCharge()); 
         
         // rho unchanged by GEMPIC_TestUtils::addSingleParticles
-        EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
+        EXPECT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle.
@@ -193,7 +192,7 @@ namespace {
         }
         ASSERT_TRUE(particleLoopRun);
 
-        EXPECT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
+        EXPECT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
     }    
     
     // Adds one particle exactly between two nodes

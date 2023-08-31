@@ -260,7 +260,7 @@ GEMPIC_D_LOOP_END;
     AMREX_GPU_HOST_DEVICE constexpr void splineEval (const amrex::Real x,
                                                      amrex::GpuArray<amrex::Real, length> &s) const
     {
-        amrex::Real factor;
+        amrex::Real factor = 0;
         switch (degree)
         {
             case 0:
@@ -462,7 +462,7 @@ public:
     AMREX_GPU_HOST_DEVICE constexpr void primitiveEval(const amrex::Real x,
                                                        amrex::GpuArray<amrex::Real, length> &s) const
     {
-        amrex::Real factor;
+        amrex::Real factor = 0;
         switch (degree)
         {
             case -1:

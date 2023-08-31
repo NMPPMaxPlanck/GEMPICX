@@ -7,7 +7,7 @@ max_grid_size_vector = 32 8 8
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
-species0.n_part_per_cell = 2000 # number of particles per cell
+species0.n_part_per_cell = 1000 # number of particles per cell
 species0.charge = 1.0 # vector (one entry per species)
 species0.mass = 1.0 # vector (one entry per species)
 species0.density = "1.0 + 0.01 * cos(kvarx * x)"
@@ -22,7 +22,7 @@ species0.vWeight_g0 = 1.0
 k = 1 1 0.3
 
 # Simulation parameters
-n_steps = 5000
+n_steps = 50000
 dt = 0.02
 save_fields = 1
 save_particles = 1
