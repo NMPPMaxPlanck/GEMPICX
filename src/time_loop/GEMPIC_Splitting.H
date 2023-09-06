@@ -13,21 +13,16 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-#include <GEMPIC_SumBoundary.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_Params.H>
-#include <GEMPIC_diagnostics.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
-#include <GEMPIC_PlotFile.H>
 #include <GEMPIC_profiling.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_PoissonSolver.H>
 
-using namespace Diagnostics_Output;
-using namespace Field_solvers;
 using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;

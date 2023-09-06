@@ -61,8 +61,6 @@ include_directories("${CMAKE_SOURCE_DIR}")
 
 # Add subfolder with source files of the library
 add_subdirectory(src)
-# Add subfolder with simulations
-add_subdirectory(simulations)
 # Add doxygen documentation
 add_subdirectory(doc)
 # Add subfolder with tests

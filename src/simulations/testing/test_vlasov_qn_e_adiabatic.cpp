@@ -11,8 +11,6 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
-// #include <GEMPIC_PlotFile.H>
-// #include <GEMPIC_profiling.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_PoissonSolver.H>
