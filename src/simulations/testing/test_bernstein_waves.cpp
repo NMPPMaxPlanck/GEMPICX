@@ -9,7 +9,6 @@
 #include <GEMPIC_Params.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_particle_mesh_coupling_C2.H>
 #include <GEMPIC_sampler.H>
 #include <GEMPIC_hs_zigzag.H>

@@ -5,15 +5,12 @@ file(GLOB DERIVATIVES "../../forms/GEMPIC_extDerivatives.cpp")
 file(GLOB POISSON "../../field_solvers/Poisson/GEMPIC_PoissonSolver.cpp")
 
 add_executable( test_bernstein_waves test_bernstein_waves.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
-add_executable( test_vlasov_maxwell_hs_deRham ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} ${POISSON} test_vlasov_maxwell_hs_deRham.cpp )
 
 if(GEMPIC_USE_CUDA) 
   setup_target_for_cuda_compilation( test_bernstein_waves )
-  setup_target_for_cuda_compilation( test_vlasov_maxwell_hs_deRham )
 endif()
 
 target_link_libraries( test_bernstein_waves  AMReX::amrex AMReX::Flags_CXX  )
-target_link_libraries( test_vlasov_maxwell_hs_deRham AMReX::amrex AMReX::Flags_CXX )
 
 if("${AMReX_SPACEDIM}" STREQUAL "3")
   add_subdirectory(IOFiles_3D)

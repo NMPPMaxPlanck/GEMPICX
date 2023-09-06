@@ -7,7 +7,6 @@
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_mesh_coupling_C2.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
 #include "GEMPIC_Spline_Class.H"
