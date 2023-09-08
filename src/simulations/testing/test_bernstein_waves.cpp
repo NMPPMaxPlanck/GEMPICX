@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
                                     positionParticle[d] = partData[pp].pos(d);
                                 Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
                                 // Needs at least max(degx, degy, degz) ghost cells
-                                gempic_deposit_rho_C3_new_splines<degx, degy, degz>(
+                                gempic_deposit_rho<degx, degy, degz>(
                                     spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
                                     rhoarr);
                             });
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 
                     Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
 
-                    gempic_deposit_rho_C3_new_splines<degx, degy, degz>(
+                    gempic_deposit_rho<degx, degy, degz>(
                         spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
 
@@ -319,7 +319,7 @@ int main(int argc, char* argv[])
 
                     Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
 
-                    gempic_deposit_rho_C3_new_splines<degx, degy, degz>(
+                    gempic_deposit_rho<degx, degy, degz>(
                         splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }

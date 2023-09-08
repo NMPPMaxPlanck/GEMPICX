@@ -38,7 +38,7 @@ namespace {
                     position[d] = partData[pp].pos(d);
                 Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
                 // Needs at least max(degX, degY, degZ) ghost cells
-                gempic_deposit_rho_C3_new_splines<degX, degY, degZ>(
+                gempic_deposit_rho<degX, degY, degZ>(
                     spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
                     rhoarr);
             });
@@ -90,7 +90,7 @@ namespace {
         }
 
     // Test fixture. Sets up clean environment before each test.
-    class DepositRhoNewSplineTest : public testing::Test {
+    class DepositRhoTest : public testing::Test {
         protected:
 
         // Degree of splines in each direction
@@ -150,7 +150,7 @@ namespace {
      */
 
     // Adds a particle with 0 weight. Checks that rho is unchanged.
-    TEST_F(DepositRhoNewSplineTest, NullTest) {
+    TEST_F(DepositRhoTest, NullTest) {
         // Adding particle to one cell
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
@@ -187,7 +187,7 @@ namespace {
 
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            gempic_deposit_rho_C3_new_splines<degX, degY, degZ>(
+            gempic_deposit_rho<degX, degY, degZ>(
                 spline, 0, rhoarr);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -196,7 +196,7 @@ namespace {
     }    
     
     // Adds one particle exactly between two nodes
-    TEST_F(DepositRhoNewSplineTest, SingleParticleMiddle) {
+    TEST_F(DepositRhoTest, SingleParticleMiddle) {
         const int numParticles{1};
 
         // Add particle in the middle of final cell to check periodic boundary conditions
@@ -238,7 +238,7 @@ namespace {
     }
 
     // Adds one particle closer to on node than the other
-    TEST_F(DepositRhoNewSplineTest, SingleParticleUnevenNodeSplit) { 
+    TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit) { 
         const int numParticles{1};
 
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbLo(0) + 0.25*infra.dx[0],
@@ -284,7 +284,7 @@ namespace {
     }    
     
     // Adds two particles in different cells to check that they don't interfere with each other
-    TEST_F(DepositRhoNewSplineTest, DoubleParticleSeparate) {
+    TEST_F(DepositRhoTest, DoubleParticleSeparate) {
         const int numParticles{2};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{
             AMREX_D_DECL(0, 0, 0)},
@@ -327,7 +327,7 @@ namespace {
     }
 
     // Adds particles in the same cell to check that they add up correctly
-    TEST_F(DepositRhoNewSplineTest, DoubleParticleOverlap) {
+    TEST_F(DepositRhoTest, DoubleParticleOverlap) {
         const int numParticles{2};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{
             AMREX_D_DECL(0, 0, 0)},
@@ -370,7 +370,7 @@ namespace {
     }
 
     // Adds particles of different species in the same cell
-    TEST_F(DepositRhoNewSplineTest, DoubleParticleMultipleSpecies) {
+    TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies) {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> pPos{{
             AMREX_D_DECL(0, 0, 0)}};

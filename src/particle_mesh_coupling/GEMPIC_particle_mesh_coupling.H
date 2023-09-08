@@ -356,25 +356,6 @@ private:
     }
 };
 
-/*!
- * Push the velocity with a given electric field
- */
-template <int vdim>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> push_v_efield(
-    amrex::GpuArray<amrex::Real, vdim> vel,
-    amrex::Real dt,
-    amrex::Real chargemass,  // charge/mass
-    amrex::GpuArray<amrex::Real, vdim> &Ep)
-{
-    amrex::GpuArray<amrex::Real, vdim> newPos;
-
-    AMREX_D_TERM((newPos[0] = vel[0] + dt * chargemass * (Ep[0]));,
-                 (newPos[1] = vel[1] + dt * chargemass * (Ep[1]));,
-                 (newPos[2] = vel[2] + dt * chargemass * (Ep[2])););
-                 
-    return (newPos);
-}
-
 /**
      Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the B-splines
      */
@@ -475,6 +456,26 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= local_size; ++ii),
 GEMPIC_D_LOOP_END;
 
 }
+
+/*!
+ * Push the velocity with a given electric field
+ */
+template <int vdim>
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> push_v_efield(
+    amrex::GpuArray<amrex::Real, vdim> vel,
+    amrex::Real dt,
+    amrex::Real chargemass,  // charge/mass
+    amrex::GpuArray<amrex::Real, vdim> &Ep)
+{
+    amrex::GpuArray<amrex::Real, vdim> newPos;
+
+    AMREX_D_TERM((newPos[0] = vel[0] + dt * chargemass * (Ep[0]));,
+                 (newPos[1] = vel[1] + dt * chargemass * (Ep[1]));,
+                 (newPos[2] = vel[2] + dt * chargemass * (Ep[2])););
+                 
+    return (newPos);
+}
+
 /**
  * @brief Deposits charge density on cells of dual grid
  *
@@ -488,7 +489,7 @@ GEMPIC_D_LOOP_END;
  * @param rho charge density to be computed
  */
 template <int degx, int degy, int degz>
-AMREX_GPU_HOST_DEVICE void gempic_deposit_rho_C3_new_splines(
+AMREX_GPU_HOST_DEVICE void gempic_deposit_rho(
     Spline::SplineBase<degx, degy, degz> &spline,
     amrex::Real weight,
     amrex::Array4<amrex::Real> const &rho)
@@ -511,7 +512,6 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degx; ++ii),
 
 GEMPIC_D_LOOP_END;
 }
-
 
 }  // namespace Particles
 }  // namespace Gempic
