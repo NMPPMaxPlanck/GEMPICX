@@ -16,7 +16,7 @@
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_Params.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_mesh_coupling_C2.H>
+#include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_profiling.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
@@ -130,7 +130,6 @@ class HSZigZagC2: public HamiltonianSplitting<vdim, numspec, degx, degy, degz, d
                 evaluate_efield<vdim, degx, degy, degz>(spline, eA);
 
             // evaluate the magnetic field
-            // mcp: correct syntax ? or evaluate_fem_bfield ?
             amrex::GpuArray<amrex::Real, int(vdim / 2.5)* 2 + 1> Bp =
                 evaluate_bfield<vdim, degx, degy, degz>(spline, bA);
 

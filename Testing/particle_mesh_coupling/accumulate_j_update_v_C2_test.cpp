@@ -1,7 +1,7 @@
 #include <AMReX.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_particle_mesh_coupling_C2.H>
+#include <GEMPIC_particle_mesh_coupling.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
 #include "GEMPIC_Spline_Class.H"

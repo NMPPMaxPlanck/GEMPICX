@@ -10,7 +10,7 @@
 #include <AMReX.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_mesh_coupling_C2.H>
+#include <GEMPIC_particle_mesh_coupling.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
 
