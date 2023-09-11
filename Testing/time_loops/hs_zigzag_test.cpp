@@ -68,7 +68,7 @@ namespace {
     };
 
     template <int vdim, int degp, int degp1, int degp2, int pdim>
-    AMREX_GPU_HOST_DEVICE void accumulate_j_update_v_C2(
+    AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
         MockSpline<degp, degp1, degp2> &spline,
         amrex::Real weight,
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,

@@ -71,29 +71,11 @@ public:
     template<int dim, int deg>
     AMREX_GPU_HOST_DEVICE amrex::Real initBSplinesAtPositions(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
-        // Compute normalized position xint and span
-        amrex::Real xint = (position - plo) * dxInverse;
-        span[dim] = std::floor(xint);
-        xint = xint - span[dim];
+        amrex::Real radius = ( deg + 1. ) / 2.;
+        amrex::Real normalized_pos = (position - plo)*dxInverse;
+        span[dim] = 1. + floor( normalized_pos - radius );
+        amrex::Real xint = span[dim] + radius - normalized_pos;
 
-        if (deg % 2 == 0)
-        {
-            if (xint < 0.5)
-            {
-                span[dim] -= deg / 2;
-                xint = 0.5 - xint;
-            }
-            else
-            {
-                span[dim] += -deg / 2 + 1;
-                xint = 1.5 - xint;
-            }
-        }
-        else
-        {
-            span[dim] -= (deg - 1) / 2;
-            xint = 1. - xint;
-        }
         return xint;
     }
 

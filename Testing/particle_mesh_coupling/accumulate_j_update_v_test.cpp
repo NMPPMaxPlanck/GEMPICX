@@ -49,7 +49,7 @@ namespace {
             splineNew.template update1DSplines<pDim, degP>(x_new, infra.plo[0], infra.dxi[0]);
             splineNew.template update1DPrimitive<pDim, degP>(x_new, infra.plo[0], infra.dxi[0]);
 
-            accumulate_j_update_v_C2<Spline::SplineWithPrimitive<1, 1, 1>, vDim, degP, degP1, degP2, pDim>(splineNew, weight, dx, bA, jA, bFields[0]);
+            accumulate_j_update_v<Spline::SplineWithPrimitive<1, 1, 1>, vDim, degP, degP1, degP2, pDim>(splineNew, weight, dx, bA, jA, bFields[0]);
         });
 
         bfields = bFields[0];

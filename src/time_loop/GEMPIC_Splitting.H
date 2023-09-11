@@ -89,7 +89,7 @@ class OperatorHamilton {
         spline.template update1DSplines<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
         spline.template update1DPrimitive<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
 
-        accumulate_j_update_v_C2<SplineType,
+        accumulate_j_update_v<SplineType,
                                     vdim, degrees[dim], degrees[(dim+1)%3],
                                     degrees[(dim+2)%3], dim>
                                     (spline, weight, dx, bA, jA, bfields);

@@ -168,10 +168,6 @@ int main(int argc, char* argv[])
     // Rescale the fields
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
 
-//    (E.data[0]).mult((1/dr[0]));
-//    (E.data[1]).mult((1/dr[1]));
-//    (E.data[2]).mult((1/dr[2]));
-
     amrex::Real dt = parametersBernstein.dt;
     int nSteps = parametersBernstein.n_steps;
 
@@ -245,10 +241,6 @@ int main(int argc, char* argv[])
 //            E *= 0.0;
             // Rescale the fields
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
-
-//            (E.data[0]).mult((1/dr[0]));
-//            (E.data[1]).mult((1/dr[1]));
-//            (E.data[2]).mult((1/dr[2]));
 
             rho.data.setVal(0.0);
 
