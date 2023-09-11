@@ -148,9 +148,9 @@ int main(int argc, char* argv[])
 
     // Needed for SumBoundary
    auto nGhost = deRham->getNGhost();
-   //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-   //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-   //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+   nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+   nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+   nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
    (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
@@ -224,9 +224,9 @@ int main(int argc, char* argv[])
 
             // Needed for SumBoundary
             auto nGhost = deRham->getNGhost();
-            //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-            //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-            //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+            nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+            nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+            nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
             (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
@@ -319,9 +319,9 @@ int main(int argc, char* argv[])
         }
 
         auto nGhost = deRham->getNGhost();
-        //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-        //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-        //std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+        nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+        nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
+        nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
 
         (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                                params.geometry().periodicity());
