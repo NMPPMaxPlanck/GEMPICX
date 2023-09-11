@@ -32,6 +32,28 @@ void write_rho(DeRhamField<Grid::dual, Space::cell> &rho, computational_domain& 
         amrex::WriteSingleLevelPlotfile(plotfilename, rho.data, varnames, infra.geom, time, 0);
 }
 
+void write_phi(DeRhamField<Grid::primal, Space::node> &phi, computational_domain& infra, double time, int step) {
+        // save fields
+        // MultiFab Info -------------------------------------------------------------
+        std::string plotfilename{"Plotfiles/" + amrex::Concatenate("phi", step)};
+ 
+        amrex::Vector<std::string> varnames{"phi"};
+ 
+        amrex::WriteSingleLevelPlotfile(plotfilename, phi.data, varnames, infra.geom, time, 0);
+}
+
+/*
+void write_E(DeRhamField<Grid::primal, Space::edge> &E, computational_domain& infra, double time, int step) {
+        // save fields
+        // MultiFab Info -------------------------------------------------------------
+        std::string plotfilename{"Plotfiles/" + amrex::Concatenate("E", step)};
+ 
+        amrex::Vector<std::string> varnames{"E"};
+ 
+        amrex::WriteSingleLevelPlotfile(plotfilename, E.data, varnames, infra.geom, time, 0);
+}
+*/
+
 int main(int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
@@ -172,6 +194,8 @@ int main(int argc, char* argv[])
     int nSteps = parametersBernstein.n_steps;
 
     write_rho(rho, infra, 0, 0);
+    write_phi(phi, infra, 0, 0);
+//    write_E(E, infra, 0, 0);
 
     for (int tStep = 0; tStep < nSteps; tStep++) {
 
@@ -331,6 +355,8 @@ int main(int argc, char* argv[])
 
         if (tStep%parametersBernstein.save_fields == 0) {
             write_rho(rho, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
+            write_phi(phi, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
+//            write_E(E, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
         }
         if (tStep%1 == 0) {
             std::cout << "Time Step: " << tStep+1 << std::endl;
