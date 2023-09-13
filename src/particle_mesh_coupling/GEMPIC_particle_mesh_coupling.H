@@ -14,7 +14,6 @@
 #include <AMReX_Print.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_particle_mesh_coupling.H>
-#include <GEMPIC_splines.H>
 #include <GEMPIC_Spline_Class.H>
 
 #include <cmath>
