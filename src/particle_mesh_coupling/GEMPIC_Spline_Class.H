@@ -27,7 +27,7 @@ public:
      *  - dxInverse[1] == 1/dy
      *  - dxInverse[2] == 1/dz
      *  - (Potentially dim < 3)
-     *  - dxInverse[dim] == 1/(dx * dy * dz)
+     *  - dxInverse[GEMPIC_SPACEDIM] == 1/(dxInverse[0] * .. * dxInverse[GEMPIC_SPACEDIM-1])
     */
     AMREX_GPU_HOST_DEVICE SplineBase(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
