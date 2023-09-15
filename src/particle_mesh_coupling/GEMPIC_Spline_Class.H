@@ -22,7 +22,7 @@ public:
      * @param position Current position of the particle
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
-     * @details Additional details about xInverse
+     * @details Additional details about dxInverse
      *  - dxInverse[0] == 1/dx
      *  - dxInverse[1] == 1/dy
      *  - dxInverse[2] == 1/dz
