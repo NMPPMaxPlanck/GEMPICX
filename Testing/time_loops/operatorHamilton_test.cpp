@@ -232,7 +232,7 @@ namespace {
 
 	    DeRhamField<Grid::dual, Space::face> J(deRham);
 	    DeRhamField<Grid::primal, Space::face> B(deRham);
-            
+
         const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", 
                                                               "0.0",
                                                               "0.0"};

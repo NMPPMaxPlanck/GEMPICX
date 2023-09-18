@@ -126,8 +126,6 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
                     //amrex::Print() << "np: " << np << std::endl;
 
-                    // Fill boundary of J or it will not add the contributions of the ghost cells in accumulate_J.
-
                     for (int cc = 0; cc < vdim; cc++)
                     {
                         jA[cc] = (J.data[cc])[pti].array();
@@ -136,7 +134,6 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
                     //amrex::Print() << "eA[0] = " << eA[0](0, 0, 0) << std::endl;
 
-                    // Fill boundary of B to calculate the B content of the primitive in accumulate_J
                     //B.fillBoundary();
                     for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
                     {
@@ -223,8 +220,6 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
             J.averageSync();
             J.fillBoundary();
-
-            // Advance E from j (field part of H_p). DO NOT MULTIPLY BY DT, ACCUMULATE_J ALREADY INTEGRATES J
 
             //J *= dt;
             D -= J;

@@ -1,9 +1,3 @@
-/*------------------------------------------------------------------------------
- functions copied from the AMReX library to make small changes
- AMReX file containing original functions: AMReX_Particle_mod_K.H
- (amrex/Src/Particle/AMReX_Particle_mod_K.H) pulled on 07.10.2019
-------------------------------------------------------------------------------*/
-
 #ifndef PARTICLE_MESH_COUPLING_H_
 #define PARTICLE_MESH_COUPLING_H_
 
@@ -27,94 +21,94 @@ namespace Particles
      */
 
 /**
- * @brief Updates J and B along one grid direction
- *
- * @tparam S splines_at_particles type
- * @tparam vdim Number of Components of B and J
- * @tparam degp Degree of spline in direction of integration (x, y or z)
- * @tparam degp1 Degree of spline in next direction (cyclic)
- * @tparam degp2 Degree of spline in second next direction (cyclic)
- * @tparam pdim Direction of integration (x=0, y=1, z=2)
- * @tparam plength
+ * @brief Updates J and computes integrated B on a given particle trajectory along one grid direction
+ *  
+ * for details about the algorithm see the documentation
+ * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
+ * 
+ * @tparam SplineType Necessary for mocking to the function can take mock spline types
+ * @tparam vDim Number of Components of B and J
+ * @tparam degP Degree of spline in direction of integration (x, y or z)
+ * @tparam degP1 Degree of spline in next direction (cyclic)
+ * @tparam degP2 Degree of spline in second next direction (cyclic)
+ * @tparam pDim Direction of integration (x=0, y=1, z=2)
+ * 
  * @param spline 3D spline at particle position
- * @param spline_new 1D spline at new particle position along given direction
- * @param spline_old 1D spline at old particle position along given direction
  * @param weight Particle charge * weight * dx
  * @param dx
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form
  * @param[out] fields Contribution of B (the 2 that are not in integration direction)
- * @param primitive Temporary array for holding difference of primitives (used for each direction)
  */
-template <typename SplineType, int vdim, int degp, int degp1, int degp2, int pdim>
+template <typename SplineType, int vDim, int degP, int degP1, int degP2, int pDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
     SplineType &spline,
     amrex::Real weight,
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> const &bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields)
 {
-    int pdim1 = (pdim + 1) % 3;
-    int pdim2 = (pdim + 2) % 3;
+    int pDim1 = (pDim + 1) % 3;
+    int pDim2 = (pDim + 2) % 3;
 
     fields = {0., 0.};
     // Size of support of difference of primitives
     // check for ghost cells
-    int local_size = std::abs(spline.span[pdim] - spline.spanOld[pdim]) + degp;
-    int span_start = spline.spanOld[pdim];
-    if (spline.span[pdim] < spline.spanOld[pdim]) span_start = spline.span[pdim];
+    int local_size = std::abs(spline.span[pDim] - spline.spanOld[pDim]) + degP;
+    int span_start = spline.spanOld[pDim];
+    if (spline.span[pDim] < spline.spanOld[pDim]) span_start = spline.span[pDim];
 
 // Add particle contribution to J
 GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= local_size; ++ii),
-                    for (int jj = 0; jj <= degp1; ++jj),
-                    for (int kk = 0; kk <= degp2; ++kk));
+                    for (int jj = 0; jj <= degP1; ++jj),
+                    for (int kk = 0; kk <= degP2; ++kk));
 
-                amrex::Real primitiveDifference = spline.template computePrimitiveDifference<pdim, degp>(dx, ii);
+                amrex::Real primitiveDifference = spline.template computePrimitiveDifference<pDim, degP>(dx, ii);
 
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index;
-                if (pdim == 0)
+                if (pDim == 0)
                     cell_index = {
                         AMREX_D_DECL(span_start + ii, spline.span[1] + jj, spline.span[2] + kk)};
-                else if (pdim == 1)
+                else if (pDim == 1)
                     cell_index = {
                         AMREX_D_DECL(spline.span[0] + kk, span_start + ii, spline.span[2] + jj)};
-                else if (pdim == 2)
+                else if (pDim == 2)
                     cell_index = {
                         AMREX_D_DECL(spline.span[0] + jj, spline.span[1] + kk, span_start + ii)};
                 double s_coeff =
-                    primitiveDifference * spline.splineNode[pdim1][jj] * spline.splineNode[pdim2][kk];
+                    primitiveDifference * spline.splineNode[pDim1][jj] * spline.splineNode[pDim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
-                amrex::HostDevice::Atomic::Add(jArray[pdim].ptr(cell_index[0], 0, 0, 0),
+                amrex::HostDevice::Atomic::Add(jArray[pDim].ptr(cell_index[0], 0, 0, 0),
                                                s_coeff * weight);
 #else
                 amrex::HostDevice::Atomic::Add(
-                    jArray[pdim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
+                    jArray[pDim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
                     s_coeff * weight);
 #endif
                 // Update two components of B
-                if (jj < degp1)
+                if (jj < degP1)
                 {
-                    double s_coeff = primitiveDifference * spline.splineCell[pdim1][jj] *
-                                     spline.splineNode[pdim2][kk];
+                    double s_coeff = primitiveDifference * spline.splineCell[pDim1][jj] *
+                                     spline.splineNode[pDim2][kk];
 
 #if (GEMPIC_SPACEDIM == 1)
-                    fields[0] += s_coeff * (bArray[pdim2])(cell_index[0], 0, 0, 0);
+                    fields[0] += s_coeff * (bArray[pDim2])(cell_index[0], 0, 0, 0);
 #else
                     fields[0] +=
-                        s_coeff * (bArray[pdim2])(
+                        s_coeff * (bArray[pDim2])(
                                       AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
 #endif
                 }
-                if (kk < degp2)
+                if (kk < degP2)
                 {
-                    double s_coeff = primitiveDifference * spline.splineNode[pdim1][jj] *
-                                     spline.splineCell[pdim2][kk];
+                    double s_coeff = primitiveDifference * spline.splineNode[pDim1][jj] *
+                                     spline.splineCell[pDim2][kk];
 #if (GEMPIC_SPACEDIM == 1)
-                    fields[1] += s_coeff * (bArray[pdim1])(cell_index[0], 0, 0, 0);
+                    fields[1] += s_coeff * (bArray[pDim1])(cell_index[0], 0, 0, 0);
 #else
                     fields[1] +=
-                        s_coeff * (bArray[pdim1])(
+                        s_coeff * (bArray[pDim1])(
                                       AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
 #endif
                 }
@@ -126,14 +120,14 @@ GEMPIC_D_LOOP_END;
 /*!
  * Push the velocity with a given electric field
  */
-template <int vdim>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vdim> push_v_efield(
-    amrex::GpuArray<amrex::Real, vdim> vel,
+template <int vDim>
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield(
+    amrex::GpuArray<amrex::Real, vDim> vel,
     amrex::Real dt,
     amrex::Real chargemass,  // charge/mass
-    amrex::GpuArray<amrex::Real, vdim> &Ep)
+    amrex::GpuArray<amrex::Real, vDim> &Ep)
 {
-    amrex::GpuArray<amrex::Real, vdim> newPos;
+    amrex::GpuArray<amrex::Real, vDim> newPos;
 
     AMREX_D_TERM((newPos[0] = vel[0] + dt * chargemass * (Ep[0]));,
                  (newPos[1] = vel[1] + dt * chargemass * (Ep[1]));,
