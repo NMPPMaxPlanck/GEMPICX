@@ -152,7 +152,7 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
                         Spline::SplineWithPrimitive<degx, degy, degz> spline(pos, infra.plo, infra.dxi);
 
-                        operatorHamilton.apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, 0.5*dt, pp);
+                        operatorHamilton.apply_H_e_particle(eA, spline, vel, velx, vely, velz, chargemass, 0.5*dt, pp);
 
                             // amrex::Real weight =
                             // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
@@ -262,7 +262,7 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                         
                         Spline::SplineBase<degx, degy, degz> spline(pos, infra.plo, infra.dxi);
 
-                        operatorHamilton.apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, 0.5*dt, pp);
+                        operatorHamilton.apply_H_e_particle(eA, spline, vel, velx, vely, velz, chargemass, 0.5*dt, pp);
 
                     });
                 }

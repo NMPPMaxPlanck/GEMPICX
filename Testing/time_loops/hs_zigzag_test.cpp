@@ -21,25 +21,6 @@ using ::testing::Mock;
 using ::testing::Exactly;
 using ::testing::_;
 
-namespace Gempic {
-
-namespace Particles {
-
-    template<>
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, 4> Gempic::Particles::push_v_efield<4>(
-        amrex::GpuArray<amrex::Real, 4> vel,
-        amrex::Real dt,
-        amrex::Real chargemass,  // charge/mass
-        amrex::GpuArray<amrex::Real, 4> &Ep)
-    {
-        amrex::GpuArray<amrex::Real, 4> newPos;
-        return newPos;
-    }
-
-}
-
-}
-
 namespace {
     template<int vDim, int numspec, int degX, int degY, int degZ, int degmw, int ndata>
     class MockHSZigZagC2 : public Time_Loop::HSZigZagC2<vDim, numspec, degX, degY, degZ, degmw, ndata> {
@@ -167,7 +148,6 @@ namespace {
             particleLoopRun = true;
 
             MockSpline<degX, degY, degZ> mockSpline({1., 1., 1.}, {1., 1., 1.}, {1., 1., 1., 1.});
-            // EXPECT_CALL(mockHSZigZagC2, push_v_efield).Times(Exactly(1));
 
             const long np{pti.numParticles()};
             EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
@@ -189,12 +169,8 @@ namespace {
                 particle_attributes->GetRealData(1).data();
             amrex::ParticleReal* const AMREX_RESTRICT velz =
                 particle_attributes->GetRealData(2).data();
-            // amrex::GpuArray<amrex::Real, 3> vel{0, 0, 0};
 
-            // mockHSZigZagC2.template apply_H_e_particle<MockSpline<degX, degY, degZ>>(position, particles, infra, eArray, mockSpline,
-            //                                  vel, velx, vely, velz, 1, 1, 0);
             amrex::GpuArray<amrex::Real, 3> efield({1, 1, 1});
-           // mockHSZigZagC2.push_v_efield(vel, 1, 1, efield);
 
             EXPECT_EQ(0, velx[0]);
             EXPECT_EQ(0, vely[0]);
@@ -202,81 +178,4 @@ namespace {
         }
         ASSERT_TRUE(particleLoopRun);
     }
-
-/*
-    TEST_F(HSZigZagC2Test , ApplyHPiTest) {
-        // Adding particle to one cell
-        const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
-        amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
-
-        // (default) charge correctly transferred from addSingleParticles
-        EXPECT_EQ(1, particleGroup[0]->getCharge()); 
-
-        // MockSpline<degX, degY, degZ> mockSpline({1., 1., 1.}, {1., 1., 1.}, {1., 1., 1., 1.});
-
-        bool particleLoopRun{false};
-        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
-        {
-            particleLoopRun = true;
-
-            const long np{pti.numParticles()};
-            EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
-
-            // hsZigZag.apply_H_e_particle();
-        }
-        ASSERT_TRUE(particleLoopRun);
-    }
-
-    TEST_F(HSZigZagC2Test , ApplyHBTest) {
-        // Adding particle to one cell
-        const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
-        amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
-
-        // (default) charge correctly transferred from addSingleParticles
-        EXPECT_EQ(1, particleGroup[0]->getCharge()); 
-
-        // MockSpline<degX, degY, degZ> mockSpline({1., 1., 1.}, {1., 1., 1.}, {1., 1., 1., 1.});
-
-        bool particleLoopRun{false};
-        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
-        {
-            particleLoopRun = true;
-
-            const long np{pti.numParticles()};
-            EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
-
-            // hsZigZag.apply_H_e_particle();
-        }
-        ASSERT_TRUE(particleLoopRun);
-    }
-
-    TEST_F(HSZigZagC2Test , ApplyHEFieldTest) {
-        // Adding particle to one cell
-        const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
-        amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
-
-        // (default) charge correctly transferred from addSingleParticles
-        EXPECT_EQ(1, particleGroup[0]->getCharge()); 
-
-        // MockSpline<degX, degY, degZ> mockSpline({1., 1., 1.}, {1., 1., 1.}, {1., 1., 1., 1.});
- 
-        bool particleLoopRun{false};
-        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
-        {
-            particleLoopRun = true;
-
-            const long np{pti.numParticles()};
-            EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
-
-            // hsZigZag.apply_H_e_particle();
-        }
-        ASSERT_TRUE(particleLoopRun);
-    }
-*/
 }

@@ -186,7 +186,7 @@ class OperatorHamilton {
     {
         constexpr int degrees[3] = {degx, degy, degz};
 
-        amrex::Real x_new = pos[dim] + dt * 0.5 * vel[dim];
+        amrex::Real x_new = pos[dim] + dt * vel[dim];
 
         spline.template update1DSplines<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
         spline.template update1DPrimitive<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);

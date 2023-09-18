@@ -247,7 +247,7 @@ namespace {
                     // with the remaining entries being 0
                     0);
         }
-        // ASSERT_TRUE(loopRun);
+        ASSERT_TRUE(loopRun);
     }
 
     TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII) {
@@ -297,7 +297,7 @@ namespace {
                     // with the remaining entries being 0
                     1);
         }
-        // ASSERT_TRUE(loopRun);
+        ASSERT_TRUE(loopRun);
     }
 
     TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII) {
