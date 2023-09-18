@@ -129,12 +129,12 @@ class OperatorHamilton {
             spline.template evalField<vdim, 1>(eA);
 
         // push v with the electric field
-        amrex::GpuArray<amrex::Real, vdim> newPosE =
-            push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
+        amrex::GpuArray<amrex::Real, vdim> newVelE =
+            push_v_efield<vdim>(vel, dt, chargemass, efield);
 
-        velx[pp] = newPosE[0];
-        vely[pp] = newPosE[1];
-        velz[pp] = newPosE[2];
+        velx[pp] = newVelE[0];
+        vely[pp] = newVelE[1];
+        velz[pp] = newVelE[2];
     }
 
 /**
@@ -224,7 +224,7 @@ class OperatorHamilton {
         // Solve Ampere-Maxwell
         deRham -> hodgeFD<degmw>(B, auxDualH);
         deRham -> curl(auxDualH, auxDualF2);
-        auxDualF2 *= 0.5*dt;
+        auxDualF2 *= dt;
         D += auxDualF2;
     }
 
@@ -250,7 +250,7 @@ class OperatorHamilton {
         deRham -> hodgeFD<degmw>(D, auxE);
         // Operator H_E for dt/2
         deRham -> curl(auxE, auxPrimalF2);
-        auxPrimalF2 *= 0.5*dt;
+        auxPrimalF2 *= dt;
         B -= auxPrimalF2;
     }
 };

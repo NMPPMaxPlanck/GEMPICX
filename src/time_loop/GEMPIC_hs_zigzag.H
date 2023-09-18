@@ -88,9 +88,9 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
             (H.data[1]).mult(1/(dr[1]));
             (H.data[2]).mult(1/(dr[2]));
 
-            operatorHamilton.apply_H_b(deRham, B, D, H, auxDualF2, dt);
+            operatorHamilton.apply_H_b(deRham, B, D, H, auxDualF2, 0.5*dt);
 
-            operatorHamilton.apply_H_e_field(deRham, E, B, D, auxPrimalF2, dt);
+            operatorHamilton.apply_H_e_field(deRham, E, B, D, auxPrimalF2, 0.5*dt);
 
             // start treat particles
             // Deposit particles in J and push particles: H_p = H_p1 + H_p2 + H_p3
@@ -152,7 +152,7 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
                         Spline::SplineWithPrimitive<degx, degy, degz> spline(pos, infra.plo, infra.dxi);
 
-                        operatorHamilton.apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, dt, pp);
+                        operatorHamilton.apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, 0.5*dt, pp);
 
                             // amrex::Real weight =
                             // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
@@ -168,13 +168,13 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
                             // push x1
-                            operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                            operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, 0.5*dt);
 
                             if (vdim > 1)
                             {
         #if GEMPIC_SPACEDIM > 1
                                 // push x2
-                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, 0.5*dt);
         #endif
                             }
                             if (vdim > 2)
@@ -189,12 +189,12 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             {
         #if GEMPIC_SPACEDIM > 1
                                 // push x2
-                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, 0.5*dt);
         #endif
                             }
 
                             // second half step of Hp1
-                        operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, dt);
+                        operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, dx, jA, bA, chargemass, weight, 0.5*dt);
 
                             for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
                             // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
@@ -262,7 +262,7 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                         
                         Spline::SplineBase<degx, degy, degz> spline(pos, infra.plo, infra.dxi);
 
-                        operatorHamilton.apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, dt, pp);
+                        operatorHamilton.apply_H_e_particle(pos, particles, infra, eA, spline, vel, velx, vely, velz, chargemass, 0.5*dt, pp);
 
                     });
                 }
@@ -270,9 +270,9 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
             }
             // end treat particles
 
-            operatorHamilton.apply_H_e_field(deRham, E, B, D, auxPrimalF2_2, dt);
+            operatorHamilton.apply_H_e_field(deRham, E, B, D, auxPrimalF2_2, 0.5*dt);
 
-            operatorHamilton.apply_H_b(deRham, B, D, H, auxDualF2_2, dt);
+            operatorHamilton.apply_H_b(deRham, B, D, H, auxDualF2_2, 0.5*dt);
 
             amrex::Real D_rms = 0.0;
             for (amrex::MFIter mfi(D.data[0]); mfi.isValid(); ++mfi)
