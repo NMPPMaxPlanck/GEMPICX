@@ -35,7 +35,7 @@ namespace Particles
  * 
  * @param spline 3D spline at particle position
  * @param weight Particle charge * weight * dx
- * @param dx
+ * @param dx Spatial grid size
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form
  * @param[out] fields Contribution of B (the 2 that are not in integration direction)
@@ -118,13 +118,20 @@ GEMPIC_D_LOOP_END;
 }
 
 /*!
- * Push the velocity with a given electric field
+ * @brief Push the velocity with a given electric field
+ *
+ * @tparam vDim Number of Components of B and J
+ * 
+ * @param vel Velocity component
+ * @param dt Temporal grid size
+ * @param chargemass : (q/m)_p ratio
+ * @param Ep Electric field
  */
 template <int vDim>
 AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield(
     amrex::GpuArray<amrex::Real, vDim> vel,
     amrex::Real dt,
-    amrex::Real chargemass,  // charge/mass
+    amrex::Real chargemass,
     amrex::GpuArray<amrex::Real, vDim> &Ep)
 {
     amrex::GpuArray<amrex::Real, vDim> newPos;
@@ -141,22 +148,23 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield(
  *
  * Here nodal splines seem to be used for deposition where integral of cell splines are expected
  *
- * @tparam degx Spline degree in x
- * @tparam degy Spline degree in y
- * @tparam degz Spline degree in z
+ * @tparam degX Spline degree in x
+ * @tparam degY Spline degree in y
+ * @tparam degZ Spline degree in z
+ * 
  * @param spline Splines evaluated at given particle position
  * @param weight Particle weight*charge*dx
  * @param rho charge density to be computed
  */
-template <int degx, int degy, int degz>
+template <int degX, int degY, int degZ>
 AMREX_GPU_HOST_DEVICE void gempic_deposit_rho(
-    Spline::SplineBase<degx, degy, degz> &spline,
+    Spline::SplineBase<degX, degY, degZ> &spline,
     amrex::Real weight,
     amrex::Array4<amrex::Real> const &rho)
 {
-GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degx; ++ii),
-                    for (int jj = 0; jj <= degy; ++jj),
-                    for (int kk = 0; kk <= degz; ++kk))
+GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
+                    for (int jj = 0; jj <= degY; ++jj),
+                    for (int kk = 0; kk <= degZ; ++kk))
 
     amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
         AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
