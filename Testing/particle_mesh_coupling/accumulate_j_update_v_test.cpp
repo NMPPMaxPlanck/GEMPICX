@@ -38,18 +38,18 @@ namespace {
         amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
         {
 
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos_start;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
-                position[d] = partData[0].pos(d);
+                pos_start[d] = partData[0].pos(d);
 
-            amrex::Real x_new = 0;
+            amrex::Real x_end = 0;
 
-            Spline::SplineWithPrimitive<degX, degY, degZ> splineNew(position, infra.plo, infra.dxi);
+            Spline::SplineWithPrimitive<degX, degY, degZ> spline(pos_start, infra.plo, infra.dxi);
 
-            splineNew.template update1DSplines<pDim, degP>(x_new, infra.plo[0], infra.dxi[0]);
-            splineNew.template update1DPrimitive<pDim, degP>(x_new, infra.plo[0], infra.dxi[0]);
+            spline.template update1DSplines<pDim, degP>(x_end, infra.plo[0], infra.dxi[0]);
+            spline.template update1DPrimitive<pDim, degP>(x_end, infra.plo[0], infra.dxi[0]);
 
-            accumulate_j_update_v<Spline::SplineWithPrimitive<1, 1, 1>, vDim, degP, degP1, degP2, pDim>(splineNew, weight, dx, bA, jA, bFields[0]);
+            accumulate_j_update_v<Spline::SplineWithPrimitive<1, 1, 1>, vDim, degP, degP1, degP2, pDim>(spline, weight, dx, bA, jA, bFields[0]);
         });
 
         bfields = bFields[0];
@@ -86,7 +86,6 @@ namespace {
         static const int pDim{1};
 
         amrex::Real weight = 1.0;
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx = {1.0, 1.0, 1.0};
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
         amrex::GpuArray<amrex::Real, std::max(degX, std::max(degY, degZ)) + 4> primitive;
@@ -172,7 +171,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[1], 0);
@@ -237,7 +236,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_NEAR(bfields[0], -4.5, 0.000000000000001);
             EXPECT_NEAR(bfields[1], -4.5, 0.000000000000001);
@@ -302,7 +301,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_NEAR(bfields[0], -4.75, 0.000000000000001);
             EXPECT_NEAR(bfields[1], -4.75, 0.000000000000001);
@@ -370,7 +369,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[0], 0);
@@ -438,7 +437,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[0], 0);

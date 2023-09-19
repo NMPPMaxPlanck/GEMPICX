@@ -233,11 +233,11 @@ namespace {
 
         bool loopRun{false};
 
-        for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(phiData); mfi.isValid(); ++mfi)
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
+            checkRho(__LINE__, (phiData[mfi]).array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,

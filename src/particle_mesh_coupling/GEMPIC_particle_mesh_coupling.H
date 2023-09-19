@@ -23,6 +23,30 @@ namespace Particles
 /**
  * @brief Updates J and computes integrated B on a given particle trajectory along one grid direction
  *  
+ * Description:
+ * given a particle trajectory x_{p,d} moving along a single dimension only (with velocity v_{p,d} aligned with grid dimension d), this function:
+ * 
+ * (1) for every dual face (dof) index) i i-th adds the time integrals 
+ *     dJ_{i,p,d} = q_p w_p \int_{t_start}^{t_end} t_R2_i( v_{p,d} * S(x-x_{p,d}(t)) ) dt
+ *     to the i-th component of the "current density"
+ *     where t_R2_i is the dof (reduction operator) corresponding to dual face i
+ *     
+ *     Note that the resulting current density is a time integral over the time step, not a time average
+ *  
+ * (2) computes the time integral of magnetic field needed for the time-integrated Lorentz force corresponding to this straight trajectory
+ *     dF_{p,d} = (q/m)_p \int_{t_start}^{t_end} v_{p,d} x B(x_{p,d}(t))dt
+ *
+ *     Specifically this function computes
+ *     fields[0] = \int_{t_start}^{t_end} B_{d-1}(x_{p,d}(t))dt
+ *     fields[1] = \int_{t_start}^{t_end} B_{d+1}(x_{p,d}(t))dt
+ *     So that after this function call the velocity can be updated over the time step 
+ *     with 
+ *     v_{p,d} += dF_{p,d}
+ *     ie
+ *     v_{p,d}_{d+1} -= (q/m)_p * v_{p,d}_d * fields[0]
+ *     v_{p,d}_{d-1} += (q/m)_p * v_{p,d}_d * fields[1]
+ *     (the Lorentz force has no contribution on the d component of v_{p,d})
+ *     
  * for details about the algorithm see the documentation
  * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
  * 
@@ -33,8 +57,8 @@ namespace Particles
  * @tparam degP2 Degree of spline in second next direction (cyclic)
  * @tparam pDim Direction of integration (x=0, y=1, z=2)
  * 
- * @param spline 3D spline at particle position
- * @param weight Particle charge * weight * dx
+ * @param spline 3D spline containing spline values and the particle trajectory
+ * @param weight Particle weight
  * @param dx Spatial grid size
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form

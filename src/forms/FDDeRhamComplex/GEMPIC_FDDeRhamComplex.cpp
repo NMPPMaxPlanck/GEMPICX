@@ -549,7 +549,6 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::RealVect dr = m_dr;
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
-
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
         {
             AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)

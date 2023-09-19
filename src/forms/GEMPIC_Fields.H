@@ -268,27 +268,35 @@ public:
     void initializeField(DeRhamField<Grid::primal, Space::node>& field)
     {
         field.data.define(amrex::convert(grid, primalNodeIndex) , distriMap, 1, nGhost[0]);
+        field.data.setVal(0.0);
     }
 
     // Function overloads for the initializations
     void initializeField(DeRhamField<Grid::primal, Space::edge>& field)
     {
         field.data[0].define(amrex::convert(grid, primalEdgeIndex[0]) , distriMap, 1, nGhost[0]);
+        field.data[0].setVal(0.0);
         field.data[1].define(amrex::convert(grid, primalEdgeIndex[1]) , distriMap, 1, nGhost[0]);
+        field.data[1].setVal(0.0);
         field.data[2].define(amrex::convert(grid, primalEdgeIndex[2]) , distriMap, 1, nGhost[0]);
+        field.data[2].setVal(0.0);
     }
 
 
     void initializeField(DeRhamField<Grid::primal, Space::face>& field)
     {
         field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, 1, nGhost[0]);
+        field.data[0].setVal(0.0);
         field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, 1, nGhost[0]);
+        field.data[1].setVal(0.0);
         field.data[2].define(amrex::convert(grid, primalFaceIndex[2]) , distriMap, 1, nGhost[0]);
+        field.data[2].setVal(0.0);
     }
 
     void initializeField(DeRhamField<Grid::primal, Space::cell>& field)
     {
         field.data.define(amrex::convert(grid, primalCellIndex) , distriMap, 1, nGhost[0]);
+        field.data.setVal(0.0);
     }
 
 
@@ -296,27 +304,35 @@ public:
     void initializeField(DeRhamField<Grid::dual, Space::node>& field)
     {
         field.data.define(amrex::convert(grid, primalCellIndex) , distriMap, 1, nGhost[0]);
+        field.data.setVal(0.0);
     }
 
 
     void initializeField(DeRhamField<Grid::dual, Space::edge>& field)
     {
         field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, 1, nGhost[0]);
+        field.data[0].setVal(0.0);
         field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, 1, nGhost[0]);
+        field.data[1].setVal(0.0);
         field.data[2].define(amrex::convert(grid, primalFaceIndex[2]) , distriMap, 1, nGhost[0]);
+        field.data[2].setVal(0.0);
     }
 
 
     void initializeField(DeRhamField<Grid::dual, Space::face>& field)
     {
         field.data[0].define(amrex::convert(grid, primalEdgeIndex[0]) , distriMap, 1, nGhost[0]);
+        field.data[0].setVal(0.0);
         field.data[1].define(amrex::convert(grid, primalEdgeIndex[1]) , distriMap, 1, nGhost[0]);
+        field.data[1].setVal(0.0);
         field.data[2].define(amrex::convert(grid, primalEdgeIndex[2]) , distriMap, 1, nGhost[0]);
+        field.data[2].setVal(0.0);
     }
 
     void initializeField(DeRhamField<Grid::dual, Space::cell>& field)
     {
         field.data.define(amrex::convert(grid, primalNodeIndex) , distriMap, 1, nGhost[0]);
+        field.data.setVal(0.0);
     }
 
 
