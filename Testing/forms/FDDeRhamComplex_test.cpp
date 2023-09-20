@@ -80,8 +80,6 @@ namespace {
         const int Nghost{GEMPIC_TestUtils::initNGhost(1, 1, 1)};
         Parameters params;
         computational_domain infra;
-        amrex::MultiFab rhoData;
-        amrex::MultiFab phiData;
 
         // virtual void SetUp() will be called before each test is run.
         void SetUp() override {
@@ -93,24 +91,13 @@ namespace {
             const amrex::Array<int, 3> isPeri{AMREX_D_DECL(1, 1, 1)};
             const amrex::IntVect isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-            Parameters params(realBox, nCell, maxGridSize, isPeri, hodgeDegree);
+            params = Parameters(realBox, nCell, maxGridSize, isPeri, hodgeDegree);
 
             infra.initialize_computational_domain(nCell, maxGridSize, isPeriodic, realBox);
             // Setup rho. This is  the special part of this text fixture.
             // node centered BA:
             const amrex::BoxArray &nba{amrex::convert(infra.grid, amrex::IntVect::TheNodeVector())};
             int Ncomp{1};            
-
-            rhoData.define(nba, params.distriMap(), Ncomp, {AMREX_D_DECL(1, 1, 1)});
-            //rhoData.define(nba, infra.distriMap, Ncomp, {AMREX_D_DECL(1, 1, 1)});
-            rhoData.setVal(1.0);
-
-            phiData.define(nba, params.distriMap(), Ncomp, {AMREX_D_DECL(1, 1, 1)});
-            //phiData.define(nba, infra.distriMap, Ncomp, {AMREX_D_DECL(1, 1, 1)});
-            phiData.setVal(0.0);
-
-            // Ensure rho exists and is 0 everywhere
-            // ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho, infra, 2));
         }
     };
 
@@ -121,19 +108,37 @@ namespace {
         amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
         amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
 
+        const std::string analyticalFunc = "1.0";
+
+        const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+        amrex::ParserExecutor<nVar> func;
+        amrex::Parser parser;
+
+        parser.define(analyticalFunc);
+        parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func = parser.compile<nVar>();
+
+        // Initialize the De Rham Complex
+        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        
+        DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
+        DeRhamField<Grid::primal, Space::node> phi(deRham);
+
+        EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
+
         std::tie(stencilNodeToCell, stencilCellToNode) =
             getHodgeStencils<degX, 0, stencilLength>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rhoData, phiData);
+        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
-        for (amrex::MFIter mfi(phiData); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phiData[mfi]).array(), infra.n_cell.dim3(),
+            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
@@ -153,19 +158,37 @@ namespace {
         amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
         amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
 
+        const std::string analyticalFunc = "1.0";
+
+        const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+        amrex::ParserExecutor<nVar> func;
+        amrex::Parser parser;
+
+        parser.define(analyticalFunc);
+        parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func = parser.compile<nVar>();
+
+        // Initialize the De Rham Complex
+        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        
+        DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
+        DeRhamField<Grid::primal, Space::node> phi(deRham);
+
+        EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
+
         std::tie(stencilNodeToCell, stencilCellToNode) =
             getHodgeStencils<4, 0, stencilLength>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rhoData, phiData);
+        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
-        for (amrex::MFIter mfi(phiData); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phiData[mfi]).array(), infra.n_cell.dim3(),
+            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
@@ -185,19 +208,37 @@ namespace {
         amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
         amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
 
+        const std::string analyticalFunc = "1.0";
+
+        const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+        amrex::ParserExecutor<nVar> func;
+        amrex::Parser parser;
+
+        parser.define(analyticalFunc);
+        parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        func = parser.compile<nVar>();
+
+        // Initialize the De Rham Complex
+        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        
+        DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
+        DeRhamField<Grid::primal, Space::node> phi(deRham);
+
+        EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
+
         std::tie(stencilNodeToCell, stencilCellToNode) =
             getHodgeStencils<6, 0, stencilLength>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rhoData, phiData);
+        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
-        for (amrex::MFIter mfi(phiData); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phiData[mfi]).array(), infra.n_cell.dim3(),
+            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
@@ -233,11 +274,11 @@ namespace {
 
         bool loopRun{false};
 
-        for (amrex::MFIter mfi(phiData); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phiData[mfi]).array(), infra.n_cell.dim3(),
+            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
@@ -268,7 +309,7 @@ namespace {
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-        ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho.data, infra, 2));
+        EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         // Select stencil according to degree
         const int stencilLength = degX - 1;

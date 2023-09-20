@@ -590,7 +590,7 @@ inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc)
     {
         parser.define(analyticalFunc[i]);
         parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        func[i] = parser.compile<4>();
+        func[i] = parser.compile<nVar>();
     }
 
     deRham->projection(func, 0.0, *this);
