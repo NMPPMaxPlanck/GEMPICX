@@ -265,12 +265,12 @@ namespace {
             amrex::Particle<0, 0>* AMREX_RESTRICT particles =
                 &(pti.GetArrayOfStructs()[0]);
 
-            amrex::GpuArray<amrex::Array4<amrex::Real>, 4> jArray;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, 3> jArray;
             for (int cc{0}; cc < vDim; cc++) jArray[cc] = (J.data[cc])[pti].array();
 
 
-            amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bArray;
-            for (int cc{0}; cc < vDim; cc++) jArray[cc] = (B.data[cc])[pti].array();
+            amrex::GpuArray<amrex::Array4<amrex::Real>, 3> bArray;
+            for (int cc{0}; cc < vDim; cc++) bArray[cc] = (B.data[cc])[pti].array();
 
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
@@ -283,11 +283,11 @@ namespace {
                 particle_attributes->GetRealData(1).data();
             amrex::ParticleReal* const AMREX_RESTRICT velz =
                 particle_attributes->GetRealData(2).data();
-            amrex::GpuArray<amrex::Real, 4> vel{0, 0, 0, 0};
+            amrex::GpuArray<amrex::Real, 3> vel{0, 0, 0};
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            OperatorHamilton<4, degX, degY, degZ, degmw> operatorHamilton;
+            OperatorHamilton<3, degX, degY, degZ, degmw> operatorHamilton;
 
             operatorHamilton.template apply_H_p_i<0, MockSpline<degX, degY, degZ>>(
                 position,

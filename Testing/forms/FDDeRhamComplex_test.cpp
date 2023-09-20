@@ -75,9 +75,9 @@ namespace {
         static const int degmw{2};
         static const int propagator{3};
 
-        static const int hodgeDegree{2};
+        static const int hodgeDegree{6};
         // Number of ghost cells in mesh
-        const int Nghost{GEMPIC_TestUtils::initNGhost(1, 1, 1)};
+        const int Nghost{GEMPIC_TestUtils::initNGhost(degX, degY, degZ)};
         Parameters params;
         computational_domain infra;
 
@@ -94,10 +94,6 @@ namespace {
             params = Parameters(realBox, nCell, maxGridSize, isPeri, hodgeDegree);
 
             infra.initialize_computational_domain(nCell, maxGridSize, isPeriodic, realBox);
-            // Setup rho. This is  the special part of this text fixture.
-            // node centered BA:
-            const amrex::BoxArray &nba{amrex::convert(infra.grid, amrex::IntVect::TheNodeVector())};
-            int Ncomp{1};            
         }
     };
 
@@ -359,7 +355,7 @@ namespace {
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham, func);
 
-        const amrex::BoxArray &nba{amrex::convert(infra.grid, amrex::IntVect::TheNodeVector())};
+//        const amrex::BoxArray &nba{amrex::convert(infra.grid, amrex::IntVect::TheNodeVector())};
 
 //        rho.data.define(nba, infra.distriMap, Ncomp, Nghost);
 

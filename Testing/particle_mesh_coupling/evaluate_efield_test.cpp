@@ -286,6 +286,68 @@ namespace {
         }
     }
 
+    TEST_F(EvaluateEFieldTest, Scaling) {
+        /* Initialize the infrastructure with cell sizes different from 1*/
+        const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+                                        {AMREX_D_DECL(10.0, 10.0, 10.0)});
+        const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
+        const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
+        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+        const int hodgeDegree{2};
+
+        // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
+        infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+
+        params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
+        
+        // particle groups
+        for (int spec{0}; spec < numSpec; spec++)
+        {
+            particleGroup[spec] =
+                std::make_unique<particle_groups<vDim>>(charge, mass, infra);
+        }
+
+        // Adding particle to one cell
+        const int numParticles{1};
+        // Add particle in the middle of final cell to check periodic boundary conditions
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[0] - 1.25*infra.dx[0],
+                      infra.geom.ProbHi()[1] - 1.25*infra.dx[1],
+                      infra.geom.ProbHi()[2] - 1.25*infra.dx[2])};
+        amrex::Array<amrex::Real, numParticles> weights{1};
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+
+        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+
+        // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
+        // Ey, Ez
+        const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+
+        const int nVar{4};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        amrex::Parser parser;
+
+        for (int i{0}; i < 3; ++i)
+        {
+            parser.define(analyticalFuncE[i]);
+            parser.registerVariables({"x", "y", "z", "t"});
+            funcE[i] = parser.compile<4>();
+        }
+
+        // Initialize the De Rham Complex
+        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
+
+        DeRhamField<Grid::primal, Space::edge> E(deRham);
+        deRham->projection(funcE, 0.0, E);
+
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        {
+            const long np{pti.numParticles()};
+            EXPECT_EQ(numParticles, np);
+
+            updateEFieldParallelFor<vDim, degX, degY, degZ>(pti, E, infra);
+        }
+    }
+
     TEST_F(EvaluateEFieldTest, DoubleParticleSeparate) {
         const int numParticles{2};
         // Particles in different cells to check that they don't interfere with each other

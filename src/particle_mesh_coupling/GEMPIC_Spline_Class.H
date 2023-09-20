@@ -95,6 +95,10 @@ public:
         const amrex::Real xint = initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
 
         splineEval<deg - 1, std::max(std::max(degX, degY), degZ)>(xint, splineCell[dim]);
+        // Scaling according to documentation
+        for (size_t i{0}; i < deg; i++) {
+            splineCell[dim][i] *= dxInverse;
+        }
         splineEval<deg, std::max(std::max(degX, degY), degZ) + 1>(xint, splineNode[dim]);
     }
 
@@ -362,6 +366,9 @@ public:
         const amrex::Real xint = this->template initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
 
         this->template splineEval<deg - 1, std::max(std::max(degX, degY), degZ)>(xint, this->splineCell[dim]);
+        for (size_t i{0}; i < deg; i++) {
+            this->splineCell[dim][i] *= dxInverse;
+        }
         this->template splineEval<deg, std::max(std::max(degX, degY), degZ) + 1>(xint, this->splineNode[dim]);
     }
 

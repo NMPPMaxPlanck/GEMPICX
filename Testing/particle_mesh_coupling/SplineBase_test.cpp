@@ -121,6 +121,64 @@ namespace {
     }
 
     /**
+     * @brief Test the constructor of the SplineBase class on a non-unit grid
+     * @details Make sure that all values are initialized
+    */
+    TEST_F(SplineBaseTest, SplineConstructorScalingTest) {
+        /* Initialize the infrastructure */
+        const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+                                        {AMREX_D_DECL(10.0, 10.0, 10.0)});
+        const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
+        const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
+        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+        const int hodgeDegree{2};
+
+        infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+
+        params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
+
+        // particles
+        for (int spec{0}; spec < numSpec; spec++)
+        {
+            particleGroup[spec] =
+                std::make_unique<particle_groups<vDim>>(charge, mass, infra);
+        }
+
+        // Adding particle to one cell
+        const int numParticles{1};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::Real, numParticles> weights{1};
+        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+
+        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+
+        bool particleLoopRun{false};
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[spec], 0); pti.isValid(); ++pti)
+        {
+            particleLoopRun = true;
+
+            const auto& particles{pti.GetArrayOfStructs()};
+            const auto partData{particles().data()};
+
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+            for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+                position[d] = partData[0].pos(d);
+            Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
+
+            EXPECT_EQ(infra.dxi[0], spline.splineCell[0][0]);
+            EXPECT_EQ(infra.dxi[1], spline.splineCell[1][0]);
+            EXPECT_EQ(infra.dxi[2], spline.splineCell[2][0]);
+
+            EXPECT_EQ(1., spline.splineNode[0][0]);
+            EXPECT_EQ(0., spline.splineNode[0][1]);
+            EXPECT_EQ(1., spline.splineNode[1][0]);
+            EXPECT_EQ(0., spline.splineNode[1][1]);
+            EXPECT_EQ(1., spline.splineNode[2][0]);
+            EXPECT_EQ(0., spline.splineNode[2][1]);
+        }
+        ASSERT_TRUE(particleLoopRun);
+    }
+    /**
      * @brief Test the initBSplinesAtPositions method
      * @details Verify values for different degrees and positions
     */
