@@ -150,13 +150,13 @@ namespace {
             amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
             EXPECT_EQ(1., result);
 
-            spline.template update1DPrimitive<0, 1>(1, 1, 1);
+            spline.template update1DPrimitive<0>(1, 1, 1);
             EXPECT_EQ(1., spline.primitiveNew[0][0]);
 
-            spline.template update1DPrimitive<1, 1>(1, 1, 1);
+            spline.template update1DPrimitive<1>(1, 1, 1);
             EXPECT_EQ(1., spline.primitiveNew[1][0]);
 
-            spline.template update1DPrimitive<2, 1>(1, 1, 1);
+            spline.template update1DPrimitive<2>(1, 1, 1);
             EXPECT_EQ(1., spline.primitiveNew[2][0]);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -192,29 +192,29 @@ namespace {
             EXPECT_EQ(0, spline.span[0]);
             EXPECT_EQ(0, spline.spanOld[0] - spline.span[0]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0, 1>({1, 1, 1}, 0);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
             EXPECT_EQ(-1, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 1>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 1>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
 
-            spline.template update1DSplines<0, 1>(0.5, infra.plo[0], infra.dxi[0]);
-            spline.template update1DPrimitive<0, 1>(0.5, infra.plo[0], infra.dxi[0]);
+            spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
+            spline.template update1DPrimitive<0>(0.5, infra.plo[0], infra.dxi[0]);
 
             EXPECT_EQ(0, spline.spanOld[0]);
             EXPECT_EQ(0, spline.span[0]);
             EXPECT_EQ(0, spline.spanOld[0] - spline.span[0]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 1>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 1>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
             EXPECT_EQ(0.5, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 1>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(0.05, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -250,29 +250,29 @@ namespace {
             EXPECT_EQ(0, spline.span[1]);
             EXPECT_EQ(0, spline.spanOld[1] - spline.span[1]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<1, 1>({1, 1, 1}, 1);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1, 1>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 0);
             EXPECT_EQ(-1, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1, 1>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
 
-            spline.template update1DSplines<1, 1>(0.5, infra.plo[1], infra.dxi[1]);
-            spline.template update1DPrimitive<1, 1>(0.5, infra.plo[1], infra.dxi[1]);
+            spline.template update1DSplines<1>(0.5, infra.plo[1], infra.dxi[1]);
+            spline.template update1DPrimitive<1>(0.5, infra.plo[1], infra.dxi[1]);
 
             EXPECT_EQ(0, spline.spanOld[1]);
             EXPECT_EQ(0, spline.span[1]);
             EXPECT_EQ(0, spline.spanOld[1] - spline.span[1]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1, 1>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1, 1>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 0);
             EXPECT_EQ(0.5, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1, 1>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(0.05, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -308,26 +308,26 @@ namespace {
             EXPECT_EQ(-1, spline.span[0]);
             EXPECT_EQ(0, spline.spanOld[0] - spline.span[0]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0, 2>({1, 1, 1}, 0);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
             EXPECT_EQ(9.875, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 2>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(0.9875, primitiveDifference);
 
-            spline.template update1DSplines<0, 2>(0.5, infra.plo[0], infra.dxi[0]);
-            spline.template update1DPrimitive<0, 2>(0.5, infra.plo[0], infra.dxi[0]);
+            spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
+            spline.template update1DPrimitive<0>(0.5, infra.plo[0], infra.dxi[0]);
 
             EXPECT_EQ(-1, spline.spanOld[0]);
             EXPECT_EQ(0, spline.span[0]);
             EXPECT_EQ(-1, spline.spanOld[0] - spline.span[0]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 2>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 1);
             EXPECT_EQ(0.375, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 2>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
             EXPECT_EQ(0.125, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0, 2>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
             EXPECT_EQ(0.0125, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);

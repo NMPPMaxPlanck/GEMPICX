@@ -186,9 +186,6 @@ int main(int argc, char* argv[])
     deRham->grad(phi, E);
 
     E *= -1.0;
-//    E *= 0.0;
-    // Rescale the fields
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
 
     amrex::Real dt = parametersBernstein.dt;
     int nSteps = parametersBernstein.n_steps;
@@ -217,8 +214,6 @@ int main(int argc, char* argv[])
                     particle_attributes->GetRealData(0).data();
                 amrex::ParticleReal* const AMREX_RESTRICT vely =
                     particle_attributes->GetRealData(1).data();
-                amrex::ParticleReal* const AMREX_RESTRICT velz =
-                    particle_attributes->GetRealData(2).data();
 
                 const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
@@ -262,9 +257,6 @@ int main(int argc, char* argv[])
             deRham->grad(phi, E);
 
             E *= -1.0;
-//            E *= 0.0;
-            // Rescale the fields
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
 
             rho.data.setVal(0.0);
 

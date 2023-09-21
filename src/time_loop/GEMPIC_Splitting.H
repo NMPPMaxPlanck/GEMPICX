@@ -184,16 +184,12 @@ class OperatorHamilton {
                             amrex::Real const dt
     ) const
     {
-        constexpr int degrees[3] = {degx, degy, degz};
-
         amrex::Real x_new = pos[dim] + dt * vel[dim];
 
-        spline.template update1DSplines<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
-        spline.template update1DPrimitive<dim, degrees[dim]>(x_new, infra.plo[dim], infra.dxi[dim]);
+        spline.template update1DSplines<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
+        spline.template update1DPrimitive<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
 
-        accumulate_j_update_v<SplineType,
-                                    vdim, degrees[dim], degrees[(dim+1)%3],
-                                    degrees[(dim+2)%3], dim>
+        accumulate_j_update_v<SplineType, vdim, dim>
                                     (spline, weight, dx, bA, jA, bfields);
 
         if (vdim > 1) vel[(dim+1)%3] = vel[(dim+1)%3] - chargemass * bfields[0];

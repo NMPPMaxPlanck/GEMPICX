@@ -85,11 +85,7 @@ void print_param(gempic_parameters<vdim, numspec> params)
     amrex::Real xhi = params.real_box.hi()[0];
     amrex::Real dx = (xhi - xlo) / params.n_cell[0];
     amrex::Real ylo = params.real_box.lo()[1];
-    amrex::Real yhi = params.real_box.hi()[1];
-    amrex::Real dy = (xhi - xlo) / params.n_cell[1];
     amrex::Real zlo = params.real_box.lo()[2];
-    amrex::Real zhi = params.real_box.hi()[2];
-    amrex::Real dz = (xhi - xlo) / params.n_cell[2];
     amrex::Real x, y, z, t = 1.0;
     amrex::Real maxerr = 0, maxloc = 0;
     for (int i = 0; i < params.n_cell[0]; i++)

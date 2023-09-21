@@ -10,7 +10,7 @@ namespace Spline {
  * @tparam degY Degree of the spline in y-direction
  * @tparam degZ Degree of the spline in z-direction
 */
-template<int degX, int degY, int degZ>
+template<AMREX_D_DECL(int degX, int degY, int degZ)>
 class SplineBase {
 
 public:
@@ -33,11 +33,24 @@ public:
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
-        AMREX_D_TERM((update1DSplines<0, degX>(position[0], plo[0], dxInverse[0]));,
-                     (update1DSplines<1, degY>(position[1], plo[1], dxInverse[1]));,
-                     (update1DSplines<2, degZ>(position[2], plo[2], dxInverse[2])););
+        AMREX_D_TERM((update1DSplines<0>(position[0], plo[0], dxInverse[0]));,
+                     (update1DSplines<1>(position[1], plo[1], dxInverse[1]));,
+                     (update1DSplines<2>(position[2], plo[2], dxInverse[2])););
     }
 
+    /**
+     * @brief An array of spline degrees stored for convenience
+    */
+    static constexpr int splineDegrees[GEMPIC_SPACEDIM] = {AMREX_D_DECL(degX, degY, degZ)};
+
+    /**
+     * @brief Max spline degree stored fo convenience
+    */
+    static constexpr int maxDeg{AMREX_D_PICK(
+        degX,
+        std::max(degX, degY),
+        std::max(std::max(degX, degY), degZ)
+    )};
     /**
      * @brief An array of indices
      * 
@@ -48,12 +61,12 @@ public:
     /**
      * @brief Cell centered spline
     */
-    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> splineCell;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, maxDeg>, GEMPIC_SPACEDIM> splineCell;
 
     /**
      * @brief Node centered spline
     */
-    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ) + 1>, GEMPIC_SPACEDIM> splineNode;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, maxDeg + 1>, GEMPIC_SPACEDIM> splineNode;
 
     /**
      * @brief Compute new particle position
@@ -68,9 +81,10 @@ public:
      * @return xint
      * @details At the end of the function, xint is the distance from the endpoint of the first non-zero spline at the particle location. It is normalized by dx and lies between 0 and 1.
     */
-    template<int dim, int deg>
+    template<int dim>
     AMREX_GPU_HOST_DEVICE amrex::Real initBSplinesAtPositions(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
+        constexpr int deg{splineDegrees[dim]};
         amrex::Real radius = ( deg + 1. ) / 2.;
         amrex::Real normalized_pos = (position - plo)*dxInverse;
         span[dim] = 1. + floor( normalized_pos - radius );
@@ -89,17 +103,18 @@ public:
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
     */
-    template<int dim, int deg>
+    template<int dim>
     AMREX_GPU_HOST_DEVICE void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
-        const amrex::Real xint = initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
+        const amrex::Real xint = initBSplinesAtPositions<dim> (position, plo, dxInverse);
 
-        splineEval<deg - 1, std::max(std::max(degX, degY), degZ)>(xint, splineCell[dim]);
+        constexpr int deg{splineDegrees[dim]};
+        splineEval<deg - 1, maxDeg>(xint, splineCell[dim]);
         // Scaling according to documentation
         for (size_t i{0}; i < deg; i++) {
             splineCell[dim][i] *= dxInverse;
         }
-        splineEval<deg, std::max(std::max(degX, degY), degZ) + 1>(xint, splineNode[dim]);
+        splineEval<deg, maxDeg + 1>(xint, splineNode[dim]);
     }
 
     /**
@@ -117,48 +132,48 @@ public:
     template<int dim, int form>
     AMREX_GPU_HOST_DEVICE amrex::Real evalBSpline(int i, int j, int k) const
     {
-        if (form == 0) {
+        if constexpr(form == 0) {
                   double base = GEMPIC_D_MULT(splineNode[0][i],
                                               splineNode[1][j],
                                               splineNode[2][k]);
                   return base;
         }
-        else if (form == 1) {
-            if (dim == 0) {
+        else if constexpr(form == 1) {
+            if constexpr(dim == 0) {
                 double base = GEMPIC_D_MULT(splineCell[0][i],
                                             splineNode[1][j],
                                             splineNode[2][k]);
                 return base;
             }
-            else if (dim == 1) {
+            else if constexpr(dim == 1) {
                 double base = GEMPIC_D_MULT(splineNode[0][i],
                                             splineCell[1][j],
                                             splineNode[2][k]);
                 return base;
             }
-            else if (dim == 2) {
+            else if constexpr(dim == 2) {
                 double base = GEMPIC_D_MULT(splineNode[0][i],
                                             splineNode[1][j],
                                             splineCell[2][k]);
                 return base;
             }
         }
-        else if (form == 2) {
-            if (dim == 0)
+        else if constexpr(form == 2) {
+            if constexpr(dim == 0)
             {
                 double base = GEMPIC_D_MULT(splineNode[0][i],
                                             splineCell[1][j],
                                             splineCell[2][k]);
                 return base;
             }
-            else if (dim == 1)
+            else if constexpr(dim == 1)
             {
                 double base = GEMPIC_D_MULT(splineCell[0][i],
                                             splineNode[1][j],
                                             splineCell[2][k]);
                 return base;
             }
-            else if (dim == 2)
+            else if constexpr(dim == 2)
             {
                 double base = GEMPIC_D_MULT(splineCell[0][i],
                                             splineCell[1][j],
@@ -166,7 +181,7 @@ public:
                 return base;
             }
         }
-        else if (form == 3){
+        else if constexpr(form == 3){
                   double base = GEMPIC_D_MULT(splineCell[0][i],
                                               splineCell[1][j],
                                               splineCell[2][k]);
@@ -301,8 +316,8 @@ GEMPIC_D_LOOP_END;
  * @tparam degY Degree of the spline in y-direction
  * @tparam degZ Degree of the spline in z-direction
 */
-template<int degX, int degY, int degZ>
-class SplineWithPrimitive : public SplineBase<degX, degY, degZ> {
+template<AMREX_D_DECL(int degX, int degY, int degZ)>
+class SplineWithPrimitive : public SplineBase<AMREX_D_DECL(degX, degY, degZ)> {
 
 public:
     /**
@@ -323,13 +338,13 @@ public:
     AMREX_GPU_HOST_DEVICE SplineWithPrimitive(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
                         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse
-                        ) : SplineBase<degX, degY, degZ>(position, plo, dxInverse)
+                        ) : SplineBase<AMREX_D_DECL(degX, degY, degZ)>(position, plo, dxInverse)
     {
         this->spanOld = std::move(this->span);
 
-        AMREX_D_TERM((update1DPrimitive<0, degX>(position[0], plo[0], dxInverse[0]));,
-                     (update1DPrimitive<1, degY>(position[1], plo[1], dxInverse[1]));,
-                     (update1DPrimitive<2, degZ>(position[2], plo[2], dxInverse[2])););
+        AMREX_D_TERM((update1DPrimitive<0>(position[0], plo[0], dxInverse[0]));,
+                     (update1DPrimitive<1>(position[1], plo[1], dxInverse[1]));,
+                     (update1DPrimitive<2>(position[2], plo[2], dxInverse[2])););
     }
 
     /**
@@ -339,15 +354,16 @@ public:
     */
     amrex::GpuArray<int, GEMPIC_SPACEDIM> spanOld;
 
+    using primitiveType = amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<AMREX_D_DECL(degX, degY, degZ)>::maxDeg>, GEMPIC_SPACEDIM>;
     /**
      * @brief primitive of the new spline
     */
-    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> primitiveNew;
+    primitiveType primitiveNew;
 
     /**
      * @brief primitive of the old spline
     */
-    amrex::GpuArray<amrex::GpuArray<amrex::Real, std::max(std::max(degX, degY), degZ)>, GEMPIC_SPACEDIM> primitiveOld;
+    primitiveType primitiveOld;
 
     /**
      * @brief Update the basis by evaluating the splines at the new particle position
@@ -359,17 +375,18 @@ public:
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
     */
-    template<int dim, int deg>
+    template<int dim>
     AMREX_GPU_HOST_DEVICE void update1DSplines(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
         this->spanOld[dim] = std::move(this->span[dim]);
-        const amrex::Real xint = this->template initBSplinesAtPositions<dim, deg> (position, plo, dxInverse);
+        const amrex::Real xint = this->template initBSplinesAtPositions<dim> (position, plo, dxInverse);
 
-        this->template splineEval<deg - 1, std::max(std::max(degX, degY), degZ)>(xint, this->splineCell[dim]);
+        constexpr int deg{this->splineDegrees[dim]};
+        this->template splineEval<deg - 1, this->maxDeg>(xint, this->splineCell[dim]);
         for (size_t i{0}; i < deg; i++) {
             this->splineCell[dim][i] *= dxInverse;
         }
-        this->template splineEval<deg, std::max(std::max(degX, degY), degZ) + 1>(xint, this->splineNode[dim]);
+        this->template splineEval<deg, this->maxDeg + 1>(xint, this->splineNode[dim]);
     }
 
     /**
@@ -382,13 +399,14 @@ public:
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
     */
-    template<int dim, int deg>
+    template<int dim>
     AMREX_GPU_HOST_DEVICE void update1DPrimitive(const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse)
     {
-        const amrex::Real xint = this->template initBSplinesAtPositions<dim, deg>(position, plo, dxInverse);
+        const amrex::Real xint = this->template initBSplinesAtPositions<dim>(position, plo, dxInverse);
 
         primitiveOld[dim] = std::move(primitiveNew[dim]);
-        primitiveEval<deg - 1, std::max(std::max(degX, degY), degZ)>(xint, primitiveNew[dim]);
+        constexpr int deg{this->splineDegrees[dim]};
+        primitiveEval<deg - 1, this->maxDeg>(xint, primitiveNew[dim]);
     }
 
     /**
@@ -402,9 +420,10 @@ public:
      * 
      * @return primitiveDifference The difference between primitives of the old spline and the new spline
     */
-    template<int dim, int deg>
+    template<int dim>
     AMREX_GPU_HOST_DEVICE amrex::Real computePrimitiveDifference(const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
     {
+        constexpr int deg{this->splineDegrees[dim]};
         // Size of support of difference of primitives
         const int local_size = std::abs(this->span[dim] - this->spanOld[dim]) + deg;
 

@@ -64,7 +64,7 @@ namespace Particles
  * @param jArray Degrees of freedom of J as dual 2-form
  * @param[out] fields Contribution of B (the 2 that are not in integration direction)
  */
-template <typename SplineType, int vDim, int degP, int degP1, int degP2, int pDim>
+template <typename SplineType, int vDim, int pDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
     SplineType &spline,
     amrex::Real weight,
@@ -73,13 +73,16 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields)
 {
-    int pDim1 = (pDim + 1) % 3;
-    int pDim2 = (pDim + 2) % 3;
+    constexpr int pDim1 = (pDim + 1) % 3;
+    constexpr int pDim2 = (pDim + 2) % 3;
+
+    constexpr int degP1 = spline.splineDegrees[pDim1];
+    constexpr int degP2 = spline.splineDegrees[pDim2];
 
     fields = {0., 0.};
     // Size of support of difference of primitives
     // check for ghost cells
-    int local_size = std::abs(spline.span[pDim] - spline.spanOld[pDim]) + degP;
+    int local_size = std::abs(spline.span[pDim] - spline.spanOld[pDim]) + spline.splineDegrees[pDim];
     int span_start = spline.spanOld[pDim];
     if (spline.span[pDim] < spline.spanOld[pDim]) span_start = spline.span[pDim];
 
@@ -88,7 +91,7 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= local_size; ++ii),
                     for (int jj = 0; jj <= degP1; ++jj),
                     for (int kk = 0; kk <= degP2; ++kk));
 
-                amrex::Real primitiveDifference = spline.template computePrimitiveDifference<pDim, degP>(dx, ii);
+                amrex::Real primitiveDifference = spline.template computePrimitiveDifference<pDim>(dx, ii);
 
                 amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index;
                 if (pDim == 0)
