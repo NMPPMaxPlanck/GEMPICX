@@ -99,13 +99,10 @@ class OperatorHamilton {
 *  
 * @tparam SplineType : spline class, for unit testing purposes
 * 
-* @param pos : not used here 
-* @param particles : not used here 
-* @param infra : not used
 * @param eA : array of E field coefficients (primal edge dofs)
 * @param spline : object containing the values of non-zero grid splines at the particle position
 * @param vel : velocity of the given particle
-* @param velx, vely, velz : arrays with all the particles velocities
+* @param velx, vely, velz : arrays with velocities of all the particles
 * @param chargemass : (q/m)_p ratio
 * @param dt : time step
 * @param pp : index of the given particle
@@ -126,7 +123,7 @@ class OperatorHamilton {
     {
         // evaluate the electric field
         amrex::GpuArray<amrex::Real, vdim> efield =
-            spline.template evalField<vdim, 1>(eA);
+            spline.template evalSplineField<vdim, 1>(eA);
 
         // push v with the electric field
         amrex::GpuArray<amrex::Real, vdim> newVelE =
@@ -143,8 +140,8 @@ class OperatorHamilton {
  * Specifically, this function:
  *  - (1) pushes x_p with constant velocity along dimension i
  *  - (2) deposits the current associated with this trajectory
- *  - (3) computes the integrated B field along this trajectory <B>_p = int_{0}^dt B(x_p(t)) dt 
- *  - (4) pushes v_p on dimensions i-1 and i+1 using <B>_p
+ *  - (3) computes the integrated B field along this trajectory \<B\>_p = int_{0}^dt B(x_p(t)) dt 
+ *  - (4) pushes v_p on dimensions i-1 and i+1 using \<B\>_p
  *   
  * Equation (H_kin_i_D) is only solved after this function has been called for all particles:
  * then the full current density has been computed and the full electric field can be updated.
@@ -166,11 +163,9 @@ class OperatorHamilton {
  * @param weight : weight of the given particle
  * @param dt : time step
  * 
- * @details : the function accumulate_j_update_v (which performs tasks (2) and (3) above) has a misleading name
- * 
 */
     template<int dim, class SplineType = Spline::SplineBase<degx, degy, degz>>
-    AMREX_GPU_HOST_DEVICE inline void apply_H_p_i(
+    AMREX_GPU_HOST_DEVICE inline void apply_H_p_i (
                             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
                             amrex::GpuArray<amrex::Real, vdim> &vel,
                             computational_domain const &infra,
@@ -189,7 +184,7 @@ class OperatorHamilton {
         spline.template update1DSplines<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
         spline.template update1DPrimitive<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
 
-        accumulate_j_update_v<SplineType, vdim, dim>
+        accumulate_J_integrate_B<SplineType, vdim, dim>
                                     (spline, weight, dx, bA, jA, bfields);
 
         if (vdim > 1) vel[(dim+1)%3] = vel[(dim+1)%3] - chargemass * bfields[0];
@@ -208,7 +203,7 @@ class OperatorHamilton {
  * @param dt : time step
  * 
 */
-    inline void apply_H_b(std::shared_ptr<FDDeRhamComplex> deRham,
+    inline void apply_H_b (std::shared_ptr<FDDeRhamComplex> deRham,
                           const DeRhamField<Grid::primal, Space::face>& B,
                           DeRhamField<Grid::dual, Space::face>& D,
                           DeRhamField<Grid::dual, Space::edge>& auxDualH,
@@ -235,7 +230,7 @@ class OperatorHamilton {
  * @param dt : time step
  * 
 */
-    inline void apply_H_e_field(std::shared_ptr<FDDeRhamComplex> deRham,
+    inline void apply_H_e_field (std::shared_ptr<FDDeRhamComplex> deRham,
                                 DeRhamField<Grid::primal, Space::edge>& auxE,
                                 DeRhamField<Grid::primal, Space::face>& B,
                                 DeRhamField<Grid::dual, Space::face>& D,
@@ -256,7 +251,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw,
 class Splitting {
 
     public:
-    virtual void time_loop(std::shared_ptr<FDDeRhamComplex> deRham,
+    virtual void time_loop (std::shared_ptr<FDDeRhamComplex> deRham,
                    DeRhamField<Grid::dual, Space::cell>& rho,
                    DeRhamField<Grid::primal, Space::edge>& E,
                    DeRhamField<Grid::primal, Space::face>& B,

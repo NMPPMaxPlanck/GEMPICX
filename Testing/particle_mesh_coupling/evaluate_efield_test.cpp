@@ -38,17 +38,17 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
         
-            efields[pp] = spline.template evalField<vDim, 1>(eArray);
+            efields[pp] = spline.template evalSplineField<vDim, 1>(eArray);
         });
 
-        EXPECT_EQ(efields[0][0], 1.0);
-        EXPECT_EQ(efields[0][1], 1.0);
-        EXPECT_EQ(efields[0][2], 1.0);
+        EXPECT_NEAR(efields[0][0], 1.0, 1e-12);
+        EXPECT_NEAR(efields[0][1], 1.0, 1e-12);
+        EXPECT_NEAR(efields[0][2], 1.0, 1e-12);
                     
         if(np == 2) {
-            EXPECT_EQ(efields[1][0], 1.0);
-            EXPECT_EQ(efields[1][1], 1.0);
-            EXPECT_EQ(efields[1][2], 1.0);
+            EXPECT_NEAR(efields[1][0], 1.0, 1e-12);
+            EXPECT_NEAR(efields[1][1], 1.0, 1e-12);
+            EXPECT_NEAR(efields[1][2], 1.0, 1e-12);
         }
     }
 
@@ -126,8 +126,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -152,7 +151,7 @@ namespace {
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
             
             amrex::GpuArray<amrex::Real, vDim> efield =
-                spline.template evalField<vDim, 1>(eArray);
+                spline.template evalSplineField<vDim, 1>(eArray);
 
             EXPECT_EQ(efield[0], 0);
             EXPECT_EQ(efield[1], 0);
@@ -190,8 +189,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
@@ -232,8 +230,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
@@ -274,8 +271,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
@@ -336,8 +332,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
@@ -380,8 +375,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
@@ -424,8 +418,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
         {
@@ -434,5 +427,9 @@ namespace {
 
             updateEFieldParallelFor<vDim, degX, degY, degZ>(pti, E, infra);
         }
+    }
+
+    TEST_F(EvaluateEFieldTest, TestingForLiterallyAnythingOtherThanUnity) {
+        GTEST_SKIP() << "Such advanced tests have not yet been implemented!";
     }
 }

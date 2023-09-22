@@ -187,21 +187,21 @@ public:
     ~FDDeRhamComplex();
 
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<primal, Space::node>& field) override;
+                    DeRhamField<Grid::primal, Space::node>& field) override;
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<primal, Space::cell>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::primal, Space::cell>& field, int gaussNodes = 6) override;
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<dual, Space::node>& field) override;
+                    DeRhamField<Grid::dual, Space::node>& field) override;
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<dual, Space::cell>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::dual, Space::cell>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<dual, Space::edge>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<primal, Space::face>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::primal, Space::face>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<primal, Space::edge>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::primal, Space::edge>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<dual, Space::face>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::dual, Space::face>& field, int gaussNodes = 6) override;
 
     /**
      * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_3\f$.
@@ -216,14 +216,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param threeForm : DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
-     * @param zeroForm : DeRhamField<primal, Space::node>, resulting 0-form \f$u^0\f$
+     * @param threeForm : DeRhamField<Grid::dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
+     * @param zeroForm : DeRhamField<Grid::primal, Space::node>, resulting 0-form \f$u^0\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::cell>& threeForm,
-                 DeRhamField<primal, Space::node>& zeroForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                 DeRhamField<Grid::primal, Space::node>& zeroForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -265,14 +265,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param threeForm : DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$
-     * @param zeroForm : DeRhamField<dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
+     * @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$u^3\f$
+     * @param zeroForm : DeRhamField<Grid::dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::cell>& threeForm,
-                 DeRhamField<dual, Space::node>& zeroForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                 DeRhamField<Grid::dual, Space::node>& zeroForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -314,14 +314,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param twoForm : DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$
-     * @param oneForm : DeRhamField<primal, Space::edge>, resulting 1-form \f$u^1\f$
+     * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{u}^2\f$
+     * @param oneForm : DeRhamField<Grid::primal, Space::edge>, resulting 1-form \f$u^1\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::face>& twoForm,
-                 DeRhamField<primal, Space::edge>& oneForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::face>& twoForm,
+                 DeRhamField<Grid::primal, Space::edge>& oneForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -376,14 +376,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param twoForm : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$
-     * @param oneForm : DeRhamField<dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
+     * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$
+     * @param oneForm : DeRhamField<Grid::dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::face>& twoForm,
-                 DeRhamField<dual, Space::edge>& oneForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::face>& twoForm,
+                 DeRhamField<Grid::dual, Space::edge>& oneForm, amrex::Real weight = 1.)
     {
         const int stencilLength = degree - 1;
         amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
@@ -436,14 +436,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param oneForm : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
-     * @param twoForm : DeRhamField<primal, Space::face>, resulting 2-form \f$u^2\f$
+     * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
+     * @param twoForm : DeRhamField<Grid::primal, Space::face>, resulting 2-form \f$u^2\f$
      * @param weight : Real, constant weight function
      * return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::edge>& oneForm,
-                 DeRhamField<primal, Space::face>& twoForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                 DeRhamField<Grid::primal, Space::face>& twoForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -499,14 +499,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param oneForm : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$
-     * @param twoForm : DeRhamField<dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
+     * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$
+     * @param twoForm : DeRhamField<Grid::dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::edge>& oneForm,
-                 DeRhamField<dual, Space::face>& twoForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                 DeRhamField<Grid::dual, Space::face>& twoForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -562,14 +562,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param zeroForm : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$
-     * @param threeForm : DeRhamField<primal, Space::cell>, resulting 3-form \f$u^3\f$
+     * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$
+     * @param threeForm : DeRhamField<Grid::primal, Space::cell>, resulting 3-form \f$u^3\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::node>& zeroForm,
-                 DeRhamField<primal, Space::cell>& threeForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                 DeRhamField<Grid::primal, Space::cell>& threeForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -612,14 +612,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param zeroForm : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$
-     * @param threeForm : DeRhamField<dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
+     * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$
+     * @param threeForm : DeRhamField<Grid::dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::node>& zeroForm,
-                 DeRhamField<dual, Space::cell>& threeForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                 DeRhamField<Grid::dual, Space::cell>& threeForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;

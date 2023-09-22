@@ -36,7 +36,7 @@ namespace {
                    Spline::SplineBase<degX, degY, degZ>(position, plo, dxInverse) {}
 
         template<int vDim, int form>
-        AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> evalField (const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
+        AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> evalSplineField (const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
         {
             amrex::GpuArray<amrex::Real, vDim> fields;
             for (int comp = 0; comp < vDim; comp++)
@@ -48,9 +48,9 @@ namespace {
         }
     };
 
-    // outdated accumulate_j_update_v template signature
+    // outdated template signature
     template <int vdim, int degp, int degp1, int degp2, int pdim>
-    AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
+    AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B(
         MockSpline<degp, degp1, degp2> &spline,
         amrex::Real weight,
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
@@ -138,8 +138,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.

@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(params);
 
-	DeRhamField<Grid::primal, Space::face> B(deRham);
-	DeRhamField<Grid::primal, Space::edge> E(deRham);
+    DeRhamField<Grid::primal, Space::face> B(deRham);
+    DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
 
                     // evaluate the electric field
                     amrex::GpuArray<amrex::Real, vdim> efield =
-                        spline.template evalField<vdim, 1>(eA);
+                        spline.template evalSplineField<vdim, 1>(eA);
 
                     // push v with the electric field
                     amrex::GpuArray<amrex::Real, vdim> newPosE =

@@ -49,7 +49,7 @@ namespace {
             spline.template update1DSplines<pDim>(x_end, infra.plo[0], infra.dxi[0]);
             spline.template update1DPrimitive<pDim>(x_end, infra.plo[0], infra.dxi[0]);
 
-            accumulate_j_update_v<Spline::SplineWithPrimitive<degX, degY, degZ>, vDim, pDim>(spline, weight, dx, bA, jA, bFields[0]);
+            accumulate_J_integrate_B<Spline::SplineWithPrimitive<degX, degY, degZ>, vDim, pDim>(spline, weight, dx, bA, jA, bFields[0]);
         });
 
         bfields = bFields[0];
@@ -154,11 +154,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -220,11 +218,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -285,11 +281,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -353,11 +347,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -421,11 +413,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.

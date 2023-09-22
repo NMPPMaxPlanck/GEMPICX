@@ -17,55 +17,60 @@ namespace Gempic
 namespace Particles
 {
 /**
-     Computes for each component i, J_i from \int_t Rho and \int_t v_i x B by integrating over the B-splines
+     Computes for each component i, J_i from \f$ \int_t\rho \f$ and \f$ \int_t v_i \times B \f$ by integrating over the B-splines
      */
 
 /**
- * @brief Updates J and computes integrated B on a given particle trajectory along one grid direction
+ * @brief Updates J and computes an integrated B on a given particle trajectory along one grid direction
  *  
  * Description:
- * given a particle trajectory x_{p,d} moving along a single dimension only (with velocity v_{p,d} aligned with grid dimension d), this function:
+ * given a trajectory xx_{p,d} moving along a single dimension d (with velocity vv_{p,d} parallel to e_d), this function
  * 
- * (1) for every dual face (dof) index) i i-th adds the time integrals 
- *     dJ_{i,p,d} = q_p w_p \int_{t_start}^{t_end} t_R2_i( v_{p,d} * S(x-x_{p,d}(t)) ) dt
- *     to the i-th component of the "current density"
- *     where t_R2_i is the dof (reduction operator) corresponding to dual face i
+ * (1) computes the time integrals 
+ *     dJ_{i,p,d} = \f$ q_p w_p \int_{t_start}^{t_end} t_R2_i( v_{p,d} * S(xx - xx_{p,d}(t)) ) dt \f$
+ *     for every dual face (dof) with index i, 
+ *     where t_R2_i is corresponding dof (reduction) operator
+ *     and adds them to the i-th component of the "current density"
  *     
  *     Note that the resulting current density is a time integral over the time step, not a time average
  *  
- * (2) computes the time integral of magnetic field needed for the time-integrated Lorentz force corresponding to this straight trajectory
- *     dF_{p,d} = (q/m)_p \int_{t_start}^{t_end} v_{p,d} x B(x_{p,d}(t))dt
- *
- *     Specifically this function computes
- *     fields[0] = \int_{t_start}^{t_end} B_{d-1}(x_{p,d}(t))dt
- *     fields[1] = \int_{t_start}^{t_end} B_{d+1}(x_{p,d}(t))dt
+ * (2) computes the time integral of the magnetic field      
+ *     needed for the time-integrated Lorentz force corresponding to this straight trajectory,
+ *     \f$ dF_{p,d} = (q/m)_p \int_{t_{start}}^{t_{end}} vv_{p,d} \times B(xx_{p,d}(t))dt \f$
+ *      
+ *     Specifically, denoting v_p = vv_{p,d}_d the d-th component of vv_{p,d} = v_p * e_d, the function computes
+ *     
+ *     fields[0] = \f$ \int_{t_start}^{t_end} v_p * B_{d-1}(xx_{p,d}(t))dt = \int_{0}^{v_p*dt} B_{d-1}(xx_{p,d}(0)+s*e_d) ds \f$
+ *     fields[1] = \f$ \int _{t_start}^{t_end} v_p * B_{d+1}(xx_{p,d}(t))dt = \int_{0}^{v_p*dt} B_{d+1}(xx_{p,d}(0)+s*e_d) ds \f$
+ *     
  *     So that after this function call the velocity can be updated over the time step 
  *     with 
- *     v_{p,d} += dF_{p,d}
+ *     vv_{p,d} += dF_{p,d}
  *     ie
- *     v_{p,d}_{d+1} -= (q/m)_p * v_{p,d}_d * fields[0]
- *     v_{p,d}_{d-1} += (q/m)_p * v_{p,d}_d * fields[1]
- *     (the Lorentz force has no contribution on the d component of v_{p,d})
+ *     vv_{p,d}_{d+1} -= (q/m)_p * fields[0]
+ *     vv_{p,d}_{d-1} += (q/m)_p * fields[1]
+ *     (here the Lorentz force has no contribution on the d component of vv_{p,d})
  *     
  * for details about the algorithm see the documentation
  * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
  * 
- * @tparam SplineType Necessary for mocking to the function can take mock spline types
- * @tparam vDim Number of Components of B and J
- * @tparam degP Degree of spline in direction of integration (x, y or z)
- * @tparam degP1 Degree of spline in next direction (cyclic)
- * @tparam degP2 Degree of spline in second next direction (cyclic)
- * @tparam pDim Direction of integration (x=0, y=1, z=2)
+ * @tparam SplineType : Necessary for mocking so the function can take mock spline types
+ * @tparam vDim : Number of components of B and J
+ * @tparam pDim : Direction of integration (trajectory) (x=0, y=1, z=2)
  * 
- * @param spline 3D spline containing spline values and the particle trajectory
- * @param weight Particle weight
- * @param dx Spatial grid size
- * @param bArray Degrees of freedom of B as primal 2-form
- * @param jArray Degrees of freedom of J as dual 2-form
- * @param[out] fields Contribution of B (the 2 that are not in integration direction)
+ * @param spline : Object containing spline values and the particle trajectory
+ * @param weight : Particle weight
+ * @param dx : Spatial grid size
+ * @param bArray : Degrees of freedom of B as primal 2-form
+ * @param jArray : Degrees of freedom of J as dual 2-form
+ * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration direction)
+ *
+ * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this should be fixed
+ * @todo Rewrite to avoid excessive branching
  */
+
 template <typename SplineType, int vDim, int pDim>
-AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
+AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B (
     SplineType &spline,
     amrex::Real weight,
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
@@ -82,65 +87,57 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
     fields = {0., 0.};
     // Size of support of difference of primitives
     // check for ghost cells
-    int local_size = std::abs(spline.span[pDim] - spline.spanOld[pDim]) + spline.splineDegrees[pDim];
-    int span_start = spline.spanOld[pDim];
-    if (spline.span[pDim] < spline.spanOld[pDim]) span_start = spline.span[pDim];
+    int local_size = std::abs(spline.firstIndex[pDim] - spline.firstIndexOld[pDim]) + spline.splineDegrees[pDim];
+    int firstIndex_start = spline.firstIndexOld[pDim];
+    if (spline.firstIndex[pDim] < spline.firstIndexOld[pDim]) firstIndex_start = spline.firstIndex[pDim];
 
 // Add particle contribution to J
-GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= local_size; ++ii),
-                    for (int jj = 0; jj <= degP1; ++jj),
-                    for (int kk = 0; kk <= degP2; ++kk));
+    for (int jj = 0; jj <= degP1; ++jj) {
+        for (int kk = 0; kk <= degP2; ++kk) {
+            for (int ii = 0; ii <= local_size; ++ii) {
 
                 amrex::Real primitiveDifference = spline.template computePrimitiveDifference<pDim>(dx, ii);
 
-                amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index;
+                amrex::Dim3 cell_index;
                 if (pDim == 0)
                     cell_index = {
-                        AMREX_D_DECL(span_start + ii, spline.span[1] + jj, spline.span[2] + kk)};
+                        AMREX_D_DECL(firstIndex_start + ii, spline.firstIndex[1] + jj, spline.firstIndex[2] + kk)};
                 else if (pDim == 1)
                     cell_index = {
-                        AMREX_D_DECL(spline.span[0] + kk, span_start + ii, spline.span[2] + jj)};
+                        AMREX_D_DECL(spline.firstIndex[0] + kk, firstIndex_start + ii, spline.firstIndex[2] + jj)};
                 else if (pDim == 2)
                     cell_index = {
-                        AMREX_D_DECL(spline.span[0] + jj, spline.span[1] + kk, span_start + ii)};
-                double s_coeff =
-                    primitiveDifference * spline.splineNode[pDim1][jj] * spline.splineNode[pDim2][kk];
-#if (GEMPIC_SPACEDIM == 1)
-                amrex::HostDevice::Atomic::Add(jArray[pDim].ptr(cell_index[0], 0, 0, 0),
-                                               s_coeff * weight);
-#else
+                        AMREX_D_DECL(spline.firstIndex[0] + jj, spline.firstIndex[1] + kk, firstIndex_start + ii)};
+                double s_coeff = GEMPIC_D_MULT(
+                    primitiveDifference,
+                    spline.nodeSplineVals[pDim1][jj],
+                    spline.nodeSplineVals[pDim2][kk]);
                 amrex::HostDevice::Atomic::Add(
-                    jArray[pDim].ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
+                    jArray[pDim].ptr(cell_index.x, cell_index.y, cell_index.z, 0),
                     s_coeff * weight);
-#endif
                 // Update two components of B
                 if (jj < degP1)
                 {
-                    double s_coeff = primitiveDifference * spline.splineCell[pDim1][jj] *
-                                     spline.splineNode[pDim2][kk];
+                    double s_coeff = GEMPIC_D_MULT(
+                        primitiveDifference,
+                        spline.cellSplineVals[pDim1][jj],
+                        spline.nodeSplineVals[pDim2][kk]);
 
-#if (GEMPIC_SPACEDIM == 1)
-                    fields[0] += s_coeff * (bArray[pDim2])(cell_index[0], 0, 0, 0);
-#else
                     fields[0] +=
-                        s_coeff * (bArray[pDim2])(
-                                      AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
-#endif
+                        s_coeff * (bArray[pDim2])(cell_index.x, cell_index.y, cell_index.z, 0);
                 }
                 if (kk < degP2)
                 {
-                    double s_coeff = primitiveDifference * spline.splineNode[pDim1][jj] *
-                                     spline.splineCell[pDim2][kk];
-#if (GEMPIC_SPACEDIM == 1)
-                    fields[1] += s_coeff * (bArray[pDim1])(cell_index[0], 0, 0, 0);
-#else
+                    double s_coeff = GEMPIC_D_MULT(
+                        primitiveDifference,
+                        spline.nodeSplineVals[pDim1][jj],
+                        spline.cellSplineVals[pDim2][kk]);
                     fields[1] +=
-                        s_coeff * (bArray[pDim1])(
-                                      AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0);
-#endif
+                        s_coeff * (bArray[pDim1])(cell_index.x, cell_index.y, cell_index.z, 0);
                 }
-
-GEMPIC_D_LOOP_END;
+            }
+        }
+    }
 
 }
 
@@ -155,7 +152,7 @@ GEMPIC_D_LOOP_END;
  * @param Ep Electric field
  */
 template <int vDim>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield(
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield (
     amrex::GpuArray<amrex::Real, vDim> vel,
     amrex::Real dt,
     amrex::Real chargemass,
@@ -184,7 +181,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield(
  * @param rho charge density to be computed
  */
 template <int degX, int degY, int degZ>
-AMREX_GPU_HOST_DEVICE void gempic_deposit_rho(
+AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (
     Spline::SplineBase<degX, degY, degZ> &spline,
     amrex::Real weight,
     amrex::Array4<amrex::Real> const &rho)
@@ -193,17 +190,13 @@ GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
                     for (int jj = 0; jj <= degY; ++jj),
                     for (int kk = 0; kk <= degZ; ++kk))
 
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> cell_index = {
-        AMREX_D_DECL(spline.span[0] + ii, spline.span[1] + jj, spline.span[2] + kk)};
-    double s_coeff = spline.template evalBSpline<-1, 0>(ii, jj, kk); 
+    amrex::Dim3 cell_index = {
+        AMREX_D_DECL(spline.firstIndex[0] + ii, spline.firstIndex[1] + jj, spline.firstIndex[2] + kk)};
+    double s_coeff = spline.template evalBSpline<0>(AMREX_D_DECL(ii, jj, kk));
 
-#if (GEMPIC_SPACEDIM == 1)
-                amrex::HostDevice::Atomic::Add(rho.ptr(cell_index[0], 0, 0, 0), s_coeff * weight);
-#else
-                amrex::HostDevice::Atomic::Add(
-                    rho.ptr(AMREX_D_DECL(cell_index[0], cell_index[1], cell_index[2]), 0),
-                    s_coeff * weight);
-#endif
+    amrex::HostDevice::Atomic::Add(
+        rho.ptr(cell_index.x, cell_index.y, cell_index.z, 0),
+        s_coeff * weight);
 
 GEMPIC_D_LOOP_END;
 }
