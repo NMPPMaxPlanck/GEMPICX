@@ -42,17 +42,53 @@ void write_phi(DeRhamField<Grid::primal, Space::node> &phi, computational_domain
         amrex::WriteSingleLevelPlotfile(plotfilename, phi.data, varnames, infra.geom, time, 0);
 }
 
-/*
-void write_E(DeRhamField<Grid::primal, Space::edge> &E, computational_domain& infra, double time, int step) {
+void write_Ex(DeRhamField<Grid::primal, Space::edge> &E, computational_domain& infra, double time, int step) {
         // save fields
         // MultiFab Info -------------------------------------------------------------
         std::string plotfilename{"Plotfiles/" + amrex::Concatenate("E", step)};
  
-        amrex::Vector<std::string> varnames{"E"};
+        amrex::Vector<std::string> varnames{{"Ex"}};
  
-        amrex::WriteSingleLevelPlotfile(plotfilename, E.data, varnames, infra.geom, time, 0);
+        amrex::WriteSingleLevelPlotfile(plotfilename, E.data[0], varnames, infra.geom, time, 0);
 }
-*/
+
+
+// apply npass times a cubic spline filter to rho
+void filter(DeRhamField<Grid::dual, Space::cell> &rho, DeRhamField<Grid::dual, Space::cell> &rhoTemp, int npass){
+    
+    auto nghost = rho.deRham->getNGhost();
+    for (int pass = 0; pass < npass; pass++)
+    {  
+        // amrex::Print() << "filt pass " << pass << std::endl;
+        for (int dimension = 0; dimension < 3; dimension++)
+        {
+            for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi) // Loop over grids
+            {
+                const amrex::Box& bx = mfi.validbox();
+                amrex::Array4<amrex::Real> const & rhoArr = rho.data[mfi].array();
+                amrex::Array4<amrex::Real> const & rhoTempArr = rhoTemp.data[mfi].array();
+
+                ParallelFor(bx,
+                            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                            {
+                                amrex::GpuArray<amrex::Real,3> coef{1./6., 2./3., 1./6.};
+                                amrex::Real val = 0.0;
+                                for (int d = 0; d < 3; d++)
+                                {
+                                    val += coef[d] * rhoArr(i + (dimension == 0 ? d - 1 : 0),
+                                                            j + (dimension == 1 ? d - 1 : 0),
+                                                            k + (dimension == 2 ? d - 1 : 0));
+                                }
+                                rhoTempArr(i, j, k) = val;
+                            });                    
+            }
+            // Copy into rho
+            rhoTemp.fillBoundary();
+            amrex::Copy(rho.data, rhoTemp.data, 0, 0, 1, amrex::IntVect{nghost[0],nghost[1],nghost[2]});  
+        }
+    }
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -66,10 +102,7 @@ int main(int argc, char* argv[])
     constexpr int degy{1};
     constexpr int degz{1};
     //
-    constexpr int degmw{2};
-    constexpr int propagator{3};
-
-    const int hodgeDegree{2};
+    constexpr int hodgeDegree{2};
 
 {
     gempic_parameters<vdim, numspec> parametersBernstein;
@@ -92,23 +125,14 @@ int main(int argc, char* argv[])
 	DeRhamField<Grid::primal, Space::face> B(deRham);
 	DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
+    DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex, Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", "0.0", "1.0"};
-
-    const int nVar = 4;  // x, y, z, t[p
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
-    amrex::Parser parser;
-
-    for (int i = 0; i < 3; ++i)
-    {
-        parser.define(analyticalFuncB[i]);
-        parser.registerVariables({"x", "y", "z", "t"});
-        funcB[i] = parser.compile<4>();
-    }
-
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcB{parametersBernstein.BxEval, parametersBernstein.ByEval, parametersBernstein.BzEval};
     deRham->projection(funcB, 0.0, B);
+    // For the moment we consider only a constant background field.
+    amrex::Real Bz = parametersBernstein.BzEval(0., 0., 0., 0.);
+    amrex::Print() << "Bz " << Bz << std::endl;
 
     // Initialize particle groups
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> ions;
@@ -139,6 +163,7 @@ int main(int argc, char* argv[])
                                               parametersBernstein.densityEval[0]);
 
     const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
+    const int npass = 3; // Number of filter passes
 
     for (int spec = 0; spec < numspec; spec++) {
 
@@ -170,32 +195,27 @@ int main(int argc, char* argv[])
 
     // Needed for SumBoundary
    auto nGhost = deRham->getNGhost();
-   // nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-   // nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-   // nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-
+   
    (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
     rho.averageSync();
     rho.fillBoundary();
 
+    filter(rho, rhoTemp, npass);
+
 //    amrex::Print() << "rho norm 1: " << rho.data.norm1() << std::endl;
 
-    deRham->hodgeFD<degmw>(rho, phi);
+    deRham->hodgeFD<hodgeDegree>(rho, phi);
 
     deRham->grad(phi, E);
 
-    E *= -1.0;
-//    E *= 0.0;
-    // Rescale the fields
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+    //E *= -1.0;
 
     amrex::Real dt = parametersBernstein.dt;
     int nSteps = parametersBernstein.n_steps;
 
     write_rho(rho, infra, 0, 0);
-    write_phi(phi, infra, 0, 0);
-//    write_E(E, infra, 0, 0);
+    write_Ex(E, infra, 0, 0);
 
     for (int tStep = 0; tStep < nSteps; tStep++) {
 
@@ -203,7 +223,6 @@ int main(int argc, char* argv[])
         {
             amrex::Real charge = ions[spec]->getCharge();
             amrex::Real chargemass = charge / ions[spec]->getMass();
-            amrex::Real Bz = 1.0;
             amrex::Real a = 0.5 * chargemass * dt * Bz;
 
             rho.data.setVal(0.0);
@@ -248,23 +267,18 @@ int main(int argc, char* argv[])
 
             // Needed for SumBoundary
             auto nGhost = deRham->getNGhost();
-            // nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-            // nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-            // nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-
+        
             (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
                            params.geometry().periodicity());
             rho.averageSync();
             rho.fillBoundary();
+            filter(rho, rhoTemp, npass);
 
-            deRham->hodgeFD<degmw>(rho, phi);
+            deRham->hodgeFD<hodgeDegree>(rho, phi);
 
             deRham->grad(phi, E);
 
-            E *= -1.0;
-//            E *= 0.0;
-            // Rescale the fields
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+            //E *= -1.0;
 
             rho.data.setVal(0.0);
 
@@ -286,7 +300,7 @@ int main(int argc, char* argv[])
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
 
-                // Extract E, not D ?
+                // Extract E
                 for (int cc = 0; cc < vdim; cc++)
                 {
                     eA[cc] = (E.data[cc])[pti].array();
@@ -307,31 +321,35 @@ int main(int argc, char* argv[])
                     amrex::GpuArray<amrex::Real, vdim> efield =
                         spline.template evalField<vdim, 1>(eA);
 
-                    // push v with the electric field
-                    amrex::GpuArray<amrex::Real, vdim> newPosE =
+                    // push v with the electric field over dt/2
+                    amrex::GpuArray<amrex::Real, vdim> newV =
                         push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
 
-                    velx[pp] = newPosE[0];
-                    vely[pp] = newPosE[1];
-                    velz[pp] = newPosE[2];
+                    velx[pp] = newV[0];
+                    vely[pp] = newV[1];
+                    velz[pp] = newV[2];
 
+                    // rotate v with magnetic field over dt
                     amrex::Real vx = velx[pp];
                     amrex::Real vy = vely[pp];
 
                     velx[pp] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
                     vely[pp] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
 
-                    // push v with the electric field
-                    newPosE = push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
+                    // push v with the electric field over dt/2
+                    vel = {velx[pp], vely[pp], velz[pp]};
+                    newV = push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
 
-                    velx[pp] = newPosE[0];
-                    vely[pp] = newPosE[1];
-                    velz[pp] = newPosE[2];
+                    velx[pp] = newV[0];
+                    vely[pp] = newV[1];
+                    velz[pp] = newV[2];
 
                     positionParticle[0] = positionParticle[0] + 0.5 * dt * velx[pp];
                     particles[pp].pos(0) = positionParticle[0];
                     positionParticle[1] = positionParticle[1] + 0.5 * dt * vely[pp];
                     particles[pp].pos(1) = positionParticle[1];
+                    positionParticle[2] = positionParticle[2] + 0.5 * dt * velz[pp];
+                    particles[pp].pos(2) = positionParticle[2];
 
                     Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
 
@@ -352,11 +370,11 @@ int main(int argc, char* argv[])
 
         rho.averageSync();
         rho.fillBoundary();
+        filter(rho, rhoTemp, npass);
 
         if (tStep%parametersBernstein.save_fields == 0) {
             write_rho(rho, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
-            write_phi(phi, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
-//            write_E(E, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
+            write_Ex(E, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
         }
         if (tStep%1 == 0) {
             std::cout << "Time Step: " << tStep+1 << std::endl;
