@@ -1,8 +1,9 @@
 #ifndef GEMPIC_INTERPOLATION_H_
 #define GEMPIC_INTERPOLATION_H_
 
-#include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <AMReX_SPACE.H>
+#include "GEMPIC_Fields.H"
+#include "GEMPIC_Params.H"
 
 using namespace GEMPIC_Fields;
 
@@ -26,7 +27,7 @@ namespace GEMPIC_Interpolation{
 * @return \f$L_{polyIndex} (y)\f$
 */
 template<int degree>
-AMREX_GPU_DEVICE amrex::Real evalLagrange(const int polyIndex, const amrex::Real xk, const amrex::Real dx, const amrex::Real y)
+AMREX_GPU_DEVICE amrex::Real evalLagrange (const int polyIndex, const amrex::Real xk, const amrex::Real dx, const amrex::Real y)
 {
     
     amrex::GpuArray<amrex::Real, degree> vals;
@@ -68,7 +69,7 @@ AMREX_GPU_DEVICE amrex::Real evalLagrange(const int polyIndex, const amrex::Real
 * @return \f$e_{polyIndex} (y)\f$
 */
 template<int degree>
-AMREX_GPU_DEVICE amrex::Real evalEdge(const int polyIndex, const amrex::Real xk, const amrex::Real dx, const amrex::Real y)
+AMREX_GPU_DEVICE amrex::Real evalEdge (const int polyIndex, const amrex::Real xk, const amrex::Real dx, const amrex::Real y)
 {
     
     amrex::Real val = 0;
@@ -142,7 +143,7 @@ AMREX_GPU_DEVICE amrex::Real evalEdge(const int polyIndex, const amrex::Real xk,
 * @return void
 */
 template<int degree>
-amrex::Real maxErrorMidpoint(amrex::Geometry geom, amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::MultiFab &func_h,
+amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::MultiFab &func_h,
                     amrex::RealVect dr, int form, bool dual, int comp = 0, amrex::Real t = 0.)
 {
     
@@ -183,7 +184,10 @@ amrex::Real maxErrorMidpoint(amrex::Geometry geom, amrex::ParserExecutor<GEMPIC_
             };
 
             amrex::Real fval = 0;
-            int b{0}, c{0};
+            AMREX_D_PICK(
+                int b{0};
+                int c{0},
+                int c{0},);
             switch (form)
             {
             case 0:

@@ -354,7 +354,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 * @return void
 */
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                                      DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes) 
+                                      DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes)
 {
     const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
     if (nQuad != gaussNodes)

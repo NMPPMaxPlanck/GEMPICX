@@ -4,7 +4,7 @@ file(GLOB DERIVATIVES "../../src/forms/GEMPIC_extDerivatives.cpp")
 
 target_sources(GtestTests PRIVATE
     # test cases
-    accumulate_j_update_v_test.cpp
+    accumulate_J_integrate_B_test.cpp
     deposit_rho_test.cpp
     evaluate_bfield_test.cpp
     evaluate_efield_test.cpp ${PARAMETERS} ${FDDERHAMCOMPLEX}

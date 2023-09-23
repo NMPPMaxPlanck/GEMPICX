@@ -16,6 +16,11 @@ using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_PoissonSolver;
 
+/**
+ * @brief Tests the Poisson solver for an analytical rho of 1.0 + cos(x)
+ * 
+ * @todo: Use our Hodge and compare to exact analytical functon
+*/
 int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
@@ -59,7 +64,6 @@ int main(int argc, char *argv[])
     for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
-        amrex::Array4<amrex::Real> const &phiMF = (phi.data)[mfi].array();
         amrex::Array4<amrex::Real> const &anPhiMF = (anPhi.data)[mfi].array();
         const amrex::RealVect dr = params.dr();
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();

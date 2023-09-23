@@ -122,8 +122,8 @@ int main(int argc, char* argv[])
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(params);
 
-	DeRhamField<Grid::primal, Space::face> B(deRham);
-	DeRhamField<Grid::primal, Space::edge> E(deRham);
+    DeRhamField<Grid::primal, Space::face> B(deRham);
+    DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
     DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -236,8 +236,6 @@ int main(int argc, char* argv[])
                     particle_attributes->GetRealData(0).data();
                 amrex::ParticleReal* const AMREX_RESTRICT vely =
                     particle_attributes->GetRealData(1).data();
-                amrex::ParticleReal* const AMREX_RESTRICT velz =
-                    particle_attributes->GetRealData(2).data();
 
                 const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
@@ -319,7 +317,7 @@ int main(int argc, char* argv[])
 
                     // evaluate the electric field
                     amrex::GpuArray<amrex::Real, vdim> efield =
-                        spline.template evalField<vdim, 1>(eA);
+                        spline.template evalSplineField<vdim, 1>(eA);
 
                     // push v with the electric field over dt/2
                     amrex::GpuArray<amrex::Real, vdim> newV =

@@ -38,7 +38,6 @@ namespace Particles {
         }
         return newPos;
     }
-
 }
 
 }
@@ -58,7 +57,7 @@ namespace {
                    Spline::SplineWithPrimitive<degX, degY, degZ>(position, plo, dxInverse) {}
 
         template<int vDim, int form>
-        AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> evalField (const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
+        AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> evalSplineField (const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
         {
             amrex::GpuArray<amrex::Real, vDim> fields;
             for (int comp = 0; comp < vDim; comp++)
@@ -69,18 +68,6 @@ namespace {
             return fields;
         }
     };
-
-    template <int vdim, int degp, int degp1, int degp2, int pdim>
-    AMREX_GPU_HOST_DEVICE void accumulate_j_update_v(
-        MockSpline<degp, degp1, degp2> &spline,
-        amrex::Real weight,
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
-        amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
-        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
-        amrex::GpuArray<amrex::Real, 2> &fields)
-    {
-        
-    }
 
     class OperatorHamiltonTest : public testing::Test {
         protected:
@@ -126,7 +113,24 @@ namespace {
             }
         }
     };
+}
 
+namespace Gempic::Particles{
+    // You cannot do partial template specialization for functions, so here is an explicit specialization for a special case
+    template <>
+    AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B<MockSpline<1, 1, 1>,4,0>(
+        MockSpline<1, 1, 1> &spline,
+        amrex::Real weight,
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+        amrex::GpuArray<amrex::Array4<amrex::Real>, int(4 / 2.5) * 2 + 1> const &bArray,
+        amrex::GpuArray<amrex::Array4<amrex::Real>, 4> const &jArray,
+        amrex::GpuArray<amrex::Real, 2> &fields)
+    {
+        
+    }
+}
+
+namespace {
     TEST_F(OperatorHamiltonTest, ApplyHEParticleTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -155,8 +159,7 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
-        deRham->projection(funcE, 0.0, E);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -227,8 +230,8 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-	    DeRhamField<Grid::dual, Space::face> J(deRham);
-	    DeRhamField<Grid::primal, Space::face> B(deRham);
+        DeRhamField<Grid::dual, Space::face> J(deRham);
+        DeRhamField<Grid::primal, Space::face> B(deRham);
 
         const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", 
                                                               "0.0",
@@ -265,7 +268,7 @@ namespace {
             amrex::Particle<0, 0>* AMREX_RESTRICT particles =
                 &(pti.GetArrayOfStructs()[0]);
 
-            amrex::GpuArray<amrex::Array4<amrex::Real>, 3> jArray;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, 4> jArray;
             for (int cc{0}; cc < vDim; cc++) jArray[cc] = (J.data[cc])[pti].array();
 
 
@@ -283,11 +286,11 @@ namespace {
                 particle_attributes->GetRealData(1).data();
             amrex::ParticleReal* const AMREX_RESTRICT velz =
                 particle_attributes->GetRealData(2).data();
-            amrex::GpuArray<amrex::Real, 3> vel{0, 0, 0};
+            amrex::GpuArray<amrex::Real, 4> vel{0, 0, 0, 0};
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            OperatorHamilton<3, degX, degY, degZ, degmw> operatorHamilton;
+            OperatorHamilton<4, degX, degY, degZ, degmw> operatorHamilton;
 
             operatorHamilton.template apply_H_p_i<0, MockSpline<degX, degY, degZ>>(
                 position,

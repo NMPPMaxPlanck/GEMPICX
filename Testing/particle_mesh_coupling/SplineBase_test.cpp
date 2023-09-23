@@ -106,16 +106,16 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(1., spline.splineCell[0][0]);
-            EXPECT_EQ(1., spline.splineCell[1][0]);
-            EXPECT_EQ(1., spline.splineCell[2][0]);
+            EXPECT_EQ(1., spline.cellSplineVals[0][0]);
+            EXPECT_EQ(1., spline.cellSplineVals[1][0]);
+            EXPECT_EQ(1., spline.cellSplineVals[2][0]);
 
-            EXPECT_EQ(1., spline.splineNode[0][0]);
-            EXPECT_EQ(0., spline.splineNode[0][1]);
-            EXPECT_EQ(1., spline.splineNode[1][0]);
-            EXPECT_EQ(0., spline.splineNode[1][1]);
-            EXPECT_EQ(1., spline.splineNode[2][0]);
-            EXPECT_EQ(0., spline.splineNode[2][1]);
+            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
+            EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);
+            EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -165,16 +165,16 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(infra.dxi[0], spline.splineCell[0][0]);
-            EXPECT_EQ(infra.dxi[1], spline.splineCell[1][0]);
-            EXPECT_EQ(infra.dxi[2], spline.splineCell[2][0]);
+            EXPECT_EQ(infra.dxi[0], spline.cellSplineVals[0][0]);
+            EXPECT_EQ(infra.dxi[1], spline.cellSplineVals[1][0]);
+            EXPECT_EQ(infra.dxi[2], spline.cellSplineVals[2][0]);
 
-            EXPECT_EQ(1., spline.splineNode[0][0]);
-            EXPECT_EQ(0., spline.splineNode[0][1]);
-            EXPECT_EQ(1., spline.splineNode[1][0]);
-            EXPECT_EQ(0., spline.splineNode[1][1]);
-            EXPECT_EQ(1., spline.splineNode[2][0]);
-            EXPECT_EQ(0., spline.splineNode[2][1]);
+            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
+            EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);
+            EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -204,24 +204,25 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            amrex::Real xintOne = spline.initBSplinesAtPositions<0, 1>(0, 0, 1);
+            amrex::Real xintOne = spline.initBSplinesAtPositions<0>(0, 0, 1);
             EXPECT_EQ(1., xintOne);
-            EXPECT_EQ(0., spline.span[0]);
+            EXPECT_EQ(0., spline.firstIndex[0]);
 
-            amrex::Real xintTwo = spline.initBSplinesAtPositions<0, 2>(0, 0, 1);
+            Spline::SplineBase<2, degY, degZ> splineDeg2(position, infra.plo, infra.dxi);
+            amrex::Real xintTwo = splineDeg2.initBSplinesAtPositions<0>(0, 0, 1);
             EXPECT_EQ(0.5, xintTwo);
-            EXPECT_EQ(-1., spline.span[0]);
+            EXPECT_EQ(-1., splineDeg2.firstIndex[0]);
 
-            amrex::Real xintThree = spline.initBSplinesAtPositions<0, 2>(0.75, 0, 1);
+            amrex::Real xintThree = splineDeg2.initBSplinesAtPositions<0>(0.75, 0, 1);
             EXPECT_EQ(0.75, xintThree);
-            EXPECT_EQ(0., spline.span[0]);
+            EXPECT_EQ(0., splineDeg2.firstIndex[0]);
         }
         ASSERT_TRUE(particleLoopRun);
     }
     
     /**
      * @brief Test the update1DSplines method
-     * @details Verify that splineCell and splineNode get assigned the correct values
+     * @details Verify that cellSplineVals and nodeSplineVals get assigned the correct values
     */
     TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest) {
         // Adding particle to one cell
@@ -248,12 +249,12 @@ namespace {
             EXPECT_CALL(spline, initBSplinesAtPositions(1, 1, 1)).WillOnce(::testing::Return(1));
 
             amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
-            spline.template update1DSplines<0, 1>(1, 1, 1);
+            spline.template update1DSplines<0>(1, 1, 1);
 
             EXPECT_EQ(1., result);
-            EXPECT_EQ(1., spline.splineCell[0][0]);
-            EXPECT_EQ(1., spline.splineNode[0][0]);
-            EXPECT_EQ(0., spline.splineNode[0][1]);
+            EXPECT_EQ(1., spline.cellSplineVals[0][0]);
+            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -286,16 +287,16 @@ namespace {
 
             amrex::Real sCoeff;
 
-            sCoeff = spline.template evalBSpline<0, 1>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<1, 0>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
             sCoeff = spline.template evalBSpline<1, 1>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
-            sCoeff = spline.template evalBSpline<2, 1>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<1, 2>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
 
-            sCoeff = spline.template evalBSpline<0, 2>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<2, 0>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
-            sCoeff = spline.template evalBSpline<1, 2>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<2, 1>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
             sCoeff = spline.template evalBSpline<2, 2>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);

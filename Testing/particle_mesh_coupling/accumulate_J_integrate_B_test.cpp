@@ -12,7 +12,7 @@ using namespace GEMPIC_Fields;
 
 namespace {
     // When using amrex::ParallelFor you have to create a standalone helper function that does the execution on GPU and call that function from the unit test because of how GTest creates tests within a TEST_F fixture.
-    template <int vDim, int degX, int degY, int degZ, int degP, int degP1, int degP2, int pDim>
+    template <int vDim, int degX, int degY, int degZ, int pDim>
     void accumulateJUpdateVC2ParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                  DeRhamField<Grid::primal, Space::face>& B,
                                  DeRhamField<Grid::dual, Space::face>& J,
@@ -46,10 +46,10 @@ namespace {
 
             Spline::SplineWithPrimitive<degX, degY, degZ> spline(pos_start, infra.plo, infra.dxi);
 
-            spline.template update1DSplines<pDim, degP>(x_end, infra.plo[0], infra.dxi[0]);
-            spline.template update1DPrimitive<pDim, degP>(x_end, infra.plo[0], infra.dxi[0]);
+            spline.template update1DSplines<pDim>(x_end, infra.plo[0], infra.dxi[0]);
+            spline.template update1DPrimitive<pDim>(x_end, infra.plo[0], infra.dxi[0]);
 
-            accumulate_j_update_v<Spline::SplineWithPrimitive<1, 1, 1>, vDim, degP, degP1, degP2, pDim>(spline, weight, dx, bA, jA, bFields[0]);
+            accumulate_J_integrate_B<Spline::SplineWithPrimitive<degX, degY, degZ>, vDim, pDim>(spline, weight, dx, bA, jA, bFields[0]);
         });
 
         bfields = bFields[0];
@@ -154,11 +154,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -171,7 +169,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[1], 0);
@@ -220,11 +218,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -236,7 +232,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_NEAR(bfields[0], -4.5, 0.000000000000001);
             EXPECT_NEAR(bfields[1], -4.5, 0.000000000000001);
@@ -285,11 +281,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -301,7 +295,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_NEAR(bfields[0], -4.75, 0.000000000000001);
             EXPECT_NEAR(bfields[1], -4.75, 0.000000000000001);
@@ -353,11 +347,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -369,7 +361,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[0], 0);
@@ -421,11 +413,9 @@ namespace {
         // Initialize the De Rham Complex
         auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
-        DeRhamField<Grid::primal, Space::face> B(deRham);
-        deRham -> projection(funcB, 0.0, B);
+        DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        deRham -> projection(funcJ, 0.0, J);
+        DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle. Hopefully.
@@ -437,7 +427,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, degP, degP1, degP2, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
+            accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[0], 0);

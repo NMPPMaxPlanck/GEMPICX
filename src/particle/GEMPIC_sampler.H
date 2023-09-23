@@ -260,7 +260,6 @@ void init_particles_full_domain_gpu(
 #endif
 #if (GEMPIC_SPACEDIM > 2)
                 int iz = k - lo[2];
-                int nz = hi[2] - lo[2] + 1;
 #endif
                 // int cellid = (ix * ny + iy) * nz + iz;
                 int cellid = (iz * ny + iy) * nx + ix;
