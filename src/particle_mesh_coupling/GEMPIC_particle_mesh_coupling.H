@@ -81,8 +81,8 @@ AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B (
     constexpr int pDim1 = (pDim + 1) % 3;
     constexpr int pDim2 = (pDim + 2) % 3;
 
-    constexpr int degP1 = spline.splineDegrees[pDim1];
-    constexpr int degP2 = spline.splineDegrees[pDim2];
+    const int degP1 = spline.splineDegrees[pDim1];
+    const int degP2 = spline.splineDegrees[pDim2];
 
     fields = {0., 0.};
     // Size of support of difference of primitives

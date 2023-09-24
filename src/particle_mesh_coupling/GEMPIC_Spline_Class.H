@@ -538,12 +538,12 @@ public:
 		this->firstIndexOld[dim] = std::move(this->firstIndex[dim]);
 		const amrex::Real xint = this->template initBSplinesAtPositions<dim> (position, plo, dxInverse_dim);
 
-		constexpr int deg{this->splineDegrees[dim]};
-		this->template splineEval<deg - 1, this->maxDeg>(xint, this->cellSplineVals[dim]);
+		constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
+		this->template splineEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(xint, this->cellSplineVals[dim]);
 		for (size_t i{0}; i < deg; i++) {
 			this->cellSplineVals[dim][i] *= dxInverse_dim;
 		}
-		this->template splineEval<deg, this->maxDeg + 1>(xint, this->nodeSplineVals[dim]);
+		SplineBase<degX, degY, degZ>::template splineEval<deg, SplineBase<degX, degY, degZ>::maxDeg + 1>(xint, this->nodeSplineVals[dim]);
 	}
 
 	/**
@@ -565,8 +565,8 @@ public:
 		const amrex::Real xint = this->template initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
 
 		primitiveOld[dim] = std::move(primitiveNew[dim]);
-		constexpr int deg{this->splineDegrees[dim]};
-		primitiveEval<deg - 1, this->maxDeg>(xint, primitiveNew[dim]);
+		constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
+		primitiveEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(xint, primitiveNew[dim]);
 	}
 
 	/**
@@ -582,9 +582,9 @@ public:
 	template<int dim>
 	AMREX_GPU_HOST_DEVICE amrex::Real computePrimitiveDifference (const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
 	{
-		constexpr int deg{this->splineDegrees[dim]};
+		constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
 		// Size of support of difference of primitives
-		const int local_size = std::abs(this->firstIndex[dim] - this->firstIndexOld[dim]) + deg;
+		const int local_size = std::abs(SplineBase<degX, degY, degZ>::firstIndex[dim] - this->firstIndexOld[dim]) + deg;
 
 		amrex::Real primitiveDifference = 0;
 
