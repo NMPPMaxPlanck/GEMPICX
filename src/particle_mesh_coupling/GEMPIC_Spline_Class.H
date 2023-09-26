@@ -520,7 +520,9 @@ public:
                         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse
                         ) : SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
-        this->firstIndexOld = this->firstIndex;
+        firstIndexOld = {};
+
+        primitiveNew = {};
 
         AMREX_D_TERM((update1DPrimitive<0>(position[0], plo[0], dxInverse[0]));,
                      (update1DPrimitive<1>(position[1], plo[1], dxInverse[1]));,

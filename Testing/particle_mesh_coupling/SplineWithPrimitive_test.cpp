@@ -312,15 +312,15 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineWithPrimitive<2, 2, 2> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(-1, spline.firstIndexOld[0]);
+            EXPECT_EQ(0, spline.firstIndexOld[0]);
             EXPECT_EQ(-1, spline.firstIndex[0]);
-            EXPECT_EQ(0, spline.firstIndexOld[0] - spline.firstIndex[0]);
+            EXPECT_EQ(1, spline.firstIndexOld[0] - spline.firstIndex[0]);
 
             amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
-            EXPECT_EQ(9.875, primitiveDifference);
+            EXPECT_EQ(-0.125, primitiveDifference);
 
             primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
-            EXPECT_EQ(0.9875, primitiveDifference);
+            EXPECT_EQ(-0.0125, primitiveDifference);
 
             spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
             spline.template update1DPrimitive<0>(0.5, infra.plo[0], infra.dxi[0]);
