@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 
     deRham->grad(phi, E);
 
-    //E *= -1.0;
+    E *= -1.0;
 
     amrex::Real dt = parametersBernstein.dt;
     int nSteps = parametersBernstein.n_steps;
@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
 
             deRham->grad(phi, E);
 
-            //E *= -1.0;
+            E *= -1.0;
 
             rho.data.setVal(0.0);
 
