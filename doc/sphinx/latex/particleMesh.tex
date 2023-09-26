@@ -194,8 +194,8 @@ In this step the following system needs to be solved
 $$
 \begin{aligned}
     \fract{x_p}{t} &= v_{p,x} \\
-    \fract{v_{y,p}}{t} &= - v_{p,x}(t)B^S_z(x_p(t) ,y_p,z_p) \\
-    \fract{v_{z,p}}{t} &= + v_{p,x}B^S_y(x_p(t),y_p,z_p) \\
+    \fract{v_{y,p}}{t} &= - \frac{q_p}{m_p} v_{p,x}(t)B^S_z(x_p(t) ,y_p,z_p) \\
+    \fract{v_{z,p}}{t} &= + \frac{q_p}{m_p} v_{p,x}B^S_y(x_p(t),y_p,z_p) \\
     \fract{\tilde{\arrD}_{\iph,j,k}}{t} &= -\tilde{\arrJ}_{\iph,j,k}. %\\ 
 \end{aligned}
 $$
@@ -203,8 +203,8 @@ that is,
 $$
 \begin{aligned}
     \fract{x_p}{t} &= v_{p,x} \\
-    \fract{v_{y,p}}{t} &= -v_{p,x} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\cell_i(x_p(t))\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
-    \fract{v_{z,p}}{t} &= +v_{p,x} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\cell_i(x_p(t))\,S^\node_j(y_p) \, S^\cell_k(z_p) \\
+    \fract{v_{y,p}}{t} &= -\frac{q_p}{m_p} v_{p,x} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\cell_i(x_p(t))\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
+    \fract{v_{z,p}}{t} &= +\frac{q_p}{m_p} v_{p,x} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\cell_i(x_p(t))\,S^\node_j(y_p) \, S^\cell_k(z_p) \\
     \fract{\tilde{\arrD}_{\iph,j,k}}{t} &= - \sum_p q_p w_p v_{p,x} S^\cell_i(x_p(t))\, S^\node_j(y_p) \,S^\node_k(z_p)    
 \end{aligned}
 $$
@@ -227,8 +227,8 @@ so that the above system becomes
 $$
 \begin{aligned}
     \fract{x_p}{t} &= v_{p,x} \\
-    \fract{v_{y,p}}{t} &= -\fract{}{t} \left(\sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\prim_i(x_p(t))\,S^\cell_j(y_p) \, S^\node_k(z_p)\right)\\
-    \fract{v_{z,p}}{t} &= +\fract{}{t} \left(\sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\prim_i(x_p(t))\,S^\node_j(y_p) \, S^\cell_k(z_p) \right)\\
+    \fract{v_{y,p}}{t} &= -\fract{}{t} \left(\frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\prim_i(x_p(t))\,S^\cell_j(y_p) \, S^\node_k(z_p)\right)\\
+    \fract{v_{z,p}}{t} &= +\fract{}{t} \left(\frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\prim_i(x_p(t))\,S^\node_j(y_p) \, S^\cell_k(z_p) \right)\\
     \fract{\tilde{\arrD}_{\iph,j,k}}{t} &= - \fract{}{t}\left(\sum_p q_p w_p S^\prim_i(x_p(t))\, S^\node_j(y_p) \,S^\node_k(z_p) \right)   
 \end{aligned}
 $$
@@ -238,13 +238,14 @@ $$
 \begin{aligned}
     x_p&(t_1) = x_p(t_0) + (t_1-t_0) v_{p,x} \\
     v_{y,p}&(t_1) = v_{y,p}(t_0) -  
-    \sum_{i,j,k} \arrB_{\iph,\jph,k} \Big(S^\prim_i(x_p(t_1))-S^\prim_i(x_p(t_0)) \Big) S^\cell_j(y_p) \, S^\node_k(z_p)    
+    \frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,\jph,k} \big[S^\prim_i(x_p)\big]_{t_0}^{t_1} S^\cell_j(y_p) \, S^\node_k(z_p)    
     \\
     v_{z,p}&(t_1) =  v_{z,p}(t_0) + 
-    \sum_{i,j,k} \arrB_{\iph,j,\kph} \Big(S^\prim_i(x_p(t_1))-S^\prim_i(x_p(t_0)) \Big) S^\node_j(y_p) \, S^\cell_k(z_p)
+    \frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,j,\kph} \big[S^\prim_i(x_p)\big]_{t_0}^{t_1}  S^\node_j(y_p) \, S^\cell_k(z_p)
     \\
     \tilde{\arrD}_{\iph,j,k} & (t_1) =  \tilde{\arrD}_{\iph,j,k}(t_0) - 
-    \sum_p q_p w_p \Big(S^\prim_i(x_p(t_1))-S^\prim_i(x_p(t_0)) \Big) S^\node_j(y_p) \,S^\node_k(z_p).
+    \sum_p q_p w_p \big[S^\prim_i(x_p)\big]_{t_0}^{t_1}  S^\node_j(y_p) \,S^\node_k(z_p).
 \end{aligned}
 $$
+where $\big[S^\prim_i(x_p)\big]_{t_0}^{t_1} = S^\prim_i(x_p(t_1))-S^\prim_i(x_p(t_0))$ is the primitive difference.
 \end{document}
