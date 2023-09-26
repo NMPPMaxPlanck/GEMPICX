@@ -69,10 +69,10 @@ namespace {
                 for (int j{0}; j <= top.y; j++) {
                     for (int k{0}; k <= top.z; k++) {
                         int condNum{0};
-                        amrex::Array<int, GEMPIC_SPACEDIM> idx{AMREX_D_DECL(i, j, k)};
+                        amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
                         for (auto cond : condVec) {
                             if (cond(AMREX_D_DECL(i, j, k))) {
-                                EXPECT_EQ(checks[condNum], *rhoarr.ptr(AMREX_D_DECL(i, j, k), 0)) <<
+                                EXPECT_EQ(checks[condNum], *rhoarr.ptr(idx, 0)) <<
                                    "LINE:" << line << ": Failed condition " << condNum <<
                                    ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
                                    break;
@@ -80,7 +80,7 @@ namespace {
                             condNum++;
                         }
                         if (condNum == condVec.size()) {
-                            EXPECT_EQ(defCheck, *rhoarr.ptr(AMREX_D_DECL(i, j, k), 0)) <<
+                            EXPECT_EQ(defCheck, *rhoarr.ptr(idx, 0)) <<
                                 "LINE:" << line << ": Failed default value check:" << defCheck <<
                                 ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
                         }
@@ -95,6 +95,8 @@ namespace {
 
         // Degree of splines in each direction
         static const int degX{1};
+        //static const int degY{AMREX_D_PICK(0, 1, 1)};
+        //static const int degZ{AMREX_D_PICK(0, 0, 1)};
         static const int degY{1};
         static const int degZ{1};
 
@@ -104,6 +106,9 @@ namespace {
         static const int vDim{0};
         // Number of ghost cells in mesh
         const int Nghost{GEMPIC_TestUtils::initNGhost(degX, degY, degZ)};
+        const amrex::IntVect Nghosts{AMREX_D_DECL(Nghost, Nghost, Nghost)};
+        const amrex::IntVect dstNGhosts{AMREX_D_DECL(0, 0, 0)};
+
 
         amrex::Array<amrex::Real, numSpec> charge{1, -1};
         amrex::Array<amrex::Real, numSpec> mass{1, 0.1};
@@ -197,6 +202,7 @@ namespace {
     
     // Adds one particle exactly between two nodes
     TEST_F(DepositRhoTest, SingleParticleMiddle) {
+        ASSERT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
         const int numParticles{1};
 
         // Add particle in the middle of final cell to check periodic boundary conditions
@@ -229,7 +235,7 @@ namespace {
                     // with the remaining entries being 0
                     0);
         }
-        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
+        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
         rho.FillBoundary(infra.geom.periodicity());
         
         // Maximum occurs evenly split between 2^GEMPIC_SPACEDIM nodes. The sum is still 1.
@@ -239,6 +245,7 @@ namespace {
 
     // Adds one particle closer to on node than the other
     TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit) { 
+        ASSERT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
         const int numParticles{1};
 
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbLo(0) + 0.25*infra.dx[0],
@@ -275,7 +282,7 @@ namespace {
                 // with the remaining entries being 0
                 0);
         }
-        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
+        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
         rho.FillBoundary(infra.geom.periodicity());
         
         // Maximum occurs on node (0, 0, 0) with value (3/4)^GEMPIC_SPACEDIM. The sum is still 1.
@@ -318,10 +325,11 @@ namespace {
                 // with the remaining entries being 0
                 0);
         }
-        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
+        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
         rho.FillBoundary(infra.geom.periodicity());
         
-        EXPECT_EQ(expectedValA, rho.norm0());
+        // The maximum expectedVal depends on the dimension on the problem
+        EXPECT_EQ(std::max(expectedValA, expectedValB), rho.norm0());
         // Total charge added is the sum of each weight*charge, here 1 + 3
         EXPECT_EQ(4, rho.norm1(0, infra.geom.periodicity()));
     }
@@ -362,7 +370,7 @@ namespace {
                     {expectedValA, expectedValB},
                     0);
         }
-        rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
+        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
         rho.FillBoundary(infra.geom.periodicity());
         
         EXPECT_EQ(expectedValA, rho.norm0());
@@ -417,10 +425,11 @@ namespace {
                 }
             }
         }
-            rho.SumBoundary(0, 1, {Nghost, Nghost, Nghost}, {0, 0, 0}, infra.geom.periodicity());
+            rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
             rho.FillBoundary(infra.geom.periodicity());
             
-            EXPECT_EQ(expectedValA, rho.norm0());
+            // The maximum expectedVal depends on the dimension on the problem
+            EXPECT_EQ(std::max(std::abs(expectedValA), std::abs(expectedValB)), rho.norm0());
             
             // Probably not GPU safe. Second argument of sum_unique is bool local, which decides if parallel reduction is done
             EXPECT_EQ(pCharge*pWeights[0] + eCharge*eWeights[0], rho.sum_unique(0, 0, infra.geom.periodicity()));

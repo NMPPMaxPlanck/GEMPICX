@@ -41,10 +41,10 @@ namespace {
                 for (int j{0}; j <= top.y; j++) {
                     for (int k{0}; k <= top.z; k++) {
                         int condNum{0};
-                        amrex::Array<int, GEMPIC_SPACEDIM> idx{AMREX_D_DECL(i, j, k)};
+                        const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
                         for (auto cond : condVec) {
                             if (cond(AMREX_D_DECL(i, j, k))) {
-                                EXPECT_NEAR(checks[condNum], *rhoarr.ptr(AMREX_D_DECL(i, j, k), 0), 1e-8) <<
+                                EXPECT_NEAR(checks[condNum], *rhoarr.ptr(idx, 0), 1e-8) <<
                                    "LINE:" << line << ": Failed condition " << condNum <<
                                    ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
                                    break;
@@ -52,7 +52,7 @@ namespace {
                             condNum++;
                         }
                         if (condNum == condVec.size()) {
-                            EXPECT_NEAR(defCheck, *rhoarr.ptr(AMREX_D_DECL(i, j, k), 0), 1e-8) <<
+                            EXPECT_NEAR(defCheck, *rhoarr.ptr(idx, 0), 1e-8) <<
                                 "LINE:" << line << ": Failed default value check:" << defCheck <<
                                 ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
                         }
@@ -88,7 +88,7 @@ namespace {
                                          {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, 3> isPeri{AMREX_D_DECL(1, 1, 1)};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeri{AMREX_D_DECL(1, 1, 1)};
             const amrex::IntVect isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
             params = Parameters(realBox, nCell, maxGridSize, isPeri, hodgeDegree);

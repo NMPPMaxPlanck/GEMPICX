@@ -69,7 +69,7 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
             BL_PROFILE("time_loop_hs_zigzag_C2::step");
 
             // Rescale the fields
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+            amrex::GpuArray<amrex::Real, 3> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
             //(rho.data).mult((dr[0] * dr[1] * dr[2]));
 
             (E.data[0]).mult((1/dr[0]));
@@ -214,8 +214,10 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
             // Then Fill Boundary of J
             auto nGhost = deRham -> getNGhost();
+            amrex::IntVect nGhosts{nGhost};
+            amrex::IntVect dstNGhosts{AMREX_D_DECL(0, 0, 0)};
             for (int comp = 0; comp < 3; ++comp)
-                (J.data[comp]).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0}, infra.geom.periodicity());
+                (J.data[comp]).SumBoundary(0, 1, nGhosts, dstNGhosts, infra.geom.periodicity());
 
             J.averageSync();
             J.fillBoundary();

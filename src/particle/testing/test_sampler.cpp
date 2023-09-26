@@ -38,7 +38,7 @@ using namespace Particles;
 using namespace Sampling;
 
 // wave function
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(amrex::Real x, amrex::Real y, amrex::Real z,
+AMREX_GPU_HOST_DEVICE amrex::Real wave_function(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
                                                 amrex::Real t)
 {
     amrex::Real val = 1.0;

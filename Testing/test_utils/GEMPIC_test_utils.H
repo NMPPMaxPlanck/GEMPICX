@@ -38,7 +38,7 @@ namespace GEMPIC_TestUtils {
         amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>&& velocities = {})
     {
         amrex::Array<bool, numParticles> checklist{false};
-
+        
         for (amrex::MFIter mfi{particleGroup[0]->MakeMFIter(0)}; mfi.isValid(); ++mfi)
         {
             const amrex::Box& bx{mfi.validbox()};
@@ -50,12 +50,12 @@ namespace GEMPIC_TestUtils {
             for (int i{0}; i < numParticles; i++) {
                 // make sure particle is within box (and not previously added? Why?)
                 if (!checklist[i] AMREX_D_TERM(
-                    && lo[0]*infra.dx[0] <= positions[i][0] && 
-                                            positions[i][0] < (hi[0] + 1)*infra.dx[0],
-                    && lo[1]*infra.dx[1] <= positions[i][1] &&
-                                            positions[i][1] < (hi[1] + 1)*infra.dx[1],
-                    && lo[2]*infra.dx[2] <= positions[i][2] &&
-                                            positions[i][2] < (hi[2] + 1)*infra.dx[2]))
+                    && (lo[0]*infra.dx[0] <= positions[i][0]) && 
+                                            (positions[i][0] < (hi[0] + 1)*infra.dx[0]),
+                    && (lo[1]*infra.dx[1] <= positions[i][1]) &&
+                                            (positions[i][1] < (hi[1] + 1)*infra.dx[1]),
+                    && (lo[2]*infra.dx[2] <= positions[i][2]) &&
+                                            (positions[i][2] < (hi[2] + 1)*infra.dx[2])))
                 {
                     particleGroup[spec]->add_particle(positions[i], velocities[i], weights[i],
                                                       particles);

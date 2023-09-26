@@ -79,12 +79,13 @@ namespace {
                                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            const amrex::IntVect isPeri{isPeriodic};
             const int hodgeDegree{2};
 
             // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
             // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
             
@@ -112,15 +113,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"0.0", "0.0", "0.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -164,7 +165,7 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Particle at position (0,0,0) in box (0,0,0)
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{0, 0, 0};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(0, 0, 0)};
         EXPECT_EQ(*infra.geom.ProbLo(), 0.0);
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
@@ -175,15 +176,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -216,15 +217,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -257,15 +258,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -288,11 +289,12 @@ namespace {
                                         {AMREX_D_DECL(10.0, 10.0, 10.0)});
         const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
         const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
-        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        const amrex::IntVect isPeri{isPeriodic};
         const int hodgeDegree{2};
 
         // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-        infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+        infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
         params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
         
@@ -318,15 +320,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -361,15 +363,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -404,15 +406,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex

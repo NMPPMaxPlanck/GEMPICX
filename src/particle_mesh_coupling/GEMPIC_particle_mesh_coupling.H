@@ -186,19 +186,20 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (
     amrex::Real weight,
     amrex::Array4<amrex::Real> const &rho)
 {
-GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
-                    for (int jj = 0; jj <= degY; ++jj),
-                    for (int kk = 0; kk <= degZ; ++kk))
+    AMREX_D_PICK(
+    int jj{0}; int kk{0};,
+    int kk{0};,)
+    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
+                        for (int jj = 0; jj <= degY; ++jj),
+                        for (int kk = 0; kk <= degZ; ++kk))
+        amrex::Dim3 cell_index = {AMREX_D_DECL(
+            spline.firstIndex[0] + ii, spline.firstIndex[1] + jj, spline.firstIndex[2] + kk)};
+        double s_coeff = spline.template evalBSpline<0>(ii, jj, kk);
 
-    amrex::Dim3 cell_index = {
-        AMREX_D_DECL(spline.firstIndex[0] + ii, spline.firstIndex[1] + jj, spline.firstIndex[2] + kk)};
-    double s_coeff = spline.template evalBSpline<0>(AMREX_D_DECL(ii, jj, kk));
-
-    amrex::HostDevice::Atomic::Add(
-        rho.ptr(cell_index.x, cell_index.y, cell_index.z, 0),
-        s_coeff * weight);
-
-GEMPIC_D_LOOP_END;
+        amrex::HostDevice::Atomic::Add(
+            rho.ptr(cell_index.x, cell_index.y, cell_index.z, 0),
+            s_coeff * weight);
+    GEMPIC_D_LOOP_END
 }
 
 }  // namespace Particles

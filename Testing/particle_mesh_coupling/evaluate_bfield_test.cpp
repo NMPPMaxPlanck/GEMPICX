@@ -71,13 +71,14 @@ namespace {
                                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            const amrex::IntVect isPeri{AMREX_D_DECL(1, 1, 1)};
             const int hodgeDegree{2};
 
 
             // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
             // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
             
@@ -106,15 +107,15 @@ namespace {
                                                               "0.0",
                                                               "0.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
         amrex::Parser parser;
 
         for (int i{0}; i<3; ++i)
         {
             parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcB[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -169,15 +170,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcB[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -192,9 +193,9 @@ namespace {
 
             amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
                         
-            EXPECT_EQ(bfields[0][0], 4.0);
-            EXPECT_EQ(bfields[0][1], 4.0);
-            EXPECT_EQ(bfields[0][2], 4.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
+            EXPECT_EQ(bfields[0][1], 1.0);
+            EXPECT_EQ(bfields[0][2], 1.0);
         }
     }
 
@@ -214,15 +215,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcB[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -237,9 +238,9 @@ namespace {
             
             amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
                         
-            EXPECT_EQ(bfields[0][0], 1.5);
-            EXPECT_EQ(bfields[0][1], 1.5);
-            EXPECT_EQ(bfields[0][2], 2.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
+            EXPECT_EQ(bfields[0][1], 1.0);
+            EXPECT_EQ(bfields[0][2], 1.0);
         }
     }
 
@@ -259,15 +260,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcB[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -282,8 +283,8 @@ namespace {
             
             amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
                         
-            EXPECT_EQ(bfields[0][0], 0.625);
-            EXPECT_EQ(bfields[0][1], 0.625);
+            EXPECT_EQ(bfields[0][0], 1.0);
+            EXPECT_EQ(bfields[0][1], 1.0);
             EXPECT_EQ(bfields[0][2], 1.0);
         }
     }
@@ -306,15 +307,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcB[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -329,13 +330,13 @@ namespace {
 
             amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
                         
-            EXPECT_EQ(bfields[0][0], 4.0);
-            EXPECT_EQ(bfields[0][1], 4.0);
-            EXPECT_EQ(bfields[0][2], 4.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
+            EXPECT_EQ(bfields[0][1], 1.0);
+            EXPECT_EQ(bfields[0][2], 1.0);
                         
-            EXPECT_EQ(bfields[1][0], 4.0);
-            EXPECT_EQ(bfields[1][1], 4.0);
-            EXPECT_EQ(bfields[1][2], 4.0);
+            EXPECT_EQ(bfields[1][0], 1.0);
+            EXPECT_EQ(bfields[1][1], 1.0);
+            EXPECT_EQ(bfields[1][2], 1.0);
         }
     }
 
@@ -357,15 +358,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcB[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -380,13 +381,17 @@ namespace {
 
             amrex::GpuArray<amrex::Real, vDim>* bfields = updateBFieldParallelFor<vDim, degX, degY, degZ>(pti, B, infra);
                         
-            EXPECT_EQ(bfields[0][0], 4.0);
-            EXPECT_EQ(bfields[0][1], 4.0);
-            EXPECT_EQ(bfields[0][2], 4.0);
+            EXPECT_EQ(bfields[0][0], 1.0);
+            EXPECT_EQ(bfields[0][1], 1.0);
+            EXPECT_EQ(bfields[0][2], 1.0);
                         
-            EXPECT_EQ(bfields[1][0], 4.0);
-            EXPECT_EQ(bfields[1][1], 4.0);
-            EXPECT_EQ(bfields[1][2], 4.0);
+            EXPECT_EQ(bfields[1][0], 1.0);
+            EXPECT_EQ(bfields[1][1], 1.0);
+            EXPECT_EQ(bfields[1][2], 1.0);
         }
+    }
+
+    TEST_F(EvaluateBFieldTest, TestingForLiterallyAnythingOtherThanUnity) {
+        GTEST_SKIP() << "Such advanced tests have not yet been implemented!";
     }
 }

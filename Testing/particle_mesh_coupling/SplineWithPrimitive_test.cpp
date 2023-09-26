@@ -59,10 +59,11 @@ namespace {
                                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            const amrex::IntVect isPeri{isPeriodic};
             const int hodgeDegree{2};
 
-            infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
 
@@ -101,20 +102,23 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineWithPrimitive<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(1., spline.cellSplineVals[0][0]);
-            EXPECT_EQ(1., spline.cellSplineVals[1][0]);
-            EXPECT_EQ(1., spline.cellSplineVals[2][0]);
+        AMREX_D_TERM(
+            EXPECT_EQ(1., spline.cellSplineVals[0][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[1][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[2][0]);)
 
+        AMREX_D_TERM(
             EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);,
             EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);,
             EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);)
 
-            EXPECT_EQ(1., spline.primitiveNew[0][0]);
-            EXPECT_EQ(1., spline.primitiveNew[1][0]);
-            EXPECT_EQ(1., spline.primitiveNew[2][0]);
+        AMREX_D_TERM(
+            EXPECT_EQ(1., spline.primitiveNew[0][0]);,
+            EXPECT_EQ(1., spline.primitiveNew[1][0]);,
+            EXPECT_EQ(1., spline.primitiveNew[2][0]);)
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -152,12 +156,14 @@ namespace {
 
             spline.template update1DPrimitive<0>(1, 1, 1);
             EXPECT_EQ(1., spline.primitiveNew[0][0]);
-
+        if constexpr(GEMPIC_SPACEDIM > 1) {
             spline.template update1DPrimitive<1>(1, 1, 1);
             EXPECT_EQ(1., spline.primitiveNew[1][0]);
-
+        }
+        if constexpr(GEMPIC_SPACEDIM == 3) {
             spline.template update1DPrimitive<2>(1, 1, 1);
             EXPECT_EQ(1., spline.primitiveNew[2][0]);
+        }
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -192,13 +198,13 @@ namespace {
             EXPECT_EQ(0, spline.firstIndex[0]);
             EXPECT_EQ(0, spline.firstIndexOld[0] - spline.firstIndex[0]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(-1, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
 
             spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
@@ -208,13 +214,13 @@ namespace {
             EXPECT_EQ(0, spline.firstIndex[0]);
             EXPECT_EQ(0, spline.firstIndexOld[0] - spline.firstIndex[0]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(0.5, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.05, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -224,6 +230,7 @@ namespace {
      * @brief Test the computePrimitiveDifference method for dimension one and degree one
      * @details Verify values for different dx and indices
     */
+#if GEMPIC_SPACEDIM > 1
     TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDimOneTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -250,13 +257,13 @@ namespace {
             EXPECT_EQ(0, spline.firstIndex[1]);
             EXPECT_EQ(0, spline.firstIndexOld[1] - spline.firstIndex[1]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 1);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(-1, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
 
             spline.template update1DSplines<1>(0.5, infra.plo[1], infra.dxi[1]);
@@ -266,22 +273,23 @@ namespace {
             EXPECT_EQ(0, spline.firstIndex[1]);
             EXPECT_EQ(0, spline.firstIndexOld[1] - spline.firstIndex[1]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(0.5, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.05, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
     }
-
+#endif
     /**
      * @brief Test the computePrimitiveDifference method for dimension zero and degree two
      * @details Verify values for different dx and indices
     */
+#if GEMPIC_SPACEDIM == 3
     TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -308,10 +316,10 @@ namespace {
             EXPECT_EQ(-1, spline.firstIndex[0]);
             EXPECT_EQ(0, spline.firstIndexOld[0] - spline.firstIndex[0]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(9.875, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.9875, primitiveDifference);
 
             spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
@@ -321,17 +329,18 @@ namespace {
             EXPECT_EQ(0, spline.firstIndex[0]);
             EXPECT_EQ(-1, spline.firstIndexOld[0] - spline.firstIndex[0]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0.375, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({1, 1, 1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(0.125, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({0.1, 0.1, 0.1}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.0125, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
     }
+#endif
     
     /**
      * @brief Test the primitiveEval method

@@ -64,10 +64,11 @@ namespace {
                                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            const amrex::IntVect isPeri{isPeriodic};
             const int hodgeDegree{2};
 
-            infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
 
@@ -105,17 +106,18 @@ namespace {
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
+        AMREX_D_TERM(
+            EXPECT_EQ(1., spline.cellSplineVals[0][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[1][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[2][0]);)
 
-            EXPECT_EQ(1., spline.cellSplineVals[0][0]);
-            EXPECT_EQ(1., spline.cellSplineVals[1][0]);
-            EXPECT_EQ(1., spline.cellSplineVals[2][0]);
-
+        AMREX_D_TERM(
             EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);,
             EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);,
             EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);)
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -130,10 +132,11 @@ namespace {
                                         {AMREX_D_DECL(10.0, 10.0, 10.0)});
         const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
         const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
-        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        const amrex::IntVect isPeri{isPeriodic};
         const int hodgeDegree{2};
 
-        infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+        infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
         params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
 
@@ -165,16 +168,18 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(infra.dxi[0], spline.cellSplineVals[0][0]);
-            EXPECT_EQ(infra.dxi[1], spline.cellSplineVals[1][0]);
-            EXPECT_EQ(infra.dxi[2], spline.cellSplineVals[2][0]);
+        AMREX_D_TERM(
+            EXPECT_EQ(infra.dxi[0], spline.cellSplineVals[0][0]);,
+            EXPECT_EQ(infra.dxi[1], spline.cellSplineVals[1][0]);,
+            EXPECT_EQ(infra.dxi[2], spline.cellSplineVals[2][0]);)
 
+        AMREX_D_TERM(
             EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);,
             EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);,
             EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);
+            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);)
         }
         ASSERT_TRUE(particleLoopRun);
     }

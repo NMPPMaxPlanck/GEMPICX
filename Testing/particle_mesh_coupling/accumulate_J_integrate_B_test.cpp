@@ -91,17 +91,20 @@ namespace {
         amrex::GpuArray<amrex::Real, std::max(degX, std::max(degY, degZ)) + 4> primitive;
 
         void SetUp() override {
+            if constexpr(GEMPIC_SPACEDIM != 3) {
+                GTEST_SKIP() << "This function barely works in 3D, let alone lower dimensions.";
+            }
             /* Initialize the infrastructure */
             const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
                                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
             const int hodgeDegree{2};
 
             // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
             // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+            infra.initialize_computational_domain(nCell, maxGridSize, {AMREX_D_DECL(1, 1, 1)}, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
             

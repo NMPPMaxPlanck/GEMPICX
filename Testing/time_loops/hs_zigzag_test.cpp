@@ -48,19 +48,6 @@ namespace {
         }
     };
 
-    // outdated template signature
-    template <int vdim, int degp, int degp1, int degp2, int pdim>
-    AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B(
-        MockSpline<degp, degp1, degp2> &spline,
-        amrex::Real weight,
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
-        amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bArray,
-        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jArray,
-        amrex::GpuArray<amrex::Real, 2> &fields)
-    {
-        
-    }
-
     class HSZigZagC2Test : public testing::Test {
         protected:
 
@@ -92,12 +79,13 @@ namespace {
                                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
             const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
             const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{1, 1, 1};
+            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            const amrex::IntVect isPeri{isPeriodic};
             const int hodgeDegree{2};
 
             // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
             // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, {1, 1, 1}, realBox);
+            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
             params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
             
@@ -109,7 +97,24 @@ namespace {
             }
         }
     };
+}
 
+namespace Gempic::Particles {
+    // You cannot do partial template specialization for functions, so here is an explicit specialization for a special case
+    template <>
+    AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B<MockSpline<1, 1, 1>,4,0>(
+        MockSpline<1, 1, 1> &spline,
+        amrex::Real weight,
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+        amrex::GpuArray<amrex::Array4<amrex::Real>, int(4 / 2.5) * 2 + 1> const &bArray,
+        amrex::GpuArray<amrex::Array4<amrex::Real>, 4> const &jArray,
+        amrex::GpuArray<amrex::Real, 2> &fields)
+    {
+        
+    }
+}
+
+namespace {
     TEST_F(HSZigZagC2Test , ApplyHEParticleTest) {
         // Adding particle to one cell
         const int numParticles{1};
@@ -124,15 +129,15 @@ namespace {
         // Ey, Ez
         const amrex::Array<std::string, 3> analyticalFuncE{"0.0", "0.0", "0.0"};
 
-        const int nVar{4};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcE;
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
         amrex::Parser parser;
 
         for (int i{0}; i < 3; ++i)
         {
             parser.define(analyticalFuncE[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcE[i] = parser.compile<4>();
+            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser.compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -148,7 +153,7 @@ namespace {
         {
             particleLoopRun = true;
 
-            MockSpline<degX, degY, degZ> mockSpline({1., 1., 1.}, {1., 1., 1.}, {1., 1., 1., 1.});
+            MockSpline<degX, degY, degZ> mockSpline({AMREX_D_DECL(1., 1., 1.)}, {AMREX_D_DECL(1., 1., 1.)}, {AMREX_D_DECL(1., 1., 1.), 1.});
 
             const long np{pti.numParticles()};
             EXPECT_EQ(1, np); // Only one particle added by addSingleParticles

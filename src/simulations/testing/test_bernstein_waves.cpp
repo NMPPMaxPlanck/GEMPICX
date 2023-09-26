@@ -84,7 +84,7 @@ void filter(DeRhamField<Grid::dual, Space::cell> &rho, DeRhamField<Grid::dual, S
             }
             // Copy into rho
             rhoTemp.fillBoundary();
-            amrex::Copy(rho.data, rhoTemp.data, 0, 0, 1, amrex::IntVect{nghost[0],nghost[1],nghost[2]});  
+            amrex::Copy(rho.data, rhoTemp.data, 0, 0, 1, nghost);  
         }
     }
 }
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
     amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcB{parametersBernstein.BxEval, parametersBernstein.ByEval, parametersBernstein.BzEval};
     deRham->projection(funcB, 0.0, B);
     // For the moment we consider only a constant background field.
-    amrex::Real Bz = parametersBernstein.BzEval(0., 0., 0., 0.);
+    amrex::Real Bz = parametersBernstein.BzEval(AMREX_D_DECL(0., 0., 0.), 0.);
     amrex::Print() << "Bz " << Bz << std::endl;
 
     // Initialize particle groups
