@@ -68,6 +68,7 @@ add_subdirectory(Testing)
 
 # Config summary
 message( STATUS "GEMPIC configuration summary: ")
+message( STATUS "   AMReX version            = ${AMREX_PKG_VERSION}")
 message( STATUS "   Build type               = ${CMAKE_BUILD_TYPE}")
 message( STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
 if( ${CMAKE_BUILD_TYPE} MATCHES "Release" )
