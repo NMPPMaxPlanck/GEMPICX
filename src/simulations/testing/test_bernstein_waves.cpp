@@ -164,6 +164,9 @@ int main(int argc, char* argv[])
 
     const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
     const int npass = 3; // Number of filter passes
+    // Needed for SumBoundary
+    auto nGhost = deRham->getNGhost();
+    amrex::IntVect zeroVect{AMREX_D_DECL(0,0,0)};
 
     for (int spec = 0; spec < numspec; spec++) {
 
@@ -193,11 +196,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Needed for SumBoundary
-   auto nGhost = deRham->getNGhost();
-   
-   (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
-                           params.geometry().periodicity());
+   (rho.data).SumBoundary(0, 1, nGhost, zeroVect, params.geometry().periodicity());
     rho.averageSync();
     rho.fillBoundary();
 
@@ -263,11 +262,7 @@ int main(int argc, char* argv[])
 
             ions[spec] -> Redistribute();
 
-            // Needed for SumBoundary
-            auto nGhost = deRham->getNGhost();
-        
-            (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
-                           params.geometry().periodicity());
+            (rho.data).SumBoundary(0, 1, nGhost, zeroVect, params.geometry().periodicity());
             rho.averageSync();
             rho.fillBoundary();
             filter(rho, rhoTemp, npass);
@@ -358,13 +353,7 @@ int main(int argc, char* argv[])
             ions[spec] -> Redistribute();
         }
 
-        auto nGhost = deRham->getNGhost();
-        // nGhost[0] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-        // nGhost[1] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-        // nGhost[2] = std::max(int(hodgeDegree/2.), std::max(degx+1, std::max(degy+1, degz+1)));
-
-        (rho.data).SumBoundary(0, 1, {nGhost[0], nGhost[1], nGhost[2]}, {0, 0, 0},
-                               params.geometry().periodicity());
+        (rho.data).SumBoundary(0, 1, nGhost, zeroVect, params.geometry().periodicity());
 
         rho.averageSync();
         rho.fillBoundary();
