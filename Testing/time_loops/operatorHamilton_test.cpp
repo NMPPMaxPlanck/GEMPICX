@@ -26,17 +26,15 @@ namespace Gempic {
 namespace Particles {
 
     template<>
-    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, 4> Gempic::Particles::push_v_efield<4>(
-        amrex::GpuArray<amrex::Real, 4> vel,
+    AMREX_GPU_HOST_DEVICE void push_v_efield<4>(
+        amrex::GpuArray<amrex::Real, 4> &vel,
         amrex::Real dt,
         amrex::Real chargemass,  // charge/mass
         amrex::GpuArray<amrex::Real, 4> &Ep)
     {
-        amrex::GpuArray<amrex::Real, 4> newPos;
         for (int i = 0; i < 4; i++) {
-            newPos[i] = 1;
+            vel[i] = 1;
         }
-        return newPos;
     }
 }
 
