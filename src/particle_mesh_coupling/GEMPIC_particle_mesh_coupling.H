@@ -152,19 +152,17 @@ AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B (
  * @param Ep Electric field
  */
 template <int vDim>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> push_v_efield (
-    amrex::GpuArray<amrex::Real, vDim> vel,
+AMREX_GPU_HOST_DEVICE void push_v_efield (
+    amrex::GpuArray<amrex::Real, vDim> &vel,
     amrex::Real dt,
     amrex::Real chargemass,
     amrex::GpuArray<amrex::Real, vDim> &Ep)
 {
     amrex::GpuArray<amrex::Real, vDim> newPos;
 
-    AMREX_D_TERM((newPos[0] = vel[0] + dt * chargemass * (Ep[0]));,
-                 (newPos[1] = vel[1] + dt * chargemass * (Ep[1]));,
-                 (newPos[2] = vel[2] + dt * chargemass * (Ep[2])););
-                 
-    return (newPos);
+    AMREX_D_TERM((vel[0] += dt * chargemass * (Ep[0]));,
+                 (vel[1] += dt * chargemass * (Ep[1]));,
+                 (vel[2] += dt * chargemass * (Ep[2])););
 }
 
 /**

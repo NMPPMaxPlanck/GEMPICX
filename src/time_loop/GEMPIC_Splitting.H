@@ -126,12 +126,11 @@ class OperatorHamilton {
             spline.template evalSplineField<vdim, 1>(eA);
 
         // push v with the electric field
-        amrex::GpuArray<amrex::Real, vdim> newVelE =
-            push_v_efield<vdim>(vel, dt, chargemass, efield);
+        push_v_efield<vdim>(vel, dt, chargemass, efield);
 
-        velx[pp] = newVelE[0];
-        vely[pp] = newVelE[1];
-        velz[pp] = newVelE[2];
+        velx[pp] = vel[0];
+        vely[pp] = vel[1];
+        velz[pp] = vel[2];
     }
 
 /**
