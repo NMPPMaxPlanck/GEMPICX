@@ -5,6 +5,7 @@
 #include <algorithm> // std::all_of, for add_particles function
 #include <GEMPIC_particle_groups.H>
 
+using namespace Particles;
 namespace GEMPIC_TestUtils {
     // Nghost helper function
     inline const int initNGhost(int degX, int degY, int degZ)
@@ -45,7 +46,7 @@ namespace GEMPIC_TestUtils {
             amrex::IntVect lo{bx.smallEnd()};
             amrex::IntVect hi{bx.bigEnd()};
 
-            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles{
+            amrex::ParticleTile<ParticleType, vdim + 1, 0>& particles{
                 particleGroup[spec]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
             for (int i{0}; i < numParticles; i++) {
                 // make sure particle is within box (and not previously added? Why?)

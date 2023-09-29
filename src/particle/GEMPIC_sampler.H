@@ -120,7 +120,7 @@ void init_particles_cellwise(
         // Adding particle from the model cell to all cells
         for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
         {
-            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
+            amrex::ParticleTile<ParticleType, vdim + 1, 0>& particles =
                 ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
@@ -390,7 +390,7 @@ void init_particles_full_domain(
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
-        using myParticleTile = amrex::ParticleTile<0, 0, vdim + ndata, 0>;
+        using myParticleTile = amrex::ParticleTile<ParticleType, vdim + ndata, 0>;
         myParticleTile& particles =
             ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -527,7 +527,7 @@ void init_particles_full_domain(
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
-        using myParticleTile = amrex::ParticleTile<0, 0, vdim + ndata, 0>;
+        using myParticleTile = amrex::ParticleTile<ParticleType, vdim + ndata, 0>;
         myParticleTile& particles =
             ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
