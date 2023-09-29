@@ -5,7 +5,6 @@
 #include <algorithm> // std::all_of, for add_particles function
 #include <GEMPIC_particle_groups.H>
 
-using namespace Particles;
 namespace GEMPIC_TestUtils {
     // Nghost helper function
     inline const int initNGhost(int degX, int degY, int degZ)
@@ -38,6 +37,7 @@ namespace GEMPIC_TestUtils {
         int spec = 0,
         amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>&& velocities = {})
     {
+        using ParticleType = amrex::Particle<0, 0>; 
         amrex::Array<bool, numParticles> checklist{false};
         
         for (amrex::MFIter mfi{particleGroup[0]->MakeMFIter(0)}; mfi.isValid(); ++mfi)
