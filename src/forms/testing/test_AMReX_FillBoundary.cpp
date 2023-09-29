@@ -20,8 +20,8 @@ void main_main()
     domain.setSmall(dom_lo);
     domain.setBig(dom_hi);
     amrex::RealBox real_box;
-    real_box.setLo(amrex::RealVect{0.0, 0.0, 0.0});
-    real_box.setHi(amrex::RealVect{1.0, 1.0, 1.0});
+    real_box.setLo(amrex::RealVect{AMREX_D_DECL(0.0, 0.0, 0.0)});
+    real_box.setHi(amrex::RealVect{AMREX_D_DECL(1.0, 1.0, 1.0)});
 
     // Grid
     amrex::BoxArray grid;
