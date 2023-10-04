@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
 	const amrex::IntVect nCell{AMREX_D_DECL(64, 64, 64)};
+    //const amrex::IntVect nCell{AMREX_D_DECL(128, 128, 128)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(64, 64, 64)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
@@ -41,10 +42,11 @@ int main(int argc, char *argv[])
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     DeRhamField<Grid::primal, Space::node> anPhi(deRham);
+    phi.data.setVal(0.0);
 
     // Analytical rho
     //const std::string analyticalRho = "3.0*cos(x)*cos(y)*cos(z) + (3.0)*cos(2*x)*cos(2*y)*cos(2*z)";
-    const std::string analyticalRho = "1.0 + cos(x)";
+    const std::string analyticalRho = "cos(x)";
 
     const int nVar = GEMPIC_SPACEDIM + 1; //x, y, z, t
     amrex::ParserExecutor<nVar> func; 

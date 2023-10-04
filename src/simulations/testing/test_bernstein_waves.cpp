@@ -190,8 +190,9 @@ int main(int argc, char* argv[])
                                 Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
                                 // Needs at least max(degx, degy, degz) ghost cells
                                 gempic_deposit_rho<degx, degy, degz>(
-                                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
-                                    rhoarr);
+                                    spline, charge * weight[pp], rhoarr);
+                                    //spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
+                                    //rhoarr);
                             });
         }
     }
@@ -248,7 +249,8 @@ int main(int argc, char* argv[])
                     Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
 
                     gempic_deposit_rho<degx, degy, degz>(
-                        spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
+                        spline, charge * weight[pp], rhoarr);
+                        //spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
 
             }
@@ -327,7 +329,8 @@ int main(int argc, char* argv[])
                     Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
 
                     gempic_deposit_rho<degx, degy, degz>(
-                        splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
+                        splineNew, charge * weight[pp], rhoarr);
+                        // splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }
             ions[spec] -> Redistribute();
