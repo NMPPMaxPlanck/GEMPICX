@@ -191,8 +191,6 @@ int main(int argc, char* argv[])
                                 // Needs at least max(degx, degy, degz) ghost cells
                                 gempic_deposit_rho<degx, degy, degz>(
                                     spline, charge * weight[pp], rhoarr);
-                                    //spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
-                                    //rhoarr);
                             });
         }
     }
@@ -250,7 +248,6 @@ int main(int argc, char* argv[])
 
                     gempic_deposit_rho<degx, degy, degz>(
                         spline, charge * weight[pp], rhoarr);
-                        //spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
 
             }
@@ -330,7 +327,6 @@ int main(int argc, char* argv[])
 
                     gempic_deposit_rho<degx, degy, degz>(
                         splineNew, charge * weight[pp], rhoarr);
-                        // splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }
             ions[spec] -> Redistribute();
