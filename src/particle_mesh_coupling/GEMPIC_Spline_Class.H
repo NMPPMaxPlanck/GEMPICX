@@ -153,7 +153,7 @@ public:
      *  - xint = firstIndex[dim] + (deg+1)/2 - (x_p - plo)/dx 
      *    where deg is the degree of the node spline in the given dimension
      * 
-     * xint is the normalized (1/dx) distance from the endpoint of the first non-zero node Spline at the particle location. 
+     * 0 < xint ≤ 1  is the normalized (1/dx) distance between the particle position and the last point in the support of the first contributing spline (of both node and cell type).
      * It will be used in the function splineEval to compute the values of the node- and cell-splines at x_p
      * 
      * @tparam dim : the direction in which to compute: x = 0, y = 1, z = 2
@@ -645,13 +645,13 @@ public:
     }
 
     /**
-     * @brief Evaluate the primitive for a given degree at a given point x
+     * @brief Compute and store the values of the primitive at regular values x+i
      * 
-     * @tparam degree Which degree primitive should be evaluated
-     * @tparam length The length of the array of results
+     * @tparam degree : degree of the primitive
+     * @tparam length : length of the stored array
      * 
-     * @param x The position at which the primitive shall be evaluated
-     * @param s The array in which the results will be stored
+     * @param x : the offset to integer positions at which the spline shall be evaluated
+     * @param s : the array in which the results will be stored
     */
     template <int degree, int length>
     AMREX_GPU_HOST_DEVICE constexpr void primitiveEval (const amrex::Real x,
