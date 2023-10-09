@@ -7,9 +7,9 @@
 
 namespace GEMPIC_TestUtils {
     // Nghost helper function
-    inline const int initNGhost(int degX, int degY, int degZ)
+    inline int initNGhost(int degX, int degY, int degZ)
     {
-        amrex::GpuArray<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
+        amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
         const int maxDeg{*(std::max_element(degs.begin(), degs.end()))};
         return maxDeg;
     }
@@ -37,7 +37,6 @@ namespace GEMPIC_TestUtils {
         int spec = 0,
         amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>&& velocities = {})
     {
-        using ParticleType = amrex::Particle<0, 0>; 
         amrex::Array<bool, numParticles> checklist{false};
         
         for (amrex::MFIter mfi{particleGroup[0]->MakeMFIter(0)}; mfi.isValid(); ++mfi)
@@ -46,7 +45,7 @@ namespace GEMPIC_TestUtils {
             amrex::IntVect lo{bx.smallEnd()};
             amrex::IntVect hi{bx.bigEnd()};
 
-            amrex::ParticleTile<ParticleType, vdim + 1, 0>& particles{
+            amrex::ParticleTile<Gempic::Particles::ParticleType, vdim + 1, 0>& particles{
                 particleGroup[spec]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
             for (int i{0}; i < numParticles; i++) {
                 // make sure particle is within box (and not previously added? Why?)
