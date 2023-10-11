@@ -46,6 +46,8 @@ public:
             // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
             bool abort_on_out_of_gpu_memory = true;  // AMReX' default: false
             pp.queryAdd("abort_on_out_of_gpu_memory", abort_on_out_of_gpu_memory);
+
+            pp.add("the_arena_is_managed", 1);
         });
 
         // Save managed memory flag for future use
