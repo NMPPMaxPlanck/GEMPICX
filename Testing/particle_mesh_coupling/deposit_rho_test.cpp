@@ -39,7 +39,7 @@ namespace {
                 Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
                 // Needs at least max(degX, degY, degZ) ghost cells
                 gempic_deposit_rho<degX, degY, degZ>(
-                    spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
+                    spline, charge * weight[pp],
                     rhoarr);
             });
         }

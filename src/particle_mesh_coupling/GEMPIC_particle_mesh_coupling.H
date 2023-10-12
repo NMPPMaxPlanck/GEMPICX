@@ -59,7 +59,7 @@ namespace Particles
  * @tparam pDim : Direction of integration (trajectory) (x=0, y=1, z=2)
  * 
  * @param spline : Object containing spline values and the particle trajectory
- * @param weight : Particle weight
+ * @param chargeWeight : Particle weight * charge
  * @param dx : Spatial grid size
  * @param bArray : Degrees of freedom of B as primal 2-form
  * @param jArray : Degrees of freedom of J as dual 2-form
@@ -72,7 +72,7 @@ namespace Particles
 template <typename SplineType, int vDim, int pDim>
 AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B (
     SplineType &spline,
-    amrex::Real weight,
+    amrex::Real chargeWeight,
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
@@ -114,7 +114,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B (
                     spline.nodeSplineVals[pDim2][kk]);
                 amrex::HostDevice::Atomic::Add(
                     jArray[pDim].ptr(cell_index.x, cell_index.y, cell_index.z, 0),
-                    s_coeff * weight);
+                    s_coeff * chargeWeight);
                 // Update two components of B
                 if (jj < degP1)
                 {
@@ -175,13 +175,13 @@ AMREX_GPU_HOST_DEVICE void push_v_efield (
  * @tparam degZ Spline degree in z
  * 
  * @param spline Splines evaluated at given particle position
- * @param weight Particle weight*charge*dx
+ * @param chargeWeight Particle weight*charge
  * @param rho charge density to be computed
  */
 template <int degX, int degY, int degZ>
 AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (
     Spline::SplineBase<degX, degY, degZ> &spline,
-    amrex::Real weight,
+    amrex::Real chargeWeight,
     amrex::Array4<amrex::Real> const &rho)
 {
     AMREX_D_PICK(
@@ -196,7 +196,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (
 
         amrex::HostDevice::Atomic::Add(
             rho.ptr(cell_index.x, cell_index.y, cell_index.z, 0),
-            s_coeff * weight);
+            s_coeff * chargeWeight);
     GEMPIC_D_LOOP_END
 }
 

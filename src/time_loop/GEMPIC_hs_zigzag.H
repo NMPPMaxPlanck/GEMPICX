@@ -155,7 +155,7 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
 
                             // amrex::Real weight =
                             // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
-                            amrex::Real weight = charge * part_weight[pp] * infra.dxi[GEMPIC_SPACEDIM];
+                            amrex::Real chargeWeight = charge * part_weight[pp];
 
                             // for (unsigned int d=0;d<vdim;++d)
                             // vel[d] = particles[pp].rdata(d);
@@ -167,20 +167,20 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
                             // push x1
-                            operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, weight, 0.5*dt);
+                            operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
 
                             if (vdim > 1)
                             {
         #if GEMPIC_SPACEDIM > 1
                                 // push x2
-                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, weight, 0.5*dt);
+                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
         #endif
                             }
                             if (vdim > 2)
                             {
         #if GEMPIC_SPACEDIM == 3
                                 // push x3
-                                operatorHamilton.template apply_H_p_i<2>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, weight, dt);
+                                operatorHamilton.template apply_H_p_i<2>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, dt);
         #endif
                             }
 
@@ -188,12 +188,12 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             {
         #if GEMPIC_SPACEDIM > 1
                                 // push x2
-                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, weight, 0.5*dt);
+                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
         #endif
                             }
 
                             // second half step of Hp1
-                        operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, weight, 0.5*dt);
+                        operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
 
                             for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
                             // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);

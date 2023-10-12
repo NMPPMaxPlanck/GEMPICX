@@ -23,8 +23,8 @@ Installing manually
 - needed software: C++ compiler, MPI, cmake 
 
 1.) git clone  
-2.) git submodule init; git submodule update  
-3.) cd gempic; mkdir build; cd build  
+2.) cd gempic; mkdir build; cd build  
+3.) git submodule sync; git submodule init; git submodule update  
 4.) cmake ..   
 5.) make
 

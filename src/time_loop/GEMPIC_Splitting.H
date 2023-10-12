@@ -159,7 +159,7 @@ class OperatorHamilton {
  * @param jA : array of J density coefficients (dual face dofs)
  * @param bA : array of B field coefficients (primal face dofs)
  * @param chargemass : (q/m)_p ratio
- * @param weight : weight of the given particle
+ * @param chargeWeight : weight * charge of the given particle
  * @param dt : time step
  * 
 */
@@ -174,7 +174,7 @@ class OperatorHamilton {
                             amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &jA,
                             amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const &bA,
                             amrex::Real const chargemass,
-                            amrex::Real const weight, 
+                            amrex::Real const chargeWeight, 
                             amrex::Real const dt
     ) const
     {
@@ -184,7 +184,7 @@ class OperatorHamilton {
         spline.template update1DPrimitive<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
 
         accumulate_J_integrate_B<SplineType, vdim, dim>
-                                    (spline, weight, dx, bA, jA, bfields);
+                                    (spline, chargeWeight, dx, bA, jA, bfields);
 
         if (vdim > 1) vel[(dim+1)%3] = vel[(dim+1)%3] - chargemass * bfields[0];
         if (vdim > 2) vel[(dim+2)%3] = vel[(dim+2)%3] + chargemass * bfields[1];
