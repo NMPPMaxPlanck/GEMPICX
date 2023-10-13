@@ -115,13 +115,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -178,13 +178,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -219,13 +219,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -260,13 +260,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -322,13 +322,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -365,13 +365,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex
@@ -408,13 +408,13 @@ namespace {
 
         const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 3> parser;
 
         for (int i{0}; i < 3; ++i)
         {
-            parser.define(analyticalFuncE[i]);
-            parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser.compile<nVar>();
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
         }
 
         // Initialize the De Rham Complex

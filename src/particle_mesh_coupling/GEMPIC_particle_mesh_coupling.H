@@ -156,10 +156,8 @@ AMREX_GPU_HOST_DEVICE void push_v_efield (
     amrex::GpuArray<amrex::Real, vDim> &vel,
     amrex::Real dt,
     amrex::Real chargemass,
-    amrex::GpuArray<amrex::Real, vDim> &Ep)
+    amrex::GpuArray<amrex::Real, vDim> const &Ep)
 {
-    amrex::GpuArray<amrex::Real, vDim> newPos;
-
     AMREX_D_TERM((vel[0] += dt * chargemass * (Ep[0]));,
                  (vel[1] += dt * chargemass * (Ep[1]));,
                  (vel[2] += dt * chargemass * (Ep[2])););

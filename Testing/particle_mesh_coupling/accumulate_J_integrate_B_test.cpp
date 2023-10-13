@@ -11,6 +11,51 @@ using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_Fields;
 
 namespace {
+    /* Helper function to check entries of rho given a series of conditions and a default
+    * value. Check order is prioritized, so a set of indices only fulfill the first succesful
+    * condition.
+    * 
+    * Parameters:
+    * ----------
+    * @param line: int, the line from which the function was called
+    * @param rhoarr: amrex::Array4, array containing rho values in an easily reached accessor
+    * @param top: Dim3, top boundaries of box for rhoarray
+    * @param condVec: vector<condLambda>, Vector of lambdas that check if the {SPACEDIM} indices fulfill a given condition.
+    * @param checks: vector<amrex::Real>, Vector of values to compare to if indices fulfill the corresponding condVec condition.
+    * @param defCheck: amrex::Real, Default value for all indices not fulfilling any of the given conditions.
+    */
+    using condLambda = bool(*)(AMREX_D_DECL(int, int, int));
+    void checkRho(int line,
+                    amrex::Array4<amrex::Real> const& rhoarr,
+                    amrex::Dim3 const&& top,
+                    std::vector<condLambda>&& condVec,
+                    std::vector<amrex::Real>&& checks,
+                    amrex::Real defCheck) {
+        // Expect only one node of rhoarr (0, 0, 0) to be non-zero and receiving full weight of particle (1)
+        for (int i{0}; i <= top.x; i++) { 
+            for (int j{0}; j <= top.y; j++) {
+                for (int k{0}; k <= top.z; k++) {
+                    int condNum{0};
+                    const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
+                    for (auto cond : condVec) {
+                        if (cond(AMREX_D_DECL(i, j, k))) {
+                            EXPECT_NEAR(checks[condNum], *rhoarr.ptr(idx, 0), 1e-8) <<
+                                "LINE:" << line << ": Failed condition " << condNum <<
+                                ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
+                                break;
+                        }
+                        condNum++;
+                    }
+                    if (condNum == condVec.size()) {
+                        EXPECT_NEAR(defCheck, *rhoarr.ptr(idx, 0), 1e-8) <<
+                            "LINE:" << line << ": Failed default value check:" << defCheck <<
+                            ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
+                    }
+                }
+            }
+        }
+    }
+
     // When using amrex::ParallelFor you have to create a standalone helper function that does the execution on GPU and call that function from the unit test because of how GTest creates tests within a TEST_F fixture.
     template <int vDim, int degX, int degY, int degZ, int pDim>
     void accumulateJUpdateVC2ParallelFor(amrex::ParIter<0, 0, vDim + 1, 0>& pti,
@@ -29,8 +74,8 @@ namespace {
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
         for (int cc = 0; cc < vDim; cc++) jA[cc] = (J.data[cc])[pti].array();
 
-        amrex::AsyncArray<amrex::GpuArray<amrex::Real, 2>> bFieldsPtr(1);
-        amrex::GpuArray<amrex::Real, 2>* bFields = bFieldsPtr.data();
+        amrex::AsyncArray aaBfields(&bfields, 1);
+        auto *bfieldsGPU = aaBfields.data();
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bA;
         for (int cc = 0; cc < (int(vDim / 2.5) * 2 + 1); cc++) bA[cc] = (B.data[cc])[pti].array();
@@ -49,10 +94,10 @@ namespace {
             spline.template update1DSplines<pDim>(x_end, infra.plo[0], infra.dxi[0]);
             spline.template update1DPrimitive<pDim>(x_end, infra.plo[0], infra.dxi[0]);
 
-            accumulate_J_integrate_B<Spline::SplineWithPrimitive<degX, degY, degZ>, vDim, pDim>(spline, weight, dx, bA, jA, bFields[0]);
+            accumulate_J_integrate_B<Spline::SplineWithPrimitive<degX, degY, degZ>, vDim, pDim>(spline, weight, dx, bA, jA, *bfieldsGPU);
         });
 
-        bfields = bFields[0];
+        aaBfields.copyToHost(&bfields, 1);
     }
 
     class AccumulateJUpdateVC2Test : public testing::Test {
@@ -138,20 +183,20 @@ namespace {
         const int nVar{4}; //x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 6> parser;
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser[i].define(analyticalFuncB[i]);
+            parser[i].registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser[i].compile<4>();
         }
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncJ[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcJ[i] = parser.compile<4>();
+            parser[i+3].define(analyticalFuncJ[i]);
+            parser[i+3].registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser[i+3].compile<4>();
         }
 
         // Initialize the De Rham Complex
@@ -176,6 +221,11 @@ namespace {
 
             EXPECT_EQ(bfields[0], 0);
             EXPECT_EQ(bfields[1], 0);
+
+            // Expect all nodes to be 0
+            checkRho(__LINE__, (J.data[0]).array(pti), infra.n_cell.dim3(), {}, {}, 0);
+            checkRho(__LINE__, (J.data[1]).array(pti), infra.n_cell.dim3(), {}, {}, 0);
+            checkRho(__LINE__, (J.data[2]).array(pti), infra.n_cell.dim3(), {}, {}, 0);
         }
     }
 
@@ -202,20 +252,20 @@ namespace {
         const int nVar{4}; //x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 6> parser;
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser[i].define(analyticalFuncB[i]);
+            parser[i].registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser[i].compile<4>();
         }
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncJ[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcJ[i] = parser.compile<4>();
+            parser[i+3].define(analyticalFuncJ[i]);
+            parser[i+3].registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser[i+3].compile<4>();
         }
 
         // Initialize the De Rham Complex
@@ -237,8 +287,25 @@ namespace {
 
             accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
-            EXPECT_NEAR(bfields[0], -4.5, 0.000000000000001);
-            EXPECT_NEAR(bfields[1], -4.5, 0.000000000000001);
+            EXPECT_NEAR(bfields[0], -4.5, 1e-15);
+            EXPECT_NEAR(bfields[1], -4.5, 1e-15);
+
+            checkRho(__LINE__, (J.data[pDim]).array(pti), infra.n_cell.dim3(), 
+                    // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero 
+                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(
+                                                            (a == 4 || a == 5),
+                                                          && b == 4,
+                                                         && (c == 4 || c == 5));},
+                    [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(
+                                                            (a == 4 || a == 5),
+                                                         &&  b <= 3,
+                                                         && (c == 4 || c == 5));}},
+                    // getting an eight of the particle weight times the primitive, plus the original 1
+                    {1 - 1./8, 1 - 0.25},
+                    // with the remaining entries being 1
+                    1);
+            checkRho(__LINE__, (J.data[(pDim + 1) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
+            checkRho(__LINE__, (J.data[(pDim + 2) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
         }
     }
 
@@ -265,20 +332,20 @@ namespace {
         const int nVar{4}; //x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 6> parser;
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser[i].define(analyticalFuncB[i]);
+            parser[i].registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser[i].compile<4>();
         }
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncJ[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcJ[i] = parser.compile<4>();
+            parser[i+3].define(analyticalFuncJ[i]);
+            parser[i+3].registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser[i+3].compile<4>();
         }
 
         // Initialize the De Rham Complex
@@ -300,8 +367,38 @@ namespace {
 
             accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
-            EXPECT_NEAR(bfields[0], -4.75, 0.000000000000001);
-            EXPECT_NEAR(bfields[1], -4.75, 0.000000000000001);
+            EXPECT_NEAR(bfields[0], -4.75, 1e-15);
+            EXPECT_NEAR(bfields[1], -4.75, 1e-15);
+
+            checkRho(__LINE__, (J.data[pDim]).array(pti), infra.n_cell.dim3(), 
+                    // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero 
+                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 4,
+                                                                              && b == 4,
+                                                                              && c == 4);},
+                    [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 4,
+                                                                             && b <= 3,
+                                                                             && c == 4);},
+                    [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 5,
+                                                                             && b == 4,
+                                                                             && c == 5);},
+                    [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 5,
+                                                                             && b <= 3,
+                                                                             && c == 5);},
+                    [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(
+                                                            (a == 4 || a == 5),
+                                                         &&  b == 4,
+                                                         && (c == 4 || c == 5) && c != a);},
+                    [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(
+                                                            (a == 4 || a == 5),
+                                                         &&  b <= 3,
+                                                         && (c == 4 || c == 5) && c != a);}},
+                    // getting an eight of the particle weight times the primitive, plus the original 1
+                    {1 - 3./64, 1 - 1./16, 1 - 27./64, 1 - 9./16, 1 - 9./64, 1 - 3./16},
+                    //{},{},
+                    // with the remaining entries being 1
+                    1);
+            checkRho(__LINE__, (J.data[(pDim + 1) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
+            checkRho(__LINE__, (J.data[(pDim + 2) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
         }
     }
 
@@ -331,20 +428,20 @@ namespace {
         const int nVar{4}; //x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 6> parser;
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser[i].define(analyticalFuncB[i]);
+            parser[i].registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser[i].compile<4>();
         }
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncJ[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcJ[i] = parser.compile<4>();
+            parser[i+3].define(analyticalFuncJ[i]);
+            parser[i+3].registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser[i+3].compile<4>();
         }
 
         // Initialize the De Rham Complex
@@ -367,7 +464,12 @@ namespace {
             accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
-            EXPECT_EQ(bfields[0], 0);
+            EXPECT_EQ(bfields[1], 0);
+
+            // Expect all nodes to be 1
+            checkRho(__LINE__, (J.data[pDim]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
+            checkRho(__LINE__, (J.data[(pDim + 1) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
+            checkRho(__LINE__, (J.data[(pDim + 2) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
         }
     }
 
@@ -397,20 +499,20 @@ namespace {
         const int nVar{4}; //x, y, z, t
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
         amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ; 
-        amrex::Parser parser;
+        amrex::Array<amrex::Parser, 6> parser;
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncB[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcB[i] = parser.compile<4>();
+            parser[i].define(analyticalFuncB[i]);
+            parser[i].registerVariables({"x", "y", "z", "t"});
+            funcB[i] = parser[i].compile<4>();
         }
 
         for (int i{0}; i<3; ++i)
         {
-            parser.define(analyticalFuncJ[i]);
-            parser.registerVariables({"x", "y", "z", "t"});
-            funcJ[i] = parser.compile<4>();
+            parser[i+3].define(analyticalFuncJ[i]);
+            parser[i+3].registerVariables({"x", "y", "z", "t"});
+            funcJ[i] = parser[i+3].compile<4>();
         }
 
         // Initialize the De Rham Complex
@@ -433,7 +535,12 @@ namespace {
             accumulateJUpdateVC2ParallelFor<vDim, degX, degY, degZ, pDim>(pti, B, J, infra, weight, infra.dx, bfields);
 
             EXPECT_EQ(bfields[0], 0);
-            EXPECT_EQ(bfields[0], 0);
+            EXPECT_EQ(bfields[1], 0);
+
+            // Expect all nodes to be 1
+            checkRho(__LINE__, (J.data[pDim]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
+            checkRho(__LINE__, (J.data[(pDim + 1) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
+            checkRho(__LINE__, (J.data[(pDim + 2) % 3]).array(pti), infra.n_cell.dim3(), {}, {}, 1);
         }
     }
 

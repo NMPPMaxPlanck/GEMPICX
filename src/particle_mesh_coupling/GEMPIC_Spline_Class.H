@@ -150,10 +150,10 @@ public:
      * Given a particle position x_p in the given dimension dim, this function computes: 
      *  - firstIndex[dim] : the index of the first contributing spline (see above):
      * and
-     *  - xint = firstIndex[dim] + (deg+1)/2 - (x_p - plo)/dx 
+     *  - refOffset = firstIndex[dim] + (deg+1)/2 - (x_p - plo)/dx 
      *    where deg is the degree of the node spline in the given dimension
      * 
-     * 0 < xint ≤ 1  is the normalized (1/dx) distance between the particle position and the last point in the support of the first contributing spline (of both node and cell type).
+     * 0 < refOffset ≤ 1  is the normalized (1/dx) distance between the particle position and the last point in the support of the first contributing spline (of both node and cell type).
      * It will be used in the function splineEval to compute the values of the node- and cell-splines at x_p
      * 
      * @tparam dim : the direction in which to compute: x = 0, y = 1, z = 2
@@ -162,7 +162,7 @@ public:
      * @param plo : low end of the problem domain
      * @param dxInverse_dim : inverse of the cell size in the given direction
      * 
-     * @return xint
+     * @return refOffset
     */
     template<int dim>
     AMREX_GPU_HOST_DEVICE amrex::Real initBSplinesAtPositions (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
@@ -170,9 +170,9 @@ public:
         amrex::Real radius = ( splineDegrees[dim] + 1. ) / 2.;
         amrex::Real normalized_pos = (position - plo)*dxInverse_dim;
         firstIndex[dim] = 1. + floor( normalized_pos - radius );
-        amrex::Real xint = firstIndex[dim] + radius - normalized_pos;
+        amrex::Real refOffset = firstIndex[dim] + radius - normalized_pos;
 
-        return xint;
+        return refOffset;
     }
 
     /**
@@ -191,15 +191,15 @@ public:
     template<int dim>
     AMREX_GPU_HOST_DEVICE void update1DSplines (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
     {
-        const amrex::Real xint = initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
+        const amrex::Real refOffset = initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
 
         constexpr int deg{splineDegrees[dim]};
-        splineEval<deg - 1, maxDeg>(xint, cellSplineVals[dim]);
+        splineEval<deg - 1, maxDeg>(refOffset, cellSplineVals[dim]);
         // Scaling according to documentation
         for (size_t i{0}; i < deg; i++) {
             cellSplineVals[dim][i] *= dxInverse_dim;
         }
-        splineEval<deg, maxDeg + 1>(xint, nodeSplineVals[dim]);
+        splineEval<deg, maxDeg + 1>(refOffset, nodeSplineVals[dim]);
     }
 
     /**
@@ -415,30 +415,30 @@ public:
      * 
      * Description: 
      *   
-     * given 0 <= x < 1, compute and store the values
+     * given 0 <= xRef < 1, compute and store the values
      *   s[i] = ref_S_{degree}(x+i-(deg+1)/2) for i = 0 .. degree
      * where ref_S_{degree} is the centered cardinal B-spline of given degree with support [-(degree+1)/2, (degree+1)/2]
      * 
      * when called with 
      *  - degree = degX-1 
-     *  - x = xint = firstIndex[dim] + (degX+1)/2 - (x_p - plo)/dx 
+     *  - xRef = refOffset = firstIndex[dim] + (degX+1)/2 - (x_p - plo)/dx 
      * this function computes 
      *  s[i] = ref_S_{degX-1}(firstIndex[dim] + 1/2 - (x_p - plo)/dx + i) = dx * cellS_i(x_p)
      * 
      * when called with 
      *  - degree = degX 
-     *  - x = xint = firstIndex[dim] + (degX+1)/2 - (x_p - plo)/dx 
+     *  - xRef = refOffset = firstIndex[dim] + (degX+1)/2 - (x_p - plo)/dx 
      * this function computes 
      *  s[i] = ref_S_{degX}(firstIndex[dim] - (x_p - plo)/dx + i) = nodeS_i(x_p)
      *  
      * @tparam degree : degree of the cardinal spline
      * @tparam length : length of the stored array
      * 
-     * @param x : the offset to integer positions at which the spline shall be evaluated
+     * @param xRef : the offset to integer positions at which the spline shall be evaluated
      * @param s : the array in which the results will be stored
     */
     template <int degree, int length>
-    AMREX_GPU_HOST_DEVICE constexpr void splineEval (const amrex::Real x,
+    AMREX_GPU_HOST_DEVICE constexpr void splineEval (const amrex::Real xRef,
                                                      amrex::GpuArray<amrex::Real, length> &s) const
     {
         amrex::Real factor = 0;
@@ -448,40 +448,40 @@ public:
                 s[0] = 1.;
                 break;
             case 1:
-                s[0] = x;
-                s[1] = 1. - x;
+                s[0] = xRef;
+                s[1] = 1. - xRef;
                 break;
             case 2:
-                s[0] = (x * x) * 0.5;
-                s[1] = (1. - x) * x + 0.5;
-                s[2] = ((x-2.)*x + 1.) * 0.5;
+                s[0] = (xRef * xRef) * 0.5;
+                s[1] = (1. - xRef) * xRef + 0.5;
+                s[2] = ((xRef -2.) * xRef + 1.) * 0.5;
                 break;
             case 3:
                 factor = 1./6.;
-                s[0] = (x * x * x) * factor;
-                s[1] = (((-x + 1) * x + 1.) * 3. * x + 1.) * factor;
-                s[2] = ((3. * x - 6.) * x * x + 4.) * factor;
-                // s[3] = pow((1. - x), 3) * factor;
-                s[3] = (((-x + 3.) * x - 3.) * x + 1.) * factor;
+                s[0] = (xRef * xRef * xRef) * factor;
+                s[1] = (((-xRef + 1) * xRef + 1.) * 3. * xRef + 1.) * factor;
+                s[2] = ((3. * xRef - 6.) * xRef * xRef + 4.) * factor;
+                // s[3] = pow((1. - xRef), 3) * factor;
+                s[3] = (((-xRef + 3.) * xRef - 3.) * xRef + 1.) * factor;
                 break;
             case 4:
                 factor = 1./24.;
-                s[0] = (x * x * x * x) * factor;
-                s[1] = ((((-x + 1.) * 4. * x + 6.) * x + 4.) * x + 1.) * factor;
-                s[2] = ((((6. * x - 12.) * x - 6.) * x + 12.) * x + 11.) * factor;
-                s[3] = ((((-4. * x + 12.) * x - 6.) * x - 12.) * x + 11.) * factor;
-                // s[4] = pow(1. - x, 4) * factor;
-                s[4] = ((((x - 4.) * x + 6.) * x - 4.) * x + 1.) * factor;
+                s[0] = (xRef * xRef * xRef * xRef) * factor;
+                s[1] = ((((-xRef + 1.) * 4. * xRef + 6.) * xRef + 4.) * xRef + 1.) * factor;
+                s[2] = ((((6. * xRef - 12.) * xRef - 6.) * xRef + 12.) * xRef + 11.) * factor;
+                s[3] = ((((-4. * xRef + 12.) * xRef - 6.) * xRef - 12.) * xRef + 11.) * factor;
+                // s[4] = pow(1. - xRef, 4) * factor;
+                s[4] = ((((xRef - 4.) * xRef + 6.) * xRef - 4.) * xRef + 1.) * factor;
                 break;
             case 5:
                 factor = 1./120.;
                 
-                s[0] = (x * x * x * x * x) * factor;
-                s[1] = (((((-x + 1.) * x + 2.) * x + 2.) * x + 1.) * 5. * x + 1.) * factor;
-                s[2] = (((((x - 2.) * x - 2.) * x + 2.) * x + 5.) * 10. * x + 26.) * factor;
-                s[3] = (((-x + 3.) * x * x - 6.) * x * 10. * x + 66.) * factor;
-                s[4] = (((((x - 4.) * x + 4.) * x + 4.) * x - 10.) * 5. * x + 26.) * factor;
-                s[5] = (((((-x + 5.) * x - 10.) * x + 10.) * x - 5.) * x + 1.) * factor;
+                s[0] = (xRef * xRef * xRef * xRef * xRef) * factor;
+                s[1] = (((((-xRef + 1.) * xRef + 2.) * xRef + 2.) * xRef + 1.) * 5. * xRef + 1.) * factor;
+                s[2] = (((((xRef - 2.) * xRef - 2.) * xRef + 2.) * xRef + 5.) * 10. * xRef + 26.) * factor;
+                s[3] = (((-xRef + 3.) * xRef * xRef - 6.) * xRef * 10. * xRef + 66.) * factor;
+                s[4] = (((((xRef - 4.) * xRef + 4.) * xRef + 4.) * xRef - 10.) * 5. * xRef + 26.) * factor;
+                s[5] = (((((-xRef + 5.) * xRef - 10.) * xRef + 10.) * xRef - 5.) * xRef + 1.) * factor;
                 break;
         }
     }
@@ -564,14 +564,14 @@ public:
     AMREX_GPU_HOST_DEVICE void update1DSplines (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
     {
         this->firstIndexOld[dim] = std::move(this->firstIndex[dim]);
-        const amrex::Real xint = this->template initBSplinesAtPositions<dim> (position, plo, dxInverse_dim);
+        const amrex::Real refOffset = this->template initBSplinesAtPositions<dim> (position, plo, dxInverse_dim);
 
         constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
-        this->template splineEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(xint, this->cellSplineVals[dim]);
+        this->template splineEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(refOffset, this->cellSplineVals[dim]);
         for (size_t i{0}; i < deg; i++) {
             this->cellSplineVals[dim][i] *= dxInverse_dim;
         }
-        this->template splineEval<deg, SplineBase<degX, degY, degZ>::maxDeg + 1>(xint, this->nodeSplineVals[dim]);
+        this->template splineEval<deg, SplineBase<degX, degY, degZ>::maxDeg + 1>(refOffset, this->nodeSplineVals[dim]);
     }
 
     /**
@@ -590,11 +590,11 @@ public:
     template<int dim>
     AMREX_GPU_HOST_DEVICE void update1DPrimitive (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
     {
-        const amrex::Real xint = this->template initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
+        const amrex::Real refOffset = this->template initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
 
         primitiveOld[dim] = std::move(primitiveNew[dim]);
         constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
-        primitiveEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(xint, primitiveNew[dim]);
+        primitiveEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(refOffset, primitiveNew[dim]);
     }
 
     /**
@@ -650,11 +650,11 @@ public:
      * @tparam degree : degree of the primitive
      * @tparam length : length of the stored array
      * 
-     * @param x : the offset to integer positions at which the spline shall be evaluated
+     * @param xRef : the offset to integer positions at which the spline shall be evaluated
      * @param s : the array in which the results will be stored
     */
     template <int degree, int length>
-    AMREX_GPU_HOST_DEVICE constexpr void primitiveEval (const amrex::Real x,
+    AMREX_GPU_HOST_DEVICE constexpr void primitiveEval (const amrex::Real xRef,
                                                        amrex::GpuArray<amrex::Real, length> &s) const
     {
         amrex::Real factor = 0;
@@ -664,46 +664,46 @@ public:
                 s[0] = 1;
                 break;
             case 0:
-                s[0] = x;
+                s[0] = xRef;
                 break;
             case 1:
-                s[0] = (x*x) * 0.5;
-                s[1] = ((-x + 2.) * x + 1) * 0.5;
+                s[0] = (xRef * xRef) * 0.5;
+                s[1] = ((-xRef + 2.) * xRef + 1) * 0.5;
                 break;
             case 2:
                 factor = (1./6.);
-                s[0] = (x*x*x) * factor;
-                s[1] = (((-2. * x + 3) * x + 3.) * x + 1.) * factor;
-                s[2] = (((-x + 3.) * x - 1.) * x - 1.) * factor + 1.;
+                s[0] = (xRef * xRef * xRef) * factor;
+                s[1] = (((-2. * xRef + 3) * xRef + 3.) * xRef + 1.) * factor;
+                s[2] = (((-xRef + 3.) * xRef - 1.) * xRef - 1.) * factor + 1.;
                 break;
             case 3:
                 factor = (1./24.);
-                s[0] = (x*x * x*x) * factor;
-                s[1] = -pow(x, 4) / 8. + pow(x, 3) / 6. + pow(x, 2) / 4. + x / 6. + 1. / 24.;
-                s[2] = pow(x, 4) / 8. - pow(x, 3) / 3. + x * 2. / 3. + 0.5;
-                // s[3] = -pow((1. - x), 4) * factor + 1.;
-                s[3] = -((((x - 4.) * x + 6) * x - 4.) * x + 1) * factor + 1.;
+                s[0] = (xRef * xRef * xRef * xRef) * factor;
+                s[1] = -pow(xRef, 4) / 8. + pow(xRef, 3) / 6. + pow(xRef, 2) / 4. + xRef / 6. + 1. / 24.;
+                s[2] = pow(xRef, 4) / 8. - pow(xRef, 3) / 3. + xRef * 2. / 3. + 0.5;
+                // s[3] = -pow((1. - xRef), 4) * factor + 1.;
+                s[3] = -((((xRef - 4.) * xRef + 6) * xRef - 4.) * xRef + 1) * factor + 1.;
                 break;
             case 4:
                 factor = (1./120.);
-                s[0] = (x*x * x * x*x) * factor;
-                s[1] = (((((-4. * x + 5.) * x + 10.) * x + 10.) * x + 5.) * x + 1.) * factor;
-                s[2] = (((((6. * x - 15.) * x - 10.) * x + 30.) * x + 55.) * x + 27.) * factor;
-                s[3] = (((((-4. * x + 15.) * x - 10.) * x - 30.) * x + 55.) * x + 93.) * factor;
-                //s[4] = ((((x - 5.) * x + 8) * x*x - 5.) * x + 1.) * factor + 1.;
-                s[4] = -(((((-x + 5.) * x - 10.) * x + 10.) * x - 5.) * x + 1.) * factor + 1.;
+                s[0] = (xRef * xRef * xRef * xRef * xRef) * factor;
+                s[1] = (((((-4. * xRef + 5.) * xRef + 10.) * xRef + 10.) * xRef + 5.) * xRef + 1.) * factor;
+                s[2] = (((((6. * xRef - 15.) * xRef - 10.) * xRef + 30.) * xRef + 55.) * xRef + 27.) * factor;
+                s[3] = (((((-4. * xRef + 15.) * xRef - 10.) * xRef - 30.) * xRef + 55.) * xRef + 93.) * factor;
+                //s[4] = ((((xRef - 5.) * xRef + 8) * x*x - 5.) * xRef + 1.) * factor + 1.;
+                s[4] = -(((((-xRef + 5.) * xRef - 10.) * xRef + 10.) * xRef - 5.) * xRef + 1.) * factor + 1.;
                 break;
             case 5:
                 factor = (1./720.);
-                s[0] = pow(x, 6) * factor;
+                s[0] = pow(xRef, 6) * factor;
                 s[1] =
-                    ((((((-5. * x + 6.) * x + 15.) * x + 20.) * x + 15.) * x + 6.) * x + 1.) * factor;
+                    ((((((-5. * xRef + 6.) * xRef + 15.) * xRef + 20.) * xRef + 15.) * xRef + 6.) * xRef + 1.) * factor;
                 s[2] =
-                    ((((((10. * x - 24.) * x - 30.) * x + 40.) * x + 150.) * x + 156.) * x + 58.) * factor;
-                s[3] = ((((-10. * x + 36.) * x * x - 120.) * x * x + 396.) * x + 360.) * factor;
+                    ((((((10. * xRef - 24.) * xRef - 30.) * xRef + 40.) * xRef + 150.) * xRef + 156.) * xRef + 58.) * factor;
+                s[3] = ((((-10. * xRef + 36.) * xRef * xRef - 120.) * xRef * xRef + 396.) * xRef + 360.) * factor;
                 s[4] =
-                    ((((((5. * x - 24.) * x + 30.) * x + 40.) * x - 150.) * x + 156.) * x + 662.) * factor;
-                s[5] = ((((((-x + 6.) * x - 15.) * x + 20.) * x - 15.) * x + 6.) * x + 719.) * factor;
+                    ((((((5. * xRef - 24.) * xRef + 30.) * xRef + 40.) * xRef - 150.) * xRef + 156.) * xRef + 662.) * factor;
+                s[5] = ((((((-xRef + 6.) * xRef - 15.) * xRef + 20.) * xRef - 15.) * xRef + 6.) * xRef + 719.) * factor;
                 break;
         }
     }
