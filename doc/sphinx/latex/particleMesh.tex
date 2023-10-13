@@ -17,96 +17,171 @@
 \newcommand{\jmh}{{j-\frac{1}{2}}}
 \newcommand{\kph}{{k+\frac{1}{2}}}
 \newcommand{\kmh}{{k-\frac{1}{2}}}
+\newcommand{\cell}{\texttt{cell}}
+\newcommand{\node}{\texttt{node}}
+\newcommand{\prim}{\texttt{prim}}
 
 \begin{document}
     \section{Particle-Mesh Coupling}
 
-    \subsection{Smoothing function}
+    \subsection{Smoothing particle splines}
 
-    The Particle-Mesh coupling algorithms are based on a smoothing function which is taken to be a tensor product spline
-    $S_h( \mathbf{x}) = S_{\Delta x}^{d_x-1}(x)S_{\Delta y}^{d_y-1}(y)S_{\Delta z}^{d_z-1}(z)$, where $S_h^d(x)=\frac 1h S^d(\frac {x}{h})$,
-    $S^d$ being the cardinal B-spline defined recursively by 
-    $$S^0(x)= 1 \mbox{ if } -\frac{1}{2} \leq x \leq \frac{1}{2}, ~~~ 0 \mbox{ else}.$$
-    $$ S^d(x) = S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-y) \dd y.$$
+    The Particle-Mesh coupling algorithms are based on a spline smoothing of the particle Dirac distribution in the discrete Lagrangian functional.
+    Associated with a particle with arbitrary position $\mathbf{x}_p = (x_p, y_p, z_p)$, the \textbf{particle spline} is a tensor product 
+    $$
+    S_h( \mathbf{x}-\mathbf{x}_p) = S_{\Delta x}^{d_x-1}(x-x_p)S_{\Delta y}^{d_y-1}(y-y_p)S_{\Delta z}^{d_z-1}(z-z_p)
+    $$
+    involving univariate scaled splines of the form
+    $S_h^d(x)=\frac 1h S^d(\frac {x}{h})$,
+    where $S^d$ is the centered, reference cardinal B-spline of degree $d$ defined recursively by 
+    $$S^0(x)= \begin{cases} 1  &\text{ if } ~ -\frac{1}{2} \leq x \leq \frac{1}{2} \\ 0 & \text{ else} \end{cases}$$
+    $$ S^d(x) = S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-x') \dd x'.$$
     \textbf{Properties of the cardinal B-spline}
     \begin{itemize}
         \item The cardinal splines are even $S^d(x) = S^d(-x)$
-        \item The support of $S^d$ is $\left[-\frac{d-1}{2},\frac{d-1}{2} \right]$
-        \item The scaled cardinal B-Spline verifies
-        $$\int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = hS_h^d(x_i-x_p),$$
+        \item The support of $S^d$ is $\left[-\frac{d+1}{2},\frac{d+1}{2} \right]$
+        \item Both the reference and scaled cardinal splines have unit integral:
+        $$ \int_{-\infty}^{\infty} S^d(x) \dd x = \int_{-\infty}^{\infty} S_h^d(x) \dd x = 1$$
+        \item Denoting grid nodes by $x_i = ih$, the scaled cardinal B-spline verifies
+        \begin{equation} \label{splinerel}
+            \int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = hS_h^d(x_i-x_p) = S^d\Big(\frac {x_i-x_p}{h}\Big)
+        \end{equation}
     \end{itemize}
 
-    \subsection{Reduction of the smoothing function at a particle position}
+    \subsection{Node and cell splines at particle positions}
 
-    The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. This yields
+    The coupling scheme then involves two kinds of univariate B-splines, evaluated at particle positions:
+    \begin{itemize}
+        
+        \item \textbf{node splines} centered on grid nodes, of the form
+        $$ 
+        S^\node_i(x_p) := S^d \Big(\frac{x_p-x_i}{h}\Big)
+        $$
+        This spline is supported on the interval $\left[x_i -\frac{(d+1)h}{2}, x_i + \frac{(d+1)h}{2} \right]$,
+        and its values are independent of the grid size.
+
+        \item \textbf{cell splines} centered on cell midpoints, of the form
+        $$ 
+        S^\cell_i(x_p) := \frac 1h S^{d-1}\Big(\frac{x_p - x_\iph}{h}\Big)
+        $$
+        This spline is centered on the supported on the interval $\left[x_\iph -\frac{dh}{2}, x_\iph + \frac{dh}{2} \right]$,
+        and its cell-integrals are independent of the grid size.
+
+    \end{itemize}
+    These splines naturally appear in the variational scheme since the above relation \eqref{splinerel} implies that 
+    the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell spline (resp. node spline) evaluated
+    at the particle position.
+
+
+    \subsection{Reduction of particle splines}
+
+    The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. 
+    Specifically, dual geometric degrees of freedom are product of univariate cell and node splines evaluated at the particles:
     $$
     \begin{aligned}
-        \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= \frac{1}{\Delta x \Delta y \Delta z}
-        S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
-        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= \frac{1}{\Delta y \Delta z} \,S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
-        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= \frac{1}{\Delta x \Delta z} \, S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
-        \tcR_1(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= \frac{1}{\Delta x \Delta y} \,S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
-        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= \frac{1}{\Delta x }  \, S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
-        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= \frac{1}{\Delta y} \, S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
-        \tcR_2(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &=\frac{1}{\Delta z}  \, S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
-        \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k} &= S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right).
+        \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
+        \tcR_1(\mathbf{e}_x S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
+        \tcR_1(\mathbf{e}_y S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
+        \tcR_1(\mathbf{e}_z S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
+        \tcR_2(\mathbf{e}_x S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p)\\
+        \tcR_2(\mathbf{e}_y S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
+        \tcR_2(\mathbf{e}_z S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &= S^\node_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
+        \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k}                &= S^\node_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p).
     \end{aligned}
     $$
-    We observe that the terms of the reduction are products of \textbf{node centered splines} of the form $S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)$ and of
-    \textbf{cell centered splines} of the form $S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)$.
 
     \subsection{Smoothed particle quantities}
 
-    The particle distribution function is of the form
-    $$ f(t,\mathbf{x},\mathbf{v}) = \sum_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t))\delta (\mathbf{v}-\mathbf{v}_p(t)).$$
+    The smoothed particle distribution function is of the form
+    $$ 
+    f(t,\mathbf{x},\mathbf{v}) = \sum_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t))\delta (\mathbf{v}-\mathbf{v}_p(t)).
+    $$
     It follows that the particle charge and current densities are respectively
-    $$\rho(t,\mathbf{x}) = \sum_p q_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t)), ~~~~ \mathbf{J}(t,\mathbf{x}) = \sum_p q_p w_p \mathbf{v}_p(t) S_h(\mathbf{x}-\mathbf{x}_p(t)).$$
-    In the GEMPIC theory, the particle charge density $rho$ is a 3-form on the dual mesh and is characterized by its cell integrals on the dual mesh $\tcR_3(\rho)$ and the particle current density is a 2-form on the dual mesh characterized by its fluxes through all the faces of the mesh $\tcR_2( \mathbf{J})$.
-
-
-    It follows by linearity of the reduction operators that the degrees of freedom (the cell integrals) of $\rho$, which are its coefficients in $\tilde{ \cC}_3$, are 
-    $$\tilde{\rho}_{i,j,k} = \sum_p q_p w_p S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)$$
-    and similarly the coefficients of $ \mathbf{J}$ in $\tilde{ \cC}_2$, are 
+    $$
+    \rho(t,\mathbf{x}) = \sum_p q_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t)), ~~~~ \bJ(t,\mathbf{x}) = \sum_p q_p w_p \mathbf{v}_p(t) S_h(\mathbf{x}-\mathbf{x}_p(t)).
+    $$
+    In the GEMPIC theory, these two densities play the role of Maxwell source terms through their dual degrees of freedom 
+    on the grid.
+    
+    Specifically, the particle charge density $\rho$ is represented as a 3-form on the dual mesh which is 
+    characterized by the dual cell integrals $\tilde{\arr{\rho}} = \tcR_3(\rho)$ in $\tilde{ \cC}_3$,
+    By linearity of the reduction operators, these degrees of freedom %(the dual cell integrals) 
+    read %of $\rho$, which are its coefficients in $\tilde{ \cC}_3$, are 
+    $$
+    \tilde{\arr{\rho}}_{i,j,k}(t) := \tcR_3(\rho(t))_{i,j,k}
+    = \sum_p q_p w_p S^\node_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\node_k(z_p(t)).
+    $$
+    As for the particle current density $\bJ$, it is represented as a 2-form on the dual mesh. 
+    Thus it is characterized 
+    by its fluxes through all the faces of the mesh, gathered in the vector 
+    $\tilde{\arrJ} = \tcR_2( \mathbf{J})$ in $\tilde{ \cC}_2$. These coefficients read
+        % imilarly the coefficients of $\mathbf{J}$ in $\tilde{ \cC}_2$ are 
     $$
     \begin{aligned}
-    \tilde{J}_{\iph,j,k} &= \frac{1}{\Delta x}  \, \sum_p q_p w_p v_{p,x}(t) S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
-    \tilde{J}_{i,\jph,k} &= \frac{1}{\Delta y }  \, \sum_p q_p w_p v_{p,y}(t) S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
-    \tilde{J}_{i,j,\kph} &= \frac{1}{\Delta z} \, \sum_p q_p w_p v_{p,z}(t) S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right)
+    \tilde{\arrJ}_{\iph,j,k}(t) &:= \tcR_2( \mathbf{J}(t))_{\iph,j,k} = \sum_p q_p w_p v_{p,x}(t) S^\cell_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\node_k(z_p(t)) \\ 
+    \tilde{\arrJ}_{i,\jph,k}(t) &:= \tcR_2( \mathbf{J}(t))_{i,\jph,k} =\sum_p q_p w_p v_{p,y}(t) S^\node_i(x_p(t))\, S^\cell_j(y_p(t)) \,S^\node_k(z_p(t)) \\
+    \tilde{\arrJ}_{i,j,\kph}(t) &:= \tcR_2( \mathbf{J}(t))_{i,j,\kph} = \sum_p q_p w_p v_{p,z}(t) S^\node_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\cell_k(z_p(t)) \\
     \end{aligned}
     $$
-    which are the components corresponding respectively to $J_x$, $J_y$, $J_z$ 
+    which correspond respectively to the three components of $\mathbf{J}$, i.e.  $J_x$, $J_y$, $J_z$ 
 
     \subsection{Smoothed electromagnetic fields}
 
-The discrete electric field $\bE$ is characterized by its integrals on the edges of the primal grid denoted by $\arrE$, where 
+The discrete electric field $\bE$ is characterized by its integrals on the edges of the primal grid, % denoted by $\arrE$, where 
 \begin{itemize}
     \item $\arrE_{\iph,j,k} \approx \int_{x_i}^{x_{i+1}} E_x(x,y_j,z_k)\dd x $
     \item $\arrE_{i,\jph,k} \approx \int_{y_j}^{y_{j+1}} E_y(x_i,y,z_k)\dd y $
     \item $\arrE_{\iph,j,k} \approx \int_{z_k}^{z_{k+1}} E_z(x_i,y_j,z)\dd z $
 \end{itemize}
-Based on the Finite Difference Lagrangian from which the electric field is derived, its smoothed version used for evaluating it at the particle positions is based on the duality of the edges of the primal grid
-and the faces of the dual grid. Therefore, the smoothing function is projected on the faces of the dual grid with the $\tcR_2$ reduction operator. This yields the following expression of $\bE$ at the particle positions
+One could define (for instance using a finite element setting) an electric field that is defined everywhere and 
+has exactly these geometric degrees of freedom. 
+However this is not necessary: in the GEMPIC scheme indeed the particles are coupled with a 
+spline-smoothed electric field $\bE^S$ which only involves the above primal degrees of freedom $\arrE \in \cC_1$
+and the reduction $\tcR_2$ of the (vectorized) particle splines, namely:
+$$
+\mathbf{e}_{d} \cdot \bE^S(\mathbf{x}_p) 
+:=  \arrE \cdot \tcR_2\big(\mathbf{e}_{d} \, S_h(\mathbf{x}-\mathbf{x}_p)\big)
+= \sum_{\texttt{e} \in \{\text{edges}\}} \arrE_{\texttt{e}} \tcR_2\big(\mathbf{e}_{d} \, S_h(\mathbf{x}-\mathbf{x}_p)\big)_{\tilde{\texttt{f}}(\texttt{e})}
+$$
+for all dimension $d \in \{x,y,z\}$, 
+where $\mathbf{e}_{d}$ is the canonical basis vector of $\mathbb{R}^3$ along dimension $d$.
+and for each primal edge $\texttt{e}$ we have denoted by $\tilde{\texttt{f}}(\texttt{e})$ its dual face.
+Given the reduction formulas above, this yields for the different components
 $$
 \begin{aligned}
-    E_x(\mathbf{x}_p) &= \frac{1}{\Delta x}  \, \sum_{i,j,k} \arrE_{\iph,j,k} S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right), \\
-    E_y(\mathbf{x}_p) &=\frac{1}{\Delta y} \, \sum_{i,j,k} \arrE_{i,\jph,k} S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right), \\
-    E_z(\mathbf{x}_p) &=\frac{1}{\Delta x} \, \sum_{i,j,k} \arrE_{i,j,\kph} S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right). 
+    E^S_x(\mathbf{x}_p) &= 
+            \sum_{i,j,k} \arrE_{\iph,j,k} S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p) \\
+    E^S_y(\mathbf{x}_p) &= 
+            \sum_{i,j,k} \arrE_{i,\jph,k} S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p) \\
+    E^S_z(\mathbf{x}_p) &= 
+            \sum_{i,j,k} \arrE_{i,j,\kph} S^\node_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
 \end{aligned}
 $$
 
-In the same way the discrete magnetic field $\bB$ is characterized by its fluxes through the faces of the primal grid denoted by $\arrE$, where 
+In the same way the discrete magnetic field $\bB$ is characterized by its fluxes through the faces of the primal grid, 
+denoted 
 \begin{itemize}
     \item $\arrB_{\iph,j,k} \approx \int_{y_j}^{y_{j+1}}\int_{z_k}^{z_{k+1}} B_x(x_i,y,z)\dd y \dd z $
     \item $\arrB_{i,\jph,k} \approx \int_{x_i}^{x_{i+1}}\int_{z_k}^{z_{k+1}} B_y(x,y_j,z)\dd x \dd z $
     \item $\arrB_{\iph,j,k} \approx \int_{x_i}^{x_{i+1}}\int_{y_j}^{y_{j+1}} B_z(x,y,z_k)\dd x\dd y $
 \end{itemize}
-For the magnetic field, based on the Lagrangian, the smoothing function is projected on the faces of the dual grid with the $\tcR_1$ reduction operator. 
-This yields the following expression of $\bB$ at the particle positions
+In the variational GEMPIC scheme the particles are coupled with a spline-smoothed magnetic field 
+which involves the primal degrees of freedom $\arrB \in \cC_2$
+and the reduction $\tcR_1$ of the (vectorized) particle splines, namely:
+$$
+\mathbf{e}_{d} \cdot \bB^S(\mathbf{x}_p) 
+:=  \arrB \cdot \tcR_1\big(\mathbf{e}_{d} \, S_h(\mathbf{x}-\mathbf{x}_p)\big)
+= \sum_{\texttt{f} \in \{\text{faces}\}} \arrB_{\texttt{f}} \tcR_1\big(\mathbf{e}_{d} \, S_h(\mathbf{x}-\mathbf{x}_p)\big)_{\tilde{\texttt{e}}(\texttt{f})}
+$$
+again for all dimension $d \in \{x,y,z\}$, 
+and where for each primal face $\texttt{f}$ we have now denoted by $\tilde{\texttt{e}}(\texttt{f})$ its dual edge.
+
+Using the formulas above for the dual dofs of the spline particles, this yields for the different components
 $$
 \begin{aligned}
-    B_x(\mathbf{x}_p) &= \frac{1}{\Delta y \Delta z} \sum_{i,j,k} \arrB_{i,\jph,\kph} \,S^{d_x}\left(\frac{x_i-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right), \\
-    B_y(\mathbf{x}_p) &= \frac{1}{\Delta x \Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right), \\
-    B_z(\mathbf{x}_p) &= \frac{1}{\Delta x \Delta y} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^{d_x-1}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right). 
+    B^S_x(\mathbf{x}_p) &= \sum_{i,j,k} \arrB_{i,\jph,\kph} \,S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p) \\
+    B^S_y(\mathbf{x}_p) &= \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p) \\
+    B^S_z(\mathbf{x}_p) &= \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p). \\
 \end{aligned}
 $$
 
@@ -119,39 +194,58 @@ In this step the following system needs to be solved
 $$
 \begin{aligned}
     \fract{x_p}{t} &= v_{p,x} \\
-    \fract{v_{y,p}}{t} &= - v_{p,x}(t)B_z(x_p(t) ,y_p,z_p) \\
-    \fract{v_{z,p}}{t} &= v_{p,x}B_y(x_p(t),y_p,z_p) \\
-    \fract{\tilde{\arrD}_{\iph,j,k}}{t} &=  -\tilde{\arrJ}_{\iph,j,k} \\ 
-    &= -\frac{1}{\Delta x}  \, \sum_p q_p w_p v_{p,x}(t) \, S^{d_x-1}\left(\frac{x_\iph-x_p(t)}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)
+    \fract{v_{y,p}}{t} &= - \frac{q_p}{m_p} v_{p,x}(t)B^S_z(x_p(t) ,y_p,z_p) \\
+    \fract{v_{z,p}}{t} &= + \frac{q_p}{m_p} v_{p,x}B^S_y(x_p(t),y_p,z_p) \\
+    \fract{\tilde{\arrD}_{\iph,j,k}}{t} &= -\tilde{\arrJ}_{\iph,j,k}. %\\ 
+\end{aligned}
+$$
+that is,
+$$
+\begin{aligned}
+    \fract{x_p}{t} &= v_{p,x} \\
+    \fract{v_{y,p}}{t} &= -\frac{q_p}{m_p} v_{p,x} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\cell_i(x_p(t))\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
+    \fract{v_{z,p}}{t} &= +\frac{q_p}{m_p} v_{p,x} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\cell_i(x_p(t))\,S^\node_j(y_p) \, S^\cell_k(z_p) \\
+    \fract{\tilde{\arrD}_{\iph,j,k}}{t} &= - \sum_p q_p w_p v_{p,x} S^\cell_i(x_p(t))\, S^\node_j(y_p) \,S^\node_k(z_p)    
 \end{aligned}
 $$
 while the other variables, not appearing on the left-hand side, stay constant.
-Using the first equation $v_{p,x}=\fract{x_p}{t}$, we can write the others as exact time derivatives by introducing the primitive of the spline $S_{\Delta x}^{d_x-1}$,
-that we denote by $\check{S}_{\Delta x}^{d_x-1}$. The integration constant is irrelevant as only differences of these primitives will be needed.
-Indeed,
+Using the first equation $v_{p,x}=\fract{x_p}{t}$, we can write the others as exact time derivatives 
+by introducing the primitive of the univariate spline $S^{d_x-1}$ on the reference grid,
+that we denote by $\check{S}^{d_x-1}$.
+The integration constant is irrelevant as only differences of these primitives will be needed.
+Writing
+$$
+S^\prim_i(x) := \check{S}^{d_x-1}\left(\frac{x-x_\iph}{\Delta x}\right)
+$$
+gives indeed
+$$
+\fract{}{t} \Big(S^\prim_i(x_p(t))\Big)
+= \frac{v_{p,x}}{\Delta x} S^{d_x-1}\left(\frac{x_p(t)-x_\iph}{\Delta x}\right)
+= v_{p,x} S^\cell_i(x_p(t))
+$$ 
+so that the above system becomes
 $$
 \begin{aligned}
-    v_{p,x}(t) B_z(x_p(t) ,y_p,z_p) &=   
-    \frac{1}{\Delta y} \sum_{i,j,k} \arrB_{\iph,\jph,k} \fract{\check{S}^{d_x-1}}{t}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) \\
-    v_{p,x}(t)  B_y(x_p(t) ,y_p,z_p) &= 
-    \frac{1}{\Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph} \fract{\check{S}^{d_x-1}}{t}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right), \\
-    v_{p,x}(t) S_{\Delta x}^{d_x-1}(x_\iph-x_p(t)) &\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) = \\ 
-    & \Delta x \fract{\check{S}^{d_x-1}}{t}\left(\frac{x_\iph-x_p}{\Delta x}\right)\,S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right) .
+    \fract{x_p}{t} &= v_{p,x} \\
+    \fract{v_{y,p}}{t} &= -\fract{}{t} \left(\frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,\jph,k} \,S^\prim_i(x_p(t))\,S^\cell_j(y_p) \, S^\node_k(z_p)\right)\\
+    \fract{v_{z,p}}{t} &= +\fract{}{t} \left(\frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,j,\kph} \,S^\prim_i(x_p(t))\,S^\node_j(y_p) \, S^\cell_k(z_p) \right)\\
+    \fract{\tilde{\arrD}_{\iph,j,k}}{t} &= - \fract{}{t}\left(\sum_p q_p w_p S^\prim_i(x_p(t))\, S^\node_j(y_p) \,S^\node_k(z_p) \right)   
 \end{aligned}
 $$
 Then, integrating the original system in time between $t_0$ and $t_1$ yields without further approximation
+
 $$
 \begin{aligned}
     x_p&(t_1) = x_p(t_0) + (t_1-t_0) v_{p,x} \\
     v_{y,p}&(t_1) = v_{y,p}(t_0) -  
-    \frac{1}{\Delta y} \sum_{i,j,k} \arrB_{\iph,\jph,k} \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)  \right) 
-      S^{d_y-1}\left(\frac{y_\jph-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)\\
+    \frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,\jph,k} \big[S^\prim_i(x_p)\big]_{t_0}^{t_1} S^\cell_j(y_p) \, S^\node_k(z_p)    
+    \\
     v_{z,p}&(t_1) =  v_{z,p}(t_0) + 
-    \frac{1}{\Delta z} \sum_{i,j,k} \arrB_{\iph,j,\kph}  \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right) 
-     S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z-1}\left(\frac{z_\kph-z_p}{\Delta z}\right) \\
+    \frac{q_p}{m_p} \sum_{i,j,k} \arrB_{\iph,j,\kph} \big[S^\prim_i(x_p)\big]_{t_0}^{t_1}  S^\node_j(y_p) \, S^\cell_k(z_p)
+    \\
     \tilde{\arrD}_{\iph,j,k} & (t_1) =  \tilde{\arrD}_{\iph,j,k}(t_0) - 
-    \frac{1}{\Delta x}  \, \sum_p q_p w_p   \times \\ &\left(\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_1)}{\Delta x}\right)-\check{S}^{d_x-1}\left(\frac{x_\iph-x_p(t_0)}{\Delta x}\right)\right)  
-    S^{d_y}\left(\frac{y_j-y_p}{\Delta y}\right)\,S^{d_z}\left(\frac{z_k-z_p}{\Delta z}\right)
+    \sum_p q_p w_p \big[S^\prim_i(x_p)\big]_{t_0}^{t_1}  S^\node_j(y_p) \,S^\node_k(z_p).
 \end{aligned}
 $$
+where $\big[S^\prim_i(x_p)\big]_{t_0}^{t_1} = S^\prim_i(x_p(t_1))-S^\prim_i(x_p(t_0))$ is the primitive difference.
 \end{document}
