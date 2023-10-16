@@ -11,8 +11,8 @@ using namespace GEMPIC_Fields;
 * 
 * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
 * 
-* @param oneForm : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
-* @param twoForm : DeRhamField<primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding the resulting face integrals
+* @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
+* @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding the resulting face integrals
 * 
 * @return void
 */
@@ -38,7 +38,6 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
    }
    twoForm.data[0].AverageSync(geom.periodicity());
    twoForm.data[0].FillBoundary_nowait(geom.periodicity());
-
 
    // Component-1 of curl
    for (amrex::MFIter mfi(twoForm.data[1]); mfi.isValid(); ++mfi)
@@ -91,8 +90,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
 * 
 * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
 * 
-* @param oneForm : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge integrals
-* @param twoForm : DeRhamField<dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$ holding the resulting face integrals
+* @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge integrals
+* @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$ holding the resulting face integrals
 * 
 * @return void
 */
@@ -175,15 +174,14 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
 * 
 * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
 * 
-* @param zeroForm : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
-* @param oneForm : DeRhamField<primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding the resulting edge integrals
+* @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node values
+* @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding the resulting edge integrals
 * 
 * @return void
 */
 void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                                DeRhamField<Grid::primal, Space::edge>& oneForm)
 {
-   
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -210,7 +208,7 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                     oneFormMF(i, j, k) = GEMPIC_D_ADD(0., zeroFormMF(i, j + 1, k) - zeroFormMF(i, j, k), 0.);
                 });
             }
-            
+
             if (comp == 2)
             {
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -235,15 +233,14 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
 * 
 * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
 * 
-* @param zeroForm : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
-* @param oneForm : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$ holding the resulting edge integrals
+* @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
+* @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$ holding the resulting edge integrals
 * 
 * @return void
 */
 void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
                                DeRhamField<Grid::dual, Space::edge>& oneForm)
 {
-    
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -296,13 +293,13 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
 * 
 * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
 * 
-* @param twoForm : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
-* @param threeForm : DeRhamField<primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$ holding the resulting cell integrals
+* @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
+* @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$ holding the resulting cell integrals
 * 
 * @return void
 */
-void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
-                              DeRhamField<primal, Space::cell>& threeForm)
+void DeRhamComplex::div(const DeRhamField<Grid::primal, Space::face>& twoForm,
+                              DeRhamField<Grid::primal, Space::cell>& threeForm)
 {
     for (amrex::MFIter mfi(threeForm.data); mfi.isValid(); ++mfi)
     {
@@ -334,13 +331,13 @@ void DeRhamComplex::div(const DeRhamField<primal, Space::face>& twoForm,
 * 
 * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
 * 
-* @param twoForm : DeRhamField<primal, Space::dual>, 2-form \f$\tilde{u}^2\f$ holding the face integrals
-* @param threeForm : DeRhamField<primal, Space::dual>, 3-form \f$\tilde{D} \tilde{u}^2\f$ holding the resulting cell integrals
+* @param twoForm : DeRhamField<Grid::primal, Space::dual>, 2-form \f$\tilde{u}^2\f$ holding the face integrals
+* @param threeForm : DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D} \tilde{u}^2\f$ holding the resulting cell integrals
 * 
 * @return void
 */
-void DeRhamComplex::div(const DeRhamField<dual, Space::face>& twoForm,
-                              DeRhamField<dual, Space::cell>& threeForm)
+void DeRhamComplex::div(const DeRhamField<Grid::dual, Space::face>& twoForm,
+                              DeRhamField<Grid::dual, Space::cell>& threeForm)
 {
     
 

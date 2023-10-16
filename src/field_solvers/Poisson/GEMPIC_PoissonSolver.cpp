@@ -13,8 +13,9 @@ using namespace GEMPIC_PoissonSolver;
 
 PoissonSolver::PoissonSolver()
 {
-    m_maxCoarseningLevel = 30;
+    m_maxCoarseningLevel = 3;
     m_maxIter = 1000;
+    m_mgBottomMaxIter = 1000;
     m_maxFmgIter = 0;
     m_verbose = 0;
     m_bottomVerbose = 0;
@@ -28,17 +29,40 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     amrex::LPInfo lpInfo;
     lpInfo.setMaxCoarseningLevel(m_maxCoarseningLevel);
 
-    amrex::MLEBNodeFDLaplacian linop({params.geometry()}, {params.grid()}, {params.distriMap()}, lpInfo);
+    //amrex::MLEBNodeFDLaplacian linop({params.geometry()}, {params.grid()}, {params.distriMap()}, lpInfo);
+
+    amrex::MLNodeLaplacian linop({params.geometry()}, {params.grid()}, {params.distriMap()}, lpInfo, {}, 1.0);
 
     // Set boundary conditions on linear operator for lower end and higher end
     linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic)},
                       {AMREX_D_DECL(amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic)});
 
     // Additional parameters for Poisson
-    m_sigma = {AMREX_D_DECL(-1., -1., -1.)};
-    linop.setSigma(m_sigma);
-    amrex::Real relTol = 1.e-11;
+    //m_sigma = {AMREX_D_DECL(-1., -1., -1.)};
+    //linop.setSigma( m_sigma);
 
+    // Sum of rhs needs to be 0 in domain is periodic in all directions
+    if (params.geometry().isAllPeriodic())
+    {
+    amrex::Real rhoSum = rho.data.sum_unique(0,false,params.geometry().periodicity());
+    amrex::Print().SetPrecision(17) << " sum " << rhoSum << " " << rhoSum/(64*64*64) << std::endl;
+    amrex::Real Ninv = 1.0/GEMPIC_D_MULT(params.nCell()[0],params.nCell()[1],params.nCell()[2]);
+    amrex::Real rhoSumNinv = rhoSum *Ninv;
+    rho.data.plus(-rhoSumNinv,0,1);
+    // for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
+    // {
+    //     const amrex::Box &bx = mfi.validbox();
+    //     amrex::Array4<amrex::Real> const &rhoarr = (rho.data)[mfi].array();
+    //     ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+    //     {
+    //         amrex::Print().SetPrecision(15) << " rho " << rhoarr(i,j,k) << std::endl;
+    //         rhoarr(i, j, k) =  rhoarr(i, j, k) -rhoSum*Ninv;
+    //     });
+    // }
+    rhoSum = rho.data.sum_unique(0,false,params.geometry().periodicity());
+    amrex::Print().SetPrecision(15) << " sum2 " << rhoSum << std::endl;
+    }
+    
     // Initialize solver class
     amrex::MLMG mlmg(linop);
     
@@ -49,12 +73,13 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     mlmg.setVerbose(m_verbose);
     mlmg.setBottomVerbose(m_bottomVerbose);
     mlmg.setBottomSolver(amrex::BottomSolver::cg);
-
-    // Do we need to subtract the constant part if we have averageSync ?
-    subtractConstantPart(params, rho, 4);
-    
+    amrex::Real relTol = 1.e-11;
+    amrex::Real absTol = 1.e-12;   
     // Solve Poisson
-    mlmg.solve({&phi.data}, {&rho.data}, relTol, 0.0);
+    mlmg.solve({&phi.data}, {&rho.data}, relTol, absTol);
+    // AMReX Poisson solver does not use Hodge. Need to rescale phi
+    auto const dr = params.dr();
+    phi.data.mult(1/GEMPIC_D_MULT(dr[0],dr[1],dr[2]));
 
     phi.averageSync();
     phi.fillBoundary();

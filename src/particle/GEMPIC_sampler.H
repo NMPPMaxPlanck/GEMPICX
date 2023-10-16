@@ -34,19 +34,10 @@ void init_particles_cellwise(
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& ppg,
     amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
     amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
-    amrex::Real (*wave_function)(amrex::Real, amrex::Real, amrex::Real, amrex::Real),
+    amrex::Real (*wave_function)(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), amrex::Real),
     int rSeed = 925)
 {
-    amrex::Real x_c
-#if GEMPIC_SPACEDIM > 1
-        ,
-        y_c
-#endif
-#if GEMPIC_SPACEDIM > 2
-        ,
-        z_c
-#endif
-        ;  // cell-corner coordinates
+    amrex::Real AMREX_D_DECL(x_c, y_c, z_c);  // cell-corner coordinates
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real, vdim> velocity;
     amrex::Real weight;
@@ -90,13 +81,10 @@ void init_particles_cellwise(
     for (int pp = 0; pp < n_part_per_cell[species]; pp++)
     {
         // position in model cell [0,dx]x[0,dy]x[0,dz]:
-        position[0] = unif(gen) * infra.dx[0];  // uniform in [0, dx]
-#if (GEMPIC_SPACEDIM > 1)
-        position[1] = unif(gen) * infra.dx[1];
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-        position[2] = unif(gen) * infra.dx[2];
-#endif
+        AMREX_D_TERM(
+        position[0] = unif(gen) * infra.dx[0];,  // uniform in [0, dx]
+        position[1] = unif(gen) * infra.dx[1];,
+        position[2] = unif(gen) * infra.dx[2];)
 
         amrex::Real gauss_choice[vdim];
         amrex::Array<amrex::Real, vdim> gauss_idx;
@@ -132,7 +120,7 @@ void init_particles_cellwise(
         // Adding particle from the model cell to all cells
         for (amrex::MFIter mfi = ppg[species]->MakeMFIter(0); mfi.isValid(); ++mfi)
         {
-            amrex::ParticleTile<0, 0, vdim + 1, 0>& particles =
+            amrex::ParticleTile<ParticleType, vdim + 1, 0>& particles =
                 ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
@@ -160,17 +148,10 @@ void init_particles_cellwise(
 
                         // TODOrefine
                         // const double result = densityEval(density_parse);
-#if (GEMPIC_SPACEDIM == 3)
-                        amrex::Real result = wave_function(x, y, z, 0.);
-                        weight = result / n_part_per_cell[species] * infra.dx[0]
-#if (GEMPIC_SPACEDIM > 1)
-                                 * infra.dx[1]
-#endif
-#if (GEMPIC_SPACEDIM > 2)
-                                 * infra.dx[2]
-#endif
-                            ;
-#endif
+                         
+                        amrex::Real result = wave_function(AMREX_D_DECL(x, y, z), 0.);
+                        weight = result / n_part_per_cell[species] * GEMPIC_D_MULT(infra.dx[0], infra.dx[1], infra.dx[2]);
+
                         ppg[species]->add_particle({AMREX_D_DECL(x, y, z)}, velocity, weight,
                                                    particles);
                     }
@@ -190,7 +171,7 @@ void init_particles_full_domain_gpu(
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
     amrex::GpuArray<int, numspec> n_part_per_cell, amrex::Vector<amrex::Vector<amrex::Real>> Vmean,
     amrex::Vector<amrex::Vector<amrex::Real>> Vdev, amrex::Vector<amrex::Real> Vweight, int species,
-    amrex::ParserExecutor<4> densityEval, int rSeed = 925)
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> densityEval, int rSeed = 925)
 {
     BL_PROFILE("init_particles_full_domain_gpu");
 
@@ -260,7 +241,6 @@ void init_particles_full_domain_gpu(
 #endif
 #if (GEMPIC_SPACEDIM > 2)
                 int iz = k - lo[2];
-                int nz = hi[2] - lo[2] + 1;
 #endif
                 // int cellid = (ix * ny + iy) * nz + iz;
                 int cellid = (iz * ny + iy) * nx + ix;
@@ -383,7 +363,7 @@ void init_particles_full_domain(
     BL_PROFILE("init_particles_full_domain");
     double x, y, z, t = 0.0;
 
-    amrex::Real x_c, y_c, z_c;  // cell-corner coordinates
+    amrex::Real AMREX_D_DECL(x_c, y_c, z_c);  // cell-corner coordinates
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real, vdim> velocity;
     amrex::Real weight;
@@ -410,7 +390,7 @@ void init_particles_full_domain(
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
-        using myParticleTile = amrex::ParticleTile<0, 0, vdim + ndata, 0>;
+        using myParticleTile = amrex::ParticleTile<ParticleType, vdim + ndata, 0>;
         myParticleTile& particles =
             ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
@@ -473,7 +453,7 @@ void init_particles_full_domain(
                         x_c = infra.geom.ProbLo()[0] + (double)l * infra.dx[0];
                         x = position[0] + x_c;
 
-                        const double factor = densityEval(x, y, z, t);
+                        const double factor = densityEval(AMREX_D_DECL(x, y, z), t);
                         weight = factor / n_part_per_cell[species] * infra.dx[0]
 #if (GEMPIC_SPACEDIM > 1)
                                  * infra.dx[1]
@@ -547,7 +527,7 @@ void init_particles_full_domain(
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
-        using myParticleTile = amrex::ParticleTile<0, 0, vdim + ndata, 0>;
+        using myParticleTile = amrex::ParticleTile<ParticleType, vdim + ndata, 0>;
         myParticleTile& particles =
             ppg[species]->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 

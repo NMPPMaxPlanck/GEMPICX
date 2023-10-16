@@ -23,6 +23,7 @@
 class Parameters
 {
     public:
+        Parameters();
         Parameters(const amrex::RealBox& realBox, const amrex::IntVect& nCell,
                    const amrex::IntVect& maxGridSize, const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic, const int degree);
 

@@ -122,7 +122,6 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                 AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
             };
 
-
             // Assign point values to zeroForm 
             zeroForm(i, j, k) = func(AMREX_D_DECL(r[0], r[1], r[2]), t);
         });
@@ -355,7 +354,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 * @return void
 */
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                                      DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes) 
+                                      DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes)
 {
     const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -440,7 +439,6 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
                                       DeRhamField<Grid::primal, Space::face>& field, int gaussNodes)
 {
-    
 
     const int nQuad = (gaussNodes <= m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -550,7 +548,6 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 
         const amrex::RealVect dr = m_dr;
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
-
 
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
         {

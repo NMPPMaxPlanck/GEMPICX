@@ -1,6 +1,6 @@
 # Minimum version of CMake required to build this project
-cmake_minimum_required(VERSION 3.0)
-set(CMAKE_CXX_STANDARD 14)
+cmake_minimum_required(VERSION 3.14.0)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
@@ -23,6 +23,11 @@ endif()
 include(cmake/gempic_CompilerConfig.cmake)
 
 
+# Give verbose output when tests fail
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+message("ctest should be: ${CMAKE_CTEST_COMMAND}")
+set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS})
+message("ctest should be: ${CMAKE_CTEST_COMMAND}")
 # Enable ctests
 enable_testing()
 # This defines how the ctests are run
@@ -56,13 +61,14 @@ include_directories("${CMAKE_SOURCE_DIR}")
 
 # Add subfolder with source files of the library
 add_subdirectory(src)
-# Add subfolder with simulations
-add_subdirectory(simulations)
 # Add doxygen documentation
 add_subdirectory(doc)
+# Add subfolder with tests
+add_subdirectory(Testing)
 
 # Config summary
 message( STATUS "GEMPIC configuration summary: ")
+message( STATUS "   AMReX version            = ${AMREX_PKG_VERSION}")
 message( STATUS "   Build type               = ${CMAKE_BUILD_TYPE}")
 message( STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
 if( ${CMAKE_BUILD_TYPE} MATCHES "Release" )
@@ -75,3 +81,10 @@ message( STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
 message( STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
 endif()
 
+# Add gtest
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/b796f7d44681514f58a683a3a71ff17c94edb0c1.zip
+)
+FetchContent_MakeAvailable(googletest)

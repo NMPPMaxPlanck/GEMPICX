@@ -35,6 +35,7 @@ namespace Gempic
 {
 namespace Particles
 {
+using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
 /**
  * Class containing all particle information. The array of particle containers has @p n_species
  * number of particles containers, that is each responsible for one species of particles. For each
@@ -97,12 +98,12 @@ public:
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
      * velocity and the weight @p weight to the Particle Tile @p particles.
      */
+    
     void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
                       amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight,
-                      amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
+                      amrex::ParticleTile<ParticleType, vdim + ndata, 0>& particles)
+                      //amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
     {                                                // Array of Structures
-        using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
-
         // new particle:
         ParticleType p;
         p.id() = ParticleType::NextID();

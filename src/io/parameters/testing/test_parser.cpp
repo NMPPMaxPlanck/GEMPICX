@@ -85,11 +85,7 @@ void print_param(gempic_parameters<vdim, numspec> params)
     amrex::Real xhi = params.real_box.hi()[0];
     amrex::Real dx = (xhi - xlo) / params.n_cell[0];
     amrex::Real ylo = params.real_box.lo()[1];
-    amrex::Real yhi = params.real_box.hi()[1];
-    amrex::Real dy = (xhi - xlo) / params.n_cell[1];
     amrex::Real zlo = params.real_box.lo()[2];
-    amrex::Real zhi = params.real_box.hi()[2];
-    amrex::Real dz = (xhi - xlo) / params.n_cell[2];
     amrex::Real x, y, z, t = 1.0;
     amrex::Real maxerr = 0, maxloc = 0;
     for (int i = 0; i < params.n_cell[0]; i++)
@@ -103,35 +99,35 @@ void print_param(gempic_parameters<vdim, numspec> params)
                 z = zlo + k * dx;
                 if (params.sim_name == "test_parser")
                 {
-                    maxloc = std::abs(params.densityEval[0](x, y, z, t) -
+                    maxloc = std::abs(params.densityEval[0](AMREX_D_DECL(x, y, z), t) -
                                       (1.0 + cos(params.k[0] * x) + sin(params.k[1] * y) +
                                        cos(2 * params.k[2] * z)));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.BxEval(x, y, z, t) -
+                    maxloc = std::abs(params.BxEval(AMREX_D_DECL(x, y, z), t) -
                                       sin(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.ByEval(x, y, z, t) -
+                    maxloc = std::abs(params.ByEval(AMREX_D_DECL(x, y, z), t) -
                                       cos(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.BzEval(x, y, z, t) - 1e-3 * cos(params.k[0] * x));
+                    maxloc = std::abs(params.BzEval(AMREX_D_DECL(x, y, z), t) - 1e-3 * cos(params.k[0] * x));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.ExEval(x, y, z, t) -
+                    maxloc = std::abs(params.ExEval(AMREX_D_DECL(x, y, z), t) -
                                       sin(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.EyEval(x, y, z, t) -
+                    maxloc = std::abs(params.EyEval(AMREX_D_DECL(x, y, z), t) -
                                       cos(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.EzEval(x, y, z, t) - 1e-3 * cos(params.k[0] * x));
+                    maxloc = std::abs(params.EzEval(AMREX_D_DECL(x, y, z), t) - 1e-3 * cos(params.k[0] * x));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.phiEval(x, y, z, t) - 4 * 0.5 * cos(0.5 * x));
+                    maxloc = std::abs(params.phiEval(AMREX_D_DECL(x, y, z), t) - 4 * 0.5 * cos(0.5 * x));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.rhoEval(x, y, z, t) - (1 + 0.1 * cos(0.5 * x)));
+                    maxloc = std::abs(params.rhoEval(AMREX_D_DECL(x, y, z), t) - (1 + 0.1 * cos(0.5 * x)));
                     maxerr = std::max(maxerr, maxloc);
                 }
                 else if (params.sim_name == "Weibel")
                 {
                     amrex::Real t0 = 0.0;
-                    maxloc = std::abs(params.densityEval[0](x, y, z, t0) - 1.0);
+                    maxloc = std::abs(params.densityEval[0](AMREX_D_DECL(x, y, z), t0) - 1.0);
                     maxerr = std::max(maxerr, maxloc);
                 }
             }

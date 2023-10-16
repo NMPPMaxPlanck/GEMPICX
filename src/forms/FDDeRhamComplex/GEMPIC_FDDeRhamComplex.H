@@ -1,8 +1,9 @@
 #ifndef GEMPIC_FDDERHAMCOMPLEX_H_
 #define GEMPIC_FDDERHAMCOMPLEX_H_
 
-#include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <AMReX_SPACE.H>
+#include "GEMPIC_Fields.H"
+#include "GEMPIC_Params.H"
 
 using namespace GEMPIC_Fields;
 
@@ -186,21 +187,21 @@ public:
     ~FDDeRhamComplex();
 
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<primal, Space::node>& field) override;
+                    DeRhamField<Grid::primal, Space::node>& field) override;
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<primal, Space::cell>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::primal, Space::cell>& field, int gaussNodes = 6) override;
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<dual, Space::node>& field) override;
+                    DeRhamField<Grid::dual, Space::node>& field) override;
     void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<dual, Space::cell>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::dual, Space::cell>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<dual, Space::edge>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::dual, Space::edge>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<primal, Space::face>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::primal, Space::face>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<primal, Space::edge>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::primal, Space::edge>& field, int gaussNodes = 6) override;
     void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, amrex::Real t,
-                    DeRhamField<dual, Space::face>& field, int gaussNodes = 6) override;
+                    DeRhamField<Grid::dual, Space::face>& field, int gaussNodes = 6) override;
 
     /**
      * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_3\f$.
@@ -215,14 +216,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param threeForm : DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
-     * @param zeroForm : DeRhamField<primal, Space::node>, resulting 0-form \f$u^0\f$
+     * @param threeForm : DeRhamField<Grid::dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
+     * @param zeroForm : DeRhamField<Grid::primal, Space::node>, resulting 0-form \f$u^0\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::cell>& threeForm,
-                 DeRhamField<primal, Space::node>& zeroForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                 DeRhamField<Grid::primal, Space::node>& zeroForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -235,18 +236,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, m_tempPrimalZeroForm);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, zeroForm.data, m_tempPrimalZeroForm);
-        matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data,
+                                          AMREX_D_PICK(zeroForm.data, m_tempPrimalZeroForm, zeroForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilCellToNode,
+                                          AMREX_D_PICK((void), m_tempPrimalZeroForm, zeroForm.data),
+                                          AMREX_D_PICK((void), zeroForm.data, m_tempPrimalZeroForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data)););
 
         zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[0], dr[1], dr[2]) * weight));
 
@@ -267,14 +265,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param threeForm : DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$
-     * @param zeroForm : DeRhamField<dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
+     * @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$u^3\f$
+     * @param zeroForm : DeRhamField<Grid::dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::cell>& threeForm,
-                 DeRhamField<dual, Space::node>& zeroForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                 DeRhamField<Grid::dual, Space::node>& zeroForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -287,18 +285,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, m_tempDualZeroForm);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data, zeroForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilCellToNode, zeroForm.data, m_tempDualZeroForm);
-        matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data,
+                                          AMREX_D_PICK(zeroForm.data, m_tempDualZeroForm, zeroForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilCellToNode,
+                                          AMREX_D_PICK((void), m_tempDualZeroForm, zeroForm.data),
+                                          AMREX_D_PICK((void), zeroForm.data, m_tempDualZeroForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data)););
 
         zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[0], dr[1], dr[2]) * weight));
 
@@ -319,14 +314,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param twoForm : DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$
-     * @param oneForm : DeRhamField<primal, Space::edge>, resulting 1-form \f$u^1\f$
+     * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{u}^2\f$
+     * @param oneForm : DeRhamField<Grid::primal, Space::edge>, resulting 1-form \f$u^1\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::face>& twoForm,
-                 DeRhamField<primal, Space::edge>& oneForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::face>& twoForm,
+                 DeRhamField<Grid::primal, Space::edge>& oneForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -341,24 +336,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], m_tempPrimalOneForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempPrimalOneForm[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         oneForm.data[comp], m_tempPrimalOneForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempPrimalOneForm[comp], oneForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
+                                              AMREX_D_PICK(oneForm.data[comp], m_tempPrimalOneForm[comp], oneForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
+                                              AMREX_D_PICK((void), m_tempPrimalOneForm[comp], oneForm.data[comp]),
+                                              AMREX_D_PICK((void), oneForm.data[comp], m_tempPrimalOneForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
+                                              m_tempPrimalOneForm[comp], oneForm.data[comp])););
 
             if (comp == 0)
                 oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
@@ -388,14 +376,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param twoForm : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$
-     * @param oneForm : DeRhamField<dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
+     * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$
+     * @param oneForm : DeRhamField<Grid::dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::face>& twoForm,
-                 DeRhamField<dual, Space::edge>& oneForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::face>& twoForm,
+                 DeRhamField<Grid::dual, Space::edge>& oneForm, amrex::Real weight = 1.)
     {
         const int stencilLength = degree - 1;
         amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
@@ -409,24 +397,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], m_tempDualOneForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempDualOneForm[comp], oneForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode),
-                                         twoForm.data[comp], oneForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
-                                         oneForm.data[comp], m_tempDualOneForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
-                                         m_tempDualOneForm[comp], oneForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
+                                              AMREX_D_PICK(oneForm.data[comp], m_tempDualOneForm[comp], oneForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
+                                              AMREX_D_PICK((void), m_tempDualOneForm[comp], oneForm.data[comp]),
+                                              AMREX_D_PICK((void), oneForm.data[comp], m_tempDualOneForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
+                                              m_tempDualOneForm[comp], oneForm.data[comp])););
 
             if (comp == 0)
                 oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
@@ -455,14 +436,14 @@ public:
      * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
-     * @param oneForm : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
-     * @param twoForm : DeRhamField<primal, Space::face>, resulting 2-form \f$u^2\f$
+     * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
+     * @param twoForm : DeRhamField<Grid::primal, Space::face>, resulting 2-form \f$u^2\f$
      * @param weight : Real, constant weight function
      * return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::edge>& oneForm,
-                 DeRhamField<primal, Space::face>& twoForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                 DeRhamField<Grid::primal, Space::face>& twoForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -477,24 +458,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], m_tempPrimalTwoForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempPrimalTwoForm[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         twoForm.data[comp], m_tempPrimalTwoForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempPrimalTwoForm[comp], twoForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp],
+                                         AMREX_D_PICK(twoForm.data[comp], m_tempPrimalTwoForm[comp], twoForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
+                                              AMREX_D_PICK((void), m_tempPrimalTwoForm[comp], twoForm.data[comp]),
+                                              AMREX_D_PICK((void), twoForm.data[comp], m_tempPrimalTwoForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
+                                              m_tempPrimalTwoForm[comp], twoForm.data[comp])););
 
             if (comp == 0)
                 twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) /
@@ -525,14 +499,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param oneForm : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$
-     * @param twoForm : DeRhamField<dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
+     * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$
+     * @param twoForm : DeRhamField<Grid::dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::edge>& oneForm,
-                 DeRhamField<dual, Space::face>& twoForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                 DeRhamField<Grid::dual, Space::face>& twoForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -547,24 +521,17 @@ public:
 
         for (int comp = 0; comp < 3; ++comp)
         {
-#if (GEMPIC_SPACEDIM == 1)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], m_tempDualTwoForm[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempDualTwoForm[comp], twoForm.data[comp]);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-            matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell),
-                                         oneForm.data[comp], twoForm.data[comp]);
-            matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
-                                         twoForm.data[comp], m_tempDualTwoForm[comp]);
-            matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
-                                         m_tempDualTwoForm[comp], twoForm.data[comp]);
-#endif
+
+            AMREX_D_TERM(
+                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp], 
+                                              AMREX_D_PICK(twoForm.data[comp], m_tempDualTwoForm[comp], twoForm.data[comp])));,
+    //
+                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
+                                              AMREX_D_PICK((void), m_tempDualTwoForm[comp], twoForm.data[comp]),
+                                              AMREX_D_PICK((void), twoForm.data[comp], m_tempDualTwoForm[comp])));,
+    //
+                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
+                                              m_tempDualTwoForm[comp], twoForm.data[comp])););
 
             if (comp == 0)
                 twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) /
@@ -595,14 +562,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param zeroForm : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$
-     * @param threeForm : DeRhamField<primal, Space::cell>, resulting 3-form \f$u^3\f$
+     * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$
+     * @param threeForm : DeRhamField<Grid::primal, Space::cell>, resulting 3-form \f$u^3\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<dual, Space::node>& zeroForm,
-                 DeRhamField<primal, Space::cell>& threeForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                 DeRhamField<Grid::primal, Space::cell>& threeForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -615,21 +582,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, m_tempPrimalThreeForm);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, m_tempPrimalThreeForm,
-                                     threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, threeForm.data,
-                                     m_tempPrimalThreeForm);
-        matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempPrimalThreeForm,
-                                     threeForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data,
+                                          AMREX_D_PICK(threeForm.data, m_tempPrimalThreeForm, threeForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilNodeToCell,
+                                          AMREX_D_PICK((void), m_tempPrimalThreeForm, threeForm.data),
+                                          AMREX_D_PICK((void), threeForm.data, m_tempPrimalThreeForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempPrimalThreeForm, threeForm.data)););
 
         threeForm.data.mult(GEMPIC_D_MULT(dr[0], dr[1], dr[2]) / weight);
 
@@ -651,14 +612,14 @@ public:
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
-     * @param zeroForm : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$
-     * @param threeForm : DeRhamField<dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
+     * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$
+     * @param threeForm : DeRhamField<Grid::dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
      * @param weight : Real, constant weight function
      * @return void
      */
     template <int degree>
-    void hodgeFD(const DeRhamField<primal, Space::node>& zeroForm,
-                 DeRhamField<dual, Space::cell>& threeForm, amrex::Real weight = 1.)
+    void hodgeFD(const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                 DeRhamField<Grid::dual, Space::cell>& threeForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
         const int stencilLength = degree - 1;
@@ -671,18 +632,15 @@ public:
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
-#if (GEMPIC_SPACEDIM == 1)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 2)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, m_tempDualThreeForm);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data);
-#endif
-#if (GEMPIC_SPACEDIM == 3)
-        matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data, threeForm.data);
-        matrixMult<stencilLength, 1>(geom, stencilNodeToCell, threeForm.data, m_tempDualThreeForm);
-        matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data);
-#endif
+        AMREX_D_TERM(
+            (matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data,
+                                          AMREX_D_PICK(threeForm.data, m_tempDualThreeForm, threeForm.data)));,
+//
+            (matrixMult<stencilLength, 1>(geom, stencilNodeToCell,
+                                          AMREX_D_PICK((void), m_tempDualThreeForm, threeForm.data),
+                                          AMREX_D_PICK((void), threeForm.data, m_tempDualThreeForm)));,
+//
+            (matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data)););
 
         threeForm.data.mult(GEMPIC_D_MULT(dr[0], dr[1], dr[2]) / weight);
 

@@ -26,11 +26,10 @@ namespace CompDom
 class computational_domain
 {
 public:
-    amrex::IntVect n_cell;         // number of cells
-    amrex::IntVect max_grid_size;  // maximum number of cells in tile in each direction
+    amrex::IntVect n_cell;         // number of cells of the domain. A domain consists of several grids.
+    amrex::IntVect max_grid_size;  // maximum number of cells in tile in each direction. AMReX automagically creates grids to cover the domain and not be bigger than a certain, maximum grid size.
     int is_periodic[GEMPIC_SPACEDIM];
     amrex::RealBox real_box;  // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
-
     amrex::RealVect Length;  // Length of domain in x,y,z directions
     amrex::BoxArray grid;
     amrex::Geometry geom;

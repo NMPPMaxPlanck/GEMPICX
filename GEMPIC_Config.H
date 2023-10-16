@@ -48,5 +48,4 @@
 #   define GEMPIC_D_LOOP_END } } }
 #endif
 
-
 #endif

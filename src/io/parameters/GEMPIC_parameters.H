@@ -48,7 +48,8 @@ public:
     amrex::Vector<amrex::Real> domain_hi{AMREX_D_DECL(1.0, 1.0, 1.0)};
     amrex::IntVect is_periodic{AMREX_D_DECL(1, 1, 1)};
     amrex::IntVect n_cell{AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect max_grid_size{AMREX_D_DECL(4, 4, 4)};  // for parallelisation
+    amrex::IntVect max_grid_size{AMREX_D_DECL(4, 4, 4)}; 
+    // for parallelisation
     // for periodic directions length of domain given by 2*pi/k[i]
     amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.25, 1.25, 1.25)};
     amrex::Real kx, ky, kz;
@@ -75,32 +76,32 @@ public:
 
     amrex::GpuArray<std::string, numspec> density = {"0"};  // particle density
     amrex::GpuArray<amrex::Parser, numspec> densityParse;
-    amrex::GpuArray<amrex::ParserExecutor<4>, numspec> densityEval;
+    amrex::GpuArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, numspec> densityEval;
 
     std::string Bx = "0.0";
     amrex::Parser BxParse;
-    amrex::ParserExecutor<4> BxEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> BxEval;
     std::string By = "0.0";
     amrex::Parser ByParse;
-    amrex::ParserExecutor<4> ByEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> ByEval;
     std::string Bz = "0.0";
     amrex::Parser BzParse;
-    amrex::ParserExecutor<4> BzEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> BzEval;
     std::string Ex = "0.0";
     amrex::Parser ExParse;
-    amrex::ParserExecutor<4> ExEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> ExEval;
     std::string Ey = "0.0";
     amrex::Parser EyParse;
-    amrex::ParserExecutor<4> EyEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> EyEval;
     std::string Ez = "0.0";
     amrex::Parser EzParse;
-    amrex::ParserExecutor<4> EzEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> EzEval;
     std::string phi = "0.0";
     amrex::Parser phiParse;
-    amrex::ParserExecutor<4> phiEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> phiEval;
     std::string rho = "0.0";
     amrex::Parser rhoParse;
-    amrex::ParserExecutor<4> rhoEval;
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> rhoEval;
 
     // code data
     amrex::Real tolerance_particles = 1e-10;
@@ -517,9 +518,9 @@ public:
             densityParse[i].setConstant("kvarx", k[0]);
             densityParse[i].setConstant("kvary", k[1]);
             densityParse[i].setConstant("kvarz", k[2]);
-            densityParse[i].registerVariables({"x", "y", "z", "t"});
+            densityParse[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             densityEval[i] =
-                densityParse[i].template compile<4>();  // 4 because there are three variables.
+                densityParse[i].template compile<GEMPIC_SPACEDIM + 1>();  // 4 because there are three variables.
         }
 
         // initial fields
@@ -527,57 +528,57 @@ public:
         BxParse.setConstant("kvarx", k[0]);
         BxParse.setConstant("kvary", k[1]);
         BxParse.setConstant("kvarz", k[2]);
-        BxParse.registerVariables({"x", "y", "z", "t"});
-        BxEval = BxParse.compile<4>();
+        BxParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        BxEval = BxParse.compile<GEMPIC_SPACEDIM + 1>();
 
         ByParse = amrex::Parser(By);
         ByParse.setConstant("kvarx", k[0]);
         ByParse.setConstant("kvary", k[1]);
         ByParse.setConstant("kvarz", k[2]);
-        ByParse.registerVariables({"x", "y", "z", "t"});
-        ByEval = ByParse.compile<4>();
+        ByParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        ByEval = ByParse.compile<GEMPIC_SPACEDIM + 1>();
 
         BzParse = amrex::Parser(Bz);
         BzParse.setConstant("kvarx", k[0]);
         BzParse.setConstant("kvary", k[1]);
         BzParse.setConstant("kvarz", k[2]);
-        BzParse.registerVariables({"x", "y", "z", "t"});
-        BzEval = BzParse.compile<4>();
+        BzParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        BzEval = BzParse.compile<GEMPIC_SPACEDIM + 1>();
 
         ExParse = amrex::Parser(Ex);
         ExParse.setConstant("kvarx", k[0]);
         ExParse.setConstant("kvary", k[1]);
         ExParse.setConstant("kvarz", k[2]);
-        ExParse.registerVariables({"x", "y", "z", "t"});
-        ExEval = ExParse.compile<4>();
+        ExParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        ExEval = ExParse.compile<GEMPIC_SPACEDIM + 1>();
 
         EyParse = amrex::Parser(Ey);
         EyParse.setConstant("kvarx", k[0]);
         EyParse.setConstant("kvary", k[1]);
         EyParse.setConstant("kvarz", k[2]);
-        EyParse.registerVariables({"x", "y", "z", "t"});
-        EyEval = EyParse.compile<4>();
+        EyParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        EyEval = EyParse.compile<GEMPIC_SPACEDIM + 1>();
 
         EzParse = amrex::Parser(Ez);
         EzParse.setConstant("kvarx", k[0]);
         EzParse.setConstant("kvary", k[1]);
         EzParse.setConstant("kvarz", k[2]);
-        EzParse.registerVariables({"x", "y", "z", "t"});
-        EzEval = EzParse.compile<4>();
+        EzParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        EzEval = EzParse.compile<GEMPIC_SPACEDIM + 1>();
 
         phiParse = amrex::Parser(phi);
         phiParse.setConstant("kvarx", k[0]);
         phiParse.setConstant("kvary", k[1]);
         phiParse.setConstant("kvarz", k[2]);
-        phiParse.registerVariables({"x", "y", "z", "t"});
-        phiEval = phiParse.compile<4>();
+        phiParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        phiEval = phiParse.compile<GEMPIC_SPACEDIM + 1>();
 
         rhoParse = amrex::Parser(rho);
         rhoParse.setConstant("kvarx", k[0]);
         rhoParse.setConstant("kvary", k[1]);
         rhoParse.setConstant("kvarz", k[2]);
-        rhoParse.registerVariables({"x", "y", "z", "t"});
-        rhoEval = rhoParse.compile<4>();
+        rhoParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        rhoEval = rhoParse.compile<GEMPIC_SPACEDIM + 1>();
     }
 };
 

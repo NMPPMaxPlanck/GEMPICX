@@ -24,3 +24,5 @@ runs/**/*
 doc/doxygen/xml/**
 doc/doxygen/html/**
 **/Plotfiles/**/*
+build1D/**/*
+build2D/**/*
