@@ -109,7 +109,7 @@ class OperatorHamilton {
 * 
 */
     template<class SplineType = Spline::SplineBase<degx, degy, degz>>
-    AMREX_GPU_HOST_DEVICE inline void apply_H_e_particle(
+    AMREX_GPU_HOST_DEVICE inline void apply_H_e_particle (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const &eA,
         SplineType &spline,
         amrex::GpuArray<amrex::Real, vdim> vel,

@@ -47,6 +47,7 @@ public:
             bool abort_on_out_of_gpu_memory = true;  // AMReX' default: false
             pp.queryAdd("abort_on_out_of_gpu_memory", abort_on_out_of_gpu_memory);
 
+            // Synchronizes CPU (host) memory with GPU (device) memory, which is useful for testing
             pp.add("the_arena_is_managed", 1);
         });
 

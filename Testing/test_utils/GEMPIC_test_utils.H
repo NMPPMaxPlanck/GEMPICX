@@ -7,7 +7,7 @@
 
 namespace GEMPIC_TestUtils {
     // Nghost helper function
-    inline int initNGhost(int degX, int degY, int degZ)
+    inline int initNGhost (int degX, int degY, int degZ)
     {
         amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
         const int maxDeg{*(std::max_element(degs.begin(), degs.end()))};
@@ -16,7 +16,7 @@ namespace GEMPIC_TestUtils {
 
     // Stream arr helper function
     template<typename T>
-    std::string stringArray(const T& valArray, int length) {
+    std::string stringArray (const T& valArray, int length) {
         std::stringstream stream;
         stream << "(" << valArray[0];
         for (int i = 1; i < length; i++) {
@@ -29,7 +29,7 @@ namespace GEMPIC_TestUtils {
     // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
     // of all particles to be added.
     template<int vdim, int numSpec, int numParticles>
-    void addSingleParticles(
+    void addSingleParticles (
         amrex::GpuArray<std::unique_ptr<Gempic::Particles::particle_groups<vdim>>, numSpec>& particleGroup,
         computational_domain& infra,
         amrex::Array<amrex::Real, numParticles>& weights,

@@ -40,7 +40,7 @@ template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int nda
 class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata, electromagnetic, profiling>
 {
     public:
-    virtual void time_loop(std::shared_ptr<FDDeRhamComplex> deRham,
+    virtual void time_loop (std::shared_ptr<FDDeRhamComplex> deRham,
                             DeRhamField<Grid::dual, Space::cell>& rho,
                             DeRhamField<Grid::primal, Space::edge>& E,
                             DeRhamField<Grid::primal, Space::face>& B,
