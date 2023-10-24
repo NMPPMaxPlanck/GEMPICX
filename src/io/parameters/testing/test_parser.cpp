@@ -8,24 +8,24 @@
 #include <GEMPIC_assertion.H>
 #include <GEMPIC_parameters.H>
 
-template <int vdim, int numspec>
+template <unsigned int numspec>
 void test_Weibel()
 {
-    gempic_parameters<vdim, numspec> WeibelParams;
+    gempic_parameters<numspec> WeibelParams;
     WeibelParams.set_params_Weibel();
     print_param(WeibelParams);
 }
 
-template <int vdim, int numspec>
+template <unsigned int numspec>
 void test_read()
 {
-    gempic_parameters<vdim, numspec> params;
+    gempic_parameters<numspec> params;
     params.read_pp_params();
     print_param(params);
 }
 
-template <int vdim, int numspec>
-void print_param(gempic_parameters<vdim, numspec> params)
+template <unsigned int numspec>
+void print_param(gempic_parameters<numspec> params)
 {
     // Print data members in gempic_parameters
     amrex::PrintToFile("test_parser.output", 0) << params.sim_name << "\n";
@@ -50,6 +50,7 @@ void print_param(gempic_parameters<vdim, numspec> params)
     amrex::PrintToFile("test_parser.output", 0) << params.propagator << "\n";
     amrex::Print() << params.propagator << "\n";
 
+    auto vdim{params.vThermal[0][0].size()};
     // particle initialisation
     for (int i = 0; i < numspec; i++)
     {
@@ -81,43 +82,43 @@ void print_param(gempic_parameters<vdim, numspec> params)
         }
     }
     // test parser
-    amrex::Real xlo = params.real_box.lo()[0];
-    amrex::Real xhi = params.real_box.hi()[0];
-    amrex::Real dx = (xhi - xlo) / params.n_cell[0];
-    amrex::Real ylo = params.real_box.lo()[1];
-    amrex::Real zlo = params.real_box.lo()[2];
+    amrex::Real xlo = params.real_box.lo()[xDir];
+    amrex::Real xhi = params.real_box.hi()[xDir];
+    amrex::Real dx = (xhi - xlo) / params.n_cell[xDir];
+    amrex::Real ylo = params.real_box.lo()[yDir];
+    amrex::Real zlo = params.real_box.lo()[zDir];
     amrex::Real x, y, z, t = 1.0;
     amrex::Real maxerr = 0, maxloc = 0;
-    for (int i = 0; i < params.n_cell[0]; i++)
+    for (int i = 0; i < params.n_cell[xDir]; i++)
     {
         x = xlo + i * dx;
-        for (int j = 0; j < params.n_cell[1]; j++)
+        for (int j = 0; j < params.n_cell[yDir]; j++)
         {
             y = ylo + j * dx;
-            for (int k = 0; k < params.n_cell[2]; k++)
+            for (int k = 0; k < params.n_cell[zDir]; k++)
             {
                 z = zlo + k * dx;
                 if (params.sim_name == "test_parser")
                 {
                     maxloc = std::abs(params.densityEval[0](AMREX_D_DECL(x, y, z), t) -
-                                      (1.0 + cos(params.k[0] * x) + sin(params.k[1] * y) +
-                                       cos(2 * params.k[2] * z)));
+                                      (1.0 + cos(params.k[xDir] * x) + sin(params.k[yDir] * y) +
+                                       cos(2 * params.k[zDir] * z)));
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.BxEval(AMREX_D_DECL(x, y, z), t) -
-                                      sin(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
+                                      sin(params.k[xDir] * x + params.k[yDir] * y + params.k[zDir] * z - t));
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.ByEval(AMREX_D_DECL(x, y, z), t) -
-                                      cos(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
+                                      cos(params.k[xDir] * x + params.k[yDir] * y + params.k[zDir] * z - t));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.BzEval(AMREX_D_DECL(x, y, z), t) - 1e-3 * cos(params.k[0] * x));
+                    maxloc = std::abs(params.BzEval(AMREX_D_DECL(x, y, z), t) - 1e-3 * cos(params.k[xDir] * x));
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.ExEval(AMREX_D_DECL(x, y, z), t) -
-                                      sin(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
+                                      sin(params.k[xDir] * x + params.k[yDir] * y + params.k[zDir] * z - t));
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.EyEval(AMREX_D_DECL(x, y, z), t) -
-                                      cos(params.k[0] * x + params.k[1] * y + params.k[2] * z - t));
+                                      cos(params.k[xDir] * x + params.k[yDir] * y + params.k[zDir] * z - t));
                     maxerr = std::max(maxerr, maxloc);
-                    maxloc = std::abs(params.EzEval(AMREX_D_DECL(x, y, z), t) - 1e-3 * cos(params.k[0] * x));
+                    maxloc = std::abs(params.EzEval(AMREX_D_DECL(x, y, z), t) - 1e-3 * cos(params.k[xDir] * x));
                     maxerr = std::max(maxerr, maxloc);
                     maxloc = std::abs(params.phiEval(AMREX_D_DECL(x, y, z), t) - 4 * 0.5 * cos(0.5 * x));
                     maxerr = std::max(maxerr, maxloc);
@@ -147,12 +148,11 @@ int main(int argc, char *argv[])
         // Print empty line
         amrex::PrintToFile("test_parser.output", 0) << "\n";
 
-        const int vdim = 3;
-        const int numSpecWeibel = 1;
-        const int numSpecRead = 2;
-        test_Weibel<vdim, numSpecWeibel>();
+        const unsigned int numSpecWeibel = 1;
+        const unsigned int numSpecRead = 2;
+        test_Weibel<numSpecWeibel>();
         amrex::Print() << "test_Weibel completed\n";
-        test_read<vdim, numSpecRead>();
+        test_read<numSpecRead>();
         amrex::Print() << "test_read completed\n";
 
         if (amrex::ParallelDescriptor::MyProc() == 0)

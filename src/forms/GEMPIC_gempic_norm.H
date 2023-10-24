@@ -42,12 +42,12 @@ amrex::Real gempic_norm(amrex::MultiFab& MultiF, computational_domain ifr, int p
 
     if (p > 0)
     {
-        result *= ((p == 2) ? (1.0 / sqrt(ifr.n_cell[0])) : (1.0 / ifr.n_cell[0]))
+        result *= ((p == 2) ? (1.0 / sqrt(ifr.n_cell[xDir])) : (1.0 / ifr.n_cell[xDir]))
 #if (GEMPIC_SPACEDIM > 1)
-                  * ((p == 2) ? (1.0 / sqrt(ifr.n_cell[1])) : (1.0 / ifr.n_cell[1]))
+                  * ((p == 2) ? (1.0 / sqrt(ifr.n_cell[yDir])) : (1.0 / ifr.n_cell[yDir]))
 #endif
 #if (GEMPIC_SPACEDIM > 2)
-                  * ((p == 2) ? (1.0 / sqrt(ifr.n_cell[2])) : (1.0 / ifr.n_cell[2]))
+                  * ((p == 2) ? (1.0 / sqrt(ifr.n_cell[zDir])) : (1.0 / ifr.n_cell[zDir]))
 #endif
             ;
     }

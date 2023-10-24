@@ -4,6 +4,7 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 #include <GEMPIC_amrex_init.H>
+#include <GEMPIC_Config.H>
 
 using namespace amrex;
 
@@ -52,8 +53,8 @@ void main_main()
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        std::cout << "low: " << lo[0] << ", " << lo[1] << ", " << lo[2] << std::endl;
-        std::cout << "low: " << hi[0] << ", " << hi[1] << ", " << hi[2] << std::endl;
+        std::cout << "low: " << lo[xDir] << ", " << lo[yDir] << ", " << lo[zDir] << std::endl;
+        std::cout << "low: " << hi[xDir] << ", " << hi[yDir] << ", " << hi[zDir] << std::endl;
 
         amrex::Array4<amrex::Real> const &vecMF = (TestMF)[mfi].array();
 

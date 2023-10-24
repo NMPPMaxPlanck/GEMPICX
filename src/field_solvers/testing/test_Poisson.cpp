@@ -27,13 +27,13 @@ int main(int argc, char *argv[])
 
     /* Initialize the infrastructure */
     const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell{AMREX_D_DECL(64, 64, 64)};
+    const amrex::IntVect nCell{AMREX_D_DECL(64, 64, 64)};
     //const amrex::IntVect nCell{AMREX_D_DECL(128, 128, 128)};
     const amrex::IntVect maxGridSize{AMREX_D_DECL(64, 64, 64)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
 
-	Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
+    Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
     auto deRham = std::make_shared<FDDeRhamComplex>(params);
 
     auto const dr = params.dr();
@@ -74,14 +74,14 @@ int main(int argc, char *argv[])
         {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                 AMREX_D_DECL(r0[0] + i*dr[0],
-                 r0[1] + j*dr[1],
-                 r0[2] + k*dr[2])
+                 AMREX_D_DECL(r0[xDir] + i*dr[xDir],
+                 r0[yDir] + j*dr[yDir],
+                 r0[zDir] + k*dr[zDir])
                 };
 
                 // Right mathematically. Rho is a volume integral of analyticalRho in the dual grid.
                 // But it doesn't use our Hodge, nor it is the exact analytical function to which it should compare. Change later.
-                anPhiMF(i, j, k) =  (GEMPIC_D_MULT(dr[0],dr[1],dr[2]))*((GEMPIC_D_MULT(std::cos(r[0]),std::cos(r[1]),std::cos(r[2])) + (1./4.)*GEMPIC_D_MULT(std::cos(2*r[0]),std::cos(2*r[1]),std::cos(2*r[2]))));
+                anPhiMF(i, j, k) =  (GEMPIC_D_MULT(dr[xDir],dr[yDir],dr[zDir]))*((GEMPIC_D_MULT(std::cos(r[xDir]),std::cos(r[yDir]),std::cos(r[zDir])) + (1./4.)*GEMPIC_D_MULT(std::cos(2*r[xDir]),std::cos(2*r[yDir]),std::cos(2*r[zDir]))));
 
         });
     }

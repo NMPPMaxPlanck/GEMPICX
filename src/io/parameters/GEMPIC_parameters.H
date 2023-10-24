@@ -34,7 +34,7 @@ void parseErrorMessage(std::string name)
 {
     amrex::Print() << "Cannot find " + name + " input! Default value will be used\n";
 }
-template <int vdim, int numspec>
+template <unsigned int numspec>
 class gempic_parameters
 {
 public:
@@ -151,7 +151,7 @@ public:
             parseErrorMessage("is_periodic_vector");
         }
         is_periodic = amrex::IntVect{
-            AMREX_D_DECL(is_periodic_vector[0], is_periodic_vector[1], is_periodic_vector[2])};
+            AMREX_D_DECL(is_periodic_vector[xDir], is_periodic_vector[yDir], is_periodic_vector[zDir])};
         int allPeriodic = 1;
         int nonePeriodic = 0;
         for (size_t i = 0; i < GEMPIC_SPACEDIM; i++)
@@ -182,13 +182,13 @@ public:
         {
             parseErrorMessage("n_cell_vector");
         }
-        n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[0], n_cell_vector[1], n_cell_vector[2])};
+        n_cell = amrex::IntVect{AMREX_D_DECL(n_cell_vector[xDir], n_cell_vector[yDir], n_cell_vector[zDir])};
         if (!pp.query("max_grid_size_vector", max_grid_size_vector))
         {
             parseErrorMessage("max_grid_size_vector");
         }
         max_grid_size = amrex::IntVect{AMREX_D_DECL(
-            max_grid_size_vector[0], max_grid_size_vector[1], max_grid_size_vector[2])};
+            max_grid_size_vector[xDir], max_grid_size_vector[yDir], max_grid_size_vector[zDir])};
 
         // time stepping
         if (!pp.query("n_steps", n_steps))
@@ -503,21 +503,21 @@ public:
                 domain_hi[i] = 2 * M_PI / k[i];
             }
         }
-        real_box = amrex::RealBox({AMREX_D_DECL(domain_lo[0], domain_lo[1], domain_lo[2])},
-                                  {AMREX_D_DECL(domain_hi[0], domain_hi[1], domain_hi[2])});
+        real_box = amrex::RealBox({AMREX_D_DECL(domain_lo[xDir], domain_lo[yDir], domain_lo[zDir])},
+                                  {AMREX_D_DECL(domain_hi[xDir], domain_hi[yDir], domain_hi[zDir])});
 
-        kx = k[0];
-        ky = k[1];
-        kz = k[2];
+        kx = k[xDir];
+        ky = k[yDir];
+        kz = k[zDir];
 
         // Parsers
         // --------
         for (size_t i = 0; i < numspec; i++)
         {
             densityParse[i] = amrex::Parser(density[i]);
-            densityParse[i].setConstant("kvarx", k[0]);
-            densityParse[i].setConstant("kvary", k[1]);
-            densityParse[i].setConstant("kvarz", k[2]);
+            densityParse[i].setConstant("kvarx", k[xDir]);
+            densityParse[i].setConstant("kvary", k[yDir]);
+            densityParse[i].setConstant("kvarz", k[zDir]);
             densityParse[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             densityEval[i] =
                 densityParse[i].template compile<GEMPIC_SPACEDIM + 1>();  // 4 because there are three variables.
@@ -525,58 +525,58 @@ public:
 
         // initial fields
         BxParse = amrex::Parser(Bx);
-        BxParse.setConstant("kvarx", k[0]);
-        BxParse.setConstant("kvary", k[1]);
-        BxParse.setConstant("kvarz", k[2]);
+        BxParse.setConstant("kvarx", k[xDir]);
+        BxParse.setConstant("kvary", k[yDir]);
+        BxParse.setConstant("kvarz", k[zDir]);
         BxParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         BxEval = BxParse.compile<GEMPIC_SPACEDIM + 1>();
 
         ByParse = amrex::Parser(By);
-        ByParse.setConstant("kvarx", k[0]);
-        ByParse.setConstant("kvary", k[1]);
-        ByParse.setConstant("kvarz", k[2]);
+        ByParse.setConstant("kvarx", k[xDir]);
+        ByParse.setConstant("kvary", k[yDir]);
+        ByParse.setConstant("kvarz", k[zDir]);
         ByParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         ByEval = ByParse.compile<GEMPIC_SPACEDIM + 1>();
 
         BzParse = amrex::Parser(Bz);
-        BzParse.setConstant("kvarx", k[0]);
-        BzParse.setConstant("kvary", k[1]);
-        BzParse.setConstant("kvarz", k[2]);
+        BzParse.setConstant("kvarx", k[xDir]);
+        BzParse.setConstant("kvary", k[yDir]);
+        BzParse.setConstant("kvarz", k[zDir]);
         BzParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         BzEval = BzParse.compile<GEMPIC_SPACEDIM + 1>();
 
         ExParse = amrex::Parser(Ex);
-        ExParse.setConstant("kvarx", k[0]);
-        ExParse.setConstant("kvary", k[1]);
-        ExParse.setConstant("kvarz", k[2]);
+        ExParse.setConstant("kvarx", k[xDir]);
+        ExParse.setConstant("kvary", k[yDir]);
+        ExParse.setConstant("kvarz", k[zDir]);
         ExParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         ExEval = ExParse.compile<GEMPIC_SPACEDIM + 1>();
 
         EyParse = amrex::Parser(Ey);
-        EyParse.setConstant("kvarx", k[0]);
-        EyParse.setConstant("kvary", k[1]);
-        EyParse.setConstant("kvarz", k[2]);
+        EyParse.setConstant("kvarx", k[xDir]);
+        EyParse.setConstant("kvary", k[yDir]);
+        EyParse.setConstant("kvarz", k[zDir]);
         EyParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         EyEval = EyParse.compile<GEMPIC_SPACEDIM + 1>();
 
         EzParse = amrex::Parser(Ez);
-        EzParse.setConstant("kvarx", k[0]);
-        EzParse.setConstant("kvary", k[1]);
-        EzParse.setConstant("kvarz", k[2]);
+        EzParse.setConstant("kvarx", k[xDir]);
+        EzParse.setConstant("kvary", k[yDir]);
+        EzParse.setConstant("kvarz", k[zDir]);
         EzParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         EzEval = EzParse.compile<GEMPIC_SPACEDIM + 1>();
 
         phiParse = amrex::Parser(phi);
-        phiParse.setConstant("kvarx", k[0]);
-        phiParse.setConstant("kvary", k[1]);
-        phiParse.setConstant("kvarz", k[2]);
+        phiParse.setConstant("kvarx", k[xDir]);
+        phiParse.setConstant("kvary", k[yDir]);
+        phiParse.setConstant("kvarz", k[zDir]);
         phiParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         phiEval = phiParse.compile<GEMPIC_SPACEDIM + 1>();
 
         rhoParse = amrex::Parser(rho);
-        rhoParse.setConstant("kvarx", k[0]);
-        rhoParse.setConstant("kvary", k[1]);
-        rhoParse.setConstant("kvarz", k[2]);
+        rhoParse.setConstant("kvarx", k[xDir]);
+        rhoParse.setConstant("kvary", k[yDir]);
+        rhoParse.setConstant("kvarz", k[zDir]);
         rhoParse.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         rhoEval = rhoParse.compile<GEMPIC_SPACEDIM + 1>();
     }

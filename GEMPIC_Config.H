@@ -48,4 +48,44 @@
 #   define GEMPIC_D_LOOP_END } } }
 #endif
 
+enum Direction : unsigned int {
+    xDir = 0,
+    yDir = 1,
+    zDir = 2,
+    noDir = 3,
+};
+
+enum class Field {
+    PrimalZeroForm,
+    PrimalOneForm,
+    PrimalTwoForm,
+    PrimalThreeForm,
+
+    DualZeroForm,
+    DualOneForm,
+    DualTwoForm,
+    DualThreeForm,
+};
+
+template <Field field>
+constexpr Field complementForm() {
+    switch (field) {
+        case Field::PrimalZeroForm:
+            return Field::DualThreeForm;
+        case Field::PrimalOneForm:
+            return Field::DualTwoForm;
+        case Field::PrimalTwoForm:
+            return Field::DualOneForm;
+        case Field::PrimalThreeForm:
+            return Field::DualZeroForm;
+        case Field::DualZeroForm:
+            return Field::DualThreeForm;
+        case Field::DualOneForm:
+            return Field::DualTwoForm;
+        case Field::DualTwoForm:
+            return Field::DualOneForm;
+        case Field::DualThreeForm:
+            return Field::DualZeroForm;
+    }
+}
 #endif

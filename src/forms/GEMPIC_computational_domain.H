@@ -82,7 +82,7 @@ public:
         }
 
         amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
-        amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[0] - 1, n_cell[1] - 1, n_cell[2] - 1));
+        amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[xDir] - 1, n_cell[yDir] - 1, n_cell[zDir] - 1));
 
         domain.setSmall(dom_lo);
         domain.setBig(dom_hi);

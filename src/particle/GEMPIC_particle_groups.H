@@ -22,7 +22,7 @@ namespace Gempic
 {
 namespace Vlasov_Maxwell
 {
-template <int vdim, int numspec>
+template <unsigned int vdim, unsigned int numspec>
 class vlasov_maxwell;  // forward declaration
 }
 }  // namespace Gempic
@@ -42,7 +42,7 @@ using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
  * particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The
  * charge and mass of the particle species are stored in a separate array.
  */
-template <int vdim, int ndata = 1>
+template <unsigned int vdim, unsigned int ndata = 1>
 class particle_groups : public amrex::ParticleContainer<0, 0, vdim + ndata, 0>
 {
 private:

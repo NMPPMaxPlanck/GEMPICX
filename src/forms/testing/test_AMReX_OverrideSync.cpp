@@ -4,6 +4,7 @@
 #include <AMReX_Print.H>
 #include <AMReX_iMultiFab.H>
 #include <GEMPIC_amrex_init.H>
+#include <GEMPIC_Config.H>
 
 using namespace amrex;
 
@@ -63,11 +64,11 @@ void main_main()
                     [=] AMREX_GPU_DEVICE(int i, int j, int k)
                     {
                         // if-loop to exclude ownership for the point that is at the upper boundary
-                        // for nodal dimensions
-                        if ((i <= (Index_A[0] == 0 ? hi[0] : (hi[0] - 1))) &&
-                            (j <= (Index_A[1] == 0 ? hi[1] : (hi[1] - 1))) &&
-                            (k <= (Index_A[2] == 0 ? hi[2] : (hi[2] - 1))))
-                            mf_arr(i, j, k) = 1000 * lo[0] + 100 * i + 10 * j + k;
+                        // for nodal directions
+                        if ((i <= (Index_A[xDir] == 0 ? hi[xDir] : (hi[xDir] - 1))) &&
+                            (j <= (Index_A[yDir] == 0 ? hi[yDir] : (hi[yDir] - 1))) &&
+                            (k <= (Index_A[zDir] == 0 ? hi[zDir] : (hi[zDir] - 1))))
+                            mf_arr(i, j, k) = 1000 * lo[xDir] + 100 * i + 10 * j + k;
                     });
     }
 
@@ -89,10 +90,10 @@ void main_main()
                     [=] AMREX_GPU_DEVICE(int i, int j, int k)
                     {
                         // if-loop to exclude ownership for the point that is at the upper boundary
-                        // for nodal dimensions
-                        if ((i <= (Index_A[0] == 0 ? hi[0] : (hi[0] - 1))) &&
-                            (j <= (Index_A[1] == 0 ? hi[1] : (hi[1] - 1))) &&
-                            (k <= (Index_A[2] == 0 ? hi[2] : (hi[2] - 1))))
+                        // for nodal directions
+                        if ((i <= (Index_A[xDir] == 0 ? hi[xDir] : (hi[xDir] - 1))) &&
+                            (j <= (Index_A[yDir] == 0 ? hi[yDir] : (hi[yDir] - 1))) &&
+                            (k <= (Index_A[zDir] == 0 ? hi[zDir] : (hi[zDir] - 1))))
                             mask_arr(i, j, k) = 1;
                     });
     }

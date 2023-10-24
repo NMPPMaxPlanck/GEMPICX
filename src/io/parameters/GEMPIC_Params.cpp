@@ -13,7 +13,7 @@ Parameters::Parameters(const amrex::RealBox& realBox, const amrex::IntVect& nCel
     m_domain.setSmall(domLo); 
 
     //higher-boundary of domain
-    amrex::IntVect domHi(AMREX_D_DECL(nCell[0] - 1, nCell[1] - 1, nCell[2] - 1));
+    amrex::IntVect domHi(AMREX_D_DECL(nCell[xDir] - 1, nCell[yDir] - 1, nCell[zDir] - 1));
     m_domain.setBig(domHi);
 
     m_grid.define(m_domain);
@@ -26,7 +26,7 @@ Parameters::Parameters(const amrex::RealBox& realBox, const amrex::IntVect& nCel
     m_distriMap.define(m_grid);
 
     //define the length of the domain
-    m_length = amrex::RealVect{AMREX_D_DECL(m_geometry.ProbHi(0) - m_geometry.ProbLo(0), m_geometry.ProbHi(1) - m_geometry.ProbLo(1), m_geometry.ProbHi(2) - m_geometry.ProbLo(2))};
+    m_length = amrex::RealVect{AMREX_D_DECL(m_geometry.ProbHi(xDir) - m_geometry.ProbLo(xDir), m_geometry.ProbHi(yDir) - m_geometry.ProbLo(yDir), m_geometry.ProbHi(zDir) - m_geometry.ProbLo(zDir))};
 
 }
 
@@ -67,7 +67,7 @@ const amrex::Box& Parameters::domain() const
 
 const amrex::RealVect Parameters::dr() const
 {
-    return amrex::RealVect{AMREX_D_DECL(m_length[0]/m_nCell[0], m_length[1]/m_nCell[1], m_length[2]/m_nCell[2])};
+    return amrex::RealVect{AMREX_D_DECL(m_length[xDir]/m_nCell[xDir], m_length[yDir]/m_nCell[yDir], m_length[zDir]/m_nCell[zDir])};
 }
 
 int Parameters::degree() const

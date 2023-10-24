@@ -46,7 +46,7 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     {
     amrex::Real rhoSum = rho.data.sum_unique(0,false,params.geometry().periodicity());
     amrex::Print().SetPrecision(17) << " sum " << rhoSum << " " << rhoSum/(64*64*64) << std::endl;
-    amrex::Real Ninv = 1.0/GEMPIC_D_MULT(params.nCell()[0],params.nCell()[1],params.nCell()[2]);
+    amrex::Real Ninv = 1.0/GEMPIC_D_MULT(params.nCell()[xDir],params.nCell()[yDir],params.nCell()[zDir]);
     amrex::Real rhoSumNinv = rhoSum *Ninv;
     rho.data.plus(-rhoSumNinv,0,1);
     // for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
@@ -79,7 +79,7 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     mlmg.solve({&phi.data}, {&rho.data}, relTol, absTol);
     // AMReX Poisson solver does not use Hodge. Need to rescale phi
     auto const dr = params.dr();
-    phi.data.mult(1/GEMPIC_D_MULT(dr[0],dr[1],dr[2]));
+    phi.data.mult(1/GEMPIC_D_MULT(dr[xDir],dr[yDir],dr[zDir]));
 
     phi.averageSync();
     phi.fillBoundary();
@@ -103,8 +103,8 @@ void PoissonSolver::subtractConstantPart(Parameters params, DeRhamField<Grid::du
                     [=] AMREX_GPU_DEVICE(int i, int j, int k)
                     {
                         // if-loop to exclude ownership for the point that is at the upper
-                        // boundary for nodal dimensions
-                        if ((i <= (hi[0] - 1)) && (j <= (hi[1] - 1)) && (k <= (hi[2] - 1)))
+                        // boundary for nodal directions
+                        if ((i <= (hi[xDir] - 1)) && (j <= (hi[yDir] - 1)) && (k <= (hi[zDir] - 1)))
                             mask_arr(i, j, k) = 1.0;
                     });
     }

@@ -207,13 +207,13 @@ int main (int argc, char *argv[])
         }
     }
 
-    amrex::Real errorCurlEx_norm0 = errorE.data[0].norm0();
-    amrex::Real errorCurlEy_norm0 = errorE.data[1].norm0();
-    amrex::Real errorCurlEz_norm0 = errorE.data[2].norm0();
+    amrex::Real errorCurlEx_norm0 = errorE.data[xDir].norm0();
+    amrex::Real errorCurlEy_norm0 = errorE.data[yDir].norm0();
+    amrex::Real errorCurlEz_norm0 = errorE.data[zDir].norm0();
 
-    amrex::Real errorCurlHx_norm0 = errorH.data[0].norm0();
-    amrex::Real errorCurlHy_norm0 = errorH.data[1].norm0();
-    amrex::Real errorCurlHz_norm0 = errorH.data[2].norm0();
+    amrex::Real errorCurlHx_norm0 = errorH.data[xDir].norm0();
+    amrex::Real errorCurlHy_norm0 = errorH.data[yDir].norm0();
+    amrex::Real errorCurlHz_norm0 = errorH.data[zDir].norm0();
 
     /*
     amrex::Print() << "errorCurlEx_norm0: " << errorCurlEx_norm0 << std::endl;
@@ -240,12 +240,12 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_curl_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
 
-    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[0] = " << errorCurlEx_norm0 << std::endl;
-    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[1] = " << errorCurlEy_norm0 << std::endl;
-    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[2] = " << errorCurlEz_norm0 << std::endl;
-    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[0] = " << errorCurlHx_norm0 << std::endl;
-    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[1] = " << errorCurlHy_norm0 << std::endl;
-    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[2] = " << errorCurlHz_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[xDir] = " << errorCurlEx_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[yDir] = " << errorCurlEy_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlE[zDir] = " << errorCurlEz_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[xDir] = " << errorCurlHx_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[yDir] = " << errorCurlHy_norm0 << std::endl;
+    amrex::PrintToFile("test_curl_projection.output") << "max Error curlH[zDir] = " << errorCurlHz_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_curl_projection.output.0", "test_curl_projection.output");

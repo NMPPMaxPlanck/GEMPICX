@@ -41,7 +41,7 @@ namespace Particles {
 }
 
 namespace {
-    template<int vDim, int numspec, int degX, int degY, int degZ, int degmw, int ndata>
+    template<unsigned int vDim, unsigned int numspec, int degX, int degY, int degZ, int degmw, unsigned int ndata>
     class MockHSZigZagC2 : public Time_Loop::HSZigZagC2<vDim, numspec, degX, degY, degZ, degmw, ndata> {
         public:
     };
@@ -54,7 +54,7 @@ namespace {
                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> const &dxInverse) :
                    Spline::SplineWithPrimitive<degX, degY, degZ>(position, plo, dxInverse) {}
 
-        template<int vDim, int form>
+        template<Field form, unsigned int vDim>
         AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> evalSplineField (const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
         {
             amrex::GpuArray<amrex::Real, vDim> fields;
@@ -117,7 +117,7 @@ namespace {
 namespace Gempic::Particles{
     // You cannot do partial template specialization for functions, so here is an explicit specialization for a special case
     template <>
-    AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B<MockSpline<1, 1, 1>,4,0>(
+    AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B<xDir, MockSpline<1, 1, 1>,4>(
         MockSpline<1, 1, 1> &spline,
         amrex::Real weight,
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
@@ -135,7 +135,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge());
@@ -221,7 +221,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge());
@@ -291,7 +291,7 @@ namespace {
 
             OperatorHamilton<4, degX, degY, degZ, degmw> operatorHamilton;
 
-            operatorHamilton.template apply_H_p_i<0, MockSpline<degX, degY, degZ>>(
+            operatorHamilton.template apply_H_p_i<xDir>(
                 position,
                 vel,
                 infra,

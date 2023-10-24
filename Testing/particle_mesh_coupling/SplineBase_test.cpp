@@ -90,7 +90,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -107,17 +107,17 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
         AMREX_D_TERM(
-            EXPECT_EQ(1., spline.cellSplineVals[0][0]);,
-            EXPECT_EQ(1., spline.cellSplineVals[1][0]);,
-            EXPECT_EQ(1., spline.cellSplineVals[2][0]);)
+            EXPECT_EQ(1., spline.cellSplineVals[xDir][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[yDir][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[zDir][0]);)
 
         AMREX_D_TERM(
-            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);,
-            EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);,
-            EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);)
+            EXPECT_EQ(1., spline.nodeSplineVals[xDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[xDir][1]);,
+            EXPECT_EQ(1., spline.nodeSplineVals[yDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[yDir][1]);,
+            EXPECT_EQ(1., spline.nodeSplineVals[zDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[zDir][1]);)
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -151,7 +151,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -169,17 +169,17 @@ namespace {
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
         AMREX_D_TERM(
-            EXPECT_EQ(infra.dxi[0], spline.cellSplineVals[0][0]);,
-            EXPECT_EQ(infra.dxi[1], spline.cellSplineVals[1][0]);,
-            EXPECT_EQ(infra.dxi[2], spline.cellSplineVals[2][0]);)
+            EXPECT_EQ(infra.dxi[xDir], spline.cellSplineVals[xDir][0]);,
+            EXPECT_EQ(infra.dxi[yDir], spline.cellSplineVals[yDir][0]);,
+            EXPECT_EQ(infra.dxi[zDir], spline.cellSplineVals[zDir][0]);)
 
         AMREX_D_TERM(
-            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);,
-            EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);,
-            EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);)
+            EXPECT_EQ(1., spline.nodeSplineVals[xDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[xDir][1]);,
+            EXPECT_EQ(1., spline.nodeSplineVals[yDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[yDir][1]);,
+            EXPECT_EQ(1., spline.nodeSplineVals[zDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[zDir][1]);)
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -192,7 +192,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -209,18 +209,18 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            amrex::Real xintOne = spline.initBSplinesAtPositions<0>(0, 0, 1);
+            amrex::Real xintOne = spline.initBSplinesAtPositions<xDir>(0, 0, 1);
             EXPECT_EQ(1., xintOne);
-            EXPECT_EQ(0., spline.firstIndex[0]);
+            EXPECT_EQ(0., spline.firstIndex[xDir]);
 
             Spline::SplineBase<2, degY, degZ> splineDeg2(position, infra.plo, infra.dxi);
-            amrex::Real xintTwo = splineDeg2.initBSplinesAtPositions<0>(0, 0, 1);
+            amrex::Real xintTwo = splineDeg2.initBSplinesAtPositions<xDir>(0, 0, 1);
             EXPECT_EQ(0.5, xintTwo);
-            EXPECT_EQ(-1., splineDeg2.firstIndex[0]);
+            EXPECT_EQ(-1., splineDeg2.firstIndex[xDir]);
 
-            amrex::Real xintThree = splineDeg2.initBSplinesAtPositions<0>(0.75, 0, 1);
+            amrex::Real xintThree = splineDeg2.initBSplinesAtPositions<xDir>(0.75, 0, 1);
             EXPECT_EQ(0.75, xintThree);
-            EXPECT_EQ(0., splineDeg2.firstIndex[0]);
+            EXPECT_EQ(0., splineDeg2.firstIndex[xDir]);
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -234,7 +234,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -254,12 +254,12 @@ namespace {
             EXPECT_CALL(spline, initBSplinesAtPositions(1, 1, 1)).WillOnce(::testing::Return(1));
 
             amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
-            spline.template update1DSplines<0>(1, 1, 1);
+            spline.template update1DSplines<xDir>(1, 1, 1);
 
             EXPECT_EQ(1., result);
-            EXPECT_EQ(1., spline.cellSplineVals[0][0]);
-            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);
+            EXPECT_EQ(1., spline.cellSplineVals[xDir][0]);
+            EXPECT_EQ(1., spline.nodeSplineVals[xDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[xDir][1]);
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -273,7 +273,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -292,18 +292,18 @@ namespace {
 
             amrex::Real sCoeff;
 
-            sCoeff = spline.template evalBSpline<1, 0>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<Field::DualTwoForm, xDir>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
-            sCoeff = spline.template evalBSpline<1, 1>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<Field::DualTwoForm, yDir>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
-            sCoeff = spline.template evalBSpline<1, 2>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<Field::DualTwoForm, zDir>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
 
-            sCoeff = spline.template evalBSpline<2, 0>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<Field::DualOneForm, xDir>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
-            sCoeff = spline.template evalBSpline<2, 1>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<Field::DualOneForm, yDir>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
-            sCoeff = spline.template evalBSpline<2, 2>(0, 0, 0);
+            sCoeff = spline.template evalBSpline<Field::DualOneForm, zDir>(0, 0, 0);
             EXPECT_EQ(1., sCoeff);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -318,7 +318,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 

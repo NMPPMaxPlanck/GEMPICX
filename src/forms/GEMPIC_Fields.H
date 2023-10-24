@@ -21,13 +21,13 @@
 
 namespace GEMPIC_Fields
 {
-enum Grid
+enum class Grid
 {
     primal,
     dual
 };
 
-enum Space
+enum class Space
 {
     node,
     edge,
@@ -54,7 +54,7 @@ class DeRhamComplex;
 * For node and cell only scalarData will be allocated, for edge and face only vector data
 */
 
-template <int grid, int space>
+template <Grid grid, Space space>
 struct DeRhamField
 {
     std::shared_ptr<DeRhamComplex> deRham;
@@ -74,7 +74,7 @@ struct DeRhamField
     void operator-=(DeRhamField<grid, space>&);
 };
 
-template <int grid>
+template <Grid grid>
 struct DeRhamField <grid, Space::node>
 {
     amrex::MultiFab data;
@@ -89,7 +89,7 @@ struct DeRhamField <grid, Space::node>
     void multEqual(const amrex::Real& dt);
 };
 
-template <int grid> 
+template <Grid grid> 
 struct DeRhamField <grid, Space::cell>
 {
     amrex::MultiFab data;
@@ -182,24 +182,24 @@ public:
 
         // set index: // 0 -> cell-centered | 1 -> node-centered
         primalNodeIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)});
-        primalEdgeIndex[0] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 1)});
-        primalEdgeIndex[1] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 1)});
-        primalEdgeIndex[2] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 0)});
-        primalFaceIndex[0] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 0)});
-        primalFaceIndex[1] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 0)});
-        primalFaceIndex[2] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 1)});
+        primalEdgeIndex[xDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 1)});
+        primalEdgeIndex[yDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 1)});
+        primalEdgeIndex[zDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 0)});
+        primalFaceIndex[xDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 0)});
+        primalFaceIndex[yDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 0)});
+        primalFaceIndex[zDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 1)});
         primalCellIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)});
 
         // Set masks. Uncommented for now as we are using averageSync()
         /*
-        nodeMask.define(amrex::convert(grid, primalNodeIndex), distriMap, nComp, nGhost[0]); 
-        edgeMask[0].define(amrex::convert(grid, primalEdgeIndex[0]), distriMap, nComp, nGhost[0]); 
-        edgeMask[1].define(amrex::convert(grid, primalEdgeIndex[1]), distriMap, nComp, nGhost[1]); 
-        edgeMask[2].define(amrex::convert(grid, primalEdgeIndex[2]), distriMap, nComp, nGhost[2]); 
-        faceMask[0].define(amrex::convert(grid, primalFaceIndex[0]), distriMap, nComp, nGhost[0]);
-        faceMask[1].define(amrex::convert(grid, primalFaceIndex[1]), distriMap, nComp, nGhost[1]);
-        faceMask[2].define(amrex::convert(grid, primalFaceIndex[2]), distriMap, nComp, nGhost[2]);
-        cellMask.define(amrex::convert(grid, primalCellIndex), deistriMap, nComp, nGhost[0]); 
+        nodeMask.define(amrex::convert(grid, primalNodeIndex), distriMap, nComp, nGhost[xDir]); 
+        edgeMask[xDir].define(amrex::convert(grid, primalEdgeIndex[xDir]), distriMap, nComp, nGhost[xDir]); 
+        edgeMask[yDir].define(amrex::convert(grid, primalEdgeIndex[yDir]), distriMap, nComp, nGhost[yDir]); 
+        edgeMask[zDir].define(amrex::convert(grid, primalEdgeIndex[zDir]), distriMap, nComp, nGhost[zDir]); 
+        faceMask[xDir].define(amrex::convert(grid, primalFaceIndex[xDir]), distriMap, nComp, nGhost[xDir]);
+        faceMask[yDir].define(amrex::convert(grid, primalFaceIndex[yDir]), distriMap, nComp, nGhost[yDir]);
+        faceMask[zDir].define(amrex::convert(grid, primalFaceIndex[zDir]), distriMap, nComp, nGhost[zDir]);
+        cellMask.define(amrex::convert(grid, primalCellIndex), deistriMap, nComp, nGhost[xDir]); 
 
         for (int comp = 0; comp < 3; ++comp)
         {
@@ -216,9 +216,9 @@ public:
 
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                     {
-                        if ((i <= (comp == 0 ? hi[0] : (hi[0] -1))) &&
-                            (j <= (comp == 1 ? hi[1] : (hi[1] -1))) &&
-                            (k <= (comp == 2 ? hi[2] : (hi[2] -1))))
+                        if ((i <= (comp == xDir ? hi[xDir] : (hi[xDir] -1))) &&
+                            (j <= (comp == yDir ? hi[yDir] : (hi[yDir] -1))) &&
+                            (k <= (comp == zDir ? hi[zDir] : (hi[zDir] -1))))
                                maskArr(i, j, k) = 1;
                     });
             }
@@ -243,9 +243,9 @@ public:
 
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                     {
-                        if ((i <= (comp == 0 ? (hi[0] -1) : hi[0])) &&
-                            (j <= (comp == 1 ? (hi[1] -1) : hi[1])) &&
-                            (k <= (comp == 2 ? (hi[2] -1) : hi[2])))
+                        if ((i <= (comp == xDir ? (hi[xDir] -1) : hi[xDir])) &&
+                            (j <= (comp == yDir ? (hi[yDir] -1) : hi[yDir])) &&
+                            (k <= (comp == zDir ? (hi[zDir] -1) : hi[zDir])))
                                maskArr(i, j, k) = 1;
                     });
             }
@@ -274,23 +274,23 @@ public:
     // Function overloads for the initializations
     void initializeField(DeRhamField<Grid::primal, Space::edge>& field)
     {
-        field.data[0].define(amrex::convert(grid, primalEdgeIndex[0]) , distriMap, 1, nGhost);
-        field.data[0].setVal(0.0);
-        field.data[1].define(amrex::convert(grid, primalEdgeIndex[1]) , distriMap, 1, nGhost);
-        field.data[1].setVal(0.0);
-        field.data[2].define(amrex::convert(grid, primalEdgeIndex[2]) , distriMap, 1, nGhost);
-        field.data[2].setVal(0.0);
+        field.data[xDir].define(amrex::convert(grid, primalEdgeIndex[xDir]) , distriMap, 1, nGhost);
+        field.data[xDir].setVal(0.0);
+        field.data[yDir].define(amrex::convert(grid, primalEdgeIndex[yDir]) , distriMap, 1, nGhost);
+        field.data[yDir].setVal(0.0);
+        field.data[zDir].define(amrex::convert(grid, primalEdgeIndex[zDir]) , distriMap, 1, nGhost);
+        field.data[zDir].setVal(0.0);
     }
 
 
     void initializeField(DeRhamField<Grid::primal, Space::face>& field)
     {
-        field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, 1, nGhost);
-        field.data[0].setVal(0.0);
-        field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, 1, nGhost);
-        field.data[1].setVal(0.0);
-        field.data[2].define(amrex::convert(grid, primalFaceIndex[2]) , distriMap, 1, nGhost);
-        field.data[2].setVal(0.0);
+        field.data[xDir].define(amrex::convert(grid, primalFaceIndex[xDir]) , distriMap, 1, nGhost);
+        field.data[xDir].setVal(0.0);
+        field.data[yDir].define(amrex::convert(grid, primalFaceIndex[yDir]) , distriMap, 1, nGhost);
+        field.data[yDir].setVal(0.0);
+        field.data[zDir].define(amrex::convert(grid, primalFaceIndex[zDir]) , distriMap, 1, nGhost);
+        field.data[zDir].setVal(0.0);
     }
 
     void initializeField(DeRhamField<Grid::primal, Space::cell>& field)
@@ -310,23 +310,23 @@ public:
 
     void initializeField(DeRhamField<Grid::dual, Space::edge>& field)
     {
-        field.data[0].define(amrex::convert(grid, primalFaceIndex[0]) , distriMap, 1, nGhost);
-        field.data[0].setVal(0.0);
-        field.data[1].define(amrex::convert(grid, primalFaceIndex[1]) , distriMap, 1, nGhost);
-        field.data[1].setVal(0.0);
-        field.data[2].define(amrex::convert(grid, primalFaceIndex[2]) , distriMap, 1, nGhost);
-        field.data[2].setVal(0.0);
+        field.data[xDir].define(amrex::convert(grid, primalFaceIndex[xDir]) , distriMap, 1, nGhost);
+        field.data[xDir].setVal(0.0);
+        field.data[yDir].define(amrex::convert(grid, primalFaceIndex[yDir]) , distriMap, 1, nGhost);
+        field.data[yDir].setVal(0.0);
+        field.data[zDir].define(amrex::convert(grid, primalFaceIndex[zDir]) , distriMap, 1, nGhost);
+        field.data[zDir].setVal(0.0);
     }
 
 
     void initializeField(DeRhamField<Grid::dual, Space::face>& field)
     {
-        field.data[0].define(amrex::convert(grid, primalEdgeIndex[0]) , distriMap, 1, nGhost);
-        field.data[0].setVal(0.0);
-        field.data[1].define(amrex::convert(grid, primalEdgeIndex[1]) , distriMap, 1, nGhost);
-        field.data[1].setVal(0.0);
-        field.data[2].define(amrex::convert(grid, primalEdgeIndex[2]) , distriMap, 1, nGhost);
-        field.data[2].setVal(0.0);
+        field.data[xDir].define(amrex::convert(grid, primalEdgeIndex[xDir]) , distriMap, 1, nGhost);
+        field.data[xDir].setVal(0.0);
+        field.data[yDir].define(amrex::convert(grid, primalEdgeIndex[yDir]) , distriMap, 1, nGhost);
+        field.data[yDir].setVal(0.0);
+        field.data[zDir].define(amrex::convert(grid, primalEdgeIndex[zDir]) , distriMap, 1, nGhost);
+        field.data[zDir].setVal(0.0);
     }
 
     void initializeField(DeRhamField<Grid::dual, Space::cell>& field)
@@ -341,33 +341,33 @@ public:
     // Function overloads for fill boundary
     void fillBoundary(DeRhamField<Grid::primal, Space::edge>& field)
     {
-        field.data[0].FillBoundary(geom.periodicity());
-        field.data[1].FillBoundary(geom.periodicity());
-        field.data[2].FillBoundary(geom.periodicity());
+        field.data[xDir].FillBoundary(geom.periodicity());
+        field.data[yDir].FillBoundary(geom.periodicity());
+        field.data[zDir].FillBoundary(geom.periodicity());
     }
    
 
     void fillBoundary(DeRhamField<Grid::primal, Space::face>& field)
     {
-        field.data[0].FillBoundary(geom.periodicity());
-        field.data[1].FillBoundary(geom.periodicity());
-        field.data[2].FillBoundary(geom.periodicity());
+        field.data[xDir].FillBoundary(geom.periodicity());
+        field.data[yDir].FillBoundary(geom.periodicity());
+        field.data[zDir].FillBoundary(geom.periodicity());
     }
 
 
     void fillBoundary(DeRhamField<Grid::dual, Space::edge>& field)
     {
-        field.data[0].FillBoundary(geom.periodicity());
-        field.data[1].FillBoundary(geom.periodicity());
-        field.data[2].FillBoundary(geom.periodicity());
+        field.data[xDir].FillBoundary(geom.periodicity());
+        field.data[yDir].FillBoundary(geom.periodicity());
+        field.data[zDir].FillBoundary(geom.periodicity());
     }
    
 
     void fillBoundary(DeRhamField<Grid::dual, Space::face>& field)
     {
-        field.data[0].FillBoundary(geom.periodicity());
-        field.data[1].FillBoundary(geom.periodicity());
-        field.data[2].FillBoundary(geom.periodicity());
+        field.data[xDir].FillBoundary(geom.periodicity());
+        field.data[yDir].FillBoundary(geom.periodicity());
+        field.data[zDir].FillBoundary(geom.periodicity());
     }
 
     void fillBoundary(DeRhamField<Grid::primal, Space::node>& field)
@@ -397,9 +397,9 @@ public:
     void overrideSync(DeRhamField<Grid::primal, Space::edge>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        field.data[0].OverrideSync(edgeMask[0], geom.periodicity());
-        field.data[1].OverrideSync(edgeMask[1], geom.periodicity());
-        field.data[2].OverrideSync(edgeMask[2], geom.periodicity());
+        field.data[xDir].OverrideSync(edgeMask[xDir], geom.periodicity());
+        field.data[yDir].OverrideSync(edgeMask[yDir], geom.periodicity());
+        field.data[zDir].OverrideSync(edgeMask[zDir], geom.periodicity());
 #endif
     }
 
@@ -407,18 +407,18 @@ public:
     void overrideSync(DeRhamField<Grid::primal, Space::face>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        field.data[0].OverrideSync(faceMask[0], geom.periodicity());
-        field.data[1].OverrideSync(faceMask[1], geom.periodicity());
-        field.data[2].OverrideSync(faceMask[2], geom.periodicity());
+        field.data[xDir].OverrideSync(faceMask[xDir], geom.periodicity());
+        field.data[yDir].OverrideSync(faceMask[yDir], geom.periodicity());
+        field.data[zDir].OverrideSync(faceMask[zDir], geom.periodicity());
 #endif
     }
 
     void overrideSync(DeRhamField<Grid::dual, Space::edge>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        field.data[0].OverrideSync(edgeMask[0], geom.periodicity());
-        field.data[1].OverrideSync(edgeMask[1], geom.periodicity());
-        field.data[2].OverrideSync(edgeMask[2], geom.periodicity());
+        field.data[xDir].OverrideSync(edgeMask[xDir], geom.periodicity());
+        field.data[yDir].OverrideSync(edgeMask[yDir], geom.periodicity());
+        field.data[zDir].OverrideSync(edgeMask[zDir], geom.periodicity());
 #endif
     }
 
@@ -426,9 +426,9 @@ public:
     void overrideSync(DeRhamField<Grid::dual, Space::face>& field)
     {
 #if GEMPIC_SPACEDIM == 3
-        field.data[0].OverrideSync(faceMask[0], geom.periodicity());
-        field.data[1].OverrideSync(faceMask[1], geom.periodicity());
-        field.data[2].OverrideSync(faceMask[2], geom.periodicity());
+        field.data[xDir].OverrideSync(faceMask[xDir], geom.periodicity());
+        field.data[yDir].OverrideSync(faceMask[yDir], geom.periodicity());
+        field.data[zDir].OverrideSync(faceMask[zDir], geom.periodicity());
 #endif
     }
 
@@ -448,16 +448,16 @@ public:
 
     void averageSync(DeRhamField<Grid::primal, Space::edge>& field)
     {
-        field.data[0].AverageSync(geom.periodicity());
-        field.data[1].AverageSync(geom.periodicity());
-        field.data[2].AverageSync(geom.periodicity());
+        field.data[xDir].AverageSync(geom.periodicity());
+        field.data[yDir].AverageSync(geom.periodicity());
+        field.data[zDir].AverageSync(geom.periodicity());
     }
 
     void averageSync(DeRhamField<Grid::primal, Space::face>& field)
     {
-        field.data[0].AverageSync(geom.periodicity());
-        field.data[1].AverageSync(geom.periodicity());
-        field.data[2].AverageSync(geom.periodicity());
+        field.data[xDir].AverageSync(geom.periodicity());
+        field.data[yDir].AverageSync(geom.periodicity());
+        field.data[zDir].AverageSync(geom.periodicity());
     }
 
     void averageSync(DeRhamField<Grid::primal, Space::cell>& field)
@@ -472,17 +472,17 @@ public:
 
     void averageSync(DeRhamField<Grid::dual, Space::edge>& field)
     {
-        field.data[0].AverageSync(geom.periodicity());
-        field.data[1].AverageSync(geom.periodicity());
-        field.data[2].AverageSync(geom.periodicity());
+        field.data[xDir].AverageSync(geom.periodicity());
+        field.data[yDir].AverageSync(geom.periodicity());
+        field.data[zDir].AverageSync(geom.periodicity());
     }
 
 
     void averageSync(DeRhamField<Grid::dual, Space::face>& field)
     {
-        field.data[0].AverageSync(geom.periodicity());
-        field.data[1].AverageSync(geom.periodicity());
-        field.data[2].AverageSync(geom.periodicity());
+        field.data[xDir].AverageSync(geom.periodicity());
+        field.data[yDir].AverageSync(geom.periodicity());
+        field.data[zDir].AverageSync(geom.periodicity());
     }
 
 
@@ -574,21 +574,21 @@ public:
 };
 
 // Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type
-template <int grid, int space>
+template <Grid grid, Space space>
 inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc)
     : deRham{drc}
 {
     deRham -> initializeField(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline DeRhamField<grid, Space::node>::DeRhamField(std::shared_ptr<DeRhamComplex> drc)
     : deRham{drc}
 {
     deRham -> initializeField(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline DeRhamField<grid, Space::cell>::DeRhamField(std::shared_ptr<DeRhamComplex> drc)
     : deRham{drc}
 {
@@ -596,7 +596,7 @@ inline DeRhamField<grid, Space::cell>::DeRhamField(std::shared_ptr<DeRhamComplex
 }
 
 // Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type
-template <int grid, int space>
+template <Grid grid, Space space>
 inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func)
     : deRham{drc}
 {
@@ -604,7 +604,7 @@ inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
     deRham->projection(func, 0.0, *this);
 }
 
-template <int grid>
+template <Grid grid>
 inline DeRhamField<grid, Space::node>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, const 
     amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
     : deRham{drc}
@@ -613,7 +613,7 @@ inline DeRhamField<grid, Space::node>::DeRhamField(std::shared_ptr<DeRhamComplex
     deRham -> projection(func, 0.0, *this);
 }
 
-template <int grid>
+template <Grid grid>
 inline DeRhamField<grid, Space::cell>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, const 
     amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
     : deRham{drc}
@@ -623,19 +623,19 @@ inline DeRhamField<grid, Space::cell>::DeRhamField(std::shared_ptr<DeRhamComplex
 }
 
 // FillBoundary of DeRhamFields following the same logic as above
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::fillBoundary()
 {
     deRham -> fillBoundary(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::node>::fillBoundary()
 {
     deRham -> fillBoundary(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::cell>::fillBoundary()
 {
     deRham -> fillBoundary(*this);
@@ -643,13 +643,13 @@ inline void DeRhamField<grid, Space::cell>::fillBoundary()
 
 /*
 // OverrideSync of DeRhamFields
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::overrideSync()
 {
     deRham -> overrideSync(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::node>::overrideSync()
 {
     deRham -> overrideSync(*this);
@@ -658,88 +658,88 @@ inline void DeRhamField<grid, Space::node>::overrideSync()
 
 
 // AverageSync of DeRhamFields
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::averageSync()
 {
     deRham -> averageSync(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::node>::averageSync()
 {
     deRham -> averageSync(*this);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::cell>::averageSync()
 {
     deRham -> averageSync(*this);
 }
 
 // Multiply by scalar
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::multEqual(const amrex::Real& dt)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        data[comp].mult(dt, nGhost[0]);
+        data[comp].mult(dt, nGhost[xDir]);
 }
 
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::operator*=(const amrex::Real& dt)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        data[comp].mult(dt,nGhost[0]);
+        data[comp].mult(dt,nGhost[xDir]);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::node>::multEqual(const amrex::Real& dt)
 {
     auto nGhost = deRham -> getNGhost();
-    data.mult(dt, nGhost[0]);
+    data.mult(dt, nGhost[xDir]);
 }
 
-template <int grid>
+template <Grid grid>
 inline void DeRhamField<grid, Space::cell>::multEqual(const amrex::Real& dt)
 {
     auto nGhost = deRham -> getNGhost();
-    data.mult(dt, nGhost[0]);
+    data.mult(dt, nGhost[xDir]);
 }
 
 // plusEqual
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::plusEqual(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        data[comp].plus(form.data[comp], 0, 1, nGhost[0]);
+        data[comp].plus(form.data[comp], 0, 1, nGhost[xDir]);
 }
 
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::operator+=(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        data[comp].plus(form.data[comp], 0, 1, nGhost[0]);
+        data[comp].plus(form.data[comp], 0, 1, nGhost[xDir]);
 }
 
 
 // minusEqual
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::minusEqual(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        data[comp].minus(form.data[comp], 0, 1, nGhost[0]);
+        data[comp].minus(form.data[comp], 0, 1, nGhost[xDir]);
 }
 
-template <int grid, int space>
+template <Grid grid, Space space>
 inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
 {
     auto nGhost = deRham -> getNGhost();
     for (int comp = 0; comp < 3; ++comp)
-        data[comp].minus(form.data[comp], 0, 1, nGhost[0]);
+        data[comp].minus(form.data[comp], 0, 1, nGhost[xDir]);
 }
 
 }

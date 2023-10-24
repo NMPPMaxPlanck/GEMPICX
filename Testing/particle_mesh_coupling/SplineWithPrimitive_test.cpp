@@ -85,7 +85,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -103,36 +103,36 @@ namespace {
             Spline::SplineWithPrimitive<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
         AMREX_D_TERM(
-            EXPECT_EQ(1., spline.cellSplineVals[0][0]);,
-            EXPECT_EQ(1., spline.cellSplineVals[1][0]);,
-            EXPECT_EQ(1., spline.cellSplineVals[2][0]);)
+            EXPECT_EQ(1., spline.cellSplineVals[xDir][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[yDir][0]);,
+            EXPECT_EQ(1., spline.cellSplineVals[zDir][0]);)
 
         AMREX_D_TERM(
-            EXPECT_EQ(1., spline.nodeSplineVals[0][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[0][1]);,
-            EXPECT_EQ(1., spline.nodeSplineVals[1][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[1][1]);,
-            EXPECT_EQ(1., spline.nodeSplineVals[2][0]);
-            EXPECT_EQ(0., spline.nodeSplineVals[2][1]);)
+            EXPECT_EQ(1., spline.nodeSplineVals[xDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[xDir][1]);,
+            EXPECT_EQ(1., spline.nodeSplineVals[yDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[yDir][1]);,
+            EXPECT_EQ(1., spline.nodeSplineVals[zDir][0]);
+            EXPECT_EQ(0., spline.nodeSplineVals[zDir][1]);)
 
         AMREX_D_TERM(
-            EXPECT_EQ(1., spline.primitiveNew[0][0]);,
-            EXPECT_EQ(1., spline.primitiveNew[1][0]);,
-            EXPECT_EQ(1., spline.primitiveNew[2][0]);)
+            EXPECT_EQ(1., spline.primitiveNew[xDir][0]);,
+            EXPECT_EQ(1., spline.primitiveNew[yDir][0]);,
+            EXPECT_EQ(1., spline.primitiveNew[zDir][0]);)
         }
         ASSERT_TRUE(particleLoopRun);
     }
 
     /**
      * @brief Test the update1DPrimitive method
-     * @details Verify values for different dimensions
+     * @details Verify values for different directions
     */
     TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest) {
         // Adding particle to one cell
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -154,30 +154,30 @@ namespace {
             amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
             EXPECT_EQ(1., result);
 
-            spline.template update1DPrimitive<0>(1, 1, 1);
-            EXPECT_EQ(1., spline.primitiveNew[0][0]);
+            spline.template update1DPrimitive<xDir>(1, 1, 1);
+            EXPECT_EQ(1., spline.primitiveNew[xDir][0]);
         if constexpr(GEMPIC_SPACEDIM > 1) {
-            spline.template update1DPrimitive<1>(1, 1, 1);
-            EXPECT_EQ(1., spline.primitiveNew[1][0]);
+            spline.template update1DPrimitive<yDir>(1, 1, 1);
+            EXPECT_EQ(1., spline.primitiveNew[yDir][0]);
         }
         if constexpr(GEMPIC_SPACEDIM == 3) {
-            spline.template update1DPrimitive<2>(1, 1, 1);
-            EXPECT_EQ(1., spline.primitiveNew[2][0]);
+            spline.template update1DPrimitive<zDir>(1, 1, 1);
+            EXPECT_EQ(1., spline.primitiveNew[zDir][0]);
         }
         }
         ASSERT_TRUE(particleLoopRun);
     }
 
     /**
-     * @brief Test the computePrimitiveDifference method for dimension zero and degree one
+     * @brief Test the computePrimitiveDifference method for direction xDir and degree one
      * @details Verify values for different dx and indices
     */
-    TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDimZeroTest) {
+    TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest) {
         // Adding particle to one cell
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -194,49 +194,49 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineWithPrimitive<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(0, spline.firstIndexOld[0]);
-            EXPECT_EQ(0, spline.firstIndex[0]);
-            EXPECT_EQ(0, spline.firstIndexOld[0] - spline.firstIndex[0]);
+            EXPECT_EQ(0, spline.firstIndexOld[xDir]);
+            EXPECT_EQ(0, spline.firstIndex[xDir]);
+            EXPECT_EQ(0, spline.firstIndexOld[xDir] - spline.firstIndex[xDir]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(-1, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
 
-            spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
-            spline.template update1DPrimitive<0>(0.5, infra.plo[0], infra.dxi[0]);
+            spline.template update1DSplines<xDir>(0.5, infra.plo[xDir], infra.dxi[xDir]);
+            spline.template update1DPrimitive<xDir>(0.5, infra.plo[xDir], infra.dxi[xDir]);
 
-            EXPECT_EQ(0, spline.firstIndexOld[0]);
-            EXPECT_EQ(0, spline.firstIndex[0]);
-            EXPECT_EQ(0, spline.firstIndexOld[0] - spline.firstIndex[0]);
+            EXPECT_EQ(0, spline.firstIndexOld[xDir]);
+            EXPECT_EQ(0, spline.firstIndex[xDir]);
+            EXPECT_EQ(0, spline.firstIndexOld[xDir] - spline.firstIndex[xDir]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(0.5, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.05, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
     }
 
     /**
-     * @brief Test the computePrimitiveDifference method for dimension one and degree one
+     * @brief Test the computePrimitiveDifference method for direction yDir and degree one
      * @details Verify values for different dx and indices
     */
 #if GEMPIC_SPACEDIM > 1
-    TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDimOneTest) {
+    TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest) {
         // Adding particle to one cell
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -253,40 +253,40 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineWithPrimitive<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(0, spline.firstIndexOld[1]);
-            EXPECT_EQ(0, spline.firstIndex[1]);
-            EXPECT_EQ(0, spline.firstIndexOld[1] - spline.firstIndex[1]);
+            EXPECT_EQ(0, spline.firstIndexOld[yDir]);
+            EXPECT_EQ(0, spline.firstIndex[yDir]);
+            EXPECT_EQ(0, spline.firstIndexOld[yDir] - spline.firstIndex[yDir]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 1);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<yDir>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<yDir>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(-1, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<yDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(-0.1, primitiveDifference);
 
-            spline.template update1DSplines<1>(0.5, infra.plo[1], infra.dxi[1]);
-            spline.template update1DPrimitive<1>(0.5, infra.plo[1], infra.dxi[1]);
+            spline.template update1DSplines<yDir>(0.5, infra.plo[yDir], infra.dxi[yDir]);
+            spline.template update1DPrimitive<yDir>(0.5, infra.plo[yDir], infra.dxi[yDir]);
 
-            EXPECT_EQ(0, spline.firstIndexOld[1]);
-            EXPECT_EQ(0, spline.firstIndex[1]);
-            EXPECT_EQ(0, spline.firstIndexOld[1] - spline.firstIndex[1]);
+            EXPECT_EQ(0, spline.firstIndexOld[yDir]);
+            EXPECT_EQ(0, spline.firstIndex[yDir]);
+            EXPECT_EQ(0, spline.firstIndexOld[yDir] - spline.firstIndex[yDir]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<yDir>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(1, 1, 1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<yDir>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(0.5, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<1>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<yDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.05, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
     }
 #endif
     /**
-     * @brief Test the computePrimitiveDifference method for dimension zero and degree two
+     * @brief Test the computePrimitiveDifference method for direction xDir and degree two
      * @details Verify values for different dx and indices
     */
 #if GEMPIC_SPACEDIM == 3
@@ -295,7 +295,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -312,30 +312,30 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineWithPrimitive<2, 2, 2> spline(position, infra.plo, infra.dxi);
 
-            EXPECT_EQ(0, spline.firstIndexOld[0]);
-            EXPECT_EQ(-1, spline.firstIndex[0]);
-            EXPECT_EQ(1, spline.firstIndexOld[0] - spline.firstIndex[0]);
+            EXPECT_EQ(0, spline.firstIndexOld[xDir]);
+            EXPECT_EQ(-1, spline.firstIndex[xDir]);
+            EXPECT_EQ(1, spline.firstIndexOld[xDir] - spline.firstIndex[xDir]);
 
-            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
+            amrex::Real primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(-0.125, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(-0.0125, primitiveDifference);
 
-            spline.template update1DSplines<0>(0.5, infra.plo[0], infra.dxi[0]);
-            spline.template update1DPrimitive<0>(0.5, infra.plo[0], infra.dxi[0]);
+            spline.template update1DSplines<xDir>(0.5, infra.plo[xDir], infra.dxi[xDir]);
+            spline.template update1DPrimitive<xDir>(0.5, infra.plo[xDir], infra.dxi[xDir]);
 
-            EXPECT_EQ(-1, spline.firstIndexOld[0]);
-            EXPECT_EQ(0, spline.firstIndex[0]);
-            EXPECT_EQ(-1, spline.firstIndexOld[0] - spline.firstIndex[0]);
+            EXPECT_EQ(-1, spline.firstIndexOld[xDir]);
+            EXPECT_EQ(0, spline.firstIndex[xDir]);
+            EXPECT_EQ(-1, spline.firstIndexOld[xDir] - spline.firstIndex[xDir]);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 1);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 1);
             EXPECT_EQ(0.375, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(1, 1, 1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(1, 1, 1)}, 0);
             EXPECT_EQ(0.125, primitiveDifference);
 
-            primitiveDifference = spline.template computePrimitiveDifference<0>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
+            primitiveDifference = spline.template computePrimitiveDifference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
             EXPECT_EQ(0.0125, primitiveDifference);
         }
         ASSERT_TRUE(particleLoopRun);
@@ -351,7 +351,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -371,28 +371,28 @@ namespace {
             amrex::Real factor;
 
             amrex::GpuArray<amrex::Real, 1> sMinusOne;
-            spline.primitiveEval<-1, 1>(0, sMinusOne);
+            spline.primitiveEval<-1>(0, sMinusOne);
             EXPECT_EQ(1, sMinusOne[0]);
 
             amrex::GpuArray<amrex::Real, 1> sZero;
-            spline.primitiveEval<0, 1>(0.5, sZero);
+            spline.primitiveEval<0>(0.5, sZero);
             EXPECT_EQ(0.5, sZero[0]);
 
             amrex::GpuArray<amrex::Real, 2> sOne;
-            spline.primitiveEval<1, 2>(0, sOne);
+            spline.primitiveEval<1>(0, sOne);
             EXPECT_EQ(0, sOne[0]);
             EXPECT_EQ(0.5, sOne[1]);
 
             amrex::GpuArray<amrex::Real, 3> sTwo;
             factor = (1./6.);
-            spline.primitiveEval<2, 3>(0, sTwo);
+            spline.primitiveEval<2>(0, sTwo);
             EXPECT_EQ(0, sTwo[0]);
             EXPECT_EQ(1./6., sTwo[1]);
             EXPECT_EQ(-1. * factor + 1., sTwo[2]);
 
             amrex::GpuArray<amrex::Real, 4> sThree;
             factor = (1./24.);
-            spline.primitiveEval<3, 4>(0, sThree);
+            spline.primitiveEval<3>(0, sThree);
             EXPECT_EQ(0, sThree[0]);
             EXPECT_EQ(1./24., sThree[1]);
             EXPECT_EQ(0.5, sThree[2]);
@@ -400,7 +400,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 5> sFour;
             factor = (1./120.);
-            spline.primitiveEval<4, 5>(0, sFour);
+            spline.primitiveEval<4>(0, sFour);
             EXPECT_EQ(0, sFour[0]);
             EXPECT_EQ(1. * factor, sFour[1]);
             EXPECT_EQ(27. * factor, sFour[2]);
@@ -409,7 +409,7 @@ namespace {
 
             amrex::GpuArray<amrex::Real, 6> sFive;
             factor = (1./720.);
-            spline.primitiveEval<5, 6>(0, sFive);
+            spline.primitiveEval<5>(0, sFive);
             EXPECT_EQ(0, sFive[0]);
             EXPECT_EQ(1./720., sFive[1]);
             EXPECT_EQ(58. * factor, sFive[2]);
