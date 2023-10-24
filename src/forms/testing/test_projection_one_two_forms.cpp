@@ -84,17 +84,17 @@ int main (int argc, char *argv[])
 
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
+                    AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])
                 };
 
-                if (comp == 0)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[0] + dr[0]) - std::sin(r[0]), std::cos(r[1]), std::cos(r[2]));
+                if (comp == xDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[xDir] + dr[xDir]) - std::sin(r[xDir]), std::cos(r[yDir]), std::cos(r[zDir]));
 
-                if (comp == 1)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::sin(r[1] + dr[1]) - std::sin(r[1]), std::cos(r[2]));
+                if (comp == yDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::sin(r[yDir] + dr[yDir]) - std::sin(r[yDir]), std::cos(r[zDir]));
 
-                if (comp == 2)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::sin(r[2] + dr[2]) - std::sin(r[2]));
+                if (comp == zDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::cos(r[yDir]), std::sin(r[zDir] + dr[zDir]) - std::sin(r[zDir]));
             });
         }
     }
@@ -126,9 +126,9 @@ int main (int argc, char *argv[])
         }
     }
 
-    amrex::Real errorEx_norm0 = errorE.data[0].norm0();
-    amrex::Real errorEy_norm0 = errorE.data[1].norm0();
-    amrex::Real errorEz_norm0 = errorE.data[2].norm0();
+    amrex::Real errorEx_norm0 = errorE.data[xDir].norm0();
+    amrex::Real errorEy_norm0 = errorE.data[yDir].norm0();
+    amrex::Real errorEz_norm0 = errorE.data[zDir].norm0();
 
     if (std::max({errorEx_norm0, errorEy_norm0, errorEz_norm0}) < tol)
         passE = true;
@@ -177,17 +177,17 @@ int main (int argc, char *argv[])
             {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
+                    AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])
                 };
 
-                if (comp == 0)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::sin(r[1] + dr[1]) - std::sin(r[1]), std::sin(r[2] + dr[2]) - std::sin(r[2]));
+                if (comp == xDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::sin(r[yDir] + dr[yDir]) - std::sin(r[yDir]), std::sin(r[zDir] + dr[zDir]) - std::sin(r[zDir]));
 
-                if (comp == 1)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[0] + dr[0]) - std::sin(r[0]), std::cos(r[1]), std::sin(r[2] + dr[2]) - std::sin(r[2]));
+                if (comp == yDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[xDir] + dr[xDir]) - std::sin(r[xDir]), std::cos(r[yDir]), std::sin(r[zDir] + dr[zDir]) - std::sin(r[zDir]));
 
-                if (comp == 2)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[0] + dr[0]) - std::sin(r[0]), std::sin(r[1] + dr[1]) - std::sin(r[1]), std::cos(r[2]));
+                if (comp == zDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[xDir] + dr[xDir]) - std::sin(r[xDir]), std::sin(r[yDir] + dr[yDir]) - std::sin(r[yDir]), std::cos(r[zDir]));
             });
 
         }
@@ -220,9 +220,9 @@ int main (int argc, char *argv[])
     }
 
 
-    amrex::Real errorBx_norm0 = errorB.data[0].norm0();
-    amrex::Real errorBy_norm0 = errorB.data[1].norm0();
-    amrex::Real errorBz_norm0 = errorB.data[2].norm0();
+    amrex::Real errorBx_norm0 = errorB.data[xDir].norm0();
+    amrex::Real errorBy_norm0 = errorB.data[yDir].norm0();
+    amrex::Real errorBz_norm0 = errorB.data[zDir].norm0();
 
     if (std::max({errorBx_norm0, errorBy_norm0, errorBz_norm0}) < tol)
         passB = true;
@@ -273,17 +273,17 @@ int main (int argc, char *argv[])
             {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
+                    AMREX_D_DECL(r0[xDir] + 0.5*dr[xDir] + i * dr[xDir], r0[yDir] + 0.5*dr[yDir] + j * dr[yDir], r0[zDir] + 0.5*dr[zDir] + k * dr[zDir])
                 };
                 
-                if (comp == 0)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[0]) - std::sin(r[0] - dr[0]), std::cos(r[1]), std::cos(r[2]));
+                if (comp == xDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[xDir]) - std::sin(r[xDir] - dr[xDir]), std::cos(r[yDir]), std::cos(r[zDir]));
 
-                if (comp == 1)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::sin(r[1]) - std::sin(r[1] - dr[1]), std::cos(r[2]));
+                if (comp == yDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::sin(r[yDir]) - std::sin(r[yDir] - dr[yDir]), std::cos(r[zDir]));
 
-                if (comp == 2)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::sin(r[2]) - std::sin(r[2] - dr[2]));
+                if (comp == zDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::cos(r[yDir]), std::sin(r[zDir]) - std::sin(r[zDir] - dr[zDir]));
             });
 
         }
@@ -313,9 +313,9 @@ int main (int argc, char *argv[])
 
     bool passH = false;
     
-    amrex::Real errorHx_norm0 = errorH.data[0].norm0();
-    amrex::Real errorHy_norm0 = errorH.data[1].norm0();
-    amrex::Real errorHz_norm0 = errorH.data[2].norm0();
+    amrex::Real errorHx_norm0 = errorH.data[xDir].norm0();
+    amrex::Real errorHy_norm0 = errorH.data[yDir].norm0();
+    amrex::Real errorHz_norm0 = errorH.data[zDir].norm0();
 
     if (std::max({errorHx_norm0, errorHy_norm0, errorHz_norm0}) < tol)
         passH = true;
@@ -366,17 +366,17 @@ int main (int argc, char *argv[])
             {
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                    AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
+                    AMREX_D_DECL(r0[xDir] + 0.5*dr[xDir] + i * dr[xDir], r0[yDir] + 0.5*dr[yDir] + j * dr[yDir], r0[zDir] + 0.5*dr[zDir] + k * dr[zDir])
                 };
 
-                if (comp == 0)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::sin(r[1]) - std::sin(r[1] - dr[1]), std::sin(r[2]) - std::sin(r[2] - dr[2]));
+                if (comp == xDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::sin(r[yDir]) - std::sin(r[yDir] - dr[yDir]), std::sin(r[zDir]) - std::sin(r[zDir] - dr[zDir]));
 
-                if (comp == 1)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[0]) - std::sin(r[0] - dr[0]), std::cos(r[1]), std::sin(r[2]) - std::sin(r[2] - dr[2]));
+                if (comp == yDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[xDir]) - std::sin(r[xDir] - dr[xDir]), std::cos(r[yDir]), std::sin(r[zDir]) - std::sin(r[zDir] - dr[zDir]));
 
-                if (comp == 2)
-                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[0]) - std::sin(r[0] - dr[0]), std::sin(r[1]) - std::sin(r[1] - dr[1]), std::cos(r[2]));
+                if (comp == zDir)
+                    oneForm(i, j, k) = GEMPIC_D_MULT(std::sin(r[xDir]) - std::sin(r[xDir] - dr[xDir]), std::sin(r[yDir]) - std::sin(r[yDir] - dr[yDir]), std::cos(r[zDir]));
             });
 
         }
@@ -406,9 +406,9 @@ int main (int argc, char *argv[])
 
     bool passD = false;
     
-    amrex::Real errorDx_norm0 = errorD.data[0].norm0();
-    amrex::Real errorDy_norm0 = errorD.data[1].norm0();
-    amrex::Real errorDz_norm0 = errorD.data[2].norm0();
+    amrex::Real errorDx_norm0 = errorD.data[xDir].norm0();
+    amrex::Real errorDy_norm0 = errorD.data[yDir].norm0();
+    amrex::Real errorDz_norm0 = errorD.data[zDir].norm0();
 
     /*
     amrex::Print() << "errorEx_norm0 = " << errorEx_norm0 << ", errorEy_norm0 = " << errorEy_norm0 << ", errorEz_norm0 = " << errorEz_norm0 << std::endl;
@@ -431,18 +431,18 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_projection_one_two_forms.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
 
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[0] = " << errorEx_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[1] = " << errorEy_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[2] = " << errorEz_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[0] = " << errorBx_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[1] = " << errorBy_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[2] = " << errorBz_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[0] = " << errorHx_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[1] = " << errorHy_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[2] = " << errorHz_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[0] = " << errorDx_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[1] = " << errorDy_norm0 << std::endl;
-    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[2] = " << errorDz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[xDir] = " << errorEx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[yDir] = " << errorEy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error E[zDir] = " << errorEz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[xDir] = " << errorBx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[yDir] = " << errorBy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error B[zDir] = " << errorBz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[xDir] = " << errorHx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[yDir] = " << errorHy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error H[zDir] = " << errorHz_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[xDir] = " << errorDx_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[yDir] = " << errorDy_norm0 << std::endl;
+    amrex::PrintToFile("test_projection_one_two_forms.output") << "max Error D[zDir] = " << errorDz_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_projection_one_two_forms.output.0", "test_projection_one_two_forms.output");

@@ -1,7 +1,7 @@
 1D test passed
-max Error gradQ[0] = 3.33067e-16
-max Error gradQ[1] = 0
-max Error gradQ[2] = 0
-max Error gradQDual[0] = 4.44089e-16
-max Error gradQDual[1] = 0
-max Error gradQDual[2] = 0
+max Error gradQ[xDir] = 3.33067e-16
+max Error gradQ[yDir] = 0
+max Error gradQ[zDir] = 0
+max Error gradQDual[xDir] = 4.44089e-16
+max Error gradQDual[yDir] = 0
+max Error gradQDual[zDir] = 0

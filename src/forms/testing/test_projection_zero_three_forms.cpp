@@ -73,10 +73,10 @@ int main (int argc, char *argv[])
         {
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
+                AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])
             };
 
-            zeroForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::cos(r[2]));
+            zeroForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::cos(r[yDir]), std::cos(r[zDir]));
         });
     }
 
@@ -135,10 +135,10 @@ int main (int argc, char *argv[])
         {
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
+                AMREX_D_DECL(r0[xDir] + 0.5*dr[xDir] + i * dr[xDir], r0[yDir] + 0.5*dr[yDir] + j * dr[yDir], r0[zDir] + 0.5*dr[zDir] + k * dr[zDir])
             };
             
-            zeroForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[0]), std::cos(r[1]), std::cos(r[2]));
+            zeroForm(i, j, k) = GEMPIC_D_MULT(std::cos(r[xDir]), std::cos(r[yDir]), std::cos(r[zDir]));
         });
 
     }
@@ -197,10 +197,10 @@ int main (int argc, char *argv[])
         {
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                AMREX_D_DECL(r0[0] + i * dr[0], r0[1] + j * dr[1], r0[2] + k * dr[2])
+                AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])
             };
             
-            threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[0] + dr[0]) - std::sin(r[0])), (std::sin(r[1] + dr[1]) - std::sin(r[1])), (std::sin(r[2] + dr[2]) - std::sin(r[2])));
+            threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[xDir] + dr[xDir]) - std::sin(r[xDir])), (std::sin(r[yDir] + dr[yDir]) - std::sin(r[yDir])), (std::sin(r[zDir] + dr[zDir]) - std::sin(r[zDir])));
         });
     }
 
@@ -259,10 +259,10 @@ int main (int argc, char *argv[])
 
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
             {
-                AMREX_D_DECL(r0[0] + 0.5*dr[0] + i * dr[0], r0[1] + 0.5*dr[1] + j * dr[1], r0[2] + 0.5*dr[2] + k * dr[2])
+                AMREX_D_DECL(r0[xDir] + 0.5*dr[xDir] + i * dr[xDir], r0[yDir] + 0.5*dr[yDir] + j * dr[yDir], r0[zDir] + 0.5*dr[zDir] + k * dr[zDir])
             };
 
-            threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[0]) - std::sin(r[0] - dr[0])), (std::sin(r[1]) - std::sin(r[1] - dr[1])), (std::sin(r[2]) - std::sin(r[2] - dr[2])));
+            threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[xDir]) - std::sin(r[xDir] - dr[xDir])), (std::sin(r[yDir]) - std::sin(r[yDir] - dr[yDir])), (std::sin(r[zDir]) - std::sin(r[zDir] - dr[zDir])));
         });
 
     }

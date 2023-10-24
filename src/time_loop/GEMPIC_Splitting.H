@@ -66,7 +66,7 @@ namespace Time_Loop {
  *      (d/dt) D_i  = - J_i                                 (H_kin_i_D)
  *      (d/dt) B  = 0                                       (H_kin_i_B)
  *      
- *    where D_i (and J_i) contain the dofs of D (and J) on dual faces normal to dimension i 
+ *    where D_i (and J_i) contain the dofs of D (and J) on dual faces normal to direction i 
  * 
  *  - the electric part 
  *      H_e = 1/2 D^T tHH_2 D
@@ -90,7 +90,7 @@ namespace Time_Loop {
  *  
  *    where tCC is the matrix of the dual curl operator (mapping dual edge dofs to dual face dofs)
 */
-template<int vdim, int degx, int degy, int degz, int degmw>
+template<unsigned int vdim, int degx, int degy, int degz, int degmw>
 class OperatorHamilton {
     public:
 
@@ -123,24 +123,24 @@ class OperatorHamilton {
     {
         // evaluate the electric field
         amrex::GpuArray<amrex::Real, vdim> efield =
-            spline.template evalSplineField<vdim, 1>(eA);
+            spline.template evalSplineField<Field::PrimalOneForm>(eA);
 
         // push v with the electric field
-        push_v_efield<vdim>(vel, dt, chargemass, efield);
+        push_v_efield(vel, dt, chargemass, efield);
 
-        velx[pp] = vel[0];
-        vely[pp] = vel[1];
-        velz[pp] = vel[2];
+        velx[pp] = vel[xDir];
+        vely[pp] = vel[yDir];
+        velz[pp] = vel[zDir];
     }
 
 /**
  * @brief computes different fields in order to solve the ODE system (H_kin_i) for one given particle and direction i
  * 
  * Specifically, this function:
- *  - (1) pushes x_p with constant velocity along dimension i
+ *  - (1) pushes x_p with constant velocity along direction i
  *  - (2) deposits the current associated with this trajectory
  *  - (3) computes the integrated B field along this trajectory \<B\>_p = int_{0}^dt B(x_p(t)) dt 
- *  - (4) pushes v_p on dimensions i-1 and i+1 using \<B\>_p
+ *  - (4) pushes v_p on directions i-1 and i+1 using \<B\>_p
  *   
  * Equation (H_kin_i_D) is only solved after this function has been called for all particles:
  * then the full current density has been computed and the full electric field can be updated.
@@ -148,14 +148,14 @@ class OperatorHamilton {
  * Also, the new particle position and velocities are not updated in the global particle arrays.
  * This must be done outside this function.
  * 
- * @tparam dim : direction of the splitting (starting at dim = 0)
+ * @tparam dir : direction of the splitting (starting at dir = 0)
  * 
  * @param pos : position of the given particle
  * @param vel : velocity of the given particle
  * @param infra : computational domain
  * @param spline : object containing the values of non-zero grid splines at the particle position
  * @param bfields : temporary array to store the values of the integrated B field
- * @param dx : cell size in every dimension
+ * @param dx : cell size in every direction
  * @param jA : array of J density coefficients (dual face dofs)
  * @param bA : array of B field coefficients (primal face dofs)
  * @param chargemass : (q/m)_p ratio
@@ -163,7 +163,7 @@ class OperatorHamilton {
  * @param dt : time step
  * 
 */
-    template<int dim, class SplineType = Spline::SplineBase<degx, degy, degz>>
+    template<Direction dir, class SplineType = Spline::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_H_p_i (
                             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &pos,
                             amrex::GpuArray<amrex::Real, vdim> &vel,
@@ -178,17 +178,16 @@ class OperatorHamilton {
                             amrex::Real const dt
     ) const
     {
-        amrex::Real x_new = pos[dim] + dt * vel[dim];
+        amrex::Real x_new = pos[dir] + dt * vel[dir];
 
-        spline.template update1DSplines<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
-        spline.template update1DPrimitive<dim>(x_new, infra.plo[dim], infra.dxi[dim]);
+        spline.template update1DSplines<dir>(x_new, infra.plo[dir], infra.dxi[dir]);
+        spline.template update1DPrimitive<dir>(x_new, infra.plo[dir], infra.dxi[dir]);
 
-        accumulate_J_integrate_B<SplineType, vdim, dim>
-                                    (spline, chargeWeight, dx, bA, jA, bfields);
+        accumulate_J_integrate_B<dir>(spline, chargeWeight, dx, bA, jA, bfields);
 
-        if (vdim > 1) vel[(dim+1)%3] = vel[(dim+1)%3] - chargemass * bfields[0];
-        if (vdim > 2) vel[(dim+2)%3] = vel[(dim+2)%3] + chargemass * bfields[1];
-        pos[dim] = x_new;
+        if (vdim > 1) vel[(dir+1)%3] = vel[(dir+1)%3] - chargemass * bfields[0];
+        if (vdim > 2) vel[(dir+2)%3] = vel[(dir+2)%3] + chargemass * bfields[1];
+        pos[dir] = x_new;
     }
 
 /**
@@ -245,8 +244,8 @@ class OperatorHamilton {
     }
 };
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degmw,
-         int ndata, bool electromagnetic, bool profiling>
+template<unsigned int vdim, unsigned int numspec, int degx, int degy, int degz, int degmw,
+         unsigned int ndata, bool electromagnetic, bool profiling>
 class Splitting {
 
     public:

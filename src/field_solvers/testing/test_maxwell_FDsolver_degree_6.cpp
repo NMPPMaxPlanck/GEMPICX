@@ -70,7 +70,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     DeRhamField<Grid::primal, Space::face> curlE(deRham);
     DeRhamField<Grid::dual, Space::face> curlH(deRham);
 
-    // Analytical solutions in every dimension
+    // Analytical solutions in every direction
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalD = {"0.",
                                                       "cos(x-t)",

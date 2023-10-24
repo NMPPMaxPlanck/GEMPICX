@@ -23,13 +23,13 @@ int main (int argc, char *argv[])
     amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> func; 
     amrex::Parser parser;
     
-    parser.define(analyticalE[0]);
-    parser.define(analyticalE[1]);
-    parser.define(analyticalE[2]);
+    parser.define(analyticalE[xDir]);
+    parser.define(analyticalE[yDir]);
+    parser.define(analyticalE[zDir]);
     parser.registerVariables({"x"});
-    func[0] = parser.compile<nVar>();
-    func[1] = parser.compile<nVar>();
-    func[2] = parser.compile<nVar>();
+    func[xDir] = parser.compile<nVar>();
+    func[yDir] = parser.compile<nVar>();
+    func[zDir] = parser.compile<nVar>();
 
     Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
     const amrex::Geometry geom = params.geometry();
@@ -56,20 +56,20 @@ int main (int argc, char *argv[])
 
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r =
                 {
-                 AMREX_D_DECL(r0[0] + i*dr[0],
-                 r0[1] + j*dr[1],
-                 r0[2] + k*dr[2])
+                 AMREX_D_DECL(r0[xDir] + i*dr[xDir],
+                 r0[yDir] + j*dr[yDir],
+                 r0[zDir] + k*dr[zDir])
                 };
 
-                oneForm(i, j, k) = func[comp](AMREX_D_DECL(r[0], r[1], r[2]));
+                oneForm(i, j, k) = func[comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]));
             });
 
             // Modify MF boundaries to see whether the value is averaged
             // There are 4 values intersecting 1, 1, 1.3, 1.7 (the 5th 4,0,0 does not refer to the same centeredness
             // => oneForm(4, 0, 0)[2] will be rounded to (1.3 + 1.7 + 1 + 1) / 4
-            if (comp == 2 && mfi.index() == 0)
+            if (comp == zDir && mfi.index() == 0)
                 oneForm(4, 0, 0) = 1.3;
-            if (comp == 2 && mfi.index() == 1)
+            if (comp == zDir && mfi.index() == 1)
                 oneForm(4, 0, 0) = 1.7;
         }
     }
@@ -79,12 +79,12 @@ int main (int argc, char *argv[])
     // Calculate the averages manually
     const amrex::Real aux = (1.0 + 1.0 + 1.3 + 1.7)/4;
     bool passed = true;
-    for (amrex::MFIter mfi(field.data[2]); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi(field.data[zDir]); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
         const auto lo = lbound(bx);
         const auto hi = ubound(bx);
-        passed = (aux == (field.data[2])[0].array()(4,0,0)) && (aux == field.data[2][1].array()(4,0,0));
+        passed = (aux == (field.data[zDir])[0].array()(4,0,0)) && (aux == field.data[zDir][1].array()(4,0,0));
     }
 
     if (passed == true)

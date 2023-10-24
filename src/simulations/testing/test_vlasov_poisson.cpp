@@ -52,7 +52,7 @@ void write_Ex(DeRhamField<Grid::primal, Space::edge> &E, computational_domain& i
  
         amrex::Vector<std::string> varnames{{"Ex"}};
  
-        amrex::WriteSingleLevelPlotfile(plotfilename, E.data[0], varnames, infra.geom, time, 0);
+        amrex::WriteSingleLevelPlotfile(plotfilename, E.data[xDir], varnames, infra.geom, time, 0);
 }
 
 
@@ -63,7 +63,7 @@ void filter(DeRhamField<Grid::dual, Space::cell> &rho, DeRhamField<Grid::dual, S
     for (int pass = 0; pass < npass; pass++)
     {  
         // amrex::Print() << "filt pass " << pass << std::endl;
-        for (int dimension = 0; dimension < 3; dimension++)
+        for (int direction = 0; direction < 3; direction++)
         {
             for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi) // Loop over grids
             {
@@ -78,9 +78,9 @@ void filter(DeRhamField<Grid::dual, Space::cell> &rho, DeRhamField<Grid::dual, S
                                 amrex::Real val = 0.0;
                                 for (int d = 0; d < 3; d++)
                                 {
-                                    val += coef[d] * rhoArr(i + (dimension == 0 ? d - 1 : 0),
-                                                            j + (dimension == 1 ? d - 1 : 0),
-                                                            k + (dimension == 2 ? d - 1 : 0));
+                                    val += coef[d] * rhoArr(i + (direction == xDir ? d - 1 : 0),
+                                                            j + (direction == yDir ? d - 1 : 0),
+                                                            k + (direction == zDir ? d - 1 : 0));
                                 }
                                 rhoTempArr(i, j, k) = val;
                             });                    
@@ -98,8 +98,8 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc, argv);
 
     // Linear splines is ok, and lower dimension Hodge is good enough
-    constexpr int vdim{3};
-    constexpr int numspec{1};
+    constexpr unsigned int vdim{3};
+    constexpr unsigned int numspec{1};
     // Spline degrees
     constexpr int degx{1};
     constexpr int degy{1};
@@ -108,13 +108,13 @@ int main(int argc, char* argv[])
     constexpr int hodgeDegree{2};
 
 {
-    gempic_parameters<vdim, numspec> parametersVP;
+    gempic_parameters<numspec> parametersVP;
     parametersVP.read_pp_params();
     parametersVP.set_computed_params();
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {AMREX_D_DECL(
-                                                     parametersVP.is_periodic[0],
-                                                     parametersVP.is_periodic[1],
-                                                     parametersVP.is_periodic[2])};
+                                                     parametersVP.is_periodic[xDir],
+                                                     parametersVP.is_periodic[yDir],
+                                                     parametersVP.is_periodic[zDir])};
 
     Parameters params(parametersVP.real_box,
                       parametersVP.n_cell,
@@ -161,12 +161,12 @@ int main(int argc, char* argv[])
     amrex::Vector<amrex::Vector<amrex::Real>> vThermal = {{1.0, 1.0, 1.0}};
     amrex::Vector<amrex::Real> vWeight = {1.0};
 
-    init_particles_full_domain<vdim, numspec>(infra,
-                                              electrons,
-                                              parametersVP.n_part_per_cell,
-                                              meanVelocity,
-                                              vThermal, vWeight, 0,
-                                              parametersVP.densityEval[0]);
+    init_particles_full_domain(infra,
+                               electrons,
+                               parametersVP.n_part_per_cell,
+                               meanVelocity,
+                               vThermal, vWeight, 0,
+                               parametersVP.densityEval[0]);
 
     const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
     const int npass = 3; // Number of filter passes
@@ -198,8 +198,7 @@ int main(int argc, char* argv[])
                                     positionParticle[d] = particles[pp].pos(d);
                                 Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
                                 // Needs at least max(degx, degy, degz) ghost cells
-                                gempic_deposit_rho<degx, degy, degz>(
-                                    spline, charge * weight[pp], rhoarr);
+                                gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
                                     //spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
                                     //rhoarr);
                             });
@@ -256,8 +255,7 @@ int main(int argc, char* argv[])
 
                     Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
 
-                    gempic_deposit_rho<degx, degy, degz>(
-                        spline, charge * weight[pp], rhoarr);
+                    gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
                         //spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
 
@@ -310,26 +308,26 @@ int main(int argc, char* argv[])
 
                     // evaluate the electric field
                     amrex::GpuArray<amrex::Real, vdim> efield =
-                        spline.template evalSplineField<vdim, 1>(eA);
+                        spline.template evalSplineField<Field::PrimalOneForm>(eA);
 
                     // push v with the electric field over dt/2
-                    push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
+                    push_v_efield(vel, dt * 0.5, chargemass, efield);
 
 
                     // rotate v with magnetic field over dt
-                    amrex::Real vx = vel[0];
-                    amrex::Real vy = vel[1];
+                    amrex::Real vx = vel[xDir];
+                    amrex::Real vy = vel[yDir];
 
-                    vel[0] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
-                    vel[1] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
+                    vel[xDir] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
+                    vel[yDir] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
 
                     // push v with the electric field over dt/2
-                    push_v_efield<vdim>(vel, dt * 0.5, chargemass, efield);
+                    push_v_efield(vel, dt * 0.5, chargemass, efield);
 
                     // update global particle velocities arrays    
-                    velx[pp] = vel[0];
-                    vely[pp] = vel[1];
-                    velz[pp] = vel[2];
+                    velx[pp] = vel[xDir];
+                    vely[pp] = vel[yDir];
+                    velz[pp] = vel[zDir];
 
                     for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
                     {
@@ -339,8 +337,7 @@ int main(int argc, char* argv[])
 
                     Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
 
-                    gempic_deposit_rho<degx, degy, degz>(
-                        splineNew, charge * weight[pp], rhoarr);
+                    gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
                         // splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp], rhoarr);
                 });
             }

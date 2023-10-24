@@ -28,7 +28,7 @@ namespace GEMPIC_TestUtils {
 
     // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
     // of all particles to be added.
-    template<int vdim, int numSpec, int numParticles>
+    template<unsigned int vdim, unsigned int numSpec, size_t numParticles>
     void addSingleParticles (
         amrex::GpuArray<std::unique_ptr<Gempic::Particles::particle_groups<vdim>>, numSpec>& particleGroup,
         computational_domain& infra,
@@ -50,12 +50,12 @@ namespace GEMPIC_TestUtils {
             for (int i{0}; i < numParticles; i++) {
                 // make sure particle is within box (and not previously added? Why?)
                 if (!checklist[i] AMREX_D_TERM(
-                    && (lo[0]*infra.dx[0] <= positions[i][0]) && 
-                                            (positions[i][0] < (hi[0] + 1)*infra.dx[0]),
-                    && (lo[1]*infra.dx[1] <= positions[i][1]) &&
-                                            (positions[i][1] < (hi[1] + 1)*infra.dx[1]),
-                    && (lo[2]*infra.dx[2] <= positions[i][2]) &&
-                                            (positions[i][2] < (hi[2] + 1)*infra.dx[2])))
+                    && (lo[xDir]*infra.dx[xDir] <= positions[i][xDir]) && 
+                                            (positions[i][xDir] < (hi[xDir] + 1)*infra.dx[xDir]),
+                    && (lo[yDir]*infra.dx[yDir] <= positions[i][yDir]) &&
+                                            (positions[i][yDir] < (hi[yDir] + 1)*infra.dx[yDir]),
+                    && (lo[zDir]*infra.dx[zDir] <= positions[i][zDir]) &&
+                                            (positions[i][zDir] < (hi[zDir] + 1)*infra.dx[zDir])))
                 {
                     particleGroup[spec]->add_particle(positions[i], velocities[i], weights[i],
                                                       particles);
@@ -75,5 +75,26 @@ namespace GEMPIC_TestUtils {
                         "\nUpper: " << stringArray(infra.geom.ProbHi(), GEMPIC_SPACEDIM);
         }
     }
+
+    /* Helper function to check entries of a field given a series of conditions and a default
+     * value. Check order is prioritized, so a set of indices only fulfill the first succesful
+     * condition.
+     * 
+     * Parameters:
+     * ----------
+     * @param line: int, the line from which the function was called
+     * @param fieldArr: amrex::Array4, array containing field values in an easily reached accessor
+     * @param top: Dim3, top boundaries of box for fieldArray
+     * @param condVec: vector<condLambda>, Vector of lambdas that check if the {SPACEDIM} indices fulfill a given condition.
+     * @param checks: vector<amrex::Real>, Vector of values to compare to if indices fulfill the corresponding condVec condition.
+     * @param defCheck: amrex::Real, Default value for all indices not fulfilling any of the given conditions.
+     */
+    using condLambda = bool(*)(AMREX_D_DECL(int, int, int));
+    void checkField(const char file[], int line,
+                    amrex::Array4<amrex::Real> const& fieldArr,
+                    amrex::Dim3 const&& top,
+                    std::vector<condLambda>&& condVec,
+                    std::vector<amrex::Real>&& checks,
+                    amrex::Real defCheck);
 }
 #endif

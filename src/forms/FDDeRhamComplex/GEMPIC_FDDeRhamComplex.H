@@ -9,6 +9,10 @@ using namespace GEMPIC_Fields;
 
 namespace GEMPIC_FDDeRhamComplex
 {
+enum class HodgeScheme {
+    FDHodge,
+    GalerkinHodge,
+};
 
 /**
  * @brief Fills the arrays of Hodge stencils.
@@ -18,94 +22,94 @@ namespace GEMPIC_FDDeRhamComplex
  *
  * @tparam degree : int, degree of basis functions used
  * @tparam scheme : int, 0 for FDHodge, 1 for Galerkin Hodge
- * @tparam stencilLength : int, total length of the Hodge stencil
  * @return std::tuple : contains the stencils in the following order:
  *                      stencilNodeToCell, stencilCellToNode
  */
-template <int degree, int scheme, int stencilLength>
-inline std::tuple<amrex::GpuArray<amrex::Real, stencilLength>,
-                  amrex::GpuArray<amrex::Real, stencilLength>>
-getHodgeStencils()
+template <int degree, HodgeScheme scheme>
+inline auto getHodgeStencils()
 {
-    amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-    amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-    switch (scheme)
-    {
-        case 0:
-            switch (degree)
-            {
-                case 2:
-                    stencilNodeToCell[0] = 1.0;
-                    stencilCellToNode[0] = 1.0;
-                    break;
-                case 4:
-                    stencilNodeToCell[0] = 1. / 8.;
-                    stencilNodeToCell[1] = 6. / 8.;
-                    stencilNodeToCell[2] = 1. / 8.;
-                    stencilCellToNode[0] = -1. / 24.;
-                    stencilCellToNode[1] = 13. / 12.;
-                    stencilCellToNode[2] = -1. / 24.;
-                    break;
-                case 6:
-                    stencilNodeToCell[0] = -7. / 384.;
-                    stencilNodeToCell[1] = 44. / 384.;
-                    stencilNodeToCell[2] = 310. / 384.;
-                    stencilNodeToCell[3] = 44. / 384.;
-                    stencilNodeToCell[4] = -7. / 384;
-                    stencilCellToNode[0] = 3. / 640.;
-                    stencilCellToNode[1] = -29. / 480.;
-                    stencilCellToNode[2] = 1067. / 960.;
-                    stencilCellToNode[3] = -29. / 480.;
-                    stencilCellToNode[4] = 3. / 640.;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-                    break;
-            }
-            break;
-        case 1:
-            switch (degree)
-            {
-                case 2:
-                    stencilCellToNode[0] = 1. / 8.;
-                    stencilCellToNode[1] = 3. / 4.;
-                    stencilCellToNode[2] = 1. / 8.;
-                    stencilNodeToCell = stencilCellToNode;
-                    break;
-                case 4:
-                    stencilCellToNode[0] = 121. / 46080.;
-                    stencilCellToNode[1] = -959. / 23040.;
-                    stencilCellToNode[2] = 4663. / 46080.;
-                    stencilCellToNode[3] = 10087. / 11520.;
-                    stencilCellToNode[4] = 4663. / 46080.;
-                    stencilCellToNode[5] = -959. / 23040.;
-                    stencilCellToNode[6] = 121. / 46080.;
-                    stencilNodeToCell = stencilCellToNode;
-                    break;
-                case 6:
-                    stencilCellToNode[0] = 365053. / 3715891200.;
-                    stencilCellToNode[1] = -2981533. / 1857945600.;
-                    stencilCellToNode[2] = 55805753. / 3715891200.;
-                    stencilCellToNode[3] = -27050951. / 464486400.;
-                    stencilCellToNode[4] = 147416293. / 1857945600.;
-                    stencilCellToNode[5] = 864656441. / 928972800.;
-                    stencilCellToNode[6] = 147416293. / 1857945600.;
-                    stencilCellToNode[7] = -27050951. / 464486400.;
-                    stencilCellToNode[8] = 55805753. / 3715891200.;
-                    stencilCellToNode[9] = -2981533. / 1857945600.;
-                    stencilCellToNode[10] = 365053. / 3715891200.;
-                    stencilNodeToCell = stencilCellToNode;
-                    break;
-                default:
-                    amrex::Print() << "Degree not implemented" << std::endl;
-            }
-            break;
-        default:
-            amrex::Print() << "Hodge not implemented" << std::endl;
-            break;
-    }
+    if constexpr (scheme == HodgeScheme::FDHodge) {
+        constexpr unsigned int stencilLength{degree - 1};
+        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
+        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
+    
+        switch (degree)
+        {
+            case 2:
+                stencilNodeToCell[0] = 1.0;
+                stencilCellToNode[0] = 1.0;
+                break;
+            case 4:
+                stencilNodeToCell[0] = 1. / 8.;
+                stencilNodeToCell[1] = 6. / 8.;
+                stencilNodeToCell[2] = 1. / 8.;
+                stencilCellToNode[0] = -1. / 24.;
+                stencilCellToNode[1] = 13. / 12.;
+                stencilCellToNode[2] = -1. / 24.;
+                break;
+            case 6:
+                stencilNodeToCell[0] = -7. / 384.;
+                stencilNodeToCell[1] = 44. / 384.;
+                stencilNodeToCell[2] = 310. / 384.;
+                stencilNodeToCell[3] = 44. / 384.;
+                stencilNodeToCell[4] = -7. / 384;
+                stencilCellToNode[0] = 3. / 640.;
+                stencilCellToNode[1] = -29. / 480.;
+                stencilCellToNode[2] = 1067. / 960.;
+                stencilCellToNode[3] = -29. / 480.;
+                stencilCellToNode[4] = 3. / 640.;
+                break;
+            default:
+                amrex::Print() << "Degree not implemented" << std::endl;
+                break;
+        }
 
-    return std::make_tuple(stencilNodeToCell, stencilCellToNode);
+        return std::make_tuple(stencilNodeToCell, stencilCellToNode);
+    }
+    if constexpr (scheme == HodgeScheme::GalerkinHodge) {
+        constexpr unsigned int stencilLength{2 * degree - 1};
+        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
+        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
+        
+        switch (degree)
+        {
+            case 2:
+                stencilCellToNode[0] = 1. / 8.;
+                stencilCellToNode[1] = 3. / 4.;
+                stencilCellToNode[2] = 1. / 8.;
+                stencilNodeToCell = stencilCellToNode;
+                break;
+            case 4:
+                stencilCellToNode[0] = 121. / 46080.;
+                stencilCellToNode[1] = -959. / 23040.;
+                stencilCellToNode[2] = 4663. / 46080.;
+                stencilCellToNode[3] = 10087. / 11520.;
+                stencilCellToNode[4] = 4663. / 46080.;
+                stencilCellToNode[5] = -959. / 23040.;
+                stencilCellToNode[6] = 121. / 46080.;
+                stencilNodeToCell = stencilCellToNode;
+                break;
+            case 6:
+                stencilCellToNode[0] = 365053. / 3715891200.;
+                stencilCellToNode[1] = -2981533. / 1857945600.;
+                stencilCellToNode[2] = 55805753. / 3715891200.;
+                stencilCellToNode[3] = -27050951. / 464486400.;
+                stencilCellToNode[4] = 147416293. / 1857945600.;
+                stencilCellToNode[5] = 864656441. / 928972800.;
+                stencilCellToNode[6] = 147416293. / 1857945600.;
+                stencilCellToNode[7] = -27050951. / 464486400.;
+                stencilCellToNode[8] = 55805753. / 3715891200.;
+                stencilCellToNode[9] = -2981533. / 1857945600.;
+                stencilCellToNode[10] = 365053. / 3715891200.;
+                stencilNodeToCell = stencilCellToNode;
+                break;
+            default:
+                amrex::Print() << "Degree not implemented" << std::endl;
+                break;
+        }
+
+        return std::make_tuple(stencilNodeToCell, stencilCellToNode);
+    }
 }
 
 /**
@@ -116,7 +120,7 @@ getHodgeStencils()
  * by a stencil and u are the values of the input along one edge.
  *
  * @tparam stencilLength : int, length of the stencil array defining the matrix
- * @tparam dimension : int, direction along which matrix vector product is calculated
+ * @tparam direction : Direction, direction along which matrix vector product is calculated
  * @param geom : Geometry, needed for FillBoundary
  * @param stencil : GpuArray, defining the matrix
  * @param MultiInput : MultiFab, containing the values of the vector being multiplied
@@ -124,8 +128,8 @@ getHodgeStencils()
  * @return void
  */
 
-template <int stencilLength, int dimension>
-inline void matrixMult(amrex::Geometry geom, amrex::GpuArray<amrex::Real, stencilLength> stencil,
+template <Direction direction, unsigned int stencilLength>
+inline void matrixMult (amrex::Geometry geom, amrex::GpuArray<amrex::Real, stencilLength> stencil,
                        const amrex::MultiFab& MultiInput, amrex::MultiFab& MultiOutput)
 {
     for (amrex::MFIter mfi(MultiOutput); mfi.isValid(); ++mfi)
@@ -143,9 +147,9 @@ inline void matrixMult(amrex::Geometry geom, amrex::GpuArray<amrex::Real, stenci
                         for (int d = 0; d < stencilLength; d++)
                         {
                             int shift = d - (stencilLength + 1) / 2 + 1;
-                            val += stencil[d] * vecIn(i + (dimension == 0 ? shift : 0),
-                                                      j + (dimension == 1 ? shift : 0),
-                                                      k + (dimension == 2 ? shift : 0));
+                            val += stencil[d] * vecIn(i + (direction == xDir ? shift : 0),
+                                                      j + (direction == yDir ? shift : 0),
+                                                      k + (direction == zDir ? shift : 0));
                         }
                         vecOut(i, j, k) = val;
                     });
@@ -213,7 +217,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
      * @param threeForm : DeRhamField<Grid::dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
@@ -226,27 +230,23 @@ public:
                  DeRhamField<Grid::primal, Space::node>& zeroForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
         AMREX_D_TERM(
-            (matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data,
+            (matrixMult<xDir>(geom, stencilCellToNode, threeForm.data,
                                           AMREX_D_PICK(zeroForm.data, m_tempPrimalZeroForm, zeroForm.data)));,
 //
-            (matrixMult<stencilLength, 1>(geom, stencilCellToNode,
+            (matrixMult<yDir>(geom, stencilCellToNode,
                                           AMREX_D_PICK((void), m_tempPrimalZeroForm, zeroForm.data),
                                           AMREX_D_PICK((void), zeroForm.data, m_tempPrimalZeroForm)));,
 //
-            (matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data)););
+            (matrixMult<zDir>(geom, stencilCellToNode, m_tempPrimalZeroForm, zeroForm.data)););
 
-        zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[0], dr[1], dr[2]) * weight));
+        zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
 
         zeroForm.averageSync();
         zeroForm.fillBoundary();
@@ -262,7 +262,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
      * @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$u^3\f$
@@ -275,27 +275,23 @@ public:
                  DeRhamField<Grid::dual, Space::node>& zeroForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
         AMREX_D_TERM(
-            (matrixMult<stencilLength, 0>(geom, stencilCellToNode, threeForm.data,
+            (matrixMult<xDir>(geom, stencilCellToNode, threeForm.data,
                                           AMREX_D_PICK(zeroForm.data, m_tempDualZeroForm, zeroForm.data)));,
 //
-            (matrixMult<stencilLength, 1>(geom, stencilCellToNode,
+            (matrixMult<yDir>(geom, stencilCellToNode,
                                           AMREX_D_PICK((void), m_tempDualZeroForm, zeroForm.data),
                                           AMREX_D_PICK((void), zeroForm.data, m_tempDualZeroForm)));,
 //
-            (matrixMult<stencilLength, 2>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data)););
+            (matrixMult<zDir>(geom, stencilCellToNode, m_tempDualZeroForm, zeroForm.data)););
 
-        zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[0], dr[1], dr[2]) * weight));
+        zeroForm.data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
 
         zeroForm.averageSync();
         zeroForm.fillBoundary();
@@ -311,7 +307,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
      * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{u}^2\f$
@@ -324,12 +320,8 @@ public:
                  DeRhamField<Grid::primal, Space::edge>& oneForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
@@ -338,24 +330,24 @@ public:
         {
 
             AMREX_D_TERM(
-                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
+                (matrixMult<xDir>(geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
                                               AMREX_D_PICK(oneForm.data[comp], m_tempPrimalOneForm[comp], oneForm.data[comp])));,
     //
-                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
+                (matrixMult<yDir>(geom, (comp == yDir ? stencilNodeToCell : stencilCellToNode),
                                               AMREX_D_PICK((void), m_tempPrimalOneForm[comp], oneForm.data[comp]),
                                               AMREX_D_PICK((void), oneForm.data[comp], m_tempPrimalOneForm[comp])));,
     //
-                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
+                (matrixMult<zDir>(geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
                                               m_tempPrimalOneForm[comp], oneForm.data[comp])););
 
-            if (comp == 0)
-                oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
-            if (comp == 1)
-                oneForm.data[comp].mult(GEMPIC_D_MULT(1, dr[1], 1) /
-                                        (GEMPIC_D_MULT(dr[0], 1, dr[2]) * weight));
-            if (comp == 2)
-                oneForm.data[comp].mult(GEMPIC_D_MULT(1, 1, dr[2]) /
-                                        (GEMPIC_D_MULT(dr[0], dr[1], 1) * weight));
+            if (comp == xDir)
+                oneForm.data[comp].mult(dr[xDir] / (GEMPIC_D_MULT(1, dr[yDir], dr[zDir]) * weight));
+            if (comp == yDir)
+                oneForm.data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) /
+                                        (GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]) * weight));
+            if (comp == zDir)
+                oneForm.data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) /
+                                        (GEMPIC_D_MULT(dr[xDir], dr[yDir], 1) * weight));
         }
 
         oneForm.averageSync();
@@ -372,7 +364,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
@@ -385,12 +377,8 @@ public:
     void hodgeFD(const DeRhamField<Grid::primal, Space::face>& twoForm,
                  DeRhamField<Grid::dual, Space::edge>& oneForm, amrex::Real weight = 1.)
     {
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
@@ -399,24 +387,24 @@ public:
         {
 
             AMREX_D_TERM(
-                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
+                (matrixMult<xDir>(geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode), twoForm.data[comp],
                                               AMREX_D_PICK(oneForm.data[comp], m_tempDualOneForm[comp], oneForm.data[comp])));,
     //
-                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilNodeToCell : stencilCellToNode),
+                (matrixMult<yDir>(geom, (comp == yDir ? stencilNodeToCell : stencilCellToNode),
                                               AMREX_D_PICK((void), m_tempDualOneForm[comp], oneForm.data[comp]),
                                               AMREX_D_PICK((void), oneForm.data[comp], m_tempDualOneForm[comp])));,
     //
-                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilNodeToCell : stencilCellToNode),
+                (matrixMult<zDir>(geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
                                               m_tempDualOneForm[comp], oneForm.data[comp])););
 
-            if (comp == 0)
-                oneForm.data[comp].mult(dr[0] / (GEMPIC_D_MULT(1, dr[1], dr[2]) * weight));
-            if (comp == 1)
-                oneForm.data[comp].mult(GEMPIC_D_MULT(1, dr[1], 1) /
-                                        (GEMPIC_D_MULT(dr[0], 1, dr[2]) * weight));
-            if (comp == 2)
-                oneForm.data[comp].mult(GEMPIC_D_MULT(1, 1, dr[2]) /
-                                        (GEMPIC_D_MULT(dr[0], dr[1], 1) * weight));
+            if (comp == xDir)
+                oneForm.data[comp].mult(dr[xDir] / (GEMPIC_D_MULT(1, dr[yDir], dr[zDir]) * weight));
+            if (comp == yDir)
+                oneForm.data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) /
+                                        (GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]) * weight));
+            if (comp == zDir)
+                oneForm.data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) /
+                                        (GEMPIC_D_MULT(dr[xDir], dr[yDir], 1) * weight));
         }
 
         oneForm.averageSync();
@@ -433,7 +421,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * @tparam degree : int, degree of basis functions used
      * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
@@ -446,12 +434,8 @@ public:
                  DeRhamField<Grid::primal, Space::face>& twoForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
@@ -460,25 +444,25 @@ public:
         {
 
             AMREX_D_TERM(
-                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp],
+                (matrixMult<xDir>(geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp],
                                          AMREX_D_PICK(twoForm.data[comp], m_tempPrimalTwoForm[comp], twoForm.data[comp])));,
     //
-                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
+                (matrixMult<yDir>(geom, (comp == yDir ? stencilCellToNode : stencilNodeToCell),
                                               AMREX_D_PICK((void), m_tempPrimalTwoForm[comp], twoForm.data[comp]),
                                               AMREX_D_PICK((void), twoForm.data[comp], m_tempPrimalTwoForm[comp])));,
     //
-                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
+                (matrixMult<zDir>(geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
                                               m_tempPrimalTwoForm[comp], twoForm.data[comp])););
 
-            if (comp == 0)
-                twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) /
-                                        (GEMPIC_D_MULT(dr[0], 1, 1) * weight));
-            if (comp == 1)
-                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], 1, dr[2])) /
-                                        (GEMPIC_D_MULT(1, dr[1], 1) * weight));
-            if (comp == 2)
-                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], dr[1], 1)) /
-                                        (GEMPIC_D_MULT(1, 1, dr[2]) * weight));
+            if (comp == xDir)
+                twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) /
+                                        (GEMPIC_D_MULT(dr[xDir], 1, 1) * weight));
+            if (comp == yDir)
+                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) /
+                                        (GEMPIC_D_MULT(1, dr[yDir], 1) * weight));
+            if (comp == zDir)
+                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) /
+                                        (GEMPIC_D_MULT(1, 1, dr[zDir]) * weight));
         }
 
         twoForm.averageSync();
@@ -495,7 +479,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
@@ -509,12 +493,8 @@ public:
                  DeRhamField<Grid::dual, Space::face>& twoForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
@@ -523,25 +503,25 @@ public:
         {
 
             AMREX_D_TERM(
-                (matrixMult<stencilLength, 0>(geom, (comp == 0 ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp], 
+                (matrixMult<xDir>(geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell), oneForm.data[comp], 
                                               AMREX_D_PICK(twoForm.data[comp], m_tempDualTwoForm[comp], twoForm.data[comp])));,
     //
-                (matrixMult<stencilLength, 1>(geom, (comp == 1 ? stencilCellToNode : stencilNodeToCell),
+                (matrixMult<yDir>(geom, (comp == yDir ? stencilCellToNode : stencilNodeToCell),
                                               AMREX_D_PICK((void), m_tempDualTwoForm[comp], twoForm.data[comp]),
                                               AMREX_D_PICK((void), twoForm.data[comp], m_tempDualTwoForm[comp])));,
     //
-                (matrixMult<stencilLength, 2>(geom, (comp == 2 ? stencilCellToNode : stencilNodeToCell),
+                (matrixMult<zDir>(geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
                                               m_tempDualTwoForm[comp], twoForm.data[comp])););
 
-            if (comp == 0)
-                twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[1], dr[2])) /
-                                        (GEMPIC_D_MULT(dr[0], 1, 1) * weight));
-            if (comp == 1)
-                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], 1, dr[2])) /
-                                        (GEMPIC_D_MULT(1, dr[1], 1) * weight));
-            if (comp == 2)
-                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[0], dr[1], 1)) /
-                                        (GEMPIC_D_MULT(1, 1, dr[2]) * weight));
+            if (comp == xDir)
+                twoForm.data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) /
+                                        (GEMPIC_D_MULT(dr[xDir], 1, 1) * weight));
+            if (comp == yDir)
+                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) /
+                                        (GEMPIC_D_MULT(1, dr[yDir], 1) * weight));
+            if (comp == zDir)
+                twoForm.data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) /
+                                        (GEMPIC_D_MULT(1, 1, dr[zDir]) * weight));
         }
 
         twoForm.averageSync();
@@ -558,7 +538,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
@@ -572,27 +552,23 @@ public:
                  DeRhamField<Grid::primal, Space::cell>& threeForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
         AMREX_D_TERM(
-            (matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data,
+            (matrixMult<xDir>(geom, stencilNodeToCell, zeroForm.data,
                                           AMREX_D_PICK(threeForm.data, m_tempPrimalThreeForm, threeForm.data)));,
 //
-            (matrixMult<stencilLength, 1>(geom, stencilNodeToCell,
+            (matrixMult<yDir>(geom, stencilNodeToCell,
                                           AMREX_D_PICK((void), m_tempPrimalThreeForm, threeForm.data),
                                           AMREX_D_PICK((void), threeForm.data, m_tempPrimalThreeForm)));,
 //
-            (matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempPrimalThreeForm, threeForm.data)););
+            (matrixMult<zDir>(geom, stencilNodeToCell, m_tempPrimalThreeForm, threeForm.data)););
 
-        threeForm.data.mult(GEMPIC_D_MULT(dr[0], dr[1], dr[2]) / weight);
+        threeForm.data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
 
         threeForm.averageSync();
         threeForm.fillBoundary();
@@ -608,7 +584,7 @@ public:
      *
      * Boundary conditions are periodic in all directions
      *
-     * For dimensions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+     * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
      *
      * Parameters:
      * @tparam degree : int, degree of basis functions used
@@ -622,27 +598,23 @@ public:
                  DeRhamField<Grid::dual, Space::cell>& threeForm, amrex::Real weight = 1.)
     {
         // Select stencil according to degree
-        const int stencilLength = degree - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degree, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degree, HodgeScheme::FDHodge>();
 
         const amrex::RealVect dr = m_dr;
         const amrex::Geometry geom = m_geom;
 
         AMREX_D_TERM(
-            (matrixMult<stencilLength, 0>(geom, stencilNodeToCell, zeroForm.data,
+            (matrixMult<xDir>(geom, stencilNodeToCell, zeroForm.data,
                                           AMREX_D_PICK(threeForm.data, m_tempDualThreeForm, threeForm.data)));,
 //
-            (matrixMult<stencilLength, 1>(geom, stencilNodeToCell,
+            (matrixMult<yDir>(geom, stencilNodeToCell,
                                           AMREX_D_PICK((void), m_tempDualThreeForm, threeForm.data),
                                           AMREX_D_PICK((void), threeForm.data, m_tempDualThreeForm)));,
 //
-            (matrixMult<stencilLength, 2>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data)););
+            (matrixMult<zDir>(geom, stencilNodeToCell, m_tempDualThreeForm, threeForm.data)););
 
-        threeForm.data.mult(GEMPIC_D_MULT(dr[0], dr[1], dr[2]) / weight);
+        threeForm.data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
 
         threeForm.averageSync();
         threeForm.fillBoundary();

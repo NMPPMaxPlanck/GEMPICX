@@ -21,7 +21,7 @@ namespace Spline {
  *  
  *  - ref_S_{deg} is the (symmetric, centered) cardinal B-spline of degree deg with support [-(deg+1)/2, (deg+1)/2]
  *  - dx is the cell size (in the relevant direction)
- *  - nx_i = (plo + i * dx) is the i-th grid node (in the relevant dimension) 
+ *  - nx_i = (plo + i * dx) is the i-th grid node (in the relevant direction) 
  *  
  * These splines obtained by applying the dual node- and cell- reduction operators 
  * (corresponding to tR0 and tR1 in 1D) to the "particle spline"
@@ -52,29 +52,29 @@ public:
      * 
      * Description: 
      * for a given (particle) position xx_p, this constructor computes the values of 
-     *  - firstIndex[dim] for each dimension (the index of the first splines contributing to xx_p) 
-     *  - cellSplineVals[dim] the array containing the non-zero values of cell splines at xx_p
-     *  - nodeSplineVals[dim] the array containing the non-zero values of node splines at xx_p
+     *  - firstIndex[dir] for each direction (the index of the first splines contributing to xx_p) 
+     *  - cellSplineVals[dir] the array containing the non-zero values of cell splines at xx_p
+     *  - nodeSplineVals[dir] the array containing the non-zero values of node splines at xx_p
      * 
      * @param position : position of the particle
      * @param plo : low end of the problem domain
      * @param dxInverse : inverse of the cell size in all three directions x, y and z
      
      * @details Additional details about dxInverse
-     *  - dxInverse[0] == 1/dx
-     *  - dxInverse[1] == 1/dy
-     *  - dxInverse[2] == 1/dz
+     *  - dxInverse[xDir] == 1/dx
+     *  - dxInverse[yDir] == 1/dy
+     *  - dxInverse[zDir] == 1/dz
      *  - (Potentially dim < 3)
-     *  - dxInverse[GEMPIC_SPACEDIM] == dxInverse[0] * .. * dxInverse[GEMPIC_SPACEDIM-1]
+     *  - dxInverse[GEMPIC_SPACEDIM] == dxInverse[xDir] * .. * dxInverse[GEMPIC_SPACEDIM-1]
     */
 
     AMREX_GPU_HOST_DEVICE SplineBase (const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
                const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
-        AMREX_D_TERM((update1DSplines<0>(position[0], plo[0], dxInverse[0]));,
-                     (update1DSplines<1>(position[1], plo[1], dxInverse[1]));,
-                     (update1DSplines<2>(position[2], plo[2], dxInverse[2])););
+        AMREX_D_TERM((update1DSplines<xDir>(position[xDir], plo[xDir], dxInverse[xDir]));,
+                     (update1DSplines<yDir>(position[yDir], plo[yDir], dxInverse[yDir]));,
+                     (update1DSplines<zDir>(position[zDir], plo[zDir], dxInverse[zDir])););
     }
 
     /**
@@ -91,21 +91,21 @@ public:
         std::max(std::max(degX, degY), degZ)
     )};
     /**
-     * @brief firstIndex[dim] is the index of the first spline(s) contributing at the particle position, along dimension dim
+     * @brief firstIndex[dir] is the index of the first spline(s) contributing at the particle position, along direction dir
      * 
      * Description: 
      *  
      * this array is computed in the function initBSplinesAtPositions: its values are such that we have 
      * 
-     *   S_i(x_p) > 0  only for  i = firstIndex[0] .. firstIndex[0] + degX
-     *   S_j(y_p) > 0  only for  j = firstIndex[1] .. firstIndex[1] + degY
-     *   S_k(z_p) > 0  only for  k = firstIndex[2] .. firstIndex[2] + degZ
+     *   S_i(x_p) > 0  only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX
+     *   S_j(y_p) > 0  only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY
+     *   S_k(z_p) > 0  only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ
      * 
      * for S = nodeS and
      * 
-     *   S_i(x_p) > 0  only for  i = firstIndex[0] .. firstIndex[0] + degX - 1
-     *   S_j(y_p) > 0  only for  j = firstIndex[1] .. firstIndex[1] + degY - 1
-     *   S_k(z_p) > 0  only for  k = firstIndex[2] .. firstIndex[2] + degZ - 1
+     *   S_i(x_p) > 0  only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX - 1
+     *   S_j(y_p) > 0  only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY - 1
+     *   S_k(z_p) > 0  only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ - 1
      * 
      * for S = cellS
     */
@@ -119,9 +119,9 @@ public:
      * this array is computed in the function update1DSplines,
      * it will store the values of the univariate cell-splines at the particle position:
      * 
-     *   cellSplineVals[0][i] = cellS_{firstIndex[0]+i}(x_p)   for  i = 0 .. degX - 1
-     *   cellSplineVals[1][j] = cellS_{firstIndex[1]+j}(y_p)   for  j = 0 .. degY - 1
-     *   cellSplineVals[2][k] = cellS_{firstIndex[2]+k}(z_p)   for  k = 0 .. degZ - 1
+     *   cellSplineVals[xDir][i] = cellS_{firstIndex[xDir]+i}(x_p)   for  i = 0 .. degX - 1
+     *   cellSplineVals[yDir][j] = cellS_{firstIndex[yDir]+j}(y_p)   for  j = 0 .. degY - 1
+     *   cellSplineVals[zDir][k] = cellS_{firstIndex[zDir]+k}(z_p)   for  k = 0 .. degZ - 1
      * 
      * where cellS is the univariate cell spline defined in the Class docstring
     */
@@ -135,9 +135,9 @@ public:
      * this array is computed in the function update1DSplines,
      * it will store the values of the univariate cell-splines at the particle position:
      * 
-     *   nodeSplineVals[0][i] = nodeS_{firstIndex[0]+i}(x_p)   for  i = 0 .. degX
-     *   nodeSplineVals[1][j] = nodeS_{firstIndex[1]+j}(y_p)   for  j = 0 .. degY
-     *   nodeSplineVals[2][k] = nodeS_{firstIndex[2]+k}(z_p)   for  k = 0 .. degZ
+     *   nodeSplineVals[xDir][i] = nodeS_{firstIndex[xDir]+i}(x_p)   for  i = 0 .. degX
+     *   nodeSplineVals[yDir][j] = nodeS_{firstIndex[yDir]+j}(y_p)   for  j = 0 .. degY
+     *   nodeSplineVals[zDir][k] = nodeS_{firstIndex[zDir]+k}(z_p)   for  k = 0 .. degZ
      * 
      * where nodeS is the univariate cell spline defined in the Class docstring
     */
@@ -147,30 +147,30 @@ public:
      * @brief Compute the first spline index and the offset for a given particle position
      * 
      * Description: 
-     * Given a particle position x_p in the given dimension dim, this function computes: 
-     *  - firstIndex[dim] : the index of the first contributing spline (see above):
+     * Given a particle position x_p in the given direction dir, this function computes: 
+     *  - firstIndex[dir] : the index of the first contributing spline (see above):
      * and
-     *  - refOffset = firstIndex[dim] + (deg+1)/2 - (x_p - plo)/dx 
-     *    where deg is the degree of the node spline in the given dimension
+     *  - refOffset = firstIndex[dir] + (deg+1)/2 - (x_p - plo)/dx 
+     *    where deg is the degree of the node spline in the given direction
      * 
      * 0 < refOffset ≤ 1  is the normalized (1/dx) distance between the particle position and the last point in the support of the first contributing spline (of both node and cell type).
      * It will be used in the function splineEval to compute the values of the node- and cell-splines at x_p
      * 
-     * @tparam dim : the direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir : the direction in which to compute: x = 0, y = 1, z = 2
      * 
      * @param position : position of the particle
      * @param plo : low end of the problem domain
-     * @param dxInverse_dim : inverse of the cell size in the given direction
+     * @param dxInverse_dir : inverse of the cell size in the given direction
      * 
      * @return refOffset
     */
-    template<int dim>
-    AMREX_GPU_HOST_DEVICE amrex::Real initBSplinesAtPositions (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
+    template<Direction dir>
+    AMREX_GPU_HOST_DEVICE amrex::Real initBSplinesAtPositions (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dir)
     {
-        amrex::Real radius = ( splineDegrees[dim] + 1. ) / 2.;
-        amrex::Real normalized_pos = (position - plo)*dxInverse_dim;
-        firstIndex[dim] = 1. + floor( normalized_pos - radius );
-        amrex::Real refOffset = firstIndex[dim] + radius - normalized_pos;
+        amrex::Real radius = ( splineDegrees[dir] + 1. ) / 2.;
+        amrex::Real normalized_pos = (position - plo)*dxInverse_dir;
+        firstIndex[dir] = 1. + floor( normalized_pos - radius );
+        amrex::Real refOffset = firstIndex[dir] + radius - normalized_pos;
 
         return refOffset;
     }
@@ -179,27 +179,27 @@ public:
      * @brief sets the values of the contributing cell- and node-splines at the given particle position
      * 
      * Description: 
-     * after this function call, the values of cellSplineVals[dim][i] and nodeSplineVals[dim][i] 
+     * after this function call, the values of cellSplineVals[dir][i] and nodeSplineVals[dir][i] 
      * are set for i = 0 .. deg, according to their documentation above
      * 
-     * @tparam dim : the direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir : the direction in which to compute: xDir, yDir, zDir
      * 
      * @param position Current position of the particle
      * @param plo : low end of the problem domain
-     * @param dxInverse_dim : inverse of the cell size in the given direction
+     * @param dxInverse_dir : inverse of the cell size in the given direction
     */
-    template<int dim>
-    AMREX_GPU_HOST_DEVICE void update1DSplines (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
+    template<Direction dir>
+    AMREX_GPU_HOST_DEVICE void update1DSplines (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dir)
     {
-        const amrex::Real refOffset = initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
+        const amrex::Real refOffset = initBSplinesAtPositions<dir>(position, plo, dxInverse_dir);
 
-        constexpr int deg{splineDegrees[dim]};
-        splineEval<deg - 1, maxDeg>(refOffset, cellSplineVals[dim]);
+        constexpr int deg{splineDegrees[dir]};
+        splineEval<deg - 1, maxDeg>(refOffset, cellSplineVals[dir]);
         // Scaling according to documentation
         for (size_t i{0}; i < deg; i++) {
-            cellSplineVals[dim][i] *= dxInverse_dim;
+            cellSplineVals[dir][i] *= dxInverse_dir;
         }
-        splineEval<deg, maxDeg + 1>(refOffset, nodeSplineVals[dim]);
+        splineEval<deg, maxDeg + 1>(refOffset, nodeSplineVals[dir]);
     }
 
     /**
@@ -208,10 +208,10 @@ public:
      * Description: 
      * This function computes a dual dof of the tensor-product particle spline
      * centered at the particle position encoded in this spline object, with a vector orientation for l = 1 or 2
-     * 
+     *Field::DualOneForm 
      * Specifically, it computes 
      *  - tR{3-l}_ijk(partS(xx-xx_p))  if l = 0 or 3
-     *  - tR{3-l}_ijk(e_dim * partS(xx-xx_p))  if l = 1 or 2
+     *  - tR{3-l}_ijk(e_dir * partS(xx-xx_p))  if l = 1 or 2
      * where 
      *   partS is the (tensor-product) particle spline defined above, centered at the particle position xx_p
      * 
@@ -221,80 +221,74 @@ public:
      *   tR1_i(partS(x-x_p)) = nodeS_i( x_p )
      * the multivariate dofs are obtained as products of univariate node- and cell-splines evaluated at the particle position
      * 
-     * @tparam form : index l of the associated primal form
-     * @tparam dim : for l = 1 or 2, the vectorized direction of the particle slpine: x = 0, y = 1, z = 2
+     * @tparam form : index l of the associated dual form
+     * @tparam dir : for l = 1 or 2, the vectorized direction of the particle slpine: x = 0, y = 1, z = 2
      * 
-     * @param i The index of the x-dim basis function
-     * @param j The index of the y-dim basis function
-     * @param k The index of the z-dim basis function
+     * @param i The index of the x-dir basis function
+     * @param j The index of the y-dir basis function
+     * @param k The index of the z-dir basis function
      * 
      * @return base The value of the calculated coefficient
     */
-    template<int form, int dim = -1>
+    template<Field form, Direction dir>
     AMREX_GPU_HOST_DEVICE amrex::Real evalBSpline (int i, int j, int k) const
     {
-        if constexpr(form == 0) {
-                  double base = GEMPIC_D_MULT(nodeSplineVals[0][i],
-                                              nodeSplineVals[1][j],
-                                              nodeSplineVals[2][k]);
-                  return base;
-        }
-        else if constexpr(form == 1) {
-            if constexpr(dim == 0) {
-                double base = GEMPIC_D_MULT(cellSplineVals[0][i],
-                                            nodeSplineVals[1][j],
-                                            nodeSplineVals[2][k]);
-                return base;
+        static_assert(form == Field::DualOneForm || form == Field::DualTwoForm,
+                      "Function called with primal form, or superfluous direction supplied.");
+        if constexpr(form == Field::DualTwoForm) {
+            if constexpr(dir == xDir) {
+                return GEMPIC_D_MULT(cellSplineVals[xDir][i],
+                                     nodeSplineVals[yDir][j],
+                                     nodeSplineVals[zDir][k]);
             }
-            else if constexpr(dim == 1) {
-                double base = GEMPIC_D_MULT(nodeSplineVals[0][i],
-                                            cellSplineVals[1][j],
-                                            nodeSplineVals[2][k]);
-                return base;
+            else if constexpr(dir == yDir) {
+                return GEMPIC_D_MULT(nodeSplineVals[xDir][i],
+                                     cellSplineVals[yDir][j],
+                                     nodeSplineVals[zDir][k]);
             }
-            else if constexpr(dim == 2) {
-                double base = GEMPIC_D_MULT(nodeSplineVals[0][i],
-                                            nodeSplineVals[1][j],
-                                            cellSplineVals[2][k]);
-                return base;
+            else if constexpr(dir == zDir) {
+                return GEMPIC_D_MULT(nodeSplineVals[xDir][i],
+                                     nodeSplineVals[yDir][j],
+                                     cellSplineVals[zDir][k]);
             }
         }
-        else if constexpr(form == 2) {
-            if constexpr(dim == 0)
+        else if constexpr(form == Field::DualOneForm) {
+            if constexpr(dir == xDir)
             {
-                double base = GEMPIC_D_MULT(nodeSplineVals[0][i],
-                                            cellSplineVals[1][j],
-                                            cellSplineVals[2][k]);
-                return base;
+                return GEMPIC_D_MULT(nodeSplineVals[xDir][i],
+                                     cellSplineVals[yDir][j],
+                                     cellSplineVals[zDir][k]);
             }
-            else if constexpr(dim == 1)
+            else if constexpr(dir == yDir)
             {
-                double base = GEMPIC_D_MULT(cellSplineVals[0][i],
-                                            nodeSplineVals[1][j],
-                                            cellSplineVals[2][k]);
-                return base;
+                return GEMPIC_D_MULT(cellSplineVals[xDir][i],
+                                     nodeSplineVals[yDir][j],
+                                     cellSplineVals[zDir][k]);
             }
-            else if constexpr(dim == 2)
+            else if constexpr(dir == zDir)
             {
-                double base = GEMPIC_D_MULT(cellSplineVals[0][i],
-                                            cellSplineVals[1][j],
-                                            nodeSplineVals[2][k]);
-                return base;
+                return GEMPIC_D_MULT(cellSplineVals[xDir][i],
+                                     cellSplineVals[yDir][j],
+                                     nodeSplineVals[zDir][k]);
             }
         }
-        else if constexpr(form == 3){
-                  double base = GEMPIC_D_MULT(cellSplineVals[0][i],
-                                              cellSplineVals[1][j],
-                                              cellSplineVals[2][k]);
-                  return base;
-        }
-        
-        return 0;
+    }
 
-        // error: Device code does not support exception handling
-//        else {
-//            throw std::runtime_error("The template parameter form must be 0, 1, 2 or 3.");
-//        }
+    template<Field form>
+    AMREX_GPU_HOST_DEVICE amrex::Real evalBSpline (int i, int j, int k) const
+    {
+        static_assert(form == Field::DualZeroForm || form == Field::DualThreeForm, 
+                      "Function called with primal form, or no direction supplied.");
+        if constexpr(form == Field::DualThreeForm) {
+            return GEMPIC_D_MULT(nodeSplineVals[xDir][i],
+                                 nodeSplineVals[yDir][j],
+                                 nodeSplineVals[zDir][k]);
+        }
+        else if constexpr(form == Field::DualZeroForm){
+            return GEMPIC_D_MULT(cellSplineVals[xDir][i],
+                                 cellSplineVals[yDir][j],
+                                 cellSplineVals[zDir][k]);
+        }
     }
 
     /**
@@ -309,7 +303,7 @@ public:
      * 
      * where:
      * - xx_p = (x_p, y_p, z_p) is the particle position encoded in the spline object
-     * - e_d is the canonical basis vector along grid dimension d 
+     * - e_d is the canonical basis vector along grid direction d 
      * - tR{3-l} is the dual reduction operator for (3-l)-forms (here in 3D)
      * - partS is the tensor-product particle spline (approximating the Dirac mass), ie
      *     partS( xx-xx_p ) = prod_d (1/dx_d) * ref_S_{deg_d-1}((xx - xx_p)_d/dx_d)
@@ -339,9 +333,10 @@ public:
      * 
      * @return fields : value of the spline-smoothed field at particle position
     */
-    template<int vDim, int form>
+    template<Field form, unsigned int vDim>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> evalSplineField (const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
     {
+        static_assert(form == Field::PrimalOneForm || form == Field::PrimalTwoForm, "Attempting smoothing of incorrect field type.");
         bool xCond{false};
         bool yCond{false};
         bool zCond{false};
@@ -359,50 +354,50 @@ public:
                             for (int jj = 0; jj <= degY; ++jj),
                             for (int kk = 0; kk <= degZ; ++kk))
             const amrex::Dim3 cell_index =
-                {AMREX_D_DECL(this->firstIndex[0] + ii, this->firstIndex[1] + jj, this->firstIndex[2] + kk)};
+                {AMREX_D_DECL(this->firstIndex[xDir] + ii, this->firstIndex[yDir] + jj, this->firstIndex[zDir] + kk)};
 
             // Ensure that we only access existing elements of cellSplineVals
-            if constexpr (form == 1) {
+            if constexpr (form == Field::PrimalOneForm) {
                 xCond = (ii < degX);
-            } else if constexpr (form == 2) {
+            } else if constexpr (form == Field::PrimalTwoForm) {
                 xCond = AMREX_D_TERM(true, && (jj < degY), && (kk < degZ));
             }
             if (xCond)
             {
-                const amrex::Real sCoeff = evalBSpline<form, 0>(ii, jj, kk);
-                fields[0] +=
+                const amrex::Real sCoeff = evalBSpline<complementForm<form>(), xDir>(ii, jj, kk);
+                fields[xDir] +=
                     sCoeff *
-                    (fieldArray[0])(cell_index.x, cell_index.y, cell_index.z, 0);
+                    (fieldArray[xDir])(cell_index.x, cell_index.y, cell_index.z, 0);
             }
 
             if constexpr(vDim > 1) {
                 // Ensure that we only access existing elements of cellSplineVals
-                if constexpr (form == 1) {
+                if constexpr (form == Field::PrimalOneForm) {
                     yCond = AMREX_D_TERM(true, && (jj < degY),);
-                } else if constexpr (form == 2) {
+                } else if constexpr (form == Field::PrimalTwoForm) {
                     yCond = AMREX_D_TERM((ii < degX),, && (kk < degZ));
                 }
                 if (yCond)
                 {
-                    const amrex::Real sCoeff = evalBSpline<form, 1>(ii, jj, kk);
-                    fields[1] +=
+                    const amrex::Real sCoeff = evalBSpline<complementForm<form>(), yDir>(ii, jj, kk);
+                    fields[yDir] +=
                         sCoeff *
-                        (fieldArray[1])(cell_index.x, cell_index.y, cell_index.z, 0);
+                        (fieldArray[yDir])(cell_index.x, cell_index.y, cell_index.z, 0);
                 }
             }
             if constexpr(vDim == 3) {
                 // Ensure that we only access existing elements of cellSplineVals
-                if constexpr (form == 1) {
+                if constexpr (form == Field::PrimalOneForm) {
                     zCond = AMREX_D_TERM(true,, && (kk < degZ));
-                } else if constexpr (form == 2) {
+                } else if constexpr (form == Field::PrimalTwoForm) {
                     zCond = AMREX_D_TERM((ii < degX), && (jj < degY),);
                 }
                 if (zCond)
                 {
-                    const amrex::Real sCoeff = evalBSpline<form, 2>(ii, jj, kk);
-                    fields[2] +=
+                    const amrex::Real sCoeff = evalBSpline<complementForm<form>(), zDir>(ii, jj, kk);
+                    fields[zDir] +=
                         sCoeff *
-                        (fieldArray[2])(cell_index.x, cell_index.y, cell_index.z, 0);
+                        (fieldArray[zDir])(cell_index.x, cell_index.y, cell_index.z, 0);
                 }
             }
         GEMPIC_D_LOOP_END
@@ -421,15 +416,15 @@ public:
      * 
      * when called with 
      *  - degree = degX-1 
-     *  - xRef = refOffset = firstIndex[dim] + (degX+1)/2 - (x_p - plo)/dx 
+     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (x_p - plo)/dx 
      * this function computes 
-     *  s[i] = ref_S_{degX-1}(firstIndex[dim] + 1/2 - (x_p - plo)/dx + i) = dx * cellS_i(x_p)
+     *  s[i] = ref_S_{degX-1}(firstIndex[dir] + 1/2 - (x_p - plo)/dx + i) = dx * cellS_i(x_p)
      * 
      * when called with 
      *  - degree = degX 
-     *  - xRef = refOffset = firstIndex[dim] + (degX+1)/2 - (x_p - plo)/dx 
+     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (x_p - plo)/dx 
      * this function computes 
-     *  s[i] = ref_S_{degX}(firstIndex[dim] - (x_p - plo)/dx + i) = nodeS_i(x_p)
+     *  s[i] = ref_S_{degX}(firstIndex[dir] - (x_p - plo)/dx + i) = nodeS_i(x_p)
      *  
      * @tparam degree : degree of the cardinal spline
      * @tparam length : length of the stored array
@@ -437,7 +432,7 @@ public:
      * @param xRef : the offset to integer positions at which the spline shall be evaluated
      * @param s : the array in which the results will be stored
     */
-    template <int degree, int length>
+    template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE constexpr void splineEval (const amrex::Real xRef,
                                                      amrex::GpuArray<amrex::Real, length> &s) const
     {
@@ -509,9 +504,9 @@ public:
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
      * @details Additional details about xInverse
-     *  - dxInverse[0] == 1/dx
-     *  - dxInverse[1] == 1/dy
-     *  - dxInverse[2] == 1/dz
+     *  - dxInverse[xDir] == 1/dx
+     *  - dxInverse[yDir] == 1/dy
+     *  - dxInverse[zDir] == 1/dz
      *  - (Potentially dim < 3)
      *  - dxInverse[dim] == 1/(dx * dy * dz)
     */
@@ -524,9 +519,9 @@ public:
 
         primitiveNew = {};
 
-        AMREX_D_TERM((update1DPrimitive<0>(position[0], plo[0], dxInverse[0]));,
-                     (update1DPrimitive<1>(position[1], plo[1], dxInverse[1]));,
-                     (update1DPrimitive<2>(position[2], plo[2], dxInverse[2])););
+        AMREX_D_TERM((update1DPrimitive<xDir>(position[xDir], plo[xDir], dxInverse[xDir]));,
+                     (update1DPrimitive<yDir>(position[yDir], plo[yDir], dxInverse[yDir]));,
+                     (update1DPrimitive<zDir>(position[zDir], plo[zDir], dxInverse[zDir])););
     }
 
     /**
@@ -551,27 +546,27 @@ public:
      * @brief sets the values of the contributing cell- and node-splines at the given particle position
      * 
      * Description: 
-     * after this function call, the values of cellSplineVals[dim][i] and nodeSplineVals[dim][i] 
+     * after this function call, the values of cellSplineVals[dir][i] and nodeSplineVals[dir][i] 
      * are set for i = 0 .. deg, according to their documentation above
      * 
-     * @tparam dim : the direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir : the direction in which to compute: x = 0, y = 1, z = 2
      * 
      * @param position Current position of the particle
      * @param plo : low end of the problem domain
-     * @param dxInverse_dim : inverse of the cell size in the given direction
+     * @param dxInverse_dir : inverse of the cell size in the given direction
     */
-    template<int dim>
-    AMREX_GPU_HOST_DEVICE void update1DSplines (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
+    template<Direction dir>
+    AMREX_GPU_HOST_DEVICE void update1DSplines (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dir)
     {
-        this->firstIndexOld[dim] = std::move(this->firstIndex[dim]);
-        const amrex::Real refOffset = this->template initBSplinesAtPositions<dim> (position, plo, dxInverse_dim);
+        this->firstIndexOld[dir] = std::move(this->firstIndex[dir]);
+        const amrex::Real refOffset = this->template initBSplinesAtPositions<dir> (position, plo, dxInverse_dir);
 
-        constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
-        this->template splineEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(refOffset, this->cellSplineVals[dim]);
+        constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dir]};
+        this->template splineEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(refOffset, this->cellSplineVals[dir]);
         for (size_t i{0}; i < deg; i++) {
-            this->cellSplineVals[dim][i] *= dxInverse_dim;
+            this->cellSplineVals[dir][i] *= dxInverse_dir;
         }
-        this->template splineEval<deg, SplineBase<degX, degY, degZ>::maxDeg + 1>(refOffset, this->nodeSplineVals[dim]);
+        this->template splineEval<deg, SplineBase<degX, degY, degZ>::maxDeg + 1>(refOffset, this->nodeSplineVals[dir]);
     }
 
     /**
@@ -581,63 +576,63 @@ public:
      * after this function call, the values of primitiveNew are moved to primitiveOld and new 
      * values of primitiveNew are set for i = 0 .. deg - 1
      * 
-     * @tparam dim The direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir The direction in which to compute: x = 0, y = 1, z = 2
      * 
      * @param position Current position of the particle
      * @param plo (rename this one)
-     * @param dxInverse_dim Inverse of the cell size in the given direction
+     * @param dxInverse_dir Inverse of the cell size in the given direction
     */
-    template<int dim>
-    AMREX_GPU_HOST_DEVICE void update1DPrimitive (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dim)
+    template<Direction dir>
+    AMREX_GPU_HOST_DEVICE void update1DPrimitive (const amrex::Real position, const amrex::Real plo, const amrex::Real dxInverse_dir)
     {
-        const amrex::Real refOffset = this->template initBSplinesAtPositions<dim>(position, plo, dxInverse_dim);
+        const amrex::Real refOffset = this->template initBSplinesAtPositions<dir>(position, plo, dxInverse_dir);
 
-        primitiveOld[dim] = std::move(primitiveNew[dim]);
-        constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
-        primitiveEval<deg - 1, SplineBase<degX, degY, degZ>::maxDeg>(refOffset, primitiveNew[dim]);
+        primitiveOld[dir] = std::move(primitiveNew[dir]);
+        constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dir]};
+        primitiveEval<deg - 1>(refOffset, primitiveNew[dir]);
     }
 
     /**
      * @brief Compute the difference between primitives of the old spline and the new spline
      * 
-     * @tparam dim The direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir The direction in which to compute: x = 0, y = 1, z = 2
      * 
      * @param dx Cell size in all three directions x, y and z (It's an array)
      * @param index Index at which to evaluate the primitive difference
      * 
      * @return primitiveDifference The difference between primitives of the old spline and the new spline
     */
-    template<int dim>
+    template<Direction dir>
     AMREX_GPU_HOST_DEVICE amrex::Real computePrimitiveDifference (const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
     {
-        constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dim]};
+        constexpr int deg{SplineBase<degX, degY, degZ>::splineDegrees[dir]};
         // Size of support of difference of primitives
-        const int local_size = std::abs(SplineBase<degX, degY, degZ>::firstIndex[dim] - this->firstIndexOld[dim]) + deg;
+        const int local_size = std::abs(SplineBase<degX, degY, degZ>::firstIndex[dir] - this->firstIndexOld[dir]) + deg;
 
         amrex::Real primitiveDifference = 0;
 
-        if (this->firstIndexOld[dim] < this->firstIndex[dim])
+        if (this->firstIndexOld[dir] < this->firstIndex[dir])
         {   
             if (index < deg) {
-                primitiveDifference = this->primitiveOld[dim][index] * dx[dim];
+                primitiveDifference = this->primitiveOld[dir][index] * dx[dir];
             }
             if (index >= deg && index < local_size) {
-                primitiveDifference = dx[dim];
+                primitiveDifference = dx[dir];
             }
             if (index >= local_size - deg && index <= local_size - 1) {
-                primitiveDifference -= this->primitiveNew[dim][index + deg - local_size] * dx[dim];
+                primitiveDifference -= this->primitiveNew[dir][index + deg - local_size] * dx[dir];
             }
         }
         else
         {
             if (index < deg) { 
-                primitiveDifference = -this->primitiveNew[dim][index] * dx[dim];
+                primitiveDifference = -this->primitiveNew[dir][index] * dx[dir];
             }
             if (index >= deg && index < local_size) {
-                primitiveDifference = -dx[dim];
+                primitiveDifference = -dx[dir];
             }
             if (index >= local_size - deg && index <= local_size - 1) {
-                primitiveDifference += this->primitiveOld[dim][index + deg - local_size] * dx[dim];
+                primitiveDifference += this->primitiveOld[dir][index + deg - local_size] * dx[dir];
             }
         }
 
@@ -653,7 +648,7 @@ public:
      * @param xRef : the offset to integer positions at which the spline shall be evaluated
      * @param s : the array in which the results will be stored
     */
-    template <int degree, int length>
+    template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE constexpr void primitiveEval (const amrex::Real xRef,
                                                        amrex::GpuArray<amrex::Real, length> &s) const
     {

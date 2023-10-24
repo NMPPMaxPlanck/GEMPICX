@@ -45,7 +45,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real wave_function(AMREX_D_DECL(amrex::Real x, amre
     return val;
 }
 
-template <int vdim, int numspec>
+template <unsigned int vdim, unsigned int numspec>
 void print_particles(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
                      const int species)
 {
@@ -83,7 +83,7 @@ void print_particles(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, num
  * @param part_gr
  * @param species
  */
-template <int vdim, int numspec>
+template <unsigned int vdim, unsigned int numspec>
 void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
                     const int species)
 {
@@ -142,11 +142,11 @@ void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>
     amrex::PrintToFile("test_sampler.tmp") << " " << vMoment[vdim + 1] << "\n";
 }
 
-template <int vdim, int numspec>
+template <unsigned int vdim, unsigned int numspec>
 void main_main()
 {
     //------------------------------------------------------------------------------
-    gempic_parameters<vdim, numspec> gpParam;
+    gempic_parameters<numspec> gpParam;
     // gpParam.init_Nghost(1, 1, 1);
     amrex::IntVect num_cells{AMREX_D_DECL(4, 4, 4)};
     amrex::GpuArray<int, numspec> n_part_per_cell = {1000};
@@ -180,7 +180,7 @@ void main_main()
         part_gr_cell[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
                                                                      gpParam.mass[spec], domain);
     }
-    init_particles_cellwise<vdim, numspec>(domain, part_gr_cell, n_part_per_cell, vMean, vThermal,
+    init_particles_cellwise(domain, part_gr_cell, n_part_per_cell, vMean, vThermal,
                                            vWeight, species, wave_function);
 
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full;
@@ -189,7 +189,7 @@ void main_main()
         part_gr_full[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
                                                                      gpParam.mass[spec], domain);
     }
-    init_particles_full_domain<vdim, numspec>(domain, part_gr_full, n_part_per_cell, vMean,
+    init_particles_full_domain(domain, part_gr_full, n_part_per_cell, vMean,
                                               vThermal, vWeight, species, wave_function);
 
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full_str;
@@ -198,7 +198,7 @@ void main_main()
         part_gr_full_str[spec] = std::make_unique<particle_groups<vdim>>(
             gpParam.charge[spec], gpParam.mass[spec], domain);
     }
-    init_particles_full_domain<vdim, numspec>(domain, part_gr_full_str, n_part_per_cell, vMean,
+    init_particles_full_domain(domain, part_gr_full_str, n_part_per_cell, vMean,
                                               vThermal, vWeight, species,
                                               gpParam.densityEval[species]);
 
@@ -208,7 +208,7 @@ void main_main()
         part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(
             gpParam.charge[spec], gpParam.mass[spec], domain);
     }
-    init_particles_full_domain_gpu<vdim, numspec>(domain, part_gr_full_gpu, n_part_per_cell, vMean,
+    init_particles_full_domain_gpu(domain, part_gr_full_gpu, n_part_per_cell, vMean,
                                                   vThermal, vWeight, species,
                                                   gpParam.densityEval[species]);
 
@@ -216,9 +216,9 @@ void main_main()
     bool printPart = false;
     if (printPart)
     {
-        print_particles<vdim, numspec>(part_gr_cell, species);
-        print_particles<vdim, numspec>(part_gr_full, species);
-        print_particles<vdim, numspec>(part_gr_full_str, species);
+        print_particles(part_gr_cell, species);
+        print_particles(part_gr_full, species);
+        print_particles(part_gr_full_str, species);
     }
 
     amrex::PrintToFile("test_sampler.tmp") << "\n";
@@ -237,9 +237,9 @@ void main_main()
     }
     amrex::PrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
     // Print computed solutions
-    print_vMoments<vdim, numspec>(part_gr_cell, species);
-    print_vMoments<vdim, numspec>(part_gr_full, species);
-    print_vMoments<vdim, numspec>(part_gr_full_str, species);
+    print_vMoments(part_gr_cell, species);
+    print_vMoments(part_gr_full, species);
+    print_vMoments(part_gr_full_str, species);
     // print_vMoments<vdim, numspec>(part_gr_full_gpu, species);
 }
 
@@ -251,8 +251,8 @@ int main(int argc, char* argv[])
 
     if (amrex::ParallelDescriptor::MyProc() == 0) remove("test_sampler.tmp.0");
 
-    const int vdim = 3;
-    const int numspec = 1;
+    const unsigned int vdim = 3;
+    const unsigned int numspec = 1;
     main_main<vdim, numspec>();
 
     if (amrex::ParallelDescriptor::MyProc() == 0)

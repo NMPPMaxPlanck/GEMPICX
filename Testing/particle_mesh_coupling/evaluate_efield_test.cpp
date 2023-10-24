@@ -38,17 +38,17 @@ namespace {
                 position[d] = partData[0].pos(d);
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
         
-            efields[pp] = spline.template evalSplineField<vDim, 1>(eArray);
+            efields[pp] = spline.template evalSplineField<Field::PrimalOneForm>(eArray);
         });
 
-        EXPECT_NEAR(efields[0][0], 1.0, 1e-12);
-        EXPECT_NEAR(efields[0][1], 1.0, 1e-12);
-        EXPECT_NEAR(efields[0][2], 1.0, 1e-12);
+        EXPECT_NEAR(efields[0][xDir], 1.0, 1e-12);
+        EXPECT_NEAR(efields[0][yDir], 1.0, 1e-12);
+        EXPECT_NEAR(efields[0][zDir], 1.0, 1e-12);
                     
         if(np == 2) {
-            EXPECT_NEAR(efields[1][0], 1.0, 1e-12);
-            EXPECT_NEAR(efields[1][1], 1.0, 1e-12);
-            EXPECT_NEAR(efields[1][2], 1.0, 1e-12);
+            EXPECT_NEAR(efields[1][xDir], 1.0, 1e-12);
+            EXPECT_NEAR(efields[1][yDir], 1.0, 1e-12);
+            EXPECT_NEAR(efields[1][zDir], 1.0, 1e-12);
         }
     }
 
@@ -104,7 +104,7 @@ namespace {
         const int numParticles{1};
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge()); 
@@ -152,11 +152,11 @@ namespace {
             Spline::SplineBase<degX, degY, degZ> spline(position, infra.plo, infra.dxi);
             
             amrex::GpuArray<amrex::Real, vDim> efield =
-                spline.template evalSplineField<vDim, 1>(eArray);
+                spline.template evalSplineField<Field::PrimalOneForm>(eArray);
 
-            EXPECT_EQ(efield[0], 0);
-            EXPECT_EQ(efield[1], 0);
-            EXPECT_EQ(efield[2], 0);
+            EXPECT_EQ(efield[xDir], 0);
+            EXPECT_EQ(efield[yDir], 0);
+            EXPECT_EQ(efield[zDir], 0);
         }
         ASSERT_TRUE(particleLoopRun);
     }
@@ -168,7 +168,7 @@ namespace {
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(0, 0, 0)};
         EXPECT_EQ(*infra.geom.ProbLo(), 0.0);
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -205,11 +205,11 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[0] - 1.5*infra.dx[0],
-                      infra.geom.ProbHi()[1] - 1.5*infra.dx[1],
-                      infra.geom.ProbHi()[2] - 1.5*infra.dx[2])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.5*infra.dx[xDir],
+                      infra.geom.ProbHi()[yDir] - 1.5*infra.dx[yDir],
+                      infra.geom.ProbHi()[zDir] - 1.5*infra.dx[zDir])};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
         
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -246,11 +246,11 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[0] - 1.25*infra.dx[0],
-                      infra.geom.ProbHi()[1] - 1.25*infra.dx[1],
-                      infra.geom.ProbHi()[2] - 1.25*infra.dx[2])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.25*infra.dx[xDir],
+                      infra.geom.ProbHi()[yDir] - 1.25*infra.dx[yDir],
+                      infra.geom.ProbHi()[zDir] - 1.25*infra.dx[zDir])};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -308,11 +308,11 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[0] - 1.25*infra.dx[0],
-                      infra.geom.ProbHi()[1] - 1.25*infra.dx[1],
-                      infra.geom.ProbHi()[2] - 1.25*infra.dx[2])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.25*infra.dx[xDir],
+                      infra.geom.ProbHi()[yDir] - 1.25*infra.dx[yDir],
+                      infra.geom.ProbHi()[zDir] - 1.25*infra.dx[zDir])};
         amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -351,11 +351,11 @@ namespace {
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{
             AMREX_D_DECL(0, 0, 0)},
             {AMREX_D_DECL(
-            infra.geom.ProbLo(0) + 5.5*infra.dx[0],
-            infra.geom.ProbLo(1) + 5.5*infra.dx[1],
-            infra.geom.ProbLo(2) + 5.5*infra.dx[2])}}};
+            infra.geom.ProbLo(xDir) + 5.5*infra.dx[xDir],
+            infra.geom.ProbLo(yDir) + 5.5*infra.dx[yDir],
+            infra.geom.ProbLo(zDir) + 5.5*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1, 1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
         
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -394,11 +394,11 @@ namespace {
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{
             AMREX_D_DECL(0, 0, 0)},
             {AMREX_D_DECL(
-            infra.geom.ProbLo(0) + 0.5*infra.dx[0],
-            infra.geom.ProbLo(1) + 0.5*infra.dx[1],
-            infra.geom.ProbLo(2) + 0.5*infra.dx[2])}}};
+            infra.geom.ProbLo(xDir) + 0.5*infra.dx[xDir],
+            infra.geom.ProbLo(yDir) + 0.5*infra.dx[yDir],
+            infra.geom.ProbLo(zDir) + 0.5*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1, 1};
-        GEMPIC_TestUtils::addSingleParticles<vDim, numSpec, numParticles>(particleGroup, infra, weights, positions);
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
         
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 

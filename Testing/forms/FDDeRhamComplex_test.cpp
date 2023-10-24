@@ -11,56 +11,12 @@
 // rho = three form
 // phi = zero form
 
+#define checkField(...) GEMPIC_TestUtils::checkField(__FILE__, __LINE__, __VA_ARGS__)
+
 using namespace Gempic;
 using namespace GEMPIC_FDDeRhamComplex;
 
 namespace {
-
-        /* Helper function to check entries of rho given a series of conditions and a default
-         * value. Check order is prioritized, so a set of indices only fulfill the first succesful
-         * condition.
-         * 
-         * Parameters:
-         * ----------
-         * @param line: int, the line from which the function was called
-         * @param rhoarr: amrex::Array4, array containing rho values in an easily reached accessor
-         * @param top: Dim3, top boundaries of box for rhoarray
-         * @param condVec: vector<condLambda>, Vector of lambdas that check if the {SPACEDIM} indices fulfill a given condition.
-         * @param checks: vector<amrex::Real>, Vector of values to compare to if indices fulfill the corresponding condVec condition.
-         * @param defCheck: amrex::Real, Default value for all indices not fulfilling any of the given conditions.
-         */
-        using condLambda = bool(*)(AMREX_D_DECL(int, int, int));
-        void checkRho(int line,
-                      amrex::Array4<amrex::Real> const& rhoarr,
-                      amrex::Dim3 const&& top,
-                      std::vector<condLambda>&& condVec,
-                      std::vector<amrex::Real>&& checks,
-                      amrex::Real defCheck) {
-            // Expect only one node of rhoarr (0, 0, 0) to be non-zero and receiving full weight of particle (1)
-            for (int i{0}; i <= top.x; i++) { 
-                for (int j{0}; j <= top.y; j++) {
-                    for (int k{0}; k <= top.z; k++) {
-                        int condNum{0};
-                        const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
-                        for (auto cond : condVec) {
-                            if (cond(AMREX_D_DECL(i, j, k))) {
-                                EXPECT_NEAR(checks[condNum], *rhoarr.ptr(idx, 0), 1e-8) <<
-                                   "LINE:" << line << ": Failed condition " << condNum <<
-                                   ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
-                                   break;
-                            }
-                            condNum++;
-                        }
-                        if (condNum == condVec.size()) {
-                            EXPECT_NEAR(defCheck, *rhoarr.ptr(idx, 0), 1e-8) <<
-                                "LINE:" << line << ": Failed default value check:" << defCheck <<
-                                ".\nIndices: " << GEMPIC_TestUtils::stringArray(idx, GEMPIC_SPACEDIM);
-                        }
-                    }
-                }
-            }
-        }
-
     class FDDeRhamComplexTest : public testing::Test {
         protected:
 
@@ -98,12 +54,6 @@ namespace {
     };
 
     TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2) {
-
-        // Select stencil according to degree
-        const int stencilLength = degX - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
         const std::string analyticalFunc = "1.0";
 
         const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
@@ -122,11 +72,12 @@ namespace {
 
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degX, 0, stencilLength>();
+        // Select stencil according to degree
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degX, HodgeScheme::FDHodge>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -134,7 +85,7 @@ namespace {
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(),
                     // Expect only one node of rhoarr (0, 0, 0) to be non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
@@ -148,12 +99,6 @@ namespace {
     }
 
     TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4) {
-
-        // Select stencil according to degree
-        const int stencilLength = 4 - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
         const std::string analyticalFunc = "1.0";
 
         const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
@@ -172,11 +117,12 @@ namespace {
 
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<4, 0, stencilLength>();
+        // Select stencil according to degree
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<4, HodgeScheme::FDHodge>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -184,15 +130,8 @@ namespace {
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
-                    // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
-                                                                              && b == 0,
-                                                                              && c == 0);}},
-                    // and receiving full weight of particle (1)
-                    {1},
-                    // with the remaining entries being 0
-                    1);
+            // Expect all entires to be 1
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
     }
@@ -223,26 +162,19 @@ namespace {
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<6, 0, stencilLength>();
+            getHodgeStencils<6, HodgeScheme::FDHodge>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
         for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
-                    // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
-                                                                              && b == 0,
-                                                                              && c == 0);}},
-                    // and receiving full weight of particle (1)
-                    {1},
-                    // with the remaining entries being 0
-                    1);
+            
+            // Expect all nodes to be 1
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
     }
@@ -258,15 +190,11 @@ namespace {
         ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho.data, infra, 2));
 
         // Select stencil according to degree
-        const int stencilLength = degX - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degX, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degX, HodgeScheme::FDHodge>();
 
         const amrex::Geometry geom = params.geometry();
-        // matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
+        // matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -274,15 +202,8 @@ namespace {
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
-                    // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
-                                                                              && b == 0,
-                                                                              && c == 0);}},
-                    // and receiving full weight of particle (1)
-                    {0},
-                    // with the remaining entries being 0
-                    0);
+            // Expect all entires to be 0
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(), {}, {}, 0);
         }
         ASSERT_TRUE(loopRun);
     }
@@ -308,15 +229,11 @@ namespace {
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         // Select stencil according to degree
-        const int stencilLength = degX - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degX, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degX, HodgeScheme::FDHodge>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -324,15 +241,8 @@ namespace {
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
-                    // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
-                                                                              && b == 0,
-                                                                              && c == 0);}},
-                    // and receiving full weight of particle (1)
-                    {1},
-                    // with the remaining entries being 0
-                    1);
+            // Expect all entires to be 1
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
     }
@@ -364,15 +274,11 @@ namespace {
         ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho.data, infra, 2));
 
         // Select stencil according to degree
-        const int stencilLength = degX - 1;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
-        std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<degX, 0, stencilLength>();
+        auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<degX, HodgeScheme::FDHodge>();
 
         const amrex::Geometry geom = params.geometry();
-        matrixMult<stencilLength, 0>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
     
         bool loopRun{false};
         
@@ -380,15 +286,8 @@ namespace {
         {
             loopRun = true;
 
-            checkRho(__LINE__, (phi.data[mfi]).array(), infra.n_cell.dim3(),
-                    // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
-                                                                              && b == 0,
-                                                                              && c == 0);}},
-                    // and receiving full weight of particle (1)
-                    {0},
-                    // with the remaining entries being 0
-                    0);
+            // Expect all entires to be 0
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(), {}, {}, 0);
         }
         ASSERT_TRUE(loopRun);
     }

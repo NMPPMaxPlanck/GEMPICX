@@ -163,7 +163,7 @@ amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC
 
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf =
         {
-            AMREX_D_DECL(dr[0] / 2, dr[1] / 2, dr[2] / 2)
+            AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)
         };
         
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -171,16 +171,16 @@ amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC
             // Compute the position of the point i, j, k
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = 
             {
-                AMREX_D_DECL(r0[0] + i*dr[0] - (dual ? drHalf[0] : 0),
-                             r0[1] + j*dr[1] - (dual ? drHalf[1] : 0),
-                             r0[2] + k*dr[2] - (dual ? drHalf[2] : 0))
+                AMREX_D_DECL(r0[xDir] + i*dr[xDir] - (dual ? drHalf[xDir] : 0),
+                             r0[yDir] + j*dr[yDir] - (dual ? drHalf[yDir] : 0),
+                             r0[zDir] + k*dr[zDir] - (dual ? drHalf[zDir] : 0))
             };
 
             amrex::Real error = 0.0;
 
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = 
             {
-                AMREX_D_DECL(rr[0] + drHalf[0], rr[1] + drHalf[1], rr[2] + drHalf[2])
+                AMREX_D_DECL(rr[xDir] + drHalf[xDir], rr[yDir] + drHalf[yDir], rr[zDir] + drHalf[zDir])
             };
 
             amrex::Real fval = 0;
@@ -195,29 +195,29 @@ amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC
                 for (int a = 1 - degree/2; a < degree/2 + 1; ++a),
                     for (int b = 1 - degree/2; b < degree/2 + 1; ++b),
                         for (int c = 1 - degree/2; c < degree/2 + 1; ++c))
-                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(evalLagrange<degree>(a, rr[0] + (dual ? dr[0] : 0), dr[0], r[0] + (dual ? dr[0] : 0)),
-                                                                                evalLagrange<degree>(b, rr[1] + (dual ? dr[1] : 0), dr[1], r[1] + (dual ? dr[1] : 0)),
-                                                                                evalLagrange<degree>(c, rr[2] + (dual ? dr[2] : 0), dr[2], r[2] + (dual ? dr[2] : 0)));
+                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(evalLagrange<degree>(a, rr[xDir] + (dual ? dr[xDir] : 0), dr[xDir], r[xDir] + (dual ? dr[xDir] : 0)),
+                                                                                evalLagrange<degree>(b, rr[yDir] + (dual ? dr[yDir] : 0), dr[yDir], r[yDir] + (dual ? dr[yDir] : 0)),
+                                                                                evalLagrange<degree>(c, rr[zDir] + (dual ? dr[zDir] : 0), dr[zDir], r[zDir] + (dual ? dr[zDir] : 0)));
                 GEMPIC_D_LOOP_END
                 break;
             case 1:
                 GEMPIC_D_LOOP_BEGIN(
-                for (int a = 1 - degree/2; a < degree/2 + (comp == 0 ? 0 : 1); ++a),
-                    for (int b = 1 - degree/2; b < degree/2 + (comp == 1 ? 0 : 1); ++b),
-                        for (int c = 1 - degree/2; c < degree/2 + (comp == 2 ? 0 : 1); ++c))
-                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(comp == 0 ? evalEdge<degree>(a, rr[0], dr[0], r[0]) : evalLagrange<degree>(a, rr[0], dr[0], r[0]),
-                                                                                comp == 1 ? evalEdge<degree>(b, rr[1], dr[1], r[1]) : evalLagrange<degree>(b, rr[1], dr[1], r[1]),
-                                                                                comp == 2 ? evalEdge<degree>(c, rr[2], dr[2], r[2]) : evalLagrange<degree>(c, rr[2], dr[2], r[2]));
+                for (int a = 1 - degree/2; a < degree/2 + (comp == xDir ? 0 : 1); ++a),
+                    for (int b = 1 - degree/2; b < degree/2 + (comp == yDir ? 0 : 1); ++b),
+                        for (int c = 1 - degree/2; c < degree/2 + (comp == zDir ? 0 : 1); ++c))
+                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(comp == xDir ? evalEdge<degree>(a, rr[xDir], dr[xDir], r[xDir]) : evalLagrange<degree>(a, rr[xDir], dr[xDir], r[xDir]),
+                                                                                comp == yDir ? evalEdge<degree>(b, rr[yDir], dr[yDir], r[yDir]) : evalLagrange<degree>(b, rr[yDir], dr[yDir], r[yDir]),
+                                                                                comp == zDir ? evalEdge<degree>(c, rr[zDir], dr[zDir], r[zDir]) : evalLagrange<degree>(c, rr[zDir], dr[zDir], r[zDir]));
                 GEMPIC_D_LOOP_END
                 break;
             case 2:
                 GEMPIC_D_LOOP_BEGIN(
-                for (int a = 1 - degree/2; a < degree/2 + (comp == 0 ? 1 : 0); ++a),
-                    for (int b = 1 - degree/2; b < degree/2 + (comp == 1 ? 1 : 0); ++b),
-                        for (int c = 1 - degree/2; c < degree/2 + (comp == 2 ? 1 : 0); ++c))
-                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(comp == 0 ? evalLagrange<degree>(a, rr[0], dr[0], r[0]) : evalEdge<degree>(a, rr[0], dr[0], r[0]),
-                                                                                comp == 1 ? evalLagrange<degree>(b, rr[1], dr[1], r[1]) : evalEdge<degree>(b, rr[1], dr[1], r[1]),
-                                                                                comp == 2 ? evalLagrange<degree>(c, rr[2], dr[2], r[2]) : evalEdge<degree>(c, rr[2], dr[2], r[2]));
+                for (int a = 1 - degree/2; a < degree/2 + (comp == xDir ? 1 : 0); ++a),
+                    for (int b = 1 - degree/2; b < degree/2 + (comp == yDir ? 1 : 0); ++b),
+                        for (int c = 1 - degree/2; c < degree/2 + (comp == zDir ? 1 : 0); ++c))
+                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(comp == xDir ? evalLagrange<degree>(a, rr[xDir], dr[xDir], r[xDir]) : evalEdge<degree>(a, rr[xDir], dr[xDir], r[xDir]),
+                                                                                comp == yDir ? evalLagrange<degree>(b, rr[yDir], dr[yDir], r[yDir]) : evalEdge<degree>(b, rr[yDir], dr[yDir], r[yDir]),
+                                                                                comp == zDir ? evalLagrange<degree>(c, rr[zDir], dr[zDir], r[zDir]) : evalEdge<degree>(c, rr[zDir], dr[zDir], r[zDir]));
                 GEMPIC_D_LOOP_END
                 break;
             case 3:
@@ -225,9 +225,9 @@ amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC
                 for (int a = 1 - degree/2; a < degree/2; ++a),
                     for (int b = 1 - degree/2; b < degree/2; ++b),
                         for (int c = 1 - degree/2; c < degree/2; ++c))
-                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(evalEdge<degree>(a, rr[0], dr[0], r[0]),
-                                                                                evalEdge<degree>(b, rr[1], dr[1], r[1]),
-                                                                                evalEdge<degree>(c, rr[2], dr[2], r[2]));
+                            fval += funcMF(i + a, j + b, k + c) * GEMPIC_D_MULT(evalEdge<degree>(a, rr[xDir], dr[xDir], r[xDir]),
+                                                                                evalEdge<degree>(b, rr[yDir], dr[yDir], r[yDir]),
+                                                                                evalEdge<degree>(c, rr[zDir], dr[zDir], r[zDir]));
                 GEMPIC_D_LOOP_END
                 break;
             
@@ -238,22 +238,22 @@ amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC
             switch (form)
             {
             case 0:
-                error += func(AMREX_D_DECL(r[0] + (dual ? dr[0] : 0),
-                                            r[1] + (dual ? dr[1] : 0),
-                                            r[2] + (dual ? dr[2] : 0)), t) - fval;
+                error += func(AMREX_D_DECL(r[xDir] + (dual ? dr[xDir] : 0),
+                                            r[yDir] + (dual ? dr[yDir] : 0),
+                                            r[zDir] + (dual ? dr[zDir] : 0)), t) - fval;
                 break;
             case 1:
-                error += func(AMREX_D_DECL(r[0] + (dual && comp != 0 ? dr[0] : 0),
-                                            r[1] + (dual && comp != 1 ? dr[1] : 0),
-                                            r[2] + (dual && comp != 2 ? dr[2] : 0)), t) - fval;
+                error += func(AMREX_D_DECL(r[xDir] + (dual && comp != xDir ? dr[xDir] : 0),
+                                            r[yDir] + (dual && comp != yDir? dr[yDir] : 0),
+                                            r[zDir] + (dual && comp != zDir ? dr[zDir] : 0)), t) - fval;
                 break;
             case 2:
-                error += func(AMREX_D_DECL(r[0] + (dual && comp == 0 ? dr[0] : 0),
-                                            r[1] + (dual && comp == 1 ? dr[1] : 0),
-                                            r[2] + (dual && comp == 2 ? dr[2] : 0)), t) - fval;
+                error += func(AMREX_D_DECL(r[xDir] + (dual && comp == xDir ? dr[xDir] : 0),
+                                            r[yDir] + (dual && comp == yDir ? dr[yDir] : 0),
+                                            r[zDir] + (dual && comp == zDir ? dr[zDir] : 0)), t) - fval;
                 break;
             case 3:
-                error += func(AMREX_D_DECL(r[0], r[1], r[2]), t) - fval;
+                error += func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t) - fval;
                 break;
             default:
                 break;

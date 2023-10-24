@@ -35,7 +35,7 @@ namespace Gempic
 namespace Time_Loop
 {
 
-template<int vdim, int numspec, int degx, int degy, int degz, int degmw, int ndata,
+template<unsigned int vdim, unsigned int numspec, int degx, int degy, int degz, int degmw, unsigned int ndata,
          bool electromagnetic = true, bool profiling = true, bool output = true>
 class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata, electromagnetic, profiling>
 {
@@ -69,24 +69,24 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
             BL_PROFILE("time_loop_hs_zigzag_C2::step");
 
             // Rescale the fields
-            amrex::GpuArray<amrex::Real, 3> const dr = {infra.geom.CellSize()[0], infra.geom.CellSize()[1], infra.geom.CellSize()[2]};
+            amrex::GpuArray<amrex::Real, 3> const dr = {infra.geom.CellSize()[xDir], infra.geom.CellSize()[yDir], infra.geom.CellSize()[zDir]};
             //(rho.data).mult((dr[0] * dr[1] * dr[2]));
 
-            (E.data[0]).mult((1/dr[0]));
-            (E.data[1]).mult((1/dr[1]));
-            (E.data[2]).mult((1/dr[2]));
+            (E.data[xDir]).mult((1/dr[xDir]));
+            (E.data[yDir]).mult((1/dr[yDir]));
+            (E.data[zDir]).mult((1/dr[zDir]));
 
-            (D.data[0]).mult(1/(dr[1] * dr[2]));
-            (D.data[1]).mult(1/(dr[0] * dr[2]));
-            (D.data[2]).mult(1/(dr[0] * dr[1]));
+            (D.data[xDir]).mult(1/(dr[yDir] * dr[zDir]));
+            (D.data[yDir]).mult(1/(dr[xDir] * dr[zDir]));
+            (D.data[zDir]).mult(1/(dr[xDir] * dr[yDir]));
 
-            (B.data[0]).mult(1/(dr[1] * dr[2]));
-            (B.data[1]).mult(1/(dr[0] * dr[2]));
-            (B.data[2]).mult(1/(dr[0] * dr[1]));
+            (B.data[xDir]).mult(1/(dr[yDir] * dr[zDir]));
+            (B.data[yDir]).mult(1/(dr[xDir] * dr[zDir]));
+            (B.data[zDir]).mult(1/(dr[xDir] * dr[yDir]));
 
-            (H.data[0]).mult(1/(dr[0]));
-            (H.data[1]).mult(1/(dr[1]));
-            (H.data[2]).mult(1/(dr[2]));
+            (H.data[xDir]).mult(1/(dr[xDir]));
+            (H.data[yDir]).mult(1/(dr[yDir]));
+            (H.data[zDir]).mult(1/(dr[zDir]));
 
             operatorHamilton.apply_H_b(deRham, B, D, H, auxDualF2, 0.5*dt);
 
@@ -160,27 +160,27 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             // for (unsigned int d=0;d<vdim;++d)
                             // vel[d] = particles[pp].rdata(d);
                             //  vel[d] = particle_attributes->GetRealData(d)[pp];
-                            vel[0] = velx[pp];
-                            vel[1] = vely[pp];
-                            vel[2] = velz[pp];
+                            vel[xDir] = velx[pp];
+                            vel[yDir] = vely[pp];
+                            vel[zDir] = velz[pp];
 
                             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
                             // push x1
-                            operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
+                            operatorHamilton.template apply_H_p_i<xDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
 
                             if (vdim > 1)
                             {
         #if GEMPIC_SPACEDIM > 1
                                 // push x2
-                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
+                                operatorHamilton.template apply_H_p_i<yDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
         #endif
                             }
                             if (vdim > 2)
                             {
         #if GEMPIC_SPACEDIM == 3
                                 // push x3
-                                operatorHamilton.template apply_H_p_i<2>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, dt);
+                                operatorHamilton.template apply_H_p_i<zDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, dt);
         #endif
                             }
 
@@ -188,20 +188,20 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             {
         #if GEMPIC_SPACEDIM > 1
                                 // push x2
-                                operatorHamilton.template apply_H_p_i<1>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
+                                operatorHamilton.template apply_H_p_i<yDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
         #endif
                             }
 
                             // second half step of Hp1
-                        operatorHamilton.template apply_H_p_i<0>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
+                        operatorHamilton.template apply_H_p_i<xDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
 
                             for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++) particles[pp].pos(xd) = pos[xd];
                             // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
                             // for (int vd=0;vd<vdim; vd++)
                             //    particle_attributes->GetRealData(vd)[pp] = vel[vd];
-                            velx[pp] = vel[0];
-                            vely[pp] = vel[1];
-                            velz[pp] = vel[2];
+                            velx[pp] = vel[xDir];
+                            vely[pp] = vel[yDir];
+                            velz[pp] = vel[zDir];
                             // exit(0);
 
                         });
@@ -276,13 +276,13 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
             operatorHamilton.apply_H_b(deRham, B, D, H, auxDualF2_2, 0.5*dt);
 
             amrex::Real D_rms = 0.0;
-            for (amrex::MFIter mfi(D.data[0]); mfi.isValid(); ++mfi)
+            for (amrex::MFIter mfi(D.data[xDir]); mfi.isValid(); ++mfi)
             {
                 const amrex::Box &bx = mfi.validbox();
                 const auto lo = lbound(bx);
                 const auto hi = ubound(bx);
 
-                amrex::Array4<amrex::Real> const &DMF = (D.data[0])[mfi].array();
+                amrex::Array4<amrex::Real> const &DMF = (D.data[xDir])[mfi].array();
 
                 for (int i = lo.x; i <= hi.x; ++i) 
                     D_rms = DMF(i, 0, 0) * DMF(i, 0, 0);

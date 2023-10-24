@@ -199,13 +199,13 @@ int main (int argc, char *argv[])
         }
     }
 
-    amrex::Real errorGradQx_norm0 = errorQ.data[0].norm0();
-    amrex::Real errorGradQy_norm0 = errorQ.data[1].norm0();
-    amrex::Real errorGradQz_norm0 = errorQ.data[2].norm0();
+    amrex::Real errorGradQx_norm0 = errorQ.data[xDir].norm0();
+    amrex::Real errorGradQy_norm0 = errorQ.data[yDir].norm0();
+    amrex::Real errorGradQz_norm0 = errorQ.data[zDir].norm0();
 
-    amrex::Real errorGradQDualx_norm0 = errorDualQ.data[0].norm0();
-    amrex::Real errorGradQDualy_norm0 = errorDualQ.data[1].norm0();
-    amrex::Real errorGradQDualz_norm0 = errorDualQ.data[2].norm0();
+    amrex::Real errorGradQDualx_norm0 = errorDualQ.data[xDir].norm0();
+    amrex::Real errorGradQDualy_norm0 = errorDualQ.data[yDir].norm0();
+    amrex::Real errorGradQDualz_norm0 = errorDualQ.data[zDir].norm0();
 
     /*
     amrex::Print() << "errorGradQx_norm0 = " << errorGradQx_norm0 << std::endl;
@@ -232,12 +232,12 @@ int main (int argc, char *argv[])
         amrex::PrintToFile("test_grad_projection.output") << GEMPIC_SPACEDIM << "D test failed" << std::endl;
     }
 
-    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[0] = " << errorGradQx_norm0 << std::endl;
-    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[1] = " << errorGradQy_norm0 << std::endl;
-    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[2] = " << errorGradQz_norm0 << std::endl;
-    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[0] = " << errorGradQDualx_norm0 << std::endl;
-    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[1] = " << errorGradQDualy_norm0 << std::endl;
-    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[2] = " << errorGradQDualz_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[xDir] = " << errorGradQx_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[yDir] = " << errorGradQy_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQ[zDir] = " << errorGradQz_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[xDir] = " << errorGradQDualx_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[yDir] = " << errorGradQDualy_norm0 << std::endl;
+    amrex::PrintToFile("test_grad_projection.output") << "max Error gradQDual[zDir] = " << errorGradQDualz_norm0 << std::endl;
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_grad_projection.output.0", "test_grad_projection.output");
