@@ -1,29 +1,26 @@
-#find_package(AMReX CONFIG)
-message("AMReX Dir is ${AMReX_DIR}")
-
 # Find the AMReX library
-find_package( AMReX  HINTS ${AMReX_DIR}/lib/cmake/AMReX )
+find_package( AMReX CONFIG )
 if(NOT AMReX_FOUND)
-    #FetchContent_Declare(
-    #AMReX
-    #GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
-    ## Latest commit before particle class was changed. Fetching newer versions will require us to change particle treatment in quite a lot of places.
-    #GIT_TAG 5bbb63f24753353bdcbb8c439fedbc3dfc11d15e
-    #)
+    FetchContent_Declare(
+    AMReX
+    GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
+    GIT_TAG 23.09
+    )
 
-    set( AMReX_PARTICLES ON )
+    set( AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
     if( GEMPIC_USE_CUDA )
-        set( AMReX_GPU_BACKEND CUDA )
+        set( AMReX_GPU_BACKEND CUDA CACHE STRING "AMReX Option set within GEMPIC")
+        if( $ENV{HOST} MATCHES "raven")
+          set( AMReX_CUDA_ARCH "Ampere" CACHE STRING "AMReX Option set within GEMPIC")
+        endif()
     endif()
-    add_subdirectory( third_party/amrex )
     if( GEMPIC_USE_OMP ) 
-        set( AMReX_OMP "YES" )
-        set( AMReX_OMP ON )
+        set( AMReX_OMP  ON CACHE BOOL "AMReX Option set within GEMPIC")
     else()
-        set( AMReX_OMP OFF )
+        set( AMReX_OMP OFF CACHE BOOL "AMReX Option set within GEMPIC")
     endif()
 
-    #FetchContent_MakeAvailable(AMReX)
+    FetchContent_MakeAvailable(AMReX)
 endif()
 
 if(GEMPIC_USE_CUDA)

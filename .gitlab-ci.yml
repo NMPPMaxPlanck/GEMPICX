@@ -9,17 +9,12 @@ stages:
   - test
   - deploy
 
-
 # 3D Build and test based on an Ubuntu 20.04 image (CPU only)
 build-test_ubuntu2204_3D:
   image: $UBUNTU_RELEASE_IMAGE
   tags:
     - cloud
   stage: test
-  # only:
-    # - DISABLE
-  variables:
-    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
@@ -32,10 +27,6 @@ build-test_ubuntu2204_2D:
   tags:
     - cloud
   stage: test
-  # only:
-    # - DISABLE
-  variables:
-    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
@@ -48,10 +39,6 @@ build-test_ubuntu2204_1D:
   tags:
     - cloud
   stage: test
-  # only:
-    # - DISABLE
-  variables:
-    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
@@ -65,10 +52,6 @@ build-test_mpcdf_modules_cloud_cpu_3D:
   tags:
     - cloud
   stage: test
-  # only:
-    # - DISABLE
-  variables:
-    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
@@ -82,10 +65,6 @@ build-test_mpcdf_modules_cloud_cpu_2D:
   tags:
     - cloud
   stage: test
-  # only:
-    # - DISABLE
-  variables:
-    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
@@ -99,10 +78,6 @@ build-test_mpcdf_modules_cloud_cpu_1D:
   tags:
     - cloud
   stage: test
-  # only:
-    # - DISABLE
-  variables:
-    OMP_NUM_THREADS: 1
   script:
     - mkdir build
     - export BUILD_DIR=`readlink -f ./build`
@@ -110,64 +85,51 @@ build-test_mpcdf_modules_cloud_cpu_1D:
     - source ci_raven_cpu_build_gcc.inc
     - bash gempic1D_ci.sh
 
-
-# 3D Build and test based on the MPCDF 'module-image' (GPU, CentOS7, environment modules)
-build-test_mpcdf_modules_cloud_gpu_3D:
+.mpcdf-gpu-env:
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
   tags:
     - cloud-gpu
   stage: test
-  # only:
-  #  - DISABLE
-  variables:
-    MAKE_NPROCS: 4
-    OMP_NUM_THREADS: 1
+  before_script:
+    - module purge
+    - module load cmake/3.24 git
+    - module load gcc/11 cuda/11.4
+    - module load openmpi/4 numdiff/5.9
+# 3D Build and test based on the MPCDF 'module-image' (GPU, CentOS7, environment modules)
+build-test_mpcdf_modules_cloud_gpu_3D:
+  extends: .mpcdf-gpu-env
   script:
     - nvidia-cuda-mps-control -d
-    - cd scripts
-    - export BUILD_DIR=$(pwd)/../build
-    - bash ci_raven_gpu_build_gcc_3D.sh
-    - bash ci_raven_gpu_ctest.sh
+    - export BUILD_DIR=$(pwd)/build
+    - cmake -S . -B $BUILD_DIR --preset mpcdf-gcc-gpu-3D
+    - cmake --build $BUILD_DIR -j 20
+    - cd build
+    - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
 
 # 2D Build and test based on the MPCDF 'module-image' (GPU, CentOS7, environment modules)
 build-test_mpcdf_modules_cloud_gpu_2D:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
-  tags:
-    - cloud-gpu
-  stage: test
-  # only:
-  #  - DISABLE
-  variables:
-    MAKE_NPROCS: 4
-    OMP_NUM_THREADS: 1
+  extends: .mpcdf-gpu-env
   script:
     - nvidia-cuda-mps-control -d
-    - cd scripts
-    - export BUILD_DIR=$(pwd)/../build
-    - bash ci_raven_gpu_build_gcc_2D.sh
-    - bash ci_raven_gpu_ctest.sh
+    - export BUILD_DIR=$(pwd)/build
+    - cmake -S . -B $BUILD_DIR --preset mpcdf-gcc-gpu-2D
+    - cmake --build $BUILD_DIR -j 20
+    - cd build
+    - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
 
 # 1D Build and test based on the MPCDF 'module-image' (GPU, CentOS7, environment modules)
 build-test_mpcdf_modules_cloud_gpu_1D:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
-  tags:
-    - cloud-gpu
-  stage: test
-  # only:
-  #  - DISABLE
-  variables:
-    MAKE_NPROCS: 4
-    OMP_NUM_THREADS: 1
+  extends: .mpcdf-gpu-env
   script:
     - nvidia-cuda-mps-control -d
-    - cd scripts
-    - export BUILD_DIR=$(pwd)/../build
-    - bash ci_raven_gpu_build_gcc_1D.sh
-    - bash ci_raven_gpu_ctest.sh
+    - export BUILD_DIR=$(pwd)/build
+    - cmake -S . -B $BUILD_DIR --preset mpcdf-gcc-gpu-1D
+    - cmake --build $BUILD_DIR -j 20
+    - cd build
+    - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
-
 
 # Build and test directly on the Raven HPC system (A100 GPU, SLES15, environment modules, Slurm)
 build-gcc-gpu:
@@ -231,7 +193,6 @@ build-ubuntu-ci-image:
       - master
       - upgrade_ci_image_ubuntu_2204
     changes:
-      #- .gitlab-ci.yml
       - scripts/Dockerfile-CI-Ubuntu2204
   script:
     - mkdir -p /kaniko/.docker
@@ -254,7 +215,6 @@ deploy-ubuntu-ci-image:
       - master
       - upgrade_ci_image_ubuntu_2204
     changes:
-      #- .gitlab-ci.yml
       - scripts/Dockerfile-CI-Ubuntu2204
   variables:
     BUILDAH_FORMAT: docker

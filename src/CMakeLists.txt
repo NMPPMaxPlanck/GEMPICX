@@ -1,7 +1,5 @@
 add_subdirectory( field_solvers )
 add_subdirectory( forms )
-add_subdirectory( particle_mesh_coupling )
-add_subdirectory( time_loop )
 add_subdirectory( io )
 add_subdirectory( particle )
 add_subdirectory( simulations )

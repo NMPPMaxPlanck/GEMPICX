@@ -3,7 +3,7 @@ macro( _CTEST_FILE_CMP _test )
   if(EXISTS  ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input )
     message("Input file ${_test}")
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-      COMMAND mpirun -np 4 --oversubscribe ../${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
+      COMMAND mpirun -np 2 --oversubscribe ../${_test} ${CMAKE_CURRENT_SOURCE_DIR}/${_test}.input
       COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
       # lines if it should pipe the console output (if unit test has print instead of writing into a file)
       # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
@@ -14,7 +14,7 @@ macro( _CTEST_FILE_CMP _test )
   else()
     message("No input file ${_test}")
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
-      COMMAND mpirun -np 4 --oversubscribe ../${_test}
+      COMMAND mpirun -np 2 --oversubscribe ../${_test}
       COMMAND tail -n +2 ${CMAKE_CURRENT_BINARY_DIR}/${_test}.output > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.code_output
       # lines if it should pipe the console output (if unit test has print instead of writing into a file)
       # > ${CMAKE_CURRENT_BINARY_DIR}/${_test}.screen-output.tmp
