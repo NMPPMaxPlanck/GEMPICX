@@ -1,55 +1,42 @@
-# gempic
+# GEMPIC
 
-New gempic code based on AMReX
+New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 
-Installing with scripts
-=====================
-The library can be compiled with scripts available in the folder scripts. The available scripts are for supermuc, the mpcdf cluster and a desktop pc. Note that you might need to change the script for your desktop pc.
+## Requirements
+- [AMReX](https://github.com/AMReX-Codes/amrex)
+- [CMake](https://cmake.org/cmake/help/latest/index.html)
+- Documentation:
+  - Doxygen 
+  - Sphinx
+  - [Breathe](https://breathe.readthedocs.io/en/latest/)
+- Postprocessing:
+  - [Graphviz](http://www.graphviz.org/) (for graphical visualization of objects)
 
-Compiling and running on MPCDF machines
-=======================================
-- go into gempic/scripts directory
-### On CPU
-- type ./compile_mpcdf.sh
-- a directory gempic_obj has been generated in your home directory. It contains all the tests and simulations.
-- An example batch script run_mpcdf.sh has been created in gempic_obj. Copy it to your run directory and adapt as needed
-### On Raven GPU
-- type ./compile_gpu_raven-gcc.sh
-- a directory gempic_gpu_obj has been generated in your home directory. It contains all the tests and simulations.
-- Use run_gpu_mpcdf-gcc.sh from script directory. Copy it to your run directory and adapt as needed
 
-Installing manually
-=====================
-- needed software: C++ compiler, MPI, cmake 
+## Installing with Presets
+For systems on which the GEMPIC code is run regularly by multiple users we provide [cmake-presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). So far this is implemented for the Raven Cluster of the MPCDF. These presets are defined in [](./CMakePresets.json)
 
-1.) git clone  
-2.) cd gempic; mkdir build; cd build  
-3.) git submodule sync; git submodule init; git submodule update  
-4.) cmake ..   
-5.) make
+All available presets can be listed using
+```sh
+cmake --list-presets
+```
 
-Main executable vlasov_maxwell is in build/simulation/vlasov_maxwell  
+If more specific presets are required to build on systems which are not defined we recommened to store these presets in a `CMakeUserPresets.json` file.
 
-- Update AMReX version in submodule
-1. cd third_party/amrex
-2. git checkout SHA (commit that is desired)
-3. cd ../..
-4. git add third_party/amrex
-5. git commit -m"update AMReX to ..."
-6. git submodule update
+Building GEMPIC using presets can be done by following the instructions below
+```
+cd /PATH/TO/GEMPIC
+cmake --preset name-of-your-preset -S . -B /PATH/TO/BUILD/DIR
+cmake --build /PATH/TO/BUILD/DIR
+```
+If multiple processes are available on the machine on which GEMPIC is build add the `-j <NProcs>` flag to the `cmake --build` command to parallelise the build. `<NProcs>` should be equal to the number of processes which should run in parallel.
 
-To update your own version with the version from the repository type 
-*git submodule update* 
+## Installing manually
 
-Changing dimension
-=====================
-cd ~build/amrex1D  
-make install  
-cd ~build/gempic  
-make
+Only recommended for experienced users familiar with [CMake](https://cmake.org/cmake/help/latest/index.html). A more detailed instruction will be provided in an upcoming commit.
 
-Ctests
-======
+CTest
+=====
 - To write a test code, write a main program in the testing directory corresponding to the code you are testing. This code should be in a file *test_mytest.cpp* and write the results of the test in a file called *test_mytest.output*   
 - The new test is automatically added to the list of ctests when a *test_mytest.expected_output* file is added in the directory IOFiles_1D, IOFiles_2D or IOFiles_3D in the testing directory containing *test_mytest.cpp*. When ctest is called the files *test_mytest.output* and *test_mytest.expected_output* are compared and the test is passed when they are identical up to round of errors that are set by parameters used in numdiff (these parameters are hard coded in define_ctest.cmake). Which directory of IOFiles_1D, IOFiles_2D or IOFiles_3D is used when ctest is looking for tests is determined at compile time by the value of AMReX_SPACEDIM.
 - Assuming *build* is the directory in which Gempic is built, the executables of the tests are found in build/src/my_dir/testing and can be run directly without performing all the ctests. You can also run all the tests in a testing directory by executing ctest in build/src/my_dir/testing
@@ -97,11 +84,6 @@ Project branches
 Dependencies
 =====================
 
-- CMake
-- Doxygen
-- Graphviz ([for graphical visualization of objects](http://www.graphviz.org/))
-- Sphinx
-- Breathe ([for bridging between Sphinx and Doxygen documentation systems](https://breathe.readthedocs.io/en/latest/))
 
 Formatting
 =====================

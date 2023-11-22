@@ -1,0 +1,84 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "raven-env",
+      "displayName": "Raven environment settings",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CUDA_ARCHITECTURES": "80"
+      }
+    },
+    {
+      "name": "gempic-gpu-cache-vars",
+      "displayName": "BSL6D Cache Variables GPU",
+      "hidden": true,
+      "cacheVariables": {
+        "GEMPIC_USE_CUDA": "On"
+      }
+    },
+    {
+      "name": "gnu-compiler",
+      "displayName": "GNU CPU Compiler",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_C_COMPILER": "gcc"
+      }
+    },
+    {
+      "name": "mpcdf-gcc-cpu-3D",
+      "displayName": "GCC CPU Settings for Raven 3D",
+      "inherits": ["raven-env","gnu-compiler"],
+      "cacheVariables": {
+        "AMReX_SPACEDIM": "3"
+      }
+    },
+    {
+      "name": "mpcdf-gcc-gpu-3D",
+      "displayName": "GCC GPU Settings for Raven 3D",
+      "inherits": ["raven-env","gnu-compiler","gempic-gpu-cache-vars"],
+      "cacheVariables": {
+        "AMReX_SPACEDIM": "3"
+      }
+    },
+    {
+      "name": "mpcdf-gcc-cpu-2D",
+      "displayName": "GCC CPU Settings for Raven 2D",
+      "inherits": ["raven-env","gnu-compiler"],
+      "cacheVariables": {
+        "AMReX_SPACEDIM": "2"
+      }
+    },
+    {
+      "name": "mpcdf-gcc-gpu-2D",
+      "displayName": "GCC GPU Settings for Raven 2D",
+      "inherits": ["raven-env","gnu-compiler","gempic-gpu-cache-vars"],
+      "cacheVariables": {
+        "AMReX_SPACEDIM": "2"
+      }
+    },
+    {
+      "name": "mpcdf-gcc-cpu-1D",
+      "displayName": "GCC CPU Settings for Raven 1D",
+      "inherits": ["raven-env","gnu-compiler"],
+      "cacheVariables": {
+        "AMReX_SPACEDIM": "1"
+      }
+    },
+    {
+      "name": "mpcdf-gcc-gpu-1D",
+      "displayName": "GCC GPU Settings for Raven 1D",
+      "inherits": ["raven-env","gnu-compiler","gempic-gpu-cache-vars"],
+      "cacheVariables": {
+        "AMReX_SPACEDIM": "1"
+      }
+    }
+  ]
+}

@@ -1,12 +1,6 @@
-CMakeLists.txt.user
-CMakeLists.txt.user.8105280
-gempic.config
-gempic.creator
-gempic.creator.user
-gempic.files
-gempic.includes
-build/**/*
-**/cmake-build-debug
+# CMake Ignores
+CMakeUserPresets.json
+# ToDo: Can the patterns below be removed?
 **/CMakeCache.txt
 **/cmake_install.cmake
 **/install_manifest.txt
@@ -16,13 +10,27 @@ build/**/*
 **/*.cbp
 **/CMakeScripts
 **/compile_commands.json
+
+# IDE Specific Excludes
 .vscode/
+.idea/
+
+# Non Source Directories
+*build*/**
+*install*/**
+*out*/**
+
+# Operating System specific excludes
 .DS_store
-runs/**/*
+
+# ToDo: Can the patterns below be removed?(Seems like absolute nonsense and repo structure problems. Should not be necessary to mention in .gitignore)
+gempic.config
+gempic.creator
+gempic.creator.user
+gempic.files
+gempic.includes
 **/dispersion_relations/__pycache__
 **/dispersion_relations/.ipynb_checkpoints
 doc/doxygen/xml/**
 doc/doxygen/html/**
 **/Plotfiles/**/*
-build1D/**/*
-build2D/**/*
