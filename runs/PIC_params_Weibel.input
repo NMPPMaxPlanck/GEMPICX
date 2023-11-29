@@ -6,52 +6,52 @@ sim_name = "Weibel"
 #amrex.abort_on_out_of_gpu_memory = 1
 # OPENMP settings
 #mfiter_tile_size = 16 16 8 
-particles.do_tiling = 1 
+particle.do_tiling = 1 
 
 # Grid parameters
 n_cell_vector = 64 64 16
 max_grid_size_vector = 64 16 16
-particles.tile_size = 64 8 8
+particle.tile_size = 64 8 8
 #max_grid_size_vector = 16 8 8
 is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
-species0.n_part_per_cell = 20 # number of particles per cell
-species0.charge = -1.0 # vector (one entry per species)
-species0.mass = 1.0 # vector (one entry per species)
-species0.density = "1.0" #"1.0 + 0.0 * cos(kvarx * x)"
-species0.num_gaussians = 1
+particle.species0.n_part_per_cell = 20 # number of particles per cell
+particle.species0.charge = -1.0 # vector (one entry per species)
+particle.species0.mass = 1.0 # vector (one entry per species)
+particle.species0.density = "1.0" #"1.0 + 0.0 * cos(kvarx * x)"
+particle.species0.num_gaussians = 1
 
 # Gaussian parameters
-species0.vMean_g0 = 0.0 0.0 0.0
-species0.vThermal_g0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
-species0.vWeight_g0 = 1.0
+particle.species0.vMean_g0 = 0.0 0.0 0.0
+particle.species0.vThermal_g0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
+particle.species0.vWeight_g0 = 1.0
 
 # wave vector
 k = 1.25 1.25 1.25 # 1.25 for Weibel, 0.5 for Landau
  
 # Simulation parameters
-n_steps = 10
-dt = 0.04
-save_fields = 5 
-save_particles = 100001 
-save_checkpoint = 4
+time_loop.n_steps = 10
+time_loop.dt = 0.04
+time_loop.save_fields = 5 
+time_loop.save_particles = 100001 
+time_loop.save_checkpoint = 4
 
 # Function parameters
-Bx = "0.0"
-By = "0.0"
-Bz = "1e-3 * cos(kvarx * x)"
-phi = "4 * 0.5 * cos(0.5 * x)"
+function.Bx = "0.0"
+function.By = "0.0"
+function.Bz = "1e-3 * cos(kvarx * x)"
+function.phi = "4 * 0.5 * cos(0.5 * x)"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
-propagator = 3
-#strang_order = 2
+time_loop.propagator = 3
+#time_loop.strang_order = 2
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
-tolerance_particles = 1.e-10
-#max_coarsening_level = 0
+time_loop.tolerance_particles = 1.e-10
+#time_loop.max_coarsening_level = 0
 
 # Restart parameters
-restart = 0
-checkpoint_file = "Checkpoint/Test_Weibel_2_"
-curr_step = 4
+time_loop.restart = 0
+time_loop.checkpoint_file = "Checkpoint/Test_Weibel_2_"
+time_loop.curr_step = 4

@@ -1,5 +1,6 @@
 # General setting
-sim_name = "test_bernstein_waves"
+utest.keep_parameters = 1
+sim_name = "GTest"
 
 # Grid parameters
 n_cell_vector = 128 8 8

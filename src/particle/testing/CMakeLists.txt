@@ -1,4 +1,6 @@
-add_executable( test_sampler test_sampler.cpp )
+file(GLOB VERBOSITY "../../utils/GEMPIC_Verbosity.cpp")
+file(GLOB PARAMETERS "../../io/parameters/GEMPIC_parameters.cpp")
+add_executable( test_sampler ${PARAMETERS} ${VERBOSITY} test_sampler.cpp )
 
 if(GEMPIC_USE_CUDA) 
   setup_target_for_cuda_compilation( test_sampler ) 

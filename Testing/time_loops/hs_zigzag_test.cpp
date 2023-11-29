@@ -66,35 +66,55 @@ namespace {
         double charge{1};
         double mass{1};
 
-        computational_domain infra;
+        computational_domain infra{false}; // "uninitialized" computational domain
         amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
 
         MockHSZigZagC2<vDim, numSpec, degX, degY, degZ, degmw, nData> mockHSZigZagC2;
 
-        // virtual void SetUp() will be called before each test is run.
-        void SetUp() override {
+        static void SetUpTestSuite()
+        {
             GTEST_SKIP() << "hs_zigzag tests not implemented";
             /* Initialize the infrastructure */
-            const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-                                            {AMREX_D_DECL(10.0, 10.0, 10.0)});
-            const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-            const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-            const amrex::IntVect isPeri{isPeriodic};
-            const int hodgeDegree{2};
+            //const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+            //                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
+            amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+            // 
+            amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2*M_PI, 0.2*M_PI, 0.2*M_PI)};
+            const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-            // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
-            // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
 
-            params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-            
+            amrex::ParmParse pp;
+            pp.addarr("domain_lo", domain_lo);
+            pp.addarr("k", k);
+            pp.addarr("n_cell_vector", nCell);
+            pp.addarr("max_grid_size_vector", maxGridSize);
+            pp.addarr("is_periodic_vector", isPeriodic);
+
+            // particle settings
+            double charge{1};
+            double mass{1};
+
+            pp.add("particle.species0.charge", charge);
+            pp.add("particle.species0.mass", mass);
+        }
+
+        // virtual void SetUp() will be called before each test is run.
+        void SetUp() override {
+            /* Initialize the infrastructure */
+            infra = computational_domain{};
+
+            // Initialize the De Rham Complex
+            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+
             // particles
             for (int spec{0}; spec < numSpec; spec++)
             {
                 particleGroup[spec] =
-                    std::make_unique<particle_groups<vDim>>(charge, mass, infra);
+                    std::make_unique<particle_groups<vDim>>(spec, infra);
             }
+
         }
     };
 }

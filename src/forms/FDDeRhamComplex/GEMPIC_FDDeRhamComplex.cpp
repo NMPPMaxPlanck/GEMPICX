@@ -1,18 +1,19 @@
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
 #include <GEMPIC_FDDeRhamComplex.H>
+#include "GEMPIC_computational_domain.H"
 
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 
-FDDeRhamComplex::FDDeRhamComplex(Parameters params) : DeRhamComplex::DeRhamComplex(params)
+
+FDDeRhamComplex::FDDeRhamComplex(const Gempic::CompDom::computational_domain& infra, const int hodgeDegree, const int maxSplineDegree) : DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
 {
     // Parameters used in the projection and hodge
-    m_dr = params.dr();
-    m_geom = params.geometry();
-    m_grid = params.grid();
-    m_distriMap = params.distriMap();
-    m_nGhost = params.degree()/2 - 1;
+    for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
+    {
+        m_dr[i] = infra.dx[i];
+    }
+    m_nGhost = DeRhamComplex::m_nGhost[xDir];
 
     // There is only one components in each MultiFab as the different components of the forms are centered differently
     m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)})), m_distriMap, 1, m_nGhost);

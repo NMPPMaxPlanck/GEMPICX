@@ -3,7 +3,6 @@
 
 #include <AMReX.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_Params.H>
 #include <AMReX_MFIter.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLEBNodeFDLaplacian.H>
@@ -11,11 +10,11 @@
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
 
 namespace GEMPIC_PoissonSolver
 {
+using namespace GEMPIC_Fields;
+using namespace GEMPIC_FDDeRhamComplex;
     class PoissonSolver
     {
         private:
@@ -35,11 +34,11 @@ namespace GEMPIC_PoissonSolver
 
             ~PoissonSolver();
 
-            void solve(Parameters params, DeRhamField<Grid::dual, Space::cell>& rho,
+            void solve(const Gempic::CompDom::computational_domain& infra, DeRhamField<Grid::dual, Space::cell>& rho,
                           DeRhamField<Grid::primal, Space::node>& phi);
 
             // The solver needs to subtract the kernel of the matrix to be invertible
-            void subtractConstantPart(Parameters params, DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost);
+            void subtractConstantPart(const Gempic::CompDom::computational_domain& infra,DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost);
     };
 }
 

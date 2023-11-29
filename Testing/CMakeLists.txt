@@ -9,6 +9,16 @@ add_subdirectory( test_utils )
 add_subdirectory( forms )
 add_subdirectory( particle_mesh_coupling )
 add_subdirectory( time_loops )
+add_subdirectory( io )
+
+add_custom_command(
+  TARGET GtestTests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          ${CMAKE_CURRENT_BINARY_DIR}/input_files
+  COMMAND ${CMAKE_COMMAND} -E copy
+          ${CMAKE_CURRENT_SOURCE_DIR}/input_files/*
+          ${CMAKE_CURRENT_BINARY_DIR}/input_files/
+)
 
 include(GoogleTest)
 # Setup target to be compiled with CUDA and be linked against CUDA-enabled AMReX

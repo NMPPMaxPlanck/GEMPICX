@@ -6,7 +6,6 @@
 #include <GEMPIC_Config.H>
 #include <GEMPIC_amrex_init.H>
 #include <GEMPIC_parameters.H>
-#include <GEMPIC_Params.H>
 #include <GEMPIC_computational_domain.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
@@ -20,7 +19,10 @@
 #include <iostream>
 
 using namespace Gempic;
+using namespace CompDom;
 using namespace Sampling;
+using namespace GEMPIC_Fields;
+using namespace GEMPIC_FDDeRhamComplex;
 
 void write_rho(DeRhamField<Grid::dual, Space::cell> &rho, computational_domain& infra, double time, int step) {
         // save fields
@@ -101,248 +103,224 @@ int main(int argc, char* argv[])
     constexpr int degx{1};
     constexpr int degy{1};
     constexpr int degz{1};
+    constexpr int maxSplineDegree{std::max(std::max(degx, degy), degz)};
     //
     constexpr int hodgeDegree{2};
 
 {
-    gempic_parameters<numspec> parametersBernstein;
-    parametersBernstein.read_pp_params();
-    parametersBernstein.set_computed_params();
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic = {AMREX_D_DECL(
-                                                     parametersBernstein.is_periodic[xDir],
-                                                     parametersBernstein.is_periodic[yDir],
-                                                     parametersBernstein.is_periodic[zDir])};
+    //Parameters::setPrintOutput();  // uncomment to print an output file
+    Parameters parameters{};
 
-    Parameters params(parametersBernstein.real_box,
-                      parametersBernstein.n_cell,
-                      parametersBernstein.max_grid_size,
-                      isPeriodic,
-                      hodgeDegree);
+    // Initialize computational_domain
+    computational_domain infra;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
 
-    DeRhamField<Grid::primal, Space::face> B(deRham);
+    auto [parseB, funcB] = Utils::parseFunctions<3>({"Bx", "By", "Bz"});
+
+    DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
     DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
     DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcB{parametersBernstein.BxEval, parametersBernstein.ByEval, parametersBernstein.BzEval};
-    deRham->projection(funcB, 0.0, B);
     // For the moment we consider only a constant background field.
-    amrex::Real Bz = parametersBernstein.BzEval(AMREX_D_DECL(0., 0., 0.), 0.);
+    amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
     amrex::Print() << "Bz " << Bz << std::endl;
 
     // Initialize particle groups
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> ions;
 
-    // In order to use the particle sampler we need to also initialize computational_domain
-    // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned. 
-    // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-    computational_domain infra;
-    infra.initialize_computational_domain(parametersBernstein.n_cell, parametersBernstein.max_grid_size, parametersBernstein.is_periodic, parametersBernstein.real_box);
-
+    // initialize particles & loop preparation:
+    // FIRST SPECIES
     for (int spec = 0; spec < numspec; spec++)
     {
         ions[spec] =
-            std::make_unique<particle_groups<vdim>>(parametersBernstein.charge[spec], parametersBernstein.mass[spec], infra);
+            std::make_unique<particle_groups<vdim>>(spec, infra);
+        init_particles_full_domain<vdim, numspec>(infra, ions, spec);
     }
 
-    // initialize particles & loop preparation:
-    // FIRST SPECIES
-    amrex::Vector<amrex::Vector<amrex::Real>> meanVelocity = {{0.0, 0.0, 0.0}};
-    amrex::Vector<amrex::Vector<amrex::Real>> vThermal = {{1.0, 1.0, 1.0}};
-    amrex::Vector<amrex::Real> vWeight = {1.0};
+    {// "Time Loop" scope. Should be a separate function
+        const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
+        const int npass = 3; // Number of filter passes
 
-    init_particles_full_domain<vdim, numspec>(infra,
-                                              ions,
-                                              parametersBernstein.n_part_per_cell,
-                                              meanVelocity,
-                                              vThermal, vWeight, 0,
-                                              parametersBernstein.densityEval[0]);
+        Parameters params("time_loop");
+        // Deposit initial charge
+        for (int spec = 0; spec < numspec; spec++) {
 
-    const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
-    const int npass = 3; // Number of filter passes
-    // Needed for SumBoundary
-    auto nGhost = deRham->getNGhost();
-    amrex::IntVect zeroVect{AMREX_D_DECL(0,0,0)};
-
-    // Deposit initial charge
-    for (int spec = 0; spec < numspec; spec++) {
-
-        amrex::Real charge = ions[spec]->getCharge();
-
-        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
-        {
-            const long np = pti.numParticles();
-            const auto particles = pti.GetArrayOfStructs()().data();
-            const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-
-            amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
-
-            amrex::ParallelFor(np,
-                            [=] AMREX_GPU_DEVICE(long pp)
-                            {
-                                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                                    positionParticle[d] = particles[pp].pos(d);
-                                Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
-                                // Needs at least max(degx, degy, degz) ghost cells
-                                gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
-                            });
-        }
-    }
-
-   (rho.data).SumBoundary(0, 1, nGhost, zeroVect, params.geometry().periodicity());
-    rho.averageSync();
-    rho.fillBoundary();
-
-    filter(rho, rhoTemp, npass);
-
-    deRham->hodgeFD<hodgeDegree>(rho, phi);
-    deRham->grad(phi, E);
-    E *= -1.0;
-
-    amrex::Real dt = parametersBernstein.dt;
-    int nSteps = parametersBernstein.n_steps;
-
-    write_rho(rho, infra, 0, 0);
-    write_Ex(E, infra, 0, 0);
-
-    for (int tStep = 0; tStep < nSteps; tStep++) {
-
-        for (int spec = 0; spec < numspec; spec++)
-        {
             amrex::Real charge = ions[spec]->getCharge();
-            amrex::Real chargemass = charge / ions[spec]->getMass();
-            amrex::Real a = 0.5 * chargemass * dt * Bz;
-
-            rho.data.setVal(0.0);
 
             for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
             {
                 const long np = pti.numParticles();
-                const auto& particles = pti.GetArrayOfStructs()().data();
-                const auto velx = pti.GetStructOfArrays().GetRealData(0).data();
-                const auto vely = pti.GetStructOfArrays().GetRealData(1).data();
-                const auto velz = pti.GetStructOfArrays().GetRealData(2).data();
+                const auto particles = pti.GetArrayOfStructs()().data();
                 const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
                 amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
 
-                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
-                {
-                    // Local arrays for particle position and velocities
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                    amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
-                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                    {
-                        // positionParticle data structure needed for spline
-                        positionParticle[d] = particles[pp].pos(d) + 0.5 * dt * vel[d];
-                        particles[pp].pos(d) = positionParticle[d];
-                    }
-
-                    Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
-
-                    gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
-                });
-
+                amrex::ParallelFor(np,
+                                [=] AMREX_GPU_DEVICE(long pp)
+                                {
+                                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
+                                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                        positionParticle[d] = particles[pp].pos(d);
+                                    Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
+                                    // Needs at least max(degx, degy, degz) ghost cells
+                                    gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
+                                });
             }
-
-            ions[spec] -> Redistribute();
-
-            (rho.data).SumBoundary(0, 1, nGhost, zeroVect, params.geometry().periodicity());
-            rho.averageSync();
-            rho.fillBoundary();
-            filter(rho, rhoTemp, npass);
-
-            deRham->hodgeFD<hodgeDegree>(rho, phi);
-            deRham->grad(phi, E);
-            E *= -1.0;
-
-            rho.data.setVal(0.0);
-
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
-            {
-                const long np = pti.numParticles();
-                const auto& particles = pti.GetArrayOfStructs()().data();
-                const auto velx = pti.GetStructOfArrays().GetRealData(0).data();
-                const auto vely = pti.GetStructOfArrays().GetRealData(1).data();
-                const auto velz = pti.GetStructOfArrays().GetRealData(2).data();
-                const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-
-                amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
-                amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-
-                // Extract E
-                for (int cc = 0; cc < vdim; cc++)
-                {
-                    eA[cc] = (E.data[cc])[pti].array();
-                }
-
-                amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
-                {
-                    // Read out particle position
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                        positionParticle[d] = particles[pp].pos(d);
-
-                    amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
-
-                    Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
-
-                    // evaluate the electric field
-                    amrex::GpuArray<amrex::Real, vdim> efield =
-                        spline.template evalSplineField<Field::PrimalOneForm>(eA);
-
-                    // push v with the electric field over dt/2
-                    push_v_efield(vel, dt * 0.5, chargemass, efield);
-
-
-                    // rotate v with magnetic field over dt
-                    amrex::Real vx = vel[xDir];
-                    amrex::Real vy = vel[yDir];
-
-                    vel[xDir] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
-                    vel[yDir] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
-
-                    // push v with the electric field over dt/2
-                    push_v_efield(vel, dt * 0.5, chargemass, efield);
-
-                    // update global particle velocities arrays    
-                    velx[pp] = vel[xDir];
-                    vely[pp] = vel[yDir];
-                    velz[pp] = vel[zDir];
-
-                    for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                    {
-                        positionParticle[d] = particles[pp].pos(d) + 0.5 * dt * vel[d];
-                        particles[pp].pos(d) = positionParticle[d];
-                    }
-
-                    Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
-
-                    gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
-                });
-            }
-            ions[spec] -> Redistribute();
         }
 
-        (rho.data).SumBoundary(0, 1, nGhost, zeroVect, params.geometry().periodicity());
+        rho.postParticleLoopSync();
 
-        rho.averageSync();
-        rho.fillBoundary();
         filter(rho, rhoTemp, npass);
 
-        if (tStep%parametersBernstein.save_fields == 0) {
-            write_rho(rho, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
-            write_Ex(E, infra, (tStep+1)*parametersBernstein.dt, tStep+1);
+        deRham->hodgeFD<hodgeDegree>(rho, phi);
+        deRham->grad(phi, E);
+        E *= -1.0;
+
+        amrex::Real dt;
+        params.get("dt", dt);
+        int nSteps;
+        params.get("n_steps", nSteps);
+
+        int saveFields = 0;
+        params.getOrSet("save_fields", saveFields);
+
+        write_rho(rho, infra, 0, 0);
+        write_Ex(E, infra, 0, 0);
+
+        for (int tStep = 0; tStep < nSteps; tStep++) {
+
+            for (int spec = 0; spec < numspec; spec++)
+            {
+                amrex::Real charge = ions[spec]->getCharge();
+                amrex::Real chargemass = charge / ions[spec]->getMass();
+                amrex::Real a = 0.5 * chargemass * dt * Bz;
+
+                rho.data.setVal(0.0);
+
+                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
+                {
+                    const long np = pti.numParticles();
+                    const auto& particles = pti.GetArrayOfStructs()().data();
+                    const auto velx = pti.GetStructOfArrays().GetRealData(0).data();
+                    const auto vely = pti.GetStructOfArrays().GetRealData(1).data();
+                    const auto velz = pti.GetStructOfArrays().GetRealData(2).data();
+                    const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+
+                    amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
+
+                    amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
+                    {
+                        // Local arrays for particle position and velocities
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
+                        amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        {
+                            // positionParticle data structure needed for spline
+                            positionParticle[d] = particles[pp].pos(d) + 0.5 * dt * vel[d];
+                            particles[pp].pos(d) = positionParticle[d];
+                        }
+
+                        Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
+
+                        gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
+                    });
+
+                }
+
+                ions[spec] -> Redistribute();
+
+                rho.postParticleLoopSync();
+                filter(rho, rhoTemp, npass);
+
+                deRham->hodgeFD<hodgeDegree>(rho, phi);
+                deRham->grad(phi, E);
+                E *= -1.0;
+
+                rho.data.setVal(0.0);
+
+                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid(); ++pti)
+                {
+                    const long np = pti.numParticles();
+                    const auto& particles = pti.GetArrayOfStructs()().data();
+                    const auto velx = pti.GetStructOfArrays().GetRealData(0).data();
+                    const auto vely = pti.GetStructOfArrays().GetRealData(1).data();
+                    const auto velz = pti.GetStructOfArrays().GetRealData(2).data();
+                    const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+
+                    amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
+                    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
+
+                    // Extract E
+                    for (int cc = 0; cc < vdim; cc++)
+                    {
+                        eA[cc] = (E.data[cc])[pti].array();
+                    }
+
+                    amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
+                    {
+                        // Read out particle position
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
+                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                            positionParticle[d] = particles[pp].pos(d);
+
+                        amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+
+                        Spline::SplineBase<degx, degy, degz> spline(positionParticle, infra.plo, infra.dxi);
+
+                        // evaluate the electric field
+                        amrex::GpuArray<amrex::Real, vdim> efield =
+                            spline.template evalSplineField<Field::PrimalOneForm>(eA);
+
+                        // push v with the electric field over dt/2
+                        push_v_efield(vel, dt * 0.5, chargemass, efield);
+
+
+                        // rotate v with magnetic field over dt
+                        amrex::Real vx = vel[xDir];
+                        amrex::Real vy = vel[yDir];
+
+                        vel[xDir] = (vx*(1.-a*a) + 2.*a*vy)/(1.+a*a);
+                        vel[yDir] = (vy*(1.-a*a) - 2.*a*vx)/(1.+a*a);
+
+                        // push v with the electric field over dt/2
+                        push_v_efield(vel, dt * 0.5, chargemass, efield);
+
+                        // update global particle velocities arrays    
+                        velx[pp] = vel[xDir];
+                        vely[pp] = vel[yDir];
+                        velz[pp] = vel[zDir];
+
+                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        {
+                            positionParticle[d] = particles[pp].pos(d) + 0.5 * dt * vel[d];
+                            particles[pp].pos(d) = positionParticle[d];
+                        }
+
+                        Spline::SplineBase<degx, degy, degz> splineNew(positionParticle, infra.plo, infra.dxi);
+
+                        gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
+                    });
+                }
+                ions[spec] -> Redistribute();
+            }
+
+            rho.postParticleLoopSync();
+
+            filter(rho, rhoTemp, npass);
+
+            if (tStep%saveFields == 0) {
+                write_rho(rho, infra, (tStep+1)*dt, tStep+1);
+                write_Ex(E, infra, (tStep+1)*dt, tStep+1);
+            }
+            if (tStep%1 == 0) {
+                std::cout << "Time Step: " << tStep+1 << std::endl;
+            }
         }
-        if (tStep%1 == 0) {
-            std::cout << "Time Step: " << tStep+1 << std::endl;
-        }
-    }
+    } // end of "time loop" scope
 }
     amrex::Finalize();
 }

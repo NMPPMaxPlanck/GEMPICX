@@ -7,7 +7,8 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_computational_domain.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_PoissonSolver.H>
@@ -25,18 +26,35 @@ int main(int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
 
+    {
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
-    const amrex::IntVect nCell{AMREX_D_DECL(64, 64, 64)};
+    //const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI, M_PI, M_PI)});
+    const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(64, 64, 64)};
     //const amrex::IntVect nCell{AMREX_D_DECL(128, 128, 128)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(64, 64, 64)};
+    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(64, 64, 64)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int degree = 2;
+    const int maxSplineDegree = 1;
+    const int nGhostExtra = 0;
 
-    Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    Parameters parameters{};
 
-    auto const dr = params.dr();
+    parameters.set("domain_lo", domain_lo);
+    parameters.set("k", k);
+    parameters.set("n_cell_vector", nCell);
+    parameters.set("max_grid_size_vector", maxGridSize);
+    parameters.set("is_periodic_vector", isPeriodic);
+    parameters.set("n_ghost_extra", nGhostExtra);
+
+    // Initialize computational_domain
+    Gempic::CompDom::computational_domain infra;
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, degree, maxSplineDegree);
+
+    auto const dr = infra.dx;
 
     // Declare both rho and phi
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
@@ -61,14 +79,14 @@ int main(int argc, char *argv[])
 
     PoissonSolver poisson;
 
-    poisson.solve(params, rho, phi);
+    poisson.solve(infra, rho, phi);
 
     for (amrex::MFIter mfi(phi.data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
         amrex::Array4<amrex::Real> const &anPhiMF = (anPhi.data)[mfi].array();
-        const amrex::RealVect dr = params.dr();
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();
+        //const amrex::RealVect dr = params.dr();
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = infra.geom.ProbLoArray();
 
         ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
@@ -120,6 +138,6 @@ int main(int argc, char *argv[])
     }
 
     amrex::Print() << "max errorPhi: " << errorPhi.data.norm0() << std::endl;
-
+    }
     amrex::Finalize();
 }

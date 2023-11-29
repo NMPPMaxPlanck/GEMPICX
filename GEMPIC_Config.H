@@ -55,6 +55,14 @@ enum Direction : unsigned int {
     noDir = 3,
 };
 
+enum Error : int {
+    InvalidInput = 1,
+    AttemptedParameterChange = 2,
+    ParametersNotInitialized = 3,
+    ParametersAlreadyInitialized = 4,
+    VerbosityAlreadySet = 5,
+};
+
 enum class Field {
     PrimalZeroForm,
     PrimalOneForm,

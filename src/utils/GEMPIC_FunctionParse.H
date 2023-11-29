@@ -1,0 +1,117 @@
+#ifndef GEMPIC_FUNCTION_PARSE_H_
+#define GEMPIC_FUNCTION_PARSE_H_
+
+#include <AMReX_Parser.H>
+#include "GEMPIC_parameters.H"
+
+namespace Gempic
+{
+namespace Utils
+{
+/**
+ * @brief Parse functions based on string array. Please keep parseArray alive.
+ * 
+ * Description:
+ * Convenience function to load and compile functions using AMReX's Parser module.
+ * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs 
+ * to be used.
+ * 
+ * @tparam functionNumber : Number of functions to parse
+ * 
+ * @param variableStrings : List of strings to parse
+ * @param params : Optional parameter class object for parsing scoped functions
+ * 
+ * @return [parseArray, functionArray]
+*/
+template <size_t functionNumber>
+auto parseFunctions(const amrex::Array<std::string, functionNumber>& variableStrings, Parameters& params)
+{
+    amrex::Vector<amrex::Real> k;
+    bool kExists{params.exists("k")};
+    if (kExists)
+    {
+        params.get("k", k);
+    }
+
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, functionNumber> evalArray;
+    amrex::Array<amrex::Parser, functionNumber> parseArray;
+
+    size_t index{0};
+    for (auto &variableString : variableStrings)
+    {
+        std::string parseString;
+        params.get(variableString, parseString);
+        auto parseArray = amrex::Parser(parseString);
+        if (kExists)
+        {
+            parseArray.setConstant("kvarx", k[xDir]);
+            parseArray.setConstant("kvary", k[yDir]);
+            parseArray.setConstant("kvarz", k[zDir]);
+        }
+        parseArray.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        evalArray[index] = parseArray.compile<GEMPIC_SPACEDIM + 1>();
+        ++index;
+    }
+    return std::make_tuple(parseArray, evalArray);
+}
+
+/**
+ * @brief Parse functions based on string array. Please keep parseArray alive.
+ * 
+ * Description:
+ * Convenience function to load and compile functions using AMReX's Parser module.
+ * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs 
+ * to be used.
+ * 
+ * @tparam functionNumber : Number of functions to parse
+ * 
+ * @param variableStrings : List of strings to parse
+ * 
+ * @return [parseArray, functionArray]
+*/
+template <size_t functionNumber>
+auto parseFunctions(const amrex::Array<std::string, functionNumber>& variableStrings)
+{
+    Parameters params{"function", "function parseFunctions"};
+    return parseFunctions(variableStrings, params);
+}
+
+/**
+ * @brief Parse function based on string. Please keep parse object (return arg 1) alive.
+ * 
+ * Description:
+ * Convenience function to load and compile functions using AMReX's Parser module.
+ * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs 
+ * to be used.
+ * 
+ * @param variableString : String to parse
+ * @param params : Optional parameter class object for parsing a scoped function
+ * 
+ * @return [parser, function]
+*/
+inline auto parseFunction(const std::string& variableString, Parameters& params)
+{
+    auto [parser, eval] = parseFunctions<1>({variableString}, params);
+    return std::make_tuple(parser[0], eval[0]);
+}
+
+/**
+ * @brief Parse function based on string. Please keep parse object (return arg 1) alive.
+ * 
+ * Description:
+ * Convenience function to load and compile functions using AMReX's Parser module.
+ * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs 
+ * to be used.
+ * 
+ * @param variableString : String to parse
+ * 
+ * @return [parser, function]
+*/
+auto parseFunction(const std::string& variableString)
+{
+    Parameters params{"function", "function parseFunction"};
+    return parseFunction(variableString, params);
+}
+} // namespace Utils
+} // namespace Gempic
+#endif

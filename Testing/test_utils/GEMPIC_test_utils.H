@@ -1,9 +1,10 @@
 #ifndef TEST_UTILS_H_
 #define TEST_UTILS_H_
 
-#include "AMReX.H"
+#include <AMReX.H>
 #include <algorithm> // std::all_of, for add_particles function
-#include <GEMPIC_particle_groups.H>
+#include "GEMPIC_particle_groups.H"
+#include "GEMPIC_computational_domain.H"
 
 namespace GEMPIC_TestUtils {
     // Nghost helper function
@@ -31,7 +32,7 @@ namespace GEMPIC_TestUtils {
     template<unsigned int vdim, unsigned int numSpec, size_t numParticles>
     void addSingleParticles (
         amrex::GpuArray<std::unique_ptr<Gempic::Particles::particle_groups<vdim>>, numSpec>& particleGroup,
-        computational_domain& infra,
+        Gempic::CompDom::computational_domain& infra,
         amrex::Array<amrex::Real, numParticles>& weights,
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
         int spec = 0,

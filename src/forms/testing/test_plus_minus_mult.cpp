@@ -1,5 +1,5 @@
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 
 using namespace GEMPIC_Fields;
@@ -8,18 +8,28 @@ using namespace GEMPIC_FDDeRhamComplex;
 int main (int argc, char *argv[]) 
 {
 	amrex::Initialize(argc, argv); 
-
-    /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(0, 0, 0)},{AMREX_D_DECL( 10, 10, 10)});
-	const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    Parameters parameters{};
+{
+    //const amrex::RealBox realBox({AMREX_D_DECL(0, 0, 0)},{AMREX_D_DECL( 10, 10, 10)});
+    const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2*M_PI, 0.2*M_PI, 0.2*M_PI)};
+	const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
+    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
+    const int maxSplineDegree = 1;
 
-	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-    const amrex::Geometry geom = params.geometry();
+    parameters.set("domain_lo", domain_lo);
+    parameters.set("k", k);
+    parameters.set("n_cell_vector", nCell);
+    parameters.set("max_grid_size_vector", maxGridSize);
+    parameters.set("is_periodic_vector", isPeriodic);
 
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    // Initialize computational_domain
+    Gempic::CompDom::computational_domain infra;
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
 
 	// Declare the fields 
 	DeRhamField<Grid::primal, Space::edge> E1(deRham);
@@ -98,4 +108,6 @@ int main (int argc, char *argv[])
             GEMPIC_D_LOOP_END
         }
     }
+}
+    amrex::Finalize();
 }

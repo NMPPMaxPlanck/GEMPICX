@@ -7,8 +7,9 @@
     curl of f to a discrete 2-form.
     Test passes if all projected DOFs are within 1e-15 of the analytical value.
 ------------------------------------------------------------------------------*/
+#include <AMReX_ParmParse.H>
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 
 using namespace GEMPIC_Fields;
@@ -17,7 +18,8 @@ using namespace GEMPIC_FDDeRhamComplex;
 int main (int argc, char *argv[]) 
 {
 	amrex::Initialize(argc, argv);
-
+    Parameters parameters{};
+{
     // error tolerance
     const amrex::Real tol = 1e-15;
 
@@ -25,16 +27,26 @@ int main (int argc, char *argv[])
     int gaussNodes = 6;
 
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    //const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+    const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+	const amrex::Vector<int> nCell{AMREX_D_DECL(9, 11, 7)};
+    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-    const int degree = 2;
+    const int hodgeDegree = 2;
+    const int maxSplineDegree = 1;
 
-	Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
-    const amrex::Geometry geom = params.geometry();
+    parameters.set("domain_lo", domain_lo);
+    parameters.set("k", k);
+    parameters.set("n_cell_vector", nCell);
+    parameters.set("max_grid_size_vector", maxGridSize);
+    parameters.set("is_periodic_vector", isPeriodic);
 
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    // Initialize computational_domain
+    Gempic::CompDom::computational_domain infra;
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
 
 	// Declare the fields 
 	DeRhamField<Grid::primal, Space::edge> E(deRham);
@@ -251,5 +263,6 @@ int main (int argc, char *argv[])
         std::rename("test_curl_projection.output.0", "test_curl_projection.output");
     amrex::Print() << "IOProcessorNumber " << amrex::ParallelDescriptor::IOProcessorNumber() << std::endl;
 
+}
     amrex::Finalize();
 }
