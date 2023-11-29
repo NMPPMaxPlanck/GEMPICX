@@ -1,5 +1,6 @@
 # General setting
-sim_name = "test_bernstein_waves"
+sim_name = "test_parameters"
+output_file = "test_parameters.output"
 
 # Grid parameters
 n_cell_vector = 128 8 8
@@ -22,7 +23,7 @@ particle.species0.vWeight_g0 = 1.0
 k = 1 1 0.3
 
 # Simulation parameters
-time_loop.n_steps = 50000
+time_loop.n_steps = 5
 time_loop.dt = 0.02
 time_loop.save_fields = 1
 time_loop.save_particles = 1

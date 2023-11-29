@@ -3,11 +3,10 @@
 
 #include <AMReX_SPACE.H>
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_Params.H"
 
-using namespace GEMPIC_Fields;
 
 namespace GEMPIC_Interpolation{
+using namespace GEMPIC_Fields;
 
 /**
 * @brief Evaluates a 1D Lagrange polynomial

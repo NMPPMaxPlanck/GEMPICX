@@ -1,4 +1,5 @@
 #include "GEMPIC_PoissonSolver.H"
+#include "GEMPIC_computational_domain.H"
 
 using namespace GEMPIC_PoissonSolver;
 
@@ -23,7 +24,7 @@ PoissonSolver::PoissonSolver()
 
 PoissonSolver::~PoissonSolver() {}
 
-void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell>& rho,
+void PoissonSolver::solve(const Gempic::CompDom::computational_domain& infra, DeRhamField<Grid::dual, Space::cell>& rho,
                           DeRhamField<Grid::primal, Space::node>& phi)
 {
     amrex::LPInfo lpInfo;
@@ -31,7 +32,7 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
 
     //amrex::MLEBNodeFDLaplacian linop({params.geometry()}, {params.grid()}, {params.distriMap()}, lpInfo);
 
-    amrex::MLNodeLaplacian linop({params.geometry()}, {params.grid()}, {params.distriMap()}, lpInfo, {}, 1.0);
+    amrex::MLNodeLaplacian linop({infra.geom}, {infra.grid}, {infra.distriMap}, lpInfo, {}, 1.0);
 
     // Set boundary conditions on linear operator for lower end and higher end
     linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic)},
@@ -42,11 +43,11 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     //linop.setSigma( m_sigma);
 
     // Sum of rhs needs to be 0 in domain is periodic in all directions
-    if (params.geometry().isAllPeriodic())
+    if (infra.geom.isAllPeriodic())
     {
-    amrex::Real rhoSum = rho.data.sum_unique(0,false,params.geometry().periodicity());
+    amrex::Real rhoSum = rho.data.sum_unique(0,false,infra.geom.periodicity());
     amrex::Print().SetPrecision(17) << " sum " << rhoSum << " " << rhoSum/(64*64*64) << std::endl;
-    amrex::Real Ninv = 1.0/GEMPIC_D_MULT(params.nCell()[xDir],params.nCell()[yDir],params.nCell()[zDir]);
+    amrex::Real Ninv = 1.0/GEMPIC_D_MULT(infra.n_cell[xDir], infra.n_cell[yDir],infra.n_cell[zDir]);
     amrex::Real rhoSumNinv = rhoSum *Ninv;
     rho.data.plus(-rhoSumNinv,0,1);
     // for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
@@ -59,7 +60,7 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     //         rhoarr(i, j, k) =  rhoarr(i, j, k) -rhoSum*Ninv;
     //     });
     // }
-    rhoSum = rho.data.sum_unique(0,false,params.geometry().periodicity());
+    rhoSum = rho.data.sum_unique(0,false,infra.geom.periodicity());
     amrex::Print().SetPrecision(15) << " sum2 " << rhoSum << std::endl;
     }
     
@@ -78,20 +79,20 @@ void PoissonSolver::solve(Parameters params, DeRhamField<Grid::dual, Space::cell
     // Solve Poisson
     mlmg.solve({&phi.data}, {&rho.data}, relTol, absTol);
     // AMReX Poisson solver does not use Hodge. Need to rescale phi
-    auto const dr = params.dr();
+    auto const dr = infra.dx;
     phi.data.mult(1/GEMPIC_D_MULT(dr[xDir],dr[yDir],dr[zDir]));
 
     phi.averageSync();
     phi.fillBoundary();
 }
 
-void PoissonSolver::subtractConstantPart(Parameters params, DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost)
+void PoissonSolver::subtractConstantPart(const Gempic::CompDom::computational_domain& infra, DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost)
 {
     const int nComp = 1;
     // Calculates a nodal mask for rho
     std::unique_ptr<amrex::iMultiFab> nodal_Mask;
-    nodal_Mask.reset(new amrex::iMultiFab(convert(params.grid(), amrex::IntVect::TheNodeVector()),
-                                              params.distriMap(), nComp, nGhost));
+    nodal_Mask.reset(new amrex::iMultiFab(convert(infra.grid, amrex::IntVect::TheNodeVector()),
+                                              infra.distriMap, nComp, nGhost));
 
     for (amrex::MFIter mfi(*nodal_Mask); mfi.isValid(); ++mfi)
     {

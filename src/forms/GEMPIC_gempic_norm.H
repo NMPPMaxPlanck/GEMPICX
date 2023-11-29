@@ -15,14 +15,11 @@
 #include <GEMPIC_computational_domain.H>
 #include <assert.h>
 
-using namespace Gempic;
-using namespace CompDom;
-
 namespace Gempic
 {
 namespace Utils
 {
-amrex::Real gempic_norm(amrex::MultiFab& MultiF, computational_domain ifr, int p)
+amrex::Real gempic_norm(amrex::MultiFab& MultiF, CompDom::computational_domain ifr, int p)
 {
     // TODOrefine
     assert(p <= 2);

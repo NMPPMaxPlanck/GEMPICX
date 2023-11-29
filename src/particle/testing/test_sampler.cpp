@@ -37,14 +37,6 @@ using namespace Gempic;
 using namespace Particles;
 using namespace Sampling;
 
-// wave function
-AMREX_GPU_HOST_DEVICE amrex::Real wave_function(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
-                                                amrex::Real t)
-{
-    amrex::Real val = 1.0;
-    return val;
-}
-
 template <unsigned int vdim, unsigned int numspec>
 void print_particles(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
                      const int species)
@@ -146,71 +138,37 @@ template <unsigned int vdim, unsigned int numspec>
 void main_main()
 {
     //------------------------------------------------------------------------------
-    gempic_parameters<numspec> gpParam;
-    // gpParam.init_Nghost(1, 1, 1);
-    amrex::IntVect num_cells{AMREX_D_DECL(4, 4, 4)};
-    amrex::GpuArray<int, numspec> n_part_per_cell = {1000};
+    Parameters parameters{};
     int species = 0;  // only one species
 
-    amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
-    amrex::Vector<amrex::Vector<amrex::Real>> vThermal{};
-    amrex::Vector<amrex::Real> vWeight{};
-
-    int num_gaussian = 2;  // velocity distribution is sum of 2 Gaussians
-    vMean = {{0.0, 0.0, 0.0}, {2.0, 2.0, 2.0}};
-    vThermal = {{2.0, 2.0, 2.0}, {1.0, 1.0, 1.0}};
-    vWeight = {0.75, 0.25};
-
-    gpParam.set_params("sampler_ctest", num_cells, n_part_per_cell);
-    gpParam.density[0] = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
-    // gpParam.density[0] = "1";
     double twopi = 4 * asin(1.0);
-    gpParam.k = {twopi, twopi, twopi};
-    gpParam.set_computed_params();
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(twopi, twopi, twopi)};
+    parameters.set("k", k);
     computational_domain domain;
-    domain.initialize_computational_domain(gpParam.n_cell, gpParam.max_grid_size,
-                                           gpParam.is_periodic, gpParam.real_box);
-    amrex::Print() << "domain " << *gpParam.real_box.lo() << " " << *gpParam.real_box.hi() << "\n";
+    amrex::Print() << "domain " << domain.real_box.lo() << " " << domain.real_box.hi() << "\n";
 
     //------------------------------------------------------------------------------
     // Initialize Particle Groups
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_cell;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_cell[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
-                                                                     gpParam.mass[spec], domain);
+        part_gr_cell[spec] = std::make_unique<particle_groups<vdim>>(spec, domain);
     }
-    init_particles_cellwise(domain, part_gr_cell, n_part_per_cell, vMean, vThermal,
-                                           vWeight, species, wave_function);
+    init_particles_cellwise(domain, part_gr_cell, species);
 
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_full[spec] = std::make_unique<particle_groups<vdim>>(gpParam.charge[spec],
-                                                                     gpParam.mass[spec], domain);
+        part_gr_full[spec] = std::make_unique<particle_groups<vdim>>(spec, domain);
     }
-    init_particles_full_domain(domain, part_gr_full, n_part_per_cell, vMean,
-                                              vThermal, vWeight, species, wave_function);
-
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full_str;
-    for (int spec = 0; spec < numspec; spec++)
-    {
-        part_gr_full_str[spec] = std::make_unique<particle_groups<vdim>>(
-            gpParam.charge[spec], gpParam.mass[spec], domain);
-    }
-    init_particles_full_domain(domain, part_gr_full_str, n_part_per_cell, vMean,
-                                              vThermal, vWeight, species,
-                                              gpParam.densityEval[species]);
+    init_particles_full_domain(domain, part_gr_full, species);
 
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full_gpu;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(
-            gpParam.charge[spec], gpParam.mass[spec], domain);
+        part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(spec, domain);
     }
-    init_particles_full_domain_gpu(domain, part_gr_full_gpu, n_part_per_cell, vMean,
-                                                  vThermal, vWeight, species,
-                                                  gpParam.densityEval[species]);
+    init_particles_full_domain_gpu(domain, part_gr_full_gpu, species);
 
     // Print particles data
     bool printPart = false;
@@ -218,18 +176,44 @@ void main_main()
     {
         print_particles(part_gr_cell, species);
         print_particles(part_gr_full, species);
-        print_particles(part_gr_full_str, species);
+        // print_particles(part_gr_full_gpu, species);
     }
 
     amrex::PrintToFile("test_sampler.tmp") << "\n";
     // Print analytical solution
     amrex::PrintToFile("test_sampler.tmp") << "1";
+
+    Parameters params("particle.species0");
+    amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
+    amrex::Vector<amrex::Vector<amrex::Real>> vThermal{};
+    amrex::Vector<amrex::Real> vWeight{}; 
+    int num_gaussian;
+    params.get("num_gaussians", num_gaussian);
+
+    for (int i{0}; i < num_gaussian; ++i)
+    {
+        amrex::Real vw;
+        std::string vwString = "vWeight_g" + std::to_string(i);
+        params.get(vwString, vw);
+        vWeight.push_back(vw);
+
+        amrex::Vector<amrex::Real> vm, vt;
+        std::string vmString = "vMean_g" + std::to_string(i);
+        params.get(vmString, vm);
+        vMean.push_back(vm);
+        
+        std::string vtString = "vThermal_g" + std::to_string(i);
+        params.get(vtString, vt);
+        vThermal.push_back(vt);
+    }
+
     amrex::Real mom2 = 0;
     for (int i = 0; i < vdim; i++)
     {
         amrex::Real mom1 = 0;
         for (int j = 0; j < num_gaussian; j++)
         {
+
             mom1 += vWeight[j] * vMean[j][i];
             mom2 += vWeight[j] * (std::pow(vThermal[j][i], 2) + std::pow(vMean[j][i], 2));
         }
@@ -239,8 +223,7 @@ void main_main()
     // Print computed solutions
     print_vMoments(part_gr_cell, species);
     print_vMoments(part_gr_full, species);
-    print_vMoments(part_gr_full_str, species);
-    // print_vMoments<vdim, numspec>(part_gr_full_gpu, species);
+    // print_vMoments(part_gr_full_gpu, species);
 }
 
 int main(int argc, char* argv[])

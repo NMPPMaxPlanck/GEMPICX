@@ -9,12 +9,17 @@
 */
 #include <AMReX.H>
 #include <GEMPIC_Config.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
+#include <GEMPIC_FDDeRhamComplex.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
 
+using namespace Gempic;
+using namespace CompDom;
 using namespace Particles;
+using namespace GEMPIC_Fields;
 
 #define checkField(...) GEMPIC_TestUtils::checkField(__FILE__, __LINE__, __VA_ARGS__)
 
@@ -62,46 +67,68 @@ namespace {
         const amrex::IntVect Nghosts{AMREX_D_DECL(Nghost, Nghost, Nghost)};
         const amrex::IntVect dstNGhosts{AMREX_D_DECL(0, 0, 0)};
 
+        Parameters params{};
 
         amrex::Array<amrex::Real, numSpec> charge{1, -1};
         amrex::Array<amrex::Real, numSpec> mass{1, 0.1};
 
-        computational_domain infra;
+        computational_domain infra{false}; // "uninitialized" computational domain
         amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
-        amrex::MultiFab rho;
+        std::shared_ptr<GEMPIC_FDDeRhamComplex::FDDeRhamComplex> deRham;
+        //amrex::MultiFab rho;
+        std::unique_ptr<DeRhamField<Grid::dual, Space::cell>> rho_ptr;
+
+        static void SetUpTestSuite()
+        {
+            /* Initialize the infrastructure */
+            //const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+            //                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
+            amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+            // 
+            amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2*M_PI, 0.2*M_PI, 0.2*M_PI)};
+            const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+
+            amrex::ParmParse pp;
+            pp.addarr("domain_lo", domain_lo);
+            pp.addarr("k", k);
+            pp.addarr("n_cell_vector", nCell);
+            pp.addarr("max_grid_size_vector", maxGridSize);
+            pp.addarr("is_periodic_vector", isPeriodic);
+
+            // particle settings
+            double charge{1};
+            double mass{1};
+
+            pp.add("particle.species0.charge", charge);
+            pp.add("particle.species0.mass", mass);
+        }
 
         // virtual void SetUp() will be called before each test is run.
         void SetUp() override {
             /* Initialize the infrastructure */
-            const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-                                         {AMREX_D_DECL(10.0, 10.0, 10.0)});
-            const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-            const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::IntVect isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            infra = computational_domain{};
 
-            infra.initialize_computational_domain(nCell, maxGridSize, isPeriodic, realBox);
+            const int hodgeDegree{2};
+            const int maxSplineDegree{std::max(std::max(degX, degY), degZ)};
 
-            // Setup rho. This is  the special part of this text fixture.
-            // node centered BA:
-            const amrex::BoxArray &nba{amrex::convert(infra.grid, amrex::IntVect::TheNodeVector())};
-            int Ncomp{1};            
+            // Initialize the De Rham Complex
+            deRham = std::make_shared<GEMPIC_FDDeRhamComplex::FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+            rho_ptr = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(deRham);
 
-            rho.define(nba, infra.distriMap, Ncomp, Nghost);
-            rho.setVal(0.0);
-            // Ensure rho exists and is 0 everywhere
-            ASSERT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
-
-            // particle groups
+            // particles
             for (int spec{0}; spec < numSpec; spec++)
             {
                 particleGroup[spec] =
-                    std::make_unique<particle_groups<vDim>>(charge[spec], mass[spec], infra);
+                    std::make_unique<particle_groups<vDim>>(spec, infra);
             }
         }
     };
 
     /** Single particle tests. The only reason most of these maneuvres are necessary is because of
-     *  amrex::Array4<amrex::Real> const& rhoarr{rho[pti].array()};
+     *  amrex::Array4<amrex::Real> const& rhoarr{rho_ptr->data[pti].array()};
      *  which is required for the connection between MultiFab rho and deposit_rho function. This in
      *  turn requires the pti iterator, which means actual particles must be added, instead of
      *  simply supplying positions directly.
@@ -119,8 +146,8 @@ namespace {
         // (default) charge correctly transferred from GEMPIC_TestUtils::addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge()); 
         
-        // rho unchanged by GEMPIC_TestUtils::addSingleParticles
-        EXPECT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
+        // rho_ptr->data unchanged by GEMPIC_TestUtils::addSingleParticles
+        EXPECT_EQ(0, rho_ptr->data.norm2(0, infra.geom.periodicity()));
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
         // Particle iteration ... over one particle.
@@ -138,7 +165,7 @@ namespace {
 
             EXPECT_EQ(1, weight[0]); // weight correctly transferred from GEMPIC_TestUtils::addSingleParticles
 
-            amrex::Array4<amrex::Real> const& rhoarr{rho[pti].array()};
+            amrex::Array4<amrex::Real> const& rhoarr{rho_ptr->data[pti].array()};
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
             for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
                 position[d] = partData[0].pos(d);
@@ -149,12 +176,12 @@ namespace {
         }
         ASSERT_TRUE(particleLoopRun);
 
-        EXPECT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
+        EXPECT_EQ(0, rho_ptr->data.norm2(0, infra.geom.periodicity()));
     }    
     
     // Adds one particle exactly between two nodes
     TEST_F(DepositRhoTest, SingleParticleMiddle) {
-        ASSERT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
+        ASSERT_EQ(0, rho_ptr->data.norm2(0, infra.geom.periodicity()));
         const int numParticles{1};
 
         // Add particle in the middle of final cell to check periodic boundary conditions
@@ -162,7 +189,7 @@ namespace {
                       infra.geom.ProbHi(yDir) - 0.5*infra.dx[yDir],
                       infra.geom.ProbHi(zDir) - 0.5*infra.dx[zDir])};
         amrex::Array<amrex::Real, numParticles> weights{3};
-        // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rhoarr (9/10, 9/10, 9/10) to be non-zero and receiving 1/2^GEMPIC_SPACEDIM the weight of the particle (3)
+        // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and receiving 1/2^GEMPIC_SPACEDIM the weight of the particle (3)
         const auto charge{particleGroup[0]->getCharge()};
         amrex::Real expectedVal{charge * infra.dxi[GEMPIC_SPACEDIM] * weights[0] * pow(0.5, GEMPIC_SPACEDIM)};
 
@@ -174,11 +201,11 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Only one particle added
 
-            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho_ptr->data, particleGroup[0]->getCharge());
 
-            // Expect the eight nearest nodes of rhoarr (9/10, 9/10, 9/10) to be non-zero and receiving 1/8 the weight of the particle (3)
-            checkField(rho[pti].array(), infra.n_cell.dim3(),
-                    // Expect the eight nearest nodes of rhoarr (9/10, 9/10, 9/10) to be non-zero 
+            // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and receiving 1/8 the weight of the particle (3)
+            checkField(rho_ptr->data[pti].array(), infra.n_cell.dim3(),
+                    // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero 
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a >= 9,
                                                                               && b >= 9,
                                                                               && c >= 9);}},
@@ -187,17 +214,17 @@ namespace {
                     // with the remaining entries being 0
                     0);
         }
-        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
-        rho.FillBoundary(infra.geom.periodicity());
+        rho_ptr->data.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
+        rho_ptr->data.FillBoundary(infra.geom.periodicity());
         
         // Maximum occurs evenly split between 2^GEMPIC_SPACEDIM nodes. The sum is still 1.
-        EXPECT_EQ(expectedVal, rho.norm0());
-        EXPECT_EQ(weights[0], rho.norm1(0, infra.geom.periodicity()));
+        EXPECT_EQ(expectedVal, rho_ptr->data.norm0());
+        EXPECT_EQ(weights[0], rho_ptr->data.norm1(0, infra.geom.periodicity()));
     }
 
     // Adds one particle closer to on node than the other
     TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit) { 
-        ASSERT_EQ(0, rho.norm2(0, infra.geom.periodicity()));
+        ASSERT_EQ(0, rho_ptr->data.norm2(0, infra.geom.periodicity()));
         const int numParticles{1};
 
         amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbLo(xDir) + 0.25*infra.dx[xDir],
@@ -213,11 +240,11 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Only one particle added
 
-            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho_ptr->data, particleGroup[0]->getCharge());
 
-            // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rhoarr (0/1, 0/1, 0/1) to be non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the particle (1)
-            checkField(rho[pti].array(), infra.n_cell.dim3(),
-                // Expect the 2^SPACEDIM nearest nodes of rhoarr (0/1, 0/1, 0/1) to be non-zero 
+            // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the particle (1)
+            checkField(rho_ptr->data[pti].array(), infra.n_cell.dim3(),
+                // Expect the 2^SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be non-zero 
                 {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                           && b == 0,
                                                                           && c == 0);},
@@ -234,12 +261,12 @@ namespace {
                 // with the remaining entries being 0
                 0);
         }
-        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
-        rho.FillBoundary(infra.geom.periodicity());
+        rho_ptr->data.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
+        rho_ptr->data.FillBoundary(infra.geom.periodicity());
         
         // Maximum occurs on node (0, 0, 0) with value (3/4)^GEMPIC_SPACEDIM. The sum is still 1.
-        EXPECT_EQ(pow(0.75,GEMPIC_SPACEDIM), rho.norm0());
-        EXPECT_EQ(1, rho.norm1(0, infra.geom.periodicity()));
+        EXPECT_EQ(pow(0.75,GEMPIC_SPACEDIM), rho_ptr->data.norm0());
+        EXPECT_EQ(1, rho_ptr->data.norm1(0, infra.geom.periodicity()));
     }    
     
     // Adds two particles in different cells to check that they don't interfere with each other
@@ -263,10 +290,10 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Two particles added
 
-            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho_ptr->data, particleGroup[0]->getCharge());
 
             // See SingleParticle test for explanation of expectations
-            checkField(rho[pti].array(), infra.n_cell.dim3(),
+            checkField(rho_ptr->data[pti].array(), infra.n_cell.dim3(),
                 {[](AMREX_D_DECL(int a, int b, int c)){return AMREX_D_TERM(a == 0,
                                                                         && b == 0,
                                                                         && c == 0);},
@@ -277,13 +304,13 @@ namespace {
                 // with the remaining entries being 0
                 0);
         }
-        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
-        rho.FillBoundary(infra.geom.periodicity());
+        rho_ptr->data.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
+        rho_ptr->data.FillBoundary(infra.geom.periodicity());
         
         // The maximum expectedVal depends on the dimension on the problem
-        EXPECT_EQ(std::max(expectedValA, expectedValB), rho.norm0());
+        EXPECT_EQ(std::max(expectedValA, expectedValB), rho_ptr->data.norm0());
         // Total charge added is the sum of each weight*charge, here 1 + 3
-        EXPECT_EQ(4, rho.norm1(0, infra.geom.periodicity()));
+        EXPECT_EQ(4, rho_ptr->data.norm1(0, infra.geom.periodicity()));
     }
 
     // Adds particles in the same cell to check that they add up correctly
@@ -309,10 +336,10 @@ namespace {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np); // Two particles added
 
-            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, particleGroup[0]->getCharge());
+            updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho_ptr->data, particleGroup[0]->getCharge());
 
             // See SingleParticle test for explanation of expectations
-            checkField(rho[pti].array(), infra.n_cell.dim3(),
+            checkField(rho_ptr->data[pti].array(), infra.n_cell.dim3(),
                     {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                               && b == 0,
                                                                               && c == 0);},
@@ -322,11 +349,11 @@ namespace {
                     {expectedValA, expectedValB},
                     0);
         }
-        rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
-        rho.FillBoundary(infra.geom.periodicity());
+        rho_ptr->data.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
+        rho_ptr->data.FillBoundary(infra.geom.periodicity());
         
-        EXPECT_EQ(expectedValA, rho.norm0());
-        EXPECT_EQ(4, rho.norm1(0, infra.geom.periodicity()));
+        EXPECT_EQ(expectedValA, rho_ptr->data.norm0());
+        EXPECT_EQ(4, rho_ptr->data.norm1(0, infra.geom.periodicity()));
     }
 
     // Adds particles of different species in the same cell
@@ -361,11 +388,11 @@ namespace {
                 const long np{pti.numParticles()};
                 EXPECT_EQ(numParticles, np); // Two particles added
 
-                updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho, charge);
+                updateRhoParallelFor<vDim, degX, degY, degZ>(pti, infra, rho_ptr->data, charge);
 
                 if (spec == numSpec - 1) {
                     // See SingleParticle test for explanation of expectations
-                    checkField(rho[pti].array(), infra.n_cell.dim3(),
+                    checkField(rho_ptr->data[pti].array(), infra.n_cell.dim3(),
                             {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
                                                                                       && b == 0,
                                                                                       && c == 0);},
@@ -377,13 +404,13 @@ namespace {
                 }
             }
         }
-            rho.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
-            rho.FillBoundary(infra.geom.periodicity());
+            rho_ptr->data.SumBoundary(0, 1, Nghosts, dstNGhosts, infra.geom.periodicity());
+            rho_ptr->data.FillBoundary(infra.geom.periodicity());
             
             // The maximum expectedVal depends on the dimension on the problem
-            EXPECT_EQ(std::max(std::abs(expectedValA), std::abs(expectedValB)), rho.norm0());
+            EXPECT_EQ(std::max(std::abs(expectedValA), std::abs(expectedValB)), rho_ptr->data.norm0());
             
             // Probably not GPU safe. Second argument of sum_unique is bool local, which decides if parallel reduction is done
-            EXPECT_EQ(pCharge*pWeights[0] + eCharge*eWeights[0], rho.sum_unique(0, 0, infra.geom.periodicity()));
+            EXPECT_EQ(pCharge*pWeights[0] + eCharge*eWeights[0], rho_ptr->data.sum_unique(0, 0, infra.geom.periodicity()));
     }
 }

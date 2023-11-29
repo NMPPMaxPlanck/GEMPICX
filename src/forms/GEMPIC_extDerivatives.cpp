@@ -36,8 +36,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
           twoForm0(i, j, k) = GEMPIC_D_ADD(0., oneForm2(i, j + 1, k) - oneForm2(i, j, k), - oneForm1(i, j, k + 1) + oneForm1(i, j, k));
        });
    }
-   twoForm.data[xDir].AverageSync(geom.periodicity());
-   twoForm.data[xDir].FillBoundary_nowait(geom.periodicity());
+   twoForm.data[xDir].AverageSync(m_geom.periodicity());
+   twoForm.data[xDir].FillBoundary_nowait(m_geom.periodicity());
 
    // Component-1 of curl
    for (amrex::MFIter mfi(twoForm.data[yDir]); mfi.isValid(); ++mfi)
@@ -54,8 +54,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
           twoForm1(i, j, k) = GEMPIC_D_ADD(- oneForm2(i + 1, j, k) + oneForm2(i, j, k), 0., oneForm0(i, j, k + 1) - oneForm0(i, j, k));
        });
    }
-   twoForm.data[yDir].AverageSync(geom.periodicity());
-   twoForm.data[yDir].FillBoundary_nowait(geom.periodicity());
+   twoForm.data[yDir].AverageSync(m_geom.periodicity());
+   twoForm.data[yDir].FillBoundary_nowait(m_geom.periodicity());
 
 
    // Component-2 of curl
@@ -73,8 +73,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::primal, Space::edge>& oneForm,
           twoForm2(i, j, k) = GEMPIC_D_ADD(oneForm1(i + 1, j, k) - oneForm1(i, j, k), - oneForm0(i, j + 1, k) + oneForm0(i, j, k), 0.);                                                                        ;
        });
    }
-   twoForm.data[zDir].AverageSync(geom.periodicity());
-   twoForm.data[zDir].FillBoundary_nowait(geom.periodicity());
+   twoForm.data[zDir].AverageSync(m_geom.periodicity());
+   twoForm.data[zDir].FillBoundary_nowait(m_geom.periodicity());
 
    // Wait for completed communication of guard data
    twoForm.data[xDir].FillBoundary_finish();
@@ -116,8 +116,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
        });
    }
 
-   twoForm.data[xDir].AverageSync(geom.periodicity());
-   twoForm.data[xDir].FillBoundary_nowait(geom.periodicity());
+   twoForm.data[xDir].AverageSync(m_geom.periodicity());
+   twoForm.data[xDir].FillBoundary_nowait(m_geom.periodicity());
 
 
    // Component-1 of curl
@@ -136,8 +136,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
        });
    }
 
-   twoForm.data[yDir].AverageSync(geom.periodicity());
-   twoForm.data[yDir].FillBoundary_nowait(geom.periodicity());
+   twoForm.data[yDir].AverageSync(m_geom.periodicity());
+   twoForm.data[yDir].FillBoundary_nowait(m_geom.periodicity());
 
 
    // Component-2 of curl
@@ -157,8 +157,8 @@ void DeRhamComplex::curl(const DeRhamField<Grid::dual, Space::edge>& oneForm,
        });
    }
 
-   twoForm.data[zDir].AverageSync(geom.periodicity());
-   twoForm.data[zDir].FillBoundary_nowait(geom.periodicity());
+   twoForm.data[zDir].AverageSync(m_geom.periodicity());
+   twoForm.data[zDir].FillBoundary_nowait(m_geom.periodicity());
 
    // Wait for completed communication of guard data
    twoForm.data[xDir].FillBoundary_finish();
@@ -217,8 +217,8 @@ void DeRhamComplex::grad(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                 });
             }
         }
-        oneForm.data[comp].AverageSync(geom.periodicity());
-        oneForm.data[comp].FillBoundary_nowait(geom.periodicity());
+        oneForm.data[comp].AverageSync(m_geom.periodicity());
+        oneForm.data[comp].FillBoundary_nowait(m_geom.periodicity());
     }
     oneForm.data[xDir].FillBoundary_finish();
     oneForm.data[yDir].FillBoundary_finish();
@@ -276,8 +276,8 @@ void DeRhamComplex::grad(const DeRhamField<Grid::dual, Space::node>& zeroForm,
                 });
             }
         }
-        oneForm.data[comp].AverageSync(geom.periodicity());
-        oneForm.data[comp].FillBoundary_nowait(geom.periodicity());
+        oneForm.data[comp].AverageSync(m_geom.periodicity());
+        oneForm.data[comp].FillBoundary_nowait(m_geom.periodicity());
     }
     
     oneForm.data[xDir].FillBoundary_finish();

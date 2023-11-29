@@ -32,7 +32,8 @@
 ------------------------------------------------------------------------------*/
 
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_computational_domain.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_Interpolation.H>
 
@@ -41,22 +42,36 @@ using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_Interpolation;
 
 const int hodgeDegree = 2;
+const int maxSplineDegree = 1;
 
 std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
 {
     /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 9, 7)};
+    //const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+    const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
+    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 9, 7)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     const amrex::Real dt = 0.0001;
     const int Nt = 10;
 
-    Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-    const amrex::Geometry geom = params.geometry();
     
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    Parameters parameters{};
+    parameters.set("domain_lo", domain_lo);
+    parameters.set("k", k);
+    parameters.set("n_cell_vector", nCell);
+    parameters.set("max_grid_size_vector", maxGridSize);
+    parameters.set("is_periodic_vector", isPeriodic);
+
+    // Initialize computational_domain
+    Gempic::CompDom::computational_domain infra;
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+
+    const amrex::Geometry geom = infra.geom;
 
     // Declare the fields 
     DeRhamField<Grid::dual, Space::face> D(deRham);
@@ -153,11 +168,11 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     amrex::Real bError = 0;
     for (int comp = 0; comp < 3; ++comp)
     {
-        dError += maxErrorMidpoint<hodgeDegree>(geom, funcD[comp], D.data[comp], params.dr(), 2, true, comp, Nt*dt);
+        dError += maxErrorMidpoint<hodgeDegree>(geom, funcD[comp], D.data[comp], amrex::RealVect{AMREX_D_DECL(infra.dx[xDir], infra.dx[yDir], infra.dx[zDir])}, 2, true, comp, Nt*dt);
     }
     for (int comp = 0; comp < 3; ++comp)
     {
-        bError += maxErrorMidpoint<hodgeDegree>(geom, funcB[comp], B.data[comp], params.dr(), 2, false, comp, Nt*dt);
+        bError += maxErrorMidpoint<hodgeDegree>(geom, funcB[comp], B.data[comp], amrex::RealVect{AMREX_D_DECL(infra.dx[xDir], infra.dx[yDir], infra.dx[zDir])}, 2, false, comp, Nt*dt);
     }
     
     return std::make_tuple(dError,bError);

@@ -1,10 +1,11 @@
 #include <AMReX.H>
+#include <AMReX_ParmParse.H>
 #include "gtest/gtest.h"
 #include "GEMPIC_computational_domain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_Params.H"
 #include "GEMPIC_parameters.H"
+#include "GEMPIC_gempic_norm.H"
 #include "test_utils/GEMPIC_test_utils.H"
 
 // E = one form
@@ -21,39 +22,48 @@ namespace {
         protected:
 
         // Linear splines is ok, and lower dimension Hodge is good enough
-        static const int vDim{3};
-        static const int numSpec{1};
         // Spline degreesx
-        static const int degX{2};
-        static const int degY{2};
-        static const int degZ{2};
-        //
-        static const int degmw{2};
-        static const int propagator{3};
+        static const int degX{1};
+        static const int degY{1};
+        static const int degZ{1};
+        inline static const int maxSplineDegree{std::max(std::max(degX, degY), degZ)};
 
-        static const int hodgeDegree{6};
-        // Number of ghost cells in mesh
-        const int Nghost{GEMPIC_TestUtils::initNGhost(degX, degY, degZ)};
-        Parameters params;
-        computational_domain infra;
+        Parameters parameters{};
+        Gempic::CompDom::computational_domain infra{false}; // "uninitialized" computational domain
+
+        static void SetUpTestSuite()
+        {
+            /* Initialize the infrastructure */
+            //const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+            //                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
+            amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+            // 
+            amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2*M_PI, 0.2*M_PI, 0.2*M_PI)};
+            const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+            // Not checking particles
+            const int nGhostExtra{-maxSplineDegree};
+
+            amrex::ParmParse pp;
+            pp.addarr("domain_lo", domain_lo);
+            pp.addarr("k", k);
+            pp.addarr("n_cell_vector", nCell);
+            pp.addarr("max_grid_size_vector", maxGridSize);
+            pp.addarr("is_periodic_vector", isPeriodic);
+            pp.add("n_ghost_extra", nGhostExtra);
+        }
+
 
         // virtual void SetUp() will be called before each test is run.
         void SetUp() override {
-            /* Initialize the infrastructure */
-            const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-                                         {AMREX_D_DECL(10.0, 10.0, 10.0)});
-            const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-            const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeri{AMREX_D_DECL(1, 1, 1)};
-            const amrex::IntVect isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-            params = Parameters(realBox, nCell, maxGridSize, isPeri, hodgeDegree);
-
-            infra.initialize_computational_domain(nCell, maxGridSize, isPeriodic, realBox);
+            infra = Gempic::CompDom::computational_domain{};
         }
     };
 
     TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2) {
+        constexpr int hodgeDegree{2};
+
         const std::string analyticalFunc = "1.0";
 
         const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
@@ -64,8 +74,8 @@ namespace {
         parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         func = parser.compile<nVar>();
 
-        // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        // Initialize the De Rham Complex with deg 2
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -73,11 +83,10 @@ namespace {
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         // Select stencil according to degree
-        auto [stencilNodeToCell, stencilCellToNode] =
-            getHodgeStencils<degX, HodgeScheme::FDHodge>();
+        [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-        const amrex::Geometry geom = params.geometry();
-        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -85,20 +94,14 @@ namespace {
         {
             loopRun = true;
 
-            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(),
-                    // Expect only one node of rhoarr (0, 0, 0) to be non-zero
-                    {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 0,
-                                                                              && b == 0,
-                                                                              && c == 0);}},
-                    // and receiving full weight of particle (1)
-                    {1},
-                    // with the remaining entries being 0
-                    1);
+            // expect all nodes to be 1
+            checkField((phi.data[mfi]).array(), infra.n_cell.dim3(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
     }
 
     TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4) {
+        constexpr int hodgeDegree{4};
         const std::string analyticalFunc = "1.0";
 
         const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
@@ -110,7 +113,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -118,11 +121,10 @@ namespace {
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         // Select stencil according to degree
-        auto [stencilNodeToCell, stencilCellToNode] =
-            getHodgeStencils<4, HodgeScheme::FDHodge>();
+        [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-        const amrex::Geometry geom = params.geometry();
-        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -137,6 +139,7 @@ namespace {
     }
 
     TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6) {
+        constexpr int hodgeDegree{6};
 
         // Select stencil according to degree
         const int stencilLength = 6 - 1;
@@ -154,7 +157,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -162,10 +165,9 @@ namespace {
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         std::tie(stencilNodeToCell, stencilCellToNode) =
-            getHodgeStencils<6, HodgeScheme::FDHodge>();
+            getHodgeStencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-        const amrex::Geometry geom = params.geometry();
-        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -180,9 +182,10 @@ namespace {
     }
 
     TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTest) {
+        constexpr int hodgeDegree{2};
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -191,10 +194,9 @@ namespace {
 
         // Select stencil according to degree
         auto [stencilNodeToCell, stencilCellToNode] =
-            getHodgeStencils<degX, HodgeScheme::FDHodge>();
+            getHodgeStencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-        const amrex::Geometry geom = params.geometry();
-        // matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
+        // matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -209,6 +211,7 @@ namespace {
     }
 
     TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII) {
+        constexpr int hodgeDegree{2};
 
         const std::string analyticalFunc = "1.0";
 
@@ -221,7 +224,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -229,11 +232,10 @@ namespace {
         EXPECT_NEAR(1, Gempic::Utils::gempic_norm(rho.data, infra, 2), 1e-12);
 
         // Select stencil according to degree
-        auto [stencilNodeToCell, stencilCellToNode] =
-            getHodgeStencils<degX, HodgeScheme::FDHodge>();
+        [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-        const amrex::Geometry geom = params.geometry();
-        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
 
         bool loopRun{false};
 
@@ -248,6 +250,7 @@ namespace {
     }
 
     TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII) {
+        constexpr int hodgeDegree{2};
 
         const std::string analyticalFunc = "1.0";
 
@@ -260,7 +263,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(params);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
 
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham, func);
@@ -274,11 +277,10 @@ namespace {
         ASSERT_EQ(0,Gempic::Utils::gempic_norm(rho.data, infra, 2));
 
         // Select stencil according to degree
-        auto [stencilNodeToCell, stencilCellToNode] =
-            getHodgeStencils<degX, HodgeScheme::FDHodge>();
+        [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
+            getHodgeStencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-        const amrex::Geometry geom = params.geometry();
-        matrixMult<xDir>(geom, stencilCellToNode, rho.data, phi.data);
+        matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
     
         bool loopRun{false};
         

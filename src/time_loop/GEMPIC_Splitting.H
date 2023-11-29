@@ -14,7 +14,6 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 #include <GEMPIC_computational_domain.H>
-#include <GEMPIC_Params.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_profiling.H>
@@ -22,16 +21,16 @@
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_PoissonSolver.H>
 
+
+namespace Gempic {
+
+namespace Time_Loop {
 using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_PoissonSolver;
-
-namespace Gempic {
-
-namespace Time_Loop {
 
 /**
  *  Algorithms to solve the ODE systems associated with a splitting of the semi-discrete Vlasov-Maxwell Hamiltonian

@@ -14,7 +14,6 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 #include <GEMPIC_computational_domain.H>
-#include <GEMPIC_Params.H>
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_profiling.H>
 #include <GEMPIC_Fields.H>
@@ -23,17 +22,17 @@
 #include <GEMPIC_Splitting.H>
 #include <GEMPIC_Spline_Class.H>
 
+
+namespace Gempic
+{
+namespace Time_Loop
+{
 using namespace CompDom;
 using namespace Particles;
 using namespace Profiling;
 using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_PoissonSolver;
-
-namespace Gempic
-{
-namespace Time_Loop
-{
 
 template<unsigned int vdim, unsigned int numspec, int degx, int degy, int degz, int degmw, unsigned int ndata,
          bool electromagnetic = true, bool profiling = true, bool output = true>

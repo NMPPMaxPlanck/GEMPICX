@@ -16,25 +16,12 @@
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
 #include <GEMPIC_computational_domain.H>
-#include <GEMPIC_Params.H>
-
-namespace Gempic
-{
-namespace Vlasov_Maxwell
-{
-template <unsigned int vdim, unsigned int numspec>
-class vlasov_maxwell;  // forward declaration
-}
-}  // namespace Gempic
-
-using namespace Gempic;
-using namespace CompDom;
-using namespace Vlasov_Maxwell;
 
 namespace Gempic
 {
 namespace Particles
 {
+using namespace CompDom;
 using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
 /**
  * Class containing all particle information. The array of particle containers has @p n_species
@@ -88,11 +75,15 @@ public:
     {
     }
 
-    particle_groups(const amrex::Real& charge, const amrex::Real& mass, Parameters params) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(params.geometry(), params.distriMap(), params.grid()),
-        m_charge(charge),
-        m_mass(mass)
-    {}
+    particle_groups(int species, computational_domain ifr) :
+        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.geom, ifr.distriMap, ifr.grid)
+    {
+        std::string specString = "particle.species" + std::to_string(species);
+        Parameters params(specString);
+        params.getOrSet("charge", m_charge);
+        params.getOrSet("mass", m_mass);
+        params.getOrSet("name", m_name);
+    }
 
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p

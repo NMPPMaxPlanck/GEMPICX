@@ -3,12 +3,12 @@
 
 #include <AMReX_SPACE.H>
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_Params.H"
+#include "GEMPIC_computational_domain.H"
 
-using namespace GEMPIC_Fields;
 
 namespace GEMPIC_FDDeRhamComplex
 {
+using namespace GEMPIC_Fields;
 enum class HodgeScheme {
     FDHodge,
     GalerkinHodge,
@@ -26,7 +26,7 @@ enum class HodgeScheme {
  *                      stencilNodeToCell, stencilCellToNode
  */
 template <int degree, HodgeScheme scheme>
-inline auto getHodgeStencils()
+inline auto getHodgeStencils ()
 {
     if constexpr (scheme == HodgeScheme::FDHodge) {
         constexpr unsigned int stencilLength{degree - 1};
@@ -162,9 +162,6 @@ class FDDeRhamComplex : public GEMPIC_Fields::DeRhamComplex
 {
 private:
     amrex::RealVect m_dr;
-    amrex::Geometry m_geom;
-    amrex::BoxArray m_grid;
-    amrex::DistributionMapping m_distriMap;
     int m_nGhost;
 
     // Temporary MultiFabs used in the Hodges
@@ -185,8 +182,10 @@ private:
 
 public:
     /// FDDeRhamComplex constructor
-    /// @param params
-    FDDeRhamComplex(Parameters params);
+    /// @param infra
+    /// @param hodgeDegree
+    /// @param maxSplineDegree
+    FDDeRhamComplex(const Gempic::CompDom::computational_domain& infra, const int hodgeDegree, const int maxSplineDegree);
 
     ~FDDeRhamComplex();
 

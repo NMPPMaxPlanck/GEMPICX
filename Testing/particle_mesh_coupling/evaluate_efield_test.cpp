@@ -2,15 +2,18 @@
 */
 
 #include <AMReX.H>
+#include <AMReX_ParmParse.H>
 #include <GEMPIC_Config.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_particle_groups.H>
 #include "gtest/gtest.h"
 #include "test_utils/GEMPIC_test_utils.H"
 #include "GEMPIC_Spline_Class.H"
 
+using namespace Gempic;
+using namespace CompDom;
 using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_Fields;
@@ -59,43 +62,69 @@ namespace {
         static const int degX{1};
         static const int degY{1};
         static const int degZ{1};
+        inline static const int maxSplineDegree{std::max(std::max(degX, degY), degZ)};
+
+        inline static const int hodgeDegree{2};
 
         static const int numSpec{1};
         static const int vDim{3};
         static const int spec{0};
-        const int Nghost{GEMPIC_TestUtils::initNGhost(degX, degY, degZ)};
-        Parameters params;
 
-        double charge{1};
-        double mass{1};
-
-        computational_domain infra;
+        computational_domain infra{false}; // "uninitialized" computational domain
         amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
+        std::shared_ptr<GEMPIC_FDDeRhamComplex::FDDeRhamComplex> deRham;
+
+        static void SetUpTestSuite()
+        {
+            /* Initialize the infrastructure */
+            //const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+            //                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
+            amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+            // 
+            amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2*M_PI, 0.2*M_PI, 0.2*M_PI)};
+            const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+
+            amrex::ParmParse pp;
+            pp.addarr("domain_lo", domain_lo);
+            pp.addarr("k", k);
+            pp.addarr("n_cell_vector", nCell);
+            pp.addarr("max_grid_size_vector", maxGridSize);
+            pp.addarr("is_periodic_vector", isPeriodic);
+
+            // particle settings
+            double charge{1};
+            double mass{1};
+
+            pp.add("particle.species0.charge", charge);
+            pp.add("particle.species0.mass", mass);
+        }
 
         // virtual void SetUp() will be called before each test is run.
         void SetUp() override {
+            // Parameters initialized here so that different tests can have different parameters
+            Parameters parameters{};
             /* Initialize the infrastructure */
-            const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-                                            {AMREX_D_DECL(10.0, 10.0, 10.0)});
-            const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-            const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-            const amrex::IntVect isPeri{isPeriodic};
-            const int hodgeDegree{2};
+            infra = computational_domain{};
 
-            // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
-            // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
+            // Initialize the De Rham Complex
+            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
 
-            params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-            
             // particles
             for (int spec{0}; spec < numSpec; spec++)
             {
                 particleGroup[spec] =
-                    std::make_unique<particle_groups<vDim>>(charge, mass, infra);
+                    std::make_unique<particle_groups<vDim>>(spec, infra);
             }
 
+        }
+    };
+
+    class EvaluateEFieldTestCustomInfrastructure : public EvaluateEFieldTest
+    {
+        void SetUp() override {
         }
     };
 
@@ -123,9 +152,6 @@ namespace {
             parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             funcE[i] = parser[i].compile<nVar>();
         }
-
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
@@ -187,9 +213,6 @@ namespace {
             funcE[i] = parser[i].compile<nVar>();
         }
 
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
-
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
@@ -227,9 +250,6 @@ namespace {
             parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             funcE[i] = parser[i].compile<nVar>();
         }
-
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
@@ -269,9 +289,6 @@ namespace {
             funcE[i] = parser[i].compile<nVar>();
         }
 
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
-
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
@@ -283,67 +300,6 @@ namespace {
         }
     }
 
-    TEST_F(EvaluateEFieldTest, Scaling) {
-        /* Initialize the infrastructure with cell sizes different from 1*/
-        const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-                                        {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
-        const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
-        const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        const amrex::IntVect isPeri{isPeriodic};
-        const int hodgeDegree{2};
-
-        // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-        infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
-
-        params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-        
-        // particle groups
-        for (int spec{0}; spec < numSpec; spec++)
-        {
-            particleGroup[spec] =
-                std::make_unique<particle_groups<vDim>>(charge, mass, infra);
-        }
-
-        // Adding particle to one cell
-        const int numParticles{1};
-        // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.25*infra.dx[xDir],
-                      infra.geom.ProbHi()[yDir] - 1.25*infra.dx[yDir],
-                      infra.geom.ProbHi()[zDir] - 1.25*infra.dx[zDir])};
-        amrex::Array<amrex::Real, numParticles> weights{1};
-        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
-
-        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
-
-        // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
-        // Ey, Ez
-        const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
-
-        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
-        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
-        amrex::Array<amrex::Parser, 3> parser;
-
-        for (int i{0}; i < 3; ++i)
-        {
-            parser[i].define(analyticalFuncE[i]);
-            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            funcE[i] = parser[i].compile<nVar>();
-        }
-
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
-
-        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
-
-        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
-        {
-            const long np{pti.numParticles()};
-            EXPECT_EQ(numParticles, np);
-
-            updateEFieldParallelFor<vDim, degX, degY, degZ>(pti, E, infra);
-        }
-    }
 
     TEST_F(EvaluateEFieldTest, DoubleParticleSeparate) {
         const int numParticles{2};
@@ -373,9 +329,6 @@ namespace {
             parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             funcE[i] = parser[i].compile<nVar>();
         }
-
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
@@ -417,9 +370,6 @@ namespace {
             funcE[i] = parser[i].compile<nVar>();
         }
 
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
-
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
@@ -433,5 +383,66 @@ namespace {
 
     TEST_F(EvaluateEFieldTest, TestingForLiterallyAnythingOtherThanUnity) {
         GTEST_SKIP() << "Such advanced tests have not yet been implemented!";
+    }
+
+    TEST_F(EvaluateEFieldTestCustomInfrastructure, Scaling) {
+        Parameters parameters{};
+
+        /* Initialize the infrastructure with cell sizes different from 1*/
+        const amrex::Vector<int> nCell{AMREX_D_DECL(8, 4, 2)};
+        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 4, 2)};
+        const int hodgeDegree{2};
+
+        parameters.set("n_cell_vector", nCell);
+        parameters.set("max_grid_size_vector", maxGridSize);
+
+        computational_domain infra;
+
+        // Initialize the De Rham Complex
+        auto deRham{std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree)};
+        
+        // particle groups
+        const int numspec{1};
+        for (int spec{0}; spec < numspec; spec++)
+        {
+            particleGroup[spec] =
+                std::make_unique<particle_groups<vDim>>(spec, infra);
+        }
+
+        // Adding particle to one cell
+        const int numParticles{1};
+        // Add particle in the middle of final cell to check periodic boundary conditions
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.25*infra.dx[xDir],
+                      infra.geom.ProbHi()[yDir] - 1.25*infra.dx[yDir],
+                      infra.geom.ProbHi()[zDir] - 1.25*infra.dx[zDir])};
+        amrex::Array<amrex::Real, numParticles> weights{1};
+        GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
+
+        particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+
+        // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
+        // Ey, Ez
+        const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+
+        const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+        amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
+        amrex::Array<amrex::Parser, 3> parser;
+
+        for (int i{0}; i < 3; ++i)
+        {
+            parser[i].define(analyticalFuncE[i]);
+            parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+            funcE[i] = parser[i].compile<nVar>();
+        }
+
+        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
+
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        {
+            const long np{pti.numParticles()};
+            EXPECT_EQ(numParticles, np);
+
+            updateEFieldParallelFor<vDim, degX, degY, degZ>(pti, E, infra);
+        }
     }
 }

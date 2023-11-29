@@ -1,5 +1,5 @@
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 
 using namespace GEMPIC_Fields;
@@ -9,32 +9,43 @@ int main (int argc, char *argv[])
 {
     const bool build_parm_parse = true;
 	amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD); 
+    Parameters parameters{};
+{
 
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI,-M_PI,-M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
-	const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
-    const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-    const int degree = 2;
+    //const amrex::RealBox realBox({AMREX_D_DECL(-M_PI,-M_PI,-M_PI)},{AMREX_D_DECL(M_PI, M_PI, M_PI)});
+    const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+	const amrex::Vector<int> nCell{AMREX_D_DECL(8, 8, 8)};
+    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    const int hodgeDegree = 2;
+    const int maxSplineDegree = 1;
 
     const amrex::Array<std::string, 3> analyticalE = {"0.0", 
                                                       "0.0",
                                                       "cos (x)"};
+    parameters.set("domain_lo", domain_lo);
+    parameters.set("k", k);
+    parameters.set("n_cell_vector", nCell);
+    parameters.set("max_grid_size_vector", maxGridSize);
+    parameters.set("is_periodic_vector", isPeriodic);
 	const int nVar = GEMPIC_SPACEDIM;
     amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> func; 
-    amrex::Parser parser;
+    amrex::Array<amrex::Parser, GEMPIC_SPACEDIM> parser;
     
-    parser.define(analyticalE[xDir]);
-    parser.define(analyticalE[yDir]);
-    parser.define(analyticalE[zDir]);
-    parser.registerVariables({"x"});
-    func[xDir] = parser.compile<nVar>();
-    func[yDir] = parser.compile<nVar>();
-    func[zDir] = parser.compile<nVar>();
+    for (int comp{0}; comp < GEMPIC_SPACEDIM; ++comp)
+    {
+        parser[comp].define(analyticalE[comp]);
+        parser[comp].registerVariables({AMREX_D_DECL("x", "y", "z")});
+        func[comp] = parser[comp].compile<nVar>();
+    }
 
-    Parameters params(realBox, nCell, maxGridSize, isPeriodic, degree);
-    const amrex::Geometry geom = params.geometry();
+    // Initialize computational_domain
+    Gempic::CompDom::computational_domain infra;
 
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+
 	DeRhamField<Grid::primal, Space::edge> field(deRham);
 
     // Write contents of field
@@ -47,8 +58,8 @@ int main (int argc, char *argv[])
             const amrex::IntVect ubound = bx.bigEnd();
             amrex::Array4<amrex::Real> const &oneForm = (field.data[comp])[mfi].array();
 
-            const amrex::RealVect dr = params.dr();
-            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray(); // Put ProbLo in parameters as a getter. Domainbounds...
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = infra.dx;
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = infra.geom.ProbLoArray(); // Put ProbLo in parameters as a getter. Domainbounds...
 
             // Do the actual writing here
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -102,7 +113,7 @@ int main (int argc, char *argv[])
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_boundaries_sync.output.0", "test_boundaries_sync.output");
     amrex::Print() << "IOProcessorNumber " << amrex::ParallelDescriptor::IOProcessorNumber() << std::endl;
-    
+}    
     amrex::Finalize();
 }
 

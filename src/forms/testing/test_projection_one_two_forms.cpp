@@ -6,7 +6,7 @@
     Test passes if all projected DOFs are within 1e-15 of the analytical value.
 ------------------------------------------------------------------------------*/
 #include <GEMPIC_Fields.H>
-#include <GEMPIC_Params.H>
+#include <GEMPIC_parameters.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 
 using namespace GEMPIC_Fields;
@@ -14,7 +14,9 @@ using namespace GEMPIC_FDDeRhamComplex;
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv);
+    amrex::Initialize(argc, argv);
+    Parameters parameters{};
+{
 
     // error tolerance
     const amrex::Real tol = 1e-15;
@@ -22,20 +24,29 @@ int main (int argc, char *argv[])
     // number of quadrature points
     int gaussNodes = 6;
     
-    /* Initialize the infrastructure */
-    const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
-	const amrex::IntVect nCell{AMREX_D_DECL(9, 8, 7)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    //const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+    const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
+    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(9, 8, 7)};
+    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(3, 4, 5)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
     const int hodgeDegree = 2;
+    const int maxSplineDegree = 1;
 
-	Parameters params(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-    const amrex::Geometry geom = params.geometry();
+    parameters.set("domain_lo", domain_lo);
+    parameters.set("k", k);
+    parameters.set("n_cell_vector", nCell);
+    parameters.set("max_grid_size_vector", maxGridSize);
+    parameters.set("is_periodic_vector", isPeriodic);
 
-    auto deRham = std::make_shared<FDDeRhamComplex>(params);
+    // Initialize computational_domain
+    Gempic::CompDom::computational_domain infra;
 
-	// Declare the fields 
-	DeRhamField<Grid::primal, Space::edge> E(deRham);
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+
+    // Declare the fields 
+    DeRhamField<Grid::primal, Space::edge> E(deRham);
 
     // Parse analytical fields and and initialize parserEval
 #if (GEMPIC_SPACEDIM == 1)
@@ -76,8 +87,8 @@ int main (int argc, char *argv[])
             const amrex::Box &bx = mfi.validbox();
             amrex::Array4<amrex::Real> const &oneForm = (lineIntegral.data[comp])[mfi].array();
 
-            const amrex::RealVect dr = params.dr();
-            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();
+            const amrex::RealVect dr = amrex::RealVect{AMREX_D_DECL(infra.dx[xDir], infra.dx[yDir], infra.dx[zDir])};
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = infra.geom.ProbLoArray();
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
@@ -109,7 +120,7 @@ int main (int argc, char *argv[])
     // Test passes if error < GEMPIC_CTEST_TOL
     bool passE = false;
 
-	DeRhamField<Grid::primal, Space::edge> errorE(deRham);
+    DeRhamField<Grid::primal, Space::edge> errorE(deRham);
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(E.data[comp]); mfi.isValid(); ++mfi)
@@ -135,8 +146,8 @@ int main (int argc, char *argv[])
 
     // Run the same test for face integrals
     // Declare the fields 
-	DeRhamField<Grid::primal, Space::face> B(deRham);
-	DeRhamField<Grid::primal, Space::face> faceIntegral(deRham);
+    DeRhamField<Grid::primal, Space::face> B(deRham);
+    DeRhamField<Grid::primal, Space::face> faceIntegral(deRham);
 
     // Parse analytical fields and and initialize parserEval
 #if (GEMPIC_SPACEDIM == 1)
@@ -170,8 +181,8 @@ int main (int argc, char *argv[])
             const amrex::Box &bx = mfi.validbox();
             amrex::Array4<amrex::Real> const &oneForm = (faceIntegral.data[comp])[mfi].array();
 
-            const amrex::RealVect dr = params.dr();
-            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();
+            const amrex::RealVect dr = amrex::RealVect{AMREX_D_DECL(infra.dx[xDir], infra.dx[yDir], infra.dx[zDir])};
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = infra.geom.ProbLoArray();
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
@@ -202,7 +213,7 @@ int main (int argc, char *argv[])
     // Test passes if error < GEMPIC_CTEST_TOL
     bool passB = false;
 
-	DeRhamField<Grid::primal, Space::face> errorB(deRham);
+    DeRhamField<Grid::primal, Space::face> errorB(deRham);
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(B.data[comp]); mfi.isValid(); ++mfi)
@@ -266,8 +277,8 @@ int main (int argc, char *argv[])
             const amrex::Box &bx = mfi.validbox();
             amrex::Array4<amrex::Real> const &oneForm = (lineIntegralDual.data[comp])[mfi].array();
 
-            const amrex::RealVect dr = params.dr();
-            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();
+            const amrex::RealVect dr = amrex::RealVect{AMREX_D_DECL(infra.dx[xDir], infra.dx[yDir], infra.dx[zDir])};
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = infra.geom.ProbLoArray();
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
@@ -293,7 +304,7 @@ int main (int argc, char *argv[])
     lineIntegralDual.fillBoundary();
 
     // Calculate error
-	DeRhamField<Grid::dual, Space::edge> errorH(deRham);
+    DeRhamField<Grid::dual, Space::edge> errorH(deRham);
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(H.data[comp]); mfi.isValid(); ++mfi)
@@ -321,7 +332,7 @@ int main (int argc, char *argv[])
         passH = true;
 
     // Declare the fields 
-	DeRhamField<Grid::dual, Space::face> D(deRham);
+    DeRhamField<Grid::dual, Space::face> D(deRham);
 
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalD = {"cos(x)", 
@@ -359,8 +370,8 @@ int main (int argc, char *argv[])
             const amrex::Box &bx = mfi.validbox();
             amrex::Array4<amrex::Real> const &oneForm = (faceIntegralDual.data[comp])[mfi].array();
 
-            const amrex::RealVect dr = params.dr();
-            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = params.geometry().ProbLoArray();
+            const amrex::RealVect dr = amrex::RealVect{AMREX_D_DECL(infra.dx[xDir], infra.dx[yDir], infra.dx[zDir])};
+            const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = infra.geom.ProbLoArray();
 
             ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
@@ -386,7 +397,7 @@ int main (int argc, char *argv[])
     faceIntegralDual.fillBoundary();
 
     // Calculate error
-	DeRhamField<Grid::dual, Space::face> errorD(deRham);
+    DeRhamField<Grid::dual, Space::face> errorD(deRham);
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(D.data[comp]); mfi.isValid(); ++mfi)
@@ -447,6 +458,6 @@ int main (int argc, char *argv[])
     if (amrex::ParallelDescriptor::MyProc() == 0)
         std::rename("test_projection_one_two_forms.output.0", "test_projection_one_two_forms.output");
     amrex::Print() << "IOProcessorNumber " << amrex::ParallelDescriptor::IOProcessorNumber() << std::endl;
-
+}
     amrex::Finalize();
 }

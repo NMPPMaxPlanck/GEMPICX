@@ -12,6 +12,8 @@
 
 #include "GEMPIC_Splitting.H"
 
+using namespace Gempic;
+using namespace CompDom;
 using namespace Particles;
 using namespace GEMPIC_FDDeRhamComplex;
 using namespace GEMPIC_Fields;
@@ -41,8 +43,8 @@ namespace Particles {
 }
 
 namespace {
-    template<unsigned int vDim, unsigned int numspec, int degX, int degY, int degZ, int degmw, unsigned int ndata>
-    class MockHSZigZagC2 : public Time_Loop::HSZigZagC2<vDim, numspec, degX, degY, degZ, degmw, ndata> {
+    template<unsigned int vDim, unsigned int numspec, int degX, int degY, int degZ, int hodgeDegree, unsigned int ndata>
+    class MockHSZigZagC2 : public Time_Loop::HSZigZagC2<vDim, numspec, degX, degY, degZ, hodgeDegree, ndata> {
         public:
     };
 
@@ -73,43 +75,64 @@ namespace {
         static const int degX{1};
         static const int degY{1};
         static const int degZ{1};
-        static const int degmw{2};
+        inline static const int hodgeDegree{2};
+        inline static const int maxSplineDegree{std::max(std::max(degX, degY), degZ)};
 
         static const int numSpec{1};
         static const int vDim{3};
         static const int spec{0};
         static const int nData{1};
-        const int Nghost{GEMPIC_TestUtils::initNGhost(degX, degY, degZ)};
-        Parameters params;
+        Parameters parameters{};
 
-        double charge{1};
-        double mass{1};
-
-        computational_domain infra;
+        computational_domain infra{false}; // "uninitialized" computational domain
         amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
+        std::shared_ptr<GEMPIC_FDDeRhamComplex::FDDeRhamComplex> deRham;
+
+        static void SetUpTestSuite()
+        {
+            /* Initialize the infrastructure */
+            //const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
+            //                             {AMREX_D_DECL(10.0, 10.0, 10.0)});
+            amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+            // 
+            amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2*M_PI, 0.2*M_PI, 0.2*M_PI)};
+            const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
+            const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+
+            amrex::ParmParse pp;
+            pp.addarr("domain_lo", domain_lo);
+            pp.addarr("k", k);
+            pp.addarr("n_cell_vector", nCell);
+            pp.addarr("max_grid_size_vector", maxGridSize);
+            pp.addarr("is_periodic_vector", isPeriodic);
+
+            // particle settings
+            double charge{1};
+            double mass{1};
+
+            pp.add("particle.species0.charge", charge);
+            pp.add("particle.species0.mass", mass);
+        }
 
         // virtual void SetUp() will be called before each test is run.
         void SetUp() override {
+            // Parameters initialized here so that different tests can have different parameters
+            Parameters parameters{};
             /* Initialize the infrastructure */
-            const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(10.0, 10.0, 10.0)});
-            const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-            const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-            const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-            const amrex::IntVect isPeri{isPeriodic};
-            const int hodgeDegree{2};
+            infra = computational_domain{};
 
-            // This class does the same as GEMPIC_parameters.H and needs to be urgently redesigned.
-            // {1, 1, 1} represents periodicity, has different types than Params and gempic_parameters.
-            infra.initialize_computational_domain(nCell, maxGridSize, isPeri, realBox);
+            // Initialize the De Rham Complex
+            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
 
-            params = Parameters(realBox, nCell, maxGridSize, isPeriodic, hodgeDegree);
-            
             // particles
             for (int spec{0}; spec < numSpec; spec++)
             {
                 particleGroup[spec] =
-                    std::make_unique<particle_groups<vDim>>(charge, mass, infra);
+                    std::make_unique<particle_groups<vDim>>(spec, infra);
             }
+
         }
     };
 }
@@ -155,9 +178,6 @@ namespace {
             funcE[i] = parser[i].compile<nVar>();
         }
 
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
-
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
         particleGroup[0]->Redistribute();  // assign particles to the tile they are in
@@ -186,14 +206,14 @@ namespace {
 
             auto particle_attributes = &pti.GetStructOfArrays();
             amrex::ParticleReal* const AMREX_RESTRICT velx =
-                particle_attributes->GetRealData(0).data();
+                particle_attributes->GetRealData(xDir).data();
             amrex::ParticleReal* const AMREX_RESTRICT vely =
-                particle_attributes->GetRealData(1).data();
+                particle_attributes->GetRealData(yDir).data();
             amrex::ParticleReal* const AMREX_RESTRICT velz =
-                particle_attributes->GetRealData(2).data();
+                particle_attributes->GetRealData(zDir).data();
             amrex::GpuArray<amrex::Real, 4> vel{0, 0, 0, 0};
             
-            OperatorHamilton<4, degX, degY, degZ, degmw> operatorHamilton;
+            OperatorHamilton<4, degX, degY, degZ, hodgeDegree> operatorHamilton;
 
             operatorHamilton.template apply_H_e_particle<MockSpline<degX, degY, degZ>>(
                 eArray,
@@ -225,9 +245,6 @@ namespace {
 
         // (default) charge correctly transferred from addSingleParticles
         EXPECT_EQ(1, particleGroup[0]->getCharge());
-
-        // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(params)};
 
         DeRhamField<Grid::dual, Space::face> J(deRham);
         DeRhamField<Grid::primal, Space::face> B(deRham);
@@ -280,16 +297,16 @@ namespace {
 
             auto particle_attributes = &pti.GetStructOfArrays();
             amrex::ParticleReal* const AMREX_RESTRICT velx =
-                particle_attributes->GetRealData(0).data();
+                particle_attributes->GetRealData(xDir).data();
             amrex::ParticleReal* const AMREX_RESTRICT vely =
-                particle_attributes->GetRealData(1).data();
+                particle_attributes->GetRealData(yDir).data();
             amrex::ParticleReal* const AMREX_RESTRICT velz =
-                particle_attributes->GetRealData(2).data();
+                particle_attributes->GetRealData(zDir).data();
             amrex::GpuArray<amrex::Real, 4> vel{0, 0, 0, 0};
 
             amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-            OperatorHamilton<4, degX, degY, degZ, degmw> operatorHamilton;
+            OperatorHamilton<4, degX, degY, degZ, hodgeDegree> operatorHamilton;
 
             operatorHamilton.template apply_H_p_i<xDir>(
                 position,

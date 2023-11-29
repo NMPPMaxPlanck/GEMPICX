@@ -1,15 +1,19 @@
-file(GLOB SOURCES "../GEMPIC_Params.cpp")
+file(GLOB VERBOSITY "../../../utils/GEMPIC_Verbosity.cpp")
+file(GLOB PARAMETERS "../GEMPIC_parameters.cpp")
+file(GLOB FDDERHAMCOMPLEX "../../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../../../forms/GEMPIC_extDerivatives.cpp")
 
-add_executable( test_Parameters ${SOURCES} test_Parameters.cpp )
-add_executable( test_parser test_parser.cpp )
+add_executable( test_parameters test_parameters.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
+
+#add_executable( test_parser test_parser.cpp )
 
 if(GEMPIC_USE_CUDA) 
-  setup_target_for_cuda_compilation( test_Parameters )
-  setup_target_for_cuda_compilation( test_parser )
+  setup_target_for_cuda_compilation( test_parameters )
+#  setup_target_for_cuda_compilation( test_parser )
 endif()
 
-target_link_libraries( test_Parameters AMReX::amrex AMReX::Flags_CXX )
-target_link_libraries( test_parser AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
+target_link_libraries( test_parameters AMReX::amrex AMReX::Flags_CXX )
+#target_link_libraries( test_parser AMReX::amrex AMReX::Flags_CXX AMReX::Flags_Fortran )
 
 list(SORT _tests)
 

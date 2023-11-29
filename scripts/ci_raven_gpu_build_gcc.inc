@@ -3,12 +3,11 @@
 module purge
 module load gcc/11
 module load cuda/11.4
-module av
 # missing module
 #module load openmpi_gpu/4
 module load openmpi/4
 module load cmake/3.22
 module load numdiff/5.9
 module load git
-module load anaconda
+module load anaconda/3/2021.11
 module list
