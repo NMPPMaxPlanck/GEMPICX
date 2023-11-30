@@ -14,7 +14,7 @@ New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 
 
 ## Installing with Presets
-For systems on which the GEMPIC code is run regularly by multiple users we provide [cmake-presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). So far this is implemented for the Raven Cluster of the MPCDF. These presets are defined in [](./CMakePresets.json)
+For systems on which the GEMPIC code is run regularly by multiple users we provide [cmake-presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). So far this is implemented only for the Raven Cluster of the MPCDF. These presets are defined in [](./CMakePresets.json). The presets might work on other systems as well but this is not guaranteed.
 
 All available presets can be listed using
 ```sh
@@ -23,7 +23,7 @@ cmake --list-presets
 
 If more specific presets are required to build on systems which are not defined we recommened to store these presets in a `CMakeUserPresets.json` file.
 
-Building GEMPIC using presets can be done by following the instructions below
+Building GEMPIC using presets can be done by following the instructions below. Use different build directories for different presets.
 ```
 cd /PATH/TO/GEMPIC
 cmake --preset name-of-your-preset -S . -B /PATH/TO/BUILD/DIR
