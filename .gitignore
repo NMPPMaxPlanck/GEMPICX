@@ -19,6 +19,7 @@ CMakeUserPresets.json
 *build*/**
 *install*/**
 *out*/**
+runs*/**
 
 # Operating System specific excludes
 .DS_store
