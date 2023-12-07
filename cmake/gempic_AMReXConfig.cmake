@@ -1,6 +1,7 @@
 # Find the AMReX library
 find_package( AMReX CONFIG )
 if(NOT AMReX_FOUND)
+    message(STATUS "Fetching AMReX from github")
     FetchContent_Declare(
     AMReX
     GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git

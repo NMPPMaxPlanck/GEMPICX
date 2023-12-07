@@ -26,7 +26,7 @@ using namespace GEMPIC_FDDeRhamComplex;
             int m_bottomVerbose;
             
             //for Poisson
-            amrex::Array<amrex::Real, GEMPIC_SPACEDIM> m_sigma;
+            //amrex::Array<amrex::Real, GEMPIC_SPACEDIM> m_sigma;
 
 
         public:

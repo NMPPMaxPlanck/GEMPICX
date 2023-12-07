@@ -1,19 +1,19 @@
-message(STATUS "--GEMPIC-CompilerID: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "GEMPIC-CompilerID: ${CMAKE_CXX_COMPILER_ID}")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU.*")
   # gcc
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -funroll-all-loops -mavx2  -march=native")
   set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
-  message(STATUS "--GEMPIC-Compiler: GNU")
+  message(STATUS "GEMPIC-Compiler: GNU")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -funroll-all-loops -xHost -zmm-usage=high -Ofast -qopt-prefetch=2 -mcmodel=large") # or try 4 for prefetch
   set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
-  message(STATUS "--GEMPIC-Compiler: Intel")
+  message(STATUS "GEMPIC-Compiler: Intel")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang.*")
   # Clang 
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra")
-  message(STATUS "--GEMPIC-Compiler: Clang")
+  message(STATUS "GEMPIC-Compiler: Clang")
 else()
-  message(STATUS "--GEMPIC-Compiler: Unknown compiler")
+  message(STATUS "GEMPIC-Compiler: Unknown compiler")
 endif()
 
 if(GEMPIC_USE_CUDA)

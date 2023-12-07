@@ -297,7 +297,7 @@ int main (int argc, char *argv[])
         });
     }
 
-    bool passQ, passQDual, passRho, passRhoDual = false;
+    bool passQ = false, passQDual = false, passRho = false, passRhoDual = false;
     amrex::Real errorQ_norm0 = errorQ.data.norm0();
     amrex::Real errorQDual_norm0 = errorQDual.data.norm0();
     amrex::Real errorRho_norm0 = errorRho.data.norm0();

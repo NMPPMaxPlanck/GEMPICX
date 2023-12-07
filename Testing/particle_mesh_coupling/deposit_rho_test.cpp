@@ -138,7 +138,7 @@ namespace {
     TEST_F(DepositRhoTest, NullTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
@@ -185,9 +185,9 @@ namespace {
         const int numParticles{1};
 
         // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi(xDir) - 0.5*infra.dx[xDir],
-                      infra.geom.ProbHi(yDir) - 0.5*infra.dx[yDir],
-                      infra.geom.ProbHi(zDir) - 0.5*infra.dx[zDir])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{AMREX_D_DECL(infra.geom.ProbHi(xDir) - 0.5*infra.dx[xDir],
+                        infra.geom.ProbHi(yDir) - 0.5*infra.dx[yDir],
+                        infra.geom.ProbHi(zDir) - 0.5*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{3};
         // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and receiving 1/2^GEMPIC_SPACEDIM the weight of the particle (3)
         const auto charge{particleGroup[0]->getCharge()};
@@ -227,9 +227,9 @@ namespace {
         ASSERT_EQ(0, rho_ptr->data.norm2(0, infra.geom.periodicity()));
         const int numParticles{1};
 
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbLo(xDir) + 0.25*infra.dx[xDir],
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{AMREX_D_DECL(infra.geom.ProbLo(xDir) + 0.25*infra.dx[xDir],
                       infra.geom.ProbLo(yDir) + 0.25*infra.dx[yDir],
-                      infra.geom.ProbLo(zDir) + 0.25*infra.dx[zDir])};
+                      infra.geom.ProbLo(zDir) + 0.25*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
 
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
@@ -359,12 +359,12 @@ namespace {
     // Adds particles of different species in the same cell
     TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies) {
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> pPos{{
-            AMREX_D_DECL(0, 0, 0)}};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> ePos{{
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> pPos{{{
+            AMREX_D_DECL(0, 0, 0)}}};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> ePos{{{
             AMREX_D_DECL(infra.geom.ProbLo(xDir) + 0.5*infra.dx[xDir],
                          infra.geom.ProbLo(yDir) + 0.5*infra.dx[yDir],
-                         infra.geom.ProbLo(zDir) + 0.5*infra.dx[zDir])}};
+                         infra.geom.ProbLo(zDir) + 0.5*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> pWeights{1};
         amrex::Array<amrex::Real, numParticles> eWeights{3};
         int pSpec{0}, eSpec{1};

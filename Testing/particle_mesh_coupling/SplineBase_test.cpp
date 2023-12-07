@@ -118,7 +118,7 @@ namespace {
     TEST_F(SplineBaseTest, SplineConstructorTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -176,7 +176,7 @@ namespace {
 
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -217,7 +217,7 @@ namespace {
     TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -259,7 +259,7 @@ namespace {
     TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -298,7 +298,7 @@ namespace {
     TEST_F(SplineBaseTest, SplineEvalBSplineTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -343,7 +343,7 @@ namespace {
     TEST_F(SplineBaseTest, SplineSplineEvalTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 

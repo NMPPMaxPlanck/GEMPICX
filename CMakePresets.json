@@ -1,84 +1,182 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 22,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "raven-env",
-      "displayName": "Raven environment settings",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CUDA_ARCHITECTURES": "80"
-      }
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 22,
+        "patch": 0
     },
-    {
-      "name": "gempic-gpu-cache-vars",
-      "displayName": "BSL6D Cache Variables GPU",
-      "hidden": true,
-      "cacheVariables": {
-        "GEMPIC_USE_CUDA": "On"
-      }
-    },
-    {
-      "name": "gnu-compiler",
-      "displayName": "GNU CPU Compiler",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_C_COMPILER": "gcc"
-      }
-    },
-    {
-      "name": "mpcdf-gcc-cpu-3D",
-      "displayName": "GCC CPU Settings for Raven 3D",
-      "inherits": ["raven-env","gnu-compiler"],
-      "cacheVariables": {
-        "AMReX_SPACEDIM": "3"
-      }
-    },
-    {
-      "name": "mpcdf-gcc-gpu-3D",
-      "displayName": "GCC GPU Settings for Raven 3D",
-      "inherits": ["raven-env","gnu-compiler","gempic-gpu-cache-vars"],
-      "cacheVariables": {
-        "AMReX_SPACEDIM": "3"
-      }
-    },
-    {
-      "name": "mpcdf-gcc-cpu-2D",
-      "displayName": "GCC CPU Settings for Raven 2D",
-      "inherits": ["raven-env","gnu-compiler"],
-      "cacheVariables": {
-        "AMReX_SPACEDIM": "2"
-      }
-    },
-    {
-      "name": "mpcdf-gcc-gpu-2D",
-      "displayName": "GCC GPU Settings for Raven 2D",
-      "inherits": ["raven-env","gnu-compiler","gempic-gpu-cache-vars"],
-      "cacheVariables": {
-        "AMReX_SPACEDIM": "2"
-      }
-    },
-    {
-      "name": "mpcdf-gcc-cpu-1D",
-      "displayName": "GCC CPU Settings for Raven 1D",
-      "inherits": ["raven-env","gnu-compiler"],
-      "cacheVariables": {
-        "AMReX_SPACEDIM": "1"
-      }
-    },
-    {
-      "name": "mpcdf-gcc-gpu-1D",
-      "displayName": "GCC GPU Settings for Raven 1D",
-      "inherits": ["raven-env","gnu-compiler","gempic-gpu-cache-vars"],
-      "cacheVariables": {
-        "AMReX_SPACEDIM": "1"
-      }
-    }
-  ]
+    "configurePresets": [
+        {
+            "name": "raven-env",
+            "displayName": "Raven environment settings",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CUDA_ARCHITECTURES": "80"
+            }
+        },
+        {
+            "name": "gempic-gpu-cache-vars",
+            "displayName": "GEMPIC Cache Variables GPU",
+            "hidden": true,
+            "cacheVariables": {
+                "GEMPIC_USE_CUDA": "On"
+            }
+        },
+        {
+            "name": "gempic-cpu-cache-vars",
+            "displayName": "GEMPIC Cache Variables CPU",
+            "hidden": true,
+            "cacheVariables": {
+                "GEMPIC_USE_CUDA": "Off"
+            }
+        },
+        {
+            "name": "gnu-compiler",
+            "displayName": "GNU CPU Compiler",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc"
+            }
+        },
+        {
+            "name": "gnu-compiler-debug",
+            "displayName": "GNU CPU Compiler (Debug)",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc"
+            }
+        },
+        {
+            "name": "clang-compiler",
+            "displayName": "Clang Compiler",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang"
+            }
+        },
+        {
+            "name": "clang-compiler-debug",
+            "displayName": "Clang Compiler (Debug)",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang"
+            }
+        },
+        {
+            "name": "mpcdf-gcc-cpu-3D",
+            "displayName": "GCC CPU settings for Raven 3D",
+            "inherits": [
+                "raven-env",
+                "gnu-compiler",
+                "gempic-cpu-cache-vars"
+            ],
+            "cacheVariables": {
+                "AMReX_SPACEDIM": "3"
+            }
+        },
+        {
+            "name": "mpcdf-gcc-gpu-3D",
+            "displayName": "GCC GPU settings for Raven 3D",
+            "inherits": [
+                "raven-env",
+                "gnu-compiler",
+                "gempic-gpu-cache-vars"
+            ],
+            "cacheVariables": {
+                "AMReX_SPACEDIM": "3"
+            }
+        },
+        {
+            "name": "mpcdf-gcc-cpu-2D",
+            "displayName": "GCC CPU settings for Raven 2D",
+            "inherits": [
+                "raven-env",
+                "gnu-compiler",
+                "gempic-cpu-cache-vars"
+            ],
+            "cacheVariables": {
+                "AMReX_SPACEDIM": "2"
+            }
+        },
+        {
+            "name": "mpcdf-gcc-gpu-2D",
+            "displayName": "GCC GPU settings for Raven 2D",
+            "inherits": [
+                "raven-env",
+                "gnu-compiler",
+                "gempic-gpu-cache-vars"
+            ],
+            "cacheVariables": {
+                "AMReX_SPACEDIM": "2"
+            }
+        },
+        {
+            "name": "mpcdf-gcc-cpu-1D",
+            "displayName": "GCC CPU settings for Raven 1D",
+            "inherits": [
+                "raven-env",
+                "gnu-compiler",
+                "gempic-cpu-cache-vars"
+            ],
+            "cacheVariables": {
+                "AMReX_SPACEDIM": "1"
+            }
+        },
+        {
+            "name": "mpcdf-gcc-gpu-1D",
+            "displayName": "GCC GPU settings for Raven 1D",
+            "inherits": [
+                "raven-env",
+                "gnu-compiler",
+                "gempic-gpu-cache-vars"
+            ],
+            "cacheVariables": {
+                "AMReX_SPACEDIM": "1"
+            }
+        },
+        {
+            "name": "clang-cpu-release",
+            "displayName": "Clang CPU release settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "gempic-cpu-cache-vars",
+                "clang-compiler"
+            ]
+        },
+        {
+            "name": "gcc-cpu-release",
+            "displayName": "GCC CPU release settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "gempic-cpu-cache-vars",
+                "gnu-compiler"
+            ]
+        },
+        {
+            "name": "clang-cpu-debug",
+            "displayName": "Clang CPU debug settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "gempic-cpu-cache-vars",
+                "clang-compiler-debug"
+            ]
+        },
+        {
+            "name": "gcc-cpu-debug",
+            "displayName": "GCC CPU debug settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "gempic-cpu-cache-vars",
+                "gnu-compiler-debug"
+            ]
+        }
+    ]
 }
