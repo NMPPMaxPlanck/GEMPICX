@@ -71,11 +71,36 @@ class DeRhamComplex;
 *
 * For node and cell only scalarData will be allocated, for edge and face only vector data
 */
-// General instance. Will never be called.
+// General instance. Will never be called. Here for documentation
 template <Grid grid, Space space, typename Enable = void>
 struct DeRhamField
 {
-    DeRhamField() = delete;
+    std::shared_ptr<DeRhamComplex> deRham;
+    /**
+     * @brief actual field information.
+     * Multifab for Space::node or Space::cell,
+     * Array of Multifabs for Space::edge or Space::face, 
+    */
+    amrex::Array<amrex::MultiFab, 3> data;
+
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc) {static_assert(space != space, "This class should not be callable.");};
+    /**
+     * @brief Construct Space::edge/Space::face fields from function array
+    */
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func) : DeRhamField{drc} {};
+
+    /**
+     * @brief Construct Space::node/Space::cell fields from function
+    */
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func) : DeRhamField{drc} {};
+
+    void fillBoundary();
+    void averageSync();
+
+    /**
+     * @brief For Space::node/Space::cell fields, perform all of the synchronization operations necessary after cpu and gpu particle loops
+    */
+    void postParticleLoopSync();
 };
 
 // One- or Two-form, i.e., space is either edge or face
@@ -362,6 +387,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     deRham -> projection(func, 0.0, *this);
 }
 
+/// @cond DOXYGEN_IGNORE
 // Synchronization necessary after cpu and gpu particle loops
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>> ::
@@ -431,6 +457,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
     for (int comp = 0; comp < 3; ++comp)
         data[comp].minus(form.data[comp], 0, 1, nGhost[xDir]);
 }
+///@endcond
 
 }
 

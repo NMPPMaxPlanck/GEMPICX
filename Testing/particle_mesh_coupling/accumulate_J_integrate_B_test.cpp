@@ -145,7 +145,7 @@ namespace {
     TEST_F(AccumulateJUpdateVC2Test, NullTest) {
         // Adding particle to one cell
         const unsigned int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -209,9 +209,9 @@ namespace {
     TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 5.5*infra.dx[xDir],
-                      infra.geom.ProbHi()[yDir] - 5.5*infra.dx[yDir],
-                      infra.geom.ProbHi()[zDir] - 5.5*infra.dx[zDir])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{AMREX_D_DECL(infra.geom.ProbHi(xDir) - 5.5*infra.dx[xDir],
+                        infra.geom.ProbHi(yDir) - 5.5*infra.dx[yDir],
+                        infra.geom.ProbHi(zDir) - 5.5*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -286,9 +286,9 @@ namespace {
     TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 5.25*infra.dx[xDir],
-                      infra.geom.ProbHi()[yDir] - 5.25*infra.dx[yDir],
-                      infra.geom.ProbHi()[zDir] - 5.25*infra.dx[zDir])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{AMREX_D_DECL(infra.geom.ProbHi(xDir) - 5.25*infra.dx[xDir],
+                        infra.geom.ProbHi(yDir) - 5.25*infra.dx[yDir],
+                        infra.geom.ProbHi(zDir) - 5.25*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 

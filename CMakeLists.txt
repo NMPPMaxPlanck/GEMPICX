@@ -25,9 +25,8 @@ include(cmake/gempic_CompilerConfig.cmake)
 
 # Give verbose output when tests fail
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-message("ctest should be: ${CMAKE_CTEST_COMMAND}")
 set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS})
-message("ctest should be: ${CMAKE_CTEST_COMMAND}")
+message("ctest command is: ${CMAKE_CTEST_COMMAND}")
 # Enable ctests
 enable_testing()
 # This defines how the ctests are run
@@ -85,6 +84,6 @@ endif()
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG b796f7d44681514f58a683a3a71ff17c94edb0c1
+  GIT_TAG v1.14.0
 )
 FetchContent_MakeAvailable(googletest)

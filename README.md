@@ -14,7 +14,7 @@ New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 
 
 ## Building with Presets
-For systems on which the GEMPIC code is run regularly by multiple users we provide [cmake-presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). So far this is implemented only for the Raven Cluster of the MPCDF. These presets are defined in [](./CMakePresets.json). The presets might work on other systems as well but this is not guaranteed.
+For systems on which the GEMPIC code is run regularly by multiple users we provide [cmake-presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html). So far this is implemented for the Raven Cluster of the MPCDF, Clang for MacOS and GCC for Linux. These presets are defined in the [CMakePresets](./CMakePresets.json) file. The presets might work on other systems as well, but this is not guaranteed.
 
 All available presets can be listed using
 ```sh
@@ -49,6 +49,7 @@ using `-D GEMPIC_OPTION Argument`
 
 | CMake Option       | Description                                  | Default Value |
 |--------------------|----------------------------------------------|---------------|
+| `AMReX_SPACEDIM`   | The dimension of the simulation (`1`, `2` or `3`)  | `3`           |
 | `GEMPIC_USE_CUDA`  | Use CUDA Backend of AMReX                    | `OFF`         |
 | `GEMPIC_USE_OMP`   | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)               | `OFF`         |
 

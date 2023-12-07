@@ -115,7 +115,7 @@ namespace {
     TEST_F(EvaluateBFieldTest, NullTest) {
         // Adding particle to one cell
         const int numParticles{1};
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -177,7 +177,7 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Particle at position (0,0,0) in box (0,0,0)
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{*infra.geom.ProbLo()};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{*infra.geom.ProbLo()}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
@@ -217,9 +217,9 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.5*infra.dx[xDir],
-                      infra.geom.ProbHi()[yDir] - 1.5*infra.dx[yDir],
-                      infra.geom.ProbHi()[zDir] - 1.5*infra.dx[zDir])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{AMREX_D_DECL(infra.geom.ProbHi(xDir) - 1.5*infra.dx[xDir],
+                        infra.geom.ProbHi(yDir) - 1.5*infra.dx[yDir],
+                        infra.geom.ProbHi(zDir) - 1.5*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
         
@@ -259,9 +259,9 @@ namespace {
         // Adding particle to one cell
         const int numParticles{1};
         // Add particle in the middle of final cell to check periodic boundary conditions
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{AMREX_D_DECL(infra.geom.ProbHi()[xDir] - 1.25*infra.dx[xDir],
-                      infra.geom.ProbHi()[yDir] - 1.25*infra.dx[yDir],
-                      infra.geom.ProbHi()[zDir] - 1.25*infra.dx[zDir])};
+        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{{{AMREX_D_DECL(infra.geom.ProbHi(xDir) - 1.25*infra.dx[xDir],
+                        infra.geom.ProbHi(yDir) - 1.25*infra.dx[yDir],
+                        infra.geom.ProbHi(zDir) - 1.25*infra.dx[zDir])}}};
         amrex::Array<amrex::Real, numParticles> weights{1};
         GEMPIC_TestUtils::addSingleParticles(particleGroup, infra, weights, positions);
 
