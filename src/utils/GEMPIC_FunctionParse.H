@@ -41,15 +41,15 @@ auto parseFunctions(const amrex::Array<std::string, functionNumber>& variableStr
     {
         std::string parseString;
         params.get(variableString, parseString);
-        auto parseArray = amrex::Parser(parseString);
+        parseArray[index] = amrex::Parser(parseString);
         if (kExists)
         {
-            parseArray.setConstant("kvarx", k[xDir]);
-            parseArray.setConstant("kvary", k[yDir]);
-            parseArray.setConstant("kvarz", k[zDir]);
+            parseArray[index].setConstant("kvarx", k[xDir]);
+            parseArray[index].setConstant("kvary", k[yDir]);
+            parseArray[index].setConstant("kvarz", k[zDir]);
         }
-        parseArray.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        evalArray[index] = parseArray.compile<GEMPIC_SPACEDIM + 1>();
+        parseArray[index].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        evalArray[index] = parseArray[index].template compile<GEMPIC_SPACEDIM + 1>();
         ++index;
     }
     return std::make_tuple(parseArray, evalArray);
