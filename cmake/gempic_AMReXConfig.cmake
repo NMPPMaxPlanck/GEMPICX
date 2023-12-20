@@ -6,6 +6,7 @@ if(NOT AMReX_FOUND)
     AMReX
     GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
     GIT_TAG 23.09
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/amrex-src"
     )
 
     set( AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")

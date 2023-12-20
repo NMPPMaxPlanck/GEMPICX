@@ -11,6 +11,10 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang.*")
   # Clang 
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra")
+  if(AMReX_SPACEDIM EQUAL 1)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-braced-scalar-init")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-braced-scalar-init")
+  endif()
   message(STATUS "GEMPIC-Compiler: Clang")
 else()
   message(STATUS "GEMPIC-Compiler: Unknown compiler")
@@ -28,4 +32,11 @@ if(GEMPIC_USE_CUDA)
 
   find_package(CUDAToolkit REQUIRED)
   set(CMAKE_CUDA_FLAGS "-lcusparse -lcurand" )
+
+  # This doesn't do anything but avoid an AMReX warning -- CMAKE_CUDA_HOST_COMPILER must be specified as a -D option on the first invocation of cmake as it is used during the compiler detection process.
+  if (CMAKE_CUDA_HOST_COMPILER)
+    if ("${CMAKE_CXX_COMPILER}" MATCHES "${CMAKE_CUDA_HOST_COMPILER}")
+      set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+    endif()
+  endif()
 endif()
