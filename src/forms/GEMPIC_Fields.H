@@ -85,12 +85,12 @@ struct DeRhamField
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc) {static_assert(space != space, "This class should not be callable.");};
     /**
-     * @brief Construct Space::edge/Space::face fields from function array
+     * @brief Construct Space::edge / Space::face fields from function array
     */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func) : DeRhamField{drc} {};
 
     /**
-     * @brief Construct Space::node/Space::cell fields from function
+     * @brief Construct Space::node / Space::cell fields from function
     */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func) : DeRhamField{drc} {};
 
@@ -98,7 +98,7 @@ struct DeRhamField
     void averageSync();
 
     /**
-     * @brief For Space::node/Space::cell fields, perform all of the synchronization operations necessary after cpu and gpu particle loops
+     * @brief For Space::node / Space::cell fields, perform all of the synchronization operations necessary after cpu and gpu particle loops
     */
     void postParticleLoopSync();
 };

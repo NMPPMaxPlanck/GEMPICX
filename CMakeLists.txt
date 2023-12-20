@@ -22,6 +22,15 @@ endif()
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
+# Define cmake to use libraries from gcc-module not default gcc
+# This section is specific for MPCDF-Cluster configurations
+IF(   ($ENV{HOST} MATCHES "raven")
+   OR ($ENV{HOST} MATCHES "cobra")
+   OR (DEFINED ENV{GITLAB_CI})
+   )
+  SET( CMAKE_BUILD_RPATH $ENV{GCC_HOME}/lib64 )
+  SET( CMAKE_INSTALL_RPATH $ENV{GCC_HOME}/lib64 )
+ENDIF()
 
 # Give verbose output when tests fail
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
@@ -85,5 +94,6 @@ FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.14.0
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/googletest-src"
 )
 FetchContent_MakeAvailable(googletest)

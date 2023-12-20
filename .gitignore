@@ -24,6 +24,10 @@ runs*/**
 # Operating System specific excludes
 .DS_store
 
+# Third Party Downloaded with CMake FetchContent
+third_party/amrex-src
+third_party/googletest-src
+
 # ToDo: Can the patterns below be removed?(Seems like absolute nonsense and repo structure problems. Should not be necessary to mention in .gitignore)
 gempic.config
 gempic.creator
