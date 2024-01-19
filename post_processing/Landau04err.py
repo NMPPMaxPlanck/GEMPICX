@@ -2,8 +2,9 @@ import numpy as np
 import sys
 
 # evaluate errors of electric field, energy and Gauss
-file = open('Landau04.txt', 'r')
-lines = file.readlines()
+with open('Landau04.txt', 'r') as file:
+    lines = file.readlines()
+
 nsteps = len(lines)-1  # First line is not counted
 time = np.zeros(nsteps)
 ex = np.zeros(nsteps)
@@ -51,12 +52,11 @@ if np.max(np.abs(err_energy))> 1e-6:
 
 i1 = 100
 i2 = 1000
+# the analytical solution of the linear Landau damping problem for k=0.4
 E1ex = 0.5*(0.05*np.pi*0.4246*np.exp(-0.0661*time[i1:i2])*np.cos(1.2850*time[i1:i2]-0.335))**2
 if np.linalg.norm(ex[i1:i2]-E1ex)/np.sqrt(i2-i1) > 1.e-4:
     print("Ex error too large", np.linalg.norm(ex[i1:i2]-E1ex)/np.sqrt(i2-i1))
     sys.exit(1)
-    
-# Close opened file
-file.close()
+        
     
 print("Job succeeded")  
