@@ -1,7 +1,7 @@
 Exterior Derivatives
 ====================
 
-Implementation of the exterior derivatives in the De-Rham Complex. Both dual and primal.
+Implementation of the exterior derivatives in the De-Rham Complex, both dual and primal.
 
 .. doxygenfile:: GEMPIC_extDerivatives.cpp
 

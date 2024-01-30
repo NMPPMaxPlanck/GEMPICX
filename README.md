@@ -136,6 +136,11 @@ The formatting should be done with clang-format version 14.
 
 # Documentation
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
+The documentation is constructed using Sphinx, and its source code can be found in the `gempic/doc/sphinx` folder.
+- To build the GEMPIC Sphinx documentation locally on your computer:
+  - Install the required packages: `sphinx`, `breathe`, `sphinx_rtd_theme`, `pandoc`
+  - Execute `make html` in the `gempic/doc/sphinx` folder
+  - The generated HTML files can be found in the `_build/html/` folder. Open `index.html` in your browser to view the documentation.
 
 # Coding style and conventions
 - we follow the [WarpX style convention](https://warpx.readthedocs.io/en/latest/developers/contributing.html#style-and-conventions)

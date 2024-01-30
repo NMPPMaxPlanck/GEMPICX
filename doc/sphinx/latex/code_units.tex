@@ -70,11 +70,11 @@
 
 \subsection{The Vlasov-Maxwell model}
 
-Vlasov equation for the distribution function of s particle species $s$ reads in SI units
+Vlasov equation for the distribution function of s particle species $s$ in SI units reads 
 \begin{equation}\label{Vlasov}
 \partial_t f_s + \bv \cdot \nabla_{\bx} f_s + \frac{q_s}{m_s} \left( \bE + \bv \times \bB \right) \cdot \nabla_{\bv} f_s = 0
 \end{equation}
-and Maxwell's equations
+along with Maxwell's equations
 \begin{align}
 \frac{\partial \bB}{\partial t} + \nabla \times \bE &= 0, \\
 - \frac{\partial \bE}{\partial t} + c^2\nabla \times \bB &= \frac{1}{\varepsilon_0}\bJ, \\
@@ -90,8 +90,8 @@ and the current density
 \begin{align*}
 \bJ =\sum_s q_s\int \bv f_s \du\bv.
 \end{align*}
-This system needs in addition boundary conditions and initial conditions for $\mathbf{E}$, $\mathbf{B}$ and $f$.
-The initial condition for $f$ involves in general Maxwellians of the form
+This system additionally requires boundary conditions and initial conditions for $\mathbf{E}$, $\mathbf{B}$ and $f$.
+The initial condition for $f$ in general involves Maxwellians of the form
 \begin{equation}\label{eq:maxwellian}
 	f_{M,s}(\mathbf{x},\mathbf{v})= \frac{n(\mathbf{x})}{(2\pi v_{th,s}^2)^{\frac 32}} e^{-\frac{|\bv|^2}{2v_{th,s}^2}},
 \end{equation}
@@ -107,9 +107,9 @@ The total energy of the system is given by the Hamiltonian in SI units,
 \subsection{Dimensionless formulation}
 
 For all physical quantities we introduce a reference scale and a corresponding dimensionless quantity.
-First for the independent variables we write
+First, for the independent variables, we write
 $$t= \tr \tht, ~~ \bx= \xr \xht, ~~ \bv = \vr \vht, ~~ q = \qr\qht, ~~~ m = \mr\mht.$$
-For the dependent variables, we define 
+For the dependent variables we define 
 \begin{align*}
 	&f(t,\bx,\bv) = \fr \fht(\tht, \xht, \vht),~~~
 	n(t,\bx) = \nr \nht(\tht, \xht), ~~~
@@ -120,8 +120,8 @@ For the dependent variables, we define
 	&T_s(t,\bx) = \Tr\Tsht(\tht, \xht).
 \end{align*} 
 so that for example 
-$$\partial_t n = \frac{1}{\tr}\partial_{\tht} \nht, ~~~ \nabla_\bx n =  \frac{1}{\xr}\partial_{\tht} \nht.$$
-Let us know define related physical reference quantities:
+$$\partial_t n = \frac{1}{\tr}\partial_{\tht} \nht, ~~~ \nabla_\bx n =  \frac{1}{\xr}\nabla_\xht \nht.$$
+Let us now define related physical reference quantities:
 \begin{equation}
 	\ompr =\sqrt{\frac{\qr^2\nr}{\varepsilon_0\mr} }, ~~~ \omcr=\frac{\qr\Br}{\mr}, ~~~ \vthr = \sqrt{\frac{k_B \Tr}{\mr}}.
 \end{equation}
@@ -134,20 +134,11 @@ Plugging these expressions into the Vlasov-Maxwell system, we get the dimensionl
 	\begin{subequations}
 	\begin{align}
 	\frac{\partial \Bht}{\partial \tht} + \frac{\tr \Er}{\Br\xr}\nablaht \times \Eht &= 0 , \\
-	-  \frac{\partial \bE}{\partial t} + \frac{\tr\Br}{\xr\Er} c^2\nabla \times \Bht &= \frac{\qr\nr\vr\tr}{\varepsilon_0\Er}\Jht , \\
-	\nabla \cdot \bE &= \frac{\qr\nr\xr}{\varepsilon_0\Er}\rhoht,\\
+	-  \frac{\partial \Eht}{\partial t} + \frac{\tr\Br}{\xr\Er} c^2\nabla \times \Bht &= \frac{\qr\nr\vr\tr}{\varepsilon_0\Er}\Jht , \\
+	\nablaht \cdot \Eht &= \frac{\qr\nr\xr}{\varepsilon_0\Er}\rhoht,\\
 	\nablaht \cdot \Bht &= 0.
 	\end{align}
 	\end{subequations}
-	The source terms of the Maxwell's equation are given by the velocity moments of the distribution function: the charge density
-	\begin{align*}
-	\rhoht= \sum_s Z_s \int \fht_s \du\vht
-	\end{align*}
-	and the current density
-	\begin{align*}
-	\Jht =\sum_s Z_s\int \vht \fht_s \du\vht.
-	\end{align*}
-	Note that for the natural choice $\qr=e$ the electron charge, $Z_s$ is the charge state of species $s$.
 
 Using the relation between $\fr$ and $\nr$, the dimensionless Maxwellian is 
 \begin{equation}\label{eq:maxwellianD}
@@ -189,6 +180,7 @@ Finally the dimensionless Vlasov-Maxwell system implemented in the code reads
 	\begin{align*}
 	\Jht =\sum_s Z_s\int \vht \fht_s \du\vht.
 	\end{align*}
+	Note that for the natural choice $\qr=e$ the electron charge, $Z_s$ is the charge state of species $s$.
 
 The total energy of the dimensionless system is given by the following dimensionless Hamiltonian, 
 	\begin{equation}\label{hamiltoniant}
@@ -199,8 +191,8 @@ The total energy of the dimensionless system is given by the following dimension
 
 A plasma is characterized by three reference parameters: density, temperature and background magnetic field (for a magnetized plasma). In addition, the charge and mass of each species in the plasma need to be given. These reference values need to be set by the user. All the other plasma quantities follow from these.
 
-We choose the electrons as the reference particles, so that
-$$\qr = e, ~~~ \mr=m_e, ~~~ \omcr=\frac{e\Br}{m<-e}, ~~~ \ompr=\frac{e^2\nr}{\epsilon_0m_e}, ~~~ \vthr= \sqrt{\frac{k_B \Tr}{m_e}} .$$
+We choose the electrons as reference particles, so that
+$$\qr = e, ~~~ \mr=m_e, ~~~ \omcr=\frac{e\Br}{m_e}, ~~~ \ompr=\sqrt{\frac{e^2\nr}{\epsilon_0m_e}}, ~~~ \vthr= \sqrt{\frac{k_B \Tr}{m_e}} .$$
 
 In addition, in our scaling we made the assumptions that $\tr = \omcr^{-1}$. 
 Then setting the reference velocity $\vr$ completely defines our two scaling parameters $s_v$ and $s_\omega$.
@@ -225,36 +217,36 @@ A summary of the reference quantities for choice 1 ($\vr=c$) and choice 2 ($\vth
 	\label{tab:refq}
 \end{table}
 
-By default the two scaling parameters are set to 1. This means on the one hand ($s_v=1$) that the reference velocity is $c$ the speed of light and on the other hand $(s_\omega=1$) that $\omega_{p,e}=\omega_{c,e}$ which imposes a dependence between $\nr$ and $\Br$.
+By default the two scaling parameters are set to 1. This means on the one hand ($s_v=1$) that the reference velocity is the speed of light, $c$, and on the other hand $(s_\omega=1$) that $\omega_{p,e}=\omega_{c,e}$, which imposes a dependence between $\nr$ and $\Br$.
 
 Other values can be set in the input file by setting
 \verb|epref_ep0| ($=s_\omega$) and \verb|curlB_scaling| (=$s_v$).
 
 \subsection{Examples of plasma parameters}
 
-A magnetized plasma is characterized by its density $n$, its temperature $T$ and the magnitude of its external magnetic field $B$. These beings known as well as the particle mass and charges, the following parameters can be computed  
+A magnetized plasma is characterized by its density $n$, its temperature $T$ and the magnitude of its external magnetic field $B$. With these quantities known in addition to the particle mass and charges, the following parameters can be computed  
 
 \begin{itemize}
  \item Thermal velocity $v_{th}= \sqrt{\frac{k_B T}{m}}$ 
- \item Plasma frequency $\omega_p = \frac{q^2 n}{\epsilon_0 m}$
+ \item Plasma frequency $\omega_p = \sqrt{\frac{q^2 n}{\epsilon_0 m}}$
  \item Cyclotron frequency  $\omega_c = \frac{q B}{m}$
- \item thermal gyroradius $\rho_L = \frac{v_{th}}{\omega_c}$
- \item inertial length $d=\frac{c}{\omega_p}$
+ \item Thermal gyroradius $\rho_L = \frac{v_{th}}{\omega_c}$
+ \item Inertial length $d=\frac{c}{\omega_p}$
  \item Debye length $\lambda_D = \frac{v_{th}}{\omega_p}$ 
  \item Alfven velocity $v_A = \frac{B_0}{\mu_0 m_i n}$
- \item ratio thermal to magnetic energy $\beta = \frac{2\mu_0 n k_B T}{B_0^2}$
+ \item Ratio of thermal to magnetic energy $\beta = \frac{2\mu_0 n k_B T}{B_0^2}$
 \end{itemize}
 
 Let us give typical values for two kinds of magnetized plasmas: a magnetic fusion plasma and a ionosphere plasma, for only hydrogen ions, so that $q_i = -q_e = 1.6022\times 10^{-19} \,C$, $m_e =  9.1094 \times 10^{-31} \,kg$, $m_i=1.6726 \times 10^{-27}\,kg$.
 
 \textbf{Remark:}
-	 In plasma physics temperature is in general given electron volt (eV). In order to get the thermal velocity in $m/s$ (SI) from a temperature in eV, the Boltzmann constant $k_B$ is set to the electron charge $e$ in the relation
+	 In plasma physics temperature is generally given in electron volt (eV). In order to get the thermal velocity in $m/s$ (SI) from a temperature in eV, the Boltzmann constant $k_B$ is replaced by the electron charge $e$ in the relation
 	$v_{th}= \sqrt{k_B T / m}$.
 
 \begin{tabular}{c|c|c|c}
-		 Parameter & magnetic fusion & ionosphere & \\\hline 
+		 Parameter & Magnetic Fusion & Ionosphere & \\\hline 
 		$n$ $(m^{-3})$ &$10^{20}$ & $10^{12} $ & density\\
-		$T\,(eV)$  &$10^4$ & $0.1$ & Temperature\\
+		$T\,(eV)$  &$10^4$ & $0.1$ & temperature\\
 		$B\, (T)$  & $2$ & $0.35\times 10^{-4}$ & external magnetic field\\
 		$\lambda_D\,(m)$ & 7.439e-05& 2.352e-03  & Debye length\\
 		$v_{th,e}\,(m/s)$   &4.191e+07  & 1.325e+05  & electron thermal velocity\\

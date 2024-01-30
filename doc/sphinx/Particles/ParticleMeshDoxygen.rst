@@ -3,16 +3,16 @@
 Particle mesh coupling functions and classes
 ============================================
 
-.. doxygenclass:: Gempic::Particles::spline1d_at_particles
-    :members:
+.. doxygenfile:: GEMPIC_Spline_Class.H
 
-.. doxygenclass:: Gempic::Particles::splines_at_particles
-    :members:
+.. toctree::
+    :maxdepth: 2
 
-.. doxygenfunction:: Gempic::Particles::evaluate_efield
+.. doxygenfile:: GEMPIC_particle_mesh_coupling.H
 
-.. doxygenfunction:: Gempic::Particles::evaluate_bfield
+.. toctree::
+    :maxdepth: 2
 
-.. doxygenfunction:: Gempic::Particles::gempic_deposit_rho_C3
-
-.. doxygenfunction:: Gempic::Particles::accumulate_j_update_v_C2
+..
+    Outcommented for the moment
+    doxygenfunction:: Gempic::Particles::accumulate_j_update_v_C2

@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
                 write_Ex(E, infra, (tStep+1)*dt, tStep+1);
             }
             if (tStep%1 == 0) {
-                std::cout << "Time Step: " << tStep+1 << std::endl;
+                amrex::Print() << "Time Step: " << tStep+1 << std::endl;
             }
         }
     } // end of "time loop" scope

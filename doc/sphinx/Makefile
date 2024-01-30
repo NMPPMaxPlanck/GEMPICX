@@ -21,5 +21,8 @@ help:
 latex-conversion:
 	cd latex; make
 
+
+html: latex-conversion
+
 clean:
 	rm -r _build/ ../doxygen/xml

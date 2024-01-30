@@ -11,32 +11,32 @@ namespace Spline {
  * 
  *  - "node splines" (centered on integer nodes) defined as
  * 
- *    nodeS_i( x ) := ref_S_{degX}( (x - nx_i)/dx )  
+ *    \f$ \mathrm{nodeS}_i( x ) := \mathrm{ref}_{S_{degX}}( (x - nx_i)/dx )  \f$
  *
  *  - "cell splines" (centered on cell mid-points) defined as
  * 
- *    cellS_i( x ) := (1/dx) * ref_S_{degX-1}( (x - nx_{i+1/2})/dx )
+ *    \f$ \mathrm{cellS}_i( x ) := (1/dx) * \mathrm{ref}_{S_{degX-1}}( (x - nx_{i+1/2})/dx ) \f$
  *
  * where: 
  *  
- *  - ref_S_{deg} is the (symmetric, centered) cardinal B-spline of degree deg with support [-(deg+1)/2, (deg+1)/2]
+ *  - \f$ \mathrm{ref}_{S_{deg}} \f$ is the (symmetric, centered) cardinal B-spline of degree deg with support [-(deg+1)/2, (deg+1)/2]
  *  - dx is the cell size (in the relevant direction)
- *  - nx_i = (plo + i * dx) is the i-th grid node (in the relevant direction) 
+ *  - \f$ nx_i \f$ = (plo + i * dx) is the i-th grid node (in the relevant direction) 
  *  
  * These splines obtained by applying the dual node- and cell- reduction operators 
- * (corresponding to tR0 and tR1 in 1D) to the "particle spline"
+ * (corresponding to \f$ t_{R0} \f$ and \f$ t_{R1} \f$ in 1D) to the "particle spline"
  * 
- *    partS( x - x_p ) := (1/dx) * ref_S_{degX-1}( (x - x_p)/dx )
+ *    \f$ \mathrm{partS}( x - x_p ) := (1/dx) * \mathrm{ref}_{S_{degX-1}}( (x - x_p)/dx ) \f$
  * 
- * (centered at the particle, with support [x_p-degX/2, x_p+degX/2] and unit integral), indeed:
+ * (centered at the particle, with support [\f$ x_p-degX/2 \f$, \f$ x_p+degX/2 \f$] and unit integral), indeed:
  * 
  *  - the reduction on a dual node yields a "cell spline" evaluated at the particle:
  * 
- *      tR0_i( partS(x-x_p) ) = partS( nx_{i+1/2} - x_p ) = cellS_i( x_p )
+ *      \f$ t_{R0_i}( \mathrm{partS}(x-x_p) ) = \mathrm{partS}( nx_{i+1/2} - x_p ) = \mathrm{cellS}_i( x_p ) \f$
  * 
  *  - the reduction on a dual cell yields a "node spline" evaluated at the particle: 
  * 
- *      tR1_i( partS(x-x_p) ) = \f$ \int_{nx_{i-1/2}}^{nx_{i+1/2}} \f$ partS( x  - x_p ) = nodeS_i( x_p )
+ *      \f$ t_{R1_i}( \mathrm{partS}(x-x_p) ) = \int_{nx_{i-1/2}}^{nx_{i+1/2}} \mathrm{partS}( x  - x_p ) = \mathrm{nodeS}_i( x_p ) \f$
  * 
  * @tparam degX : degree of the node-spline in x-direction
  * @tparam degY : degree of the node-spline in y-direction
@@ -51,10 +51,10 @@ public:
      * @brief Construct a new SplineBase object
      * 
      * Description: 
-     * for a given (particle) position xx_p, this constructor computes the values of 
-     *  - firstIndex[dir] for each direction (the index of the first splines contributing to xx_p) 
-     *  - cellSplineVals[dir] the array containing the non-zero values of cell splines at xx_p
-     *  - nodeSplineVals[dir] the array containing the non-zero values of node splines at xx_p
+     * for a given (particle) position \f$ xx_p \f$, this constructor computes the values of 
+     *  - firstIndex[dir] for each direction (the index of the first splines contributing to \f$ xx_p \f$)
+     *  - cellSplineVals[dir] the array containing the non-zero values of cell splines at \f$ xx_p \f$
+     *  - nodeSplineVals[dir] the array containing the non-zero values of node splines at \f$ xx_p \f$
      * 
      * @param position : position of the particle
      * @param plo : low end of the problem domain
@@ -97,15 +97,19 @@ public:
      *  
      * this array is computed in the function initBSplinesAtPositions: its values are such that we have 
      * 
-     *   S_i(x_p) > 0  only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX
-     *   S_j(y_p) > 0  only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY
-     *   S_k(z_p) > 0  only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ
+     *   \f$ S_i(x_p) > 0\f$ only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX
+     * 
+     *   \f$ S_j(y_p) > 0\f$ only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY
+     * 
+     *   \f$ S_k(z_p) > 0\f$ only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ
      * 
      * for S = nodeS and
      * 
-     *   S_i(x_p) > 0  only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX - 1
-     *   S_j(y_p) > 0  only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY - 1
-     *   S_k(z_p) > 0  only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ - 1
+     *   \f$ S_i(x_p) > 0 \f$ only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX - 1
+     * 
+     *   \f$ S_j(y_p) > 0 \f$ only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY - 1
+     * 
+     *   \f$ S_k(z_p) > 0 \f$ only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ - 1
      * 
      * for S = cellS
     */
@@ -119,9 +123,11 @@ public:
      * this array is computed in the function update1DSplines,
      * it will store the values of the univariate cell-splines at the particle position:
      * 
-     *   cellSplineVals[xDir][i] = cellS_{firstIndex[xDir]+i}(x_p)   for  i = 0 .. degX - 1
-     *   cellSplineVals[yDir][j] = cellS_{firstIndex[yDir]+j}(y_p)   for  j = 0 .. degY - 1
-     *   cellSplineVals[zDir][k] = cellS_{firstIndex[zDir]+k}(z_p)   for  k = 0 .. degZ - 1
+     *   cellSplineVals[xDir][i] = \f$ \mathrm{cellS}_{\mathrm{firstIndex[xDir]}+i}(x_p) \f$ for  i = 0 .. degX - 1
+     * 
+     *   cellSplineVals[yDir][j] = \f$ \mathrm{cellS}_{\mathrm{firstIndex[yDir]}+j}(y_p) \f$ for  j = 0 .. degY - 1
+     * 
+     *   cellSplineVals[zDir][k] = \f$ \mathrm{cellS}_{\mathrm{firstIndex[zDir]}+k}(z_p) \f$ for  k = 0 .. degZ - 1
      * 
      * where cellS is the univariate cell spline defined in the Class docstring
     */
@@ -135,9 +141,11 @@ public:
      * this array is computed in the function update1DSplines,
      * it will store the values of the univariate cell-splines at the particle position:
      * 
-     *   nodeSplineVals[xDir][i] = nodeS_{firstIndex[xDir]+i}(x_p)   for  i = 0 .. degX
-     *   nodeSplineVals[yDir][j] = nodeS_{firstIndex[yDir]+j}(y_p)   for  j = 0 .. degY
-     *   nodeSplineVals[zDir][k] = nodeS_{firstIndex[zDir]+k}(z_p)   for  k = 0 .. degZ
+     *   nodeSplineVals[xDir][i] = \f$ \mathrm{nodeS}_{\mathrm{firstIndex[xDir]}+i}(x_p) \f$ for  i = 0 .. degX
+     * 
+     *   nodeSplineVals[yDir][j] = \f$ \mathrm{nodeS}_{\mathrm{firstIndex[yDir]}+j}(y_p) \f$ for  j = 0 .. degY
+     * 
+     *   nodeSplineVals[zDir][k] = \f$ \mathrm{nodeS}_{\mathrm{firstIndex[zDir]}+k}(z_p) \f$ for  k = 0 .. degZ
      * 
      * where nodeS is the univariate cell spline defined in the Class docstring
     */
@@ -147,14 +155,14 @@ public:
      * @brief Compute the first spline index and the offset for a given particle position
      * 
      * Description: 
-     * Given a particle position x_p in the given direction dir, this function computes: 
+     * Given a particle position \f$ x_p \f$ in the given direction dir, this function computes: 
      *  - firstIndex[dir] : the index of the first contributing spline (see above):
      * and
-     *  - refOffset = firstIndex[dir] + (deg+1)/2 - (x_p - plo)/dx 
+     *  - refOffset = firstIndex[dir] + (deg+1)/2 - (\f$ x_p \f$ - plo)/dx
      *    where deg is the degree of the node spline in the given direction
      * 
      * 0 < refOffset ≤ 1  is the normalized (1/dx) distance between the particle position and the last point in the support of the first contributing spline (of both node and cell type).
-     * It will be used in the function splineEval to compute the values of the node- and cell-splines at x_p
+     * It will be used in the function splineEval to compute the values of the node- and cell-splines at \f$ x_p \f$
      * 
      * @tparam dir : the direction in which to compute: x = 0, y = 1, z = 2
      * 
@@ -203,22 +211,22 @@ public:
     }
 
     /**
-     * @brief Compute a dual dof (defined by the corresponding reduction operator tR{3-l}) of a vectorized particle spline
+     * @brief Compute a dual dof (defined by the corresponding reduction operator \f$ t_{R\{3-l\}}) \f$ of a vectorized particle spline
      * 
      * Description: 
      * This function computes a dual dof of the tensor-product particle spline
      * centered at the particle position encoded in this spline object, with a vector orientation for l = 1 or 2
      *Field::DualOneForm 
      * Specifically, it computes 
-     *  - tR{3-l}_ijk(partS(xx-xx_p))  if l = 0 or 3
-     *  - tR{3-l}_ijk(e_dir * partS(xx-xx_p))  if l = 1 or 2
+     *  - \f$ t_{R\{3-l\}_{ijk}}(\mathrm{partS}(xx-xx_p)) \f$ if l = 0 or 3
+     *  - \f$ t_{R\{3-l\}_{ijk}}(e_{dir} * \mathrm{partS}(xx-xx_p)) \f$ if l = 1 or 2
      * where 
-     *   partS is the (tensor-product) particle spline defined above, centered at the particle position xx_p
+     *   partS is the (tensor-product) particle spline defined above, centered at the particle position \f$ xx_p \f$
      * 
      * According to the univariate formulas above:
-     *   tR0_i(partS(x-x_p)) = cellS_i( x_p )
+     *   \f$ t_{R0_i}(\mathrm{partS}(x-x_p)) = \mathrm{cellS}_i( x_p ) \f$
      * and  
-     *   tR1_i(partS(x-x_p)) = nodeS_i( x_p )
+     *   \f$ t_{R1_i}(\mathrm{partS}(x-x_p)) = \mathrm{nodeS}_i( x_p ) \f$
      * the multivariate dofs are obtained as products of univariate node- and cell-splines evaluated at the particle position
      * 
      * @tparam form : index l of the associated dual form
@@ -296,32 +304,32 @@ public:
      * 
      * Description: 
      * 
-     * Given a primal l-form (l = 1 or 2) field with coefficients (edge or face dofs) F_ijk
-     * this function computes the value of the spline-smoothed field at xx_p:
+     * Given a primal l-form (l = 1 or 2) field with coefficients (edge or face dofs) \f$ F_{ijk} \f$
+     * this function computes the value of the spline-smoothed field at \f$ xx_p: \f$
      * 
-     * F^S(xx_p) = sum_d (e_d * sum_{ijk} F_ijk * tR{3-l}_ijk(e_d * partS(xx-xx_p)))
+     * \f$ F^S(xx_p) = \sum_d (e_d * \sum_{ijk} F_{ijk} * t_{R\{3-l\}_{ijk}}(e_d * \mathrm{partS}(xx-xx_p))) \f$
      * 
      * where:
-     * - xx_p = (x_p, y_p, z_p) is the particle position encoded in the spline object
-     * - e_d is the canonical basis vector along grid direction d 
-     * - tR{3-l} is the dual reduction operator for (3-l)-forms (here in 3D)
+     * - \f$ xx_p \f$ = (\f$ x_p \f$, \f$ y_p \f$, \f$ z_p \f$) is the particle position encoded in the spline object
+     * - \f$ e_d \f$ is the canonical basis vector along grid direction d 
+     * - \f$ t_{R\{3-l\}} \f$ is the dual reduction operator for (3-l)-forms (here in 3D)
      * - partS is the tensor-product particle spline (approximating the Dirac mass), ie
-     *     partS( xx-xx_p ) = prod_d (1/dx_d) * ref_S_{deg_d-1}((xx - xx_p)_d/dx_d)
+     *     \f$ \mathrm{partS}( xx-xx_p ) = \prod_d (1/dx_d) * \mathrm{ref}_{S_{deg_{d-1}}}((xx - xx_{p})_{d}/dx_{d}) \f$
      *   (see also the class documentation)
      * 
      * Examples: 
      * 
      * - for a (primal) 1-form electric field with (primal edge) dofs E_i, the function computes
      *   
-     *   E^S(xx_p) = sum_{d = components} e_d ( sum_{i = primal edges / dual faces} E_i tR2_i(e_d * partS_p(xx)) )
+     *   \f$ E^S(xx_p) = \sum_{d = \mathrm{components}} e_d ( \sum_{i = \mathrm{primal\ edges / dual\ faces}} E_i t_{R2_i}(e_d * \mathrm{partS}_p(xx)) ) \f$
      *   
-     *   where tR2_i(.) is the reduction corresponding to a flux on the dual face i
+     *   where \f$ t_{R2_i}(.) \f$ is the reduction corresponding to a flux on the dual face i
      * 
-     * - for a (primal) 2-form magnetic field with (primal face) dofs B_i, the function computes
+     * - for a (primal) 2-form magnetic field with (primal face) dofs \f$ B_i \f$, the function computes
      * 
-     *   B^S(xx_p) = sum_{d = components} e_d ( sum_{i = primal faces / dual edges} B_i tR1_i(e_d * partS_p(xx)) )
+     *   \f$ B^S(xx_p) = \sum_{d = \mathrm{components}} e_d ( \sum_{i = \mathrm{primal\ faces / dual\ edges}} B_i t_{R1_i}(e_d * \mathrm{partS}_p(xx)) ) \f$
      *   
-     *   where tR1_i(.) is the reduction corresponding to a circulation on the dual edge i
+     *   where \f$ t_{R1_i}(.) \f$ is the reduction corresponding to a circulation on the dual edge i
      * 
      * for details about the algorithm see the documentation
      * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#smoothed-electromagnetic-fields
@@ -411,20 +419,20 @@ public:
      * Description: 
      *   
      * given 0 <= xRef < 1, compute and store the values
-     *   s[i] = ref_S_{degree}(x+i-(deg+1)/2) for i = 0 .. degree
-     * where ref_S_{degree} is the centered cardinal B-spline of given degree with support [-(degree+1)/2, (degree+1)/2]
+     *   \f$ s[i] = \mathrm{ref}_{S_{degree}}(x+i-(deg+1)/2) \f$ for i = 0 .. degree
+     * where \f$ \mathrm{ref}_{S_{degree}} \f$ is the centered cardinal B-spline of given degree with support [-(degree+1)/2, (degree+1)/2]
      * 
      * when called with 
      *  - degree = degX-1 
-     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (x_p - plo)/dx 
+     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
      * this function computes 
-     *  s[i] = ref_S_{degX-1}(firstIndex[dir] + 1/2 - (x_p - plo)/dx + i) = dx * cellS_i(x_p)
+     *  s[i] = \f$ \mathrm{ref}_{S_{degX-1}}\f$(firstIndex[dir] + 1/2 - (\f$ x_p \f$ - plo)/dx + i) = dx * \f$ \mathrm{cellS}_{i}(x_p) \f$
      * 
      * when called with 
      *  - degree = degX 
-     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (x_p - plo)/dx 
+     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
      * this function computes 
-     *  s[i] = ref_S_{degX}(firstIndex[dir] - (x_p - plo)/dx + i) = nodeS_i(x_p)
+     *  s[i] = \f$ \mathrm{ref}_{S_{degX}}\f$(firstIndex[dir] - (\f$ x_p \f$ - plo)/dx + i) = \f$ \mathrm{nodeS}_i(x_p) \f$
      *  
      * @tparam degree : degree of the cardinal spline
      * @tparam length : length of the stored array

@@ -150,8 +150,8 @@ In one space dimension, the same also applies to the previous step.
 
 As we just saw, the  $\cH_p$ part of the hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting. 
 
-In our algorithm described in the Particle-Mesh coupling section, we need the primitives
-of $\bB$  and $\bJ$ in each of the direction. We shall denote them by
+In our algorithm, described in the Particle-Mesh coupling section, we need the primitives
+of $\bB$  and $\bJ$ in each of the directions. We shall denote them by
 $\check{B}^x(x,y,z) = \int^x B(x',y,z) \dd x'$ and in the same way the primitives in the other directions  by $\check{B}^y$, $\check{B}^z$. Similarly, the primitives of $\bJ$ in the three directions are denoted by $\check{J}^x$, $\check{J}^y$, $\check{J}^z$.
 We observe that $\bB$ does not vary in this split step. We express only the quantities that vary during each step, giving them a new upper index when they are modified.
 

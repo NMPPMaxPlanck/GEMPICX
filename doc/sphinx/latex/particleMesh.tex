@@ -33,12 +33,12 @@
     $$
     involving univariate scaled splines of the form
     $S_h^d(x)=\frac 1h S^d(\frac {x}{h})$,
-    where $S^d$ is the centered, reference cardinal B-spline of degree $d$ defined recursively by 
+    where $S^d$ is the centered reference cardinal B-spline of degree $d$ defined recursively by 
     $$S^0(x)= \begin{cases} 1  &\text{ if } ~ -\frac{1}{2} \leq x \leq \frac{1}{2} \\ 0 & \text{ else} \end{cases}$$
     $$ S^d(x) = S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-x') \dd x'.$$
     \textbf{Properties of the cardinal B-spline}
     \begin{itemize}
-        \item The cardinal splines are even $S^d(x) = S^d(-x)$
+        \item The cardinal splines are even ($S^d(x) = S^d(-x)$)
         \item The support of $S^d$ is $\left[-\frac{d+1}{2},\frac{d+1}{2} \right]$
         \item Both the reference and scaled cardinal splines have unit integral:
         $$ \int_{-\infty}^{\infty} S^d(x) \dd x = \int_{-\infty}^{\infty} S_h^d(x) \dd x = 1$$
@@ -69,14 +69,13 @@
 
     \end{itemize}
     These splines naturally appear in the variational scheme since the above relation \eqref{splinerel} implies that 
-    the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell spline (resp. node spline) evaluated
-    at the particle position.
+    the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell (resp. node) spline evaluated at the particle position.
 
 
     \subsection{Reduction of particle splines}
 
     The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. 
-    Specifically, dual geometric degrees of freedom are product of univariate cell and node splines evaluated at the particles:
+    Specifically, dual geometric degrees of freedom are products of univariate cell and node splines evaluated at the particles:
     $$
     \begin{aligned}
         \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
@@ -135,7 +134,7 @@ The discrete electric field $\bE$ is characterized by its integrals on the edges
 \end{itemize}
 One could define (for instance using a finite element setting) an electric field that is defined everywhere and 
 has exactly these geometric degrees of freedom. 
-However this is not necessary: in the GEMPIC scheme indeed the particles are coupled with a 
+This is, however, not necessary: Indeed, in the GEMPIC scheme the particles are coupled with a 
 spline-smoothed electric field $\bE^S$ which only involves the above primal degrees of freedom $\arrE \in \cC_1$
 and the reduction $\tcR_2$ of the (vectorized) particle splines, namely:
 $$
@@ -144,7 +143,7 @@ $$
 = \sum_{\texttt{e} \in \{\text{edges}\}} \arrE_{\texttt{e}} \tcR_2\big(\mathbf{e}_{d} \, S_h(\mathbf{x}-\mathbf{x}_p)\big)_{\tilde{\texttt{f}}(\texttt{e})}
 $$
 for all dimension $d \in \{x,y,z\}$, 
-where $\mathbf{e}_{d}$ is the canonical basis vector of $\mathbb{R}^3$ along dimension $d$.
+where $\mathbf{e}_{d}$ is the canonical basis vector of $\mathbb{R}^3$ along dimension $d$,
 and for each primal edge $\texttt{e}$ we have denoted by $\tilde{\texttt{f}}(\texttt{e})$ its dual face.
 Given the reduction formulas above, this yields for the different components
 $$
@@ -187,7 +186,7 @@ $$
 
 \subsection{Exact computation of time integrated $J_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
 
-One step of the hamiltonian splitting algorithm, consists in pushing the particles successively in the 3 axis dimensions and updating positions, velocities and electric field leaving the magnetic field constant.
+One step of the hamiltonian splitting algorithm consists of pushing the particles successively in the three axes and updating positions, velocities and electric field, leaving the magnetic field constant.
 Let us describe this algorithm when the particles are pushed in the $x$-direction. The two other directions are handled similarly.  
 
 In this step the following system needs to be solved
