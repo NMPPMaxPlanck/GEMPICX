@@ -1,0 +1,354 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,urlcolor=cyan]{hyperref}%,linkcolor=green]{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\usepackage{xstring}
+\usepackage{xparse}
+\usepackage{comment}
+\renewcommand{\Affilfont}{\footnotesize}
+\newcommand{\gt}{GoogleTest}
+\newcommand{\ctest}{\texttt{ctest}}
+\newcommand{\pmc}{\texttt{Testing/particle\_mesh\_coupling}}
+\newcommand{\tu}{\texttt{Testing/test\_utils}}
+\newcommand{\main}{main \texttt{Testing}}
+% This is sound .tex, but pandoc gives up.
+%\newcommand*{\loc}[1]{%
+%    \IfStrEqCase{#1}{%
+%        {pmc}{in the \texttt{Testing/particle\_mesh\_coupling} folder}%
+%        {tu}{in the \texttt{Testing/test\_utils} folder}%
+%        {main}{in the main \texttt{Testing} folder}%
+%    }[{in the #1 folder}]}
+\newcommand\loc[1]{in the #1 folder}
+
+%\renewcommand{\Authfont}{\normalsize}
+\usepackage{mdframed}
+\newenvironment{important}[1][]{%
+   \begin{mdframed}[%
+      backgroundcolor={red!15}, hidealllines=true,
+      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
+      splitbottomskip=2pt, splittopskip=4pt, #1]%
+   \makebox[0pt]{% ignore the withd of !
+      \smash{% ignor the height of !
+         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
+         \hspace*{-19pt}% move ! to the left
+         \raisebox{-2pt}{% move ! up a little
+            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
+         }%
+      }%
+   }%
+}{\end{mdframed}}
+%\usepackage{algpseudocode}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{lightergray}{gray}{0.95}
+\definecolor{macrocolor}{RGB}{255,145,0}
+\usepackage{expl3}
+
+\ExplSyntaxOn
+
+% compile the expression
+\regex_new:N \l_CPP_uppercase_regex
+%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
+\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
+
+\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
+\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
+
+% a variant that expands the input fully
+\cs_generate_variant:Nn \regex_match:NnTF {NV}
+
+\NewDocumentCommand \ifuppercase { m m }
+{
+    % expand to actual underscore
+    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
+    \tl_set:cn { lst@um_ } { _ }
+    % match the current token
+    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
+    % reset
+    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
+}
+
+\ExplSyntaxOff
+
+
+
+\lstset{language=C++,
+        morekeywords={constexpr},
+        keywordstyle=\color{blue}\bfseries,
+        alsoletter={_},
+        basicstyle=\ttfamily,
+        columns=fullflexible,
+        identifierstyle=\ifuppercase{\color{macrocolor}\bfseries}{},
+        backgroundcolor=\color{lightergray}}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\input{gempic_spectral_macros}
+
+\title{Testing With \gt}
+
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This note describes the usage of the \gt{} testing framework in GEMPIC as well as some conventions that should be followed in testing the GEMPIC code.
+\end{abstract}
+
+\tableofcontents
+
+\section{Overall structure}
+All \gt{} unit tests are located \loc{\main}, in a structure mirroring the that of the \verb|src| folder. For instance, since the \verb|deposit_rho| function is located in a file in \verb|src/particle_mesh_coupling|, the corresponding unit test, \verb|deposit_rho_test.cpp|, is located \loc{\pmc}. 
+
+\section{Compiling with CMake}
+In order for the tests located in a file to compile and run, it is necessary to include the commands
+\begin{itemize}
+    \item \verb|add_subdirectory( directory_containing_your_test_file )| along with the other\\
+    \verb|add_subdirectory| commands in the \verb|CMakeLists.txt| file \loc{\main{}}
+    \item \verb|target_sources(GtestTests PRIVATE your_test_file.cpp )| in the \verb|CMakeLists.txt| file of the folder containing your test file
+    \item \lstinline{#include <gtest/gtest.h>} in your test file
+    \item \lstinline{#include <gmock/gmock.h>} in your test file if you use mocking (\url{https://google.github.io/googletest/gmock_for_dummies.html})
+\end{itemize}
+Additionally, if you need to include any of testing helper modules not part of GEMPIC proper, the relative include path acts as if you were \loc{\main}, meaning including \emph{e.g.} the main helper function library \verb|GEMPIC_test_utils.H| is done through the command \lstinline{#include "test_utils/GEMPIC_test_utils.H"}, no matter where your specific test file is located.
+
+\emph{Note}: Due to CMake shenanigans, as in the rest of the GEMPIC project, only two kinds of \verb|C++| file extensions are accepted: \verb|.cpp| and \verb|.H|.
+
+\section{Running Tests}
+Running tests is very easy, and can be done through the usual \ctest{} command in the build folder. The \gt{} tests are automatically included in the tests that are run.
+To select specific tests, use the \verb|-r| flag along with part of the specific test name.
+
+\gt{} on its own can sometimes provide more useful output than the standard \ctest{} framework. If you are only interested in \gt{} tests, you can run the executable in the \verb|Testing| subfoldder of your build folder. In this case, specific tests are run with the flag \verb|--gtest_filter=partOfTestName*|.
+
+\section{Creating Tests}
+Those new to \gt{} are suggested to read the primer found on the website\\\url{https://google.github.io/googletest/primer.html}\\
+In the following, I will mostly be focusing on peculiarities specific to using \gt{} with GEMPIC, but in the interest of completeness, the absolute basics have been included here.
+\subsection{Basics}
+Tests are done inside the \lstinline{TEST}\footnote{or its derivatives, \lstinline{TEST_F}, \lstinline{TEST_P}, \emph{etc.}} macro.
+ The \lstinline{TEST} macro takes two arguments, neither of which can have underscores: The first is the name of the test suite, which would presumably be related to the function you are testing, and the second is the name of the specific test you are performing. Inside this macro you would then carry out a number of \lstinline{EXPECT} and \lstinline{ASSERT} statements, the list of which can be found at \url{https://google.github.io/googletest/reference/assertions.html}.
+ It is recommended to wrap the tests in a namespace, so as not to accidentally pollute global namespace and mix testing environments.
+
+ A very basic test file for testing the function \lstinline{alwaysReturnsTrue} in \verb|someGempicFile.H| would then be
+\begin{lstlisting}[emph={TEST,EXPECT_TRUE},emphstyle={\color{macrocolor}\bfseries}]
+#include <gtest/gtest.h> // GoogleTest library
+
+#include "someGempicFile.H" // file containing the function to test
+
+namespace
+{ // namespace out of an abundance of caution
+    // Test suite name refers to the function to test
+    // Test name refers to this specific TEST
+    TEST(AlwaysReturnsTrueTest, TrueTest)
+    {
+        EXPECT_TRUE(alwaysReturnsTrue());
+    }
+}
+\end{lstlisting}
+ and following the guidelines of the preceeding sections should allow this test file to be compiled and run.
+
+ If you find that many of your tests repeat code for setup and/or cleanup, you should use a test fixture. To see how, refer to the official \gt{} documentation,
+ \\\url{https://google.github.io/googletest/primer.html#same-data-multiple-tests},\\
+ or view \verb|deposit_rho_test.cpp| \loc{\pmc} for an example. Note that when using fixtures, the corresponding test macro is \lstinline{TEST_F} instead of \lstinline{TEST}.
+
+\subsection{AMReX Setup}
+AMReX is set up automatically, initiating the environment in each test based on the main GEMPIC build. This is done through the \verb|utest_main.cpp| file \loc{\main}.
+AMReX should accept any arguments given, but it is probably better to feign this functionality using either \lstinline{amrex::ParmParse} or the \lstinline{Parameters} class to set variables (to keep options contained), and change runtime variables in \verb|test_utils/AmrexTestEnv.H| if needed. \todo{Move golden file ctests to \gt{}?}.
+
+\subsection{Testing GPU Code}\label{testing-gpu-code}
+If there is one obvious flaw in choosing \gt, it's that it doesn't play well with CUDA. What this means is that any GPU code (such as \lstinline{amrex::ParallelFor}) must be put outside the test macros (\lstinline{TEST}, \lstinline{TEST_F} and \lstinline{TEST_P}) and into functions called from said macros instead. For examples, see the functions
+\begin{itemize} 
+    \item \lstinline{updateRhoParallelFor} in \verb|deposit_rho_test.cpp| or 
+    \item \lstinline{updateEFieldParallelFor} in \verb|evaluate_efield_test.cpp|.
+\end{itemize}
+Both example files are located \loc{\pmc}.
+
+Furthermore, \gt{} code like \lstinline{EXPECT_EQ} cannot be called from GPU code for much the same reasons, meaning that any checking will have to be done before and/or after these sections. This behaviour is not specific to \gt{}; no private code can be called with AMReX's GPU helper functions. If your variable only lives inside these sections, either reconsider what you want to test or use an \lstinline{async_array}. An example of the last approach is shown in the \lstinline{updateEFieldParallelFor} function.
+
+\subsection{Field Checking Helpers}
+Alternatively, for checking individual values of fields you can use one of the helper functions \lstinline{GEMPIC_TestUtils::checkField} or \lstinline{GEMPIC_TestUtils::compareFields} directly in your tests. Note that both of these functions require that you preface your testing script with
+\begin{lstlisting}
+    #include "test_utils/GEMPIC_test_utils.H"
+
+    #define compareFields(...) GEMPIC_TestUtils::compareFields(__FILE__, __LINE__, __VA_ARGS__)
+    #define checkField(...) GEMPIC_TestUtils::checkField(__FILE__, __LINE__, __VA_ARGS__)
+\end{lstlisting}
+
+\subsubsection*{Compare Fields}
+For comparing the values of two fields, you can use \lstinline{GEMPIC_TestUtils::checkField}:
+\begin{lstlisting}
+    void checkField(const char file[], int line,
+                    amrex::Array4<amrex::Real> const& fieldArr,
+                    amrex::Array4<amrex::Real> const& fieldArr2,
+                    amrex::Dim3 const&& top);
+\end{lstlisting}
+The first two arguments are supplied automagically by the \lstinline{#define compareFields} macro.
+The user supplied arguments are:
+\begin{itemize}
+    \item the field array in \lstinline{amrex::Array4} form
+    \item the other field array in \lstinline{amrex::Array4} form
+    \item the top indices of the iterating range (which is assumed to start from $0$)
+\end{itemize}
+
+Comparison between field values of a multifab \lstinline{mfTmp} and another multifab \lstinline{mfExpected} can then be done inside a test as follows:
+
+\begin{lstlisting}
+    for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi) {
+        checkField(mfTmp[mfi].array(), mfExpected[mfi].array(), infra.n_cell.dim3());
+    }
+\end{lstlisting}
+
+\subsubsection*{Check Field Values individually}
+For checking field values individually, you can use \lstinline{GEMPIC_TestUtils::checkField}:
+\begin{lstlisting}
+    void checkField(const char file[], int line,
+                    amrex::Array4<amrex::Real> const& fieldArr,
+                    amrex::Dim3 const&& top,
+                    std::vector<condLambda>&& condVec,
+                    std::vector<amrex::Real>&& checks,
+                    amrex::Real defCheck);
+\end{lstlisting}
+The first two arguments are supplied automagically by the \lstinline{#define checkField} macro.
+The user supplied arguments are:
+\begin{itemize}
+    \item the field array in \lstinline{amrex::Array4} form
+    \item the top indices of the iterating range (which is assumed to start from $0$)
+    \item the vector of conditions (see below)
+    \item the vector of checks (see below)
+    \item the default value checked against all indices not specifically triggering a condition
+\end{itemize}
+
+The most complicated part is the condition vector, which is a vector of lambdas that return true for certain indices, and the corresponding check vector containing the values to compare special indices to.
+
+Assuming, for instance, that the only nonzero field values of a multifab \lstinline{mfTmp} are at indices $(0, 1, 1)$, $(1, 1, 1)$ and $(3, 3, 3)$ with values $10$, $10$ and $30$, respectively. Then the function call would look like:
+
+\begin{lstlisting}
+    for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi) {
+        checkField(mfTmp[mfi].array(), infra.n_cell.dim3(), 
+        // condition vector
+                // First condition: index (<0/1>, 1, 1): should be 10
+                {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a <= 1,
+                                                                          && b == 1,
+                                                                          && c == 1);},
+                // Second condition: index (3, 3, 3): should be 30
+                 [] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a == 3,
+                                                                          && b == 3,
+                                                                          && c == 3);}},
+                // Values associated with conditions above    
+                {10.0, 30.0},
+                // remaining values are zero
+                0);
+    }
+\end{lstlisting}
+
+% if the fates are merciful, we won't have to use this, but I'm reluctant to let it go
+\begin{comment}
+\subsection{(Advanced) Testing Different Values of Template Value Arguments}
+\begin{important}
+    Warning: This is an advanced feature and arguably mostly too complicated to be beneficial. Proceed with caution.
+\end{important}
+GEMPIC contains many template value arguments -- at the time of writing, \lstinline{vdim}, \lstinline{degx}, \lstinline{degy} and \lstinline{degz}, among others. In many cases, different values of these parameters change the logic of the code, but sometimes it is desirable to be able to write only one test to check a host of different parameter values. 
+An obvious candidate for such tests would be the parameterised test capabilities of \gt{}\footnote{\url{https://google.github.io/googletest/advanced.html\#value-parameterized-tests}}.
+This does not, however, work for template parameters, as they have to be compile time constants. 
+To circumvent this, we have to abuse the \lstinline{TYPED_TEST} feature instead. 
+
+For each value that we wish to test, we define a "compile time constant"-struct,
+\begin{lstlisting}
+struct One
+{
+    static constexpr int val{1};
+}
+struct Two
+{
+    static constexpr int val{2};
+}
+...
+\end{lstlisting}
+%
+a templated fixture class,
+%
+\begin{lstlisting}
+template <class MyConst>
+class MyTestFixture : public testing::Test
+{
+    protected:
+        static const int degx{MyConst::val};
+};
+\end{lstlisting}
+%
+and finally, you initialise the test suite with all of the compile time constants needed,
+%
+\begin{lstlisting}
+using MyTypes = ::testing::Types<One, Two, Three>;
+TYPED_TEST_SUITE(MyTestFixture, MyTypes);
+\end{lstlisting}
+%
+which can then be used in a \lstinline{TYPED_TEST} as a template value argument to test what you wanted, \emph{e.g.}
+\begin{lstlisting}
+TYPED_TEST(MyTestFixture, MyTest)
+{
+constexpr int degreeX{this->degx};
+spline1d_at_particles<degreeX> spline1D;
+...
+}
+\end{lstlisting}
+%
+Note that unlike a normal fixture class, class variables can only be accessed through the \lstinline{this} class pointer.
+
+For an example, see \verb|spline_test.cpp| \loc{\pmc}.
+\end{comment}
+
+\section*{Frequently Asked Questions}
+\begin{itemize}
+    \item \emph{\ldots why?}
+
+    Testing is good. It helps maintain the code and bug hunting becomes considerably easier with good (unit) testing. \gt{} is simply a light-weight, well-known framework to help this process.
+
+    \item \emph{The CPU version runs fine, but GPU doesn't even build!\\ (or: My tests build and run, but I get mails that the pipeline failed every time I push.)}
+
+    See \hyperref[testing-gpu-code]{The GPU section}.
+
+    \item \emph{I get linker errors that some functions have multiple definitions}
+    
+    \emph{Sigh.} You have encountered an ongoing problem with GEMPIC as a whole: Everything is defined in header functions, not just template definitions. You have three ways to proceed:
+    \begin{enumerate}
+        \item If there are no header guards in the file containing the offending code, you should write them in
+        \item If the duplicated function definition is small, you may preface it in the header file with the \lstinline{inline} keyword 
+        \item If the duplicated function definition is \emph{not} small, consider whether you really need the functionality that you are trying to get. If you do, you will have to separate \emph{only} this part of non-templated\footnote{If the linker error is due to templated code, recheck step $1$, then your own code, then raise an issue on Gitlab.} code into a declaration in the header file and a definition in a similarly named \verb|.cpp| file. Make sure to add the \verb|.cpp| file to the compilation of all relevant projects in the \verb|CMakeLists.txt| files. Typically the relevant projects are the main project (\verb|gempic|) and any tests using the header file.
+    \end{enumerate}
+\end{itemize}
+
+\end{document}

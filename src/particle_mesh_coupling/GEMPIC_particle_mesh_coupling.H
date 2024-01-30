@@ -20,12 +20,12 @@ namespace Particles
  * @brief Updates J and computes an integrated B on a given particle trajectory along one grid direction
  *  
  * Description:
- * given a trajectory xx_{p,d} moving along a single direction d (with velocity vv_{p,d} parallel to e_d), this function
+ * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function
  * 
  * (1) computes the time integrals 
- *     dJ_{i,p,d} = \f$ q_p w_p \int_{t_start}^{t_end} t_R2_i( v_{p,d} * S(xx - xx_{p,d}(t)) ) dt \f$
+ *     \f$ dJ_{i,p,d} = q_p w_p \int_{t_{start}}^{t_{end}} t_{R2_i}( v_{p,d} * S(xx - xx_{p,d}(t)) ) dt \f$
  *     for every dual face (dof) with index i, 
- *     where t_R2_i is corresponding dof (reduction) operator
+ *     where \f$ t_{R2_i} \f$ is corresponding dof (reduction) operator
  *     and adds them to the i-th component of the "current density"
  *     
  *     Note that the resulting current density is a time integral over the time step, not a time average
@@ -34,18 +34,21 @@ namespace Particles
  *     needed for the time-integrated Lorentz force corresponding to this straight trajectory,
  *     \f$ dF_{p,d} = (q/m)_p \int_{t_{start}}^{t_{end}} vv_{p,d} \times B(xx_{p,d}(t))dt \f$
  *      
- *     Specifically, denoting v_p = vv_{p,d}_d the d-th component of vv_{p,d} = v_p * e_d, the function computes
+ *     Specifically, denoting \f$ v_p = vv_{{p,d}_d} \f$ the d-th component of \f$ vv_{p,d} = v_p * e_d \f$, the function computes
  *     
- *     fields[xDir] = \f$ \int_{t_start}^{t_end} v_p * B_{d-1}(xx_{p,d}(t))dt = \int_{0}^{v_p*dt} B_{d-1}(xx_{p,d}(0)+s*e_d) ds \f$
- *     fields[yDir] = \f$ \int _{t_start}^{t_end} v_p * B_{d+1}(xx_{p,d}(t))dt = \int_{0}^{v_p*dt} B_{d+1}(xx_{p,d}(0)+s*e_d) ds \f$
+ *     fields[xDir] = \f$ \int_{t_{start}}^{t_{end}} v_p * B_{d-1}(xx_{p,d}(t))dt = \int_{0}^{v_p*dt} B_{d-1}(xx_{p,d}(0)+s*e_d) ds \f$
+ *     fields[yDir] = \f$ \int _{t_{start}}^{t_{end}} v_p * B_{d+1}(xx_{p,d}(t))dt = \int_{0}^{v_p*dt} B_{d+1}(xx_{p,d}(0)+s*e_d) ds \f$
  *     
  *     So that after this function call the velocity can be updated over the time step 
  *     with 
- *     vv_{p,d} += dF_{p,d}
- *     ie
- *     vv_{p,d}_{d+1} -= (q/m)_p * fields[xDir]
- *     vv_{p,d}_{d-1} += (q/m)_p * fields[yDir]
- *     (here the Lorentz force has no contribution on the d component of vv_{p,d})
+ * 
+ *     \f$ vv_{p,d} += dF_{p,d} \f$, i.e.
+ * 
+ *     \f$ vv_{{p,d}_{d+1}} -= (q/m)_p \f$ * fields[xDir]
+ * 
+ *     \f$ vv_{{p,d}_{d-1}} += (q/m)_p \f$ * fields[yDir]
+ * 
+ *     (here the Lorentz force has no contribution on the d component of \f$ vv_{p,d}) \f$
  *     
  * for details about the algorithm see the documentation
  * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
@@ -144,7 +147,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B (
  * 
  * @param vel Velocity component
  * @param dt Temporal grid size
- * @param chargemass : (q/m)_p ratio
+ * @param chargemass : \f$ (q/m)_p \f$ ratio
  * @param Ep Electric field
  */
 template <unsigned int vDim>

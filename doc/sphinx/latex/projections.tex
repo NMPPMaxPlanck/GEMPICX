@@ -58,7 +58,7 @@ and its documentation.
 \tableofcontents
 
 \section{Projections}
-With the projection operators we map the infinite-dimensional function spaces to the finite-dimensional ones corresponding to the degrees of freedom. A projection to an 1-form solves line integrals for the degrees of freedom corresponding to the edges of the grid, for a 2-form the projection solves face integrals corresponding to the faces of the grid. The Gauss-Quadrature algorithm approximates the integral: 
+With the projection operators we map the infinite-dimensional function spaces to the finite-dimensional ones corresponding to the degrees of freedom. A projection to a 1-form solves line integrals for the degrees of freedom corresponding to the edges of the grid. For a 2-form the projection solves face integrals corresponding to the faces of the grid. The Gauss-Quadrature algorithm approximates the integral: 
 
 \begin{equation}
     \int_ a ^ b W(x) f(x) dx \approx \sum_{j=0}^{N-1} w_j f(q_j)
@@ -88,11 +88,11 @@ The following steps are used in order to implement the Gauss quadrature:
 
 \begin{itemize}
     \item Initialize the abscissas (from -1 to 1) and the weights
-    \item Calculate component-wise the location of each point in the grid $\bfr = \{ r_{0,x} + idx, r_{0,y} + jdy, r_{0,z} + kdz \}$, being $\bfr_0$ the reference point and $i, j, k$ the indexes of the point in the grid (we need to take into account the centeredness of the grid, for the dual grid we need to shift the point by half).
-    \item Calculate the midpoint of the quadratule rule after having the position of the point in the grid: $\bfr_{comp,mid} = \bfr + \frac{d\bfr_{comp}}{2}$
-    \item Compute the integral along the direction of the component in two steps looping over the $N$ abscissas, which we denominate here by $q_l$ being l and index from $1$ to $N$:
+    \item Calculate the location of each point in the grid component-wise $\bfr = \{ r_{0,x} + idx, r_{0,y} + jdy, r_{0,z} + kdz \}$, $\bfr_0$ being the reference point and $i, j, k$ the indexes of the point in the grid (taking the centeredness of the grid into account; for the dual grid the point is shifted by a half).
+    \item Calculate the midpoint of the quadrature rule after having the position of the point in the grid: $\bfr_{comp,mid} = \bfr + \frac{d\bfr_{comp}}{2}$
+    \item Compute the integral along the direction of the component in two steps looping over the $N$ abscissas, which we denominate here by $q_l$ with $l$ an index ranging from $1$ to $N$:
         \begin{enumerate}
-        \item location of the quadrature point: $\bfr_{comp} = \bfr_{comp, mid} + q_l \frac{d\bfr_{comp}}{2}$
+        \item Calculate the location of the quadrature point: $\bfr_{comp} = \bfr_{comp, mid} + q_l \frac{d\bfr_{comp}}{2}$
         \item Increment the integral according to the quadrature rule: $integral += w_l f(r_x, r_y, r_z, t)$
         \end{enumerate}
     \item Re-scale the integral and assign it to the degrees of freedom: $f_{comp}^1(i, j, k) = integral * \frac{d\bfr_{comp}}{2}$
@@ -113,6 +113,6 @@ The degrees of freedom are the faces of the grid. Therefore, face integrals have
     f_{I,z}^2(i, j, k) = \int _{i} ^ {i+1} \int _{j} ^ {j+1} f_z (x, y, z_k) dx dy
 \end{equation}
 
-The implementation of the Gauss quadrature is similar to the one used for the 1-form. Although, there are two midpoints (one for each direction integrated) and two integrals.
+The implementation of the Gauss quadrature is similar to the one used for the 1-form, except here there are two midpoints (one for each direction integrated) and two integrals.
 
 \end{document}

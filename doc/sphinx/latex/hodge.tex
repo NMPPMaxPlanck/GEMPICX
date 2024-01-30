@@ -100,7 +100,7 @@ For the z component:
 
 \subsection{Hodge algorithm}
 
-We transform the expression (mind we use square brackets to denote an array of indices for the form)
+Using square brackets to denote an array of indices for the form, we transform the expression 
 \begin{equation}
     \sum_{s_i = -d} ^ {+d} \sum_{s_j = -d} ^ {+d} \sum_{s_k = -d} ^ {+d} w[s_i]h[s_j]h[s_k] f_{x}^2 [i + s_i, j + s_j, k + s_k]
 \end{equation}
@@ -111,7 +111,7 @@ into
     t_1 [i,j,k] = \sum_{s_k} h[s_k] f_x ^ 2[i, j, k + s_k]
 \end{equation}
 
-Since the sums are independent on each other:
+Since the sums are independent of each other:
 \begin{equation}
     t_2 [i,j,k] = \sum_{s_j} h[s_j] t_1[i, j + s_j, k]
 \end{equation}

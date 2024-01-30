@@ -56,13 +56,13 @@ and its documentation.
 \tableofcontents
 
 \section{Curl}
-The curl is calculated applying the Stokes' theorem along all discrete elements of the domain. For example, if $\bfE$ is a 3D-vector defined in $\RR^3$, $\bff^1_{I} = (f^1_{I,x}, f^1_{I,y}, f^1_{I,z})$ the projections of $\bff$ to one forms (line integrals along each direction) and $\bff^2_{I} = (f^2_{I,x}, f^2_{I,y}, f^2_{I,z})$ the corresponding projections of $\bff$ to two forms (face integrals on the elements of the grid), then:
+The curl is calculated applying the Stokes' theorem along all discrete elements of the domain. For example, if $\bfE$ is a 3D-vector defined in $\RR^3$, $\bff^1_{I} = (f^1_{I,x}, f^1_{I,y}, f^1_{I,z})$ the projections of $\bff$ to 1-forms (line integrals along each direction) and $\bff^2_{I} = (f^2_{I,x}, f^2_{I,y}, f^2_{I,z})$ the corresponding projections of $\bff$ to 2-forms (face integrals on the elements of the grid), then:
 
 \begin{equation}
     \oint_{\partial \Sigma} \bff \cdot d\bfl = \iint_{\Sigma} \curl f \cdot d\bfS
 \end{equation}
 
-Which means that we can calculate the curl with the following relations which are applied to each component of the 2-form:
+Which means that we can calculate the curl with the following relations applied to each component of the 2-form:
 
 \begin{align}
     f^2_{I,x}(x, y, z) = f^1_{I,z}(x, y + dy, z) - f^1_{I,z}(x, y, z) - f^1_{I,y}(x, y, z + dz) + f^1_{I,y}(x, y, z)

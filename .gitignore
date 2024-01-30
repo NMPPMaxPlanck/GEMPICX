@@ -38,4 +38,6 @@ gempic.includes
 **/dispersion_relations/.ipynb_checkpoints
 doc/doxygen/xml/**
 doc/doxygen/html/**
+doc/sphinx/_build/
+doc/sphinx/latex/*.rst
 **/Plotfiles/**/*
