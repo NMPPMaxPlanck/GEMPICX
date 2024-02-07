@@ -97,5 +97,21 @@ namespace GEMPIC_TestUtils {
                     std::vector<condLambda>&& condVec,
                     std::vector<amrex::Real>&& checks,
                     amrex::Real defCheck);
+
+    /* Helper function to check that the entries of two fields are equal.
+     * 
+     * Parameters:
+     * ----------
+     * @param line: int, the line from which the function was called
+     * @param fieldArr: amrex::Array4, array containing field values in an easily reached accessor
+     * @param fieldArr2: amrex::Array4, array containing field values in an easily reached accessor
+     * @param top: Dim3, top boundaries of box for fieldArray
+     */
+    void compareFields(const char file[], int line,
+                       amrex::Array4<amrex::Real> const& fieldArr,
+                       amrex::Array4<amrex::Real> const& fieldArr2,
+                       amrex::Box const& bx,
+                       int ncomp = 1);
+
 }
 #endif

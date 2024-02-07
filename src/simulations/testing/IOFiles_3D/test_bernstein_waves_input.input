@@ -31,3 +31,7 @@ time_loop.save_particles = 1
 function.Bx = "0.0"
 function.By = "0.0"
 function.Bz = "1.0"
+
+# filter
+filter.use_filter = 1
+filter.filter_npass_each_dir = 3 3 3

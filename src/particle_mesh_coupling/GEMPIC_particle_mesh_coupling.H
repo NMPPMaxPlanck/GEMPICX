@@ -181,8 +181,8 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (
     amrex::Real chargeWeight,
     amrex::Array4<amrex::Real> const &rho)
 {
-    AMREX_D_PICK(
-    int jj{0}; int kk{0};,
+    GEMPIC_D_EXCL(
+    int jj{0};,
     int kk{0};,)
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
                         for (int jj = 0; jj <= degY; ++jj),

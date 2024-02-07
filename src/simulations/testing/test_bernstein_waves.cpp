@@ -14,6 +14,7 @@
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
 #include <GEMPIC_PoissonSolver.H>
+#include <BilinearFilter.H>
 
 #include <random>
 #include <iostream>
@@ -132,6 +133,9 @@ int main(int argc, char* argv[])
     // Initialize particle groups
     amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> ions;
 
+    //Initializing filter
+    std::unique_ptr<Filter> biFilter = std::make_unique<BilinearFilter> ();
+
     // initialize particles & loop preparation:
     // FIRST SPECIES
     for (int spec = 0; spec < numspec; spec++)
@@ -174,7 +178,8 @@ int main(int argc, char* argv[])
 
         rho.postParticleLoopSync();
 
-        filter(rho, rhoTemp, npass);
+        //filter(rho, rhoTemp, npass);
+        biFilter->ApplyStencil(rhoTemp.data, rho.data, 0, 0, 1);
 
         deRham->hodgeFD<hodgeDegree>(rho, phi);
         deRham->grad(phi, E);
@@ -234,7 +239,8 @@ int main(int argc, char* argv[])
                 ions[spec] -> Redistribute();
 
                 rho.postParticleLoopSync();
-                filter(rho, rhoTemp, npass);
+                //filter(rho, rhoTemp, npass);
+                biFilter->ApplyStencil(rhoTemp.data, rho.data, 0, 0, 1);
 
                 deRham->hodgeFD<hodgeDegree>(rho, phi);
                 deRham->grad(phi, E);
@@ -310,7 +316,8 @@ int main(int argc, char* argv[])
 
             rho.postParticleLoopSync();
 
-            filter(rho, rhoTemp, npass);
+            //filter(rho, rhoTemp, npass);
+            biFilter->ApplyStencil(rhoTemp.data, rho.data, 0, 0, 1);
 
             if (tStep%saveFields == 0) {
                 write_rho(rho, infra, (tStep+1)*dt, tStep+1);

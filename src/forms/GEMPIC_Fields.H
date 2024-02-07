@@ -191,6 +191,19 @@ public:
         m_nGhost = amrex::IntVect{AMREX_D_DECL(nGhostNum, nGhostNum, nGhostNum)};
         std::vector<int> nGhostVector{AMREX_D_DECL(m_nGhost[xDir], m_nGhost[yDir], m_nGhost[zDir])};
         params.set("n_ghost", nGhostVector);
+        // Check that user isn't expecting "n_ghost" to have an effect
+        if (params.isInInputFile("n_ghost"))
+        {
+            amrex::ParmParse pp;
+            std::vector<int> nGhostVectorInputFile;
+            pp.getarr("n_ghost", nGhostVectorInputFile);
+            if (AMREX_D_TERM(nGhostVector[xDir] != nGhostVectorInputFile[xDir],
+                          || nGhostVector[yDir] != nGhostVectorInputFile[yDir],
+                          || nGhostVector[zDir] != nGhostVectorInputFile[zDir]))
+            {
+                std::cerr << "Warning: Number of ghost cells can only be influenced by specifying the number of extra ghost cells.\n";
+            }
+        }
 
         // set index: // 0 -> cell-centered | 1 -> node-centered
         primalNodeIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)});
