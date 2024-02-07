@@ -6,10 +6,11 @@ add_executable ( GtestTests utest_main.cpp )
 target_include_directories(GtestTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory( test_utils )
+add_subdirectory( filter )
 add_subdirectory( forms )
+add_subdirectory( io )
 add_subdirectory( particle_mesh_coupling )
 add_subdirectory( time_loops )
-add_subdirectory( io )
 
 add_custom_command(
   TARGET GtestTests POST_BUILD

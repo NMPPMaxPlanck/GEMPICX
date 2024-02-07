@@ -262,6 +262,7 @@ class Parameters {
     inline static const auto s_sharedParams = initSharedParameters({
             "output_file",
             "sim_name",
+            "n_ghost",
             "n_ghost_extra",
             "n_cell_vector",
             "max_grid_size_vector",

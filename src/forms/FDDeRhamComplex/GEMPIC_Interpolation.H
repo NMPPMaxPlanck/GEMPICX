@@ -183,10 +183,9 @@ amrex::Real maxErrorMidpoint (amrex::Geometry geom, amrex::ParserExecutor<GEMPIC
             };
 
             amrex::Real fval = 0;
-            AMREX_D_PICK(
-                int b{0};
-                int c{0},
-                int c{0},);
+            GEMPIC_D_EXCL(
+                int b{0};,
+                int c{0};,)
             switch (form)
             {
             case 0:

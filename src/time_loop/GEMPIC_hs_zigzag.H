@@ -168,28 +168,28 @@ class HSZigZagC2: public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata
                             // push x1
                             operatorHamilton.template apply_H_p_i<xDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
 
-                            if (vdim > 1)
-                            {
         #if GEMPIC_SPACEDIM > 1
+                            if constexpr (vdim > 1)
+                            {
                                 // push x2
                                 operatorHamilton.template apply_H_p_i<yDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
-        #endif
                             }
-                            if (vdim > 2)
-                            {
+        #endif
         #if GEMPIC_SPACEDIM == 3
+                            if constexpr (vdim > 2)
+                            {
                                 // push x3
                                 operatorHamilton.template apply_H_p_i<zDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, dt);
-        #endif
                             }
+        #endif
 
-                            if (vdim > 1)
-                            {
         #if GEMPIC_SPACEDIM > 1
+                            if constexpr (vdim > 1)
+                            {
                                 // push x2
                                 operatorHamilton.template apply_H_p_i<yDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);
-        #endif
                             }
+        #endif
 
                             // second half step of Hp1
                         operatorHamilton.template apply_H_p_i<xDir>(pos, vel, infra, spline, bfields, infra.dx, jA, bA, chargemass, chargeWeight, 0.5*dt);

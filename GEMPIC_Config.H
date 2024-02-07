@@ -13,7 +13,7 @@
 
 #if GEMPIC_SPACEDIM==1
 /**
- * The GEMPIC_SPACEDIM(a,b,c) macro multiplies the elements of a
+ * The GEMPIC_D_MULT(a,b,c) macro multiplies the elements of a
  * comma-separated list of 1, 2, or all 3 of the arguments of the call,
  * depending on the value of AMREX_SPACEDIM.
  */
@@ -25,6 +25,11 @@
 #endif
 
 #if GEMPIC_SPACEDIM==1
+/**
+ * The GEMPIC_D_ADD(a,b,c) macro adds the elements of a
+ * comma-separated list of 1, 2, or all 3 of the arguments of the call,
+ * depending on the value of AMREX_SPACEDIM.
+ */
 #    define GEMPIC_D_ADD(a, b, c) (a)
 #elif GEMPIC_SPACEDIM==2
 #    define GEMPIC_D_ADD(a, b, c) ((a) + (b))
@@ -33,6 +38,25 @@
 #endif
 
 #if GEMPIC_SPACEDIM==1
+/**
+ * The GEMPIC_D_EXCL(a,b,c) macro evaluates the elements of a
+ * comma-separated list of the third, second or all three of the arguments of the call,
+ * depending on the value of AMREX_SPACEDIM.
+ * Chiefly used to define constants that may be lacking in 1D or 2D.
+ */
+#    define GEMPIC_D_EXCL(a, b, c) a b c
+#elif GEMPIC_SPACEDIM==2
+#    define GEMPIC_D_EXCL(a, b, c) b c
+#elif GEMPIC_SPACEDIM==3
+#    define GEMPIC_D_EXCL(a, b, c) c
+#endif
+
+#if GEMPIC_SPACEDIM==1
+/**
+ * The GEMPIC_D_LOOP_BEGIN(a,b,c) macro initializes nested for loops using a
+ * comma-separated list of 1, 2, or all 3 of the arguments of the call,
+ * depending on the value of AMREX_SPACEDIM.
+ */
 #   define GEMPIC_D_LOOP_BEGIN(a, b, c) a {
 #elif GEMPIC_SPACEDIM==2
 #   define GEMPIC_D_LOOP_BEGIN(a, b, c) b { a { 
@@ -41,6 +65,9 @@
 #endif
 
 #if GEMPIC_SPACEDIM==1
+/**
+ * The GEMPIC_D_LOOP_END macro ends a nested for loop begun by GEMPIC_D_LOOP_BEGIN
+ */
 #   define GEMPIC_D_LOOP_END }
 #elif GEMPIC_SPACEDIM==2
 #   define GEMPIC_D_LOOP_END } }

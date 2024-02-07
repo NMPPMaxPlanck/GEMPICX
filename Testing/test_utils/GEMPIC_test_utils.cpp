@@ -45,4 +45,43 @@ void checkField(const char file[], int line,
         }
     }
 }
+
+void compareFields(const char file[], int line,
+                   amrex::Array4<amrex::Real> const& fieldArr,
+                   amrex::Array4<amrex::Real> const& fieldArr2,
+                   amrex::Dim3 const&& top) {
+    for (int i{0}; i <= top.x; i++) { 
+        for (int j{0}; j <= top.y; j++) {
+            for (int k{0}; k <= top.z; k++) {
+                const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
+                    EXPECT_NEAR(*fieldArr.ptr(idx, 0), *fieldArr2.ptr(idx, 0), 1e-14) <<
+                            file << ":" << line << ": Unequal arrays.\nIndices: " << 
+                            stringArray(idx, GEMPIC_SPACEDIM);
+                            break;
+            }
+        }
+    }
+}
+void compareFields(const char file[], int line,
+                   amrex::Array4<amrex::Real> const& fieldArr,
+                   amrex::Array4<amrex::Real> const& fieldArr2,
+                   amrex::Box const& bx, 
+                   int ncomp) {
+    const auto lo = amrex::lbound(bx);
+    const auto hi = amrex::ubound(bx);
+    for (int comp{0}; comp < ncomp; comp++) {
+        for (int i{lo.x}; i <= hi.x; i++) { 
+            for (int j{lo.y}; j <= hi.y; j++) {
+                for (int k{lo.z}; k <= hi.z; k++) {
+                    const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
+                        EXPECT_NEAR(*fieldArr.ptr(idx, comp), *fieldArr2.ptr(idx, comp), 1e-14) <<
+                                file << ":" << line << ": Unequal arrays.\nIndices: " << 
+                                stringArray(idx, GEMPIC_SPACEDIM) << "\tComponent: " << comp;
+                                break;
+                }
+            }
+        }
+    }
+}
+
 } // namespace GEMPIC_TestUtils
