@@ -35,3 +35,28 @@ function.Bz = "1.0"
 # filter
 filter.use_filter = 1
 filter.filter_npass_each_dir = 3 3 3
+
+# Full Diagnostics
+fullDiagnostics.enable = 1 # 1 for true, 0 for false
+fulldiagnostics.group_names = part_test Ez_raw plots 
+
+fullDiagnostics.part_test.var_names = particles
+fullDiagnostics.part_test.functor = raw
+
+fullDiagnostics.plots.var_names = Ey Ez Bx
+fullDiagnostics.plots.functor = CellCenter
+
+fullDiagnostics.Ez_raw.var_names = Ez
+fullDiagnostics.Ez_raw.save_interval = 50
+fullDiagnostics.Ez_raw.functor = raw
+
+# Reduced Diagnostics
+reducedDiagnostics.enable = 1 # 1 for true, 0 for false
+reducedDiagnostics.group_names = Part FieldEnergies GaussErr
+reducedDiagnostics.save_interval = 5 # save_interval for all groupings not specifying their own
+
+reducedDiagnostics.FieldEnergies.types = ElecFieldEnergy MagFieldEnergy
+
+reducedDiagnostics.Part.types = Particle
+
+reducedDiagnostics.GaussErr.types = GaussError

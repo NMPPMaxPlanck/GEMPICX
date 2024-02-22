@@ -19,7 +19,7 @@ function.Bz = "1.0"
 # Parameters for class particle.species0:
 particle.species0.charge = 1
 particle.species0.mass = 1
-particle.species0.name = "electrons"
+particle.species0.name = "particles"
 
 # Parameters for class particle.species0:
 particle.species0.n_part_per_cell = 10

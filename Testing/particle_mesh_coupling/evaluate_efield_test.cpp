@@ -110,7 +110,7 @@ namespace {
             infra = computational_domain{};
 
             // Initialize the De Rham Complex
-            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
             // particles
             for (int spec{0}; spec < numSpec; spec++)
@@ -399,7 +399,7 @@ namespace {
         computational_domain infra;
 
         // Initialize the De Rham Complex
-        auto deRham{std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree)};
+        auto deRham{std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge)};
         
         // particle groups
         const int numspec{1};

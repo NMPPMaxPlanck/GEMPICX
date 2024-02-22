@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
     Gempic::CompDom::computational_domain infra;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
 	// Declare the fields 
 	DeRhamField<Grid::primal, Space::edge> E(deRham);

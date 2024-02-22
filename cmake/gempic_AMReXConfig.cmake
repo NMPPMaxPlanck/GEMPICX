@@ -9,6 +9,7 @@ if(NOT AMReX_FOUND)
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/amrex-src"
     )
 
+    # set( AMReX_HDF5 TRUE CACHE BOOL "AMReX Option set within GEMPIC")
     set( AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
     if( GEMPIC_USE_CUDA )
         set( AMReX_GPU_BACKEND CUDA CACHE STRING "AMReX Option set within GEMPIC")

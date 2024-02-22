@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     computational_domain infra;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     auto [parseB, funcB] = Utils::parseFunctions<3>({"Bx", "By", "Bz"});
 
@@ -131,9 +131,9 @@ int main(int argc, char* argv[])
     amrex::Print() << "Bz " << Bz << std::endl;
 
     // Initialize Poisson solver
-    PoissonSolver poisson;
+    PoissonSolver poisson(deRham);
     // Initialize particle groups
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> electrons;
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> electrons;
 
     // initialize particles & loop preparation:
     // FIRST SPECIES
@@ -165,7 +165,6 @@ int main(int argc, char* argv[])
                 const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
                 amrex::Array4<amrex::Real> const& rhoarr = rho.data[pti].array();
-
                 amrex::ParallelFor(np,
                                 [=] AMREX_GPU_DEVICE(long pp)
                                 {

@@ -34,7 +34,7 @@ amrex::Real test12(int n)
     //const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.3, 0.6, 0.4)};
     const amrex::Vector<amrex::Real> k{AMREX_D_DECL(2*M_PI, 2*M_PI, 2*M_PI)};
-	const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
@@ -51,13 +51,13 @@ amrex::Real test12(int n)
     const amrex::Geometry geom = infra.geom;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     // Declare the fields 
     DeRhamField<Grid::primal, Space::face> primalTwoForm(deRham);
-	DeRhamField<Grid::dual, Space::edge> dualOneForm(deRham);
-	DeRhamField<Grid::dual, Space::face> dualTwoForm(deRham);
-	DeRhamField<Grid::primal, Space::edge> primalOneForm(deRham);
+    DeRhamField<Grid::dual, Space::edge> dualOneForm(deRham);
+    DeRhamField<Grid::dual, Space::face> dualTwoForm(deRham);
+    DeRhamField<Grid::primal, Space::edge> primalOneForm(deRham);
 
     const amrex::Real weight = 2./3.;
 
@@ -90,10 +90,10 @@ amrex::Real test12(int n)
     }
 
     deRham->projection(funcP, 0.0, dualOneForm);
-    deRham->hodgeFD<hodgeDegree>(dualOneForm, primalTwoForm, weight);
+    deRham->hodge(dualOneForm, primalTwoForm, weight);
 
     deRham->projection(funcP, 0.0, primalOneForm);
-    deRham->hodgeFD<hodgeDegree>(primalOneForm, dualTwoForm, weight);
+    deRham->hodge(primalOneForm, dualTwoForm, weight);
 
     
     for (int i = 0; i < 3; ++i)
@@ -120,7 +120,7 @@ amrex::Real test21(int n)
     //const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.3, 0.6, 0.4)};
     const amrex::Vector<amrex::Real> k{AMREX_D_DECL(2*M_PI, 2*M_PI, 2*M_PI)};
-	const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
@@ -137,13 +137,13 @@ amrex::Real test21(int n)
     const amrex::Geometry geom = infra.geom;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
     
     // Declare the fields 
-	DeRhamField<Grid::primal, Space::face> primalTwoForm(deRham);
-	DeRhamField<Grid::dual, Space::edge> dualOneForm(deRham);
-	DeRhamField<Grid::dual, Space::face> dualTwoForm(deRham);
-	DeRhamField<Grid::primal, Space::edge> primalOneForm(deRham);
+    DeRhamField<Grid::primal, Space::face> primalTwoForm(deRham);
+    DeRhamField<Grid::dual, Space::edge> dualOneForm(deRham);
+    DeRhamField<Grid::dual, Space::face> dualTwoForm(deRham);
+    DeRhamField<Grid::primal, Space::edge> primalOneForm(deRham);
 
     const amrex::Real weight = 2./3.;
 
@@ -176,10 +176,10 @@ amrex::Real test21(int n)
     }
 
     deRham->projection(funcP, 0.0, primalTwoForm);
-    deRham->hodgeFD<hodgeDegree>(primalTwoForm, dualOneForm, weight);
+    deRham->hodge(primalTwoForm, dualOneForm, weight);
 
     deRham->projection(funcP, 0.0, dualTwoForm);
-    deRham->hodgeFD<hodgeDegree>(dualTwoForm, primalOneForm, weight);
+    deRham->hodge(dualTwoForm, primalOneForm, weight);
 
 
     for (int i = 0; i < 3; ++i)
@@ -206,7 +206,7 @@ amrex::Real test03(int n)
     //const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.3, 0.6, 0.4)};
     const amrex::Vector<amrex::Real> k{AMREX_D_DECL(2*M_PI, 2*M_PI, 2*M_PI)};
-	const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
@@ -223,13 +223,13 @@ amrex::Real test03(int n)
     const amrex::Geometry geom = infra.geom;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     // Declare the fields 
     DeRhamField<Grid::primal, Space::cell> primalThreeForm(deRham);
-	DeRhamField<Grid::dual, Space::node> dualZeroForm(deRham);
-	DeRhamField<Grid::dual, Space::cell> dualThreeForm(deRham);
-	DeRhamField<Grid::primal, Space::node> primalZeroForm(deRham);
+    DeRhamField<Grid::dual, Space::node> dualZeroForm(deRham);
+    DeRhamField<Grid::dual, Space::cell> dualThreeForm(deRham);
+    DeRhamField<Grid::primal, Space::node> primalZeroForm(deRham);
 
     const amrex::Real weight = 2./3.;
 
@@ -254,10 +254,10 @@ amrex::Real test03(int n)
     
 
     deRham->projection(funcP, 0.0, dualZeroForm);
-    deRham->hodgeFD<hodgeDegree>(dualZeroForm, primalThreeForm, weight);
+    deRham->hodge(dualZeroForm, primalThreeForm, weight);
 
     deRham->projection(funcP, 0.0, primalZeroForm);
-    deRham->hodgeFD<hodgeDegree>(primalZeroForm, dualThreeForm, weight);
+    deRham->hodge(primalZeroForm, dualThreeForm, weight);
     
     
     parser.define(func);
@@ -276,7 +276,7 @@ amrex::Real test30(int n)
     //const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.3, 0.6, 0.4)};
     const amrex::Vector<amrex::Real> k{AMREX_D_DECL(2*M_PI, 2*M_PI, 2*M_PI)};
-	const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
+    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
@@ -293,13 +293,13 @@ amrex::Real test30(int n)
     const amrex::Geometry geom = infra.geom;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     // Declare the fields 
     DeRhamField<Grid::primal, Space::cell> primalThreeForm(deRham);
-	DeRhamField<Grid::dual, Space::node> dualZeroForm(deRham);
-	DeRhamField<Grid::dual, Space::cell> dualThreeForm(deRham);
-	DeRhamField<Grid::primal, Space::node> primalZeroForm(deRham);
+    DeRhamField<Grid::dual, Space::node> dualZeroForm(deRham);
+    DeRhamField<Grid::dual, Space::cell> dualThreeForm(deRham);
+    DeRhamField<Grid::primal, Space::node> primalZeroForm(deRham);
 
     const amrex::Real weight = 2./3.;
 
@@ -324,10 +324,10 @@ amrex::Real test30(int n)
     
 
     deRham->projection(funcP, 0.0, dualThreeForm);
-    deRham->hodgeFD<hodgeDegree>(dualThreeForm, primalZeroForm, weight);
+    deRham->hodge(dualThreeForm, primalZeroForm, weight);
 
     deRham->projection(funcP, 0.0, primalThreeForm);
-    deRham->hodgeFD<hodgeDegree>(primalThreeForm,dualZeroForm, weight);
+    deRham->hodge(primalThreeForm,dualZeroForm, weight);
 
     
     parser.define(func);
@@ -342,7 +342,7 @@ amrex::Real test30(int n)
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv); 
+    amrex::Initialize(argc, argv); 
     {
         const int coarse = 16;
         const int fine = 32;

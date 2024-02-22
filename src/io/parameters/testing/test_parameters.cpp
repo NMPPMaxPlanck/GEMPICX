@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     computational_domain infra;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     // parseB object needs to be kept alive at least as long as funcB
     auto [parseB, funcB] = Utils::parseFunctions<3>({"Bx", "By", "Bz"});
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     [[maybe_unused]] DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
     // Initialize particle groups
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> ions;
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> ions;
 
     // initialize particles & loop preparation (probably should be one initializer):
     for (int spec = 0; spec < numspec; spec++)

@@ -197,6 +197,54 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (
     GEMPIC_D_LOOP_END
 }
 
+template <int degX, int degY, int degZ, int vDim>
+AMREX_GPU_HOST_DEVICE void gempic_deposit_J (
+    Spline::SplineBase<degX, degY, degZ> const &spline,
+    amrex::GpuArray<amrex::Real, vDim> const &velChargeWeight,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &currentDensity)
+{
+    AMREX_D_PICK(
+    int jj{0}; int kk{0};,
+    int kk{0};,)
+    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii),
+                        for (int jj = 0; jj <= degY; ++jj),
+                        for (int kk = 0; kk <= degZ; ++kk))
+        amrex::Dim3 cell_index = {AMREX_D_DECL(
+            spline.firstIndex[xDir] + ii, spline.firstIndex[yDir] + jj, spline.firstIndex[zDir] + kk)};
+
+        // Ensure that we only access existing elements of cellSplineVals
+        if (ii < degX)
+        {
+            double s_coeff = spline.template evalBSpline<Field::DualTwoForm, xDir>(ii, jj, kk);
+            amrex::HostDevice::Atomic::Add(
+                        currentDensity[xDir].ptr(cell_index.x, cell_index.y, cell_index.z, 0),
+                        s_coeff * velChargeWeight[xDir]);
+
+        }
+
+        if constexpr(vDim > 1) {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (jj < degY)
+            {
+                double s_coeff = spline.template evalBSpline<Field::DualTwoForm, yDir>(ii, jj, kk);
+                amrex::HostDevice::Atomic::Add(
+                            currentDensity[yDir].ptr(cell_index.x, cell_index.y, cell_index.z, 0),
+                            s_coeff * velChargeWeight[yDir]);
+            }
+        }
+        if constexpr(vDim == 3) {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (kk < degZ)
+            {
+                double s_coeff = spline.template evalBSpline<Field::DualTwoForm, zDir>(ii, jj, kk);
+                amrex::HostDevice::Atomic::Add(
+                            currentDensity[zDir].ptr(cell_index.x, cell_index.y, cell_index.z, 0),
+                            s_coeff * velChargeWeight[zDir]);
+            }
+        }
+    GEMPIC_D_LOOP_END
+}
+
 }  // namespace Particles
 }  // namespace Gempic
 

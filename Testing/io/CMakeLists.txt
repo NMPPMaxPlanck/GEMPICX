@@ -8,4 +8,6 @@ file(GLOB DERIVATIVES "../../src/forms/GEMPIC_extDerivatives.cpp")
 target_sources(GtestTests PRIVATE
     # test cases
     parameters_test.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX} ${DERIVATIVES}
+    FullDiagnostics_test.cpp
+    reducedDiagnostics_test.cpp
     )

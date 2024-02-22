@@ -210,7 +210,7 @@ class OperatorHamilton {
     {
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell
-        deRham -> hodgeFD<degmw>(B, auxDualH);
+        deRham->hodge(B, auxDualH);
         deRham -> curl(auxDualH, auxDualF2);
         auxDualF2 *= dt;
         D += auxDualF2;
@@ -235,7 +235,7 @@ class OperatorHamilton {
                                 const amrex::Real dt
     )
     {
-        deRham -> hodgeFD<degmw>(D, auxE);
+        deRham->hodge(D, auxE);
         // Operator H_E for dt/2
         deRham -> curl(auxE, auxPrimalF2);
         auxPrimalF2 *= dt;

@@ -105,7 +105,8 @@ namespace GEMPIC_TestUtils {
      * @param line: int, the line from which the function was called
      * @param fieldArr: amrex::Array4, array containing field values in an easily reached accessor
      * @param fieldArr2: amrex::Array4, array containing field values in an easily reached accessor
-     * @param top: Dim3, top boundaries of box for fieldArray
+     * @param bx: amrex::Box used to find the boundaries of fieldArr and fieldArr2
+     * @param ncomp: number of components of the two multifabs
      */
     void compareFields(const char file[], int line,
                        amrex::Array4<amrex::Real> const& fieldArr,

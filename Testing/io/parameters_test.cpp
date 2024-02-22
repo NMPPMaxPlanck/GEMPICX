@@ -3,13 +3,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <GEMPIC_hs_zigzag.H>
-#include <GEMPIC_FDDeRhamComplex.H>
-#include <GEMPIC_Fields.H>
+#include <AMReX.H>
+
 #include <GEMPIC_parameters.H>
-#include <GEMPIC_particle_groups.H>
-#include <GEMPIC_particle_mesh_coupling.H>
-#include <GEMPIC_Spline_Class.H>
 
 #include "test_utils/GEMPIC_test_utils.H"
 

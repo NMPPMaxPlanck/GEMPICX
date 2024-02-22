@@ -4,42 +4,86 @@
 #include <AMReX.H>
 #include <AMReX_Print.H>
 #include <AMReX_MFIter.H>
-#include <AMReX_MLMG.H>
 #include <AMReX_MLEBNodeFDLaplacian.H>
+#include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
-#include <GEMPIC_Fields.H>
+#include <AMReX_Print.H>
 #include <GEMPIC_FDDeRhamComplex.H>
-
+#include <GEMPIC_Fields.H>
 
 namespace GEMPIC_PoissonSolver
 {
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
-    class PoissonSolver
+    using Grid = GEMPIC_FDDeRhamComplex::Grid;
+    using Space = GEMPIC_FDDeRhamComplex::Space;
+
+class PoissonSolver
+{
+private:
+    int m_maxIter;
+    int m_maxCoarseningLevel;
+    int m_maxFmgIter;
+    int m_mgBottomMaxIter;
+    int m_verbose;
+    int m_bottomVerbose;
+    amrex::Real m_reltol{1.e-11};
+    amrex::Real m_maxsteps{100};
+    std::shared_ptr<GEMPIC_Fields::DeRhamComplex> m_deRham;
+    GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::edge> m_residual;
+
+    // for Poisson
+    amrex::Array<amrex::Real, GEMPIC_SPACEDIM> m_sigma;
+
+public:
+    PoissonSolver(std::shared_ptr<GEMPIC_Fields::DeRhamComplex> deRham);
+
+    ~PoissonSolver();
+ 
+    void solve(const Gempic::CompDom::computational_domain& infra, GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& rho, 
+    GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::node>& phi);
+
+    void subtractConstantPart(const Gempic::CompDom::computational_domain& infra, GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost);
+
+    template <int hodgeDegree, GEMPIC_FDDeRhamComplex::HodgeScheme hodgeScheme>
+    void solveHodgeCG(GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::edge> primalEdgeField,
+                      GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::face> dualFaceField)
     {
-        private:
-            int m_maxIter;
-            int m_maxCoarseningLevel;
-            int m_maxFmgIter;
-            int m_mgBottomMaxIter;
-            int m_verbose;
-            int m_bottomVerbose;
-            
-            //for Poisson
-            //amrex::Array<amrex::Real, GEMPIC_SPACEDIM> m_sigma;
+        //    DeRhamField<Grid::primal, Space::edge> residual(deRham);  //, d(m_deRham),
+        //    z(m_deRham);
+        m_deRham->hodge(dualFaceField, m_residual);
 
+        // for (amrex::MFIter mfi(primalEdgeField.data); mfi.isValid(); ++mfi)
+        // {
+        //     const amrex::Box &bx = mfi.validbox();
+        //     amrex::Array4<amrex::Real> const &residualArr = (residual.data)[mfi].array();
+        //     amrex::Array4<amrex::Real> const &zArr = (z.data)[mfi].array();
+        //     amrex::Array4<amrex::Real> const &bArr = (primalEdgeField.data)[mfi].array();
+        //     //amrex::Array4<amrex::Real> const &dArr = (b.data)[mfi].array();
 
-        public:
-            PoissonSolver();
+        //     ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        //         {
+        //             rArr(i,j,k) = bArr(i,j,k) - zArr(i,j,k);
+        //             dArr(i,j,k) = rArr(i,j,k);
+        //         });
+        // }
+        for (int step = 0; step < m_maxsteps; step++)
+        {
+        }
+    }
 
-            ~PoissonSolver();
+    template <int hodgeDegree, GEMPIC_FDDeRhamComplex::HodgeScheme hodgeScheme>
+    void applyPoissonOperator(Gempic::CompDom::computational_domain compDom,
+                              GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& dualCellOut,
+                              GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::node>& primalNodeIn)
+    {
+        auto deRham{primalNodeIn.deRham};
+        GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::edge> tempPrimalEdge(deRham);
+        GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::face> tempDualFace(deRham);
+        deRham->grad(primalNodeIn, tempPrimalEdge);
+        solveHodgeCG<hodgeDegree, hodgeScheme>(tempPrimalEdge, tempDualFace);
+        deRham->div(tempDualFace, dualCellOut);
+    }
+};
 
-            void solve(const Gempic::CompDom::computational_domain& infra, DeRhamField<Grid::dual, Space::cell>& rho,
-                          DeRhamField<Grid::primal, Space::node>& phi);
-
-            // The solver needs to subtract the kernel of the matrix to be invertible
-            void subtractConstantPart(const Gempic::CompDom::computational_domain& infra,DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost);
-    };
-}
+}  // namespace GEMPIC_PoissonSolver
 
 #endif
