@@ -4,22 +4,26 @@
  *
  * License: BSD-3-Clause-LBNL
  */
+/*
+* Modified for GEMPICX
+*/
 
-#ifndef REDUCEDDIAGS_REDUCEDDIAGS_H_
-#define REDUCEDDIAGS_REDUCEDDIAGS_H_
+#ifndef REDUCEDDIAGNOSTICS_REDUCEDDIAGNOSTICS_H_
+#define REDUCEDDIAGNOSTICS_REDUCEDDIAGNOSTICS_H_
 
 //#include "Utils/IntervalsParser.H"
+#include <GEMPIC_Fields.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_ParmParse.H>
-#include <AMReX_Utility.H>
 
 #include <string>
 #include <vector>
 #include <fstream>
 #include <iomanip>
+#include <filesystem>
 
 /**
  *  Base class for reduced diagnostics. Each type of reduced diagnostics is
@@ -27,12 +31,14 @@
  *  function ComputeDiags.
  */
 template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata>
-class ReducedDiags
+class ReducedDiagnostics
 {
 public:
 
     /// output path (default)
-    std::string m_path = "./";
+    std::string m_dirName = "reducedDiagnostics";
+    
+    std::string m_path = m_dirName + "/";
 
     /// output extension (default)
     std::string m_extension = "txt";
@@ -49,14 +55,17 @@ public:
     /// output data
     std::vector<amrex::Real> m_data;
 
-    // Domain Volume
-    amrex::Real vol = 1.0;
+    /// create fields needed for computations if they are missing
+    bool m_computeMissingFields;
+
+    /// deRham complex
+    std::shared_ptr<GEMPIC_Fields::DeRhamComplex> m_deRham;
 
     /**
      * constructor
      * @param[in] rd_name reduced diags names
      */
-    ReducedDiags (std::string rd_name)
+    ReducedDiagnostics (std::string rd_name)
     {
         m_rd_name = rd_name;
         //BackwardCompatibility();
@@ -64,6 +73,10 @@ public:
         amrex::ParmParse pp_rd_name(m_rd_name);
 
         // read path
+        if (!(std::filesystem::exists(m_dirName)))
+        {
+        std::filesystem::create_directories(m_dirName);
+        }
         pp_rd_name.query("path", m_path);
 
         // read extension
@@ -91,13 +104,17 @@ public:
     /**
      * Virtual destructor for polymorphism
      */
-    virtual ~ReducedDiags () = default;
+    virtual ~ReducedDiagnostics () = default;
 
     /**
      * function to initialize data after amr
      * levels are initialized.
      */
-    virtual void InitData (){}
+    virtual void InitData (std::shared_ptr<GEMPIC_Fields::DeRhamComplex> drc, bool cmf)
+    {
+        m_deRham = drc;
+        m_computeMissingFields = cmf;
+    }
 
     /** Redistribute parallel data structures during load balance
      */
@@ -105,16 +122,12 @@ public:
 
     /**
      * function to compute diags
-     *
-     * @param[in] step current time step
      */
-    virtual void ComputeDiags (int step, computational_domain infra, maxwell_yee<vdim> *mw_yee,
-                        amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec> &part_gr) = 0;
+    virtual void ComputeDiags (Gempic::CompDom::computational_domain& infra, std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics, 
+                        amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec> &part_gr) = 0;
 
     /**
      * write to file function
-     *
-     * @param[in] step current time step
      */
     virtual void WriteToFile (amrex::Real dt, int step) const
     {
@@ -123,7 +136,7 @@ public:
         std::ofstream::out | std::ofstream::app};
 
         // write step
-        ofs << step+1;
+        ofs << step;
 
         ofs << m_sep;
 
@@ -144,7 +157,7 @@ public:
         // close file
         ofs.close();
     }
-    // end ReducedDiags::WriteToFile
+    // end ReducedDiagnostics::WriteToFile
 };
 
 #endif

@@ -35,7 +35,7 @@ class particle_groups : public amrex::ParticleContainer<0, 0, vdim + ndata, 0>
 private:
     amrex::ParticleReal m_charge = 1;
     amrex::ParticleReal m_mass = 1;
-    std::string m_name = "electrons";
+    std::string m_name = "particles";
 
 public:
     amrex::ParticleReal getCharge() { return m_charge; }

@@ -45,23 +45,6 @@ void checkField(const char file[], int line,
         }
     }
 }
-
-void compareFields(const char file[], int line,
-                   amrex::Array4<amrex::Real> const& fieldArr,
-                   amrex::Array4<amrex::Real> const& fieldArr2,
-                   amrex::Dim3 const&& top) {
-    for (int i{0}; i <= top.x; i++) { 
-        for (int j{0}; j <= top.y; j++) {
-            for (int k{0}; k <= top.z; k++) {
-                const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
-                    EXPECT_NEAR(*fieldArr.ptr(idx, 0), *fieldArr2.ptr(idx, 0), 1e-14) <<
-                            file << ":" << line << ": Unequal arrays.\nIndices: " << 
-                            stringArray(idx, GEMPIC_SPACEDIM);
-                            break;
-            }
-        }
-    }
-}
 void compareFields(const char file[], int line,
                    amrex::Array4<amrex::Real> const& fieldArr,
                    amrex::Array4<amrex::Real> const& fieldArr2,

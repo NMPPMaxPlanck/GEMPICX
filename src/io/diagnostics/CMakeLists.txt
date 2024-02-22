@@ -1,0 +1,4 @@
+add_subdirectory(ReducedDiags)
+add_subdirectory(fullDiagnostics)
+add_subdirectory(FlushFormats)
+add_subdirectory(ComputeDiagFunctors)

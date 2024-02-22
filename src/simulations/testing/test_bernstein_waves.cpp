@@ -10,14 +10,15 @@
 #include <GEMPIC_particle_groups.H>
 #include <GEMPIC_particle_mesh_coupling.H>
 #include <GEMPIC_sampler.H>
-#include <GEMPIC_hs_zigzag.H>
 #include <GEMPIC_Fields.H>
 #include <GEMPIC_FDDeRhamComplex.H>
-#include <GEMPIC_PoissonSolver.H>
+//#include <GEMPIC_PoissonSolver.H>
 #include <BilinearFilter.H>
 
 #include <random>
 #include <iostream>
+#include <MultiFullDiagnostics.H>
+#include <MultiReducedDiagnostics.H>
 
 using namespace Gempic;
 using namespace CompDom;
@@ -98,8 +99,9 @@ int main(int argc, char* argv[])
     amrex::Initialize(argc, argv);
 
     // Linear splines is ok, and lower dimension Hodge is good enough
-    constexpr unsigned int vdim{3};
-    constexpr unsigned int numspec{1};
+    constexpr int vdim{3};
+    constexpr int numspec{1};
+    constexpr int ndata{1};
     // Spline degrees
     constexpr int degx{1};
     constexpr int degy{1};
@@ -112,26 +114,27 @@ int main(int argc, char* argv[])
     //Parameters::setPrintOutput();  // uncomment to print an output file
     Parameters parameters{};
 
+
     // Initialize computational_domain
     computational_domain infra;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     auto [parseB, funcB] = Utils::parseFunctions<3>({"Bx", "By", "Bz"});
 
-    DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
-    DeRhamField<Grid::primal, Space::edge> E(deRham);
-    DeRhamField<Grid::dual, Space::cell> rho(deRham);
+    DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
+    DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
+    DeRhamField<Grid::primal, Space::edge> E(deRham, "E");
+    DeRhamField<Grid::dual, Space::face> D(deRham, "D");
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
+    DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
     DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
-    DeRhamField<Grid::primal, Space::node> phi(deRham);
-
-    // For the moment we consider only a constant background field.
-    amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
-    amrex::Print() << "Bz " << Bz << std::endl;
+    DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
+    DeRhamField<Grid::dual, Space::face> currentDensity(deRham, "J");
 
     // Initialize particle groups
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> ions;
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> ions;
 
     //Initializing filter
     std::unique_ptr<Filter> biFilter = std::make_unique<BilinearFilter> ();
@@ -145,13 +148,33 @@ int main(int argc, char* argv[])
         init_particles_full_domain<vdim, numspec>(infra, ions, spec);
     }
 
+    // For the moment we consider only a constant background field.
+    amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
+
     {// "Time Loop" scope. Should be a separate function
         const int ndata = 1; // Needs to be 1 so that the correct ParIter type is defined. Putting 4 gets a non-defined type
-        const int npass = 3; // Number of filter passes
+        const int npass = 0; // Number of filter passes
 
+        // Initialize full diagnostics and write initial time step
+        
         Parameters params("time_loop");
+        amrex::Real dt;
+        params.get("dt", dt);
+        int nSteps;
+        params.get("n_steps", nSteps);
+        Parameters paramsSim("sim");
+        amrex::Real Te; // electron temperature
+        paramsSim.get("Te", Te);
+        auto nGhost = deRham->getNGhost();
+        MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
+        fullDiagn.InitData(infra, deRham->fieldsDiagnostics, deRham->fieldsScaling, ions, nGhost);
+
+        // Initialize reduced diagnostics and write initial time step
+        MultiReducedDiagnostics<vdim, numspec, degx, degy, degz, hodgeDegree, 1> redDiagn(deRham);
+    
         // Deposit initial charge
         for (int spec = 0; spec < numspec; spec++) {
+
 
             amrex::Real charge = ions[spec]->getCharge();
 
@@ -180,21 +203,30 @@ int main(int argc, char* argv[])
 
         //filter(rho, rhoTemp, npass);
         biFilter->ApplyStencil(rhoTemp.data, rho.data, 0, 0, 1);
+        
+        for (int component = 0; component < vdim; component++)
+            currentDensity.data[component].SumBoundary(0, 1, nGhost, amrex::IntVect(AMREX_D_DECL(0,0,0)),  infra.geom.periodicity());
+        currentDensity.averageSync();
+        currentDensity.fillBoundary();
 
-        deRham->hodgeFD<hodgeDegree>(rho, phi);
+        deRham->hodge(rho, phi);
         deRham->grad(phi, E);
-        E *= -1.0;
+        //E *= -1.0;
+        E *= - Te;
 
-        amrex::Real dt;
-        params.get("dt", dt);
-        int nSteps;
-        params.get("n_steps", nSteps);
+        // D is also needed to compute energy
+        deRham->hodge(E, D);
 
-        int saveFields = 0;
-        params.getOrSet("save_fields", saveFields);
+        // computing rho from D to check Gauss law // Makes no sense for quasi-neutral model
+        // deRham->div(D,rho_gauss_law); //must be done before writing reduced diagnostics
 
-        write_rho(rho, infra, 0, 0);
-        write_Ex(E, infra, 0, 0);
+        // Write initial time step
+        redDiagn.ComputeDiags(infra, deRham->fieldsDiagnostics, ions);
+        redDiagn.WriteToFile(0, dt);
+        fullDiagn.FilterComputePackFlush(0); 
+
+        // write_rho(rho, infra, 0, 0);
+        // write_Ex(E, infra, 0, 0);
 
         for (int tStep = 0; tStep < nSteps; tStep++) {
 
@@ -242,9 +274,12 @@ int main(int argc, char* argv[])
                 //filter(rho, rhoTemp, npass);
                 biFilter->ApplyStencil(rhoTemp.data, rho.data, 0, 0, 1);
 
-                deRham->hodgeFD<hodgeDegree>(rho, phi);
+                deRham->hodge(rho, phi);
                 deRham->grad(phi, E);
-                E *= -1.0;
+                //E *= -1.0;
+                E *= - Te;
+                // D is also needed to compute energy
+                deRham->hodge(E, D);
 
                 rho.data.setVal(0.0);
 
@@ -319,12 +354,15 @@ int main(int argc, char* argv[])
             //filter(rho, rhoTemp, npass);
             biFilter->ApplyStencil(rhoTemp.data, rho.data, 0, 0, 1);
 
-            if (tStep%saveFields == 0) {
-                write_rho(rho, infra, (tStep+1)*dt, tStep+1);
-                write_Ex(E, infra, (tStep+1)*dt, tStep+1);
-            }
-            if (tStep%1 == 0) {
-                amrex::Print() << "Time Step: " << tStep+1 << std::endl;
+            redDiagn.ComputeDiags(infra, deRham->fieldsDiagnostics, ions);
+            redDiagn.WriteToFile(tStep + 1, dt);
+            fullDiagn.FilterComputePackFlush(tStep+1); 
+            // if (tStep%saveFields == 0) {
+            //     write_rho(rho, infra, (tStep+1)*dt, tStep+1);
+            //     write_Ex(E, infra, (tStep+1)*dt, tStep+1);
+            // }
+            if (tStep%10 == 0) {
+                std::cout << "Time Step: " << tStep+1 << std::endl;
             }
         }
     } // end of "time loop" scope

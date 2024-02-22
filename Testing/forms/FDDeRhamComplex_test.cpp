@@ -75,7 +75,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex with deg 2
-        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -113,7 +113,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -157,7 +157,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -185,7 +185,7 @@ namespace {
         constexpr int hodgeDegree{2};
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -224,7 +224,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
         
         DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -263,7 +263,7 @@ namespace {
         func = parser.compile<nVar>();
 
         // Initialize the De Rham Complex
-        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+        auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham, func);

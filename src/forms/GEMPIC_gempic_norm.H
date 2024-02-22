@@ -19,7 +19,7 @@ namespace Gempic
 {
 namespace Utils
 {
-amrex::Real gempic_norm(amrex::MultiFab& MultiF, CompDom::computational_domain ifr, int p)
+inline amrex::Real gempic_norm(amrex::MultiFab& MultiF, CompDom::computational_domain ifr, int p)
 {
     // TODOrefine
     assert(p <= 2);

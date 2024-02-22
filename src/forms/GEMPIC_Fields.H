@@ -22,6 +22,9 @@
 #include "GEMPIC_parameters.H"
 #include "GEMPIC_computational_domain.H"
 
+#include <variant>
+#include <memory>
+
 namespace GEMPIC_Fields
 {
 enum class Grid
@@ -37,6 +40,11 @@ enum class Space
     face,
     cell
 };
+
+// // map of pointers to the field multifabs for the diagnostics
+// static std::map<std::string, amrex::MultiFab*> fieldsDiagnostics;
+// // map of scaling parameters to go from degrees of freedom to point values for diagnostics
+// static std::map<std::string, amrex::Real> fieldsScaling;
 
 // Helpful for enable_if magic. @todo: If we switch to C++20, we should use concepts, as shown in
 // https://gitlab.mpcdf.mpg.de/gempic/gempic/-/merge_requests/127#note_225990
@@ -85,6 +93,10 @@ struct DeRhamField
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc) {static_assert(space != space, "This class should not be callable.");};
     /**
+     * @brief Construct Space::edge/Space::face fields and add name to fieldsDiagnostics map
+    */
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName) : DeRhamField{drc} {};
+    /**
      * @brief Construct Space::edge / Space::face fields from function array
     */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func) : DeRhamField{drc} {};
@@ -111,7 +123,12 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
     amrex::Array<amrex::MultiFab, 3> data;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc,
+                const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc,
+                const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+                const std::string& diagName);
 
     void fillBoundary();
     void averageSync();
@@ -129,7 +146,12 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     amrex::MultiFab data;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc);
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc,
+                const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc,
+                const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+                const std::string& diagName);
 
     void fillBoundary();
     void averageSync();
@@ -138,14 +160,34 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     void operator*=(const amrex::Real& dt);
 };
 
+// Helper variants
+using anyFieldRef = std::variant<
+    std::reference_wrapper<DeRhamField<Grid::primal, Space::node>>,
+    std::reference_wrapper<DeRhamField<Grid::primal, Space::edge>>,
+    std::reference_wrapper<DeRhamField<Grid::primal, Space::face>>,
+    std::reference_wrapper<DeRhamField<Grid::primal, Space::cell>>,
+    std::reference_wrapper<DeRhamField<Grid::dual, Space::node>>,
+    std::reference_wrapper<DeRhamField<Grid::dual, Space::edge>>,
+    std::reference_wrapper<DeRhamField<Grid::dual, Space::face>>,
+    std::reference_wrapper<DeRhamField<Grid::dual, Space::cell>>>;
+using anyFieldConstRef = std::variant<
+    std::reference_wrapper<const DeRhamField<Grid::primal, Space::node>>,
+    std::reference_wrapper<const DeRhamField<Grid::primal, Space::edge>>,
+    std::reference_wrapper<const DeRhamField<Grid::primal, Space::face>>,
+    std::reference_wrapper<const DeRhamField<Grid::primal, Space::cell>>,
+    std::reference_wrapper<const DeRhamField<Grid::dual, Space::node>>,
+    std::reference_wrapper<const DeRhamField<Grid::dual, Space::edge>>,
+    std::reference_wrapper<const DeRhamField<Grid::dual, Space::face>>,
+    std::reference_wrapper<const DeRhamField<Grid::dual, Space::cell>>>;
+
 /**
- * @brief Base class for discrete de Rham Complexes. The member functions with the `inline` specifier implement the methods of the elements of the Complex (the functions of the fields). 
- * The projections are virtual functions, whose details are implemented in the inherited subclasses.
+ * @brief Base class for discrete de Rham Complexes. The member functions with the `inline`
+ * specifier implement the methods of the elements of the Complex (the functions of the fields). The
+ * projections are virtual functions, whose details are implemented in the inherited subclasses.
  *
  */
 class DeRhamComplex
 {
-
 private:
     // Indices
     amrex::IndexType primalNodeIndex;
@@ -154,10 +196,12 @@ private:
     amrex::IndexType primalCellIndex;
 
 protected:
+    static constexpr std::array<int, 0> validDegreesNoScheme{};
     // Computational grid
     amrex::BoxArray m_grid;
     amrex::DistributionMapping m_distriMap;
     amrex::Geometry m_geom;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> m_dxInv;
     int m_hodgeDegree;
 
     // Number of ghost cells along each direction
@@ -176,6 +220,7 @@ public:
         m_distriMap = infra.distriMap;
         m_geom = infra.geom;
         m_hodgeDegree = hodgeDegree;
+        m_dxInv = infra.dxi;
 
         /* Ghost cells are decided for the fields by the degree of the Hodge.
         ** Needs to be changed for particles and decided by spline degree:
@@ -224,10 +269,22 @@ public:
         return m_nGhost;
     }
 
+    /// Getter for the cell size
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1>& getDxInv() const
+    {
+        return m_dxInv;
+    }
+
     const amrex::Periodicity getPeriodicity() const
     {
        return m_geom.periodicity(); 
     } 
+
+    // map of pointers to the field multifabs for the diagnostics
+    std::map<std::string, amrex::MultiFab*> fieldsDiagnostics;
+
+    // map of scaling parameters to go from degrees of freedom to point values for diagnostics
+    std::map<std::string, amrex::Real> fieldsScaling;
 
     void initializeField(DeRhamField<Grid::primal, Space::node>& field)
     {
@@ -349,22 +406,42 @@ public:
     // Projections
     //------------
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<Grid::primal, Space::node>&) = 0;
+                            DeRhamField<Grid::primal, Space::node>&) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<Grid::primal, Space::cell>&, int gaussNodes = 6) = 0;
+                            DeRhamField<Grid::primal, Space::cell>&, int gaussNodes = 6) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<Grid::dual, Space::node>&) = 0;
+                            DeRhamField<Grid::dual, Space::node>&) = 0;
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, amrex::Real t,
-                    DeRhamField<Grid::dual, Space::cell>&, int gaussNodes = 6) = 0;
+                            DeRhamField<Grid::dual, Space::cell>&, int gaussNodes = 6) = 0;
 
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<Grid::dual, Space::edge>&, int gaussNodes = 6) = 0;
+                            amrex::Real t, DeRhamField<Grid::dual, Space::edge>&,
+                            int gaussNodes = 6) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<Grid::primal, Space::face>&, int gaussNodes = 6) = 0;
+                            amrex::Real t, DeRhamField<Grid::primal, Space::face>&,
+                            int gaussNodes = 6) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                    amrex::Real t, DeRhamField<Grid::primal, Space::edge>&, int gaussNodes = 6) = 0;
+                            amrex::Real t, DeRhamField<Grid::primal, Space::edge>&,
+                            int gaussNodes = 6) = 0;
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
                     amrex::Real t, DeRhamField<Grid::dual, Space::face>&, int gaussNodes = 6) = 0;
+
+    virtual void hodge(const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                DeRhamField<Grid::primal, Space::node>& zeroForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                DeRhamField<Grid::dual, Space::node>& zeroForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::dual, Space::face>& twoForm,
+                DeRhamField<Grid::primal, Space::edge>& oneForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::primal, Space::face>& twoForm,
+                DeRhamField<Grid::dual, Space::edge>& oneForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                DeRhamField<Grid::primal, Space::face>& twoForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                DeRhamField<Grid::dual, Space::face>& twoForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                DeRhamField<Grid::primal, Space::cell>& threeForm, amrex::Real weight = 1.) = 0;
+    virtual void hodge(const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                DeRhamField<Grid::dual, Space::cell>& threeForm, amrex::Real weight = 1.) = 0;
 };
 
 // Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type
@@ -372,35 +449,84 @@ template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc)
     : deRham{drc}
 {
-    deRham -> initializeField(*this);
+    deRham->initializeField(*this);
 }
 
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc)
     : deRham{drc}
 {
-    deRham -> initializeField(*this);
+    deRham->initializeField(*this);
 }
 
+template <Grid grid, Space space>
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc,
+const std::string& diagName) : DeRhamField{drc}
+{
+    deRham->fieldsDiagnostics[diagName + "x"] = &(this->data[xDir]);
+    deRham->fieldsDiagnostics[diagName + "y"] = &(this->data[yDir]);
+    deRham->fieldsDiagnostics[diagName + "z"] = &(this->data[zDir]);
 
-// Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type
+    if constexpr (space == Space::edge) // edge field 
+    {
+        auto dxInv{deRham->getDxInv()};
+        deRham->fieldsScaling[diagName + "x"] = dxInv[xDir];
+        deRham->fieldsScaling[diagName + "y"] = GEMPIC_D_MULT(1.0, dxInv[yDir], 1.0);
+        deRham->fieldsScaling[diagName + "z"] = GEMPIC_D_MULT(1.0, 1.0, dxInv[zDir]);
+    }
+    if constexpr (space == Space::face) // face field 
+    {
+        auto dxInv{deRham->getDxInv()};
+        deRham->fieldsScaling[diagName + "x"] = GEMPIC_D_MULT(1.0, dxInv[yDir], dxInv[zDir]); 
+        deRham->fieldsScaling[diagName + "y"] = GEMPIC_D_MULT(dxInv[xDir], 1.0, dxInv[zDir]);
+        deRham->fieldsScaling[diagName + "z"] = GEMPIC_D_MULT(dxInv[xDir], dxInv[yDir], 1.0);
+    }
+};
+
+template <Grid grid, Space space>
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc,
+const std::string& diagName) : DeRhamField{drc}
+{
+    deRham->fieldsDiagnostics[diagName] = &(this->data);
+    if constexpr (space == Space::node) // node field 
+    {
+        deRham->fieldsScaling[diagName] = 1.0; 
+    }
+    if constexpr (space == Space::cell) // cell field 
+    {
+        deRham->fieldsScaling[diagName] = deRham->getDxInv()[GEMPIC_SPACEDIM];
+    }
+}
+
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func)
-    : deRham{drc}
+    : DeRhamField{drc}
 {
-    deRham -> initializeField(*this);
-    deRham -> projection(func, 0.0, *this);
+    deRham->projection(func, 0.0, *this);
 }
 
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
-    : deRham{drc}
+    : DeRhamField{drc}
 {
-    deRham -> initializeField(*this);
-    deRham -> projection(func, 0.0, *this);
+    deRham->projection(func, 0.0, *this);
 }
 
 /// @cond DOXYGEN_IGNORE
+template <Grid grid, Space space>
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc, const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func, const std::string& diagName)
+    : DeRhamField{drc, diagName}
+{
+    deRham->projection(func, 0.0, *this);
+}
+
+template <Grid grid, Space space>
+inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField (std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func, const std::string& diagName)
+    : DeRhamField{drc, diagName}
+{
+    deRham->projection(func, 0.0, *this);
+}
+
 // Synchronization necessary after cpu and gpu particle loops
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>> ::
@@ -414,26 +540,26 @@ postParticleLoopSync () {
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fillBoundary ()
 {
-    deRham -> fillBoundary(*this);
+    deRham->fillBoundary(*this);
 }
 
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::fillBoundary ()
 {
-    deRham -> fillBoundary(*this);
+    deRham->fillBoundary(*this);
 }
 
 // AverageSync of DeRhamFields
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::averageSync ()
 {
-    deRham -> averageSync(*this);
+    deRham->averageSync(*this);
 }
 
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::averageSync ()
 {
-    deRham -> averageSync(*this);
+    deRham->averageSync(*this);
 }
 
 // Multiply by scalar
@@ -461,7 +587,6 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
         data[comp].plus(form.data[comp], 0, 1, nGhost[xDir]);
 }
 
-
 // minusEqual
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator-= (DeRhamField<grid, space>& form)
@@ -472,9 +597,46 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 }
 ///@endcond
 
-}
+}  // namespace GEMPIC_Fields
 
+namespace Gempic::Impl::Fields {
+using namespace GEMPIC_Fields;
+template<class T>
+struct unwrap_reference { using type = T; };
+template<class U>
+struct unwrap_reference<std::reference_wrapper<U>> { using type = U&; };
+ 
+template<class T>
+struct unwrap_ref_decay : unwrap_reference<std::decay_t<T>> {};
 
-// namespace GEMPIC_Fields
+template<class T>
+using unwrap_reference_t = typename unwrap_reference<T>::type;
+
+template<class T>
+using unwrap_ref_decay_t = typename unwrap_ref_decay<T>::type;
+
+template <Grid grid, Space space>
+struct FieldTypes {
+    static constexpr Grid gridType{grid};
+    static constexpr Space spaceType{space};
+    FieldTypes(const DeRhamField<grid, space>&) {};
+    FieldTypes(std::reference_wrapper<const DeRhamField<grid, space>>) {};
+};
+
+template <Grid grid>
+constexpr Grid oppositeGrid{
+    [] () {if constexpr (grid == Grid::primal) return Grid::dual;
+      else if constexpr (grid == Grid::dual) return Grid::primal;}()
+};
+
+template <Space space>
+constexpr Space oppositeSpace{
+    [] () {if constexpr (space == Space::node) return Space::cell;
+      else if constexpr (space == Space::cell) return Space::node;
+      else if constexpr (space == Space::face) return Space::edge;
+      else if constexpr (space == Space::edge) return Space::face;
+      }()
+};
+} // namespace Gempic::Impl::Fields
 
 #endif

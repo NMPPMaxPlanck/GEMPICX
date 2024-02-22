@@ -124,7 +124,7 @@ namespace {
             infra = computational_domain{};
 
             // Initialize the De Rham Complex
-            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
             // particles
             for (int spec{0}; spec < numSpec; spec++)

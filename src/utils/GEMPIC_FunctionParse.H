@@ -44,9 +44,10 @@ auto parseFunctions(const amrex::Array<std::string, functionNumber>& variableStr
         parseArray[index] = amrex::Parser(parseString);
         if (kExists)
         {
-            parseArray[index].setConstant("kvarx", k[xDir]);
-            parseArray[index].setConstant("kvary", k[yDir]);
-            parseArray[index].setConstant("kvarz", k[zDir]);
+            AMREX_D_TERM(
+                parseArray[index].setConstant("kvarx", k[xDir]);,
+                parseArray[index].setConstant("kvary", k[yDir]);,
+                parseArray[index].setConstant("kvarz", k[zDir]);)
         }
         parseArray[index].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         evalArray[index] = parseArray[index].template compile<GEMPIC_SPACEDIM + 1>();
@@ -107,7 +108,7 @@ inline auto parseFunction(const std::string& variableString, Parameters& params)
  * 
  * @return [parser, function]
 */
-auto parseFunction(const std::string& variableString)
+inline auto parseFunction(const std::string& variableString)
 {
     Parameters params{"function", "function parseFunction"};
     return parseFunction(variableString, params);

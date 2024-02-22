@@ -12,20 +12,21 @@ using namespace GEMPIC_PoissonSolver;
  * 
  */
 
-PoissonSolver::PoissonSolver()
+PoissonSolver::PoissonSolver(std::shared_ptr<GEMPIC_Fields::DeRhamComplex> deRham) : m_deRham{deRham}, m_residual{deRham}
 {
-    m_maxCoarseningLevel = 3;
-    m_maxIter = 1000;
-    m_mgBottomMaxIter = 1000;
+    m_maxCoarseningLevel = 0;  // no multigrid (else 30 (from tutorial))
+    m_maxIter = 100;
+    m_mgBottomMaxIter = 100;
     m_maxFmgIter = 0;
     m_verbose = 0;
     m_bottomVerbose = 0;
+    m_maxsteps = 100;
 }
 
 PoissonSolver::~PoissonSolver() {}
 
-void PoissonSolver::solve(const Gempic::CompDom::computational_domain& infra, DeRhamField<Grid::dual, Space::cell>& rho,
-                          DeRhamField<Grid::primal, Space::node>& phi)
+void PoissonSolver::solve(const Gempic::CompDom::computational_domain& infra, GEMPIC_Fields::DeRhamField<Grid::dual, Space::cell>& rho,
+                          GEMPIC_Fields::DeRhamField<Grid::primal, Space::node>& phi)
 {
     amrex::LPInfo lpInfo;
     lpInfo.setMaxCoarseningLevel(m_maxCoarseningLevel);
@@ -86,7 +87,7 @@ void PoissonSolver::solve(const Gempic::CompDom::computational_domain& infra, De
     phi.fillBoundary();
 }
 
-void PoissonSolver::subtractConstantPart(const Gempic::CompDom::computational_domain& infra, DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost)
+void PoissonSolver::subtractConstantPart(const Gempic::CompDom::computational_domain& infra, GEMPIC_Fields::DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost)
 {
     const int nComp = 1;
     // Calculates a nodal mask for rho

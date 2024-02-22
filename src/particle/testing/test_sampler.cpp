@@ -38,7 +38,7 @@ using namespace Particles;
 using namespace Sampling;
 
 template <unsigned int vdim, unsigned int numspec>
-void print_particles(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+void print_particles(amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec>& part_gr,
                      const int species)
 {
     std::ofstream ofs("particles.out", std::ofstream::out);
@@ -76,7 +76,7 @@ void print_particles(amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, num
  * @param species
  */
 template <unsigned int vdim, unsigned int numspec>
-void print_vMoments(const amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec>& part_gr,
+void print_vMoments(const amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec>& part_gr,
                     const int species)
 {
     // compute the first three moments of f(x,v), only one species
@@ -149,24 +149,24 @@ void main_main()
 
     //------------------------------------------------------------------------------
     // Initialize Particle Groups
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_cell;
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> part_gr_cell;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_cell[spec] = std::make_unique<particle_groups<vdim>>(spec, domain);
+        part_gr_cell[spec] = std::make_shared<particle_groups<vdim>>(spec, domain);
     }
     init_particles_cellwise(domain, part_gr_cell, species);
 
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full;
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> part_gr_full;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_full[spec] = std::make_unique<particle_groups<vdim>>(spec, domain);
+        part_gr_full[spec] = std::make_shared<particle_groups<vdim>>(spec, domain);
     }
     init_particles_full_domain(domain, part_gr_full, species);
 
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim>>, numspec> part_gr_full_gpu;
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> part_gr_full_gpu;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_full_gpu[spec] = std::make_unique<particle_groups<vdim>>(spec, domain);
+        part_gr_full_gpu[spec] = std::make_shared<particle_groups<vdim>>(spec, domain);
     }
     init_particles_full_domain_gpu(domain, part_gr_full_gpu, species);
 

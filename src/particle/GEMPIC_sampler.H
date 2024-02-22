@@ -32,7 +32,7 @@ using ParticleType = amrex::Particle<0, 0>;  // For SoA attributes
 template <unsigned int vdim, unsigned int numspec, unsigned int ndata>
 void init_particles_cellwise (
     computational_domain infra,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
     int species,
     int rSeed = 925)
 {
@@ -192,7 +192,7 @@ void init_particles_cellwise (
 template <unsigned int vdim, unsigned int numspec, unsigned int ndata = 1>
 void init_particles_full_domain_gpu (
     computational_domain infra,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
     int species,
     int rSeed = 925)
 {
@@ -394,7 +394,7 @@ void init_particles_full_domain_gpu (
 template <unsigned int vdim, unsigned int numspec, unsigned int ndata>
 void init_particles_full_domain (
     computational_domain infra,
-    amrex::GpuArray<std::unique_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
+    amrex::GpuArray<std::shared_ptr<particle_groups<vdim, ndata>>, numspec>& ppg,
     int species,
     int rSeed = 925)
 {
@@ -407,8 +407,6 @@ void init_particles_full_domain (
     amrex::Real weight;
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
     amrex::Real u1, u2, z0;
-    bool check_rnd = false;
-    int npart = 0;
 
     std::string specString = "particle.species" + std::to_string(species);
     Parameters params(specString);
@@ -452,8 +450,8 @@ void init_particles_full_domain (
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        std::mt19937 gen(rSeed + lo[xDir] + lo[yDir] * 10 + lo[zDir] * 100 + species * 1000);
-        std::mt19937 genv(rSeed + lo[xDir] + lo[yDir] * 10 + lo[zDir] * 100 + species * 1000 + 17);
+        std::mt19937 gen(GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) + species * 1000);
+        std::mt19937 genv(GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) + species * 1000 + 17);
         std::uniform_real_distribution<> unif(0.0, 1.0);
         std::uniform_real_distribution<> unifv(0.0, 1.0);
 
@@ -527,14 +525,14 @@ void init_particles_full_domain (
                         // ppg[species]->add_particle(position, velocity,
                         //                                    weight, particles);
                         // Check random number
-                        if (check_rnd)
-                        {
-                            npart++;
-                            if (npart < 10)
-                                amrex::Print() << npart << " " << x << " " << y << " " << z << " "
-                                               << velocity[xDir] << " " << velocity[yDir] << " "
-                                               << velocity[zDir] << " " << weight << "\n";
-                        }
+                        // if (check_rnd)
+                        // {
+                        //     npart++;
+                        //     if (npart < 10)
+                        //         amrex::Print() << npart << " " << x << " " << y << " " << z << " "
+                        //                        << velocity[xDir] << " " << velocity[yDir] << " "
+                        //                        << velocity[zDir] << " " << weight << "\n";
+                        // }
                     }
 #if (GEMPIC_SPACEDIM > 1)
                 }

@@ -100,7 +100,7 @@ namespace {
             infra = computational_domain{};
 
             // Initialize the De Rham Complex
-            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+            deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
             // particles
             for (int spec{0}; spec < numSpec; spec++)
@@ -376,7 +376,10 @@ namespace {
 
         DeRhamField<Grid::primal, Space::edge> B(deRham, funcB);
 
-        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0); pti.isValid(); ++pti)
+        amrex::MFItInfo mfii{};
+        mfii.do_tiling = amrex::TilingIfNotGPU();
+
+        for (amrex::ParIter<0, 0, vDim + 1, 0> pti(*particleGroup[0], 0, mfii); pti.isValid(); ++pti)
         {
             const long np{pti.numParticles()};
             EXPECT_EQ(numParticles, np);

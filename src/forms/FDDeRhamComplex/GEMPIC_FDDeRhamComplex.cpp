@@ -6,7 +6,7 @@ using namespace GEMPIC_Fields;
 using namespace GEMPIC_FDDeRhamComplex;
 
 
-FDDeRhamComplex::FDDeRhamComplex(const Gempic::CompDom::computational_domain& infra, const int hodgeDegree, const int maxSplineDegree) : DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
+FDDeRhamComplex::FDDeRhamComplex(const Gempic::CompDom::computational_domain& infra, const int hodgeDegree, const int maxSplineDegree, HodgeScheme hodgeScheme) : DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
 {
     // Parameters used in the projection and hodge
     for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
@@ -14,6 +14,7 @@ FDDeRhamComplex::FDDeRhamComplex(const Gempic::CompDom::computational_domain& in
         m_dr[i] = infra.dx[i];
     }
     m_nGhost = DeRhamComplex::m_nGhost[xDir];
+    m_hodgeScheme = hodgeScheme;
 
     // There is only one components in each MultiFab as the different components of the forms are centered differently
     m_tempPrimalZeroForm.define(amrex::convert(m_grid, amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)})), m_distriMap, 1, m_nGhost);
@@ -851,4 +852,58 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     }
     field.fillBoundary();
     field.averageSync();
+}
+
+void FDDeRhamComplex::hodgeSchemeSelector (anyFieldConstRef F1, anyFieldRef F2, amrex::Real weight) {
+    if (m_hodgeScheme == HodgeScheme::FDHodge)
+    {
+        hodgeDegreeSelector<HodgeScheme::FDHodge>(F1, F2, weight);
+    }
+    else if (m_hodgeScheme == HodgeScheme::FDHodge)
+    {
+        hodgeDegreeSelector<HodgeScheme::FDHodge>(F1, F2, weight);
+    }
+}
+
+
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::cell>& threeForm,
+            DeRhamField<Grid::primal, Space::node>& zeroForm, amrex::Real weight) 
+{
+    hodgeSchemeSelector(threeForm, zeroForm, weight);
+}
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::cell>& threeForm,
+            DeRhamField<Grid::dual, Space::node>& zeroForm, amrex::Real weight) 
+{
+    hodgeSchemeSelector(threeForm, zeroForm, weight);
+}
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::face>& twoForm,
+            DeRhamField<Grid::primal, Space::edge>& oneForm, amrex::Real weight) 
+{
+    hodgeSchemeSelector(twoForm, oneForm, weight);
+}
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::face>& twoForm,
+            DeRhamField<Grid::dual, Space::edge>& oneForm, amrex::Real weight) 
+{
+    hodgeSchemeSelector(twoForm, oneForm, weight);
+}
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::edge>& oneForm,
+            DeRhamField<Grid::primal, Space::face>& twoForm, amrex::Real weight)
+{
+    hodgeSchemeSelector(oneForm, twoForm, weight);
+}
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::edge>& oneForm,
+            DeRhamField<Grid::dual, Space::face>& twoForm, amrex::Real weight)
+{
+    hodgeSchemeSelector(oneForm, twoForm, weight);
+}
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::node>& zeroForm,
+            DeRhamField<Grid::primal, Space::cell>& threeForm, amrex::Real weight)
+{
+    hodgeSchemeSelector(zeroForm, threeForm, weight);
+}
+
+void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::node>& zeroForm,
+            DeRhamField<Grid::dual, Space::cell>& threeForm, amrex::Real weight)
+{
+    hodgeSchemeSelector(zeroForm, threeForm, weight);
 }

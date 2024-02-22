@@ -1,3 +1,5 @@
+# run this script in parallel with mpirun -n 4 python3 plot_dispersion_relation.py (for 4 cores)
+
 import numpy as np
 import argparse
 import yt
@@ -14,7 +16,7 @@ parser.add_argument('field')
 
 args = parser.parse_args()
 
-plotfiles = args.files + '?????' 
+plotfiles = args.files + '??????' 
 
 # read times series
 ts = yt.load(plotfiles)
@@ -43,4 +45,3 @@ if yt.is_root():
     for data in storage.items():
         arr[:,data[0]] = data[1]
     np.save("t_x_array.npy",arr)
-

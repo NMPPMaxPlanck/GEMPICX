@@ -68,7 +68,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     Gempic::CompDom::computational_domain infra;
 
     // Initialize the De Rham Complex
-    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree);
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree, HodgeScheme::FDHodge);
 
     const amrex::Geometry geom = infra.geom;
     
@@ -140,19 +140,19 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
     for (int i = 0; i < Nt; ++i)
     {
         // solve Faraday equation for a half step
-        deRham->hodgeFD<hodgeDegree>(D, E);
+        deRham->hodge(D, E);
         deRham->curl(E, curlE);
         curlE *= dt/2;
         B -= curlE;
         
         // solve Ampère equation for a full step
-        deRham->hodgeFD<hodgeDegree>(B, H);
+        deRham->hodge(B, H);
         deRham->curl(H, curlH);
         curlH *= dt;
         D += curlH;
 
         // solve Faraday's equation again for a half step
-        deRham->hodgeFD<hodgeDegree>(D, E);
+        deRham->hodge(D, E);
         deRham->curl(E, curlE);
         curlE *= dt/2;
         B -= curlE;
@@ -179,7 +179,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell(const int n)
 
 int main (int argc, char *argv[]) 
 {
-	amrex::Initialize(argc, argv);
+    amrex::Initialize(argc, argv);
     {
         const int coarse = 16;
         const int fine = 32;
