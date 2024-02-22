@@ -56,6 +56,8 @@ using `-D GEMPIC_OPTION Argument`
 
 # Quickstart Example
 
+The quickstart example applies the above guidelines for a specific simple configuration namely a 3D simulation for a CPU.
+
 ## Download and Build
 
 Clone the gempic repository from gitlab and build the code using CMake. 
@@ -64,28 +66,29 @@ Before building make sure that all dependencies are satisfied.
 ```sh
 git clone git@gitlab.mpcdf.mpg.de:gempic/gempic.git
 cd gempic
-cmake -S . -B build
+cmake --preset cpu-release-3D -S .
 cmake --build build
 ```
 
 ## Run a simulation
 
-Example simulations and input files can be found in `gempic/src/simulations`. 
-From the `gempic` directory, do
+Example simulations and input files can be found in `src/simulations`. 
+Create a directory from which the simulation can be started. We run the simulation in a subdirectory of `gempic` project directory which is not 
+recommended for real production runs.
 ```sh
 mkdir runs/gempic_quickstart
 cd runs/gempic_quickstart
+cp ../../build/cpu-release-3D/src/simulations/testing/test_bernstein_waves .
 cp ../../src/simulations/testing/IOFiles_3D/test_bernstein_waves_input.input .
 ```
-Optionally, change the value of the parameter `time_loop.n_steps` in the input file `test_bernstein_waves_input.input', and run with
+Optionally, change the value of the parameter `time_loop.n_steps` in the input file `test_bernstein_waves_input.input` to reduce the runtime.
+Now run the simulation using
 ```sh
-../../build/src/simulations/testing/test_bernstein_waves test_bernstein_waves_input.input 
+./test_bernstein_waves test_bernstein_waves_input.input 
 ```
 
 ## Plot simple diagnostics
-
-Some jupyter notebooks can be found in 
-`gempic/post_processing` and adapted to the user run.
+Some jupyter notebooks can be found in `gempic/post_processing` and adapted to the user run.
 Just do (still in the `gempic_quickstart` run folder)
 
 ```sh
