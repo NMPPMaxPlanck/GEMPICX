@@ -140,9 +140,13 @@ The formatting should be done with clang-format version 14.
 # Documentation
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
 The documentation is constructed using Sphinx, and its source code can be found in the `gempic/doc/sphinx` folder.
-- To build the GEMPIC Sphinx documentation locally on your computer:
-  - Install the required packages: `sphinx`, `breathe`, `sphinx_rtd_theme`, `pandoc`
-  - Execute `make html` in the `gempic/doc/sphinx` folder
+
+The documentation can be build locally on your computer following the 
+steps below. This is only recommended if a developer needs to extend
+the existing documentation and needs to check his or her changes.
+  - Install the required packages: `sphinx`, `breathe`, `sphinx_rtd_theme`, `pandoc`, `doxygen`
+  - Follow the `script` in the `pages` section of the CI configuration [.gitlab-ci.yml](./.gitlab-ci.yml) to build the documentation
+    (Except the last step which publishes the documentation.)
   - The generated HTML files can be found in the `_build/html/` folder. Open `index.html` in your browser to view the documentation.
 
 # Coding style and conventions
