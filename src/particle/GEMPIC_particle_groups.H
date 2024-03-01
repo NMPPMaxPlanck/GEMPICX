@@ -15,7 +15,8 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 #include <AMReX_StructOfArrays.H>
-#include <GEMPIC_computational_domain.H>
+
+#include "GEMPIC_computational_domain.H"
 
 namespace Gempic
 {
@@ -30,7 +31,7 @@ using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
  * charge and mass of the particle species are stored in a separate array.
  */
 template <unsigned int vdim, unsigned int ndata = 1>
-class particle_groups : public amrex::ParticleContainer<0, 0, vdim + ndata, 0>
+class ParticleGroups : public amrex::ParticleContainer<0, 0, vdim + ndata, 0>
 {
 private:
     amrex::ParticleReal m_charge = 1;
@@ -38,16 +39,17 @@ private:
     std::string m_name = "particles";
 
 public:
-    amrex::ParticleReal getCharge() { return m_charge; }
-    amrex::ParticleReal getMass() { return m_mass; }
-    std::string getName() { return m_name; }
+    amrex::ParticleReal get_charge () { return m_charge; }
+    amrex::ParticleReal get_mass () { return m_mass; }
+    std::string get_name () { return m_name; }
 
     /**
      * Default Constructor.
      */
-    particle_groups() {}
-    particle_groups(amrex::Geometry geom, amrex::DistributionMapping distriMap,
-                    amrex::BoxArray grid) :
+    ParticleGroups() {}
+    ParticleGroups(amrex::Geometry geom,
+                   amrex::DistributionMapping distriMap,
+                   amrex::BoxArray grid) :
         amrex::ParticleContainer<0, 0, vdim + ndata, 0>(geom, distriMap, grid)
     {
     }
@@ -60,41 +62,44 @@ public:
      */
     // particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
     //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
-    particle_groups(amrex::Real charge, amrex::Real mass, std::string& name,
-                    computational_domain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.geom, ifr.distriMap, ifr.grid),
+    ParticleGroups(amrex::Real charge,
+                   amrex::Real mass,
+                   std::string& name,
+                   ComputationalDomain ifr) :
+        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid),
         m_charge(charge),
         m_mass(mass),
         m_name(name)
     {
     }
-    particle_groups(amrex::Real charge, amrex::Real mass, computational_domain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.geom, ifr.distriMap, ifr.grid),
+    ParticleGroups(amrex::Real charge, amrex::Real mass, ComputationalDomain ifr) :
+        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid),
         m_charge(charge),
         m_mass(mass)
     {
     }
 
-    particle_groups(int species, computational_domain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.geom, ifr.distriMap, ifr.grid)
+    ParticleGroups(int species, ComputationalDomain ifr) :
+        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         std::string specString = "particle.species" + std::to_string(species);
         Parameters params(specString);
-        params.getOrSet("charge", m_charge);
-        params.getOrSet("mass", m_mass);
-        params.getOrSet("name", m_name);
+        params.get_or_set("charge", m_charge);
+        params.get_or_set("mass", m_mass);
+        params.get_or_set("name", m_name);
     }
 
     /**
      * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
      * velocity and the weight @p weight to the Particle Tile @p particles.
      */
-    
-    void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
-                      amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight,
-                      amrex::ParticleTile<ParticleType, vdim + ndata, 0>& particles)
-                      //amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
-    {                                                // Array of Structures
+
+    void add_particle (amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
+                       amrex::GpuArray<amrex::Real, vdim> velocity,
+                       amrex::Real weight,
+                       amrex::ParticleTile<ParticleType, vdim + ndata, 0>& particles)
+    // amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
+    {  // Array of Structures
         // new particle:
         ParticleType p;
         p.id() = ParticleType::NextID();
@@ -122,10 +127,10 @@ public:
         particles.push_back(p);
     }
 
-    void copy(particle_groups<vdim, ndata>& source, bool local = false)
+    void copy (ParticleGroups<vdim, ndata>& source, bool local = false)
     {
-        this->charge = source.getCharge();
-        this->mass = source.getMass();
+        this->charge = source.get_charge();
+        this->mass = source.get_mass();
         this->copyParticles(source, local);
     }
 };

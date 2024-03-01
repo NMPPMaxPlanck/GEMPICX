@@ -1,10 +1,8 @@
 #ifndef GEMPICX_FULLDIAGNOSTICS_H_
 #define GEMPICX_FULLDIAGNOSTICS_H_
 
-#include "CellCenterFunctor.H"
-#include "RawFunctor.H"
-#include "FlushFormat.H"
-#include "FlushFormatPlotfile.H"
+#include <memory>
+#include <string>
 
 #include <AMReX.H>
 #include <AMReX_Array.H>
@@ -13,245 +11,258 @@
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
 #include <AMReX_MultiFab.H>
+#include <AMReX_Particles.H>
 #include <AMReX_REAL.H>
 #include <AMReX_Vector.H>
-#include <AMReX_Particles.H>
 
-#include <GEMPIC_particle_groups.H>
+#include "CellCenterFunctor.H"
+#include "FlushFormat.H"
+#include "FlushFormatPlotfile.H"
 #include "GEMPIC_parameters.H"
-
-#include <memory>
-#include <string>
+#include "GEMPIC_particle_groups.H"
+#include "RawFunctor.H"
 
 template <int vdim, int numspec, int ndata>
 class FullDiagnostics
 {
 public:
-    FullDiagnostics (int diag_index, std::string name, amrex::Real dt, int save_interval = 100) : m_diag_name{std::move(name)}, m_diag_index{diag_index}, m_dt{dt}, m_save_interval{save_interval}
+    FullDiagnostics(int diagIndex, std::string name, amrex::Real dt, int saveInterval = 100) :
+        m_diagName{std::move(name)}, m_diagIndex{diagIndex}, m_dt{dt}, m_saveInterval{saveInterval}
     {
-        ReadParameters();
+        read_parameters();
     }
 
     /** Whether the last timestep is always dumped */
-    bool DoDumpLastTimestep () const {return  m_dump_last_timestep;}
+    bool do_dump_last_timestep () const { return m_dumpLastTimestep; }
 
     /** Pack (stack) all fields in the cell-centered output MultiFab m_mf_outputs.
      *
      * Fields are computed (e.g., cell-centered or back-transformed)
-       on-the-fly using a functor. 
+       on-the-fly using a functor.
      */
-    void ComputeAndPack ()
+    void compute_and_pack ()
     {
         // compute the necessary fields and store result in m_mf_outputs.
-        if(!m_plot_particles) 
+        if (!m_plotParticles)
         {
-            for (int i = 0; i < nComps; i++)
-            { 
-                if (m_mf_outputs.size() > 1)
+            for (int i = 0; i < m_nComps; i++)
+            {
+                if (m_mfOutputs.size() > 1)
                 {
-                    m_all_field_functors[i]->operator()(*(m_mf_outputs[i]), i);
+                    m_allFieldFunctors[i]->operator()(*(m_mfOutputs[i]), i);
                 }
                 else
                 {
-                    m_all_field_functors[i]->operator()(*(m_mf_outputs[0]), i);
+                    m_allFieldFunctors[i]->operator()(*(m_mfOutputs[0]), i);
                 }
             }
         }
     }
 
     /** Initialize pointers to main fields and allocate output multifab m_mf_outputs. */
-    void InitData (Gempic::CompDom::computational_domain& compDom, std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-                    std::map<std::string, amrex::Real>& fieldsScaling, 
-                    amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec> ions, amrex::IntVect& nGhost) 
+    void init_data (Gempic::CompDom::ComputationalDomain& compDom,
+                    std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+                    std::map<std::string, amrex::Real>& fieldsScaling,
+                    amrex::GpuArray<std::shared_ptr<Gempic::Particles::ParticleGroups<vdim, ndata>>,
+                                    numspec> ions,
+                    amrex::IntVect& nGhost)
     {
         // initialize member variables and arrays in base class::Diagnostics
-        InitBaseData();
-        InitializeFieldFunctorsAndBufferData(compDom, fieldsDiagnostics, fieldsScaling, ions, nGhost);
+        init_base_data();
+        initialize_field_functors_and_buffer_data(compDom, fieldsDiagnostics, fieldsScaling, ions,
+                                                  nGhost);
     }
-    
+
     /** Perform necessary operations with user-defined diagnostic parameters
      *  to filter (coarsen, slice), compute (cell-center, back-transform),
-     *  and flush the output data stored in buffers, m_mf_outputs.
+     *  and flush the output data stored in buffers, m_mfOutputs.
      * \param[in] step current timestep
-     * \param[in] force_flush used to force-fully write data stored in buffers.
+     * \param[in] forceFlush used to force-fully write data stored in buffers.
      */
-    void FilterComputePackFlush (int step, bool force_flush=false)
+    void filter_compute_pack_flush (int step, bool forceFlush = false)
     {
-        //GEMPIC_PROFILE("Diagnostics::FilterComputePackFlush()");
+        // GEMPIC_PROFILE("Diagnostics::FilterComputePackFlush()");
 
-        if ( DoComputeAndPack (step, force_flush) ) {
-            ComputeAndPack();
-            Flush(step);
+        if (do_compute_and_pack(step, forceFlush))
+        {
+            compute_and_pack();
+            flush(step);
         }
     }
     /// getter for number of components of full diagnostics
-    int getNcomp()
-    {
-        return nComps;
-    }
+    int get_ncomp () { return m_nComps; }
 
     /** Vector of (pointers to) functors to compute output fields, per level,
      * per component. This allows for simple operations (averaging to
      * cell-center for standard EB fields) as well as more involved operations */
-    amrex::Vector<std::unique_ptr<ComputeDiagFunctor>> m_all_field_functors;
+    amrex::Vector<std::unique_ptr<ComputeDiagFunctor>> m_allFieldFunctors;
 
 private:
     /** Read user-requested parameters for full diagnostics */
-    void ReadParameters ()//computational_domain infra)
+    void read_parameters ()  // computational_domain infra)
     {
         // Read list of full diagnostics fields requested by the user.
-        Parameters pp_diag_name("fullDiagnostics." + m_diag_name);
+        Parameters ppDiagName("fullDiagnostics." + m_diagName);
 
-        //prefix
-        m_file_prefix = "fullDiagnostics/plt_" + m_diag_name; //default for paraview
-        pp_diag_name.getOrSet("file_prefix", m_file_prefix);
-        
-        pp_diag_name.getOrSet("file_min_digits", m_file_min_digits);
-        pp_diag_name.getOrSet("dump_last_timestep", m_dump_last_timestep);
-        
-        //reading variable names for diagnostic
-        pp_diag_name.getOrSet("var_names", m_diag_varnames);
-        nComps = static_cast<int>(m_diag_varnames.size());
-        m_all_field_functors.resize(nComps);
+        // prefix
+        m_filePrefix = "fullDiagnostics/plt_" + m_diagName;  // default for paraview
+        ppDiagName.get_or_set("file_prefix", m_filePrefix);
+
+        ppDiagName.get_or_set("file_min_digits", m_fileMinDigits);
+        ppDiagName.get_or_set("dump_last_timestep", m_dumpLastTimestep);
+
+        // reading variable names for diagnostic
+        ppDiagName.get_or_set("var_names", m_diagVarnames);
+        m_nComps = static_cast<int>(m_diagVarnames.size());
+        m_allFieldFunctors.resize(m_nComps);
 
         // reading format of file to be written
-        pp_diag_name.getOrSet("format", m_format);
+        ppDiagName.get_or_set("format", m_format);
 
-        //reading functor
-        pp_diag_name.getOrSet("functor", m_diag_functor);
-        
-        pp_diag_name.getOrSet("save_interval", m_save_interval);
+        // reading functor
+        ppDiagName.get_or_set("functor", m_diagFunctor);
+
+        ppDiagName.get_or_set("save_interval", m_saveInterval);
 
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-            m_format == "plotfile" //|| m_format == "openpmd" ||
-            //m_format == "checkpoint" || m_format == "ascent" ||
-            //m_format == "sensei"
-            ,"<diag>.format must be plotfile or openpmd or checkpoint or ascent or sensei");
+            m_format == "plotfile"  //|| m_format == "openpmd" ||
+            // m_format == "checkpoint" || m_format == "ascent" ||
+            // m_format == "sensei"
+            ,
+            "<diag>.format must be plotfile or openpmd or checkpoint or ascent or sensei");
     }
 
-    void InitBaseData ()
+    void init_base_data ()
     /** Initialize formats and data required to construct the buffers
      */
     {
         // Construct Flush class.
-        if (m_format == "plotfile"){
-            m_flush_format = std::make_unique<FlushFormatPlotfile<vdim, numspec, ndata>>() ;
-        //} else if (m_format == "checkpoint"){
+        if (m_format == "plotfile")
+        {
+            m_flushFormat = std::make_unique<FlushFormatPlotfile<vdim, numspec, ndata>>();
+            //} else if (m_format == "checkpoint"){
             // creating checkpoint format
-           // m_flush_format = std::make_unique<FlushFormatCheckpoint>() ;
-        } else if (m_format == "openpmd"){
-    #ifdef WARPX_USE_OPENPMD
+            // m_flush_format = std::make_unique<FlushFormatCheckpoint>() ;
+        }
+        else if (m_format == "openpmd")
+        {
+#ifdef WARPX_USE_OPENPMD
             m_flush_format = std::make_unique<FlushFormatOpenPMD>(m_diag_name);
-    #else
+#else
             amrex::Abort("To use openpmd output format, need to compile with USE_OPENPMD=TRUE");
-    #endif
-        } else {
+#endif
+        }
+        else
+        {
             amrex::Abort("unknown output format");
         }
     }
 
     /** Whether to plot raw (i.e., NOT cell-centered) fields */
-    bool m_plot_particles = false;
+    bool m_plotParticles = false;
     /** Whether to plot guard cells of raw fields */
-    bool m_plot_raw_fields_guards = false;
+    bool m_plotRawFieldsGuards = false;
     /** Name of diagnostics: runtime parameter given in the input file. */
-    std::string m_diag_name;
+    std::string m_diagName;
     /** Variable names in diagnostics: runtime parameter given in the input file. */
-    amrex::Vector<std::string> m_diag_varnames;
+    amrex::Vector<std::string> m_diagVarnames;
     /** Type of functor: runtime parameter given in the input file. */
-    std::string m_diag_functor = "raw"; // raw functor as default
+    std::string m_diagFunctor = "raw";  // raw functor as default
     /** Prefix for output directories */
-    std::string m_file_prefix;
+    std::string m_filePrefix;
     /** Minimum number of digits to iteration number in file name */
-    int m_file_min_digits = 6;
+    int m_fileMinDigits = 6;
     /** Index of diagnostics in MultiDiagnostics::alldiags */
-    int m_diag_index;
+    int m_diagIndex;
 
-    int nComps{0};
-    
+    int m_nComps{0};
+
     /** format for output files, "plotfile" or "openpmd" or "sensei" or "ascent"
      * The checkpoint format is applicable for FullDiagnostics only.
      */
-    std::string m_format = "plotfile"; // AMReX format
+    std::string m_format = "plotfile";  // AMReX format
     /** Whether this iteration has already been dumped, to avoid writing data twice */
-    int m_already_done = false;
+    int m_alreadyDone = false;
     /** This class is responsible for flushing the data to file */
-    std::unique_ptr<FlushFormat<vdim, numspec, ndata>> m_flush_format;
+    std::unique_ptr<FlushFormat<vdim, numspec, ndata>> m_flushFormat;
     /** output multifab, where all fields are computed (cell-centered or back-transformed)
      *  and stacked.
      *  The first vector is for total number of snapshots. (=1 for FullDiagnostics)
      *  The second vector is loops over the total number of levels.
      */
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>>  m_mf_outputs;
+    amrex::Vector<std::unique_ptr<amrex::MultiFab>> m_mfOutputs;
 
-    /** If true, a dump is performed at the last timestep regardless of the required dump timesteps */
-    bool m_dump_last_timestep = true;
-    
+    /** If true, a dump is performed at the last timestep regardless of the required dump timesteps
+     */
+    bool m_dumpLastTimestep = true;
+
     /** Geometry that defines the domain attributes corresponding to output multifab.
      *  Specifically, the user-defined physical co-ordinates for the diagnostics
      *  is used to construct the geometry information for each MultiFab at
      *  the respective levels. This geometry will be used to write out
      *  plotfile data using the WriteToFile() function
      */
-    amrex::Geometry m_geom_output;
+    amrex::Geometry m_geomOutput;
 
-    amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec> m_particles;
+    amrex::GpuArray<std::shared_ptr<Gempic::Particles::ParticleGroups<vdim, ndata>>, numspec>
+        m_particles;
 
     /** Coarsening ratio such that, fields are averaged to the coarsened grid.
-      * The ratio should render the grid to be coarsenable (as defined by AMReX). */
-    amrex::IntVect m_crse_ratio = amrex::IntVect(1);
+     * The ratio should render the grid to be coarsenable (as defined by AMReX). */
+    amrex::IntVect m_crseRatio = amrex::IntVect(1);
 
     /* simulation dt */
     amrex::Real m_dt;
 
     /** Determines timesteps at which full diagnostics are written to file */
-    int m_save_interval = 100;
+    int m_saveInterval = 100;
 
     /** Flush m_mf_outputs and particles to file for the i^th buffer */
-    inline void Flush (int step)
+    inline void flush (int step)
     {
-        if (m_mf_outputs.size() > 1)
+        if (m_mfOutputs.size() > 1)
         {
-            for (int i{0}; i < m_mf_outputs.size(); ++i)
+            for (int i{0}; i < m_mfOutputs.size(); ++i)
             {
-                std::string file_prefix = m_file_prefix + "_" + m_diag_varnames[i]; 
-                amrex::Vector<std::string> singleEntryVarnameVector{m_diag_varnames[i]};
-                m_flush_format->WriteToFile(
-                    singleEntryVarnameVector, *(m_mf_outputs[i]), m_geom_output, step,
-                    step*m_dt, m_particles, 1, file_prefix,
-                    m_file_min_digits, m_plot_particles);
+                std::string filePrefix = m_filePrefix + "_" + m_diagVarnames[i];
+                amrex::Vector<std::string> singleEntryVarnameVector{m_diagVarnames[i]};
+                m_flushFormat->write_to_file(singleEntryVarnameVector, *(m_mfOutputs[i]),
+                                             m_geomOutput, step, step * m_dt, m_particles, 1,
+                                             filePrefix, m_fileMinDigits, m_plotParticles);
             }
         }
         else
         {
-            m_flush_format->WriteToFile(
-                m_diag_varnames, *(m_mf_outputs[0]), m_geom_output, step,
-                step*m_dt, m_particles, 1, m_file_prefix,
-                m_file_min_digits, m_plot_particles);
+            m_flushFormat->write_to_file(m_diagVarnames, *(m_mfOutputs[0]), m_geomOutput, step,
+                                         step * m_dt, m_particles, 1, m_filePrefix, m_fileMinDigits,
+                                         m_plotParticles);
         }
     }
 
-    inline bool DoComputeAndPack (int step, bool force_flush=false)
+    inline bool do_compute_and_pack (int step, bool forceFlush = false)
     /** whether to flush at this time step
      * \param[in] step current time step
-     * \param[in] force_flush if true, return true for any step
+     * \param[in] forceFlush if true, return true for any step
      * \return bool, whether to flush
      */
     {
         // Data must be computed and packed for full diagnostics
         // whenever the data needs to be flushed.
-        return (force_flush || (step % m_save_interval == 0));
+        return (forceFlush || (step % m_saveInterval == 0));
     }
 
     /**
-     * Figure out if particles or fields are being plotted. Breaks if particle groups and fields have the identical names.
-    */
-    std::string get_diag_type (std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics, 
-                        amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec>& particles)
+     * Figure out if particles or fields are being plotted. Breaks if particle groups and fields
+     * have the identical names.
+     */
+    std::string get_diag_type (
+        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+        amrex::GpuArray<std::shared_ptr<Gempic::Particles::ParticleGroups<vdim, ndata>>, numspec>&
+            particles)
     {
         bool particleType{false};
         bool fieldType{false};
-        for (const auto &diagName : m_diag_varnames)
+        for (const auto& diagName : m_diagVarnames)
         {
             if (fieldsDiagnostics.find(diagName) != fieldsDiagnostics.end())
             {
@@ -263,7 +274,7 @@ private:
                 bool diagNameMatched{false};
                 for (int species{0}; species < numspec; ++species)
                 {
-                    if (diagName == particles[species]->getName())
+                    if (diagName == particles[species]->get_name())
                     {
                         particleType = true;
                         diagNameMatched = true;
@@ -276,13 +287,15 @@ private:
                 }
                 else
                 {
-                    amrex::Assert("Variable name neither particle nor field", "FullDiagnostics.H" , __LINE__, diagName.c_str());
+                    amrex::Assert("Variable name neither particle nor field", "FullDiagnostics.H",
+                                  __LINE__, diagName.c_str());
                 }
             }
         }
         if (fieldType && particleType)
         {
-            amrex::Assert("Particles and fields in the same diagnostics group", "FullDiagnostics.H", __LINE__);
+            amrex::Assert("Particles and fields in the same diagnostics group", "FullDiagnostics.H",
+                          __LINE__);
             return "";
         }
         else if (fieldType)
@@ -295,65 +308,85 @@ private:
         }
         else
         {
-            amrex::Assert("Empty diagnostics group ", "FullDiagnostics.H", __LINE__, m_diag_name.c_str());
+            amrex::Assert("Empty diagnostics group ", "FullDiagnostics.H", __LINE__,
+                          m_diagName.c_str());
             return "";
         }
     }
 
     /** Initialize functors that store pointers to the fields requested by the user.
-      */
-    
-    void InitializeFieldFunctorsAndBufferData (Gempic::CompDom::computational_domain& compDom, std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics, 
-                                               std::map<std::string, amrex::Real>& fieldsScaling, 
-                                            amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec>& particles, amrex::IntVect& nghost)
+     */
+
+    void initialize_field_functors_and_buffer_data (
+        Gempic::CompDom::ComputationalDomain& compDom,
+        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+        std::map<std::string, amrex::Real>& fieldsScaling,
+        amrex::GpuArray<std::shared_ptr<Gempic::Particles::ParticleGroups<vdim, ndata>>, numspec>&
+            particles,
+        amrex::IntVect& nghost)
     {
-        std::string diag_type{get_diag_type(fieldsDiagnostics, particles)};
-        if (diag_type == "particle")
+        std::string diagType{get_diag_type(fieldsDiagnostics, particles)};
+        if (diagType == "particle")
         {
-            if(!m_plot_particles) // needs only to be performed once for all particle groups 
-            { 
-                m_plot_particles = true;
+            if (!m_plotParticles)  // needs only to be performed once for all particle groups
+            {
+                m_plotParticles = true;
                 m_particles = particles;
                 // Multifab output needs to be defined but not filled when using particles
-                amrex::IntVect ngrow{AMREX_D_DECL(0,0,0)}; // no ghost cells needed
-                m_mf_outputs.push_back(std::make_unique<amrex::MultiFab> (amrex::MultiFab(compDom.grid, compDom.distriMap, nComps, ngrow)));
-                m_geom_output = compDom.geom;
+                amrex::IntVect ngrow{AMREX_D_DECL(0, 0, 0)};  // no ghost cells needed
+                m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
+                    amrex::MultiFab(compDom.m_grid, compDom.m_distriMap, m_nComps, ngrow)));
+                m_geomOutput = compDom.m_geom;
             }
         }
-        else if (diag_type == "field")
+        else if (diagType == "field")
         {
-            if (m_diag_functor == "CellCenter")
+            if (m_diagFunctor == "CellCenter")
             {
-                m_mf_outputs.push_back(std::make_unique<amrex::MultiFab> (amrex::MultiFab(compDom.grid, compDom.distriMap, nComps, nghost))); //ngrow required for interpolation 
-                m_geom_output = compDom.geom;
+                m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
+                    amrex::MultiFab(compDom.m_grid, compDom.m_distriMap, m_nComps,
+                                    nghost)));  // ngrow required for interpolation
+                m_geomOutput = compDom.m_geom;
 
-                for (int i = 0; i < nComps; i++)
+                for (int i = 0; i < m_nComps; i++)
                 {
-                    if (fieldsDiagnostics.find(m_diag_varnames[i]) != fieldsDiagnostics.end())
+                    if (fieldsDiagnostics.find(m_diagVarnames[i]) != fieldsDiagnostics.end())
                     {
-                        m_all_field_functors[i] = std::make_unique<CellCenterFunctor>(fieldsDiagnostics[m_diag_varnames[i]], fieldsScaling[m_diag_varnames[i]], this->m_crse_ratio);
+                        m_allFieldFunctors[i] = std::make_unique<CellCenterFunctor>(
+                            fieldsDiagnostics[m_diagVarnames[i]], fieldsScaling[m_diagVarnames[i]],
+                            this->m_crseRatio);
                     }
                     else
-                        amrex::Assert("Field for diagnostics not found",  "FullDiagnostics.H" , __LINE__, m_diag_varnames[i].c_str());
+                    {
+                        amrex::Assert("Field for diagnostics not found", "FullDiagnostics.H",
+                                      __LINE__, m_diagVarnames[i].c_str());
+                    }
                 }
-            } 
-            else if (m_diag_functor == "raw")
+            }
+            else if (m_diagFunctor == "raw")
             {
-                for (int i{0}; i < nComps; ++i)
+                for (int i{0}; i < m_nComps; ++i)
                 {
-                    if (fieldsDiagnostics.find(m_diag_varnames[i]) != fieldsDiagnostics.end())
+                    if (fieldsDiagnostics.find(m_diagVarnames[i]) != fieldsDiagnostics.end())
                     {
-                        m_all_field_functors[i] = std::make_unique<RawFunctor>(fieldsDiagnostics[m_diag_varnames[i]], this->m_crse_ratio);
-                        //map.second->n_grow -> if we want to write ghost cells too, also to be changed in operator()
-                        m_mf_outputs.push_back(std::make_unique<amrex::MultiFab> (amrex::MultiFab(convert(compDom.grid, fieldsDiagnostics[m_diag_varnames[i]]->ixType()), compDom.distriMap, 1, 0))); //ncomp 1, ngrow 0 as just copying
+                        m_allFieldFunctors[i] = std::make_unique<RawFunctor>(
+                            fieldsDiagnostics[m_diagVarnames[i]], this->m_crseRatio);
+                        // map.second->n_grow -> if we want to write ghost cells too, also to be
+                        // changed in operator()
+                        m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(amrex::MultiFab(
+                            convert(compDom.m_grid, fieldsDiagnostics[m_diagVarnames[i]]->ixType()),
+                            compDom.m_distriMap, 1, 0)));  // ncomp 1, ngrow 0 as just copying
                     }
                     else
-                        amrex::Assert("Field for diagnostics not found",  "FullDiagnostics.H" , __LINE__, m_diag_varnames[i].c_str());
+                    {
+                        amrex::Assert("Field for diagnostics not found", "FullDiagnostics.H",
+                                      __LINE__, m_diagVarnames[i].c_str());
+                    }
                 }
-                m_geom_output = compDom.geom;
+                m_geomOutput = compDom.m_geom;
             }
         }
     }
 };
 
-#endif // GEMPICX_FULLDIAGNOSTICS_H_
+#endif  // GEMPICX_FULLDIAGNOSTICS_H_

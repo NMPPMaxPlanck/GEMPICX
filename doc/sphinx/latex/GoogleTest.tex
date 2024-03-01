@@ -162,11 +162,11 @@ Tests are done inside the \lstinline{TEST}\footnote{or its derivatives, \lstinli
  The \lstinline{TEST} macro takes two arguments, neither of which can have underscores: The first is the name of the test suite, which would presumably be related to the function you are testing, and the second is the name of the specific test you are performing. Inside this macro you would then carry out a number of \lstinline{EXPECT} and \lstinline{ASSERT} statements, the list of which can be found at \url{https://google.github.io/googletest/reference/assertions.html}.
  It is recommended to wrap the tests in a namespace, so as not to accidentally pollute global namespace and mix testing environments.
 
- A very basic test file for testing the function \lstinline{alwaysReturnsTrue} in \verb|someGempicFile.H| would then be
+ A very basic test file for testing the function \lstinline{alwaysReturnsTrue} in \verb|GEMPIC_some_file.H| would then be
 \begin{lstlisting}[emph={TEST,EXPECT_TRUE},emphstyle={\color{macrocolor}\bfseries}]
 #include <gtest/gtest.h> // GoogleTest library
 
-#include "someGempicFile.H" // file containing the function to test
+#include "GEMPIC_some_file.H" // file containing the function to test
 
 namespace
 { // namespace out of an abundance of caution
@@ -191,31 +191,31 @@ AMReX should accept any arguments given, but it is probably better to feign this
 \subsection{Testing GPU Code}\label{testing-gpu-code}
 If there is one obvious flaw in choosing \gt, it's that it doesn't play well with CUDA. What this means is that any GPU code (such as \lstinline{amrex::ParallelFor}) must be put outside the test macros (\lstinline{TEST}, \lstinline{TEST_F} and \lstinline{TEST_P}) and into functions called from said macros instead. For examples, see the functions
 \begin{itemize} 
-    \item \lstinline{updateRhoParallelFor} in \verb|deposit_rho_test.cpp| or 
-    \item \lstinline{updateEFieldParallelFor} in \verb|evaluate_efield_test.cpp|.
+    \item \lstinline{update_rho_parallel_for} in \verb|deposit_rho_test.cpp| or 
+    \item \lstinline{update_e_field_parallel_for} in \verb|evaluate_efield_test.cpp|.
 \end{itemize}
 Both example files are located \loc{\pmc}.
 
 Furthermore, \gt{} code like \lstinline{EXPECT_EQ} cannot be called from GPU code for much the same reasons, meaning that any checking will have to be done before and/or after these sections. This behaviour is not specific to \gt{}; no private code can be called with AMReX's GPU helper functions. If your variable only lives inside these sections, either reconsider what you want to test or use an \lstinline{async_array}. An example of the last approach is shown in the \lstinline{updateEFieldParallelFor} function.
 
 \subsection{Field Checking Helpers}
-Alternatively, for checking individual values of fields you can use one of the helper functions \lstinline{GEMPIC_TestUtils::checkField} or \lstinline{GEMPIC_TestUtils::compareFields} directly in your tests. Note that both of these functions require that you preface your testing script with
+Alternatively, for checking individual values of fields you can use one of the helper functions \lstinline{GEMPIC_TestUtils::check_field} or \lstinline{GEMPIC_TestUtils::compare_fields} directly in your tests. Note that both of these functions require that you preface your testing script with
 \begin{lstlisting}
     #include "test_utils/GEMPIC_test_utils.H"
 
-    #define compareFields(...) GEMPIC_TestUtils::compareFields(__FILE__, __LINE__, __VA_ARGS__)
-    #define checkField(...) GEMPIC_TestUtils::checkField(__FILE__, __LINE__, __VA_ARGS__)
+    #define compare_fields(...) GEMPIC_TestUtils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
+    #define check_field(...) GEMPIC_TestUtils::check_field(__FILE__, __LINE__, __VA_ARGS__)
 \end{lstlisting}
 
 \subsubsection*{Compare Fields}
-For comparing the values of two fields, you can use \lstinline{GEMPIC_TestUtils::checkField}:
+For comparing the values of two fields, you can use \lstinline{GEMPIC_TestUtils::check_field}:
 \begin{lstlisting}
-    void checkField(const char file[], int line,
+    void check_field(const char file[], int line,
                     amrex::Array4<amrex::Real> const& fieldArr,
                     amrex::Array4<amrex::Real> const& fieldArr2,
                     amrex::Dim3 const&& top);
 \end{lstlisting}
-The first two arguments are supplied automagically by the \lstinline{#define compareFields} macro.
+The first two arguments are supplied automagically by the \lstinline{#define compare_fields} macro.
 The user supplied arguments are:
 \begin{itemize}
     \item the field array in \lstinline{amrex::Array4} form
@@ -227,21 +227,21 @@ Comparison between field values of a multifab \lstinline{mfTmp} and another mult
 
 \begin{lstlisting}
     for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi) {
-        checkField(mfTmp[mfi].array(), mfExpected[mfi].array(), infra.n_cell.dim3());
+        check_field(mfTmp[mfi].array(), mfExpected[mfi].array(), infra.n_cell.dim3());
     }
 \end{lstlisting}
 
 \subsubsection*{Check Field Values individually}
-For checking field values individually, you can use \lstinline{GEMPIC_TestUtils::checkField}:
+For checking field values individually, you can use \lstinline{GEMPIC_TestUtils::check_field}:
 \begin{lstlisting}
-    void checkField(const char file[], int line,
+    void check_field(const char file[], int line,
                     amrex::Array4<amrex::Real> const& fieldArr,
                     amrex::Dim3 const&& top,
                     std::vector<condLambda>&& condVec,
                     std::vector<amrex::Real>&& checks,
                     amrex::Real defCheck);
 \end{lstlisting}
-The first two arguments are supplied automagically by the \lstinline{#define checkField} macro.
+The first two arguments are supplied automagically by the \lstinline{#define check_field} macro.
 The user supplied arguments are:
 \begin{itemize}
     \item the field array in \lstinline{amrex::Array4} form
@@ -257,7 +257,7 @@ Assuming, for instance, that the only nonzero field values of a multifab \lstinl
 
 \begin{lstlisting}
     for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi) {
-        checkField(mfTmp[mfi].array(), infra.n_cell.dim3(), 
+        check_field(mfTmp[mfi].array(), infra.n_cell.dim3(), 
         // condition vector
                 // First condition: index (<0/1>, 1, 1): should be 10
                 {[] (AMREX_D_DECL(int a, int b, int c)) {return AMREX_D_TERM(a <= 1,

@@ -12,36 +12,36 @@ namespace Profiling
  * Class responsible contains all timers for profiling the code
  */
 
-class timers
+class Timers
 {
 public:
-    bool profiling;
-    amrex::Real counter_deposition;
-    amrex::Real counter_redistribute;
-    amrex::Real counter_jboundary;
-    amrex::Real counter_fields;
-    amrex::Real counter_diagnostics;
-    amrex::Real counter_all;
+    bool m_profiling;
+    amrex::Real m_counterDeposition;
+    amrex::Real m_counterRedistribute;
+    amrex::Real m_counterJboundary;
+    amrex::Real m_counterFields;
+    amrex::Real m_counterDiagnostics;
+    amrex::Real m_counterAll;
 
     // The default constructor.
     /**
      * Default Constructor.
      */
-    timers();
+    Timers();
 
     // Explicit const
     /**
      * Explicit constructor.
      */
-    timers(bool prof)
+    Timers(bool prof)
     {
-        profiling = prof;
-        counter_deposition = 0.;
-        counter_redistribute = 0.;
-        counter_jboundary = 0.;
-        counter_fields = 0.;
-        counter_diagnostics = 0.;
-        counter_all = 0.;
+        m_profiling = prof;
+        m_counterDeposition = 0.;
+        m_counterRedistribute = 0.;
+        m_counterJboundary = 0.;
+        m_counterFields = 0.;
+        m_counterDiagnostics = 0.;
+        m_counterAll = 0.;
     }
 };
 }  // namespace Profiling

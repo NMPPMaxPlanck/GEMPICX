@@ -1,11 +1,13 @@
 #ifndef AMREXTESTENV_H
 #define AMREXTESTENV_H
 
-#include "gtest/gtest.h"
-#include "AMReX.H"
-#include "AMReX_ParmParse.H"
+#include <gtest/gtest.h>
 
-namespace GEMPIC_tests {
+#include <AMReX.H>
+#include <AMReX_ParmParse.H>
+
+namespace GEMPIC_Tests
+{
 
 /** Global setup/teardown test enviroment configuration for unit tests
  * (stolen from AMR_wind)
@@ -27,33 +29,37 @@ public:
 
     ~AmrexTestEnv() override = default;
 
-    void SetUp() override
+    void SetUp () override
     {
-        amrex::Initialize(m_argc, m_argv, true, MPI_COMM_WORLD, []() {
-            amrex::ParmParse pp("amrex");
-            if (!(pp.contains("v") || pp.contains("verbose"))) {
-                pp.add("verbose", -1);
-                pp.add("v", -1);
-            }
+        amrex::Initialize(m_argc, m_argv, true, MPI_COMM_WORLD,
+                          [] ()
+                          {
+                              amrex::ParmParse pp("amrex");
+                              if (!(pp.contains("v") || pp.contains("verbose")))
+                              {
+                                  pp.add("verbose", -1);
+                                  pp.add("v", -1);
+                              }
 
-            pp.add("throw_exception", 1);
-            pp.add("signal_handling", 0);
+                              pp.add("throw_exception", 1);
+                              pp.add("signal_handling", 0);
 
-            // Abort the simulation when we run out of GPU memory
-            // By default, AMReX starts swapping to CPU, which makes runs very slow.
-            // It's more useful to abort and tell the user to request more GPUs or scale
-            // down the simulation.
-            // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
-            bool abort_on_out_of_gpu_memory = true;  // AMReX' default: false
-            pp.queryAdd("abort_on_out_of_gpu_memory", abort_on_out_of_gpu_memory);
-            // Synchronizes CPU (host) memory with GPU (device) memory, which is useful for testing
-            pp.add("the_arena_is_managed", 1);
-        });
+                              // Abort the simulation when we run out of GPU memory
+                              // By default, AMReX starts swapping to CPU, which makes runs very
+                              // slow. It's more useful to abort and tell the user to request more
+                              // GPUs or scale down the simulation.
+                              // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
+                              bool abortOnOutOfGpuMemory = true;  // AMReX' default: false
+                              pp.queryAdd("abort_on_out_of_gpu_memory", abortOnOutOfGpuMemory);
+                              // Synchronizes CPU (host) memory with GPU (device) memory, which is
+                              // useful for testing
+                              pp.add("the_arena_is_managed", 1);
+                          });
 
         // Save managed memory flag for future use
         {
             amrex::ParmParse pp("amrex");
-            pp.query("the_arena_is_managed", m_has_managed_memory);
+            pp.query("the_arena_is_managed", m_hasManagedMemory);
         }
 
         // Call ParmParse::Finalize immediately to allow unit tests to start
@@ -61,26 +67,27 @@ public:
         // behavior through command line arguments.
         {
             amrex::ParmParse pp("utest");
-            bool keep_parameters = false;
-            pp.query("keep_parameters", keep_parameters);
+            bool keepParameters = false;
+            pp.query("keep_parameters", keepParameters);
 
-            if (!keep_parameters) {
+            if (!keepParameters)
+            {
                 amrex::ParmParse::Finalize();
             }
         }
     }
 
-    void TearDown() override { amrex::Finalize(); }
+    void TearDown () override { amrex::Finalize(); }
 
-    bool has_managed_memory() const { return m_has_managed_memory; }
+    bool has_managed_memory () const { return m_hasManagedMemory; }
 
 protected:
     int& m_argc;
     char**& m_argv;
 
-    bool m_has_managed_memory{true};
+    bool m_hasManagedMemory{true};
 };
 
-} // namespace GEMPIC_tests
+}  // namespace GEMPIC_Tests
 
 #endif /* AMREXTESTENV_H */

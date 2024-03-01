@@ -1,0 +1,178 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,urlcolor=cyan]{hyperref}%,linkcolor=green]{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\usepackage{xstring}
+\usepackage{xparse}
+\usepackage{comment}
+\renewcommand{\Affilfont}{\footnotesize}
+
+%\renewcommand{\Authfont}{\normalsize}
+\usepackage{mdframed}
+\newenvironment{important}[1][]{%
+   \begin{mdframed}[%
+      backgroundcolor={red!15}, hidealllines=true,
+      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
+      splitbottomskip=2pt, splittopskip=4pt, #1]%
+   \makebox[0pt]{% ignore the withd of !
+      \smash{% ignor the height of !
+         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
+         \hspace*{-19pt}% move ! to the left
+         \raisebox{-2pt}{% move ! up a little
+            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
+         }%
+      }%
+   }%
+}{\end{mdframed}}
+%\usepackage{algpseudocode}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{lightergray}{gray}{0.95}
+\definecolor{macrocolor}{RGB}{255,145,0}
+\usepackage{expl3}
+
+\ExplSyntaxOn
+
+% compile the expression
+\regex_new:N \l_CPP_uppercase_regex
+%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
+\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
+
+\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
+\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
+
+% a variant that expands the input fully
+\cs_generate_variant:Nn \regex_match:NnTF {NV}
+
+\NewDocumentCommand \ifuppercase { m m }
+{
+    % expand to actual underscore
+    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
+    \tl_set:cn { lst@um_ } { _ }
+    % match the current token
+    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
+    % reset
+    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
+}
+
+\ExplSyntaxOff
+
+
+
+\lstset{language=C++,
+        morekeywords={constexpr},
+        keywordstyle=\color{blue}\bfseries,
+        alsoletter={_},
+        basicstyle=\ttfamily,
+        columns=fullflexible,
+        identifierstyle=\ifuppercase{\color{macrocolor}\bfseries}{},
+        backgroundcolor=\color{lightergray}}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\input{gempic_spectral_macros}
+
+\title{Coding Style and Conventions}
+
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This note describes some style conventions that should be followed in writing the GEMPIC code as well as the usage of the linting and formatting tools \verb|clang-tidy| and \verb|clang-format|.
+\end{abstract}
+
+\tableofcontents
+
+\section{Conventions}
+GEMPIC uses a set of style conventions expanded from \href{https://warpx.readthedocs.io/en/latest/developers/contributing.html#style-and-conventions}{the WarpX project}. The rationale behind some of the conventions are explained there.
+These conventions only apply to source and header files. Checks that cannot be automatically enforced are marked with (*). Everything else could be fixed by running \verb|scripts/sanitize_code.sh|.
+
+\subsection{General conventions}
+\begin{itemize}
+    \item Four spaces for indentation (no tabs)
+    \item <= 100 characters per line
+    \item Spaces around assignment operator (\lstinline{=})
+    \item Spaces after the function name for function definitions, \emph{e.g.} \lstinline{my_function ()}. Note that there should be no such spaces when simply calling or declarating a function.
+    \item Overriding virtual functions are declared without the \lstinline{virtual} keyword but with \lstinline{override} or \lstinline{final}
+    \item Function or class definitions have the starting \verb|{| brace on a new line
+    \item (*) Namespaces follow the outer folder structure, such that code in \verb|src/io/parameters| would be in the scope \lstinline{Gempic::Io}
+    \item (*) \lstinline{#include}s are surrounded by quotation marks (\verb|"..."|) for GEMPIC headers and angular brackets (\verb|<...>|) otherwise
+\end{itemize}
+\subsection{Naming conventions}
+\begin{itemize}
+    \item Names for classes and namespaces are \verb|CamelCase|
+    \item Names for functions, including member functions, are \verb|snake_case|
+    \item Variable names are \verb|camelBack|. Exceptions are single character names optionally followed by \lstinline{x}, \lstinline{y} or \lstinline{z}, \emph{e.g.} \verb|E|, \lstinline{Bx} or \lstinline{Hz}.
+    \item Template variable names are \verb|CamelCase| if they're type names and \verb|camelBack| if not
+    \item Macros are \verb|UPPER_CASE|
+    \item (Non-static) class member variables have the \lstinline{m_} prefix
+    \item Static class variables have the \lstinline{s_} prefix
+    \item (*) File names are prefixed with \verb|GEMPIC| and then in snake case, \emph{e.g.} \verb|GEMPIC_some_module.H|
+\end{itemize}
+Exceptions to these conventions are unavoidable when inheriting from or calling third party libraries, but otherwise they should be followed and will be enforced with automatic tools.
+
+\section{Automatic Linting and Formatting}
+To help enforce the above conventions we use two clang extra tools: \verb|clang-format| and \verb|clang-format|.
+
+\verb|clang-format| is mostly responsible for formatting whitespace: \verb|{| on newlines, spaces around assignment operators, order of \lstinline{#include} statements, indentation, etc. It can be run in seconds.
+
+\verb|clang-tidy| is responsible for semantic style choices: parentheses around macro arguments, no cstyle casting, correct case for variables, functions and classes, etc. It takes minutes to run, with recent versions taking longer.
+
+\begin{important}
+    Unfortunately, these tools still have some bugs. It is therefore recommended not to run them on their own, but instead run the script \verb|scripts/sanitize_code.sh| which speeds up the runtime of \verb|clang-tidy| and attempts to correct mistakes incurred by both tools.
+    To format and lint your code before committing run:
+
+    \verb|source scripts/sanitize_code.sh|\\
+    The formatting should be done with clang-format and clang-tidy version 14 or 17, and preferably after configuring compilation for 3D.
+\end{important}
+If you wish to do only linting or only formatting, uncomment the corresponding line at the end of \verb|script/sanitize_code.sh|. It is, however, not recommended to do only linting, and \verb|clang-format| takes seconds to run, so there should be no need.
+    
+\section*{Frequently Asked Questions}
+\begin{itemize}
+    \item \emph{\ldots why?}
+
+    Clean code is easier to read and debug. Strict style conventions provide a safety net that's hopefully not too restrictive.
+
+    \item \emph{Your style conventions are too restrictive. Can I not just focus on programming?}
+    
+    Sure you can! Just remember to run \verb|scripts/sanitize_code.sh| when you're done (and check that it still compiles and runs).
+
+\end{itemize}
+
+\end{document}

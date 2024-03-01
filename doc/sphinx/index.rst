@@ -29,3 +29,4 @@ Table of Contents
    Forms/Forms
    Particles/Particles
    Forms/link_tests 
+   latex/CodeStyle

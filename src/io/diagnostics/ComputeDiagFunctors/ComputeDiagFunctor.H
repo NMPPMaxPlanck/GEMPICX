@@ -8,32 +8,34 @@
  * \brief Functor to compute a diagnostic and store the result in existing
  * MultiFab
  */
-class
-ComputeDiagFunctor
+class ComputeDiagFunctor
 {
 public:
-    ComputeDiagFunctor( int ncomp, amrex::IntVect crse_ratio) :
-                        m_ncomp(ncomp), m_crse_ratio(crse_ratio) {}
-    //** Virtual Destructor to handle clean destruction of derived classes */
+    ComputeDiagFunctor(int ncomp, amrex::IntVect crseRatio) : m_ncomp(ncomp), m_crseRatio(crseRatio)
+    {
+    }
+    /** Virtual Destructor to handle clean destruction of derived classes */
     virtual ~ComputeDiagFunctor() = default;
-    /** Compute a field and store the result in mf_dst
+    /** Compute a field and store the result in mfDst
      *
-     * \param[out] mf_dst output MultiFab where the result is written
-     * \param[in] dcomp first component of mf_dst in which the result is written
-     *            to the output diagnostic MultiFab, mf_dst.
+     * \param[out] mfDst output MultiFab where the result is written
+     * \param[in] dcomp first component of mfDst in which the result is written
+     *            to the output diagnostic MultiFab, mfDst.
      */
-    virtual void operator() (amrex::MultiFab& mf_dst, int dcomp) const = 0;
+    virtual void operator()(amrex::MultiFab& mfDst, int dcomp) const = 0;
     /** Number of component from the input multifab to write to the output
      * multifab */
-    int nComp () const { return m_ncomp; }
+    int n_comp () const { return m_ncomp; }
 
-    virtual void InitData() {}
+    virtual void init_data () {}
+
 private:
-    /** Number of components of mf_dst that this functor updates. */
+    /** Number of components of mfDst that this functor updates. */
     int m_ncomp;
+
 protected:
     /** Coarsening ratio used to interpolate fields from simulation MultiFabs to output MultiFab. */
-    amrex::IntVect m_crse_ratio;
+    amrex::IntVect m_crseRatio;
 };
 
-#endif // COMPUTEDIAGFUNCTOR_H_
+#endif  // COMPUTEDIAGFUNCTOR_H_

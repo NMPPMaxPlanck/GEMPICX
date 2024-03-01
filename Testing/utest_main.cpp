@@ -3,18 +3,20 @@
  *  Entry point for unit tests
  */
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include "test_utils/AmrexTestEnv.H"
 
 //! Global instance of the environment (for access in tests)
-GEMPIC_tests::AmrexTestEnv* utest_env = nullptr;
+GEMPIC_Tests::AmrexTestEnv* utestEnv = nullptr;
 
-int main(int argc, char* argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  ::testing::InitGoogleMock(&argc, argv);
-  // gtest takes ownership of the TestEnvironment ptr - we don't delete it.
-  auto utest_env = new GEMPIC_tests::AmrexTestEnv(argc, argv);
-  ::testing::AddGlobalTestEnvironment(utest_env);
-  return RUN_ALL_TESTS();
+int main (int argc, char* argv[])
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleMock(&argc, argv);
+    // gtest takes ownership of the TestEnvironment ptr - we don't delete it.
+    auto* utestEnv = new GEMPIC_Tests::AmrexTestEnv(argc, argv);
+    ::testing::AddGlobalTestEnvironment(utestEnv);
+    return RUN_ALL_TESTS();
 }

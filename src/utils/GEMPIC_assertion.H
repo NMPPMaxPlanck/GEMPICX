@@ -1,16 +1,17 @@
 #ifndef GEMPIC_ASSERT_H_
 #define GEMPIC_ASSERT_H_
 
-#include <AMReX.H>
-#include <AMReX_REAL.H>
-#include <GEMPIC_Config.H>
-
 #include <cmath>
 #include <limits>
 
+#include <AMReX.H>
+#include <AMReX_REAL.H>
+
+#include "GEMPIC_Config.H"
+
 namespace Gempic
 {
-void gempic_assert(bool passed, amrex::Real solution, amrex::Real value)
+void gempic_assert (bool passed, amrex::Real solution, amrex::Real value)
 {
     // check absolute error
     bool pass_abs = std::fabs(solution - value) < GEMPIC_CTEST_TOL;
@@ -23,7 +24,7 @@ void gempic_assert(bool passed, amrex::Real solution, amrex::Real value)
     passed = passed && (pass_abs || pass_rel);
 }
 
-void gempic_assert_err(bool &passed, amrex::Real solution, amrex::Real err)
+void gempic_assert_err (bool &passed, amrex::Real solution, amrex::Real err)
 {
     // check absolute error
 

@@ -13,7 +13,8 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
-#include <GEMPIC_Config.H>
+
+#include "GEMPIC_Config.H"
 #include "GEMPIC_parameters.H"
 
 namespace Gempic
@@ -24,118 +25,120 @@ namespace CompDom
  * Class containing all the necessary structures (such as the @p domain and the @p distriMap) and
  * information (such as @p dx and @p n_cell).
  */
-class computational_domain
+class ComputationalDomain
 {
 public:
-    amrex::IntVect n_cell;         // number of cells of the domain. A domain consists of several grids.
-    amrex::IntVect max_grid_size;  // maximum number of cells in tile in each direction. AMReX automagically creates grids to cover the domain and not be bigger than a certain, maximum grid size.
-    amrex::Array<int, GEMPIC_SPACEDIM> is_periodic;
-    amrex::RealBox real_box;  // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
-    amrex::RealVect Length;  // Length of domain in x,y,z directions
-    amrex::BoxArray grid;
-    amrex::Geometry geom;
-    amrex::Box domain;
-    amrex::DistributionMapping distriMap;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> plo;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> phi;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> dxi;  // inverse of dx
+    amrex::IntVect m_nCell;  // number of cells of the domain. A domain consists of several grids.
+    amrex::IntVect m_maxGridSize;  // maximum number of cells in tile in each direction. AMReX
+                                   // automagically creates grids to cover the domain and not be
+                                   // bigger than a certain, maximum grid size.
+    amrex::Array<int, GEMPIC_SPACEDIM> m_isPeriodic;
+    amrex::RealBox m_realBox;  // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
+    amrex::RealVect m_length;  // Length of domain in x,y,z directions
+    amrex::BoxArray m_grid;
+    amrex::Geometry m_geom;
+    amrex::Box m_domain;
+    amrex::DistributionMapping m_distriMap;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_dx;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_plo;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_phi;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> m_dxi;  // inverse of dx
 
-    amrex::Real tolerance_particle;  //
+    amrex::Real m_toleranceParticle;  //
 
-    computational_domain (bool) {}; // bool constructor for deferred specification of domain
+    ComputationalDomain(bool){};  // bool constructor for deferred specification of domain
 
-    computational_domain ()
+    ComputationalDomain()
     {
         BL_PROFILE("computational_domain::computational_domain");
         Parameters params("computational_domain");
         // Initialize infrastructure:
-        //params.get("n_cell_vector", n_cell);
-        //params.get("max_grid_size_vector", max_grid_size);
+        // params.get("n_cell_vector", n_cell);
+        // params.get("max_grid_size_vector", max_grid_size);
         amrex::Vector<int> nCellVector;
         params.get("n_cell_vector", nCellVector);
         amrex::Vector<int> maxGridSizeVector;
         params.get("max_grid_size_vector", maxGridSizeVector);
         for (int i{0}; i < GEMPIC_SPACEDIM; ++i)
         {
-            n_cell[i] = nCellVector[i];
-            max_grid_size[i] = maxGridSizeVector[i];
+            m_nCell[i] = nCellVector[i];
+            m_maxGridSize[i] = maxGridSizeVector[i];
         }
 
-        params.get("is_periodic_vector", is_periodic);
+        params.get("is_periodic_vector", m_isPeriodic);
         // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
         // Probably needs to check that both are not provided for the same direction?
-        amrex::Vector<amrex::Real> domain_lo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        params.getOrSet("domain_lo", domain_lo);
-        amrex::Vector<amrex::Real> domain_hi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        params.get_or_set("domain_lo", domainLo);
+        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
         amrex::Vector<amrex::Real> k;
         // Non-periodic directions exist
-        if (!AMREX_D_TERM(is_periodic[xDir],&& is_periodic[yDir],&& is_periodic[zDir]))
+        if (!AMREX_D_TERM(m_isPeriodic[xDir], &&m_isPeriodic[yDir], &&m_isPeriodic[zDir]))
         {
-            params.getOrSet("domain_hi", domain_hi);
+            params.get_or_set("domain_hi", domainHi);
         }
         // Periodic directions exist
-        if (AMREX_D_TERM(is_periodic[xDir],|| is_periodic[yDir],|| is_periodic[zDir]))
+        if (AMREX_D_TERM(m_isPeriodic[xDir], || m_isPeriodic[yDir], || m_isPeriodic[zDir]))
         {
             // Attempt to use k first
             if (params.exists("k"))
             {
-                if (params.isInInputFile("domain_hi"))
+                if (params.is_in_input_file("domain_hi"))
                 {
                     std::cerr << "Warning: \"domain_hi\" will not be used if \"k\" exists\n";
                 }
                 params.get("k", k);
                 for (int i = 0; i < GEMPIC_SPACEDIM; i++)
                 {
-                    if (is_periodic[i] == 1)
+                    if (m_isPeriodic[i] == 1)
                     {
-                        domain_hi[i] = 2 * M_PI / k[i] + domain_lo[i];
+                        domainHi[i] = 2 * M_PI / k[i] + domainLo[i];
                     }
                 }
             }
             // settle for domain_hi
             else
             {
-                params.getOrSet("domain_hi", domain_hi);
+                params.get_or_set("domain_hi", domainHi);
             }
         }
-        real_box = amrex::RealBox({AMREX_D_DECL(domain_lo[xDir], domain_lo[yDir], domain_lo[zDir])},
-                                  {AMREX_D_DECL(domain_hi[xDir], domain_hi[yDir], domain_hi[zDir])});
+        m_realBox = amrex::RealBox({AMREX_D_DECL(domainLo[xDir], domainLo[yDir], domainLo[zDir])},
+                                   {AMREX_D_DECL(domainHi[xDir], domainHi[yDir], domainHi[zDir])});
 
-        //define the length of the domain
+        // define the length of the domain
         for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
         {
-            Length[cc] = (real_box.hi(cc) - real_box.lo(cc));
+            m_length[cc] = (m_realBox.hi(cc) - m_realBox.lo(cc));
         }
 
-        //lower-boundary of domain
-        amrex::IntVect dom_lo(AMREX_D_DECL(0, 0, 0));
-        domain.setSmall(dom_lo);
+        // lower-boundary of domain
+        amrex::IntVect domLo(AMREX_D_DECL(0, 0, 0));
+        m_domain.setSmall(domLo);
 
-        //higher-boundary of domain
-        amrex::IntVect dom_hi(AMREX_D_DECL(n_cell[xDir] - 1, n_cell[yDir] - 1, n_cell[zDir] - 1));
-        domain.setBig(dom_hi);
+        // higher-boundary of domain
+        amrex::IntVect domHi(AMREX_D_DECL(m_nCell[xDir] - 1, m_nCell[yDir] - 1, m_nCell[zDir] - 1));
+        m_domain.setBig(domHi);
 
-        grid.define(domain);
-        grid.maxSize(max_grid_size);
+        m_grid.define(m_domain);
+        m_grid.maxSize(m_maxGridSize);
 
-        geom.define(domain, real_box, amrex::CoordSys::cartesian, is_periodic);
+        m_geom.define(m_domain, m_realBox, amrex::CoordSys::cartesian, m_isPeriodic);
 
-        //initialize distribution mapping needed to define MultiFabs
-        distriMap.define(grid);
+        // initialize distribution mapping needed to define MultiFabs
+        m_distriMap.define(m_grid);
 
-        dxi[GEMPIC_SPACEDIM] = 1.;
+        m_dxi[GEMPIC_SPACEDIM] = 1.;
         for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
         {
-            dx[cc] = geom.CellSize()[cc];
-            plo[cc] = geom.ProbLo()[cc];
-            phi[cc] = geom.ProbHi()[cc];
-            dxi[cc] = 1.0 / dx[cc];
-            dxi[GEMPIC_SPACEDIM] *= dxi[cc];  // inverse volume
+            m_dx[cc] = m_geom.CellSize()[cc];
+            m_plo[cc] = m_geom.ProbLo()[cc];
+            m_phi[cc] = m_geom.ProbHi()[cc];
+            m_dxi[cc] = 1.0 / m_dx[cc];
+            m_dxi[GEMPIC_SPACEDIM] *= m_dxi[cc];  // inverse volume
         }
 
-        tolerance_particle = 1.e-10;
-        params.getOrSet("tolerance_particle", tolerance_particle);
+        m_toleranceParticle = 1.e-10;
+        params.get_or_set("tolerance_particle", m_toleranceParticle);
     }
 };
 }  // namespace CompDom
