@@ -44,6 +44,8 @@
  * depending on the value of AMREX_SPACEDIM.
  * Chiefly used to define constants that may be lacking in 1D or 2D.
  */
+// Tell clang-tidy that we know what we are doing with this macro:
+// NOLINTBEGIN(bugprone-macro-parentheses)
 #    define GEMPIC_D_EXCL(a, b, c) a b c
 #elif GEMPIC_SPACEDIM==2
 #    define GEMPIC_D_EXCL(a, b, c) b c
@@ -63,6 +65,7 @@
 #elif GEMPIC_SPACEDIM==3
 #   define GEMPIC_D_LOOP_BEGIN(a, b, c) c { b { a { 
 #endif
+// NOLINTEND(bugprone-macro-parentheses)
 
 #if GEMPIC_SPACEDIM==1
 /**
@@ -103,7 +106,7 @@ enum class Field {
 };
 
 template <Field field>
-constexpr Field complementForm() {
+constexpr Field complement_form() {
     switch (field) {
         case Field::PrimalZeroForm:
             return Field::DualThreeForm;

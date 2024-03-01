@@ -129,14 +129,6 @@ The executable simulations/valsov\_maxwell/vlasov\_maxwell generates output. Thi
 time | Ex | Ey | Ez | Bx | By | Bz | kinetic energy | momentumx | momentumy | momentumz| gauss error  
 where the 2-norm has been applied to all the fields. If the simulation is run for dimensions other than 3d3v, then the corresponding components are not part of the output.
 
-
-# Formatting
-The format of the code (identation, spacing, etc.) follows the WarpX conventions, which are automatically done by `clang-format`. To format your code before committing run:
-
-`source scripts/sanitize_code.sh`
-
-The formatting should be done with clang-format version 14.
-
 # Documentation
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
 The documentation is constructed using Sphinx, and its source code can be found in the `gempic/doc/sphinx` folder.
@@ -148,6 +140,3 @@ the existing documentation and needs to check his or her changes.
   - Follow the `script` in the `pages` section of the CI configuration [.gitlab-ci.yml](./.gitlab-ci.yml) to build the documentation
     (Except the last step which publishes the documentation.)
   - The generated HTML files can be found in the `_build/html/` folder. Open `index.html` in your browser to view the documentation.
-
-# Coding style and conventions
-- we follow the [WarpX style convention](https://warpx.readthedocs.io/en/latest/developers/contributing.html#style-and-conventions)

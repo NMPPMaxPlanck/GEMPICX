@@ -5,25 +5,25 @@
  * License: BSD-3-Clause-LBNL
  */
 /*
-* Modified for GEMPICX
-*/
+ * Modified for GEMPICX
+ */
 
 #ifndef REDUCEDDIAGNOSTICS_REDUCEDDIAGNOSTICS_H_
 #define REDUCEDDIAGNOSTICS_REDUCEDDIAGNOSTICS_H_
 
 //#include "Utils/IntervalsParser.H"
-#include <GEMPIC_Fields.H>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <string>
+#include <vector>
 
-#include <AMReX_REAL.H>
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_ParmParse.H>
+#include <AMReX_REAL.H>
 
-#include <string>
-#include <vector>
-#include <fstream>
-#include <iomanip>
-#include <filesystem>
+#include "GEMPIC_Fields.H"
 
 /**
  *  Base class for reduced diagnostics. Each type of reduced diagnostics is
@@ -34,20 +34,19 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degree, int n
 class ReducedDiagnostics
 {
 public:
-
     /// output path (default)
     std::string m_dirName = "reducedDiagnostics";
-    
+
     std::string m_path = m_dirName + "/";
 
     /// output extension (default)
     std::string m_extension = "txt";
 
     /// diags name
-    std::string m_rd_name;
+    std::string m_rdName;
 
     /// check if it is a restart run
-    int m_IsNotRestart = 1;
+    int m_isNotRestart = 1;
 
     /// separator in the output file
     std::string m_sep = " ";
@@ -63,54 +62,55 @@ public:
 
     /**
      * constructor
-     * @param[in] rd_name reduced diags names
+     * @param[in] rdName reduced diags names
      */
-    ReducedDiagnostics (std::string rd_name)
+    ReducedDiagnostics(std::string rdName)
     {
-        m_rd_name = rd_name;
-        //BackwardCompatibility();
+        m_rdName = rdName;
+        // BackwardCompatibility();
 
-        amrex::ParmParse pp_rd_name(m_rd_name);
+        amrex::ParmParse ppRdName(m_rdName);
 
         // read path
         if (!(std::filesystem::exists(m_dirName)))
         {
-        std::filesystem::create_directories(m_dirName);
+            std::filesystem::create_directories(m_dirName);
         }
-        pp_rd_name.query("path", m_path);
+        ppRdName.query("path", m_path);
 
         // read extension
-        pp_rd_name.query("extension", m_extension);
+        ppRdName.query("extension", m_extension);
 
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             // create folder
-            //if (!UtilCreateDirectory(m_path, 0755))
+            // if (!UtilCreateDirectory(m_path, 0755))
             //{ CreateDirectoryFailed(m_path); }
 
             // replace / create output file
-            if ( m_IsNotRestart ) // not a restart
+            if (m_isNotRestart)  // not a restart
             {
-                std::ofstream ofs{m_path+m_rd_name+"."+m_extension, std::ios::trunc};
+                std::ofstream ofs{m_path + m_rdName + "." + m_extension, std::ios::trunc};
                 ofs.close();
             }
         }
-/*
-        // read separator
-        pp_rd_name.query("separator", m_sep);
-*/    }
+        /*
+                // read separator
+                pp_rd_name.query("separator", m_sep);
+        */
+    }
     // end constructor
 
     /**
      * Virtual destructor for polymorphism
      */
-    virtual ~ReducedDiagnostics () = default;
+    virtual ~ReducedDiagnostics() = default;
 
     /**
      * function to initialize data after amr
      * levels are initialized.
      */
-    virtual void InitData (std::shared_ptr<GEMPIC_Fields::DeRhamComplex> drc, bool cmf)
+    virtual void init_data (std::shared_ptr<GEMPIC_Fields::DeRhamComplex> drc, bool cmf)
     {
         m_deRham = drc;
         m_computeMissingFields = cmf;
@@ -118,22 +118,25 @@ public:
 
     /** Redistribute parallel data structures during load balance
      */
-    virtual void LoadBalance (){}
+    virtual void load_balance () {}
 
     /**
      * function to compute diags
      */
-    virtual void ComputeDiags (Gempic::CompDom::computational_domain& infra, std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics, 
-                        amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec> &part_gr) = 0;
+    virtual void compute_diags(
+        Gempic::CompDom::ComputationalDomain& infra,
+        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+        amrex::GpuArray<std::shared_ptr<Gempic::Particles::ParticleGroups<vdim, ndata>>, numspec>&
+            partGr) = 0;
 
     /**
      * write to file function
      */
-    virtual void WriteToFile (amrex::Real dt, int step) const
+    virtual void write_to_file (amrex::Real dt, int step) const
     {
         // open file
-        std::ofstream ofs{m_path + m_rd_name + "." + m_extension,
-        std::ofstream::out | std::ofstream::app};
+        std::ofstream ofs{m_path + m_rdName + "." + m_extension,
+                          std::ofstream::out | std::ofstream::app};
 
         // write step
         ofs << step;

@@ -1,8 +1,35 @@
-﻿---
+﻿# General 
 BasedOnStyle: Google
 AccessModifierOffset: '-4'
 BreakBeforeBraces: Allman
 BreakConstructorInitializers: AfterColon
 ColumnLimit: 100
 IndentWidth: '4'
----
+
+# Specific
+MacroBlockBegin: "^GEMPIC_D_LOOP_BEGIN"
+MacroBlockEnd: "^GEMPIC_D_LOOP_END$"
+# LambdaBodyIndentation: OuterScope
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: true
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: true
+  AfterFunctionDefinitionName: true
+# Don't fix spacing in the beginning of line comments
+SpacesInLineCommentPrefix:
+  Minimum: 0
+  Maximum: -1
+# Sorting order for includes: 1) GEMPIC(X), 2) AMReX, 3) other third party libraries, 4) std library
+IncludeBlocks: Regroup
+IncludeIsMainRegex: "TreatNothingAsMain"
+#  - Regex:          '\\".*\\"'
+IncludeCategories:
+  - Regex:          '".*"'
+    Priority:       9
+  - Regex:          '^<AMReX'
+    Priority:       8
+  - Regex:          '^((<|")(gtest|gmock)/?)'
+    Priority:       3
+  - Regex:          '^<[a-z0-9_]*'
+    Priority:       1

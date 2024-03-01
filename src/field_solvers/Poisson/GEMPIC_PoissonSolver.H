@@ -2,19 +2,19 @@
 #define GEMPIC_POISSONSOLVER_H_
 
 #include <AMReX.H>
-#include <AMReX_Print.H>
 #include <AMReX_MFIter.H>
 #include <AMReX_MLEBNodeFDLaplacian.H>
 #include <AMReX_MLMG.H>
 #include <AMReX_MLNodeLaplacian.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_FDDeRhamComplex.H>
-#include <GEMPIC_Fields.H>
+
+#include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_Fields.H"
 
 namespace GEMPIC_PoissonSolver
 {
-    using Grid = GEMPIC_FDDeRhamComplex::Grid;
-    using Space = GEMPIC_FDDeRhamComplex::Space;
+using Grid = GEMPIC_FDDeRhamComplex::Grid;
+using Space = GEMPIC_FDDeRhamComplex::Space;
 
 class PoissonSolver
 {
@@ -37,15 +37,19 @@ public:
     PoissonSolver(std::shared_ptr<GEMPIC_Fields::DeRhamComplex> deRham);
 
     ~PoissonSolver();
- 
-    void solve(const Gempic::CompDom::computational_domain& infra, GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& rho, 
-    GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::node>& phi);
 
-    void subtractConstantPart(const Gempic::CompDom::computational_domain& infra, GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& rho, const int nGhost);
+    void solve(const Gempic::CompDom::ComputationalDomain& infra,
+               GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& rho,
+               GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::node>& phi);
+
+    void subtract_constant_part(const Gempic::CompDom::ComputationalDomain& infra,
+                                GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& rho,
+                                const int nGhost);
 
     template <int hodgeDegree, GEMPIC_FDDeRhamComplex::HodgeScheme hodgeScheme>
-    void solveHodgeCG(GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::edge> primalEdgeField,
-                      GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::face> dualFaceField)
+    void solve_hodge_cg (
+        GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::edge> primalEdgeField,
+        GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::face> dualFaceField)
     {
         //    DeRhamField<Grid::primal, Space::edge> residual(deRham);  //, d(m_deRham),
         //    z(m_deRham);
@@ -71,15 +75,16 @@ public:
     }
 
     template <int hodgeDegree, GEMPIC_FDDeRhamComplex::HodgeScheme hodgeScheme>
-    void applyPoissonOperator(Gempic::CompDom::computational_domain compDom,
-                              GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& dualCellOut,
-                              GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::node>& primalNodeIn)
+    void apply_poisson_operator (
+        Gempic::CompDom::ComputationalDomain compDom,
+        GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::cell>& dualCellOut,
+        GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::node>& primalNodeIn)
     {
-        auto deRham{primalNodeIn.deRham};
+        auto deRham{primalNodeIn.m_deRham};
         GEMPIC_FDDeRhamComplex::DeRhamField<Grid::primal, Space::edge> tempPrimalEdge(deRham);
         GEMPIC_FDDeRhamComplex::DeRhamField<Grid::dual, Space::face> tempDualFace(deRham);
         deRham->grad(primalNodeIn, tempPrimalEdge);
-        solveHodgeCG<hodgeDegree, hodgeScheme>(tempPrimalEdge, tempDualFace);
+        solve_hodge_cg<hodgeDegree, hodgeScheme>(tempPrimalEdge, tempDualFace);
         deRham->div(tempDualFace, dualCellOut);
     }
 };

@@ -15,77 +15,80 @@
 #include "GEMPIC_Verbosity.H"
 
 // utility functions for this class
-namespace Gempic::Impl::Params {
-// Exhaustive list of parameter types possible to get from ParmParse (except for IntVect, because that's broken)
-using parmParseParameterType = std::variant<bool, int, long, long long, float, double, std::string, amrex::Box>;
+namespace Gempic::Impl::Params
+{
+// Exhaustive list of parameter types possible to get from ParmParse (except for IntVect, because
+// that's broken)
+using parmParseParameterType =
+    std::variant<bool, int, long, long long, float, double, std::string, amrex::Box>;
 using parmParseVectorType = std::vector<parmParseParameterType>;
 using parmParseArrayType = std::array<parmParseParameterType, GEMPIC_SPACEDIM>;
 using parmParseType = std::variant<parmParseParameterType, parmParseVectorType, parmParseArrayType>;
 
 /**
  * @brief Overload parmParseType printing
- * 
-*/
+ *
+ */
 std::ostream& operator<<(std::ostream& os, const parmParseType& val);
 
 std::ostream& operator<<(std::ostream& os, const parmParseParameterType& val);
 /**
  * @brief Overload parameter vector printing
-*/
+ */
 std::ostream& operator<<(std::ostream& os, const parmParseVectorType& inputVector);
 
 /**
  * @brief Overload parameter array printing
-*/
+ */
 std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray);
 
 /**
  * @brief Setter function from arbitrary value to shared parameter map
- * 
+ *
  * @param sharedParam : Shared parameter to be set
  * @param value : Value of the parameter
-*/
+ */
 template <typename T>
-void setSharedParam (parmParseType& sharedParam, const T& value)
+void set_shared_param (parmParseType& sharedParam, const T& value)
 {
     sharedParam = value;
 }
 
 /**
  * @brief Setter function from arbitrary vector to shared parameter map
- * 
+ *
  * @param sharedParam : Shared parameter to be set
  * @param value : Values of the parameter
-*/
+ */
 template <typename T>
-void setSharedParam (parmParseType& sharedParam, const std::vector<T>& value)
+void set_shared_param (parmParseType& sharedParam, const std::vector<T>& value)
 {
     sharedParam = parmParseVectorType(value.begin(), value.end());
 }
 
 /**
  * @brief Setter function from arbitrary amrex::Vector to shared parameter map
- * 
+ *
  * @param sharedParam : Shared parameter to be set
  * @param value : Values of the parameter
-*/
+ */
 template <typename T>
-void setSharedParam (parmParseType& sharedParam, const amrex::Vector<T>& value)
+void set_shared_param (parmParseType& sharedParam, const amrex::Vector<T>& value)
 {
     sharedParam = parmParseVectorType(value.begin(), value.end());
 }
 
 /**
  * @brief Setter function from arbitrary array to shared parameter map
- * 
+ *
  * @param sharedParam : Shared parameter to be set
  * @param value : Values of the parameter
-*/
+ */
 template <typename T>
-void setSharedParam (parmParseType& sharedParam, const std::array<T, GEMPIC_SPACEDIM>& value)
+void set_shared_param (parmParseType& sharedParam, const std::array<T, GEMPIC_SPACEDIM>& value)
 {
     parmParseArrayType tmp;
-    auto tmpIt{tmp.begin()};
+    auto* tmpIt{tmp.begin()};
     for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
     {
         *tmpIt = value[i];
@@ -95,26 +98,26 @@ void setSharedParam (parmParseType& sharedParam, const std::array<T, GEMPIC_SPAC
 }
 
 /**
- * @brief Getter function from shared parameter map to arbitrary value 
- * 
+ * @brief Getter function from shared parameter map to arbitrary value
+ *
  * @param variable : variable to be set
  * @param sharedParam : Shared parameter to load
-*/
+ */
 template <typename T>
-void getSharedParam (T& variable, const parmParseType& sharedParam)
+void get_shared_param (T& variable, const parmParseType& sharedParam)
 {
     auto tmp = std::get<parmParseParameterType>(sharedParam);
     variable = std::get<T>(tmp);
 }
 
 /**
- * @brief Getter function from shared parameter map to arbitrary vector 
- * 
+ * @brief Getter function from shared parameter map to arbitrary vector
+ *
  * @param variable : vector to be set
  * @param sharedParam : Shared parameter to load
-*/
+ */
 template <typename T>
-void getSharedParam (std::vector<T>& variable, const parmParseType& sharedParam)
+void get_shared_param (std::vector<T>& variable, const parmParseType& sharedParam)
 {
     auto tmp = std::get<parmParseVectorType>(sharedParam);
     variable.resize(tmp.size());
@@ -125,13 +128,13 @@ void getSharedParam (std::vector<T>& variable, const parmParseType& sharedParam)
 }
 
 /**
- * @brief Getter function from shared parameter map to arbitrary amrex::Vector 
- * 
+ * @brief Getter function from shared parameter map to arbitrary amrex::Vector
+ *
  * @param variable : amrex::Vector to be set
  * @param sharedParam : Shared parameter to load
-*/
+ */
 template <typename T>
-void getSharedParam (amrex::Vector<T>& variable, const parmParseType& sharedParam)
+void get_shared_param (amrex::Vector<T>& variable, const parmParseType& sharedParam)
 {
     auto tmp = std::get<parmParseVectorType>(sharedParam);
     variable.resize(tmp.size());
@@ -143,12 +146,12 @@ void getSharedParam (amrex::Vector<T>& variable, const parmParseType& sharedPara
 
 /**
  * @brief Getter function from shared parameter map to arbitrary array
- * 
+ *
  * @param variable : array to be set
  * @param sharedParam : Shared parameter to load
-*/
+ */
 template <typename T>
-void getSharedParam (std::array<T, GEMPIC_SPACEDIM>& variable, const parmParseType& sharedParam)
+void get_shared_param (std::array<T, GEMPIC_SPACEDIM>& variable, const parmParseType& sharedParam)
 {
     auto tmp = std::get<parmParseArrayType>(sharedParam);
     for (size_t i{0}; i < GEMPIC_SPACEDIM; i++)
@@ -159,45 +162,46 @@ void getSharedParam (std::array<T, GEMPIC_SPACEDIM>& variable, const parmParseTy
 
 /**
  * @brief convert to parmParseType
- * 
+ *
  * Description:
  * Convenience function that converts to parmParseType in order to print correctly to output file
- * 
+ *
  * @param variable : Parameter to print
-*/
+ */
 template <typename T>
-parmParseType convertToParam (T variable)
+parmParseType convert_to_param (T variable)
 {
     parmParseType parameterVariable;
-    setSharedParam(parameterVariable, variable);
+    set_shared_param(parameterVariable, variable);
     return parameterVariable;
 }
-} // namespace Gempic::Impl::Params
+}  // namespace Gempic::Impl::Params
 
 /**
  * @brief Objects of this class will mediate the information on and loading of parameters
- * 
+ *
  * Description:
  * There are two types of objects of this class: Main parameter objects and class parameter objects
- * 
- * Main parameter objects are set at the outer scope and initialized with a value of true or false 
+ *
+ * Main parameter objects are set at the outer scope and initialized with a value of true or false
  * to turn printing of parameters used on or off, respectively:
  * Parameters params{true}; // printing parameters
  * Subsequent calls to main parameter initializer cannot change printing behaviour, but will simply
  * act like un-prefixed class parameter objects
- * 
+ *
  * Class parameter objects are initialized inside class initialization methods and called with a
  * class prefix:
  * Parameters params{"class_abc"}; // lets you load scoped parameters related to class_abc
- * 
-*/
-class Parameters {
-    private:
+ *
+ */
+class Parameters
+{
+private:
     /**
      * @brief Is this process an IO_Process?
      */
     bool m_isIOProcess;
-    
+
     /**
      * @brief Dirty instance counter for construction and destruction logic purposes
      */
@@ -225,15 +229,16 @@ class Parameters {
 
     /**
      * @brief Structure of a shared parameter
-     * 
+     *
      * @param ref : Direct reference to parameter value
      * @param isSet : Has this parameter been set already?
      * @param setBy : Which class or input file set this parameter?
      */
-    struct SharedParam {
-        Gempic::Impl::Params::parmParseType ref;
-        bool isSet{false};
-        std::string setBy{"not used"};
+    struct SharedParam
+    {
+        Gempic::Impl::Params::parmParseType m_ref;
+        bool m_isSet{false};
+        std::string m_setBy{"not used"};
     };
 
     /**
@@ -243,46 +248,48 @@ class Parameters {
 
     /**
      * @brief Construct the shared parameters map. Used once.
-     * 
+     *
      * @param sharedParamNames : List of names of all shared parameters
      */
-    static const std::map<std::string, std::unique_ptr<SharedParam>> initSharedParameters (const std::vector<std::string>& sharedParamNames)
+    static const std::map<std::string, std::unique_ptr<SharedParam>> init_shared_parameters (
+        const std::vector<std::string>& sharedParamNames)
     {
-         std::map<std::string, std::unique_ptr<SharedParam>> m;
-         for (auto sharedParamName : sharedParamNames)
-         {
-             m.insert(std::make_pair(sharedParamName, std::make_unique<SharedParam>()));
-         }
+        std::map<std::string, std::unique_ptr<SharedParam>> m;
+        for (auto sharedParamName : sharedParamNames)
+        {
+            m.insert(std::make_pair(sharedParamName, std::make_unique<SharedParam>()));
+        }
         return m;
     }
 
     /**
      * @brief Parameters needed by two or more classes. The names of all shared parameters go here
      */
-    inline static const auto s_sharedParams = initSharedParameters({
-            "output_file",
-            "sim_name",
-            "n_ghost",
-            "n_ghost_extra",
-            "n_cell_vector",
-            "max_grid_size_vector",
-            "is_periodic_vector",
-            "k",
-            "domain_lo",
-            "domain_hi",});
+    inline static const auto s_sharedParams = init_shared_parameters({
+        "output_file",
+        "sim_name",
+        "n_ghost",
+        "n_ghost_extra",
+        "n_cell_vector",
+        "max_grid_size_vector",
+        "is_periodic_vector",
+        "k",
+        "domain_lo",
+        "domain_hi",
+    });
 
-    public:
+public:
     /**
      * @brief set the print behavior of parameters. Without calling this function, print behavior
      * is turned off by default.
-     * 
-     * Calls to this function after the first parameters class has been initialized aborts 
+     *
+     * Calls to this function after the first parameters class has been initialized aborts
      * simulation
-     * 
+     *
      * @param printOrNot : To print or not to print
-     * 
+     *
      */
-    static void setPrintOutput(bool printOrNot = true);
+    static void set_print_output(bool printOrNot = true);
 
     /**
      * @brief Main parameter initializer. Unprefixed input file scope.
@@ -301,37 +308,38 @@ class Parameters {
 
     // Delete other default methods
     Parameters(Parameters const& rhs) = delete;             // copy constructor
-    Parameters (Parameters && rhs) = delete;                // move constructor
-    Parameters& operator= (const Parameters& rhs) = delete; // copy assignment
-    Parameters& operator= (Parameters&& rhs) = delete;      // move assignment
+    Parameters(Parameters&& rhs) = delete;                  // move constructor
+    Parameters& operator=(const Parameters& rhs) = delete;  // copy assignment
+    Parameters& operator=(Parameters&& rhs) = delete;       // move assignment
 
     /**
-     * @brief Get variable if it was previously set or exists in input file. Otherwise, set it. Prefer getOrSet over set unless it is vital that the variable is set from here.
+     * @brief Get variable if it was previously set or exists in input file. Otherwise, set it.
+     * Prefer getOrSet over set unless it is vital that the variable is set from here.
      *
      * This is technically doing double work. It shouldn't be a problem.
      *
      * @tparam T : type of the variable. Automatically intuited
-     * 
+     *
      * @param variableName : Name of the variable. Should match a name in the input file
      * @param variable : variable to be loaded/saved
-     * 
+     *
      * @return variableWasSet : whether variable was set or not
      */
     template <typename T>
-    bool getOrSet (const std::string& variableName, T& variable)
+    bool get_or_set (const std::string& variableName, T& variable)
     {
         // Check if variable is a shared parameter ('.contains' is c++20).
-        auto search{s_sharedParams.find(variableName)}; 
+        auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
         {
-            // Get existing shared parameter 
-            if (search->second.get()->isSet)
+            // Get existing shared parameter
+            if (search->second.get()->m_isSet)
             {
                 get(variableName, variable);
                 return false;
             }
             // Get parameter that exists in input file
-            else if (queryShared(variableName, variable))
+            else if (query_shared(variableName, variable))
             {
                 get(variableName, variable);
                 return false;
@@ -353,34 +361,36 @@ class Parameters {
      * @brief Get variable if it was previously set or exists in input file. Else, abort simulation
      *
      * @tparam T : type of the variable. Automatically intuited
-     * 
+     *
      * @param variableName : Name of the variable. Should match a name in the input file
      * @param variable : variable to be loaded
      */
     template <typename T>
     void get (const std::string& variableName, T& variable)
     {
-        using namespace Gempic::Impl::Params; // utility functions for this class
+        using namespace Gempic::Impl::Params;  // utility functions for this class
         // Check if variable is a shared parameter (contains is c++20).
-        auto search{s_sharedParams.find(variableName)}; 
+        auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
         {
-            if (search->second.get()->isSet)
+            if (search->second.get()->m_isSet)
             {
-                getSharedParam(variable, search->second.get()->ref);
+                get_shared_param(variable, search->second.get()->m_ref);
             }
-            else if (queryShared(variableName, variable))
+            else if (query_shared(variableName, variable))
             {
-                setSharedParam(search->second.get()->ref, variable); //Trouble w/ uncopyable parameters?
-                search->second.get()->isSet = true;
-                search->second.get()->setBy = "read from file";
+                set_shared_param(search->second.get()->m_ref,
+                                 variable);  // Trouble w/ uncopyable parameters?
+                search->second.get()->m_isSet = true;
+                search->second.get()->m_setBy = "read from file";
             }
             else
             {
                 std::cerr << "Error: Parameter " << variableName << " not in input file!";
                 exit(Error::InvalidInput);
             }
-            m_classOutput << variableName << " = " << convertToParam(variable) << " # " << search->second.get()->setBy <<'\n';
+            m_classOutput << variableName << " = " << convert_to_param(variable) << " # "
+                          << search->second.get()->m_setBy << '\n';
         }
         // local parameter
         else
@@ -389,100 +399,105 @@ class Parameters {
             std::string prefixDot{m_classPrefix.empty() ? m_classPrefix : m_classPrefix + "."};
             if (!query(variableName, variable))
             {
-                std::cerr << "Error: Parameter " << prefixDot << variableName << " not in input file!";
+                std::cerr << "Error: Parameter " << prefixDot << variableName
+                          << " not in input file!";
                 exit(Error::InvalidInput);
             }
-            m_classOutput << prefixDot << variableName << " = " << convertToParam(variable) << "\n";
+            m_classOutput << prefixDot << variableName << " = " << convert_to_param(variable)
+                          << "\n";
         }
         return;
     }
- 
+
     /**
-     * @brief Set variable if it was not previously set or loaded from input file. Else, abort simulation. Prefer getOrSet unless it is vital that the variable is set from here.
+     * @brief Set variable if it was not previously set or loaded from input file. Else, abort
+     * simulation. Prefer getOrSet unless it is vital that the variable is set from here.
      *
      * @tparam T : type of the variable. Automatically intuited
-     * 
+     *
      * @param variableName : Name of the variable. Should match a name in the input file
      * @param variable : variable to be saved
      */
     template <typename T>
     void set (const std::string& variableName, T& variable)
     {
-        using namespace Gempic::Impl::Params; // utility functions for this class
+        using namespace Gempic::Impl::Params;  // utility functions for this class
         // Check if variable is a shared parameter (contains is c++20).
-        auto search{s_sharedParams.find(variableName)}; 
+        auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
         {
             // variable is already set!
-            if (search->second.get()->isSet)
+            if (search->second.get()->m_isSet)
             {
-                std::cerr << "Error: " << m_className << " attempted to set parameter " << variableName << " already " << search->second.get()->setBy;
+                std::cerr << "Error: " << m_className << " attempted to set parameter "
+                          << variableName << " already " << search->second.get()->m_setBy;
                 exit(Error::AttemptedParameterChange);
             }
             else
             {
-                setSharedParam(search->second.get()->ref, variable);
-                search->second.get()->isSet = true;
-                search->second.get()->setBy = "set by " + m_className;
+                set_shared_param(search->second.get()->m_ref, variable);
+                search->second.get()->m_isSet = true;
+                search->second.get()->m_setBy = "set by " + m_className;
             }
-            m_classOutput << variableName << " = " << convertToParam(variable) << " # set here\n";
-
+            m_classOutput << variableName << " = " << convert_to_param(variable) << " # set here\n";
         }
         else
         {
             // Update output
-            m_classOutput << m_classPrefix << "." << variableName << " = " << convertToParam(variable) << '\n';
+            m_classOutput << m_classPrefix << "." << variableName << " = "
+                          << convert_to_param(variable) << '\n';
         }
         if (Gempic::Utils::Verbosity::level() > 0)
         {
-            std::cerr << "Variable" << variableName << " = " << convertToParam(variable) << " set by default in " << m_className << "\n";
+            std::cerr << "Variable" << variableName << " = " << convert_to_param(variable)
+                      << " set by default in " << m_className << "\n";
         }
         return;
     }
-    
+
     /**
      * @brief Print class parameters. Automatically called by destructor.
-     * 
+     *
      * Description:
      * Prints class related parameter information to s_outputFile if s_printOutput is set.
      */
-    void printClassParameters();
+    void print_class_parameters();
 
     /**
      * @brief Print shared parameters. Automatically called by destructor.
-     * 
+     *
      * Description:
      * Prints shared parameters used in the simulation to s_outputFile if s_printOutput is set.
      */
-    void printSharedParameters();
+    void print_shared_parameters();
 
     /**
      * @brief Does variable exist, either set in shared parameters or in input file?
-     * 
+     *
      * Description: Prefer to use getOrSet instead of implementing logic based on this return value
-    */
+     */
     bool exists(const std::string& variableName);
 
     /**
      * @brief is variable in input file?
-     * 
+     *
      * Description: This function should not be used except when debugging. Prefer to use getOrSet
      * instead of implementing logic based on this return value.
-    */
-    bool isInInputFile(const std::string& variableName);
+     */
+    bool is_in_input_file(const std::string& variableName);
 
     /**
      * @brief Has shared parameter been set? Where?
-     * 
+     *
      * Description: This function should not be used except when debugging. Prefer to use getOrSet
      * instead of implementing logic based on this return value.
-    */
-    std::string hasBeenSetBy(const std::string& variableName);
+     */
+    std::string has_been_set_by(const std::string& variableName);
 
-    private:
+private:
     /**
      * @brief query local parameters
-     * 
+     *
      * @param variableName : Name of the parameter to be queried
      * @param value : Reference to write potentially loaded value to
      */
@@ -495,12 +510,12 @@ class Parameters {
 
     /**
      * @brief query local vector parameters
-     * 
+     *
      * @param variableName : Name of the parameter to be queried
      * @param value : Reference to write potentially loaded value to
-     * 
+     *
      * @todo amrex::ParmParse has no inherent size check. Alternatively, call queryarr with
-     * (name, variable, startIndex, endIndex)? 
+     * (name, variable, startIndex, endIndex)?
      */
     template <typename T>
     bool query (std::string variableName, std::vector<T>& value)
@@ -511,7 +526,7 @@ class Parameters {
 
     /**
      * @brief query local amrex::Vector parameters
-     * 
+     *
      * @param variableName : Name of the parameter to be queried
      * @param value : Reference to write potentially loaded value to
      */
@@ -524,12 +539,12 @@ class Parameters {
 
     /**
      * @brief query shared parameters
-     * 
+     *
      * @param variableName : Name of the parameter to be queried
      * @param value : Reference to write potentially loaded value to
      */
     template <typename T>
-    bool queryShared (std::string variableName, T& value)
+    bool query_shared (std::string variableName, T& value)
     {
         amrex::ParmParse pp;
         return pp.query(variableName.c_str(), value);
@@ -537,12 +552,12 @@ class Parameters {
 
     /**
      * @brief query shared vector parameters
-     * 
+     *
      * @param variableName : Name of the parameter to be queried
      * @param value : Reference to write potentially loaded value to
      */
     template <typename T>
-    bool queryShared (std::string variableName, std::vector<T>& value)
+    bool query_shared (std::string variableName, std::vector<T>& value)
     {
         amrex::ParmParse pp;
         return pp.queryarr(variableName.c_str(), value);
@@ -550,12 +565,12 @@ class Parameters {
 
     /**
      * @brief query shared amrex::Vector parameters
-     * 
+     *
      * @param variableName : Name of the parameter to be queried
      * @param value : Reference to write potentially loaded value to
      */
     template <typename T>
-    bool queryShared (std::string variableName, amrex::Vector<T>& value)
+    bool query_shared (std::string variableName, amrex::Vector<T>& value)
     {
         amrex::ParmParse pp;
         return pp.queryarr(variableName.c_str(), value);
@@ -563,26 +578,27 @@ class Parameters {
 
     /**
      * @brief print shared parameter
-     * 
+     *
      * Description:
      * Convenience function to differentiate between shared parameters that have been set and those
      * that have not
-     * 
+     *
      * @param ofs : Output file stream
      * @param variableName : Name of the parameter to be printed
      * @param variable : Reference to the value of the parameter
      */
     template <typename T>
-    void printSharedParameter (std::ofstream& ofs, std::string variableName, T& variable)
+    void print_shared_parameter (std::ofstream& ofs, std::string variableName, T& variable)
     {
-        using namespace Gempic::Impl::Params; // utility functions for this class
-        if (s_sharedParams.at(variableName).get()->isSet)
+        using namespace Gempic::Impl::Params;  // utility functions for this class
+        if (s_sharedParams.at(variableName).get()->m_isSet)
         {
-            ofs << variableName << " " << convertToParam(variable) << " # " << s_sharedParams.at(variableName).get()->setBy << '\n'; 
+            ofs << variableName << " " << convertToParam(variable) << " # "
+                << s_sharedParams.at(variableName).get()->m_setBy << '\n';
         }
         else
         {
-            ofs << variableName << " # " << s_sharedParams.at(variableName).get()->setBy << '\n';
+            ofs << variableName << " # " << s_sharedParams.at(variableName).get()->m_setBy << '\n';
         }
     }
 };

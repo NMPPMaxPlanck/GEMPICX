@@ -6,20 +6,21 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_Config.H>
-#include <GEMPIC_FDDeRhamComplex.H>
-#include <GEMPIC_PlotFile.H>
-#include <GEMPIC_loop_preparation.H>
-#include <GEMPIC_parameters.H>
-#include <GEMPIC_particle_groups.H>
-#include <GEMPIC_sampler.H>
-#include <GEMPIC_time_loop_boris_fd.H>
-#include <GEMPIC_time_loop_hs_fem.H>
-#include <GEMPIC_time_loop_hs_zigzag_C2.H>
-#include <GEMPIC_time_loop_hsall_fem.H>
-#include <GEMPIC_time_loop_ls_rungekutta.H>
-#include <GEMPIC_time_loop_particles.H>
-#include <MultiReducedDiagnostics.H>
+
+#include "GEMPIC_Config.H"
+#include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_PlotFile.H"
+#include "GEMPIC_loop_preparation.H"
+#include "GEMPIC_parameters.H"
+#include "GEMPIC_particle_groups.H"
+#include "GEMPIC_sampler.H"
+#include "GEMPIC_time_loop_boris_fd.H"
+#include "GEMPIC_time_loop_hs_fem.H"
+#include "GEMPIC_time_loop_hs_zigzag_C2.H"
+#include "GEMPIC_time_loop_hsall_fem.H"
+#include "GEMPIC_time_loop_ls_rungekutta.H"
+#include "GEMPIC_time_loop_particles.H"
+#include "MultiReducedDiagnostics.H"
 
 using namespace amrex;
 using namespace Gempic;
@@ -32,15 +33,24 @@ using namespace Sampling;
 using namespace Time_Loop;
 using namespace Vlasov_Maxwell;
 
-AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function(amrex::Real x, amrex::Real y,
-                                                                amrex::Real z, amrex::Real t)
+AMREX_GPU_HOST_DEVICE AMREX_NO_INLINE amrex::Real wave_function (amrex::Real x,
+                                                                 amrex::Real y,
+                                                                 amrex::Real z,
+                                                                 amrex::Real t)
 {
     amrex::Real val = 1.0;  //+ 0.5 * std::cos(0.5 * x);
     return val;
 }
 
-template <int vdim, int numspec, int degx, int degy, int degz, int degvm,
-          bool electromagnetic = true, bool output = true, int ndata = 1>
+template <int vdim,
+          int numspec,
+          int degx,
+          int degy,
+          int degz,
+          int degvm,
+          bool electromagnetic = true,
+          bool output = true,
+          int ndata = 1>
 class vlasov_maxwell_simulation
 {
 public:
@@ -53,7 +63,7 @@ public:
     bool readinfile = false;
     bool ctest = false;
 
-    void initialize_vlasov_maxwell_from_file()
+    void initialize_vlasov_maxwell_from_file ()
     {
         BL_PROFILE("vlasov_maxwell_simulation::initialize_vlasov_maxwell_from_file");
 
@@ -64,8 +74,8 @@ public:
         initialize_gempic_structures();
     }
 
-    void initialize_gempic_structures(amrex::GpuArray<int, 2> funcSelectRho,
-                                      amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB)
+    void initialize_gempic_structures (amrex::GpuArray<int, 2> funcSelectRho,
+                                       amrex::GpuArray<int, int(vdim / 2.5) * 2 + 1> funcSelectB)
     {
         BL_PROFILE("vlasov_maxwell_simulation::initialize_gempic_structures(args)");
         auto start = std::chrono::high_resolution_clock::now();
@@ -125,7 +135,7 @@ public:
                        << " s" << std::endl;
     }
 
-    void initialize_gempic_structures()
+    void initialize_gempic_structures ()
     {
         BL_PROFILE("vlasov_maxwell_simulation::initialize_gempic_structures");
         auto start = std::chrono::high_resolution_clock::now();
@@ -203,7 +213,7 @@ public:
                        << std::endl;
     }
 
-    void run_time_loop()
+    void run_time_loop ()
     {
         BL_PROFILE("vlasov_maxwell_simulation::run_time_loop");
 

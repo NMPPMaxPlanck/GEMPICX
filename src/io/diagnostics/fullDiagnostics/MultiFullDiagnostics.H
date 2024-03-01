@@ -1,16 +1,16 @@
 #ifndef GEMPICX_MULTIDIAGNOSTICS_H_
 #define GEMPICX_MULTIDIAGNOSTICS_H_
 
-#include "FullDiagnostics.H"
-
-#include <AMReX_Vector.H>
-#include <AMReX.H>
-#include <AMReX_REAL.H>
-
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <AMReX.H>
+#include <AMReX_REAL.H>
+#include <AMReX_Vector.H>
+
+#include "FullDiagnostics.H"
 
 /**
  * \brief This class contains a vector of all full diagnostics in the simulation.
@@ -20,70 +20,80 @@ template <int vdim, int numspec, int ndata>
 class MultiDiagnostics
 {
 public:
-    MultiDiagnostics (amrex::Real dt)
+    MultiDiagnostics(amrex::Real dt)
     {
-        ReadParameters();
+        read_parameters();
         /** Resize alldiags and initialize each element to a pointer to a
          * diagnostics. Calls the corresponding diagnostics constructor.
          */
 
-        //diags_names = {"part", "field"}; //default for testing
-        ndiags = static_cast<int>(diags_names.size());
-        alldiags.resize( ndiags );
-        for (int i=0; i<ndiags; i++){
-            alldiags[i] = std::make_unique<FullDiagnostics<vdim, numspec, ndata>>(i, diags_names[i], dt, m_default_save_interval);
+        // diags_names = {"part", "field"}; //default for testing
+        m_ndiags = static_cast<int>(m_diagsNames.size());
+        m_alldiags.resize(m_ndiags);
+        for (int i = 0; i < m_ndiags; i++)
+        {
+            m_alldiags[i] = std::make_unique<FullDiagnostics<vdim, numspec, ndata>>(
+                i, m_diagsNames[i], dt, m_defaultSaveInterval);
         }
-    }   
+    }
     /** \brief Read Input parameters. Called in constructor. */
-    void ReadParameters ()
+    void read_parameters ()
     {
         Parameters params("fullDiagnostics");
 
-        bool enable_diags{false};
-        params.getOrSet("enable", enable_diags);
-        if (enable_diags) 
+        bool enableDiags{false};
+        params.get_or_set("enable", enableDiags);
+        if (enableDiags)
         {
-            params.get("group_names", diags_names);
-            params.getOrSet("save_interval", m_default_save_interval);
+            params.get("group_names", m_diagsNames);
+            params.get_or_set("save_interval", m_defaultSaveInterval);
         }
     }
     /** \brief Loop over diags in alldiags and call their InitDiags */
-    void InitData (Gempic::CompDom::computational_domain& compDom, std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics, 
-                    std::map<std::string, amrex::Real>& fieldsScaling, 
-                    amrex::GpuArray<std::shared_ptr<Gempic::Particles::particle_groups<vdim, ndata>>, numspec> particles, amrex::IntVect& nghost)
+    void init_data (Gempic::CompDom::ComputationalDomain& compDom,
+                    std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+                    std::map<std::string, amrex::Real>& fieldsScaling,
+                    amrex::GpuArray<std::shared_ptr<Gempic::Particles::ParticleGroups<vdim, ndata>>,
+                                    numspec> particles,
+                    amrex::IntVect& nghost)
     {
-        for( auto& diag : alldiags ){
-            diag->InitData(compDom, fieldsDiagnostics, fieldsScaling, particles, nghost);
+        for (auto& diag : m_alldiags)
+        {
+            diag->init_data(compDom, fieldsDiagnostics, fieldsScaling, particles, nghost);
         }
     }
     /** \brief Called at each iteration. Compute diags and flush. */
-    void FilterComputePackFlush (int step, bool force_flush=false)
+    void filter_compute_pack_flush (int step, bool forceFlush = false)
     {
-        for (auto& diag : alldiags){
-            diag->FilterComputePackFlush (step, force_flush);
+        for (auto& diag : m_alldiags)
+        {
+            diag->filter_compute_pack_flush(step, forceFlush);
         }
     }
     /** \brief Called only at the last iteration. Loop over each diag and if m_dump_last_timestep
      *         is true, compute diags and flush with force_flush=true. */
-    void FilterComputePackFlushLastTimestep (int step)
+    void filter_compute_pack_flush_last_timestep (int step)
     {
-        for (auto& diag : alldiags){
-            if (diag->DoDumpLastTimestep()){
-                constexpr bool force_flush = true;
-                diag->FilterComputePackFlush (step, force_flush);
+        for (auto& diag : m_alldiags)
+        {
+            if (diag->DoDumpLastTimestep())
+            {
+                constexpr bool forceFlush = true;
+                diag->FilterComputePackFlush(step, forceFlush);
             }
         }
     }
 
-    FullDiagnostics<vdim, numspec, ndata>& GetDiag(int idiag) {return *alldiags[idiag]; }
-    int getTotalDiags() {return ndiags;}
-    int getNcomp(int idiag) {return alldiags[idiag]->getNcomp();}
+    FullDiagnostics<vdim, numspec, ndata>& get_diag (int idiag) { return *m_alldiags[idiag]; }
+    int get_total_diags () { return m_ndiags; }
+    int get_ncomp (int idiag) { return m_alldiags[idiag]->get_ncomp(); }
+
 private:
     /** Vector of pointers to all diagnostics */
-    amrex::Vector<std::unique_ptr<FullDiagnostics<vdim, numspec, ndata>> > alldiags;
-    int ndiags = 0; /**< number of different diagnostics */
-    std::vector<std::string> diags_names;
-    int m_default_save_interval{100}; // default save interval for all full diagnostics
+    amrex::Vector<std::unique_ptr<FullDiagnostics<vdim, numspec, ndata>>> m_alldiags;
+    int m_ndiags = 0; /**< number of different diagnostics */
+    std::vector<std::string> m_diagsNames;
+    int m_defaultSaveInterval{100};  // default save interval for all full diagnostics
 };
 
-#endif // GEMPICX_MULTIDIAGNOSTICS_H_
+#endif  // GEMPICX_MULTIDIAGNOSTICS_H_

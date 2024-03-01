@@ -21,7 +21,7 @@ namespace Gempic
 {
 namespace FieldSolvers
 {
-void initConst(amrex::MultiFab& multiF, amrex::Real constant)
+void init_const (amrex::MultiFab& multiF, amrex::Real constant)
 {
     for (amrex::MFIter mfi(multiF); mfi.isValid(); ++mfi)
     {

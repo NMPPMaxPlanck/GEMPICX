@@ -5,7 +5,7 @@
 
 namespace Gempic::Utils
 {
-void Verbosity::setLevel(int level)
+void Verbosity::set_level (int level)
 {
     if (s_settable)
     {
@@ -19,19 +19,17 @@ void Verbosity::setLevel(int level)
     }
     else
     {
-        std::cerr << "Verbosity level cannot be set twice or after it's been used the first time!\n";
+        std::cerr
+            << "Verbosity level cannot be set twice or after it's been used the first time!\n";
         std::exit(Error::VerbosityAlreadySet);
     }
 }
 
-Verbosity::Verbosity(int level)
-{
-    setLevel(level);
-}
+Verbosity::Verbosity(int level) { set_level(level); }
 
 unsigned int Verbosity::level()
 {
     s_settable = false;
     return s_verbosityLevel;
 }
-} // namespace Gempic::Utils
+}  // namespace Gempic::Utils

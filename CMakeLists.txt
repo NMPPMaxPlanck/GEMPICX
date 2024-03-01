@@ -102,3 +102,6 @@ FetchContent_Declare(
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/googletest-src"
 )
 FetchContent_MakeAvailable(googletest)
+
+# Preparations necessary for clang-tidy
+include(cmake/clang_tidy.cmake)

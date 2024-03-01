@@ -23,12 +23,12 @@
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
-#include <GEMPIC_amrex_init.H>
-//#include <GEMPIC_Config.H>
-#include <GEMPIC_computational_domain.H>
-#include <GEMPIC_parameters.H>
-#include <GEMPIC_particle_groups.H>
-#include <GEMPIC_sampler.H>
+
+#include "GEMPIC_amrex_init.H"
+#include "GEMPIC_computational_domain.H"
+#include "GEMPIC_parameters.H"
+#include "GEMPIC_particle_groups.H"
+#include "GEMPIC_sampler.H"
 
 // using namespace amrex;
 using namespace Gempic;
@@ -38,15 +38,15 @@ using namespace Particles;
 using namespace Sampling;
 
 template <unsigned int vdim, unsigned int numspec>
-void print_particles(amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec>& part_gr,
-                     const int species)
+void print_particles (amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
+                      const int species)
 {
     std::ofstream ofs("particles.out", std::ofstream::out);
-    for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*part_gr[species], 0); pti.isValid(); ++pti)
+    for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*partGr[species], 0); pti.isValid(); ++pti)
     {
         auto& particles = pti.GetArrayOfStructs();  // get particles
         const long np = pti.numParticles();
-        auto& particle_attributes = pti.GetStructOfArrays();
+        auto& particleAttributes = pti.GetStructOfArrays();
         amrex::Print(ofs) << "number of particles " << np << "\n";
         for (int pp = 0; pp < np; pp++)
         {
@@ -57,7 +57,7 @@ void print_particles(amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, num
             }
             for (int i = 0; i <= vdim; i++)
             {
-                amrex::Print(ofs) << particle_attributes.GetRealData(i)[pp] << " ";
+                amrex::Print(ofs) << particleAttributes.GetRealData(i)[pp] << " ";
             }  // particle_attributes(vdim) is the particle weight
             amrex::Print(ofs) << "\n";
         }
@@ -72,35 +72,35 @@ void print_particles(amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, num
  *
  * @tparam vdim
  * @tparam numspec
- * @param part_gr
+ * @param partGr
  * @param species
  */
 template <unsigned int vdim, unsigned int numspec>
-void print_vMoments(const amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec>& part_gr,
-                    const int species)
+void print_v_moments (const amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
+                      const int species)
 {
     // compute the first three moments of f(x,v), only one species
     amrex::GpuArray<amrex::Real, vdim + 2> vMoment;
-    amrex::Real vMoment_tmp;
+    amrex::Real vMomentTmp;
     // 1) \int f(x,v) dx dv
-    vMoment_tmp = amrex::ReduceSum(
-        *part_gr[species],
+    vMomentTmp = amrex::ReduceSum(
+        *partGr[species],
         [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
         {
             auto w = p.rdata(vdim);  // particle weight
             return (w);
         });
     // reduce sum over MPI ranks
-    amrex::ParallelDescriptor::ReduceRealSum(vMoment_tmp,
+    amrex::ParallelDescriptor::ReduceRealSum(vMomentTmp,
                                              amrex::ParallelDescriptor::IOProcessorNumber());
-    vMoment[0] = vMoment_tmp;
+    vMoment[0] = vMomentTmp;
 
     // 2) \int v f(x,v) dx dv
     for (int cmp = 0; cmp < vdim; cmp++)
     {
         // reduce sum over one MPI rank
-        vMoment_tmp = amrex::ReduceSum(
-            *part_gr[species],
+        vMomentTmp = amrex::ReduceSum(
+            *partGr[species],
             [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
             {
                 auto w = p.rdata(vdim);   // particle weight
@@ -108,13 +108,13 @@ void print_vMoments(const amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>
                 return (w * vel);
             });
         // reduced sum over MPI ranks
-        amrex::ParallelDescriptor::ReduceRealSum(vMoment_tmp,
+        amrex::ParallelDescriptor::ReduceRealSum(vMomentTmp,
                                                  amrex::ParallelDescriptor::IOProcessorNumber());
-        vMoment[cmp + 1] = vMoment_tmp;
+        vMoment[cmp + 1] = vMomentTmp;
     }
     // 3) \int v^2 f(x,v) dx dv
-    vMoment_tmp = amrex::ReduceSum(
-        *part_gr[species],
+    vMomentTmp = amrex::ReduceSum(
+        *partGr[species],
         [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vdim + 1, 0>& p) -> amrex::Real
         {
             auto w = p.rdata(vdim);  // particle weight
@@ -122,9 +122,9 @@ void print_vMoments(const amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>
             return (w * v2);
         });
     // reduced sum over MPI ranks
-    amrex::ParallelDescriptor::ReduceRealSum(vMoment_tmp,
+    amrex::ParallelDescriptor::ReduceRealSum(vMomentTmp,
                                              amrex::ParallelDescriptor::IOProcessorNumber());
-    vMoment[vdim + 1] = vMoment_tmp;
+    vMoment[vdim + 1] = vMomentTmp;
 
     amrex::PrintToFile("test_sampler.tmp") << vMoment[0];
     for (int i = 0; i < vdim; i++)
@@ -135,7 +135,7 @@ void print_vMoments(const amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>
 }
 
 template <unsigned int vdim, unsigned int numspec>
-void main_main()
+void main_main ()
 {
     //------------------------------------------------------------------------------
     Parameters parameters{};
@@ -144,38 +144,38 @@ void main_main()
     double twopi = 4 * asin(1.0);
     const amrex::Vector<amrex::Real> k{AMREX_D_DECL(twopi, twopi, twopi)};
     parameters.set("k", k);
-    computational_domain domain;
-    amrex::Print() << "domain " << domain.real_box.lo() << " " << domain.real_box.hi() << "\n";
+    ComputationalDomain domain;
+    amrex::Print() << "domain " << domain.m_realBox.lo() << " " << domain.m_realBox.hi() << "\n";
 
     //------------------------------------------------------------------------------
     // Initialize Particle Groups
-    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> part_gr_cell;
+    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGrCell;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_cell[spec] = std::make_shared<particle_groups<vdim>>(spec, domain);
+        partGrCell[spec] = std::make_shared<ParticleGroups<vdim>>(spec, domain);
     }
-    init_particles_cellwise(domain, part_gr_cell, species);
+    init_particles_cellwise(domain, partGrCell, species);
 
-    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> part_gr_full;
+    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGrFull;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_full[spec] = std::make_shared<particle_groups<vdim>>(spec, domain);
+        partGrFull[spec] = std::make_shared<ParticleGroups<vdim>>(spec, domain);
     }
-    init_particles_full_domain(domain, part_gr_full, species);
+    init_particles_full_domain(domain, partGrFull, species);
 
-    amrex::GpuArray<std::shared_ptr<particle_groups<vdim>>, numspec> part_gr_full_gpu;
+    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGrFullGpu;
     for (int spec = 0; spec < numspec; spec++)
     {
-        part_gr_full_gpu[spec] = std::make_shared<particle_groups<vdim>>(spec, domain);
+        partGrFullGpu[spec] = std::make_shared<ParticleGroups<vdim>>(spec, domain);
     }
-    init_particles_full_domain_gpu(domain, part_gr_full_gpu, species);
+    init_particles_full_domain_gpu(domain, partGrFullGpu, species);
 
     // Print particles data
     bool printPart = false;
     if (printPart)
     {
-        print_particles(part_gr_cell, species);
-        print_particles(part_gr_full, species);
+        print_particles(partGrCell, species);
+        print_particles(partGrFull, species);
         // print_particles(part_gr_full_gpu, species);
     }
 
@@ -186,11 +186,11 @@ void main_main()
     Parameters params("particle.species0");
     amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
     amrex::Vector<amrex::Vector<amrex::Real>> vThermal{};
-    amrex::Vector<amrex::Real> vWeight{}; 
-    int num_gaussian;
-    params.get("num_gaussians", num_gaussian);
+    amrex::Vector<amrex::Real> vWeight{};
+    int numGaussian;
+    params.get("num_gaussians", numGaussian);
 
-    for (int i{0}; i < num_gaussian; ++i)
+    for (int i{0}; i < numGaussian; ++i)
     {
         amrex::Real vw;
         std::string vwString = "vWeight_g" + std::to_string(i);
@@ -201,7 +201,7 @@ void main_main()
         std::string vmString = "vMean_g" + std::to_string(i);
         params.get(vmString, vm);
         vMean.push_back(vm);
-        
+
         std::string vtString = "vThermal_g" + std::to_string(i);
         params.get(vtString, vt);
         vThermal.push_back(vt);
@@ -211,9 +211,8 @@ void main_main()
     for (int i = 0; i < vdim; i++)
     {
         amrex::Real mom1 = 0;
-        for (int j = 0; j < num_gaussian; j++)
+        for (int j = 0; j < numGaussian; j++)
         {
-
             mom1 += vWeight[j] * vMean[j][i];
             mom2 += vWeight[j] * (std::pow(vThermal[j][i], 2) + std::pow(vMean[j][i], 2));
         }
@@ -221,16 +220,15 @@ void main_main()
     }
     amrex::PrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
     // Print computed solutions
-    print_vMoments(part_gr_cell, species);
-    print_vMoments(part_gr_full, species);
+    print_v_moments(partGrCell, species);
+    print_v_moments(partGrFull, species);
     // print_vMoments(part_gr_full_gpu, species);
 }
 
-int main(int argc, char* argv[])
+int main (int argc, char* argv[])
 {
-    const bool build_parm_parse = true;
-    amrex::Initialize(argc, argv, build_parm_parse, MPI_COMM_WORLD,
-                      overwrite_amrex_parser_defaults);
+    const bool buildParmParse = true;
+    amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD, overwrite_amrex_parser_defaults);
 
     if (amrex::ParallelDescriptor::MyProc() == 0) remove("test_sampler.tmp.0");
 
@@ -239,7 +237,9 @@ int main(int argc, char* argv[])
     main_main<vdim, numspec>();
 
     if (amrex::ParallelDescriptor::MyProc() == 0)
+    {
         std::rename("test_sampler.tmp.0", "test_sampler.output");
+    }
 
     amrex::Finalize();
 }
