@@ -1,35 +1,27 @@
 file(GLOB VERBOSITY "../../utils/GEMPIC_Verbosity.cpp")
-file(GLOB PARAMETERS "../../io/parameters/GEMPIC_parameters.cpp")
-file(GLOB FDDERHAMCOMPLEX "../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
-file(GLOB DERIVATIVES "../../forms/GEMPIC_extDerivatives.cpp")
-file(GLOB POISSON "../Poisson/GEMPIC_PoissonSolver.cpp")
+file(GLOB PARAMETERS "../../io/parameters/GEMPIC_Parameters.cpp")
+file(GLOB FDDERHAMCOMPLEX "../../forms/fd_derham_complex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../../forms/GEMPIC_ExtDerivatives.cpp")
+file(GLOB POISSON "../poisson/GEMPIC_PoissonSolver.cpp")
 
-add_executable( test_constval test_constval.cpp )
 add_executable( test_maxwell_FDsolver_degree_2 test_maxwell_FDsolver_degree_2.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
 add_executable( test_maxwell_FDsolver_degree_4 test_maxwell_FDsolver_degree_4.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
 add_executable( test_maxwell_FDsolver_degree_6 test_maxwell_FDsolver_degree_6.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
 add_executable( test_Poisson test_Poisson.cpp ${FDDERHAMCOMPLEX} ${PARAMETERS} ${VERBOSITY} ${POISSON} )
 
 if(GEMPIC_USE_CUDA)
-  setup_target_for_cuda_compilation( test_constval )
   setup_target_for_cuda_compilation( test_maxwell_FDsolver_degree_2 )
   setup_target_for_cuda_compilation( test_maxwell_FDsolver_degree_4 )
   setup_target_for_cuda_compilation( test_maxwell_FDsolver_degree_6 )
   setup_target_for_cuda_compilation( test_Poisson )
 endif()
 
-target_link_libraries( test_constval AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_maxwell_FDsolver_degree_2 AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_maxwell_FDsolver_degree_4 AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_maxwell_FDsolver_degree_6 AMReX::amrex AMReX::Flags_CXX )
 target_link_libraries( test_Poisson AMReX::amrex AMReX::Flags_CXX )
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
-
-
-if(GEMPIC_USE_CUDA)
-  setup_target_for_cuda_compilation( test_constval )
-endif()
 
 if("${AMReX_SPACEDIM}" STREQUAL "3")
   add_subdirectory(IOFiles_3D)

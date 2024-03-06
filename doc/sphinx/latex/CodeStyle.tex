@@ -131,8 +131,8 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item Spaces after the function name for function definitions, \emph{e.g.} \lstinline{my_function ()}. Note that there should be no such spaces when simply calling or declarating a function.
     \item Overriding virtual functions are declared without the \lstinline{virtual} keyword but with \lstinline{override} or \lstinline{final}
     \item Function or class definitions have the starting \verb|{| brace on a new line
+    \item \lstinline{#include}s are surrounded by quotation marks (\verb|"..."|) for GEMPIC headers and angular brackets (\verb|<...>|) otherwise
     \item (*) Namespaces follow the outer folder structure, such that code in \verb|src/io/parameters| would be in the scope \lstinline{Gempic::Io}
-    \item (*) \lstinline{#include}s are surrounded by quotation marks (\verb|"..."|) for GEMPIC headers and angular brackets (\verb|<...>|) otherwise
 \end{itemize}
 \subsection{Naming conventions}
 \begin{itemize}
@@ -143,7 +143,9 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item Macros are \verb|UPPER_CASE|
     \item (Non-static) class member variables have the \lstinline{m_} prefix
     \item Static class variables have the \lstinline{s_} prefix
-    \item (*) File names are prefixed with \verb|GEMPIC| and then in snake case, \emph{e.g.} \verb|GEMPIC_some_module.H|
+    \item Folder names are \verb|snake_case|
+    \item File names are prefixed with \verb|GEMPIC_| and then in \verb|CamelCase|, \emph{e.g.} \verb|GEMPIC_SomeModule.H|
+    \item Test file names are \verb|CamelCase| and then postfixed with \verb|_test|, \emph{e.g.} \verb|SomeModule_test.cpp|
 \end{itemize}
 Exceptions to these conventions are unavoidable when inheriting from or calling third party libraries, but otherwise they should be followed and will be enforced with automatic tools.
 

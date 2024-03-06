@@ -16,6 +16,71 @@ read_build_dir_file ()
 }
 
 # --------------------------------------------------------------------------------------------------
+# Enforces consistent folder and C++ file naming
+# --------------------------------------------------------------------------------------------------
+GEMPIC_fix_folder_file_names ()
+{
+    # Ensure folders are snake_case:
+    # Find all folders with uppercase letters in their name
+    for folder in $(find ./src/ ./testing -type d -print | grep [A-Z])
+    do
+        # replace uppercase with snake_case
+        newName=$(echo $folder | sed -E -e 's#/([A-Z])#/\l\1#g' -e 's/([A-Z])/_\l\1/g')
+        mv $folder $newName
+        echo "Fixed $folder to $newName because folders are snake_case."
+
+        # An automatic solution would be hard to look at and prone to bugs
+        echo "Remember to update CMakeLists.txt files pointing to this folder:"
+        grep -nR "${folder##*/}" . --include=CMakeLists.txt --exclude-dir=third_party
+    done
+
+    # Ensure all code files follow one of three patterns:
+    # A) GEMPIC_CamelCase.H or GEMPIC_CamelCase.cpp
+    # B) CamelCase_test.cpp
+    # C) test_aNy_StYlE.cpp (deprecated)
+    for file in $(find ./src/ ./testing/ -name "*.H" -or -name "*.cpp" -type f |
+                  grep -Ev -- '/GEMPIC_[A-Z][a-zA-Z]*\.|/[A-Z][a-zA-Z]*_test\.cpp$|/test\w*\.cpp$')
+    do
+        # Remove underscores and convert following letters to uppercase
+        newName=$(echo $file | sed -E -e 's#(.*/)(.)#\1\u\2#' -e 's/_(\w)/\u\1/g')
+        # Is it likely to be a test file?
+        if [[ $(echo $file | grep '\./testing/.*\.cpp') ]]
+        then
+            # Add _test postfix
+            newName=$(echo $newName | sed -E 's#(Test)?(\.cpp$)#_test\1#I')
+        else
+            # Add GEMPIC_ prefix
+            newName=$(echo $newName | sed -E 's#(.*/)(GEMPIC)?#\1GEMPIC_#I')
+
+        fi
+        # Rename file
+        mv $file $newName
+
+        # Old file name (with extension, without path) and extension
+        oldFileName="${$file##*/}"
+        oldFileExt="${oldFileName##*.}"
+        # Source or header file?
+        if [[ "$oldFileExt" == "cpp" ]]
+        then
+            # For source (.cpp) files, update CMakeLists.txt files accordingly
+            newFileName="${$newName##*/}"
+            grep -lnR "$oldFileName" . --include=CMakeLists.txt --exclude-dir=third_party |
+            xargs sed -Ei "s/$oldFileName/$newFileName/g"
+        else
+            # For header (.H) files, update #include statements accordingly
+            newFileName="${$newName##*/}"
+            grep -lnR "^#include .[^\">]*$oldFileName" . --include=*.H --include=*.cpp --exclude-dir=third_party |
+            xargs sed -Ei "s/(^#include ).([^\">]*)$oldFileName[\">]/\1\"\2$newFileName\"/"
+        fi
+
+        echo "Attempted to fix the name of $file to $newName because the style was not one of:"
+        echo "A) GEMPIC_CamelCase.H or GEMPIC_CamelCase.cpp"
+        echo "B) CamelCase_test.cpp"
+        echo "C) test_aNy_StYlE.cpp (deprecated)"
+    done
+}
+
+# --------------------------------------------------------------------------------------------------
 # Sanitizes code using clang-tidy
 # --------------------------------------------------------------------------------------------------
 GEMPIC_run_clang_tidy ()
@@ -51,20 +116,6 @@ GEMPIC_run_clang_tidy ()
         lineNum=$(echo "$line" | cut -d':' -f2)
         sed -Ei "$lineNum s/\[[^]]*\] AMREX_GPU/[=] AMREX_GPU/" $fileName
     done
-
-    ## Attempt to fix the destroyed gempic_ prefix
-    # Use git diff --name-only --cached for staged changes
-    grep -nIR "[Gg]empic[A-Z]" $(git diff --name-only) --include=*.H --include=*.cpp --exclude-dir=third_party | \
-    while read -r line ; do
-        echo "clang-tidy fixed a gempic_ prefix because the rest of the name was in the wrong case."
-        fileName=$(echo "$line" | cut -d':' -f1)
-        lineNum=$(echo "$line" | cut -d':' -f2)
-        echo "Please check that the correct fix was applied to $fileName:$lineNum."
-        # This fix fails where we invoke the namespace literally ( GEMPIC_Something::aFunction(); )
-        sed -Ei "$lineNum s/namespace Gempic/namespace GEMPIC_/" $fileName # namespace GEMPIC_Name
-        sed -Ei "$lineNum s/(Gempic)([A-Z])/\1_\2/" $fileName # class Gempic_ClassName
-        sed -Ei "$lineNum s/(gempic)([A-Z])/\1_\L\2/" $fileName # function gempic_doSomething
-    done
 }
 
 # --------------------------------------------------------------------------------------------------
@@ -72,8 +123,12 @@ GEMPIC_run_clang_tidy ()
 # --------------------------------------------------------------------------------------------------
 GEMPIC_run_clang_format ()
 {
-    for file in $(find ./src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f)
+    for file in $(find ./src/ ./testing/ -name "*.H" -or -name "*.cpp" -type f)
     do
+        # Enforce style: #include "GEMPIC_File.H" or #include <notAGempicFile>
+        sed -Ei 's/(^#include )"([^"]*)"/\1<\2>/g' $file
+        sed -Ei 's/(^#include )<([^>]*GEMPIC_[^>]*\.H)>/\1"\2"/g' $file
+
         clang-format -i -style=file $file
         # This is a hotfix to a bug in clang-format around the formatting of lambdas inside function calls.
         # This _sometimes_ happens, and it's difficult to say when:
@@ -123,8 +178,11 @@ cleanup ()
 read_build_dir_file
 trap cleanup EXIT
 # --------------------------------------------------------------------------------------------------
-# Actual sanitation. Comment or uncomment desired parts. It's recommended to do -tidy before -format
+# Actual sanitation. Comment or uncomment desired parts. It's recommended to do -format after -tidy
 # It's also recommended to run this after setting the CMAKE configure settings to 3D debug.
+
+#GEMPIC_fix_folder_file_names
+
 GEMPIC_run_clang_tidy
 
 GEMPIC_run_clang_format

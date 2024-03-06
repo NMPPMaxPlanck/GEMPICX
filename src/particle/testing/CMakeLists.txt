@@ -1,5 +1,5 @@
 file(GLOB VERBOSITY "../../utils/GEMPIC_Verbosity.cpp")
-file(GLOB PARAMETERS "../../io/parameters/GEMPIC_parameters.cpp")
+file(GLOB PARAMETERS "../../io/parameters/GEMPIC_Parameters.cpp")
 add_executable( test_sampler ${PARAMETERS} ${VERBOSITY} test_sampler.cpp )
 
 if(GEMPIC_USE_CUDA) 

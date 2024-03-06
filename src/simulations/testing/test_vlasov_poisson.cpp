@@ -7,24 +7,22 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include "GEMPIC_AmrexInit.H"
+#include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
-#include "GEMPIC_amrex_init.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_parameters.H"
-#include "GEMPIC_particle_groups.H"
-#include "GEMPIC_particle_mesh_coupling.H"
-#include "GEMPIC_sampler.H"
-//#include "GEMPIC_hs_zigzag.H"
+#include "GEMPIC_Parameters.H"
+#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_ParticleMeshCoupling.H"
+#include "GEMPIC_Sampler.H"
+//#include "GEMPIC_HsZigzag.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_PoissonSolver.H"
 
 using namespace Gempic;
-using namespace Sampling;
-using namespace CompDom;
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
-using namespace GEMPIC_PoissonSolver;
+using namespace Forms;
+using namespace Particle;
+using namespace ParticleMeshCoupling;
 
 void write_rho (DeRhamField<Grid::dual, Space::cell> &rho,
                 ComputationalDomain &infra,
@@ -122,7 +120,7 @@ int main (int argc, char *argv[])
     constexpr int hodgeDegree{2};
 
     {
-        Parameters parameters{};
+        Io::Parameters parameters{};
 
         // Initialize computational_domain
         ComputationalDomain infra;
@@ -145,7 +143,7 @@ int main (int argc, char *argv[])
         amrex::Print() << "Bz " << Bz << std::endl;
 
         // Initialize Poisson solver
-        PoissonSolver poisson(deRham);
+        FieldSolvers::PoissonSolver poisson(deRham);
         // Initialize particle groups
         amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> electrons;
 
@@ -162,7 +160,7 @@ int main (int argc, char *argv[])
                                   // Putting 4 gets a non-defined type
             const int npass = 3;  // Number of filter passes
 
-            Parameters params("time_loop");
+            Io::Parameters params("time_loop");
             // Deposit initial charge
             // start with background charge
 
@@ -188,8 +186,8 @@ int main (int argc, char *argv[])
                             {
                                 positionParticle[d] = particles[pp].pos(d);
                             }
-                            Spline::SplineBase<degx, degy, degz> spline(positionParticle,
-                                                                        infra.m_plo, infra.m_dxi);
+                            SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                                                infra.m_dxi);
                             // Needs at least max(degx, degy, degz) ghost cells
                             gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
                             // spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
@@ -253,8 +251,8 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                Spline::SplineBase<degx, degy, degz> spline(
-                                    positionParticle, infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                                                    infra.m_dxi);
 
                                 gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
                                 // spline, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],
@@ -310,8 +308,8 @@ int main (int argc, char *argv[])
                                 amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
-                                Spline::SplineBase<degx, degy, degz> spline(
-                                    positionParticle, infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                                                    infra.m_dxi);
 
                                 // evaluate the electric field
                                 amrex::GpuArray<amrex::Real, vdim> efield =
@@ -342,8 +340,8 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                Spline::SplineBase<degx, degy, degz> splineNew(
-                                    positionParticle, infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> splineNew(positionParticle,
+                                                                       infra.m_plo, infra.m_dxi);
 
                                 gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
                                 // splineNew, charge * infra.dxi[GEMPIC_SPACEDIM] * weight[pp],

@@ -1,8 +1,8 @@
 file(GLOB VERBOSITY "../../utils/GEMPIC_Verbosity.cpp")
-file(GLOB PARAMETERS "../../io/parameters/GEMPIC_parameters.cpp")
-file(GLOB FDDERHAMCOMPLEX "../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
-file(GLOB DERIVATIVES "../../forms/GEMPIC_extDerivatives.cpp")
-file(GLOB POISSON "../../field_solvers/Poisson/GEMPIC_PoissonSolver.cpp")
+file(GLOB PARAMETERS "../../io/parameters/GEMPIC_Parameters.cpp")
+file(GLOB FDDERHAMCOMPLEX "../../forms/fd_derham_complex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../../forms/GEMPIC_ExtDerivatives.cpp")
+file(GLOB POISSON "../../field_solvers/poisson/GEMPIC_PoissonSolver.cpp")
 
 add_executable( test_bernstein_waves test_bernstein_waves.cpp ${VERBOSITY} ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES})
 add_executable( test_vlasov_poisson test_vlasov_poisson.cpp ${VERBOSITY} ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} ${POISSON})

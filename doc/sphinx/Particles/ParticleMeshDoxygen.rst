@@ -3,12 +3,12 @@
 Particle mesh coupling functions and classes
 ============================================
 
-.. doxygenfile:: GEMPIC_Spline_Class.H
+.. doxygenfile:: GEMPIC_SplineClass.H
 
 .. toctree::
     :maxdepth: 2
 
-.. doxygenfile:: GEMPIC_particle_mesh_coupling.H
+.. doxygenfile:: GEMPIC_ParticleMeshCoupling.H
 
 .. toctree::
     :maxdepth: 2
