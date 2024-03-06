@@ -32,15 +32,13 @@
 log_2 (error_16 / error_32)
 ------------------------------------------------------------------------------*/
 
+#include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_parameters.H"
+#include "GEMPIC_Parameters.H"
 
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
-using namespace GEMPIC_Interpolation;
+using namespace Gempic::Forms;
 
 const int hodgeDegree = 6;
 const int maxSplineDegree = 1;
@@ -59,7 +57,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell (const int n)
     const amrex::Real dt = 0.0001;
     const int nt = 10;
 
-    Parameters parameters{};
+    Gempic::Io::Parameters parameters{};
 
     parameters.set("domain_lo", domainLo);
     parameters.set("k", k);
@@ -68,7 +66,7 @@ std::tuple<amrex::Real, amrex::Real> maxwell (const int n)
     parameters.set("is_periodic_vector", isPeriodic);
 
     // Initialize computational_domain
-    Gempic::CompDom::ComputationalDomain infra;
+    Gempic::ComputationalDomain infra;
 
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,

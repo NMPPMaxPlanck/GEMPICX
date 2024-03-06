@@ -3,11 +3,9 @@
 
 #include <AMReX_Parser.H>
 
-#include "GEMPIC_parameters.H"
+#include "GEMPIC_Parameters.H"
 
-namespace Gempic
-{
-namespace Utils
+namespace Gempic::Utils
 {
 /**
  * @brief Parse functions based on string array. Please keep parseArray alive.
@@ -26,7 +24,7 @@ namespace Utils
  */
 template <size_t functionNumber>
 auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings,
-                      Parameters& params)
+                      Io::Parameters& params)
 {
     amrex::Vector<amrex::Real> k;
     bool kExists{params.exists("k")};
@@ -74,7 +72,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
 template <size_t functionNumber>
 auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings)
 {
-    Parameters params{"function", "function parseFunctions"};
+    Io::Parameters params{"function", "function parseFunctions"};
     return parse_functions(variableStrings, params);
 }
 
@@ -91,7 +89,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
  *
  * @return [parser, function]
  */
-inline auto parse_function (const std::string& variableString, Parameters& params)
+inline auto parse_function (const std::string& variableString, Io::Parameters& params)
 {
     auto [parser, eval] = parse_functions<1>({variableString}, params);
     return std::make_tuple(parser[0], eval[0]);
@@ -111,9 +109,8 @@ inline auto parse_function (const std::string& variableString, Parameters& param
  */
 inline auto parse_function (const std::string& variableString)
 {
-    Parameters params{"function", "function parseFunction"};
+    Io::Parameters params{"function", "function parseFunction"};
     return parse_function(variableString, params);
 }
-}  // namespace Utils
-}  // namespace Gempic
+}  // namespace Gempic::Utils
 #endif

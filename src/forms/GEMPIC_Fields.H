@@ -22,10 +22,10 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_parameters.H"
+#include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_Parameters.H"
 
-namespace GEMPIC_Fields
+namespace Gempic::Forms
 {
 enum class Grid
 {
@@ -221,11 +221,11 @@ public:
     /// @param infra The computational domain needed to construct the class correctly
     /// @param hodgeDegree The degree of the Hodge scheme, used for a lower limit of ghost cells
     /// @param maxSplineDegree The degree of the splines, used for a lower limit of ghost cells
-    DeRhamComplex(const Gempic::CompDom::ComputationalDomain& infra,
+    DeRhamComplex(const ComputationalDomain& infra,
                   const int hodgeDegree,
                   const int maxSplineDegree)
     {
-        Parameters params("DeRhamComplex");
+        Io::Parameters params("DeRhamComplex");
 
         m_grid = infra.m_grid;
         m_distriMap = infra.m_distriMap;
@@ -658,11 +658,11 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 }
 ///@endcond
 
-}  // namespace GEMPIC_Fields
+}  // namespace Gempic::Forms
 
-namespace Gempic::Impl::Fields
+namespace Gempic::Forms::Impl
 {
-using namespace GEMPIC_Fields;
+using namespace Forms;
 template <class T>
 struct UnwrapReference
 {
@@ -733,6 +733,6 @@ constexpr Grid oppositeGrid{get_opposite_grid<grid>()};
 
 template <Space space>
 constexpr Space oppositeSpace{get_opposite_space<space>()};
-}  // namespace Gempic::Impl::Fields
+}  // namespace Gempic::Forms::Impl
 
 #endif

@@ -4,8 +4,8 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_Config.H"
-#include "GEMPIC_amrex_init.H"
 
 using namespace amrex;
 

@@ -4,8 +4,8 @@
 #include <AMReX_Print.H>
 #include <AMReX_iMultiFab.H>
 
+#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_Config.H"
-#include "GEMPIC_amrex_init.H"
 
 using namespace amrex;
 

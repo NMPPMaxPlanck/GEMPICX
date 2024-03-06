@@ -1,0 +1,817 @@
+#ifndef GEMPIC_FDDERHAMCOMPLEX_H_
+#define GEMPIC_FDDERHAMCOMPLEX_H_
+
+#include <AMReX_SPACE.H>
+
+#include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_Fields.H"
+
+namespace Gempic::Forms
+{
+enum class HodgeScheme
+{
+    FDHodge,
+    GalerkinHodge,
+};
+
+/**
+ * @brief Fills the arrays of Hodge stencils.
+ *
+ * Description: Computes stencils for periodic boundary conditions for either
+ * finite difference of Galerkin Hodge
+ *
+ * @tparam degree : int, degree of basis functions used
+ * @tparam scheme : int, 0 for FDHodge, 1 for Galerkin Hodge
+ * @return std::tuple : contains the stencils in the following order:
+ *                      stencilNodeToCell, stencilCellToNode
+ */
+// NOLINTBEGIN(readability-magic-numbers)
+template <int degree, HodgeScheme scheme>
+inline auto get_hodge_stencils ()
+{
+    if constexpr (scheme == HodgeScheme::FDHodge)
+    {
+        constexpr unsigned int stencilLength{degree - 1};
+        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
+        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
+
+        switch (degree)
+        {
+            case 2:
+                stencilNodeToCell[0] = 1.0;
+                stencilCellToNode[0] = 1.0;
+                break;
+            case 4:
+                stencilNodeToCell[0] = 1. / 8.;
+                stencilNodeToCell[1] = 6. / 8.;
+                stencilNodeToCell[2] = 1. / 8.;
+                stencilCellToNode[0] = -1. / 24.;
+                stencilCellToNode[1] = 13. / 12.;
+                stencilCellToNode[2] = -1. / 24.;
+                break;
+            case 6:
+                stencilNodeToCell[0] = -7. / 384.;
+                stencilNodeToCell[1] = 44. / 384.;
+                stencilNodeToCell[2] = 310. / 384.;
+                stencilNodeToCell[3] = 44. / 384.;
+                stencilNodeToCell[4] = -7. / 384;
+                stencilCellToNode[0] = 3. / 640.;
+                stencilCellToNode[1] = -29. / 480.;
+                stencilCellToNode[2] = 1067. / 960.;
+                stencilCellToNode[3] = -29. / 480.;
+                stencilCellToNode[4] = 3. / 640.;
+                break;
+            default:
+                amrex::Print() << "Degree not implemented" << std::endl;
+                break;
+        }
+
+        return std::make_tuple(stencilNodeToCell, stencilCellToNode);
+    }
+    if constexpr (scheme == HodgeScheme::GalerkinHodge)
+    {
+        constexpr unsigned int stencilLength{2 * degree - 1};
+        amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
+        amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
+
+        switch (degree)
+        {
+            case 2:
+                stencilCellToNode[0] = 1. / 8.;
+                stencilCellToNode[1] = 3. / 4.;
+                stencilCellToNode[2] = 1. / 8.;
+                stencilNodeToCell = stencilCellToNode;
+                break;
+            case 4:
+                stencilCellToNode[0] = 121. / 46080.;
+                stencilCellToNode[1] = -959. / 23040.;
+                stencilCellToNode[2] = 4663. / 46080.;
+                stencilCellToNode[3] = 10087. / 11520.;
+                stencilCellToNode[4] = 4663. / 46080.;
+                stencilCellToNode[5] = -959. / 23040.;
+                stencilCellToNode[6] = 121. / 46080.;
+                stencilNodeToCell = stencilCellToNode;
+                break;
+            case 6:
+                stencilCellToNode[0] = 365053. / 3715891200.;
+                stencilCellToNode[1] = -2981533. / 1857945600.;
+                stencilCellToNode[2] = 55805753. / 3715891200.;
+                stencilCellToNode[3] = -27050951. / 464486400.;
+                stencilCellToNode[4] = 147416293. / 1857945600.;
+                stencilCellToNode[5] = 864656441. / 928972800.;
+                stencilCellToNode[6] = 147416293. / 1857945600.;
+                stencilCellToNode[7] = -27050951. / 464486400.;
+                stencilCellToNode[8] = 55805753. / 3715891200.;
+                stencilCellToNode[9] = -2981533. / 1857945600.;
+                stencilCellToNode[10] = 365053. / 3715891200.;
+                stencilNodeToCell = stencilCellToNode;
+                break;
+            default:
+                amrex::Print() << "Degree not implemented" << std::endl;
+                break;
+        }
+
+        return std::make_tuple(stencilNodeToCell, stencilCellToNode);
+    }
+}
+// NOLINTEND(readability-magic-numbers)
+
+/**
+ * @brief Computes a matrix-vector product along 1 spatial direction.
+ *
+ * Description:
+ * Computes M*u for all edges in a given direction, where M is given
+ * by a stencil and u are the values of the input along one edge.
+ *
+ * @tparam stencilLength : int, length of the stencil array defining the matrix
+ * @tparam direction : Direction, direction along which matrix vector product is calculated
+ * @param geom : Geometry, needed for FillBoundary
+ * @param stencil : GpuArray, defining the matrix
+ * @param multiInput : MultiFab, containing the values of the vector being multiplied
+ * @param multiOutput : MultiFab, containing the result
+ * @return void
+ */
+
+template <Direction direction, unsigned int stencilLength>
+inline void matrix_mult (amrex::Geometry geom,
+                         amrex::GpuArray<amrex::Real, stencilLength> stencil,
+                         const amrex::MultiFab& multiInput,
+                         amrex::MultiFab& multiOutput)
+{
+    for (amrex::MFIter mfi(multiOutput); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.validbox();
+
+        amrex::Array4<amrex::Real const> const& vecIn = multiInput[mfi].const_array();
+        amrex::Array4<amrex::Real> const& vecOut = multiOutput[mfi].array();
+
+        ParallelFor(bx,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::Real val = 0.0;
+
+                        for (int d = 0; d < stencilLength; d++)
+                        {
+                            int shift = d - (stencilLength + 1) / 2 + 1;
+                            val += stencil[d] * vecIn(i + (direction == xDir ? shift : 0),
+                                                      j + (direction == yDir ? shift : 0),
+                                                      k + (direction == zDir ? shift : 0));
+                        }
+                        vecOut(i, j, k) = val;
+                    });
+    }
+    multiOutput.FillBoundary(geom.periodicity());
+}
+
+/// FDDeRhamComplex
+class FDDeRhamComplex : public DeRhamComplex
+{
+private:
+    static constexpr std::array<int, 3> s_validDegreesFDHodge{2, 4, 6};
+    static constexpr std::array<int, 3> s_validDegreesGalerkinHodge{2, 4, 6};
+
+    template <HodgeScheme hodgeScheme>
+    static constexpr auto valid_degrees ()
+    {
+        if constexpr (hodgeScheme == HodgeScheme::FDHodge)
+        {
+            return s_validDegreesFDHodge;
+        }
+        else if constexpr (hodgeScheme == HodgeScheme::GalerkinHodge)
+        {
+            return s_validDegreesGalerkinHodge;
+        }
+        else
+        {
+            return s_validDegreesNoScheme;
+        }
+    }
+
+    amrex::RealVect m_dr;
+    int m_nGhost;
+    HodgeScheme m_hodgeScheme;
+
+    // Temporary MultiFabs used in the Hodges
+    amrex::MultiFab m_tempPrimalZeroForm;
+    amrex::MultiFab m_tempDualZeroForm;
+    amrex::Array<amrex::MultiFab, 3> m_tempPrimalOneForm;
+    amrex::Array<amrex::MultiFab, 3> m_tempDualOneForm;
+    amrex::Array<amrex::MultiFab, 3> m_tempPrimalTwoForm;
+    amrex::Array<amrex::MultiFab, 3> m_tempDualTwoForm;
+    amrex::MultiFab m_tempPrimalThreeForm;
+    amrex::MultiFab m_tempDualThreeForm;
+
+    // m_nGaussFormulas Gauss quadrature rules with up to m_maxGaussNodes nodes
+    static const int s_m_nGaussFormulas = 10;
+    static const int s_m_maxGaussNodes = 10;
+    amrex::Array<amrex::GpuArray<amrex::Real, s_m_maxGaussNodes>, s_m_nGaussFormulas> m_quadPoints;
+    amrex::Array<amrex::GpuArray<amrex::Real, s_m_maxGaussNodes>, s_m_nGaussFormulas> m_quadWeights;
+
+public:
+    /// FDDeRhamComplex constructor
+    /// @param infra
+    /// @param hodgeDegree
+    /// @param maxSplineDegree
+    /// @param hodgeScheme
+    FDDeRhamComplex(const ComputationalDomain& infra,
+                    const int hodgeDegree,
+                    const int maxSplineDegree,
+                    const HodgeScheme hodgeScheme = HodgeScheme::FDHodge);
+
+    ~FDDeRhamComplex() override;
+
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::primal, Space::node>& field) override;
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::primal, Space::cell>& field,
+                    int gaussNodes = 6) override;
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::dual, Space::node>& field) override;
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::dual, Space::cell>& field,
+                    int gaussNodes = 6) override;
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::dual, Space::edge>& field,
+                    int gaussNodes = 6) override;
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::primal, Space::face>& field,
+                    int gaussNodes = 6) override;
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::primal, Space::edge>& field,
+                    int gaussNodes = 6) override;
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+                    amrex::Real t,
+                    DeRhamField<Grid::dual, Space::face>& field,
+                    int gaussNodes = 6) override;
+
+    void hodge(const DeRhamField<Grid::dual, Space::cell>& threeForm,
+               DeRhamField<Grid::primal, Space::node>& zeroForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::primal, Space::cell>& threeForm,
+               DeRhamField<Grid::dual, Space::node>& zeroForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::dual, Space::face>& twoForm,
+               DeRhamField<Grid::primal, Space::edge>& oneForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::primal, Space::face>& twoForm,
+               DeRhamField<Grid::dual, Space::edge>& oneForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::dual, Space::edge>& oneForm,
+               DeRhamField<Grid::primal, Space::face>& twoForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::primal, Space::edge>& oneForm,
+               DeRhamField<Grid::dual, Space::face>& twoForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::dual, Space::node>& zeroForm,
+               DeRhamField<Grid::primal, Space::cell>& threeForm,
+               amrex::Real weight = 1.) override;
+    void hodge(const DeRhamField<Grid::primal, Space::node>& zeroForm,
+               DeRhamField<Grid::dual, Space::cell>& threeForm,
+               amrex::Real weight = 1.) override;
+
+private:
+    void hodge_scheme_selector(anyFieldConstRef f1, anyFieldRef f2, amrex::Real weight = 1.);
+
+    template <HodgeScheme hodgeScheme, int hodgeDegreeIdx = 0>
+    void hodge_degree_selector(anyFieldConstRef hodgeSrc,
+                               anyFieldRef hodgeDst,
+                               amrex::Real weight = 1.);
+
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                        DeRhamField<Grid::primal, Space::node>& zeroForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                        DeRhamField<Grid::dual, Space::node>& zeroForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::dual, Space::face>& twoForm,
+                        DeRhamField<Grid::primal, Space::edge>& oneForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::primal, Space::face>& twoForm,
+                        DeRhamField<Grid::dual, Space::edge>& oneForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                        DeRhamField<Grid::primal, Space::face>& twoForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                        DeRhamField<Grid::dual, Space::face>& twoForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                        DeRhamField<Grid::primal, Space::cell>& threeForm,
+                        amrex::Real weight = 1.);
+    template <int hodgeDegree, HodgeScheme hodgeScheme>
+    void hodge_operator(const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                        DeRhamField<Grid::dual, Space::cell>& threeForm,
+                        amrex::Real weight = 1.);
+};
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_3\f$.
+ *
+ * Description:
+ * Computes \f$\tilde{\mathbb{H}}_3\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param threeForm : DeRhamField<Grid::dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
+ * @param zeroForm : DeRhamField<Grid::primal, Space::node>, resulting 0-form \f$u^0\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                                     DeRhamField<Grid::primal, Space::node>& zeroForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    AMREX_D_TERM(
+        (matrix_mult<xDir>(
+            geom, stencilCellToNode, threeForm.m_data,
+            AMREX_D_PICK(zeroForm.m_data, this->m_tempPrimalZeroForm, zeroForm.m_data)));
+        , (matrix_mult<yDir>(geom, stencilCellToNode,
+                             AMREX_D_PICK((void), this->m_tempPrimalZeroForm, zeroForm.m_data),
+                             AMREX_D_PICK((void), zeroForm.m_data, this->m_tempPrimalZeroForm)));
+        ,
+        (matrix_mult<zDir>(geom, stencilCellToNode, this->m_tempPrimalZeroForm, zeroForm.m_data)););
+
+    zeroForm.m_data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
+
+    zeroForm.average_sync();
+    zeroForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_3\f$.
+ *
+ * Description:
+ * Computes \f$\mathbb{H}_3\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$u^3\f$
+ * @param zeroForm : DeRhamField<Grid::dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                                     DeRhamField<Grid::dual, Space::node>& zeroForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    AMREX_D_TERM(
+        (matrix_mult<xDir>(
+            geom, stencilCellToNode, threeForm.m_data,
+            AMREX_D_PICK(zeroForm.m_data, this->m_tempDualZeroForm, zeroForm.m_data)));
+        , (matrix_mult<yDir>(geom, stencilCellToNode,
+                             AMREX_D_PICK((void), this->m_tempDualZeroForm, zeroForm.m_data),
+                             AMREX_D_PICK((void), zeroForm.m_data, this->m_tempDualZeroForm)));
+        , (matrix_mult<zDir>(geom, stencilCellToNode, this->m_tempDualZeroForm, zeroForm.m_data)););
+
+    zeroForm.m_data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
+
+    zeroForm.average_sync();
+    zeroForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_2\f$.
+ *
+ * Description:
+ * Computes \f$\tilde{\mathbb{H}}_2\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{u}^2\f$
+ * @param oneForm : DeRhamField<Grid::primal, Space::edge>, resulting 1-form \f$u^1\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>& twoForm,
+                                     DeRhamField<Grid::primal, Space::edge>& oneForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        AMREX_D_TERM(
+            (matrix_mult<xDir>(geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode),
+                               twoForm.m_data[comp],
+                               AMREX_D_PICK(oneForm.m_data[comp], this->m_tempPrimalOneForm[comp],
+                                            oneForm.m_data[comp])));
+            , (matrix_mult<yDir>(
+                  geom, (comp == yDir ? stencilNodeToCell : stencilCellToNode),
+                  AMREX_D_PICK((void), this->m_tempPrimalOneForm[comp], oneForm.m_data[comp]),
+                  AMREX_D_PICK((void), oneForm.m_data[comp], this->m_tempPrimalOneForm[comp])));
+            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
+                                 this->m_tempPrimalOneForm[comp], oneForm.m_data[comp])););
+
+        if (comp == xDir)
+        {
+            oneForm.m_data[comp].mult(dr[xDir] / (GEMPIC_D_MULT(1, dr[yDir], dr[zDir]) * weight));
+        }
+        if (comp == yDir)
+        {
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) /
+                                      (GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]) * weight));
+        }
+        if (comp == zDir)
+        {
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) /
+                                      (GEMPIC_D_MULT(dr[xDir], dr[yDir], 1) * weight));
+        }
+    }
+
+    oneForm.average_sync();
+    oneForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_2\f$.
+ *
+ * Description:
+ * Computes \f$\mathbb{H}_2\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * Parameters:
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$
+ * @param oneForm : DeRhamField<Grid::dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::face>& twoForm,
+                                     DeRhamField<Grid::dual, Space::edge>& oneForm,
+                                     amrex::Real weight)
+{
+    // select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        AMREX_D_TERM(
+            (matrix_mult<xDir>(geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode),
+                               twoForm.m_data[comp],
+                               AMREX_D_PICK(oneForm.m_data[comp], this->m_tempDualOneForm[comp],
+                                            oneForm.m_data[comp])));
+            , (matrix_mult<yDir>(
+                  geom, (comp == yDir ? stencilNodeToCell : stencilCellToNode),
+                  AMREX_D_PICK((void), this->m_tempDualOneForm[comp], oneForm.m_data[comp]),
+                  AMREX_D_PICK((void), oneForm.m_data[comp], this->m_tempDualOneForm[comp])));
+            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
+                                 this->m_tempDualOneForm[comp], oneForm.m_data[comp])););
+
+        if (comp == xDir)
+        {
+            oneForm.m_data[comp].mult(dr[xDir] / (GEMPIC_D_MULT(1, dr[yDir], dr[zDir]) * weight));
+        }
+        if (comp == yDir)
+        {
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) /
+                                      (GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]) * weight));
+        }
+        if (comp == zDir)
+        {
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) /
+                                      (GEMPIC_D_MULT(dr[xDir], dr[yDir], 1) * weight));
+        }
+    }
+
+    oneForm.average_sync();
+    oneForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_1\f$.
+ *
+ * Description:
+ * Computes \f$\tilde{\mathbb{H}}_1\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
+ * @param twoForm : DeRhamField<Grid::primal, Space::face>, resulting 2-form \f$u^2\f$
+ * @param weight : Real, constant weight function
+ * return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                                     DeRhamField<Grid::primal, Space::face>& twoForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        AMREX_D_TERM(
+            (matrix_mult<xDir>(geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell),
+                               oneForm.m_data[comp],
+                               AMREX_D_PICK(twoForm.m_data[comp], this->m_tempPrimalTwoForm[comp],
+                                            twoForm.m_data[comp])));
+            , (matrix_mult<yDir>(
+                  geom, (comp == yDir ? stencilCellToNode : stencilNodeToCell),
+                  AMREX_D_PICK((void), this->m_tempPrimalTwoForm[comp], twoForm.m_data[comp]),
+                  AMREX_D_PICK((void), twoForm.m_data[comp], this->m_tempPrimalTwoForm[comp])));
+            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
+                                 this->m_tempPrimalTwoForm[comp], twoForm.m_data[comp])););
+
+        if (comp == xDir)
+        {
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) /
+                                      (GEMPIC_D_MULT(dr[xDir], 1, 1) * weight));
+        }
+        if (comp == yDir)
+        {
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) /
+                                      (GEMPIC_D_MULT(1, dr[yDir], 1) * weight));
+        }
+        if (comp == zDir)
+        {
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) /
+                                      (GEMPIC_D_MULT(1, 1, dr[zDir]) * weight));
+        }
+    }
+
+    twoForm.average_sync();
+    twoForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_1\f$.
+ *
+ * Description:
+ * Computes \f$\mathbb{H}_1\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * Parameters:
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$
+ * @param twoForm : DeRhamField<Grid::dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                                     DeRhamField<Grid::dual, Space::face>& twoForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        AMREX_D_TERM(
+            (matrix_mult<xDir>(geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell),
+                               oneForm.m_data[comp],
+                               AMREX_D_PICK(twoForm.m_data[comp], this->m_tempDualTwoForm[comp],
+                                            twoForm.m_data[comp])));
+            , (matrix_mult<yDir>(
+                  geom, (comp == yDir ? stencilCellToNode : stencilNodeToCell),
+                  AMREX_D_PICK((void), this->m_tempDualTwoForm[comp], twoForm.m_data[comp]),
+                  AMREX_D_PICK((void), twoForm.m_data[comp], this->m_tempDualTwoForm[comp])));
+            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
+                                 this->m_tempDualTwoForm[comp], twoForm.m_data[comp])););
+
+        if (comp == xDir)
+        {
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) /
+                                      (GEMPIC_D_MULT(dr[xDir], 1, 1) * weight));
+        }
+        if (comp == yDir)
+        {
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) /
+                                      (GEMPIC_D_MULT(1, dr[yDir], 1) * weight));
+        }
+        if (comp == zDir)
+        {
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) /
+                                      (GEMPIC_D_MULT(1, 1, dr[zDir]) * weight));
+        }
+    }
+
+    twoForm.average_sync();
+    twoForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_0\f$.
+ *
+ * Description:
+ * Computes \f$\tilde{\mathbb{H}}_0\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * Parameters:
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$
+ * @param threeForm : DeRhamField<Grid::primal, Space::cell>, resulting 3-form \f$u^3\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                                     DeRhamField<Grid::primal, Space::cell>& threeForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    AMREX_D_TERM(
+        (matrix_mult<xDir>(
+            geom, stencilNodeToCell, zeroForm.m_data,
+            AMREX_D_PICK(threeForm.m_data, this->m_tempPrimalThreeForm, threeForm.m_data)));
+        , (matrix_mult<yDir>(geom, stencilNodeToCell,
+                             AMREX_D_PICK((void), this->m_tempPrimalThreeForm, threeForm.m_data),
+                             AMREX_D_PICK((void), threeForm.m_data, this->m_tempPrimalThreeForm)));
+        , (matrix_mult<zDir>(geom, stencilNodeToCell, this->m_tempPrimalThreeForm,
+                             threeForm.m_data)););
+
+    threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
+
+    threeForm.average_sync();
+    threeForm.fill_boundary();
+}
+
+/**
+ * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_0\f$.
+ *
+ * Description:
+ * Computes \f$\mathbb{H}_0\f$ by multiplying the 1D stencils along
+ * each direction separately
+ * Supports a constant weight function of the form w(x,y,z) = w
+ *
+ * Boundary conditions are periodic in all directions
+ *
+ * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
+ *
+ * Parameters:
+ * @tparam hodgeDegree : int, degree of basis functions used
+ * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
+ * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$
+ * @param threeForm : DeRhamField<Grid::dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
+ * @param weight : Real, constant weight function
+ * @return void
+ */
+template <int hodgeDegree, HodgeScheme hodgeScheme>
+void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                                     DeRhamField<Grid::dual, Space::cell>& threeForm,
+                                     amrex::Real weight)
+{
+    // Select stencil according to degree
+    auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
+
+    const amrex::RealVect dr = this->m_dr;
+    const amrex::Geometry geom = this->m_geom;
+
+    AMREX_D_TERM(
+        (matrix_mult<xDir>(
+            geom, stencilNodeToCell, zeroForm.m_data,
+            AMREX_D_PICK(threeForm.m_data, this->m_tempDualThreeForm, threeForm.m_data)));
+        , (matrix_mult<yDir>(geom, stencilNodeToCell,
+                             AMREX_D_PICK((void), this->m_tempDualThreeForm, threeForm.m_data),
+                             AMREX_D_PICK((void), threeForm.m_data, this->m_tempDualThreeForm)));
+        ,
+        (matrix_mult<zDir>(geom, stencilNodeToCell, this->m_tempDualThreeForm, threeForm.m_data)););
+
+    threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
+
+    threeForm.average_sync();
+    threeForm.fill_boundary();
+}
+
+template <HodgeScheme hodgeScheme, int testDegInd>
+void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
+                                            anyFieldRef hodgeDst,
+                                            amrex::Real weight)
+{
+    constexpr auto validDegreesArray = valid_degrees<hodgeScheme>();
+    if constexpr (testDegInd < validDegreesArray.size())
+    {
+        if (this->m_hodgeDegree == validDegreesArray[testDegInd])
+        {
+            std::visit(
+                [this, &validDegreesArray, weight] (const auto& hSrc, auto& hDst)
+                {
+                    using namespace Impl;
+                    using dstFieldTypename = unwrap_ref_decay_t<decltype(hDst)>;
+                    FieldTypes srcFieldTypes{hSrc};
+                    if constexpr (std::is_same_v<
+                                      dstFieldTypename,
+                                      DeRhamField<oppositeGrid<srcFieldTypes.s_gridType>,
+                                                  oppositeSpace<srcFieldTypes.s_spaceType>>&>)
+                    {
+                        hodge_operator<validDegreesArray[testDegInd], hodgeScheme>(hSrc, hDst,
+                                                                                   weight);
+                    }
+                    else
+                    {
+                        std::string str =
+                            "hodgeDegreeSelector must be called with field types that are deRham "
+                            "duals "
+                            "of each other.";
+                        amrex::Assert("Incompatible Hodge operator fields",
+                                      "GEMPIC_FDDeRhamComplex.H", __LINE__, str.c_str());
+                    }
+                },
+                hodgeSrc, hodgeDst);
+        }
+        else
+        {
+            hodge_degree_selector<hodgeScheme, testDegInd + 1>(hodgeSrc, hodgeDst, weight);
+        }
+    }
+    else
+    {
+        std::string str =
+            "No such degree " + std::to_string(m_hodgeDegree) + " for selected Hodge scheme";
+        amrex::Assert("Incompatible Hodge degree and Hodge scheme", "GEMPIC_FDDeRhamComplex.H",
+                      __LINE__, str.c_str());
+    }
+}
+}  // namespace Gempic::Forms
+
+#endif

@@ -6,24 +6,22 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include "GEMPIC_AmrexInit.H"
+#include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_FunctionParse.H"
+#include "GEMPIC_HsZigzag.H"
+#include "GEMPIC_Parameters.H"
+#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
-#include "GEMPIC_amrex_init.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_hs_zigzag.H"
-#include "GEMPIC_parameters.H"
-#include "GEMPIC_particle_groups.H"
-#include "GEMPIC_particle_mesh_coupling.H"
-#include "GEMPIC_sampler.H"
+#include "GEMPIC_Sampler.H"
 
 using namespace Gempic;
-using namespace CompDom;
-using namespace Sampling;
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
+using namespace Particle;
+using namespace Forms;
 
 int main (int argc, char* argv[])
 {
@@ -32,8 +30,8 @@ int main (int argc, char* argv[])
     amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD, overwrite_amrex_parser_defaults);
 
     // Initialize the main parameters instance and tell it to print output
-    Parameters::set_print_output();
-    Parameters parameters{};
+    Io::Parameters::set_print_output();
+    Io::Parameters parameters{};
 
     constexpr unsigned int vdim{3};
     constexpr unsigned int numspec{1};
@@ -70,7 +68,7 @@ int main (int argc, char* argv[])
         }
 
         {  // "Time Loop" scope. Should be a separate function
-            Parameters params("time_loop");
+            Io::Parameters params("time_loop");
 
             amrex::Real dt;
             params.get("dt", dt);

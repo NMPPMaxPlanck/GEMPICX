@@ -1,10 +1,10 @@
 /**
  * @file test_sampler.cpp
  * @author sonnen@ipp.mpg.de
- * @brief Tests GEMPIC_sampler.H
+ * @brief Tests GEMPIC_Sampler.H
  * @version 0.1
  * @date 2021-12-30
- * @details GEMPIC_sampler.H samples functions of the type (for vdim=3) !!! Formula only for 1
+ * @details GEMPIC_Sampler.H samples functions of the type (for vdim=3) !!! Formula only for 1
  * species @n
  * @f[f(x,v)= n_0(x) \left(
  * \prod_{j=1}^{vdim}\frac{w_j}{\sqrt{2\pi v_{th,j}}}\exp(-\frac{(v_j-u_j)^2}{2v_{th,j}}
@@ -24,18 +24,17 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
-#include "GEMPIC_amrex_init.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_parameters.H"
-#include "GEMPIC_particle_groups.H"
-#include "GEMPIC_sampler.H"
+#include "GEMPIC_AmrexInit.H"
+#include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_Parameters.H"
+#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Sampler.H"
 
 // using namespace amrex;
 using namespace Gempic;
 
 // using namespace Field_solvers;
-using namespace Particles;
-using namespace Sampling;
+using namespace Particle;
 
 template <unsigned int vdim, unsigned int numspec>
 void print_particles (amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
@@ -138,7 +137,7 @@ template <unsigned int vdim, unsigned int numspec>
 void main_main ()
 {
     //------------------------------------------------------------------------------
-    Parameters parameters{};
+    Io::Parameters parameters{};
     int species = 0;  // only one species
 
     double twopi = 4 * asin(1.0);
@@ -183,7 +182,7 @@ void main_main ()
     // Print analytical solution
     amrex::PrintToFile("test_sampler.tmp") << "1";
 
-    Parameters params("particle.species0");
+    Io::Parameters params("particle.species0");
     amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
     amrex::Vector<amrex::Vector<amrex::Real>> vThermal{};
     amrex::Vector<amrex::Real> vWeight{};

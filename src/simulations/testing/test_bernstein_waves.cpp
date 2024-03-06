@@ -7,25 +7,24 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include "GEMPIC_AmrexInit.H"
+#include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_amrex_init.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_parameters.H"
-#include "GEMPIC_particle_groups.H"
-#include "GEMPIC_particle_mesh_coupling.H"
-#include "GEMPIC_sampler.H"
+#include "GEMPIC_Parameters.H"
+#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_ParticleMeshCoupling.H"
+#include "GEMPIC_Sampler.H"
 //"include <GEMPIC_PoissonSolver.H"
-#include "BilinearFilter.H"
-#include "MultiFullDiagnostics.H"
-#include "MultiReducedDiagnostics.H"
+#include "GEMPIC_BilinearFilter.H"
+#include "GEMPIC_MultiFullDiagnostics.H"
+#include "GEMPIC_MultiReducedDiagnostics.H"
 
 using namespace Gempic;
-using namespace CompDom;
-using namespace Sampling;
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
+using namespace Forms;
+using namespace Particle;
+using namespace ParticleMeshCoupling;
 
 void write_rho (DeRhamField<Grid::dual, Space::cell> &rho,
                 ComputationalDomain &infra,
@@ -126,7 +125,7 @@ int main (int argc, char *argv[])
 
     {
         // Parameters::setPrintOutput();  // uncomment to print an output file
-        Parameters parameters{};
+        Io::Parameters parameters{};
 
         // Initialize computational_domain
         ComputationalDomain infra;
@@ -151,7 +150,7 @@ int main (int argc, char *argv[])
         amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> ions;
 
         // Initializing filter
-        std::unique_ptr<Filter> biFilter = std::make_unique<BilinearFilter>();
+        std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
 
         // initialize particles & loop preparation:
         // FIRST SPECIES
@@ -168,21 +167,21 @@ int main (int argc, char *argv[])
             // const int npass = 0; // Number of filter passes
 
             // Initialize full diagnostics and write initial time step
-            Parameters params("time_loop");
+            Io::Parameters params("time_loop");
             amrex::Real dt;
             params.get("dt", dt);
             int nSteps;
             params.get("n_steps", nSteps);
-            Parameters paramsSim("sim");
+            Io::Parameters paramsSim("sim");
             amrex::Real te;  // electron temperature
             paramsSim.get("Te", te);
             auto nGhost = deRham->get_n_ghost();
-            MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
+            Io::MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
             fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, ions,
                                 nGhost);
 
             // Initialize reduced diagnostics and write initial time step
-            MultiReducedDiagnostics<vdim, numspec, degx, degy, degz, hodgeDegree, 1> redDiagn(
+            Io::MultiReducedDiagnostics<vdim, numspec, degx, degy, degz, hodgeDegree, 1> redDiagn(
                 deRham);
 
             // Deposit initial charge
@@ -208,8 +207,8 @@ int main (int argc, char *argv[])
                             {
                                 positionParticle[d] = particles[pp].pos(d);
                             }
-                            Spline::SplineBase<degx, degy, degz> spline(positionParticle,
-                                                                        infra.m_plo, infra.m_dxi);
+                            SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                                                infra.m_dxi);
                             // Needs at least max(degx, degy, degz) ghost cells
                             gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
                         });
@@ -286,8 +285,8 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                Spline::SplineBase<degx, degy, degz> spline(
-                                    positionParticle, infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                                                    infra.m_dxi);
 
                                 gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
                             });
@@ -341,8 +340,8 @@ int main (int argc, char *argv[])
                                 amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
-                                Spline::SplineBase<degx, degy, degz> spline(
-                                    positionParticle, infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                                                    infra.m_dxi);
 
                                 // evaluate the electric field
                                 amrex::GpuArray<amrex::Real, vdim> efield =
@@ -373,8 +372,8 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                Spline::SplineBase<degx, degy, degz> splineNew(
-                                    positionParticle, infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> splineNew(positionParticle,
+                                                                       infra.m_plo, infra.m_dxi);
 
                                 gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
                             });

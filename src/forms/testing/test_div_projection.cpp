@@ -9,15 +9,14 @@
 ------------------------------------------------------------------------------*/
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_parameters.H"
+#include "GEMPIC_Parameters.H"
 
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
+using namespace Gempic::Forms;
 
 int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
-    Parameters parameters{};
+    Gempic::Io::Parameters parameters{};
     {
         // error tolerance
         const amrex::Real tol = 1e-15;
@@ -43,7 +42,7 @@ int main (int argc, char *argv[])
         parameters.set("is_periodic_vector", isPeriodic);
 
         // Initialize computational_domain
-        Gempic::CompDom::ComputationalDomain infra;
+        Gempic::ComputationalDomain infra;
 
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,

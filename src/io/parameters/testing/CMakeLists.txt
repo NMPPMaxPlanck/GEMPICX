@@ -1,7 +1,7 @@
 file(GLOB VERBOSITY "../../../utils/GEMPIC_Verbosity.cpp")
-file(GLOB PARAMETERS "../GEMPIC_parameters.cpp")
-file(GLOB FDDERHAMCOMPLEX "../../../forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
-file(GLOB DERIVATIVES "../../../forms/GEMPIC_extDerivatives.cpp")
+file(GLOB PARAMETERS "../GEMPIC_Parameters.cpp")
+file(GLOB FDDERHAMCOMPLEX "../../../forms/fd_derham_complex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../../../forms/GEMPIC_ExtDerivatives.cpp")
 
 add_executable( test_parameters test_parameters.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX} ${DERIVATIVES} )
 

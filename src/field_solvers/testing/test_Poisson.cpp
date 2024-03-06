@@ -7,15 +7,13 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
+#include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Parameters.H"
 #include "GEMPIC_PoissonSolver.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_parameters.H"
 
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
-using namespace GEMPIC_PoissonSolver;
+using namespace Gempic::Forms;
 
 /**
  * @brief Tests the Poisson solver for an analytical rho of 1.0 + cos(x)
@@ -41,7 +39,7 @@ int main (int argc, char *argv[])
         const int maxSplineDegree = 1;
         const int nGhostExtra = 0;
 
-        Parameters parameters{};
+        Gempic::Io::Parameters parameters{};
 
         parameters.set("domain_lo", domainLo);
         parameters.set("k", k);
@@ -51,7 +49,7 @@ int main (int argc, char *argv[])
         parameters.set("n_ghost_extra", nGhostExtra);
 
         // Initialize computational_domain
-        Gempic::CompDom::ComputationalDomain infra;
+        Gempic::ComputationalDomain infra;
 
         // Initialize the De Rham Complex
         auto deRham =
@@ -93,7 +91,7 @@ int main (int argc, char *argv[])
         deRham->projection(funcPhi, 0.0, anPhi);
 
         // solve Poisson
-        PoissonSolver poisson(deRham);
+        Gempic::FieldSolvers::PoissonSolver poisson(deRham);
         poisson.solve(infra, rho, phi);
 
         for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)

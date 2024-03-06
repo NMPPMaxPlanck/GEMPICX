@@ -14,25 +14,17 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 
+#include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
-#include "GEMPIC_computational_domain.H"
-#include "GEMPIC_particle_groups.H"
-#include "GEMPIC_particle_mesh_coupling.H"
-#include "GEMPIC_profiling.H"
+#include "GEMPIC_Profiling.H"
 
-namespace Gempic
+namespace Gempic::TimeLoop
 {
-
-namespace TimeLoop
-{
-using namespace CompDom;
-using namespace Particles;
-using namespace Profiling;
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
-using namespace GEMPIC_PoissonSolver;
+using namespace Forms;
 
 /**
  *  Algorithms to solve the ODE systems associated with a splitting of the semi-discrete
@@ -112,7 +104,7 @@ public:
      * @param pp : index of the given particle
      *
      */
-    template <class splineType = Spline::SplineBase<degx, degy, degz>>
+    template <class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_e_particle (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eA,
         splineType& spline,
@@ -129,7 +121,7 @@ public:
             spline.template eval_spline_field<Field::PrimalOneForm>(eA);
 
         // push v with the electric field
-        push_v_efield(vel, dt, chargemass, efield);
+        ParticleMeshCoupling::push_v_efield(vel, dt, chargemass, efield);
 
         velx[pp] = vel[xDir];
         vely[pp] = vel[yDir];
@@ -169,7 +161,7 @@ public:
      * @param dt : time step
      *
      */
-    template <Direction dir, class splineType = Spline::SplineBase<degx, degy, degz>>
+    template <Direction dir, class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i (
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& pos,
         amrex::GpuArray<amrex::Real, vdim>& vel,
@@ -188,7 +180,8 @@ public:
         spline.template update1_d_splines<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
         spline.template update1_d_primitive<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
 
-        accumulate_j_integrate_b<dir>(spline, chargeWeight, dx, bA, jA, bfields);
+        ParticleMeshCoupling::accumulate_j_integrate_b<dir>(spline, chargeWeight, dx, bA, jA,
+                                                            bfields);
 
         if (vdim > 1) vel[(dir + 1) % 3] = vel[(dir + 1) % 3] - chargemass * bfields[0];
         if (vdim > 2) vel[(dir + 2) % 3] = vel[(dir + 2) % 3] + chargemass * bfields[1];
@@ -269,14 +262,12 @@ public:
         DeRhamField<Grid::dual, Space::face>& J,
         ComputationalDomain infra,
         const amrex::Real dt,
-        amrex::GpuArray<std::unique_ptr<ParticleGroups<vdim, ndata>>, numspec>& partGr,
+        amrex::GpuArray<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& partGr,
         const int nSteps,
         int strangOrder,
         OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) = 0;
 };
 
-}  // namespace TimeLoop
-
-}  // namespace Gempic
+}  // namespace Gempic::TimeLoop
 
 #endif

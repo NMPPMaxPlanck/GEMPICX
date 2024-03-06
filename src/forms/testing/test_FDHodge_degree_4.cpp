@@ -21,11 +21,9 @@ error_32)
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
-#include "GEMPIC_parameters.H"
+#include "GEMPIC_Parameters.H"
 
-using namespace GEMPIC_Fields;
-using namespace GEMPIC_FDDeRhamComplex;
-using namespace GEMPIC_Interpolation;
+using namespace Gempic::Forms;
 
 const int hodgeDegree = 4;
 const int maxSplineDegree = 1;
@@ -43,7 +41,7 @@ amrex::Real test12 (int n)
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-    Parameters parameters{};
+    Gempic::Io::Parameters parameters{};
     parameters.set("domain_lo", domainLo);
     parameters.set("k", k);
     parameters.set("n_cell_vector", nCell);
@@ -51,7 +49,7 @@ amrex::Real test12 (int n)
     parameters.set("is_periodic_vector", isPeriodic);
 
     // Initialize computational_domain
-    Gempic::CompDom::ComputationalDomain infra;
+    Gempic::ComputationalDomain infra;
 
     const amrex::Geometry geom = infra.m_geom;
 
@@ -144,7 +142,7 @@ amrex::Real test21 (int n)
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-    Parameters parameters{};
+    Gempic::Io::Parameters parameters{};
     parameters.set("domain_lo", domainLo);
     parameters.set("k", k);
     parameters.set("n_cell_vector", nCell);
@@ -152,7 +150,7 @@ amrex::Real test21 (int n)
     parameters.set("is_periodic_vector", isPeriodic);
 
     // Initialize computational_domain
-    Gempic::CompDom::ComputationalDomain infra;
+    Gempic::ComputationalDomain infra;
 
     const amrex::Geometry geom = infra.m_geom;
 
@@ -245,7 +243,7 @@ amrex::Real test03 (int n)
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-    Parameters parameters{};
+    Gempic::Io::Parameters parameters{};
     parameters.set("domain_lo", domainLo);
     parameters.set("k", k);
     parameters.set("n_cell_vector", nCell);
@@ -253,7 +251,7 @@ amrex::Real test03 (int n)
     parameters.set("is_periodic_vector", isPeriodic);
 
     // Initialize computational_domain
-    Gempic::CompDom::ComputationalDomain infra;
+    Gempic::ComputationalDomain infra;
 
     const amrex::Geometry geom = infra.m_geom;
 
@@ -323,7 +321,7 @@ amrex::Real test30 (int n)
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
     const amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-    Parameters parameters{};
+    Gempic::Io::Parameters parameters{};
     parameters.set("domain_lo", domainLo);
     parameters.set("k", k);
     parameters.set("n_cell_vector", nCell);
@@ -331,7 +329,7 @@ amrex::Real test30 (int n)
     parameters.set("is_periodic_vector", isPeriodic);
 
     // Initialize computational_domain
-    Gempic::CompDom::ComputationalDomain infra;
+    Gempic::ComputationalDomain infra;
 
     const amrex::Geometry geom = infra.m_geom;
 

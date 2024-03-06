@@ -1,7 +1,7 @@
 file(GLOB VERBOSITY "../../utils/GEMPIC_Verbosity.cpp")
-file(GLOB PARAMETERS "../../io/parameters/GEMPIC_parameters.cpp")
-file(GLOB FDDERHAMCOMPLEX "../FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
-file(GLOB DERIVATIVES "../GEMPIC_extDerivatives.cpp")
+file(GLOB PARAMETERS "../../io/parameters/GEMPIC_Parameters.cpp")
+file(GLOB FDDERHAMCOMPLEX "../fd_derham_complex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../GEMPIC_ExtDerivatives.cpp")
 
 add_executable( test_AMReX_FillBoundary test_AMReX_FillBoundary.cpp )
 add_executable( test_AMReX_OverrideSync test_AMReX_OverrideSync.cpp )

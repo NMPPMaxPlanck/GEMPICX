@@ -144,7 +144,7 @@ In order for the tests located in a file to compile and run, it is necessary to 
     \item \lstinline{#include <gtest/gtest.h>} in your test file
     \item \lstinline{#include <gmock/gmock.h>} in your test file if you use mocking (\url{https://google.github.io/googletest/gmock_for_dummies.html})
 \end{itemize}
-Additionally, if you need to include any of testing helper modules not part of GEMPIC proper, the relative include path acts as if you were \loc{\main}, meaning including \emph{e.g.} the main helper function library \verb|GEMPIC_test_utils.H| is done through the command \lstinline{#include "test_utils/GEMPIC_test_utils.H"}, no matter where your specific test file is located.
+Additionally, if you need to include any of testing helper modules not part of GEMPIC proper, the relative include path acts as if you were \loc{\main}, meaning including \emph{e.g.} the main helper function library \verb|GEMPIC_TestUtils.H| is done through the command \lstinline{#include "test_utils/GEMPIC_TestUtils.H"}, no matter where your specific test file is located.
 
 \emph{Note}: Due to CMake shenanigans, as in the rest of the GEMPIC project, only two kinds of \verb|C++| file extensions are accepted: \verb|.cpp| and \verb|.H|.
 
@@ -185,7 +185,7 @@ namespace
  or view \verb|deposit_rho_test.cpp| \loc{\pmc} for an example. Note that when using fixtures, the corresponding test macro is \lstinline{TEST_F} instead of \lstinline{TEST}.
 
 \subsection{AMReX Setup}
-AMReX is set up automatically, initiating the environment in each test based on the main GEMPIC build. This is done through the \verb|utest_main.cpp| file \loc{\main}.
+AMReX is set up automatically, initiating the environment in each test based on the main GEMPIC build. This is done through the \verb|GEMPIC_UnitTests.cpp| file \loc{\main}.
 AMReX should accept any arguments given, but it is probably better to feign this functionality using either \lstinline{amrex::ParmParse} or the \lstinline{Parameters} class to set variables (to keep options contained), and change runtime variables in \verb|test_utils/AmrexTestEnv.H| if needed. \todo{Move golden file ctests to \gt{}?}.
 
 \subsection{Testing GPU Code}\label{testing-gpu-code}
@@ -201,7 +201,7 @@ Furthermore, \gt{} code like \lstinline{EXPECT_EQ} cannot be called from GPU cod
 \subsection{Field Checking Helpers}
 Alternatively, for checking individual values of fields you can use one of the helper functions \lstinline{GEMPIC_TestUtils::check_field} or \lstinline{GEMPIC_TestUtils::compare_fields} directly in your tests. Note that both of these functions require that you preface your testing script with
 \begin{lstlisting}
-    #include "test_utils/GEMPIC_test_utils.H"
+    #include "test_utils/GEMPIC_TestUtils.H"
 
     #define compare_fields(...) GEMPIC_TestUtils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
     #define check_field(...) GEMPIC_TestUtils::check_field(__FILE__, __LINE__, __VA_ARGS__)
