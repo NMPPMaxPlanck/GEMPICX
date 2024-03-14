@@ -1,0 +1,5 @@
+add_subdirectory( FieldSolvers )
+add_subdirectory( Forms )
+add_subdirectory( Io )
+add_subdirectory( Particle )
+add_subdirectory( Simulations )

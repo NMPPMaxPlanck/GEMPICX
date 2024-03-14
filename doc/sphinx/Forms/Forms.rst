@@ -10,8 +10,8 @@ Forms
 
    ExteriorDerivatives
 
-.. doxygenstruct:: GEMPIC_Fields::DeRhamField
+.. doxygenstruct:: Gempic::Forms::DeRhamField
    :members:
 
-.. doxygenclass:: GEMPIC_Fields::DeRhamComplex
+.. doxygenclass:: Gempic::Forms::DeRhamComplex
    :members:

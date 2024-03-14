@@ -1,0 +1,35 @@
+# General setting
+utest.keepParameters = 1
+simName = "GTest"
+
+# Grid parameters
+nCellVector = 128 8 8
+maxGridSizeVector = 32 8 8
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+Particle.speciesNames = ions
+Particle.ions.nPartPerCell = 10 # number of Particles per cell
+Particle.ions.charge = 1.0 # vector (one entry per species)
+Particle.ions.mass = 1.0 # vector (one entry per species)
+Particle.ions.density = "1.0 + 0.01 * cos(kvarx * x)"
+Particle.ions.numGaussians = 1
+
+# Gaussian parameters
+Particle.ions.G0.vMean = 0.0 0.0 0.0
+Particle.ions.G0.vThermal = 1 1 1
+Particle.ions.G0.vWeight = 1.0
+
+# wave vector
+k = 1 1 0.3
+
+# Simulation parameters
+TimeLoop.nSteps = 50000
+TimeLoop.dt = 0.02
+TimeLoop.saveFields = 1
+TimeLoop.saveParticles = 1
+
+# Function parameters
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "1.0"

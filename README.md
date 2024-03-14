@@ -5,6 +5,7 @@ New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 ## Requirements
 - [AMReX](https://github.com/AMReX-Codes/amrex)
 - [CMake](https://cmake.org/cmake/help/latest/index.html)
+- [numdiff](https://www.nongnu.org/numdiff/) (To be deprecated. See issue #99)
 - Documentation:
   - Doxygen 
   - Sphinx
@@ -67,21 +68,21 @@ Before building make sure that all dependencies are satisfied.
 git clone git@gitlab.mpcdf.mpg.de:gempic/gempic.git
 cd gempic
 cmake --preset cpu-release-3D -S .
-cmake --build build
+cmake --build build/cpu-release-3D
 ```
 
 ## Run a simulation
 
-Example simulations and input files can be found in `src/simulations`. 
+Example simulations and input files can be found in `Src/Simulations`. 
 Create a directory from which the simulation can be started. We run the simulation in a subdirectory of `gempic` project directory which is not 
 recommended for real production runs.
 ```sh
 mkdir runs/gempic_quickstart
 cd runs/gempic_quickstart
-cp ../../build/cpu-release-3D/src/simulations/testing/test_bernstein_waves .
-cp ../../src/simulations/testing/IOFiles_3D/test_bernstein_waves_input.input .
+cp ../../build/cpu-release-3D/Src/Simulations/Testing/test_bernstein_waves .
+cp ../../Src/Simulations/Testing/IOFiles3D/test_bernstein_waves_input.input .
 ```
-Optionally, change the value of the parameter `time_loop.n_steps` in the input file `test_bernstein_waves_input.input` to reduce the runtime.
+Optionally, change the value of the parameter `TimeLoop.nSteps` in the input file `test_bernstein_waves_input.input` to reduce the runtime.
 Now run the simulation using
 ```sh
 ./test_bernstein_waves test_bernstein_waves_input.input 
@@ -95,12 +96,6 @@ Just do (still in the `gempic_quickstart` run folder)
 cp ../../post_processing/rho_slices.ipynb .
 jupyter lab rho_slices.ipynb         
 ```
-
-# CTest
-
-- To write a test code, write a main program in the testing directory corresponding to the code you are testing. This code should be in a file *test_mytest.cpp* and write the results of the test in a file called *test_mytest.output*   
-- The new test is automatically added to the list of ctests when a *test_mytest.expected_output* file is added in the directory IOFiles_1D, IOFiles_2D or IOFiles_3D in the testing directory containing *test_mytest.cpp*. When ctest is called the files *test_mytest.output* and *test_mytest.expected_output* are compared and the test is passed when they are identical up to round of errors that are set by parameters used in numdiff (these parameters are hard coded in define_ctest.cmake). Which directory of IOFiles_1D, IOFiles_2D or IOFiles_3D is used when ctest is looking for tests is determined at compile time by the value of AMReX_SPACEDIM.
-- Assuming *build* is the directory in which Gempic is built, the executables of the tests are found in build/src/my_dir/testing and can be run directly without performing all the ctests. You can also run all the tests in a testing directory by executing ctest in build/src/my_dir/testing
 
 # Settings for vscode
 

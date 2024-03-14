@@ -1,0 +1,26 @@
+file(GLOB VERBOSITY "../../Utils/GEMPIC_Verbosity.cpp")
+file(GLOB PARAMETERS "../../Io/Parameters/GEMPIC_Parameters.cpp")
+file(GLOB FDDERHAMCOMPLEX "../../Forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
+file(GLOB DERIVATIVES "../../Forms/GEMPIC_ExtDerivatives.cpp")
+file(GLOB POISSON "../../FieldSolvers/Poisson/GEMPIC_PoissonSolver.cpp")
+
+add_executable( test_bernstein_waves test_bernstein_waves.cpp ${VERBOSITY} ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES})
+add_executable( test_vlasov_poisson test_vlasov_poisson.cpp ${VERBOSITY} ${PARAMETERS} ${FDDERHAMCOMPLEX} ${DERIVATIVES} ${POISSON})
+
+if(GEMPIC_USE_CUDA) 
+  setup_target_for_cuda_compilation( test_bernstein_waves )
+  setup_target_for_cuda_compilation( test_vlasov_poisson )
+endif()
+
+target_link_libraries( test_bernstein_waves  AMReX::amrex AMReX::Flags_CXX  )
+target_link_libraries( test_vlasov_poisson  AMReX::amrex AMReX::Flags_CXX  )
+
+if("${AMReX_SPACEDIM}" STREQUAL "3")
+  add_subdirectory(IOFiles3D)
+elseif("${AMReX_SPACEDIM}" STREQUAL "2")
+  add_subdirectory(IOFiles2D)
+elseif("${AMReX_SPACEDIM}" STREQUAL "1")
+  add_subdirectory(IOFiles1D)
+else()
+  message("Dimension not implemented in AMReX")
+endif()

@@ -6,7 +6,7 @@ Checks: '-*,readability-identifier-naming,bugprone-macro-parentheses,cppcoreguid
 # These checks are (very!) bug prone:
 #,misc-const-correctness
 #HeaderFilterRegex: '^\./(src/.*|Testing/.*|[^/]*)\.H$' # regex to exclude third_party folder, but include header files in src/,  Testing/ and the root folder (where GEMPIC_Config.H is).
-HeaderFilterRegex: 'gempic/(src/.*|testing/.*|[^/]*)\.H$' # regex to exclude third_party folder, but include header files in src/,  testing/ and the root folder (where GEMPIC_Config.H is).
+HeaderFilterRegex: 'gempic/(Src/.*|Testing/.*|[^/]*)\.H$' # regex to exclude third_party folder, but include header files in src/,  testing/ and the root folder (where GEMPIC_Config.H is).
 FormatStyle: none
 # ExportFixes: 'clangTidyFixes.yaml'
 # Current naming conventions

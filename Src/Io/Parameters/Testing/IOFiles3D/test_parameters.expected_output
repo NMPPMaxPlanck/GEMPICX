@@ -1,0 +1,50 @@
+# Parameters for class ComputationalDomain:
+nCellVector = 128 8 8  # read from file
+maxGridSizeVector = 32 8 8  # read from file
+isPeriodicVector = 1 1 1  # read from file
+domainLo = 0 0 0  # set here
+k = 1 1 0.3  # read from file
+ComputationalDomain.toleranceParticle = 1e-10
+
+# Parameters for class DeRhamComplex:
+nGhostExtra = 3 # set here
+nGhost = 4 4 4  # set here
+
+# Parameters for function parseFunctions:
+k = 1 1 0.3  # read from file
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "1.0"
+
+# Parameters for class Particle:
+Particle.speciesNames = "ions" 
+
+# Parameters for class ParticleGroups (ions):
+Particle.ions.charge = 1
+Particle.ions.mass = 1
+
+# Parameters for function init_particles_full_domain (ions):
+Particle.ions.nPartPerCell = 10
+k = 1 1 0.3  # read from file
+Particle.ions.density = "1.0 + 0.01 * cos(kvarx * x)"
+Particle.ions.numGaussians = 1
+Particle.ions.G0.vMean = 0 0 0
+Particle.ions.G0.vThermal = 1 1 1
+Particle.ions.G0.vWeight = 1
+
+# Parameters for class TimeLoop:
+TimeLoop.dt = 0.02
+TimeLoop.nSteps = 5
+TimeLoop.saveFields = 1
+
+# Shared parameters:
+#domainHi not used
+domainLo = 0 0 0  # set by class ComputationalDomain
+isPeriodicVector = 1 1 1  # read from file
+k = 1 1 0.3  # read from file
+maxGridSizeVector = 32 8 8  # read from file
+nCellVector = 128 8 8  # read from file
+nGhost = 4 4 4  # set by class DeRhamComplex
+nGhostExtra = 3 # set by class DeRhamComplex
+outputFile = "test_parameters.output" # read from file
+simName = "test_parameters" # read from file

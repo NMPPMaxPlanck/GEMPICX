@@ -47,8 +47,11 @@
 
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage[most]{tcolorbox}
 \definecolor{lightergray}{gray}{0.95}
 \definecolor{macrocolor}{RGB}{255,145,0}
+\definecolor{warningred}{RGB}{255,145,145}
+\newtcolorbox{customWarning}{colback=warningred,grow to right by=-10mm,grow to left by=-10mm, boxrule=0pt,boxsep=0pt,breakable}
 \usepackage{expl3}
 
 \ExplSyntaxOn
@@ -132,7 +135,8 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item Overriding virtual functions are declared without the \lstinline{virtual} keyword but with \lstinline{override} or \lstinline{final}
     \item Function or class definitions have the starting \verb|{| brace on a new line
     \item \lstinline{#include}s are surrounded by quotation marks (\verb|"..."|) for GEMPIC headers and angular brackets (\verb|<...>|) otherwise
-    \item (*) Namespaces follow the outer folder structure, such that code in \verb|src/io/parameters| would be in the scope \lstinline{Gempic::Io}
+    \item (*) \emph{Do not} put \lstinline{using namespace} statements in header (\verb|.H|) files
+    \item (*) \emph{Do not} put third party \lstinline{using namespace} statements in source (\verb|.cpp|) files. 
 \end{itemize}
 \subsection{Naming conventions}
 \begin{itemize}
@@ -140,32 +144,36 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item Names for functions, including member functions, are \verb|snake_case|
     \item Variable names are \verb|camelBack|. Exceptions are single character names optionally followed by \lstinline{x}, \lstinline{y} or \lstinline{z}, \emph{e.g.} \verb|E|, \lstinline{Bx} or \lstinline{Hz}.
     \item Template variable names are \verb|CamelCase| if they're type names and \verb|camelBack| if not
-    \item Macros are \verb|UPPER_CASE|
+    \item Macros are \lstinline{UPPER_CASE}
     \item (Non-static) class member variables have the \lstinline{m_} prefix
     \item Static class variables have the \lstinline{s_} prefix
-    \item Folder names are \verb|snake_case|
+    \item Folder names are \verb|CamelCase|
     \item File names are prefixed with \verb|GEMPIC_| and then in \verb|CamelCase|, \emph{e.g.} \verb|GEMPIC_SomeModule.H|
     \item Test file names are \verb|CamelCase| and then postfixed with \verb|_test|, \emph{e.g.} \verb|SomeModule_test.cpp|
+    \item (*) Namespaces follow the outer folder structure, such that code in \verb|Src/Io/Parameters| would be in the scope \lstinline{Gempic::Io}
 \end{itemize}
 Exceptions to these conventions are unavoidable when inheriting from or calling third party libraries, but otherwise they should be followed and will be enforced with automatic tools.
 
 \section{Automatic Linting and Formatting}
-To help enforce the above conventions we use two clang extra tools: \verb|clang-format| and \verb|clang-format|.
+To help enforce the above conventions we use two clang extra tools: \verb|clang-format| and \verb|clang-tidy|.
 
 \verb|clang-format| is mostly responsible for formatting whitespace: \verb|{| on newlines, spaces around assignment operators, order of \lstinline{#include} statements, indentation, etc. It can be run in seconds.
 
 \verb|clang-tidy| is responsible for semantic style choices: parentheses around macro arguments, no cstyle casting, correct case for variables, functions and classes, etc. It takes minutes to run, with recent versions taking longer.
 
+%% None of this produces a coloured text box in the end. I give up.
 \begin{important}
+%\begin{customWarning}
     Unfortunately, these tools still have some bugs. It is therefore recommended not to run them on their own, but instead run the script \verb|scripts/sanitize_code.sh| which speeds up the runtime of \verb|clang-tidy| and attempts to correct mistakes incurred by both tools.
     To format and lint your code before committing run:
 
     \verb|source scripts/sanitize_code.sh|\\
     The formatting should be done with clang-format and clang-tidy version 14 or 17, and preferably after configuring compilation for 3D.
+%\end{customWarning}
 \end{important}
 If you wish to do only linting or only formatting, uncomment the corresponding line at the end of \verb|script/sanitize_code.sh|. It is, however, not recommended to do only linting, and \verb|clang-format| takes seconds to run, so there should be no need.
     
-\section*{Frequently Asked Questions}
+\subsection*{Frequently Asked Questions}
 \begin{itemize}
     \item \emph{\ldots why?}
 

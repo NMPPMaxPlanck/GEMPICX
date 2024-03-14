@@ -1,4 +1,0 @@
-add_subdirectory(reduced_diags)
-add_subdirectory(full_diagnostics)
-add_subdirectory(flush_formats)
-add_subdirectory(compute_diag_functors)
