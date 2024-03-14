@@ -18,27 +18,53 @@ read_build_dir_file ()
 # --------------------------------------------------------------------------------------------------
 # Enforces consistent folder and C++ file naming
 # --------------------------------------------------------------------------------------------------
-GEMPIC_fix_folder_file_names ()
+fix_folder_names ()
 {
     # Ensure folders are snake_case:
-    # Find all folders with uppercase letters in their name
-    for folder in $(find ./src/ ./testing -type d -print | grep [A-Z])
+    # Find all folders
+    for folder in $(find $1 -maxdepth 1 -type d -print)
     do
-        # replace uppercase with snake_case
-        newName=$(echo $folder | sed -E -e 's#/([A-Z])#/\l\1#g' -e 's/([A-Z])/_\l\1/g')
-        mv $folder $newName
-        echo "Fixed $folder to $newName because folders are snake_case."
+        # ... starting with lowercase or with underscores in their name?
+        if [[ $(echo $folder | grep -E "/[a-z]|_") ]]
+        then
+            # replace snake_case with CamelCase
+            newName=$(echo $folder | sed -E -e 's#/([a-z])#/\u\1#g' -e 's#_+([[:alnum:]])#\u\1#g')
+            git mv $folder $newName
+            echo "Fixed $folder to $newName because folders are CamelCase."
 
-        # An automatic solution would be hard to look at and prone to bugs
-        echo "Remember to update CMakeLists.txt files pointing to this folder:"
-        grep -nR "${folder##*/}" . --include=CMakeLists.txt --exclude-dir=third_party
+            # An automatic solution would be hard to look at and prone to bugs
+            if [[ $(grep -nR "\b${folder##*/}\b" . --include=CMakeLists.txt --exclude-dir=third_party --exclude-dir=*build*) ]]
+            then
+                echo "Remember to update CMakeLists.txt files pointing to this folder:"
+                grep -nR "\b${folder##*/}\b" . --include=CMakeLists.txt --exclude-dir=third_party --exclude-dir=*build*
+            fi
+            
+            # Launch subfolder search with changed folder name
+            fix_folder_names $newName
+        # Folder conforming to name scheme
+        else
+            if [[ $folder != $1 ]] # Avoid infinite recursion ...
+            then
+                # Folder name was fine, so we simply search subfolders
+                fix_folder_names $folder
+            fi
+        fi
+
     done
+}
+
+
+GEMPIC_fix_folder_file_names ()
+{
+    # Ensure code folders are CamelCase
+    fix_folder_names "./Src"
+    fix_folder_names "./Testing"
 
     # Ensure all code files follow one of three patterns:
     # A) GEMPIC_CamelCase.H or GEMPIC_CamelCase.cpp
     # B) CamelCase_test.cpp
     # C) test_aNy_StYlE.cpp (deprecated)
-    for file in $(find ./src/ ./testing/ -name "*.H" -or -name "*.cpp" -type f |
+    for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f |
                   grep -Ev -- '/GEMPIC_[A-Z][a-zA-Z]*\.|/[A-Z][a-zA-Z]*_test\.cpp$|/test\w*\.cpp$')
     do
         # Remove underscores and convert following letters to uppercase
@@ -54,7 +80,7 @@ GEMPIC_fix_folder_file_names ()
 
         fi
         # Rename file
-        mv $file $newName
+        git mv $file $newName
 
         # Old file name (with extension, without path) and extension
         oldFileName="${$file##*/}"
@@ -123,7 +149,7 @@ GEMPIC_run_clang_tidy ()
 # --------------------------------------------------------------------------------------------------
 GEMPIC_run_clang_format ()
 {
-    for file in $(find ./src/ ./testing/ -name "*.H" -or -name "*.cpp" -type f)
+    for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f)
     do
         # Enforce style: #include "GEMPIC_File.H" or #include <notAGempicFile>
         sed -Ei 's/(^#include )"([^"]*)"/\1<\2>/g' $file
@@ -181,7 +207,7 @@ trap cleanup EXIT
 # Actual sanitation. Comment or uncomment desired parts. It's recommended to do -format after -tidy
 # It's also recommended to run this after setting the CMAKE configure settings to 3D debug.
 
-#GEMPIC_fix_folder_file_names
+GEMPIC_fix_folder_file_names
 
 GEMPIC_run_clang_tidy
 

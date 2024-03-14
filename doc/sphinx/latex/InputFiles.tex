@@ -1,0 +1,373 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,urlcolor=cyan]{hyperref}%,linkcolor=green]{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\usepackage{xstring}
+\usepackage{xparse}
+\usepackage{comment}
+\renewcommand{\Affilfont}{\footnotesize}
+
+\newcommand{\amrex}{\texttt{AMReX}}
+%\renewcommand{\Authfont}{\normalsize}
+\usepackage{mdframed}
+\newenvironment{important}[1][]{%
+   \begin{mdframed}[%
+      backgroundcolor={red!15}, hidealllines=true,
+      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
+      splitbottomskip=2pt, splittopskip=4pt, #1]%
+   \makebox[0pt]{% ignore the withd of !
+      \smash{% ignor the height of !
+         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
+         \hspace*{-19pt}% move ! to the left
+         \raisebox{-2pt}{% move ! up a little
+            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
+         }%
+      }%
+   }%
+}{\end{mdframed}}
+%\usepackage{algpseudocode}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{lightergray}{gray}{0.95}
+\definecolor{macrocolor}{RGB}{255,145,0}
+\usepackage{expl3}
+
+\ExplSyntaxOn
+
+% compile the expression
+\regex_new:N \l_CPP_uppercase_regex
+%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
+\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
+
+\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
+\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
+
+% a variant that expands the input fully
+\cs_generate_variant:Nn \regex_match:NnTF {NV}
+
+\NewDocumentCommand \ifuppercase { m m }
+{
+    % expand to actual underscore
+    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
+    \tl_set:cn { lst@um_ } { _ }
+    % match the current token
+    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
+    % reset
+    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
+}
+
+\ExplSyntaxOff
+
+\lstdefinelanguage{text}{
+    morecomment=[l]{\#}
+}
+
+\lstset{language={text},
+%        basicstyle=\sffamily,
+        columns=fullflexible,
+        backgroundcolor=\color{lightergray}}
+%\lstset{language=C++,
+%        alsoletter={_},
+%        basicstyle=\ttfamily,
+%        columns=fullflexible,
+%        backgroundcolor=\color{lightergray}}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\input{gempic_spectral_macros}
+
+\title{Input Files}
+
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This note describes the input file semantics and their meaning
+\end{abstract}
+
+\tableofcontents
+
+\section{Input Files}
+The \amrex{} framework provides a simple way to give input parameters to a simulation: The input file. This is a file in ordinary \verb|.txt| encoding (typically named \verb|.input|) that can be read as an argument to an executable compiled with \amrex:
+\begin{lstlisting}[language=sh]
+   $ ./executable inputFile.input 
+\end{lstlisting}
+
+\subsection{Overall structure}
+An input file consists of separate lines of variables, each with the variable name, an equals (\verb|=|) sign and one or more values. Variables can have an optional scope, typically corresponding to a class, and values are separated by spaces:
+\begin{lstlisting}
+# Comments begin with '#'
+# Input file for simulation etc
+simName = "etc"
+
+# Input for class Filter
+Filter.enable = 1 # enable filtering
+Filter.npassEachDir = 3 3 3 # pass the filter three times in each direction
+\end{lstlisting}
+%
+Notice that, like the class and variable counterparts:
+\begin{itemize}
+    \item Scope names are \verb|CamelCase|
+    \item Variable names are \verb|camelBack|
+\end{itemize}
+%
+In the following, the possible options are discussed for each category of input variables. Most of these will have default options that are used if the values are not provided by the user.
+
+\subsection{Global Variables}
+A list of global variables (\emph{i.e.}, variables read in more than one place) follows below. Note that these variables \emph{never} have a scope. A fully up-to-date lists can always be found in \verb|GEMPIC_Parameters.H|.
+\begin{lstlisting}
+# Global variables
+# The name of the output file.
+outputFile = "outputFileName" # string. No default.
+
+# The name of the simulation itself
+simName = "my_simulation" # string. No default.
+
+# How many additional ghost cells to put. Note that Gempic always calculates a default
+# number of ghost cells in addition to this, depending on Hodge- and spline parameters.
+nGhostExtra = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. Default 3.
+
+# Number of cells used in the grid
+nCellVector = 32 8 8 #  Integer vector of AMReX_SPACEDIM entries. No default.
+
+# Maximum grid size for partitioning computations. 
+# The maxGridSizeVector must be less than or equal to nCellVector,
+# and in each direction, nCellVector must be divisible by maxGridSizeVector.
+# Here we would have 4 regions in the x-direction and 1 in the y- and z-directions.
+maxGridSizeVector = 8 8 8 # Integer vector of AMReX_SPACEDIM entries. No default.
+
+# Is this direction periodic?
+isPeriodicVector = 1 1 1 # Boolean (1/0) vector of AMReX_SPACEDIM entries. No default.
+
+# Wave vector. This determines the physical length of the mesh, which is equal to 1/k.
+# If this is given, domainHi will therefore be ignored.
+k = 1 1 0.3 # Real vector of AMReX_SPACEDIM entries. No default.
+
+# Lower physical coordinates of the mesh
+domainLo = 0.0 0.0 0.0 # Real vector of AMReX_SPACEDIM entries. Default 0.0 0.0 0.0.
+
+# Higher physical coordinates of the mesh. Will be ignored if the wave vector k is given.
+domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM entries. Default 1.0 1.0 1.0.
+\end{lstlisting}
+
+\subsection{Filter}
+Controls the filtering behaviour of the simulation (assuming your simulation has this option).
+\begin{lstlisting}
+# Filter class options
+
+# To filter or not to filter 
+Filter.enable = 1 # Boolean (1/0). Default 0.
+
+# How many times to pass the filter in each direction
+Filter.npassEachDir = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No default.
+\end{lstlisting}
+
+\subsection{FullDiagnostics}
+Controls the behaviour of the full diagnostics module (assuming your simulation has this option).
+\begin{lstlisting}
+# FullDiagnostics class options
+
+FullDiagnostics.enable = 1 # Boolean (1/0). Default 0.
+
+# Arbitrary names for groups of diagnostics. No naming style is enforced.
+FullDiagnostics.groupNames = any group_name yOu want # string vector. No default.
+
+# How often to output diagnostics. Overwrites default and is used for each group 
+# unless they specify values themselves.
+FullDiagnostics.saveInterval = 55 # Integer. No default.
+
+## Options for each individual group
+# Prefix to output files
+FullDiagnostics.{groupName}.filePrefix = "." # string. Default "FullDiagnostics/plt_{groupName}".
+
+# Minimal number of digits of output file names, i.e. rho000001
+FullDiagnostics.{groupName}.fileMinDigits = 5 # Integer. Default 6.
+
+# If true, a dump is performed at the last timestep regardless of the required dump timesteps
+FullDiagnostics.{groupName}.dumpLastTimeStep = 0 # Boolean (1/0). Default 1.
+
+# Names of the variables in this group to output. Must correspond to names in simulation.
+# Cannot be a mixture of particles and fields.
+FullDiagnostics.{groupName}.varNames = Ey Ez Bx # string vector. No default.
+
+# Format of the output files. Options are "plotfile" (and maybe some day "openPMD")
+FullDiagnostics.{groupName}.format = "plotfile" # string. Default "plotfile".
+
+# Print functor. Only applicable to fields. Options are "raw" and "CellCenter", detmining
+# if you want the raw data or the interpolated values of the fields in the cell centers.
+FullDiagnostics.{groupName}.functor = "raw" # string. Default "raw".
+
+# How often to output the diagnostics. Every n time steps.
+FullDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 100.
+
+\end{lstlisting}
+
+\subsection{ReducedDiagnostics}
+Controls the behaviour of the reduced diagnostics module (assuming your simulation has this option).
+\begin{lstlisting}
+# ReducedDiagnostics class options
+
+ReducedDiagnostics.enable = 1 # Boolean (1/0). Default 0.
+
+# Where or not to compute fields that might be needed for reduced calculations
+# even if they aren't initiated in the main script.
+ReducedDiagnostics.computeMissingFields = 1 # Boolean (1/0). Default 0.
+
+# Arbitrary names for groups of diagnostics. No naming style is enforced.
+ReducedDiagnostics.groupNames = any group_name yOu want # string vector. No default.
+
+# How often to output diagnostics. Overwrites default and is used for each group 
+# unless they specify values themselves.
+ReducedDiagnostics.saveInterval = 55 # Integer. No default.
+
+## Options for each individual group
+# Names of the variables in this group to output. Options are:
+# Particle ElecFieldEnergy MagFieldEnergy GaussError
+ReducedDiagnostics.{groupName}.types = Particle GaussError # string vector. No default.
+
+# How often to output the diagnostics. Every n time steps.
+ReducedDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 1.
+
+\end{lstlisting}
+\subsection{Particle}
+Particle input variables are divided into species with subscopes given by user provided \verb|speciesNames|:
+\begin{lstlisting}
+# Particle parameters
+# Note that no naming style is enforced.
+# The name has to match that given to Reduced- and FullDiagnostics.
+Particles.speciesNames = any_names yOU WANT # string vector. No default.
+# Number of particles per cell
+# Parameters for the first species
+Particle.{speciesName}.nPartPerCell = 10 # Integer. No default.
+Particle.{speciesName}.charge = -1.0 # Real. Default 1.0.
+Particle.{speciesName}.mass = 1.0 # Real. Default 1.0.
+
+# Initial density of the particle species using the Parser class in AMReX
+Particle.{speciesName}.density = "1.0 + 0.01 * cos(kvarx * x)" # string. No default. Here, kvarx=k[0].
+
+# Number of Gaussians making up the velocity distribution of the {speciesName}
+Particle.{speciesName}.numGaussians = 1 # Integer. Default 1.
+
+# Gaussian parameters for the first (G0) Gaussian
+Particle.{speciesName}.G0.vMean = 0.0 0.0 0.0 # Real vector. No default.
+Particle.{speciesName}.G0.vThermal = 1 1 1 # Real vector. No default.
+Particle.{speciesName}.G0.vWeight = 1.0 # Real. No default.
+\end{lstlisting}
+
+\subsection{Function}
+Variables read in the simulation by the helper function interpreter \verb|parse_funtions| using the \href{https://amrex-codes.github.io/amrex/docs_html/Basics.html#parser}{Parser class in AMReX}. The variable names can be anything.
+\begin{lstlisting}
+# Functions
+Function.Bz = "1e-3 * cos(kvarx * x)" # string. No default.
+\end{lstlisting}
+
+\subsection{Example of An Input File}
+Putting it all together, an input file might look like this:
+\begin{lstlisting}
+# Input file for adiabatic slab simulation
+simName = "test_adiabatic_slab"
+
+# Grid parameters
+nCellVector = 128 8 8
+maxGridSizeVector = 32 8 8
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+k = 1 1 0.3
+
+# Particle parameters
+Particle.speciesNames = electrons ions
+
+# Electrons
+Particle.electrons.nPartPerCell = 10
+Particle.electrons.charge = -1.0
+Particle.electrons.mass = 1.0
+Particle.electrons.density = "1.0 +  cos(kvarx * x) + sin(kvary * y) + cos(2*kvarz *z)"
+
+Particle.electrons.numGaussians = 2
+Particle.electrons.G0.vMean = 0 0 0
+Particle.electrons.G0.vThermal = 1.0 1.0 1.0
+Particle.electrons.G0.vWeight = 0.75
+Particle.electrons.G1.vMean = -2.4 0 0
+Particle.electrons.G1.vThermal = 1.0 1.0 1.0
+Particle.electrons.G1.vWeight = 0.25
+
+# Ions
+Particle.ions.nPartPerCell = 100 
+Particle.ions.charge = 1.0
+Particle.ions.mass = 1.0
+Particle.ions.density = "1.0 +  0.2*cos(kvarx * x)"
+
+Particle.ions.numGaussians = 1
+Particle.ions.G0.vMean = 2.4 0 0
+Particle.ions.G0.vThermal = 1.0 1.0 1.0
+Particle.ions.G0.vWeight = 1.0
+
+# Filter
+Filter.enable = 1
+Filter.npassEachDir = 3 3 3
+
+# Full Diagnostics
+FullDiagnostics.enable = 1
+FullDiagnostics.groupNames = part_test Ez_raw plots 
+
+FullDiagnostics.part_test.varNames = ions
+FullDiagnostics.part_test.functor = raw
+
+FullDiagnostics.plots.varNames = Ey Ez Bx
+FullDiagnostics.plots.functor = CellCenter
+
+FullDiagnostics.Ez_raw.varNames = Ez
+FullDiagnostics.Ez_raw.saveInterval = 50
+FullDiagnostics.Ez_raw.functor = raw
+
+# Reduced Diagnostics 
+ReducedDiagnostics.groupNames = PartDiag FieldDiag GaussErr 
+ReducedDiagnostics.saveInterval = 1 # Default for all reduced diagnostic groups
+
+ReducedDiagnostics.FieldDiag.types = ElecFieldEnergy MagFieldEnergy 
+
+ReducedDiagnostics.PartDiag.types = Particle 
+ReducedDiagnostics.PartDiag.saveInterval = 10 # Special for this diagnostic group
+
+ReducedDiagnostics.GaussErr.types = GaussError
+
+# Functions
+Function.Bz = "1e-3 * cos(kvarx * x)"
+\end{lstlisting}
+
+\end{document}

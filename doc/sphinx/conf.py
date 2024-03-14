@@ -23,7 +23,7 @@ def configureDoxyfile(input_dir, output_dir):
     with open('Doxyfile.in', 'r') as file :
         filedata = file.read()
 
-    filedata = filedata.replace('./../../src', input_dir)
+    filedata = filedata.replace('./../../Src', input_dir)
     filedata = filedata.replace('_build', output_dir)
 
     with open('Doxyfile', 'w') as file:
@@ -223,7 +223,7 @@ breathe_default_project = "gempic"
 breathe_default_members = ('members', 'undoc-members')
 breathe_implementation_filename_extensions = ['.cpp']
 if read_the_docs_build:
-    input_dir = '../../src'
+    input_dir = '../../Src'
     output_dir = '_build'
     configureDoxyfile(input_dir, output_dir)
     subprocess.call('doxygen', shell=True)

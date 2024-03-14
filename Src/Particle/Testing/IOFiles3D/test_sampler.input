@@ -1,0 +1,25 @@
+# General setting
+simName = "sampler_ctest"
+
+# Grid parameters
+nCellVector = 4 4 4
+maxGridSizeVector = 32 8 8 # DEFAULT from old params class
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else # DEFAULT from old params class
+
+# Particle parameters
+Particle.speciesNames = ions
+Particle.ions.nPartPerCell = 1000 # number of Particles per cell
+Particle.ions.charge = 1.0 # vector (one entry per species)
+Particle.ions.mass = 1.0 # vector (one entry per species)
+Particle.ions.density = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)"
+
+# Gaussian parameters
+Particle.ions.numGaussians = 2
+
+Particle.ions.G0.vMean = 0.0 0.0 0.0
+Particle.ions.G0.vThermal = 2.0 2.0 2.0
+Particle.ions.G0.vWeight = 0.75
+
+Particle.ions.G1.vMean = 2.0 2.0 2.0
+Particle.ions.G1.vThermal = 1.0 1.0 1.0
+Particle.ions.G1.vWeight = 0.25

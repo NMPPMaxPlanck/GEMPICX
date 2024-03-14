@@ -35,7 +35,6 @@
             "displayName": "MPI Compiler",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_COMPILER": "mpicxx",
                 "CMAKE_C_COMPILER": "mpicc",
                 "CMAKE_CUDA_HOST_COMPILER": "mpicxx"
@@ -50,6 +49,7 @@
                 "gempic-gpu-cache-vars"
             ],
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "3"
             }
         },
@@ -62,6 +62,7 @@
                 "gempic-gpu-cache-vars"
             ],
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "2"
             }
         },
@@ -74,6 +75,7 @@
                 "gempic-gpu-cache-vars"
             ],
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "1"
             }
         },
@@ -125,6 +127,7 @@
                 "mpi-compiler"
             ],
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "3"
             }
         },
@@ -137,6 +140,7 @@
                 "mpi-compiler"
             ],
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "2"
             }
         },
@@ -149,6 +153,7 @@
                 "mpi-compiler"
             ],
             "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "1"
             }
         }

@@ -1,57 +1,57 @@
 # General setting
-sim_name = "Weibel"
+simName = "Weibel"
 
 # GPU settings
-#amrex.use_gpu_aware_mpi = 1 
-#amrex.abort_on_out_of_gpu_memory = 1
+#amrex.useGpu_aware_mpi = 1 
+#amrex.abort_on_out_ofGpu_memory = 1
 # OPENMP settings
 #mfiter_tile_size = 16 16 8 
-particle.do_tiling = 1 
+Particle.do_tiling = 1 
 
 # Grid parameters
-n_cell_vector = 64 64 16
-max_grid_size_vector = 64 16 16
-particle.tile_size = 64 8 8
-#max_grid_size_vector = 16 8 8
-is_periodic_vector = 1 1 1 # 1 -> periodic, 0 -> else
+nCellVector = 64 64 16
+maxGridSizeVector = 64 16 16
+Particle.tile_size = 64 8 8
+#maxGridSizeVector = 16 8 8
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
-particle.species0.n_part_per_cell = 20 # number of particles per cell
-particle.species0.charge = -1.0 # vector (one entry per species)
-particle.species0.mass = 1.0 # vector (one entry per species)
-particle.species0.density = "1.0" #"1.0 + 0.0 * cos(kvarx * x)"
-particle.species0.num_gaussians = 1
+Particle.species0.nPartPerCell = 20 # number of Particles per cell
+Particle.species0.charge = -1.0 # vector (one entry per species)
+Particle.species0.mass = 1.0 # vector (one entry per species)
+Particle.species0.density = "1.0" #"1.0 + 0.0 * cos(kvarx * x)"
+Particle.species0.numGaussians = 1
 
 # Gaussian parameters
-particle.species0.vMean_g0 = 0.0 0.0 0.0
-particle.species0.vThermal_g0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
-particle.species0.vWeight_g0 = 1.0
+Particle.species0.vMeanG0 = 0.0 0.0 0.0
+Particle.species0.vThermalG0 = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
+Particle.species0.vWeightG0 = 1.0
 
 # wave vector
 k = 1.25 1.25 1.25 # 1.25 for Weibel, 0.5 for Landau
  
 # Simulation parameters
-time_loop.n_steps = 10
-time_loop.dt = 0.04
-time_loop.save_fields = 5 
-time_loop.save_particles = 100001 
-time_loop.save_checkpoint = 4
+TimeLoop.nSteps = 10
+TimeLoop.dt = 0.04
+TimeLoop.saveFields = 5 
+TimeLoop.saveParticles = 100001 
+TimeLoop.save_checkpoint = 4
 
 # Function parameters
-function.Bx = "0.0"
-function.By = "0.0"
-function.Bz = "1e-3 * cos(kvarx * x)"
-function.phi = "4 * 0.5 * cos(0.5 * x)"
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "1e-3 * cos(kvarx * x)"
+Function.phi = "4 * 0.5 * cos(0.5 * x)"
 
 # Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
-time_loop.propagator = 3
-#time_loop.strang_order = 2
+TimeLoop.propagator = 3
+#TimeLoop.strang_order = 2
 
 # Tolerances for iterative solver (if needed by the chosen propagator)
-time_loop.tolerance_particles = 1.e-10
-#time_loop.max_coarsening_level = 0
+TimeLoop.toleranceParticles = 1.e-10
+#TimeLoop.max_coarsening_level = 0
 
 # Restart parameters
-time_loop.restart = 0
-time_loop.checkpoint_file = "Checkpoint/Test_Weibel_2_"
-time_loop.curr_step = 4
+TimeLoop.restart = 0
+TimeLoop.checkpoint_file = "Checkpoint/Test_Weibel_2_"
+TimeLoop.curr_step = 4

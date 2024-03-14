@@ -1,5 +1,0 @@
-add_subdirectory( field_solvers )
-add_subdirectory( forms )
-add_subdirectory( io )
-add_subdirectory( particle )
-add_subdirectory( simulations )
