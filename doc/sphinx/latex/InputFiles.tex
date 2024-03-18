@@ -78,11 +78,11 @@
 
 \ExplSyntaxOff
 
-\lstdefinelanguage{text}{
+\lstdefinelanguage{toml}{
     morecomment=[l]{\#}
 }
 
-\lstset{language={text},
+\lstset{language={toml},
 %        basicstyle=\sffamily,
         columns=fullflexible,
         backgroundcolor=\color{lightergray}}
@@ -131,7 +131,7 @@ The \amrex{} framework provides a simple way to give input parameters to a simul
 
 \subsection{Overall structure}
 An input file consists of separate lines of variables, each with the variable name, an equals (\verb|=|) sign and one or more values. Variables can have an optional scope, typically corresponding to a class, and values are separated by spaces:
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # Comments begin with '#'
 # Input file for simulation etc
 simName = "etc"
@@ -151,7 +151,7 @@ In the following, the possible options are discussed for each category of input 
 
 \subsection{Global Variables}
 A list of global variables (\emph{i.e.}, variables read in more than one place) follows below. Note that these variables \emph{never} have a scope. A fully up-to-date lists can always be found in \verb|GEMPIC_Parameters.H|.
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # Global variables
 # The name of the output file.
 outputFile = "outputFileName" # string. No default.
@@ -188,7 +188,7 @@ domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM entries. Default 1.0 1.
 
 \subsection{Filter}
 Controls the filtering behaviour of the simulation (assuming your simulation has this option).
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # Filter class options
 
 # To filter or not to filter 
@@ -200,7 +200,7 @@ Filter.npassEachDir = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No defau
 
 \subsection{FullDiagnostics}
 Controls the behaviour of the full diagnostics module (assuming your simulation has this option).
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # FullDiagnostics class options
 
 FullDiagnostics.enable = 1 # Boolean (1/0). Default 0.
@@ -240,7 +240,7 @@ FullDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 100.
 
 \subsection{ReducedDiagnostics}
 Controls the behaviour of the reduced diagnostics module (assuming your simulation has this option).
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # ReducedDiagnostics class options
 
 ReducedDiagnostics.enable = 1 # Boolean (1/0). Default 0.
@@ -267,7 +267,7 @@ ReducedDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 1.
 \end{lstlisting}
 \subsection{Particle}
 Particle input variables are divided into species with subscopes given by user provided \verb|speciesNames|:
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # Particle parameters
 # Note that no naming style is enforced.
 # The name has to match that given to Reduced- and FullDiagnostics.
@@ -292,14 +292,14 @@ Particle.{speciesName}.G0.vWeight = 1.0 # Real. No default.
 
 \subsection{Function}
 Variables read in the simulation by the helper function interpreter \verb|parse_funtions| using the \href{https://amrex-codes.github.io/amrex/docs_html/Basics.html#parser}{Parser class in AMReX}. The variable names can be anything.
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # Functions
 Function.Bz = "1e-3 * cos(kvarx * x)" # string. No default.
 \end{lstlisting}
 
 \subsection{Example of An Input File}
 Putting it all together, an input file might look like this:
-\begin{lstlisting}
+\begin{lstlisting}[language=toml]
 # Input file for adiabatic slab simulation
 simName = "test_adiabatic_slab"
 
