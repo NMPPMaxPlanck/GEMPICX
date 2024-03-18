@@ -9,20 +9,40 @@ stages:
   - test
   - deploy
 
+.mpcdf-modules:
+  before_script:
+    - module purge
+    - module load numdiff/5.9
+    - module load cmake/3.24
+    - module load git
+
+# Avoids splitting commit and merge pipelines
+# Without this, every push to a branch with a merge request creates two pipelines: One for the 
+# branch itself, having all build-tests and another for the ones specific to merge requests.
+# With this, when a branch is part of a merge request, build-tests are cancelled on the branch but
+# run in the merge request pipeline.
+.combine-merge-branch-pipelines:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
 .mpcdf-gcc-env:
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image
   tags:
     - cloud
   stage: test
   before_script:
-    - module purge
-    - module load cmake/3.24 git
+    - !reference [.mpcdf-modules,before_script]
     - module load gcc/11
-    - module load openmpi/4 numdiff/5.9
+    - module load openmpi/4
     - module list
 
 build-test_gcc_3D:
-  extends: .mpcdf-gcc-env
+  extends:
+    - .mpcdf-gcc-env
+    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-3D
     - cmake --build ./build -j 20
@@ -30,7 +50,9 @@ build-test_gcc_3D:
     - ctest --output-on-failure
 
 build-test_gcc_2D:
-  extends: .mpcdf-gcc-env
+  extends:
+    - .mpcdf-gcc-env
+    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-2D
     - cmake --build ./build -j 20
@@ -38,7 +60,9 @@ build-test_gcc_2D:
     - ctest --output-on-failure
 
 build-test_gcc_1D:
-  extends: .mpcdf-gcc-env
+  extends:
+    - .mpcdf-gcc-env
+    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-1D
     - cmake --build ./build -j 20
@@ -51,13 +75,15 @@ build-test_gcc_1D:
     - cloud-gpu
   stage: test
   before_script:
-    - module purge
-    - module load cmake/3.24 git
+    - !reference [.mpcdf-modules,before_script]
     - module load gcc/11 cuda/11.4
-    - module load openmpi/4 numdiff/5.9
+    - module load openmpi/4
+    - module list
 
 build-test_gpu_3D:
-  extends: .mpcdf-gpu-env
+  extends:
+    - .mpcdf-gpu-env
+    - .combine-merge-branch-pipelines
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
@@ -68,7 +94,9 @@ build-test_gpu_3D:
     - echo quit | nvidia-cuda-mps-control
 
 build-test_gpu_2D:
-  extends: .mpcdf-gpu-env
+  extends:
+    - .mpcdf-gpu-env
+    - .combine-merge-branch-pipelines
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
@@ -79,7 +107,9 @@ build-test_gpu_2D:
     - echo quit | nvidia-cuda-mps-control
 
 build-test_gpu_1D:
-  extends: .mpcdf-gpu-env
+  extends:
+    - .mpcdf-gpu-env
+    - .combine-merge-branch-pipelines
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
@@ -95,15 +125,16 @@ build-test_gpu_1D:
     - cloud
   stage: test
   before_script:
-    - module purge
-    - module load cmake/3.24 git
+    - !reference [.mpcdf-modules,before_script]
     - module load gcc/12
-    - module load openmpi/4 numdiff/5.9
+    - module load openmpi/4
     - module load clang/15
     - module list
 
 build-test_clang_cpu_3D:
-  extends: .mpcdf-clang-env
+  extends:
+    - .mpcdf-clang-env
+    - .combine-merge-branch-pipelines
   script:
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
@@ -111,7 +142,9 @@ build-test_clang_cpu_3D:
     - ctest --output-on-failure
 
 build-test_clang_cpu_2D:
-  extends: .mpcdf-clang-env
+  extends:
+    - .mpcdf-clang-env
+    - .combine-merge-branch-pipelines
   script:
     - cmake --preset cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
@@ -119,7 +152,9 @@ build-test_clang_cpu_2D:
     - ctest --output-on-failure
 
 build-test_clang_cpu_1D:
-  extends: .mpcdf-clang-env
+  extends:
+    - .mpcdf-clang-env
+    - .combine-merge-branch-pipelines
   script:
     - cmake --preset cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
@@ -151,6 +186,35 @@ build-gcc-gpu:
 #     - cd scripts
 #     - bash ci_raven_gpu_long_test.sh
 
+# Test that merge requests are "clean", i.e. with the proper style
+style-test_cpu_3D:
+  extends: .mpcdf-clang-env
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
+  before_script:
+    - !reference [.mpcdf-clang-env,before_script]
+    - module load anaconda/3/2021.11
+    - module list
+  script:
+    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
+    - bash scripts/sanitize_code.sh
+    - git diff --exit-code
+  needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
+
+style-test_gpu_3D:
+  extends: .mpcdf-gpu-env
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
+  before_script:
+    - !reference [.mpcdf-gpu-env,before_script]
+    - module load clang/15
+    - module load anaconda/3/2021.11
+    - module list
+  script:
+    - cmake -S . -B ./build --preset mpcdf-gpu-3D
+    - bash scripts/sanitize_code.sh
+    - git diff --exit-code
+  needs: ["build-test_gpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
 # Create and publish documentation pages (Ubuntu 20.04)
 pages:
