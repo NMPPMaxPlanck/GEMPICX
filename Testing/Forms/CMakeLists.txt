@@ -4,4 +4,6 @@ file(GLOB FDDERHAMCOMPLEX "../../Src/Forms/FDDeRhamComplex/GEMPIC_FDDeRhamComple
 file(GLOB DERIVATIVES "../../Src/Forms/GEMPIC_ExtDerivatives.cpp")
 
 target_sources(GtestTests PRIVATE
-    FDDeRhamComplex_test.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX})
+    FDDeRhamComplex_test.cpp ${PARAMETERS} ${VERBOSITY} ${FDDERHAMCOMPLEX}
+    FDDeRhamComplexProjection_test.cpp
+    )
