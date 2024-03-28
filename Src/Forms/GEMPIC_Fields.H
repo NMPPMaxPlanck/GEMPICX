@@ -243,7 +243,7 @@ public:
         // buffer ghost cells
         int nGhostExtra{3};
         params.get_or_set("nGhostExtra", nGhostExtra);
-        int nGhostNum{std::max(m_hodgeDegree / 2, maxSplineDegree + nGhostExtra)};
+        int nGhostNum{std::max(m_hodgeDegree / 2, maxSplineDegree) + nGhostExtra};
         m_nGhost = amrex::IntVect{AMREX_D_DECL(nGhostNum, nGhostNum, nGhostNum)};
         std::vector<int> nGhostVector{AMREX_D_DECL(m_nGhost[xDir], m_nGhost[yDir], m_nGhost[zDir])};
         params.set("nGhost", nGhostVector);

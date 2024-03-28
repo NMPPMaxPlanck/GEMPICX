@@ -136,7 +136,7 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item Function or class definitions have the starting \verb|{| brace on a new line
     \item \lstinline{#include}s are surrounded by quotation marks (\verb|"..."|) for GEMPIC headers and angular brackets (\verb|<...>|) otherwise
     \item (*) \emph{Do not} put \lstinline{using namespace} statements in header (\verb|.H|) files
-    \item (*) \emph{Do not} put third party \lstinline{using namespace} statements in source (\verb|.cpp|) files. 
+    \item (*) \emph{Do not} put third party \lstinline{using namespace} statements in source (\verb|.cpp|) files
 \end{itemize}
 \subsection{Naming conventions}
 \begin{itemize}
@@ -151,6 +151,7 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item File names are prefixed with \verb|GEMPIC_| and then in \verb|CamelCase|, \emph{e.g.} \verb|GEMPIC_SomeModule.H|
     \item Test file names are \verb|CamelCase| and then postfixed with \verb|_test|, \emph{e.g.} \verb|SomeModule_test.cpp|
     \item (*) Namespaces follow the outer folder structure, such that code in \verb|Src/Io/Parameters| would be in the scope \lstinline{Gempic::Io}
+    \item (*) Implementation details internal to a module can be "hidden" in an \verb|Impl| namespace, \emph{e.g.} \verb|{Gempic::Io::Impl}|
 \end{itemize}
 Exceptions to these conventions are unavoidable when inheriting from or calling third party libraries, but otherwise they should be followed and will be enforced with automatic tools.
 

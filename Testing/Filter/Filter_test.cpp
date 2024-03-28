@@ -63,7 +63,7 @@ public:
         pp.add("Filter.enable", true);
         int filterPass{GetParam()};
         m_filterNpass = std::vector<int>{AMREX_D_DECL(filterPass, filterPass, filterPass)};
-        pp.addarr("Filter.npassEachDir", m_filterNpass);
+        pp.addarr("Filter.nPass", m_filterNpass);
 
         std::vector<int> nGhostVec{m_filterNpass};
         m_parameters.set("nGhost", nGhostVec);
@@ -88,13 +88,13 @@ TEST_P(BilinearFilterTestParameter, ConstantTest)
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(mfTmp, mf, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilter->apply_stencil(mf, mfTmp, srcCompBegIn, dstCompBegIn, m_nComps);
     // probably fails due to filter expanding box (which then has 0s)
 
     for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi)
     {
         // Expect all indices to be constVal
-        check_field(mfTmp[mfi].array(), m_infra.m_nCell.dim3(), {}, {}, constVal);
+        check_field(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, constVal);
     }
 }
 
@@ -122,12 +122,12 @@ TEST_F(BilinearFilterTest, NoFilter)
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(mfTmp, mf, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilter->apply_stencil(mf, mfTmp, srcCompBegIn, dstCompBegIn, m_nComps);
 
     for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi)
     {
         // Expect the all indices to be constVal
-        check_field(mfTmp[mfi].array(), m_infra.m_nCell.dim3(), {}, {}, tmpVal);
+        check_field(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, tmpVal);
     }
 }
 
@@ -135,29 +135,37 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
 {
     // Parse analytical field and initialize parserEval.
     const std::string analyticalInit{"sin(kvarx*x)"};
-    // const std::string analyticalInit{"x"};
     //  One pass bilinear filter is
     //  f(x) + 0.5*(sum_{n=1}^{infty} df^(2n)/d^(2n)x (x) *(dx)^(2n)/(2n)!)
     //  with dx = 1 and f(x) = sin(k*x), this is
     //  f(x) + 0.5*(cos(k) - 1)*f(x) = 0.5*f(x)(1 + cos(k))
     const std::string analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
+    //  One pass bilinear filter is with compensation is
+    //  (alpha+(1-alpha)cos(kvarx))*g(x)
+    //  where g(x) is the analytical solution without filter
+    const std::string analyticalSolComp{"(0.5 + 0.5*cos(kvarx))*" + analyticalSol};
 
     amrex::Vector<amrex::Real> k;
     m_parameters.get("k", k);
     const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
-    amrex::Parser parserInit;
 
+    amrex::Parser parserInit;
     parserInit.define(analyticalInit);
     parserInit.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     parserInit.setConstant("kvarx", k[xDir]);
     auto funcInit = parserInit.compile<nVar>();
 
     amrex::Parser parserSol;
-
     parserSol.define(analyticalSol);
     parserSol.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     parserSol.setConstant("kvarx", k[xDir]);
     auto funcSol = parserSol.compile<nVar>();
+
+    amrex::Parser parserSolComp;
+    parserSolComp.define(analyticalSolComp);
+    parserSolComp.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    parserSolComp.setConstant("kvarx", k[xDir]);
+    auto funcSolComp = parserSolComp.compile<nVar>();
 
     constexpr int hodgeDegree{2};
     constexpr int maxSplineDegree{3};
@@ -165,21 +173,35 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     DeRhamField<Grid::dual, Space::cell> rho(deRham, funcInit);
     DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
     DeRhamField<Grid::dual, Space::cell> rhoSol(deRham, funcSol);
+    DeRhamField<Grid::dual, Space::cell> rhoSolComp(deRham, funcSol);
 
     amrex::ParmParse pp;
     pp.add("Filter.enable", true);
     std::vector<int> filterNpass{AMREX_D_DECL(1, 0, 0)};
-    pp.addarr("Filter.npassEachDir", filterNpass);
+    pp.addarr("Filter.nPass", filterNpass);
 
+    // Test uncompensated filter
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilter->apply_stencil(rho.m_data, rhoTemp.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(rhoTemp.m_data[mfi].array(), rhoSol.m_data[mfi].array(), bx);
+        compare_fields(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
+    }
+
+    // Test compensated filter
+    pp.add("Filter.compensate", true);
+
+    std::unique_ptr<Filter::Filter> biFilterComp = std::make_unique<Filter::BilinearFilter>();
+    biFilter->apply_stencil(rho.m_data, rhoTemp.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
+
+    for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.tilebox();
+        compare_fields(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
     }
 }
 }  // namespace

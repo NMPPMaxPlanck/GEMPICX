@@ -66,11 +66,12 @@ public:
         // with a clean "input file". However, allow user to override this
         // behavior through command line arguments.
         {
-            amrex::ParmParse pp("utest");
-            bool keepParameters = false;
-            pp.query("keepParameters", keepParameters);
+            {
+                amrex::ParmParse pp("utest");
+                pp.query("keepParameters", m_keepParameters);
+            }
 
-            if (!keepParameters)
+            if (!m_keepParameters)
             {
                 amrex::ParmParse::Finalize();
             }
@@ -86,6 +87,30 @@ protected:
     char**& m_argv;
 
     bool m_hasManagedMemory{true};
+    bool m_keepParameters{false};
+};
+
+class AmrexTestIsolation : public testing::EmptyTestEventListener
+{
+public:
+    AmrexTestIsolation()
+    {
+        amrex::ParmParse pp("utest");
+        pp.query("keepParameters", m_keepParameters);
+    }
+
+private:
+    // Called after each test suite ends
+    void OnTestSuiteEnd (const testing::TestSuite& testSuite) override
+    {
+        if (!m_keepParameters)
+        {
+            amrex::ParmParse::Finalize();
+        }
+    }
+
+protected:
+    bool m_keepParameters{false};
 };
 
 }  // namespace GEMPIC_Tests

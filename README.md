@@ -93,8 +93,8 @@ Some jupyter notebooks can be found in `gempic/post_processing` and adapted to t
 Just do (still in the `gempic_quickstart` run folder)
 
 ```sh
-cp ../../post_processing/rho_slices.ipynb .
-jupyter lab rho_slices.ipynb         
+cp ../../post_processing/rho_slices.py .
+python3 rho_slices.py 
 ```
 
 # Settings for vscode

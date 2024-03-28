@@ -78,11 +78,11 @@
 
 \ExplSyntaxOff
 
-\lstdefinelanguage{toml}{
+\lstdefinelanguage{pkgconfig}{
     morecomment=[l]{\#}
 }
 
-\lstset{language={toml},
+\lstset{language={pkgconfig},
 %        basicstyle=\sffamily,
         columns=fullflexible,
         backgroundcolor=\color{lightergray}}
@@ -131,14 +131,14 @@ The \amrex{} framework provides a simple way to give input parameters to a simul
 
 \subsection{Overall structure}
 An input file consists of separate lines of variables, each with the variable name, an equals (\verb|=|) sign and one or more values. Variables can have an optional scope, typically corresponding to a class, and values are separated by spaces:
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # Comments begin with '#'
 # Input file for simulation etc
 simName = "etc"
 
 # Input for class Filter
 Filter.enable = 1 # enable filtering
-Filter.npassEachDir = 3 3 3 # pass the filter three times in each direction
+Filter.nPass = 3 3 3 # pass the filter three times in each direction
 \end{lstlisting}
 %
 Notice that, like the class and variable counterparts:
@@ -151,17 +151,17 @@ In the following, the possible options are discussed for each category of input 
 
 \subsection{Global Variables}
 A list of global variables (\emph{i.e.}, variables read in more than one place) follows below. Note that these variables \emph{never} have a scope. A fully up-to-date lists can always be found in \verb|GEMPIC_Parameters.H|.
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # Global variables
 # The name of the output file.
-outputFile = "outputFileName" # string. No default.
+outputFile = "outputFileName" # String. No default.
 
 # The name of the simulation itself
-simName = "my_simulation" # string. No default.
+simName = "my_simulation" # String. No default.
 
 # How many additional ghost cells to put. Note that Gempic always calculates a default
 # number of ghost cells in addition to this, depending on Hodge- and spline parameters.
-nGhostExtra = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. Default 3.
+nGhostExtra = 2 # Integer. Default 3.
 
 # Number of cells used in the grid
 nCellVector = 32 8 8 #  Integer vector of AMReX_SPACEDIM entries. No default.
@@ -188,25 +188,28 @@ domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM entries. Default 1.0 1.
 
 \subsection{Filter}
 Controls the filtering behaviour of the simulation (assuming your simulation has this option).
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # Filter class options
 
 # To filter or not to filter 
 Filter.enable = 1 # Boolean (1/0). Default 0.
 
 # How many times to pass the filter in each direction
-Filter.npassEachDir = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No default.
+Filter.nPass = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No default.
+
+# Whether or not to do an extra compensation step when calculating the filter stencil
+Filter.compensate = 1 # Boolean (1/0). Default 0.
 \end{lstlisting}
 
 \subsection{FullDiagnostics}
 Controls the behaviour of the full diagnostics module (assuming your simulation has this option).
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # FullDiagnostics class options
 
 FullDiagnostics.enable = 1 # Boolean (1/0). Default 0.
 
 # Arbitrary names for groups of diagnostics. No naming style is enforced.
-FullDiagnostics.groupNames = any group_name yOu want # string vector. No default.
+FullDiagnostics.groupNames = any group_name yOu want # String vector. No default.
 
 # How often to output diagnostics. Overwrites default and is used for each group 
 # unless they specify values themselves.
@@ -214,7 +217,7 @@ FullDiagnostics.saveInterval = 55 # Integer. No default.
 
 ## Options for each individual group
 # Prefix to output files
-FullDiagnostics.{groupName}.filePrefix = "." # string. Default "FullDiagnostics/plt_{groupName}".
+FullDiagnostics.{groupName}.filePrefix = "." # String. Default "FullDiagnostics/plt_{groupName}".
 
 # Minimal number of digits of output file names, i.e. rho000001
 FullDiagnostics.{groupName}.fileMinDigits = 5 # Integer. Default 6.
@@ -224,14 +227,14 @@ FullDiagnostics.{groupName}.dumpLastTimeStep = 0 # Boolean (1/0). Default 1.
 
 # Names of the variables in this group to output. Must correspond to names in simulation.
 # Cannot be a mixture of particles and fields.
-FullDiagnostics.{groupName}.varNames = Ey Ez Bx # string vector. No default.
+FullDiagnostics.{groupName}.varNames = Ey Ez Bx # String vector. No default.
 
 # Format of the output files. Options are "plotfile" (and maybe some day "openPMD")
-FullDiagnostics.{groupName}.format = "plotfile" # string. Default "plotfile".
+FullDiagnostics.{groupName}.format = "plotfile" # String. Default "plotfile".
 
 # Print functor. Only applicable to fields. Options are "raw" and "CellCenter", detmining
 # if you want the raw data or the interpolated values of the fields in the cell centers.
-FullDiagnostics.{groupName}.functor = "raw" # string. Default "raw".
+FullDiagnostics.{groupName}.functor = "raw" # String. Default "raw".
 
 # How often to output the diagnostics. Every n time steps.
 FullDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 100.
@@ -240,7 +243,7 @@ FullDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 100.
 
 \subsection{ReducedDiagnostics}
 Controls the behaviour of the reduced diagnostics module (assuming your simulation has this option).
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # ReducedDiagnostics class options
 
 ReducedDiagnostics.enable = 1 # Boolean (1/0). Default 0.
@@ -250,7 +253,7 @@ ReducedDiagnostics.enable = 1 # Boolean (1/0). Default 0.
 ReducedDiagnostics.computeMissingFields = 1 # Boolean (1/0). Default 0.
 
 # Arbitrary names for groups of diagnostics. No naming style is enforced.
-ReducedDiagnostics.groupNames = any group_name yOu want # string vector. No default.
+ReducedDiagnostics.groupNames = any group_name yOu want # String vector. No default.
 
 # How often to output diagnostics. Overwrites default and is used for each group 
 # unless they specify values themselves.
@@ -259,32 +262,38 @@ ReducedDiagnostics.saveInterval = 55 # Integer. No default.
 ## Options for each individual group
 # Names of the variables in this group to output. Options are:
 # Particle ElecFieldEnergy MagFieldEnergy GaussError
-ReducedDiagnostics.{groupName}.types = Particle GaussError # string vector. No default.
+ReducedDiagnostics.{groupName}.types = Particle GaussError # String vector. No default.
 
 # How often to output the diagnostics. Every n time steps.
 ReducedDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 1.
 
+# Where to save the output file
+ReducedDiagnostics.{groupName}.path = "Data/Values/" # String. Default "ReducedDiagnostics/".
+
+# File extension of the output file
+ReducedDiagnostics.{groupName}.extension = "output" # String. Default "txt".
+
 \end{lstlisting}
 \subsection{Particle}
 Particle input variables are divided into species with subscopes given by user provided \verb|speciesNames|:
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # Particle parameters
 # Note that no naming style is enforced.
 # The name has to match that given to Reduced- and FullDiagnostics.
-Particles.speciesNames = any_names yOU WANT # string vector. No default.
+Particle.speciesNames = any_names yOU WANT # String vector. No default.
 # Number of particles per cell
 # Parameters for the first species
 Particle.{speciesName}.nPartPerCell = 10 # Integer. No default.
 Particle.{speciesName}.charge = -1.0 # Real. Default 1.0.
 Particle.{speciesName}.mass = 1.0 # Real. Default 1.0.
 
-# Initial density of the particle species using the Parser class in AMReX
-Particle.{speciesName}.density = "1.0 + 0.01 * cos(kvarx * x)" # string. No default. Here, kvarx=k[0].
+# Initial density of the particle species using the Parser class in AMReX. Here, kvarx=k[0].
+Particle.{speciesName}.density = "1.0 + 0.01 * cos(kvarx * x)" # String. No default.
 
 # Number of Gaussians making up the velocity distribution of the {speciesName}
 Particle.{speciesName}.numGaussians = 1 # Integer. Default 1.
 
-# Gaussian parameters for the first (G0) Gaussian
+# Gaussian parameters for the first (G0) Gaussian. The sum of all Gaussian weights must be 1.0.
 Particle.{speciesName}.G0.vMean = 0.0 0.0 0.0 # Real vector. No default.
 Particle.{speciesName}.G0.vThermal = 1 1 1 # Real vector. No default.
 Particle.{speciesName}.G0.vWeight = 1.0 # Real. No default.
@@ -292,14 +301,14 @@ Particle.{speciesName}.G0.vWeight = 1.0 # Real. No default.
 
 \subsection{Function}
 Variables read in the simulation by the helper function interpreter \verb|parse_funtions| using the \href{https://amrex-codes.github.io/amrex/docs_html/Basics.html#parser}{Parser class in AMReX}. The variable names can be anything.
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # Functions
-Function.Bz = "1e-3 * cos(kvarx * x)" # string. No default.
+Function.Bz = "1e-3 * cos(kvarx * x)" # String. No default.
 \end{lstlisting}
 
 \subsection{Example of An Input File}
 Putting it all together, an input file might look like this:
-\begin{lstlisting}[language=toml]
+\begin{lstlisting}[language=pkgconfig]
 # Input file for adiabatic slab simulation
 simName = "test_adiabatic_slab"
 
@@ -339,7 +348,8 @@ Particle.ions.G0.vWeight = 1.0
 
 # Filter
 Filter.enable = 1
-Filter.npassEachDir = 3 3 3
+Filter.nPass = 3 3 3
+Filter.compensate = 1
 
 # Full Diagnostics
 FullDiagnostics.enable = 1
