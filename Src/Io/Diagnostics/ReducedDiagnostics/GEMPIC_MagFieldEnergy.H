@@ -41,9 +41,12 @@ public:
     /**
      * constructor
      * @param[in] rdName reduced diags names
+     * @param[in] indexNum the index of the print field in the header
+     * @param[in] isLastType is this the last type in the group?
      */
-    MagFieldEnergy(std::string rdName) :
-        ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(rdName)
+    MagFieldEnergy(std::string rdName, int& indexNum, bool isLastType) :
+        ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
+            rdName, indexNum, isLastType)
     {
         if (amrex::ParallelDescriptor::IOProcessor())
         {
@@ -51,20 +54,25 @@ public:
             {
                 // open file
                 std::ofstream ofs{this->m_path + this->m_rdName + "." + this->m_extension,
-                                  std::ofstream::out};
+                                  std::ofstream::out | std::ofstream::app};
                 // write header row
-                int c = 0;
-                ofs << "#";
-                ofs << "[" << c++ << "]step()";
+                if (this->m_isFirstType)
+                {
+                    ofs << "#";
+                    ofs << "[" << ++indexNum << "]step()";
+                    ofs << this->m_sep;
+                    ofs << "[" << ++indexNum << "]time(s)";
+                }
                 ofs << this->m_sep;
-                ofs << "[" << c++ << "]time(s)";
+                ofs << "[" << ++indexNum << "]Bx^2/2" + std::string("(J)");
                 ofs << this->m_sep;
-                ofs << "[" << c++ << "]Bx^2/2" + std::string("(J)");
+                ofs << "[" << ++indexNum << "]By^2/2" + std::string("(J)");
                 ofs << this->m_sep;
-                ofs << "[" << c++ << "]By^2/2" + std::string("(J)");
-                ofs << this->m_sep;
-                ofs << "[" << c++ << "]Bz^2/2" + std::string("(J)");
-                ofs << std::endl;
+                ofs << "[" << ++indexNum << "]Bz^2/2" + std::string("(J)");
+                if (this->m_isLastType)
+                {
+                    ofs << std::endl;
+                }
                 // close file
                 ofs.close();
             }

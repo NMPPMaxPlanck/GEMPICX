@@ -2,6 +2,7 @@
 #define SAMPLER_H_
 
 #include <cassert>
+#include <numeric>
 
 #include <AMReX.H>
 #include <AMReX_Array.H>
@@ -100,23 +101,25 @@ void init_particles_cellwise (ComputationalDomain infra,
 
     int numGauss{1};
     params.get_or_set("numGaussians", numGauss);
-    amrex::Vector<amrex::Vector<amrex::Real>> vmean, vdev;
-    amrex::Vector<amrex::Real> vweight;
+    amrex::Vector<amrex::Vector<amrex::Real>> vMean, vDev;
+    amrex::Vector<amrex::Real> vWeight;
     for (int ng = 0; ng < numGauss; ng++)
     {
         std::string gaussianNumber = 'G' + std::to_string(ng) + '.';
         amrex::Vector<amrex::Real> vm, vt;
         std::string vmString = gaussianNumber + "vMean";
         params.get(vmString, vm);
-        vmean.push_back(vm);
+        vMean.push_back(vm);
         std::string vtString = gaussianNumber + "vThermal";
         params.get(vtString, vt);
-        vdev.push_back(vt);
+        vDev.push_back(vt);
         std::string vwString = gaussianNumber + "vWeight";
         amrex::Real vw;
         params.get(vwString, vw);
-        vweight.push_back(vw);
+        vWeight.push_back(vw);
     }
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
+                                     "Gaussian weights must sum to 1.0!");
 
     // cumulative sum of vel_weights
     // amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
@@ -127,7 +130,7 @@ void init_particles_cellwise (ComputationalDomain infra,
     // std::vector<amrex::Real> zeroVec(vdim,0);
     // std::vector<std::vector<amrex::Real>> vel_cum(num_gauss,zeroVec);
     amrex::Vector<amrex::Real> velCum(numGauss);
-    std::partial_sum(vweight.begin(), vweight.end(), velCum.begin());
+    std::partial_sum(vWeight.begin(), vWeight.end(), velCum.begin());
     // for (int i = 0; i < vdim; i++)
     // {
     //     for (int j = 0; j < num_gauss; j++)
@@ -186,7 +189,7 @@ void init_particles_cellwise (ComputationalDomain infra,
             } while (u1 < epsilon);  // make sure epsilon large enough to take log
             // first value from Box-Muller algorithm
             z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
-            velocity[cc] = vdev[gaussIdx[cc]][cc] * z0 + vmean[gaussIdx[cc]][cc];
+            velocity[cc] = vDev[gaussIdx[cc]][cc] * z0 + vMean[gaussIdx[cc]][cc];
         }
 
         // Adding particle from the model cell to all cells
@@ -285,6 +288,8 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
         params.get(vwString, vw);
         vWeight.push_back(vw);
     }
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
+                                     "Gaussian weights must sum to 1.0!");
 
     amrex::Array2D<amrex::Real, 0, MAXGAUSS - 1, 0, static_cast<int>(vdim) - 1> vDevGpu, vMeanGpu;
     // actual number of Gaussians in velocity is smaller than maximum number set in
@@ -470,27 +475,29 @@ void init_particles_full_domain (ComputationalDomain infra,
 
     int numGauss{1};
     params.get_or_set("numGaussians", numGauss);
-    amrex::Vector<amrex::Vector<amrex::Real>> vmean, vdev;
-    amrex::Vector<amrex::Real> vweight;
+    amrex::Vector<amrex::Vector<amrex::Real>> vMean, vDev;
+    amrex::Vector<amrex::Real> vWeight;
     for (int ng = 0; ng < numGauss; ng++)
     {
         std::string gaussianNumber = 'G' + std::to_string(ng) + '.';
         amrex::Vector<amrex::Real> vm, vt;
         std::string vmString = gaussianNumber + "vMean";
         params.get(vmString, vm);
-        vmean.push_back(vm);
+        vMean.push_back(vm);
         std::string vtString = gaussianNumber + "vThermal";
         params.get(vtString, vt);
-        vdev.push_back(vt);
+        vDev.push_back(vt);
         std::string vwString = gaussianNumber + "vWeight";
         amrex::Real vw;
         params.get(vwString, vw);
-        vweight.push_back(vw);
+        vWeight.push_back(vw);
     }
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
+                                     "Gaussian weights must sum to 1.0!");
 
     // cumulative sum of vel_weights
     amrex::Vector<amrex::Real> velCum(numGauss);
-    std::partial_sum(vweight.begin(), vweight.end(), velCum.begin());
+    std::partial_sum(vWeight.begin(), vWeight.end(), velCum.begin());
 
     // MFI that adds particle from the model cell to all cells
     //#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
@@ -557,7 +564,7 @@ void init_particles_full_domain (ComputationalDomain infra,
                             } while (u1 < epsilon);  // make sure epsilon large enough to take log
                             // first value from Box-Muller algorithm
                             z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
-                            velocity[cc] = vdev[gaussIdx[cc]][cc] * z0 + vmean[gaussIdx[cc]][cc];
+                            velocity[cc] = vDev[gaussIdx[cc]][cc] * z0 + vMean[gaussIdx[cc]][cc];
                         }
 #if (GEMPIC_SPACEDIM > 2)
                         z_c = infra.m_geom.ProbLo()[zDir] + (double)k * infra.m_dx[zDir];

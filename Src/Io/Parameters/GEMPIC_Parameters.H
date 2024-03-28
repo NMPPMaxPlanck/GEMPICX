@@ -230,6 +230,11 @@ private:
     std::stringstream m_classOutput;
 
     /**
+     * @brief Flag to hide output for a specific instance when it would otherwise be printed
+     */
+    bool m_hideOutput{false};
+
+    /**
      * @brief Structure of a shared parameter
      *
      * @param ref : Direct reference to parameter value
@@ -302,7 +307,7 @@ public:
      * @brief Class parameter initializers
      * Class parameter objects are initialized inside class initialization methods and called with a
      * class prefix:
-     * Parameters params{"ClassAbc"}; // lets you load scoped parameters related to ClassABC
+     * Parameters params{"ClassAbc"}; // lets you load scoped parameters related to ClassAbc
      */
     Parameters(const std::string& classPrefix, std::string printName = "None");
 
@@ -316,7 +321,7 @@ public:
 
     /**
      * @brief Get variable if it was previously set or exists in input file. Otherwise, set it.
-     * Prefer getOrSet over set unless it is vital that the variable is set from here.
+     * Prefer get_or_set over set unless it is vital that the variable is set from here.
      *
      * This is technically doing double work. It shouldn't be a problem.
      *
@@ -413,7 +418,7 @@ public:
 
     /**
      * @brief Set variable if it was not previously set or loaded from input file. Else, abort
-     * simulation. Prefer getOrSet unless it is vital that the variable is set from here.
+     * simulation. Prefer get_or_set unless it is vital that the variable is set from here.
      *
      * @tparam T : type of the variable. Automatically intuited
      *
@@ -458,10 +463,16 @@ public:
     }
 
     /**
+     * @brief Hide class parameter output for this instance
+     */
+    void hide_class_output();
+
+    /**
      * @brief Print class parameters. Automatically called by destructor.
      *
      * Description:
-     * Prints class related parameter information to s_outputFile if s_printOutput is set.
+     * Prints class related parameter information to s_outputFile if s_printOutput is set and
+     * hide_class_output is not called.
      */
     void print_class_parameters();
 
@@ -476,14 +487,14 @@ public:
     /**
      * @brief Does variable exist, either set in shared parameters or in input file?
      *
-     * Description: Prefer to use getOrSet instead of implementing logic based on this return value
+     * Description: Prefer get_or_set instead of implementing logic based on this return value
      */
     bool exists(const std::string& variableName);
 
     /**
      * @brief is variable in input file?
      *
-     * Description: This function should not be used except when debugging. Prefer to use getOrSet
+     * Description: This function should not be used except when debugging. Prefer to use get_or_set
      * instead of implementing logic based on this return value.
      */
     bool is_in_input_file(const std::string& variableName);
@@ -491,7 +502,7 @@ public:
     /**
      * @brief Has shared parameter been set? Where?
      *
-     * Description: This function should not be used except when debugging. Prefer to use getOrSet
+     * Description: This function should not be used except when debugging. Prefer to use get_or_set
      * instead of implementing logic based on this return value.
      */
     std::string has_been_set_by(const std::string& variableName);

@@ -29,6 +29,13 @@ fix_folder_names ()
         then
             # replace snake_case with CamelCase
             newName=$(echo $folder | sed -E -e 's#/([a-z])#/\u\1#g' -e 's#_+([[:alnum:]])#\u\1#g')
+
+            if [[ -d $newName ]]
+            then
+              echo "Cannot fix incorrect folder name '$folder' because '$newName' already exists!"
+              exit 1
+            fi
+            
             git mv $folder $newName
             echo "Fixed $folder to $newName because folders are CamelCase."
 
@@ -59,6 +66,7 @@ GEMPIC_fix_folder_file_names ()
     # Ensure code folders are CamelCase
     fix_folder_names "./Src"
     fix_folder_names "./Testing"
+    #fix_folder_names "./Examples"
 
     # Ensure all code files follow one of three patterns:
     # A) GEMPIC_CamelCase.H or GEMPIC_CamelCase.cpp
@@ -70,7 +78,7 @@ GEMPIC_fix_folder_file_names ()
         # Remove underscores and convert following letters to uppercase
         newName=$(echo $file | sed -E -e 's#(.*/)(.)#\1\u\2#' -e 's/_(\w)/\u\1/g')
         # Is it likely to be a test file?
-        if [[ $(echo $file | grep '\./testing/.*\.cpp') ]]
+        if [[ $(echo $file | grep '\./Testing/.*\.cpp') ]]
         then
             # Add _test postfix
             newName=$(echo $newName | sed -E 's#(Test)?(\.cpp$)#_test\1#I')
@@ -83,7 +91,7 @@ GEMPIC_fix_folder_file_names ()
         git mv $file $newName
 
         # Old file name (with extension, without path) and extension
-        oldFileName="${$file##*/}"
+        oldFileName="${file##*/}"
         oldFileExt="${oldFileName##*.}"
         # Source or header file?
         if [[ "$oldFileExt" == "cpp" ]]
@@ -149,6 +157,7 @@ GEMPIC_run_clang_tidy ()
 # --------------------------------------------------------------------------------------------------
 GEMPIC_run_clang_format ()
 {
+    #for file in $(find ./Src/ ./Testing/ ./Examples/ -name "*.H" -or -name "*.cpp" -type f)
     for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f)
     do
         # Enforce style: #include "GEMPIC_File.H" or #include <notAGempicFile>

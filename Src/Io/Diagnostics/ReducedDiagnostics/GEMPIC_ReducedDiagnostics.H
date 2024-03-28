@@ -37,15 +37,19 @@ class ReducedDiagnostics
 {
 public:
     /// output path (default)
-    std::string m_dirName = "ReducedDiagnostics";
-
-    std::string m_path = m_dirName + "/";
+    std::string m_path = "ReducedDiagnostics/";
 
     /// output extension (default)
     std::string m_extension = "txt";
 
     /// diags name
     std::string m_rdName;
+
+    /// is this instance the first type of a group?
+    bool m_isFirstType = true;
+
+    /// is this instance the last type of a group?
+    bool m_isLastType = true;
 
     /// check if it is a restart run
     int m_isNotRestart = 1;
@@ -65,25 +69,39 @@ public:
     /**
      * constructor
      * @param[in] rdName reduced diags names
+     * @param[in] indexNum the index of the print field in the header
+     * @param[in] isLastType is this the last type in the group?
      */
-    ReducedDiagnostics(std::string rdName)
+    ReducedDiagnostics(std::string rdName, int& indexNum, bool isLastType) :
+        m_rdName{rdName}, m_isLastType{isLastType}
     {
-        m_rdName = rdName;
+        m_isFirstType = (indexNum == 0);
         // BackwardCompatibility();
 
-        amrex::ParmParse ppRdName(m_rdName);
+        Parameters ppRdName("ReducedDiagnostics." + m_rdName);
 
-        // read path
-        if (!(std::filesystem::exists(m_dirName)))
+        ppRdName.get_or_set("path", m_path);
+
+        if (m_isFirstType)
         {
-            std::filesystem::create_directories(m_dirName);
+            // ensure output directory exists
+            std::filesystem::path dirName{m_path};
+            dirName.remove_filename();
+            if (!(std::filesystem::exists(dirName)))
+            {
+                std::filesystem::create_directories(dirName);
+            }
         }
-        ppRdName.query("path", m_path);
+        else
+        {
+            // We only want output once per group (if at all)
+            ppRdName.hide_class_output();
+        }
 
         // read extension
-        ppRdName.query("extension", m_extension);
+        ppRdName.get_or_set("extension", m_extension);
 
-        if (amrex::ParallelDescriptor::IOProcessor())
+        if (amrex::ParallelDescriptor::IOProcessor() && m_isFirstType)
         {
             // create folder
             // if (!UtilCreateDirectory(m_path, 0755))
@@ -140,24 +158,35 @@ public:
         std::ofstream ofs{m_path + m_rdName + "." + m_extension,
                           std::ofstream::out | std::ofstream::app};
 
-        // write step
-        ofs << step;
+        if (m_isFirstType)
+        {
+            // write step
+            ofs << step;
 
-        ofs << m_sep;
+            ofs << m_sep;
 
-        // set precision
-        ofs << std::fixed << std::setprecision(14) << std::scientific;
+            // set precision
+            ofs << std::fixed << std::setprecision(14) << std::scientific;
 
-        // write time
-        ofs << dt * (step);
+            // write time
+            ofs << dt * (step);
+        }
+        else
+        {
+            // set precision
+            ofs << std::fixed << std::setprecision(14) << std::scientific;
+        }
 
         // loop over data size and write
         for (const auto& item : m_data) ofs << m_sep << item;
 
         // end loop over data size
 
-        // end line
-        ofs << std::endl;
+        if (m_isLastType)
+        {
+            // end line
+            ofs << std::endl;
+        }
 
         // close file
         ofs.close();

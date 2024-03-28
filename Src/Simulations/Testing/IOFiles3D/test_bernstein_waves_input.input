@@ -25,6 +25,7 @@ k = 1 1 0.3
 # Simulation parameters
 TimeLoop.nSteps = 50000
 TimeLoop.dt = 0.02
+Sim.Te = 1.0
 
 # Function parameters
 Function.Bx = "0.0"
@@ -37,17 +38,15 @@ Filter.npassEachDir = 3 3 3
 
 # Full Diagnostics
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
-FullDiagnostics.groupNames = part_test Ez_raw plots 
+FullDiagnostics.groupNames = part field 
 
-FullDiagnostics.part_test.varNames = particles # default name for a particle group
-FullDiagnostics.part_test.functor = raw
+FullDiagnostics.part.varNames = ions # default name for a particle group
+FullDiagnostics.part.saveInterval = 1000
+FullDiagnostics.part.functor = raw
 
-FullDiagnostics.plots.varNames = Ey Ez Bx
-FullDiagnostics.plots.functor = CellCenter
-
-FullDiagnostics.Ez_raw.varNames = Ez
-FullDiagnostics.Ez_raw.saveInterval = 50
-FullDiagnostics.Ez_raw.functor = raw
+FullDiagnostics.field.varNames = rho Ex Ey Ez Dy Bz phi
+FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.saveInterval = 10
 
 # Reduced Diagnostics
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false

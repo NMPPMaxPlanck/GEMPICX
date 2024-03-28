@@ -176,36 +176,46 @@ private:
             std::vector<std::string> rdTypes;
             ppRdName.get("types", rdTypes);
 
+            const size_t numTypes{rdTypes.size()};
+            int indexNum{0};
+            size_t typeNum{0};
             // loop over all reduced diags and fill m_multi_rd with requested reduced diags
             std::transform(rdTypes.begin(), rdTypes.end(), std::back_inserter(m_multiRds[idx]),
                            [&] (const auto& rdType)
-                           { return get_diagnostics_type(rdType, m_rdNames[idx]); });
+                           {
+                               bool isLastType{++typeNum == numTypes};
+                               return get_diagnostics_type(rdType, m_rdNames[idx], indexNum,
+                                                           isLastType);
+                           });
         }
         // end loop over all reduced diags
     }
 
     std::unique_ptr<ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>>
-    get_diagnostics_type (const std::string& diagType, const std::string& name)
+    get_diagnostics_type (const std::string& diagType,
+                          const std::string& name,
+                          int& indexNum,
+                          bool isLastType)
     {
         if (diagType == "ElecFieldEnergy")
         {
             using ElecEnergy = ElecFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
-            return std::make_unique<ElecEnergy>(name);
+            return std::make_unique<ElecEnergy>(name, indexNum, isLastType);
         }
         else if (diagType == "MagFieldEnergy")
         {
             using MagEnergy = MagFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
-            return std::make_unique<MagEnergy>(name);
+            return std::make_unique<MagEnergy>(name, indexNum, isLastType);
         }
         else if (diagType == "GaussError")
         {
             using GaussErr = GaussError<vdim, numspec, degx, degy, degz, degree, ndata>;
-            return std::make_unique<GaussErr>(name);
+            return std::make_unique<GaussErr>(name, indexNum, isLastType);
         }
         else if (diagType == "Particle")
         {
             using Part = Particle<vdim, numspec, degx, degy, degz, degree, ndata>;
-            return std::make_unique<Part>(name);
+            return std::make_unique<Part>(name, indexNum, isLastType);
         }
         else
         {
@@ -213,7 +223,8 @@ private:
                 false, diagType + " is not a valid type for reduced diagnostic in group " + name);
             // this is never reached
             return std::make_unique<
-                ElecFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>>(name);
+                ElecFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>>(name, indexNum,
+                                                                                 isLastType);
         }
     }
 };

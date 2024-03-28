@@ -134,10 +134,12 @@ Parameters::~Parameters()
     }
 }
 
+void Parameters::hide_class_output() { m_hideOutput = true; }
+
 // Probably just have this in the destructor.
 void Parameters::print_class_parameters ()
 {
-    if (s_printOutput && m_classOutput.rdbuf()->in_avail() && m_isIOProcess)
+    if (s_printOutput && !m_hideOutput && m_classOutput.rdbuf()->in_avail() && m_isIOProcess)
     {
         // Space for next output section
         m_classOutput << "\n";
