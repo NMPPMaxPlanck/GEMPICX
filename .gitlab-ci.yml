@@ -197,7 +197,8 @@ style-test_cpu_3D:
     - module list
   script:
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
-    - bash scripts/sanitize_code.sh
+    - python3 scripts/sanitize_with_python.py
+    - cat build/tidyOutput.out
     - git diff --exit-code
   needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
@@ -212,7 +213,8 @@ style-test_gpu_3D:
     - module list
   script:
     - cmake -S . -B ./build --preset mpcdf-gpu-3D
-    - bash scripts/sanitize_code.sh
+    - python3 scripts/sanitize_with_python.py
+    - cat build/tidyOutput.out
     - git diff --exit-code
   needs: ["build-test_gpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 

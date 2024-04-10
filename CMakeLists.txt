@@ -70,6 +70,8 @@ include_directories("${CMAKE_SOURCE_DIR}/Src/Particle")
 include_directories("${CMAKE_SOURCE_DIR}/Src/Simulations")
 include_directories("${CMAKE_SOURCE_DIR}/Src/TimeLoop")
 include_directories("${CMAKE_SOURCE_DIR}/Src/TimeLoop/HamiltonianSplitting")
+include_directories("${CMAKE_SOURCE_DIR}/Examples")
+include_directories("${CMAKE_SOURCE_DIR}/Examples/QuasiNeutral")
 include_directories("${CMAKE_SOURCE_DIR}")
 
 # Add subfolder with source files of the library
@@ -78,6 +80,8 @@ add_subdirectory(Src)
 add_subdirectory(doc)
 # Add subfolder with tests
 add_subdirectory(Testing)
+# Add subfolder with examples
+add_subdirectory(Examples)
 
 # Config summary
 message( STATUS "GEMPIC configuration summary: ")

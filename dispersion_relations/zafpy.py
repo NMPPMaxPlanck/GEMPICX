@@ -29,6 +29,10 @@ class zafpy:
                           D(omega,kmode)/sp.diff(D(omega,kmode),omega),'mpmath')
         self.N_over_Dprime = sp.lambdify(omega,
                           N(omega,kmode)/sp.diff(D(omega,kmode),omega),'mpmath')
+        self.N_over_D = sp.lambdify(omega,N(omega,kmode)/D(omega,kmode),'mpmath')
+        self.N_over_D_s = sp.lambdify(omega,N(omega,kmode)/D(omega,kmode)+N(-omega,kmode)/D(-omega,kmode),'mpmath')
+        self.N_over_D_a = sp.lambdify(omega,N(omega,kmode)/D(omega,kmode)-N(-omega,kmode)/D(-omega,kmode),'mpmath')
+        
 
     
     def count_zeros(self, z0, z1, z2, z3, tol=1.e-7):

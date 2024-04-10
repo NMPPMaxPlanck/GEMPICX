@@ -1,4 +1,7 @@
-# run this script in parallel with mpirun -n 4 python3 plot_dispersion_relation.py (for 4 cores)
+# run this script in parallel (e.g. for 4 cores) with 
+# mpirun -n 4 ../../gempic/post_processing/create_space_time_arrays.py rho 
+# assuming that your run directory is in gempic/runs and that you want to do a FFT or rho
+# you can replace rho by any field name from the FullDiagnostics
 
 import numpy as np
 import argparse
@@ -11,12 +14,12 @@ yt.set_log_level(0) # do not show log output
 #rank = comm.Get_rank()
 
 parser = argparse.ArgumentParser(description='Files to be read')
-parser.add_argument('files')
+#parser.add_argument('files')
 parser.add_argument('field')
 
 args = parser.parse_args()
 
-plotfiles = args.files + '??????' 
+plotfiles = 'FullDiagnostics/plt_field' + '??????' 
 
 # read times series
 ts = yt.load(plotfiles)

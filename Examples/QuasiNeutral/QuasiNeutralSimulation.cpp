@@ -26,75 +26,6 @@ using namespace Forms;
 using namespace Particle;
 using namespace ParticleMeshCoupling;
 
-// apply npass times a bilinear filter to rho
-constexpr int npass = 4;
-void filter (DeRhamField<Grid::dual, Space::cell> &rho,
-             DeRhamField<Grid::dual, Space::cell> &rhoTemp,
-             int npass)
-{
-    auto nghost = rho.m_deRham->get_n_ghost();
-    for (int pass = 0; pass < npass - 1; pass++)
-    {
-        // amrex::Print() << "filt pass " << pass << std::endl;
-        for (int direction = 0; direction < GEMPIC_SPACEDIM; direction++)
-        {
-            for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)  // Loop over grids
-            {
-                const amrex::Box &bx = mfi.validbox();
-                amrex::Array4<amrex::Real> const &rhoArr = rho.m_data[mfi].array();
-                amrex::Array4<amrex::Real> const &rhoTempArr = rhoTemp.m_data[mfi].array();
-
-                ParallelFor(bx,
-                            [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                            {
-                                //amrex::GpuArray<amrex::Real, 3> coef{1. / 6., 2. / 3., 1. / 6.};
-                                amrex::GpuArray<amrex::Real, 3> coef{0.25, 0.5, 0.25};
-                                amrex::Real val = 0.0;
-                                for (int d = 0; d < 3; d++)
-                                {
-                                    val += coef[d] * rhoArr(i + (direction == xDir ? d - 1 : 0),
-                                                            j + (direction == yDir ? d - 1 : 0),
-                                                            k + (direction == zDir ? d - 1 : 0));
-                                }
-                                rhoTempArr(i, j, k) = val;
-                            });
-            }
-            // Copy into rho
-            rhoTemp.fill_boundary();
-            amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nghost);
-        }
-    }
-    // Compensation step
-    for (int direction = 0; direction < GEMPIC_SPACEDIM; direction++)
-    {
-        for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)  // Loop over grids
-        {
-            const amrex::Box &bx = mfi.validbox();
-            amrex::Array4<amrex::Real> const &rhoArr = rho.m_data[mfi].array();
-            amrex::Array4<amrex::Real> const &rhoTempArr = rhoTemp.m_data[mfi].array();
-
-            ParallelFor(bx,
-                        [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                        {
-                            //amrex::GpuArray<amrex::Real, 3> coef{1. / 6., 2. / 3., 1. / 6.};
-                            amrex::GpuArray<amrex::Real, 3> coef{
-                                0.25 * (1 - npass), 0.5 * (1 + npass), 0.25 * (1 - npass)};
-                            amrex::Real val = 0.0;
-                            for (int d = 0; d < 3; d++)
-                            {
-                                val += coef[d] * rhoArr(i + (direction == xDir ? d - 1 : 0),
-                                                        j + (direction == yDir ? d - 1 : 0),
-                                                        k + (direction == zDir ? d - 1 : 0));
-                            }
-                            rhoTempArr(i, j, k) = val;
-                        });
-        }
-        // Copy into rho
-        rhoTemp.fill_boundary();
-        amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nghost);
-    }
-}
-
 int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
@@ -105,9 +36,9 @@ int main (int argc, char *argv[])
     constexpr int ndata{1};  // Needs to be 1 so that the correct ParIter type is defined. Putting 4
                              // gets a non-defined type
     // Spline degrees
-    constexpr int degx{3};
-    constexpr int degy{3};
-    constexpr int degz{3};
+    constexpr int degx{1};
+    constexpr int degy{1};
+    constexpr int degz{1};
     constexpr int maxSplineDegree{std::max(std::max(degx, degy), degz)};
     //
     constexpr int hodgeDegree{2};
@@ -146,6 +77,7 @@ int main (int argc, char *argv[])
         amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
 
         {  // "Time Loop" scope. Should be a separate function
+            // const int npass = 0; // Number of filter passes
 
             // Initialize full diagnostics and write initial time step
             Io::Parameters params("TimeLoop");
@@ -198,6 +130,9 @@ int main (int argc, char *argv[])
 
             rho.post_particle_loop_sync();
 
+            // filter(rho, rhoTemp, npass);
+            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+
             for (int component = 0; component < vdim; component++)
             {
                 currentDensity.m_data[component].SumBoundary(0, 1, nGhost,
@@ -207,7 +142,7 @@ int main (int argc, char *argv[])
             currentDensity.average_sync();
             currentDensity.fill_boundary();
 
-            // Filter rho and compute phi with filtered array
+            // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
             deRham->hodge(rhoTemp, phi);
             deRham->grad(phi, E);
@@ -272,7 +207,8 @@ int main (int argc, char *argv[])
                     ions[spec]->Redistribute();
 
                     rho.post_particle_loop_sync();
-                    // Filter rho and compute phi with filtered array
+
+                    // Apply filter and compute phi with filtered rho
                     biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
                     deRham->hodge(rhoTemp, phi);
                     deRham->grad(phi, E);
@@ -356,14 +292,7 @@ int main (int argc, char *argv[])
                     }
                     ions[spec]->Redistribute();
                 }
-
                 rho.post_particle_loop_sync();
-
-                //filter(rho, rhoTemp, npass);
-                // biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
-                // // Copy into rho
-                // rhoTemp.fill_boundary();
-                // amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nGhost);
 
                 redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, ions);
                 redDiagn.write_to_file(tStep + 1, dt);
