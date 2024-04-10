@@ -74,14 +74,14 @@ GEMPIC_fix_folder_file_names ()
     # Ensure code folders are CamelCase
     fix_folder_names "./Src"
     fix_folder_names "./Testing"
-    #fix_folder_names "./Examples"
+    fix_folder_names "./Examples"
 
     # Ensure all code files follow one of three patterns:
     # A) GEMPIC_CamelCase.H or GEMPIC_CamelCase.cpp
     # B) CamelCase_test.cpp
     # C) test_aNy_StYlE.cpp (deprecated)
-    # for file in $(find ./Src/ ./Testing/ ./Examples/ -name "*.H" -or -name "*.cpp" -type f |
-    for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f |
+    for file in $(find ./Src/ ./Testing/ ./Examples/ -name "*.H" -or -name "*.cpp" -type f |
+    #for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f |
                   grep -Ev -- '/GEMPIC_[A-Z][a-zA-Z]*\.|/[A-Z][a-zA-Z]*_test\.cpp$|/test\w*\.cpp$')
     do
         # Remove underscores and convert following letters to uppercase
@@ -174,8 +174,8 @@ GEMPIC_run_clang_tidy ()
 # --------------------------------------------------------------------------------------------------
 GEMPIC_run_clang_format ()
 {
-    #for file in $(find ./Src/ ./Testing/ ./Examples/ -name "*.H" -or -name "*.cpp" -type f)
-    for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f)
+    for file in $(find ./Src/ ./Testing/ ./Examples/ -name "*.H" -or -name "*.cpp" -type f)
+    #for file in $(find ./Src/ ./Testing/ -name "*.H" -or -name "*.cpp" -type f)
     do
         # Enforce style: #include "GEMPIC_File.H" or #include <notAGempicFile>
         sed -E -i'' 's/(^#include )"([^"]*)"/\1<\2>/g' $file

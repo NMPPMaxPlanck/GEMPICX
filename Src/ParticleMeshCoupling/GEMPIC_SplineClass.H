@@ -392,9 +392,11 @@ public:
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
         GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                             for (int kk = 0; kk <= degZ; ++kk))
-            const amrex::Dim3 cellIndex = {AMREX_D_DECL(this->m_firstIndex[xDir] + ii,
-                                                        this->m_firstIndex[yDir] + jj,
-                                                        this->m_firstIndex[zDir] + kk)};
+            const amrex::Dim3 cellIndex =
+                (amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[xDir] + ii,
+                                             this->m_firstIndex[yDir] + jj,
+                                             this->m_firstIndex[zDir] + kk)})
+                    .dim3();
 
             // Ensure that we only access existing elements of cellSplineVals
             if constexpr (form == Field::PrimalOneForm)

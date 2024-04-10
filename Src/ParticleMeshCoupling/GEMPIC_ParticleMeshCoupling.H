@@ -113,17 +113,17 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
                 amrex::Dim3 cellIndex;
                 if (pDir == xDir)
                 {
-                    cellIndex = {AMREX_D_DECL(firstIndexStart + ii, spline.m_firstIndex[yDir] + jj,
+                    cellIndex = {GEMPIC_D_PAD(firstIndexStart + ii, spline.m_firstIndex[yDir] + jj,
                                               spline.m_firstIndex[zDir] + kk)};
                 }
                 else if (pDir == yDir)
                 {
-                    cellIndex = {AMREX_D_DECL(spline.m_firstIndex[xDir] + kk, firstIndexStart + ii,
+                    cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + kk, firstIndexStart + ii,
                                               spline.m_firstIndex[zDir] + jj)};
                 }
                 else if (pDir == zDir)
                 {
-                    cellIndex = {AMREX_D_DECL(spline.m_firstIndex[xDir] + jj,
+                    cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + jj,
                                               spline.m_firstIndex[yDir] + kk,
                                               firstIndexStart + ii)};
                 }
@@ -172,9 +172,10 @@ AMREX_GPU_HOST_DEVICE void push_v_efield (amrex::GpuArray<amrex::Real, vDim> &ve
                                           amrex::Real chargemass,
                                           amrex::GpuArray<amrex::Real, vDim> const &E)
 {
-    AMREX_D_TERM((vel[xDir] += dt * chargemass * (E[xDir]));
-                 , (vel[yDir] += dt * chargemass * (E[yDir]));
-                 , (vel[zDir] += dt * chargemass * (E[zDir])););
+    for (int i = 0; i < vDim; i++)
+    {
+        vel[i] += dt * chargemass * E[i];
+    }
 }
 
 /**
@@ -198,7 +199,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (SplineBase<degX, degY, degZ> &spl
     GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
-        amrex::Dim3 cellIndex = {AMREX_D_DECL(spline.m_firstIndex[xDir] + ii,
+        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
                                               spline.m_firstIndex[yDir] + jj,
                                               spline.m_firstIndex[zDir] + kk)};
         double sCoeff = spline.template eval_b_spline<Field::DualThreeForm>(ii, jj, kk);
@@ -217,7 +218,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_j (
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
-        amrex::Dim3 cellIndex = {AMREX_D_DECL(spline.firstIndex[xDir] + ii,
+        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.firstIndex[xDir] + ii,
                                               spline.firstIndex[yDir] + jj,
                                               spline.firstIndex[zDir] + kk)};
 

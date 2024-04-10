@@ -1,0 +1,61 @@
+# General setting
+simName = "Bernstein_waves"
+
+# Grid parameters
+nCellVector = 128 8 8
+maxGridSizeVector = 32 8 8
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+Particle.speciesNames = ions
+Particle.ions.nPartPerCell = 1000 # number of Particles per cell
+Particle.ions.charge = 1.0 # vector (one entry per species)
+Particle.ions.mass = 1.0 # vector (one entry per species)
+Particle.ions.density = "1.0 + 0.05 * cos(kvarx * x)"
+Particle.ions.numGaussians = 1
+
+# Gaussian parameters
+Particle.ions.G0.vMean = 0.0 0.0 0.0
+Particle.ions.G0.vThermal = 1 1 1
+Particle.ions.G0.vWeight = 1.0
+
+# wave vector
+k = .3 .3  0.004166666666666667
+
+# Simulation parameters
+TimeLoop.nSteps = 50000
+TimeLoop.dt = 0.02
+Sim.Te = 2.5
+
+# Function parameters
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "1.0"
+
+# Filter
+Filter.enable = 0
+Filter.npassEachDir = 3 3 3
+
+# Diagnostics
+# Full Diagnostics
+FullDiagnostics.enable = 1 # 1 for true, 0 for false
+FullDiagnostics.groupNames = part field 
+
+FullDiagnostics.part.varNames = ions # default name for a particle group
+FullDiagnostics.part.saveInterval = 10000
+FullDiagnostics.part.functor = raw
+
+FullDiagnostics.field.varNames = rho Ex 
+FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.saveInterval = 1
+
+# Reduced Diagnostics
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
+ReducedDiagnostics.saveInterval = 1 # saveInterval for all groupings not specifying their own
+
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+
+ReducedDiagnostics.Part.types = Particle
+
