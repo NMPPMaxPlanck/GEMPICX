@@ -118,8 +118,9 @@ void init_particles_cellwise (ComputationalDomain infra,
         params.get(vwString, vw);
         vWeight.push_back(vw);
     }
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
-                                     "Gaussian weights must sum to 1.0!");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        std::abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
+        "Gaussian weights must sum to 1.0!");
 
     // cumulative sum of vel_weights
     // amrex::GpuArray<std::vector<amrex::Real>,vdim> vel_cum;
@@ -249,8 +250,6 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
 {
     BL_PROFILE("init_particles_full_domain_gpu");
 
-    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
-
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{AMREX_D_DECL(
         infra.m_geom.ProbLo()[xDir], infra.m_geom.ProbLo()[yDir], infra.m_geom.ProbLo()[zDir])};
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{
@@ -288,8 +287,9 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
         params.get(vwString, vw);
         vWeight.push_back(vw);
     }
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
-                                     "Gaussian weights must sum to 1.0!");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        std::abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
+        "Gaussian weights must sum to 1.0!");
 
     amrex::Array2D<amrex::Real, 0, MAXGAUSS - 1, 0, static_cast<int>(vdim) - 1> vDevGpu, vMeanGpu;
     // actual number of Gaussians in velocity is smaller than maximum number set in
@@ -309,6 +309,8 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
     std::partial_sum(vWeight.begin(), vWeight.end(), velCum.begin());
 
 #if (GEMPIC_SPACEDIM == 3)
+    constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
+
     // MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
@@ -456,7 +458,8 @@ void init_particles_full_domain (ComputationalDomain infra,
                                  int rSeed = 925)
 {
     BL_PROFILE("init_particles_full_domain");
-    double x, y, z, t = 0.0;
+    amrex::Real AMREX_D_DECL(x, y, z);
+    amrex::Real t{0.0};
 
     amrex::Real AMREX_D_DECL(x_c, y_c, z_c);  // cell-corner coordinates
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
@@ -492,8 +495,9 @@ void init_particles_full_domain (ComputationalDomain infra,
         params.get(vwString, vw);
         vWeight.push_back(vw);
     }
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
-                                     "Gaussian weights must sum to 1.0!");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        std::abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
+        "Gaussian weights must sum to 1.0!");
 
     // cumulative sum of vel_weights
     amrex::Vector<amrex::Real> velCum(numGauss);

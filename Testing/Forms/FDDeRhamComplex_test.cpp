@@ -146,11 +146,6 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
 {
     constexpr int hodgeDegree{6};
 
-    // Select stencil according to degree
-    const int stencilLength = 6 - 1;
-    amrex::GpuArray<amrex::Real, stencilLength> stencilNodeToCell;
-    amrex::GpuArray<amrex::Real, stencilLength> stencilCellToNode;
-
     const std::string analyticalFunc = "1.0";
 
     const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
@@ -170,7 +165,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
 
     EXPECT_NEAR(1, Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
 
-    std::tie(stencilNodeToCell, stencilCellToNode) =
+    [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
     matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
@@ -201,10 +196,10 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTest)
     ASSERT_EQ(0, Utils::gempic_norm(rho.m_data, m_infra, 2));
 
     // Select stencil according to degree
-    auto [stencilNodeToCell, stencilCellToNode] =
+    [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    // matrixMult<xDir>(infra.geom, stencilCellToNode, rho.data, phi.data);
+    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 

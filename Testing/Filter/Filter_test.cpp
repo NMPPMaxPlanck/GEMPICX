@@ -173,7 +173,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     DeRhamField<Grid::dual, Space::cell> rho(deRham, funcInit);
     DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
     DeRhamField<Grid::dual, Space::cell> rhoSol(deRham, funcSol);
-    DeRhamField<Grid::dual, Space::cell> rhoSolComp(deRham, funcSol);
+    DeRhamField<Grid::dual, Space::cell> rhoSolComp(deRham, funcSolComp);
 
     amrex::ParmParse pp;
     pp.add("Filter.enable", true);
@@ -196,7 +196,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     pp.add("Filter.compensate", true);
 
     std::unique_ptr<Filter::Filter> biFilterComp = std::make_unique<Filter::BilinearFilter>();
-    biFilter->apply_stencil(rho.m_data, rhoTemp.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilterComp->apply_stencil(rho.m_data, rhoTemp.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {

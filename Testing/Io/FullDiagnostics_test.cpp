@@ -33,9 +33,9 @@ void define_expected (amrex::MFIter& mfi,
     ParallelFor(bx,
                 [=] AMREX_GPU_DEVICE(int i, int j, int k)
                 {
-                    amrex::Real x = (i + 0.5) * dx[0];
-                    amrex::Real y = (j + 0.5) * dx[1];
-                    amrex::Real z = (k + 0.5) * dx[2];
+                    AMREX_D_TERM(amrex::Real x{(i + 0.5) * dx[xDir]};
+                                 , amrex::Real y{(j + 0.5) * dx[yDir]};
+                                 , amrex::Real z{(k + 0.5) * dx[zDir]};)
                     expected(i, j, k, 0) = 1;  // rho 3-form needs to be constant
 #if GEMPIC_SPACEDIM == 3
                     expected(i, j, k, 1) = 2 + y + z;  // Ex 1-form constant in x direction
@@ -179,10 +179,10 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
                                                     HodgeScheme::FDHodge);
 
     // Initialize fields
-    auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
-    auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
-    auto [parseRho, funcRho] = Utils::parse_function("rho");
-    auto [parsePhi, funcPhi] = Utils::parse_function("phi");
+    [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
+    [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
+    [[maybe_unused]] auto [parseRho, funcRho] = Utils::parse_function("rho");
+    [[maybe_unused]] auto [parsePhi, funcPhi] = Utils::parse_function("phi");
 
     DeRhamField<Grid::dual, Space::cell> rho(deRham, funcRho, "rho");
     DeRhamField<Grid::primal, Space::node> phi(deRham, funcPhi, "phi");

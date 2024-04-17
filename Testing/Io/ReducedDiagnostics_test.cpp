@@ -31,7 +31,6 @@ protected:
     // particle data
     static const int s_vdim{3};
     static const int s_numspec{1};
-    static const int s_ndata{1};
 
     //
     ComputationalDomain m_infra{false};  // "uninitialized" periodic computational domain
@@ -135,8 +134,8 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
-    auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
+    [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
+    [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
     DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
     DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");

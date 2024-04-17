@@ -15,6 +15,8 @@ stages:
     - module load numdiff/5.9
     - module load cmake/3.24
     - module load git
+    - module load gcc/12
+    - module load openmpi/4
 
 # Avoids splitting commit and merge pipelines
 # Without this, every push to a branch with a merge request creates two pipelines: One for the 
@@ -35,8 +37,6 @@ stages:
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/11
-    - module load openmpi/4
     - module list
 
 build-test_gcc_3D:
@@ -76,8 +76,7 @@ build-test_gcc_1D:
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/11 cuda/11.4
-    - module load openmpi/4
+    - module load cuda/12.1
     - module list
 
 build-test_gpu_3D:
@@ -126,9 +125,7 @@ build-test_gpu_1D:
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/12
-    - module load openmpi/4
-    - module load clang/15
+    - module load clang/16 # clang/17+ needs gcc/13 libraries to run
     - module list
 
 build-test_clang_cpu_3D:
@@ -193,7 +190,7 @@ style-test_cpu_3D:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
   before_script:
     - !reference [.mpcdf-clang-env,before_script]
-    - module load anaconda/3/2021.11
+    - module load anaconda/3/2023.03
     - module list
   script:
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
@@ -208,8 +205,8 @@ style-test_gpu_3D:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
   before_script:
     - !reference [.mpcdf-gpu-env,before_script]
-    - module load clang/15
-    - module load anaconda/3/2021.11
+    - module load clang/16 
+    - module load anaconda/3/2023.03
     - module list
   script:
     - cmake -S . -B ./build --preset mpcdf-gpu-3D

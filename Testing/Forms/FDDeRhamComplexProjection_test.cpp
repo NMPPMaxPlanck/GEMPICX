@@ -27,7 +27,6 @@ namespace
 void update_one_form_primal_parallel_for (amrex::MFIter& mfi,
                                           DeRhamField<Grid::primal, Space::edge>& lineIntegral,
                                           ComputationalDomain& mInfra,
-                                          DeRhamField<Grid::primal, Space::edge>& E,
                                           int comp)
 {
     const amrex::Box& bx = mfi.validbox();
@@ -85,7 +84,6 @@ void update_one_form_primal_error_parallel_for (
 void update_two_form_primal_parallel_for (amrex::MFIter& mfi,
                                           DeRhamField<Grid::primal, Space::face>& faceIntegral,
                                           ComputationalDomain& mInfra,
-                                          DeRhamField<Grid::primal, Space::face>& B,
                                           int comp)
 {
     const amrex::Box& bx = mfi.validbox();
@@ -145,7 +143,6 @@ void update_two_form_primal_error_parallel_for (
 void update_one_form_dual_parallel_for (amrex::MFIter& mfi,
                                         DeRhamField<Grid::dual, Space::edge>& lineIntegralDual,
                                         ComputationalDomain& mInfra,
-                                        DeRhamField<Grid::dual, Space::edge>& H,
                                         int comp)
 {
     const amrex::Box& bx = mfi.validbox();
@@ -205,7 +202,6 @@ void update_one_form_dual_error_parallel_for (
 void update_two_form_dual_parallel_for (amrex::MFIter& mfi,
                                         DeRhamField<Grid::dual, Space::face>& faceIntegralDual,
                                         ComputationalDomain& mInfra,
-                                        DeRhamField<Grid::dual, Space::face>& D,
                                         int comp)
 {
     const amrex::Box& bx = mfi.validbox();
@@ -266,8 +262,7 @@ void update_two_form_dual_error_parallel_for (
 
 void update_zero_form_primal_parallel_for (amrex::MFIter& mfi,
                                            DeRhamField<Grid::primal, Space::node>& pointVals,
-                                           ComputationalDomain& mInfra,
-                                           DeRhamField<Grid::primal, Space::node>& Q)
+                                           ComputationalDomain& mInfra)
 {
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& zeroForm = (pointVals.m_data)[mfi].array();
@@ -306,8 +301,7 @@ void update_zero_form_primal_error_parallel_for (amrex::MFIter& mfi,
 
 void update_zero_form_dual_parallel_for (amrex::MFIter& mfi,
                                          DeRhamField<Grid::dual, Space::node>& pointValsDual,
-                                         ComputationalDomain& mInfra,
-                                         DeRhamField<Grid::dual, Space::node>& qDual)
+                                         ComputationalDomain& mInfra)
 {
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& zeroForm = (pointValsDual.m_data)[mfi].array();
@@ -347,8 +341,7 @@ void update_zero_form_dual_error_parallel_for (amrex::MFIter& mfi,
 
 void update_three_form_primal_parallel_for (amrex::MFIter& mfi,
                                             DeRhamField<Grid::primal, Space::cell>& rhoAn,
-                                            ComputationalDomain& mInfra,
-                                            DeRhamField<Grid::primal, Space::cell>& rho)
+                                            ComputationalDomain& mInfra)
 {
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& threeForm = (rhoAn.m_data)[mfi].array();
@@ -388,8 +381,7 @@ void update_three_form_primal_error_parallel_for (amrex::MFIter& mfi,
 
 void update_three_form_dual_parallel_for (amrex::MFIter& mfi,
                                           DeRhamField<Grid::dual, Space::cell>& rhoAnDual,
-                                          ComputationalDomain& mInfra,
-                                          DeRhamField<Grid::dual, Space::cell>& rhoDual)
+                                          ComputationalDomain& mInfra)
 {
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& threeForm = (rhoAnDual.m_data)[mfi].array();
@@ -469,8 +461,6 @@ protected:
 
 TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
 {
-    const std::string analyticalFunc = "1.0";
-
     // Parse analytical fields and and initialize parserEval
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalE = {
@@ -519,7 +509,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
     {
         for (amrex::MFIter mfi(lineIntegral.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_one_form_primal_parallel_for(mfi, lineIntegral, m_infra, E, comp);
+            update_one_form_primal_parallel_for(mfi, lineIntegral, m_infra, comp);
         }
     }
 
@@ -584,7 +574,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
     {
         for (amrex::MFIter mfi(faceIntegral.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_two_form_primal_parallel_for(mfi, faceIntegral, m_infra, B, comp);
+            update_two_form_primal_parallel_for(mfi, faceIntegral, m_infra, comp);
         }
     }
 
@@ -651,7 +641,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
     {
         for (amrex::MFIter mfi(lineIntegralDual.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_one_form_dual_parallel_for(mfi, lineIntegralDual, m_infra, H, comp);
+            update_one_form_dual_parallel_for(mfi, lineIntegralDual, m_infra, comp);
         }
     }
 
@@ -715,7 +705,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
     {
         for (amrex::MFIter mfi(faceIntegralDual.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_two_form_dual_parallel_for(mfi, faceIntegralDual, m_infra, D, comp);
+            update_two_form_dual_parallel_for(mfi, faceIntegralDual, m_infra, comp);
         }
     }
 
@@ -740,33 +730,6 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
 
 TEST_F(FDDeRhamComplexProjectionTest, test_projection_zero_three_forms)
 {
-    const std::string analyticalFunc = "1.0";
-
-    // Parse analytical fields and and initialize parserEval
-#if (GEMPIC_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> analyticalE = {
-        "cos(x)",
-        "cos(x)",
-        "cos(x)",
-    };
-#endif
-
-#if (GEMPIC_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> analyticalE = {
-        "cos(x) * cos(y)",
-        "cos(x) * cos(y)",
-        "cos(x) * cos(y)",
-    };
-#endif
-
-#if (GEMPIC_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> analyticalE = {
-        "cos(x) * cos(y) * cos(z)",
-        "cos(x) * cos(y) * cos(z)",
-        "cos(x) * cos(y) * cos(z)",
-    };
-#endif
-
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
@@ -800,7 +763,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_zero_three_forms)
 
     for (amrex::MFIter mfi(pointVals.m_data); mfi.isValid(); ++mfi)
     {
-        update_zero_form_primal_parallel_for(mfi, pointVals, m_infra, Q);
+        update_zero_form_primal_parallel_for(mfi, pointVals, m_infra);
     }
 
     pointVals.average_sync();
@@ -842,7 +805,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_zero_three_forms)
 
     for (amrex::MFIter mfi(pointValsDual.m_data); mfi.isValid(); ++mfi)
     {
-        update_zero_form_dual_parallel_for(mfi, pointValsDual, m_infra, qDual);
+        update_zero_form_dual_parallel_for(mfi, pointValsDual, m_infra);
     }
 
     pointValsDual.average_sync();
@@ -884,7 +847,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_zero_three_forms)
 
     for (amrex::MFIter mfi(rhoAn.m_data); mfi.isValid(); ++mfi)
     {
-        update_three_form_primal_parallel_for(mfi, rhoAn, m_infra, rho);
+        update_three_form_primal_parallel_for(mfi, rhoAn, m_infra);
     }
 
     rhoAn.fill_boundary();
@@ -925,7 +888,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_zero_three_forms)
 
     for (amrex::MFIter mfi(rhoAnDual.m_data); mfi.isValid(); ++mfi)
     {
-        update_three_form_dual_parallel_for(mfi, rhoAnDual, m_infra, rhoDual);
+        update_three_form_dual_parallel_for(mfi, rhoAnDual, m_infra);
     }
 
     rhoAnDual.average_sync();
