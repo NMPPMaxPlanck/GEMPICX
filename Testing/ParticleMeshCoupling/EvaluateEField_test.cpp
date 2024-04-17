@@ -115,7 +115,7 @@ protected:
     void SetUp () override
     {
         // Parameters initialized here so that different tests can have different parameters
-        Io::Parameters parameters{};
+        Io::Parameters parameters;
         /* Initialize the infrastructure */
         m_infra = ComputationalDomain{};
 

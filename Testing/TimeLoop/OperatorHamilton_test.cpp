@@ -64,7 +64,7 @@ public:
 
     template <Field form, unsigned int vDim>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> eval_spline_field (
-        const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
+        const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> /*fieldArray*/) const
     {
         amrex::GpuArray<amrex::Real, vDim> fields;
         for (int comp = 0; comp < vDim; comp++)
@@ -88,7 +88,6 @@ protected:
     static const int s_numSpec{1};
     static const int s_vDim{3};
     static const int s_spec{0};
-    static const int s_nData{1};
     Io::Parameters m_parameters{};
 
     ComputationalDomain m_infra{false};  // "uninitialized" computational domain
@@ -231,6 +230,7 @@ TEST_F(OperatorHamiltonTest, ApplyHEParticleTest)
             eArray, mockSpline, vel, velx, vely, velz, 1, 1, 0);
 
         amrex::GpuArray<amrex::Real, 3> efield({1, 1, 1});
+        ASSERT_THAT(efield, ::testing::ElementsAreArray({1, 1, 1}));
 
         EXPECT_EQ(1, velx[0]);
         EXPECT_EQ(1, vely[0]);
@@ -316,6 +316,7 @@ TEST_F(OperatorHamiltonTest, ApplyHpiTest)
                                                     m_infra.m_dx, jArray, bArray, 1, 1, 1);
 
         amrex::GpuArray<amrex::Real, 3> efield({1, 1, 1});
+        ASSERT_THAT(efield, ::testing::ElementsAreArray({1, 1, 1}));
 
         EXPECT_EQ(0, velx[0]);
         EXPECT_EQ(0, vely[0]);

@@ -784,8 +784,8 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
                                       DeRhamField<oppositeGrid<srcFieldTypes.s_gridType>,
                                                   oppositeSpace<srcFieldTypes.s_spaceType>>&>)
                     {
-                        hodge_operator<validDegreesArray[testDegInd], hodgeScheme>(hSrc, hDst,
-                                                                                   weight);
+                        this->hodge_operator<validDegreesArray[testDegInd], hodgeScheme>(hSrc, hDst,
+                                                                                         weight);
                     }
                     else
                     {

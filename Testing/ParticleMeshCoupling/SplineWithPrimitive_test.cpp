@@ -47,9 +47,7 @@ protected:
     static const int s_degX{1};
     static const int s_degY{1};
     static const int s_degZ{1};
-    static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
-    static const int s_hodgeDegree{2};
     static const int s_vDim{3};
     static const int s_numSpec{1};
     static const int s_spec{0};

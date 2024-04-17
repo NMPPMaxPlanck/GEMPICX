@@ -67,15 +67,15 @@ def execute_git_mv(source, destination, forceMove=False):
     created_file_name=''
     if forceMove:
         if source.is_file():
-            subprocess.run(['git', 'add', str(source)])
+            subprocess.run(f'git add {str(source)}', shell=True)
         else:
             created_file_name = '__madeBySanitizeWithPython__.txt'
             created_file=pathlib.Path(source, created_file_name)
             created_file.touch()
-            subprocess.run(['git', 'add', str(created_file)])
+            subprocess.run(f'git add {str(created_file)}', shell=True)
 
     # The actual call
-    gitmvout = subprocess.run(['git', 'mv', str(source), str(destination)], capture_output=True, text=True)
+    gitmvout = subprocess.run(f'git mv {str(source)} {str(destination)}', shell=True, capture_output=True, text=True)
     if gitmvout.returncode == 0:
         msg = f'{str(source)} was moved to {str(destination)}.'
     else:
@@ -94,7 +94,7 @@ def execute_git_mv(source, destination, forceMove=False):
             destination.rmdir()
             msg = f'The badly named directory {str(source)} was empty and should be gone now.'
             removedDir=True
-        subprocess.run(['git', 'add', '-u', str(new_created_file)])
+        subprocess.run(f'git add -u {str(new_created_file)}', shell=True)
         
     return msg, removedDir
 
@@ -277,6 +277,24 @@ def fix_files_syntax(folders, forceMove=False):
         print("C) test_aNy_StYlE.cpp (deprecated)")
         print("D) CamelCase.H or CamelCase.cpp (other folders)")
 
+def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> bool:
+    """
+    Checks if Clang-Tidy or Clang-Format is
+    A) Available
+    B) An acceptable version
+    """
+    try:
+        output=subprocess.run("clang-tidy --version", shell=True, capture_output=True, text=True)
+        version=int(re.sub(r'^.*?version (\d+)\.\d+\..*$', r'\g<1>', output.stdout.replace('\n','')))
+        if minVersion <= version <= maxVersion:
+            return True
+        else:
+            msg=f'clang-{tidyOrFormat} version is {version}, but accepted versions are {minVersion}-{maxVersion}. Skipping run.'
+    except (FileNotFoundError):
+        msg=f'clang-{tidyOrFormat} was not found. Did you install it?'
+    warnings.warn(msg)
+    return False
+
 def read_build_info() -> tuple[pathlib.Path, str]:
     """
     Get build directory and implicitly included libraries necessary for clang.
@@ -360,6 +378,9 @@ def gempic_run_clang_tidy(folders):
     The compile_commands.json file, as well as the scripts/build_dir.txt file
     pointing to it, are created at cmake configuration time.
     """
+    if not clang_version_is_ok('tidy'):
+        return
+
     buildDir, includeLibs = read_build_info()
     
     curate_compile_commands(buildDir, folders)
@@ -428,11 +449,14 @@ def gempic_run_clang_format(folders):
     """
     Run Clang-Format and fix the mistakes introduced thereby.
     """
+    if not clang_version_is_ok('format'):
+        return
+
     print("Running Clang-Format ... ", end='')
     for file in find_files(["*.cpp", "*.H"], folders=folders):
         fix_includes(file)
         try:
-            clangFormatOut = subprocess.run(['clang-format', '-i', '-style=file', file], capture_output=True, text=True)
+            clangFormatOut = subprocess.run(f'clang-format -i -style=file {file}', shell=True, capture_output=True, text=True)
 
             if clangFormatOut.returncode == 0:
                 fix_lambda_brackets(file)
@@ -448,8 +472,8 @@ def main():
     #folders = ['bad']
     #forceMove = False
     parser=argparse.ArgumentParser(description="Cleanup script for GEMPIC that should be "
-                                   "independent of OS. Requires clang-tidy and -format in path as "
-                                   "well as Python 3.5+.")
+                                   "independent of OS. Requires (run-)clang-tidy and clang-format"
+                                   "in path as well as Python 3.7+.")
     parser.add_argument('-forcemove', '-force-move', '--forceMove', action='store_true',
                         help='Git add files or create fake files to facilitate git move when fixing'
                         ' folder and file syntax. Fake files are automatically removed again.')

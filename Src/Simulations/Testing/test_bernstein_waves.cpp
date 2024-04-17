@@ -27,7 +27,6 @@ using namespace Particle;
 using namespace ParticleMeshCoupling;
 
 // apply npass times a bilinear filter to rho
-constexpr int npass = 4;
 void filter (DeRhamField<Grid::dual, Space::cell> &rho,
              DeRhamField<Grid::dual, Space::cell> &rhoTemp,
              int npass)

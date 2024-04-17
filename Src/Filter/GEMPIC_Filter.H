@@ -45,7 +45,7 @@ public:
                      , amrex::Real const* AMREX_RESTRICT sy = m_stencilY.data();
                      , amrex::Real const* AMREX_RESTRICT sz = m_stencilZ.data();)
 
-        amrex::Dim3 slen{AMREX_D_DECL(static_cast<int>(m_stencilX.size()),
+        amrex::Dim3 slen{GEMPIC_D_PAD(static_cast<int>(m_stencilX.size()),
                                       static_cast<int>(m_stencilY.size()),
                                       static_cast<int>(m_stencilZ.size()))};
 

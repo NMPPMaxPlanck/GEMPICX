@@ -132,6 +132,5 @@ void compare_fields(const char file[],
                     amrex::Array4<amrex::Real> const& fieldArr2,
                     amrex::Box const& bx,
                     int ncomp = 1);
-
 }  // namespace Gempic::Test::Utils
 #endif

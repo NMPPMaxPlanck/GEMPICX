@@ -25,13 +25,13 @@ private:
     int m_mgBottomMaxIter;
     int m_verbose;
     int m_bottomVerbose;
-    amrex::Real m_reltol{1.e-11};
+    //amrex::Real m_reltol{1.e-11};
     amrex::Real m_maxsteps{100};
     std::shared_ptr<Forms::DeRhamComplex> m_deRham;
     Forms::DeRhamField<Grid::primal, Space::edge> m_residual;
 
     // for Poisson
-    amrex::Array<amrex::Real, GEMPIC_SPACEDIM> m_sigma;
+    //amrex::Array<amrex::Real, GEMPIC_SPACEDIM> m_sigma;
 
 public:
     PoissonSolver(std::shared_ptr<Forms::DeRhamComplex> deRham);
