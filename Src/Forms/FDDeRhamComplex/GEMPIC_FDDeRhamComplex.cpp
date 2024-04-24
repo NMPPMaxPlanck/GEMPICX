@@ -10,6 +10,7 @@ FDDeRhamComplex::FDDeRhamComplex(const ComputationalDomain& infra,
                                  HodgeScheme hodgeScheme) :
     DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
     // Parameters used in the projection and hodge
     for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
     {
@@ -151,6 +152,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                  amrex::Real t,
                                  DeRhamField<Grid::primal, Space::node>& field)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, node>)");
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
@@ -197,6 +199,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                  DeRhamField<Grid::primal, Space::cell>& field,
                                  int gaussNodes)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, cell>)");
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -277,6 +280,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                  amrex::Real t,
                                  DeRhamField<Grid::dual, Space::node>& field)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, node>)");
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
@@ -325,6 +329,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                  DeRhamField<Grid::dual, Space::cell>& field,
                                  int gaussNodes)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, cell>)");
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -409,6 +414,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                  DeRhamField<Grid::dual, Space::edge>& field,
                                  int gaussNodes)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, edge>)");
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -499,6 +505,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                  DeRhamField<Grid::primal, Space::face>& field,
                                  int gaussNodes)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, face>)");
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -661,6 +668,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                  int gaussNodes)
 
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, edge>)");
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -750,6 +758,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                  DeRhamField<Grid::dual, Space::face>& field,
                                  int gaussNodes)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, face>)");
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -897,6 +906,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 
 void FDDeRhamComplex::hodge_scheme_selector (anyFieldConstRef f1, anyFieldRef f2, amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_scheme_selector()");
     if (m_hodgeScheme == HodgeScheme::FDHodge)
     {
         hodge_degree_selector<HodgeScheme::FDHodge>(f1, f2, weight);
@@ -911,42 +921,49 @@ void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::cell>& threeFo
                             DeRhamField<Grid::primal, Space::node>& zeroForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,cell,primal,node,weight)");
     hodge_scheme_selector(threeForm, zeroForm, weight);
 }
 void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::cell>& threeForm,
                             DeRhamField<Grid::dual, Space::node>& zeroForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,cell,dual,node,weight)");
     hodge_scheme_selector(threeForm, zeroForm, weight);
 }
 void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::face>& twoForm,
                             DeRhamField<Grid::primal, Space::edge>& oneForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,face,primal,edge,weight)");
     hodge_scheme_selector(twoForm, oneForm, weight);
 }
 void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::face>& twoForm,
                             DeRhamField<Grid::dual, Space::edge>& oneForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,face,dual,edge,weight)");
     hodge_scheme_selector(twoForm, oneForm, weight);
 }
 void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::edge>& oneForm,
                             DeRhamField<Grid::primal, Space::face>& twoForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,edge,primal,face,weight)");
     hodge_scheme_selector(oneForm, twoForm, weight);
 }
 void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::edge>& oneForm,
                             DeRhamField<Grid::dual, Space::face>& twoForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,edge,dual,face,weight)");
     hodge_scheme_selector(oneForm, twoForm, weight);
 }
 void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::node>& zeroForm,
                             DeRhamField<Grid::primal, Space::cell>& threeForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,node,primal,cell,weight)");
     hodge_scheme_selector(zeroForm, threeForm, weight);
 }
 
@@ -954,5 +971,6 @@ void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::node>& zeroF
                             DeRhamField<Grid::dual, Space::cell>& threeForm,
                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,node,dual,cell,weight)");
     hodge_scheme_selector(zeroForm, threeForm, weight);
 }

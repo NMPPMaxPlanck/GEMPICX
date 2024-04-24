@@ -31,6 +31,7 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
              DeRhamField<Grid::dual, Space::cell> &rhoTemp,
              int npass)
 {
+    BL_PROFILE("Gempic::Forms::Particle::ParticleMeshCoupling::filter()");
     auto nghost = rho.m_deRham->get_n_ghost();
     for (int pass = 0; pass < npass - 1; pass++)
     {
@@ -97,6 +98,7 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
 int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+    BL_PROFILE_VAR("main()", pmain);
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     constexpr int vdim{3};
@@ -375,5 +377,6 @@ int main (int argc, char *argv[])
             }
         }  // end of "time loop" scope
     }
+    BL_PROFILE_VAR_STOP(pmain);
     amrex::Finalize();
 }

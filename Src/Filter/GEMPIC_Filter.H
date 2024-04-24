@@ -40,6 +40,7 @@ public:
                     int dcomp,
                     int ncomp)
     {
+        BL_PROFILE("Gempic::Filter::Filter::do_filter()");
         // src and dst are of type Array4 (Fortran ordering)
         AMREX_D_TERM(amrex::Real const* AMREX_RESTRICT sx = m_stencilX.data();
                      , amrex::Real const* AMREX_RESTRICT sy = m_stencilY.data();
@@ -86,6 +87,7 @@ public:
     void apply_stencil (
         const amrex::MultiFab& srcmf, amrex::MultiFab& dstmf, int scomp, int dcomp, int ncomp)
     {
+        BL_PROFILE("Gempic::Filter::Filter::apply_stencil()");
         if (!m_useFilter)
         {
             return;

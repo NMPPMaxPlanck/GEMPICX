@@ -48,7 +48,7 @@ public:
         int bufferID = 1,
         int numBuffers = 1) const override
     {
-        BL_PROFILE("FlushFormatPlotfile::WriteToFile()");
+        BL_PROFILE("FlushFormatPlotfile::write_to_file()");
         std::string filename{amrex::Concatenate(prefix, iteration, fileMinDigits)};
         const amrex::VisMF::Header::Version currentVersion = amrex::VisMF::GetHeaderVersion();
 
@@ -89,6 +89,7 @@ public:
     /** Write general info of the run into the plotfile */
     void write_job_info (const std::string& dir) const
     {
+        BL_PROFILE("FlushFormatPlotfile::write_job_info()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             // job_info file with details about the run
@@ -214,6 +215,7 @@ public:
     /** Write WarpX-specific plotfile header */
     void write_warp_x_header (const std::string& name, amrex::Geometry& geom) const
     {
+        BL_PROFILE("FlushFormatPlotfile::write_warp_x_header()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             amrex::VisMF::IO_Buffer ioBuffer(amrex::VisMF::IO_Buffer_Size);

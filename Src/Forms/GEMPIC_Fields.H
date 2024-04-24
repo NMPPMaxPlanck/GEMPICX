@@ -225,6 +225,7 @@ public:
                   const int hodgeDegree,
                   const int maxSplineDegree)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
         Io::Parameters params("DeRhamComplex");
 
         m_grid = infra.m_grid;
@@ -291,6 +292,7 @@ public:
 
     void initialize_field (DeRhamField<Grid::primal, Space::node>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,node,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalNodeIndex), m_distriMap, 1, m_nGhost);
         field.m_data.setVal(0.0);
     }
@@ -298,6 +300,7 @@ public:
     // Function overloads for the initializations
     void initialize_field (DeRhamField<Grid::primal, Space::edge>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,edge,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap, 1,
                                   m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -311,6 +314,7 @@ public:
 
     void initialize_field (DeRhamField<Grid::primal, Space::face>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,face,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap, 1,
                                   m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -324,6 +328,7 @@ public:
 
     void initialize_field (DeRhamField<Grid::primal, Space::cell>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,cell,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalCellIndex), m_distriMap, 1, m_nGhost);
         field.m_data.setVal(0.0);
     }
@@ -331,12 +336,14 @@ public:
     // Centering is always set by the primal grid
     void initialize_field (DeRhamField<Grid::dual, Space::node>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,node,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalCellIndex), m_distriMap, 1, m_nGhost);
         field.m_data.setVal(0.0);
     }
 
     void initialize_field (DeRhamField<Grid::dual, Space::edge>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,edge,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap, 1,
                                   m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -350,6 +357,7 @@ public:
 
     void initialize_field (DeRhamField<Grid::dual, Space::face>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,face,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap, 1,
                                   m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -363,6 +371,7 @@ public:
 
     void initialize_field (DeRhamField<Grid::dual, Space::cell>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,cell,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalNodeIndex), m_distriMap, 1, m_nGhost);
         field.m_data.setVal(0.0);
     }
@@ -372,6 +381,7 @@ public:
     template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
     void fill_boundary (DeRhamField<grid, space>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary(field)");
         field.m_data[xDir].FillBoundary(m_geom.periodicity());
         field.m_data[yDir].FillBoundary(m_geom.periodicity());
         field.m_data[zDir].FillBoundary(m_geom.periodicity());
@@ -381,6 +391,7 @@ public:
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void fill_boundary (DeRhamField<grid, space>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary(field)");
         field.m_data.FillBoundary(m_geom.periodicity());
     }
 
@@ -389,6 +400,7 @@ public:
     template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
     void average_sync (DeRhamField<grid, space>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::average_sync(field)");
         field.m_data[xDir].AverageSync(m_geom.periodicity());
         field.m_data[yDir].AverageSync(m_geom.periodicity());
         field.m_data[zDir].AverageSync(m_geom.periodicity());
@@ -398,6 +410,7 @@ public:
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void average_sync (DeRhamField<grid, space>& field)
     {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::average_sync(field)");
         field.m_data.AverageSync(m_geom.periodicity());
     }
 
@@ -481,6 +494,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     std::shared_ptr<DeRhamComplex> drc) :
     m_deRham{drc}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc)");
     m_deRham->initialize_field(*this);
 }
 
@@ -489,6 +503,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     std::shared_ptr<DeRhamComplex> drc) :
     m_deRham{drc}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc)");
     m_deRham->initialize_field(*this);
 }
 
@@ -497,6 +512,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     std::shared_ptr<DeRhamComplex> drc, const std::string& diagName) :
     DeRhamField{drc}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,diagName)");
     m_deRham->m_fieldsDiagnostics[diagName + "x"] = &(this->m_data[xDir]);
     m_deRham->m_fieldsDiagnostics[diagName + "y"] = &(this->m_data[yDir]);
     m_deRham->m_fieldsDiagnostics[diagName + "z"] = &(this->m_data[zDir]);
@@ -522,6 +538,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     std::shared_ptr<DeRhamComplex> drc, const std::string& diagName) :
     DeRhamField{drc}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,diagName)");
     m_deRham->m_fieldsDiagnostics[diagName] = &(this->m_data);
     if constexpr (space == Space::node)  // node field
     {
@@ -539,6 +556,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     const amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func) :
     DeRhamField{drc}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,func)");
     m_deRham->projection(func, 0.0, *this);
 }
 
@@ -547,6 +565,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     std::shared_ptr<DeRhamComplex> drc, const amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func) :
     DeRhamField{drc}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func)");
     m_deRham->projection(func, 0.0, *this);
 }
 
@@ -558,6 +577,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     const std::string& diagName) :
     DeRhamField{drc, diagName}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,diagName)");
     m_deRham->projection(func, 0.0, *this);
 }
 
@@ -568,6 +588,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     const std::string& diagName) :
     DeRhamField{drc, diagName}
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func,diagName)");
     m_deRham->projection(func, 0.0, *this);
 }
 
@@ -576,6 +597,7 @@ template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::
     post_particle_loop_sync()
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
     m_data.SumBoundary(0, 1, m_deRham->get_n_ghost(), amrex::IntVect::Zero,
                        m_deRham->get_periodicity());
     average_sync();
@@ -587,6 +609,7 @@ template <Grid grid, Space space>
 inline void
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary()
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
 }
 
@@ -594,6 +617,7 @@ template <Grid grid, Space space>
 inline void
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::fill_boundary()
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
 }
 
@@ -602,6 +626,7 @@ template <Grid grid, Space space>
 inline void
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::average_sync()
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::average_sync()");
     m_deRham->average_sync(*this);
 }
 
@@ -609,6 +634,7 @@ template <Grid grid, Space space>
 inline void
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::average_sync()
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::average_sync()");
     m_deRham->average_sync(*this);
 }
 
@@ -617,6 +643,7 @@ template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator*=(
     const amrex::Real& dt)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=()");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -629,6 +656,7 @@ inline void
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::operator*=(
     const amrex::Real& dt)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=()");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.mult(dt, nGhost[xDir]);
 }
@@ -638,6 +666,7 @@ template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator+=(
     DeRhamField<grid, space>& form)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=()");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -650,6 +679,7 @@ template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator-=(
     DeRhamField<grid, space>& form)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-=()");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {

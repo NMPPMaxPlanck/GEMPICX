@@ -24,6 +24,7 @@ public:
     RawFunctor(const amrex::MultiFab* const mfSrc, const amrex::IntVect crseRatio, int ncomp = 1) :
         ComputeDiagFunctor(ncomp, crseRatio), m_mfSrc(mfSrc)
     {
+        BL_PROFILE("RawFunctor::RawFunctor()");
     }
 
     /** \brief Cell-center m_mfSrc and write the result in mfDst.
@@ -37,6 +38,7 @@ public:
      */
     void operator()(amrex::MultiFab& mfDst, int dcomp) const override
     {
+        BL_PROFILE("RawFunctor::operator()");
         // Copying raw file
         // std::cout<<"Reached copying files\n";
         amrex::Copy(mfDst, *m_mfSrc, 0, 0, 1, 0);

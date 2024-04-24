@@ -13,6 +13,7 @@ class ComputeDiagFunctor
 public:
     ComputeDiagFunctor(int ncomp, amrex::IntVect crseRatio) : m_ncomp(ncomp), m_crseRatio(crseRatio)
     {
+        BL_PROFILE("ComputeDiagFunctor::ComputeDiagFunctor()");
     }
     /** Virtual Destructor to handle clean destruction of derived classes */
     virtual ~ComputeDiagFunctor() = default;

@@ -53,6 +53,7 @@ std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray)
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, const T& value)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param()");
     sharedParam = value;
 }
 
@@ -65,6 +66,7 @@ void set_shared_param (parmParseType& sharedParam, const T& value)
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, const std::vector<T>& value)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::vector)");
     sharedParam = parmParseVectorType(value.begin(), value.end());
 }
 
@@ -77,6 +79,7 @@ void set_shared_param (parmParseType& sharedParam, const std::vector<T>& value)
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, const amrex::Vector<T>& value)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param(amrex::Vector)");
     sharedParam = parmParseVectorType(value.begin(), value.end());
 }
 
@@ -89,6 +92,7 @@ void set_shared_param (parmParseType& sharedParam, const amrex::Vector<T>& value
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, const std::array<T, GEMPIC_SPACEDIM>& value)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::array)");
     parmParseArrayType tmp;
     auto* tmpIt{tmp.begin()};
     for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
@@ -108,6 +112,7 @@ void set_shared_param (parmParseType& sharedParam, const std::array<T, GEMPIC_SP
 template <typename T>
 void get_shared_param (T& variable, const parmParseType& sharedParam)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param()");
     auto tmp = std::get<parmParseParameterType>(sharedParam);
     variable = std::get<T>(tmp);
 }
@@ -121,6 +126,7 @@ void get_shared_param (T& variable, const parmParseType& sharedParam)
 template <typename T>
 void get_shared_param (std::vector<T>& variable, const parmParseType& sharedParam)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::vector)");
     auto tmp = std::get<parmParseVectorType>(sharedParam);
     variable.resize(tmp.size());
     for (size_t i{0}; i < tmp.size(); i++)
@@ -138,6 +144,7 @@ void get_shared_param (std::vector<T>& variable, const parmParseType& sharedPara
 template <typename T>
 void get_shared_param (amrex::Vector<T>& variable, const parmParseType& sharedParam)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param(amrex::Vector)");
     auto tmp = std::get<parmParseVectorType>(sharedParam);
     variable.resize(tmp.size());
     for (size_t i{0}; i < tmp.size(); i++)
@@ -155,6 +162,7 @@ void get_shared_param (amrex::Vector<T>& variable, const parmParseType& sharedPa
 template <typename T>
 void get_shared_param (std::array<T, GEMPIC_SPACEDIM>& variable, const parmParseType& sharedParam)
 {
+    BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::array)");
     auto tmp = std::get<parmParseArrayType>(sharedParam);
     for (size_t i{0}; i < GEMPIC_SPACEDIM; i++)
     {
@@ -173,6 +181,7 @@ void get_shared_param (std::array<T, GEMPIC_SPACEDIM>& variable, const parmParse
 template <typename T>
 parmParseType convert_to_param (T variable)
 {
+    BL_PROFILE("Gempic::Io::Impl::convert_to_param()");
     parmParseType parameterVariable;
     set_shared_param(parameterVariable, variable);
     return parameterVariable;
@@ -335,6 +344,7 @@ public:
     template <typename T>
     bool get_or_set (const std::string& variableName, T& variable)
     {
+        BL_PROFILE("Gempic::Io::Parameters::get_or_set()");
         // Check if variable is a shared parameter ('.contains' is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -375,6 +385,7 @@ public:
     template <typename T>
     void get (const std::string& variableName, T& variable)
     {
+        BL_PROFILE("Gempic::Io::Parameters::get()");
         using namespace Impl;  // utility functions for this class
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
@@ -428,6 +439,7 @@ public:
     template <typename T>
     void set (const std::string& variableName, T& variable)
     {
+        BL_PROFILE("Gempic::Io::Parameters::set()");
         using namespace Impl;  // utility functions for this class
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
@@ -517,6 +529,7 @@ private:
     template <typename T>
     bool query (std::string variableName, T& value)
     {
+        BL_PROFILE("Gempic::Io::Parameters::query()");
         amrex::ParmParse ppPrefix(m_classPrefix);
         return ppPrefix.query(variableName.c_str(), value);
     }
@@ -533,6 +546,7 @@ private:
     template <typename T>
     bool query (std::string variableName, std::vector<T>& value)
     {
+        BL_PROFILE("Gempic::Io::Parameters::query(std::vector)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         return ppPrefix.queryarr(variableName.c_str(), value);
     }
@@ -546,6 +560,7 @@ private:
     template <typename T>
     bool query (std::string variableName, amrex::Vector<T>& value)
     {
+        BL_PROFILE("Gempic::Io::Parameters::query(amrex::Vector)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         return ppPrefix.queryarr(variableName.c_str(), value);
     }
@@ -559,6 +574,7 @@ private:
     template <typename T>
     bool query_shared (std::string variableName, T& value)
     {
+        BL_PROFILE("Gempic::Io::Parameters::query_shared()");
         amrex::ParmParse pp;
         return pp.query(variableName.c_str(), value);
     }
@@ -572,6 +588,7 @@ private:
     template <typename T>
     bool query_shared (std::string variableName, std::vector<T>& value)
     {
+        BL_PROFILE("Gempic::Io::Parameters::query_shared(std::vector)");
         amrex::ParmParse pp;
         return pp.queryarr(variableName.c_str(), value);
     }
@@ -585,6 +602,7 @@ private:
     template <typename T>
     bool query_shared (std::string variableName, amrex::Vector<T>& value)
     {
+        BL_PROFILE("Gempic::Io::Parameters::query_shared(amrex::Vector)");
         amrex::ParmParse pp;
         return pp.queryarr(variableName.c_str(), value);
     }
@@ -603,6 +621,7 @@ private:
     template <typename T>
     void print_shared_parameter (std::ofstream& ofs, std::string variableName, T& variable)
     {
+        BL_PROFILE("Gempic::Io::Parameters::print_shared_parameter()");
         using namespace Impl;  // utility functions for this class
         if (s_sharedParams.at(variableName).get()->m_isSet)
         {

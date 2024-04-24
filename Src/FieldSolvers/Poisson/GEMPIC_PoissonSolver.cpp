@@ -32,6 +32,7 @@ void PoissonSolver::solve (const ComputationalDomain& infra,
                           Forms::DeRhamField<Grid::dual, Space::cell>& rho,
                           Forms::DeRhamField<Grid::primal, Space::node>& phi)
 {
+    BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::solve()");
     amrex::LPInfo lpInfo;
     lpInfo.setMaxCoarseningLevel(m_maxCoarseningLevel);
 
@@ -101,6 +102,7 @@ void PoissonSolver::subtract_constant_part (const ComputationalDomain& infra,
                                            Forms::DeRhamField<Grid::dual, Space::cell>& rho,
                                            const int nGhost)
 {
+    BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::subtract_constant_part()");
     const int nComp = 1;
     // Calculates a nodal mask for rho
     std::unique_ptr<amrex::iMultiFab> nodalMask;

@@ -40,6 +40,7 @@ template <unsigned int vdim, unsigned int numspec>
 void print_particles (amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
                       const int species)
 {
+    BL_PROFILE("Gempic::Particle::print_particles()");
     std::ofstream ofs("particles.out", std::ofstream::out);
     for (amrex::ParIter<0, 0, vdim + 1, 0> pti(*partGr[species], 0); pti.isValid(); ++pti)
     {
@@ -78,6 +79,7 @@ template <unsigned int vdim, unsigned int numspec>
 void print_v_moments (const amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
                       const int species)
 {
+    BL_PROFILE("Gempic::Particle::print_v_moments");
     // compute the first three moments of f(x,v), only one species
     amrex::GpuArray<amrex::Real, vdim + 2> vMoment;
     amrex::Real vMomentTmp;
@@ -136,6 +138,7 @@ void print_v_moments (const amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>
 template <unsigned int vdim, unsigned int numspec>
 void main_main ()
 {
+    BL_PROFILE("main()");
     //------------------------------------------------------------------------------
     Io::Parameters parameters{};
     int species = 0;  // only one species
@@ -217,17 +220,18 @@ int main (int argc, char* argv[])
 {
     const bool buildParmParse = true;
     amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD, overwrite_amrex_parser_defaults);
-
-    if (amrex::ParallelDescriptor::MyProc() == 0) remove("test_sampler.tmp.0");
-
-    const unsigned int vdim = 3;
-    const unsigned int numspec = 1;
-    main_main<vdim, numspec>();
-
-    if (amrex::ParallelDescriptor::MyProc() == 0)
     {
-        std::rename("test_sampler.tmp.0", "test_sampler.output");
-    }
+        BL_PROFILE("main()");
+        if (amrex::ParallelDescriptor::MyProc() == 0) remove("test_sampler.tmp.0");
 
+        const unsigned int vdim = 3;
+        const unsigned int numspec = 1;
+        main_main<vdim, numspec>();
+
+        if (amrex::ParallelDescriptor::MyProc() == 0)
+        {
+            std::rename("test_sampler.tmp.0", "test_sampler.output");
+        }
+    }
     amrex::Finalize();
 }

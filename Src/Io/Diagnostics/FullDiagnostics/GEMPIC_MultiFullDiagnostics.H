@@ -24,6 +24,7 @@ class MultiDiagnostics
 public:
     MultiDiagnostics(amrex::Real dt)
     {
+        BL_PROFILE("Gempic::Io::MultiDiagnostics()");
         read_parameters();
         /** Resize alldiags and initialize each element to a pointer to a
          * diagnostics. Calls the corresponding diagnostics constructor.
@@ -41,6 +42,7 @@ public:
     /** \brief Read Input parameters. Called in constructor. */
     void read_parameters ()
     {
+        BL_PROFILE("Gempic::Io::MultiDiagnostics::read_parameters()");
         Parameters params("FullDiagnostics");
 
         bool enableDiags{false};
@@ -59,6 +61,7 @@ public:
         amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec> particles,
         amrex::IntVect& nghost)
     {
+        BL_PROFILE("Gempic::Io::MultiDiagnostics::init_data()");
         for (auto& diag : m_alldiags)
         {
             diag->init_data(compDom, fieldsDiagnostics, fieldsScaling, particles, nghost);
@@ -67,6 +70,7 @@ public:
     /** \brief Called at each iteration. Compute diags and flush. */
     void filter_compute_pack_flush (int step, bool forceFlush = false)
     {
+        BL_PROFILE("Gempic::Io::MultiDiagnostics::filter_compute_pack_flush()");
         for (auto& diag : m_alldiags)
         {
             diag->filter_compute_pack_flush(step, forceFlush);
@@ -76,6 +80,7 @@ public:
      *         is true, compute diags and flush with force_flush=true. */
     void filter_compute_pack_flush_last_timestep (int step)
     {
+        BL_PROFILE("Gempic::Io::MultiDiagnostics::filter_compute_pack_flush_last_timestep()");
         for (auto& diag : m_alldiags)
         {
             if (diag->DoDumpLastTimestep())

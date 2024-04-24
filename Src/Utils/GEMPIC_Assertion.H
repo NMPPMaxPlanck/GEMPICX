@@ -13,6 +13,7 @@ namespace Gempic
 {
 void gempic_assert (bool passed, amrex::Real solution, amrex::Real value)
 {
+    BL_PROFILE("Gempic::gempic_assert()");
     // check absolute error
     bool pass_abs = std::fabs(solution - value) < GEMPIC_CTEST_TOL;
 
@@ -26,6 +27,7 @@ void gempic_assert (bool passed, amrex::Real solution, amrex::Real value)
 
 void gempic_assert_err (bool &passed, amrex::Real solution, amrex::Real err)
 {
+    BL_PROFILE("Gempic::gempic_assert_err()");
     // check absolute error
 
     passed = passed && (std::fabs(err) < GEMPIC_CTEST_TOL);
@@ -36,5 +38,4 @@ void gempic_assert_err (bool &passed, amrex::Real solution, amrex::Real err)
                         GEMPIC_CTEST_RELTOL);
 }
 }  // namespace Gempic
-
 #endif

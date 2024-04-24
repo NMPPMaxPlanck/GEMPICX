@@ -29,6 +29,7 @@ void write_rho (DeRhamField<Grid::dual, Space::cell> &rho,
                 double time,
                 int step)
 {
+    BL_PROFILE("Gempic::Forms::Particle::ParticleMeshCoupling::write_rho()");
     // save fields
     // MultiFab Info -------------------------------------------------------------
     std::string plotfilename{"Plotfiles/" + amrex::Concatenate("rho", step)};
@@ -43,6 +44,7 @@ void write_phi (DeRhamField<Grid::primal, Space::node> &phi,
                 double time,
                 int step)
 {
+    BL_PROFILE("Gempic::Forms::Particle::ParticleMeshCoupling::write_phi()");
     // save fields
     // MultiFab Info -------------------------------------------------------------
     std::string plotfilename{"Plotfiles/" + amrex::Concatenate("phi", step)};
@@ -57,6 +59,7 @@ void write_ex (DeRhamField<Grid::primal, Space::edge> &E,
                double time,
                int step)
 {
+    BL_PROFILE("Gempic::Forms::Particle::ParticleMeshCoupling::write_ex()");
     // save fields
     // MultiFab Info -------------------------------------------------------------
     std::string plotfilename{"Plotfiles/" + amrex::Concatenate("E", step)};
@@ -71,6 +74,7 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
              DeRhamField<Grid::dual, Space::cell> &rhoTemp,
              int npass)
 {
+    BL_PROFILE("Gempic::Forms::Particle::ParticleMeshCoupling::filter()");
     auto nghost = rho.m_deRham->get_n_ghost();
     for (int pass = 0; pass < npass; pass++)
     {
@@ -107,7 +111,6 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
 int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
-
     // Linear splines is ok, and lower dimension Hodge is good enough
     constexpr unsigned int vdim{3};
     constexpr unsigned int numspec{1};
@@ -120,6 +123,7 @@ int main (int argc, char *argv[])
     constexpr int hodgeDegree{2};
 
     {
+        BL_PROFILE("main()");
         Io::Parameters parameters{};
 
         // Initialize computational_domain

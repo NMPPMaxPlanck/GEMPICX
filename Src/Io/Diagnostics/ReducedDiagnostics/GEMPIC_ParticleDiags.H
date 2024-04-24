@@ -42,6 +42,7 @@ public:
         ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
             rdName, indexNum, isLastType)
     {
+        BL_PROFILE("Gempic::Io::Particle::Particle()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -85,6 +86,7 @@ public:
         amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
             partGr) final
     {
+        BL_PROFILE("Gempic::Io::Particle::compute_diags()");
         constexpr int noutputs = 4;
         this->m_data.resize(noutputs, 0);
         for (int i = 0; i < noutputs; i++)

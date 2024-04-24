@@ -14,12 +14,14 @@ namespace Impl
  */
 std::ostream& operator<<(std::ostream& os, const parmParseType& val)
 {
+    BL_PROFILE("Gempic::Io::Impl::operator(os,parmParseType& val)");
     std::visit([&os] (auto&& arg) { os << arg; }, val);
     return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const parmParseParameterType& val)
 {
+    BL_PROFILE("Gempic::Io::Impl::operator(os,parmParseParameterType& val)");
     std::visit(
         [&os] (auto&& arg)
         {
@@ -40,6 +42,7 @@ std::ostream& operator<<(std::ostream& os, const parmParseParameterType& val)
 
 std::ostream& operator<<(std::ostream& os, const parmParseVectorType& inputVector)
 {
+    BL_PROFILE("Gempic::Io::Impl::operator(os,inputVector)");
     for (const auto& elem : inputVector)
     {
         os << elem << " ";
@@ -49,6 +52,7 @@ std::ostream& operator<<(std::ostream& os, const parmParseVectorType& inputVecto
 
 std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray)
 {
+    BL_PROFILE("Gempic::Io::Impl::operator(os,inputArray)");
     for (const auto& elem : inputArray)
     {
         os << elem << " ";
@@ -59,6 +63,7 @@ std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray)
 
 void Parameters::set_print_output (bool printOrNot)
 {
+    BL_PROFILE("Gempic::Io::set_print_output()");
     if (s_numParameterInstances == 0)
     {
         s_printOutput = printOrNot;
@@ -73,6 +78,7 @@ void Parameters::set_print_output (bool printOrNot)
 Parameters::Parameters(const std::string& classPrefix, std::string printName) :
     m_classPrefix{classPrefix}
 {
+    BL_PROFILE("Gempic::Io::Parameters(class)");
     using namespace Impl;  // utility functions for this class
     if (s_numParameterInstances == 0)
     {
@@ -94,6 +100,7 @@ Parameters::Parameters(const std::string& classPrefix, std::string printName) :
 
 Parameters::Parameters()
 {
+    BL_PROFILE("Gempic::Io::Parameters(main)");
     m_className = "Parameters class";
     m_classPrefix = "";
 
@@ -115,6 +122,7 @@ Parameters::Parameters()
 
 Parameters::~Parameters()
 {
+    BL_PROFILE("Gempic::Io::~Parameters()");
     if (--s_numParameterInstances)
     {
         print_class_parameters();
@@ -139,6 +147,7 @@ void Parameters::hide_class_output() { m_hideOutput = true; }
 // Probably just have this in the destructor.
 void Parameters::print_class_parameters ()
 {
+    BL_PROFILE("Gempic::Io::print_class_parameters()");
     if (s_printOutput && !m_hideOutput && m_classOutput.rdbuf()->in_avail() && m_isIOProcess)
     {
         // Space for next output section
@@ -153,6 +162,7 @@ void Parameters::print_class_parameters ()
 // Probably just have this in the destructor.
 void Parameters::print_shared_parameters ()
 {
+    BL_PROFILE("Gempic::Io::print_shared_parameters()");
     using namespace Impl;  // utility functions for this class
     if (s_printOutput && m_isIOProcess)
     {
@@ -178,6 +188,7 @@ void Parameters::print_shared_parameters ()
 
 bool Parameters::exists (const std::string& variableName)
 {
+    BL_PROFILE("Gempic::Io::exists()");
     // Check if variable is a shared parameter (contains is c++20).
     auto search{s_sharedParams.find(variableName)};
     if (search != s_sharedParams.end())
@@ -194,6 +205,7 @@ bool Parameters::exists (const std::string& variableName)
 
 bool Parameters::is_in_input_file (const std::string& variableName)
 {
+    BL_PROFILE("Gempic::Io::is_in_input_file");
     // Check if variable is a shared parameter (contains is c++20).
     auto search{s_sharedParams.find(variableName)};
     if (search != s_sharedParams.end())
@@ -210,6 +222,7 @@ bool Parameters::is_in_input_file (const std::string& variableName)
 
 std::string Parameters::has_been_set_by (const std::string& variableName)
 {
+    BL_PROFILE("Gempic::Io::has_been_set_by");
     // Check if variable is a shared parameter (contains is c++20).
     auto search{s_sharedParams.find(variableName)};
     if (search != s_sharedParams.end())

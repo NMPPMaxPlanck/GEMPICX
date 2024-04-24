@@ -29,6 +29,7 @@ enum class HodgeScheme
 template <int degree, HodgeScheme scheme>
 inline auto get_hodge_stencils ()
 {
+    BL_PROFILE("Gempic::Forms::get_hodge_stencils()");
     if constexpr (scheme == HodgeScheme::FDHodge)
     {
         constexpr unsigned int stencilLength{degree - 1};
@@ -138,6 +139,7 @@ inline void matrix_mult (amrex::Geometry geom,
                          const amrex::MultiFab& multiInput,
                          amrex::MultiFab& multiOutput)
 {
+    BL_PROFILE("Gempic::Forms::matrix_mult()");
     for (amrex::MFIter mfi(multiOutput); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.validbox();
@@ -342,6 +344,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
                                      DeRhamField<Grid::primal, Space::node>& zeroForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(dual,cell,primal,node,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -388,6 +391,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
                                      DeRhamField<Grid::dual, Space::node>& zeroForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(primal,cell,dual,node,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -433,6 +437,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
                                      DeRhamField<Grid::primal, Space::edge>& oneForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(dual,face,primal,edge,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -498,6 +503,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
                                      DeRhamField<Grid::dual, Space::edge>& oneForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(primal,face,dual,edge,weight)");
     // select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -562,6 +568,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
                                      DeRhamField<Grid::primal, Space::face>& twoForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(dual,edge,primal,face,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -628,6 +635,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
                                      DeRhamField<Grid::dual, Space::face>& twoForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(primal,edge,dual,face,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -694,6 +702,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
                                      DeRhamField<Grid::primal, Space::cell>& threeForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(dual,node,primal,cell,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -741,6 +750,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::nod
                                      DeRhamField<Grid::dual, Space::cell>& threeForm,
                                      amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_operator(primal,node,dual,cell,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -768,6 +778,7 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
                                             anyFieldRef hodgeDst,
                                             amrex::Real weight)
 {
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge_degree_selector()")
     constexpr auto validDegreesArray = valid_degrees<hodgeScheme>();
     if constexpr (testDegInd < validDegreesArray.size())
     {

@@ -29,6 +29,7 @@ public:
                       int ncomp = 1) :
         ComputeDiagFunctor(ncomp, crseRatio), m_mfSrc(mfSrc)
     {
+        BL_PROFILE("CellCenterFunctor::CellCenterFunctor()");
         m_scaling = scaling;
         const amrex::IntVect indexTypeSrc = mfSrc->boxArray().ixType().toIntVect();
         AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
@@ -46,6 +47,7 @@ public:
      */
     void operator()(amrex::MultiFab& mfDst, int dcomp) const override
     {
+        BL_PROFILE("CellCenterFunctor::operator()");
         // In cartesian geometry, interpolate from simulation MultiFab, m_mfSrc,
         // to output diagnostic MultiFab, mfDst.
         for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)

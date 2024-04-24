@@ -31,6 +31,7 @@ public:
     FullDiagnostics(int diagIndex, std::string name, amrex::Real dt, int saveInterval = 100) :
         m_diagName{std::move(name)}, m_diagIndex{diagIndex}, m_dt{dt}, m_saveInterval{saveInterval}
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::FullDiagnostics()");
         read_parameters();
     }
 
@@ -44,6 +45,7 @@ public:
      */
     void compute_and_pack ()
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::compute_and_pack()");
         // compute the necessary fields and store result in m_mf_outputs.
         if (!m_plotParticles)
         {
@@ -69,6 +71,7 @@ public:
         amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec> ions,
         amrex::IntVect& nGhost)
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::init_data()");
         // initialize member variables and arrays in base class::Diagnostics
         init_base_data();
         initialize_field_functors_and_buffer_data(compDom, fieldsDiagnostics, fieldsScaling, ions,
@@ -83,6 +86,7 @@ public:
      */
     void filter_compute_pack_flush (int step, bool forceFlush = false)
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::filter_compute_pack_flush()");
         // GEMPIC_PROFILE("Diagnostics::FilterComputePackFlush()");
 
         if (do_compute_and_pack(step, forceFlush))
@@ -103,6 +107,7 @@ private:
     /** Read user-requested parameters for full diagnostics */
     void read_parameters ()  // computational_domain infra)
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::read_parameters()");
         // Read list of full diagnostics fields requested by the user.
         Parameters ppDiagName("FullDiagnostics." + m_diagName);
 
@@ -138,6 +143,7 @@ private:
     /** Initialize formats and data required to construct the buffers
      */
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::init_base_data()");
         // Construct Flush class.
         if (m_format == "plotfile")
         {
@@ -221,6 +227,7 @@ private:
     /** Flush m_mf_outputs and particles to file for the i^th buffer */
     inline void flush (int step)
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::flush()");
         if (m_mfOutputs.size() > 1)
         {
             for (int i{0}; i < m_mfOutputs.size(); ++i)
@@ -247,6 +254,7 @@ private:
      * \return bool, whether to flush
      */
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::do_compute_and_pack()");
         // Data must be computed and packed for full diagnostics
         // whenever the data needs to be flushed.
         return (forceFlush || (step % m_saveInterval == 0));
@@ -260,6 +268,7 @@ private:
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
         amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& particles)
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::get_diag_type()");
         bool particleType{false};
         bool fieldType{false};
         for (const auto& diagName : m_diagVarnames)
@@ -324,6 +333,7 @@ private:
         amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& particles,
         amrex::IntVect& nghost)
     {
+        BL_PROFILE("Gempic::Io::FullDiagnostics::initialize_field_functors_and_buffer_data()");
         std::string diagType{get_diag_type(fieldsDiagnostics, particles)};
         if (diagType == "Particle")
         {

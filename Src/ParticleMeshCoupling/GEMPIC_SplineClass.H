@@ -82,6 +82,7 @@ public:
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
+        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::SplineBase()");
         AMREX_D_TERM((update1_d_splines<xDir>(position[xDir], plo[xDir], dxInverse[xDir]));
                      , (update1_d_splines<yDir>(position[yDir], plo[yDir], dxInverse[yDir]));
                      , (update1_d_splines<zDir>(position[zDir], plo[zDir], dxInverse[zDir])););
@@ -194,6 +195,7 @@ public:
                                                                    const amrex::Real plo,
                                                                    const amrex::Real dxInverseDir)
     {
+        // BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::init_b_splines_at_positions()");
         amrex::Real radius = (s_splineDegrees[dir] + 1.) / 2.;
         amrex::Real normalizedPos = (position - plo) * dxInverseDir;
         m_firstIndex[dir] = 1. + floor(normalizedPos - radius);
@@ -221,6 +223,7 @@ public:
                                                   const amrex::Real plo,
                                                   const amrex::Real dxInverseDir)
     {
+        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::update1_d_splines()");
         const amrex::Real refOffset = init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
         constexpr int deg{s_splineDegrees[dir]};
@@ -267,6 +270,7 @@ public:
     template <Field form, Direction dir>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
     {
+        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::eval_b_spline()");
         static_assert(form == Field::DualOneForm || form == Field::DualTwoForm,
                       "Function called with primal form, or superfluous direction supplied.");
         if constexpr (form == Field::DualTwoForm)
@@ -310,6 +314,7 @@ public:
     template <Field form>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
     {
+        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::eval_b_spline()");
         static_assert(form == Field::DualZeroForm || form == Field::DualThreeForm,
                       "Function called with primal form, or no direction supplied.");
         if constexpr (form == Field::DualThreeForm)
@@ -377,6 +382,7 @@ public:
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> eval_spline_field (
         const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
     {
+        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::eval_spline_field()");
         static_assert(form == Field::PrimalOneForm || form == Field::PrimalTwoForm,
                       "Attempting smoothing of incorrect field type.");
         bool xCond{false};
@@ -580,6 +586,7 @@ public:
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
+        BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::SplineWithPrimitive()");
         m_firstIndexOld = {};
 
         m_primitiveNew = {};
@@ -629,6 +636,7 @@ public:
                                                   const amrex::Real plo,
                                                   const amrex::Real dxInverseDir)
     {
+        BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_splines()");
         this->m_firstIndexOld[dir] = std::move(this->m_firstIndex[dir]);
         const amrex::Real refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
@@ -662,6 +670,7 @@ public:
                                                     const amrex::Real plo,
                                                     const amrex::Real dxInverseDir)
     {
+        BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_primitive()");
         const amrex::Real refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
@@ -685,6 +694,8 @@ public:
     AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
     {
+        BL_PROFILE(
+            "Gempic::ParticleMeshCoupling::SplineWithPrimitive::compute_primitive_difference()");
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
         const int localSize =

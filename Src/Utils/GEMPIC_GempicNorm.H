@@ -21,6 +21,7 @@ namespace Gempic::Utils
 {
 inline amrex::Real gempic_norm (amrex::MultiFab& multiF, ComputationalDomain ifr, int p)
 {
+    BL_PROFILE("Gempic::Utils::gempic_norm()");
     // TODOrefine
     assert(p <= 2);
     amrex::Real result = 0.0;

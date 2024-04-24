@@ -44,6 +44,7 @@ int main (int argc, char *argv[])
     constexpr int hodgeDegree{2};
 
     {
+        BL_PROFILE("quasiNeutMain()");
         // Parameters::setPrintOutput();  // uncomment to print an output file
         Io::Parameters parameters{};
 

@@ -39,6 +39,7 @@ inline void init_particles (
     amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles,
     const amrex::GpuArray<InitMethod, numspec>& initMet)
 {
+    BL_PROFILE("Gempic::Particle::init_particles(infra,particles,initMetArr)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
@@ -72,6 +73,7 @@ inline void init_particles (
     amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles,
     InitMethod initMet)
 {
+    BL_PROFILE("Gempic::Particle::init_particles(infra,particles,initMet)");
     amrex::GpuArray<InitMethod, numspec> initMethodsArray;
     initMethodsArray.fill(initMet);
     init_particles(infra, particles, initMethodsArray);
@@ -83,7 +85,7 @@ void init_particles_cellwise (ComputationalDomain infra,
                               std::shared_ptr<ParticleGroups<vdim, ndata>>& ppg,
                               int rSeed = 925)
 {
-    BL_PROFILE("init_particles_cellwise");
+    BL_PROFILE("Gempic::Particle::init_particles_cellwise(infra,ppg,rSeed)");
     amrex::Real AMREX_D_DECL(x_c, y_c, z_c);  // cell-corner coordinates
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
     amrex::GpuArray<amrex::Real, vdim> velocity;
@@ -248,7 +250,7 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
                                      int species,
                                      int rSeed = 925)
 {
-    BL_PROFILE("init_particles_full_domain_gpu");
+    BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
 
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{AMREX_D_DECL(
         infra.m_geom.ProbLo()[xDir], infra.m_geom.ProbLo()[yDir], infra.m_geom.ProbLo()[zDir])};
@@ -457,7 +459,7 @@ void init_particles_full_domain (ComputationalDomain infra,
                                  int species,
                                  int rSeed = 925)
 {
-    BL_PROFILE("init_particles_full_domain");
+    BL_PROFILE("Gempic::Particle::init_particles_full_domain()");
     amrex::Real AMREX_D_DECL(x, y, z);
     amrex::Real t{0.0};
 
@@ -615,6 +617,7 @@ void init_one_particle_cellwise (amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> c
                                  ParticleGroups<vdim>& pg,
                                  amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position)
 {
+    BL_PROFILE("Gempic::Particle::init_one_particle_cellwise()");
     amrex::Real x, y, z;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> shiftedPosition;
     amrex::GpuArray<amrex::Real, vdim> velocity;

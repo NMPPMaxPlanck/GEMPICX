@@ -49,6 +49,7 @@ public:
         ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
             rdName, indexNum, isLastType)
     {
+        BL_PROFILE("Gempic::Io::ElecFieldEnergy()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -90,6 +91,7 @@ public:
                         amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>,
                                         numspec>& partGr) final
     {
+        BL_PROFILE("Gempic::Io::ElecFieldEnergy::compute_diags()");
         static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};
 
         constexpr int noutputs = 3;
@@ -151,6 +153,7 @@ private:
     ComputeMethod choose_computation_method (
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics)
     {
+        BL_PROFILE("Gempic::Io::ElecFieldEnergy::choose_computation_method()");
         using namespace Forms;
         if (fieldsDiagnostics.count("Dx") && fieldsDiagnostics.count("Dy") &&
             fieldsDiagnostics.count("Dz") && fieldsDiagnostics.count("Ex") &&
