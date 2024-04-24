@@ -55,7 +55,7 @@ public:
         int strangOrder,
         OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) override
     {
-        BL_PROFILE("time_loop_hs_zigzag_C2");
+        BL_PROFILE("Gempic::TimeLoop::HSZigZagC2::time_loop()");
 
         // bool profiling_count = false;
         // timers profiling_timers(true);

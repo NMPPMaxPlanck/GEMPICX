@@ -9,6 +9,7 @@ int main (int argc, char *argv[])
     amrex::Initialize(argc, argv);
     Gempic::Io::Parameters parameters{};
     {
+        BL_PROFILE("main()");
         // const amrex::RealBox realBox({AMREX_D_DECL(0, 0, 0)},{AMREX_D_DECL( 10, 10, 10)});
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
         const amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};

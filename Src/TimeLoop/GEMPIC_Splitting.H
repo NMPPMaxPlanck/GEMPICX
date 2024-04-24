@@ -116,6 +116,7 @@ public:
         amrex::Real const dt,
         const long pp) const
     {
+        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_particle()");
         // evaluate the electric field
         amrex::GpuArray<amrex::Real, vdim> efield =
             spline.template eval_spline_field<Field::PrimalOneForm>(eA);
@@ -175,6 +176,7 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
+        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i()");
         amrex::Real xNew = pos[dir] + dt * vel[dir];
 
         spline.template update1_d_splines<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
@@ -206,6 +208,7 @@ public:
                            DeRhamField<Grid::dual, Space::face>& auxDualF2,
                            const amrex::Real dt)
     {
+        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell
         deRham->hodge(B, auxDualH);
@@ -232,6 +235,7 @@ public:
                                  DeRhamField<Grid::primal, Space::face>& auxPrimalF2,
                                  const amrex::Real dt)
     {
+        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
         deRham->hodge(D, auxE);
         // Operator H_E for dt/2
         deRham->curl(auxE, auxPrimalF2);

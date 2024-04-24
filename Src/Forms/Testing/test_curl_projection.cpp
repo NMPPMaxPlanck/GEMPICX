@@ -20,6 +20,7 @@ int main (int argc, char *argv[])
     amrex::Initialize(argc, argv);
     Gempic::Io::Parameters parameters{};
     {
+        BL_PROFILE("main()");
         // error tolerance
         const amrex::Real tol = 1e-15;
 

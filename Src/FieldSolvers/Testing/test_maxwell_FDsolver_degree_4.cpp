@@ -45,6 +45,7 @@ const int maxSplineDegree = 1;
 
 std::tuple<amrex::Real, amrex::Real> maxwell (const int n)
 {
+    BL_PROFILE("Gempic::Forms::std::tuple<amrex::Real, amrex::Real> maxwell()");
     /* Initialize the infrastructure */
     // const amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI +
     // 0.4)},{AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
@@ -202,6 +203,7 @@ int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
     {
+        BL_PROFILE("main()");
         const int coarse = 16;
         const int fine = 32;
         amrex::Real errorCoarseD;

@@ -83,6 +83,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields)
 {
+    BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
 
@@ -172,6 +173,7 @@ AMREX_GPU_HOST_DEVICE void push_v_efield (amrex::GpuArray<amrex::Real, vDim> &ve
                                           amrex::Real chargemass,
                                           amrex::GpuArray<amrex::Real, vDim> const &E)
 {
+    //BL_PROFILE("Gempic::ParticleMeshCoupling::push_v_efield()");
     for (int i = 0; i < vDim; i++)
     {
         vel[i] += dt * chargemass * E[i];
@@ -196,6 +198,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_rho (SplineBase<degX, degY, degZ> &spl
                                                amrex::Real chargeWeight,
                                                amrex::Array4<amrex::Real> const &rho)
 {
+    //BL_PROFILE("Gempic::ParticleMeshCoupling::gempic_deposit_rho()");
     GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -215,6 +218,7 @@ AMREX_GPU_HOST_DEVICE void gempic_deposit_j (
     amrex::GpuArray<amrex::Real, vDim> const &velChargeWeight,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &currentDensity)
 {
+    BL_PROFILE("Gempic::ParticleMeshCoupling::gempic_deposit_j()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))

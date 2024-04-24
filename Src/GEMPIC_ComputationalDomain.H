@@ -48,7 +48,7 @@ public:
 
     ComputationalDomain()
     {
-        BL_PROFILE("ComputationalDomain::ComputationalDomain");
+        BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
         Io::Parameters params("ComputationalDomain");
         // Initialize infrastructure:
         // params.get("nCellVector", n_cell);

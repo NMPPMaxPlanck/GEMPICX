@@ -26,6 +26,7 @@ template <size_t functionNumber>
 auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings,
                       Io::Parameters& params)
 {
+    BL_PROFILE("Gempic::Utils::parse_functions(variableStrings,params)");
     amrex::Vector<amrex::Real> k;
     bool kExists{params.exists("k")};
     if (kExists)
@@ -72,6 +73,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
 template <size_t functionNumber>
 auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings)
 {
+    BL_PROFILE("Gempic::Utils::parse_functions(variableStrings)");
     Io::Parameters params{"Function", "function parseFunctions"};
     return parse_functions(variableStrings, params);
 }
@@ -91,6 +93,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
  */
 inline auto parse_function (const std::string& variableString, Io::Parameters& params)
 {
+    BL_PROFILE("Gempic::Utils::parse_function(variableString,params)");
     auto [parser, eval] = parse_functions<1>({variableString}, params);
     return std::make_tuple(parser[0], eval[0]);
 }
@@ -109,6 +112,7 @@ inline auto parse_function (const std::string& variableString, Io::Parameters& p
  */
 inline auto parse_function (const std::string& variableString)
 {
+    BL_PROFILE("Gempic::Utils::parse_function(variableString)");
     Io::Parameters params{"Function", "function parseFunction"};
     return parse_function(variableString, params);
 }

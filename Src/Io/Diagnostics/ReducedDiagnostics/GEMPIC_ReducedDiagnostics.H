@@ -75,6 +75,7 @@ public:
     ReducedDiagnostics(std::string rdName, int& indexNum, bool isLastType) :
         m_rdName{rdName}, m_isLastType{isLastType}
     {
+        BL_PROFILE("Gempic::Io::ReducedDiagnostics::ReducedDiagnostics()");
         m_isFirstType = (indexNum == 0);
         // BackwardCompatibility();
 
@@ -132,6 +133,7 @@ public:
      */
     virtual void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf)
     {
+        BL_PROFILE("Gempic::Io::ReducedDiagnostics::init_data()");
         m_deRham = drc;
         m_computeMissingFields = cmf;
     }
@@ -154,6 +156,7 @@ public:
      */
     virtual void write_to_file (amrex::Real dt, int step) const
     {
+        BL_PROFILE("Gempic::Io::ReducedDiagnostics::write_to_file()");
         // open file
         std::ofstream ofs{m_path + m_rdName + "." + m_extension,
                           std::ofstream::out | std::ofstream::app};

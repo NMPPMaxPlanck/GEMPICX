@@ -20,6 +20,7 @@ using namespace Gempic::Forms;
 void DeRhamComplex::curl (const DeRhamField<Grid::primal, Space::edge> &oneForm,
                          DeRhamField<Grid::primal, Space::face> &twoForm)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(primal,edge,primal,face)");
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
@@ -116,6 +117,7 @@ void DeRhamComplex::curl (const DeRhamField<Grid::primal, Space::edge> &oneForm,
 void DeRhamComplex::curl (const DeRhamField<Grid::dual, Space::edge> &oneForm,
                          DeRhamField<Grid::dual, Space::face> &twoForm)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(dual,edge,dual,face)");
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
@@ -215,6 +217,7 @@ void DeRhamComplex::curl (const DeRhamField<Grid::dual, Space::edge> &oneForm,
 void DeRhamComplex::grad (const DeRhamField<Grid::primal, Space::node> &zeroForm,
                          DeRhamField<Grid::primal, Space::edge> &oneForm)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(primal,node,primal,edge)");
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(oneForm.m_data[comp]); mfi.isValid(); ++mfi)
@@ -279,6 +282,7 @@ void DeRhamComplex::grad (const DeRhamField<Grid::primal, Space::node> &zeroForm
 void DeRhamComplex::grad (const DeRhamField<Grid::dual, Space::node> &zeroForm,
                          DeRhamField<Grid::dual, Space::edge> &oneForm)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(dual,node,dual,edge)");
     for (int comp = 0; comp < 3; ++comp)
     {
         for (amrex::MFIter mfi(oneForm.m_data[comp]); mfi.isValid(); ++mfi)
@@ -344,6 +348,7 @@ void DeRhamComplex::grad (const DeRhamField<Grid::dual, Space::node> &zeroForm,
 void DeRhamComplex::div (const DeRhamField<Grid::primal, Space::face> &twoForm,
                         DeRhamField<Grid::primal, Space::cell> &threeForm)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::div(primal,face,primal,cell)");
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
@@ -391,6 +396,7 @@ void DeRhamComplex::div (const DeRhamField<Grid::primal, Space::face> &twoForm,
 void DeRhamComplex::div (const DeRhamField<Grid::dual, Space::face> &twoForm,
                         DeRhamField<Grid::dual, Space::cell> &threeForm)
 {
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::div(dual,face,dual,cell)");
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();

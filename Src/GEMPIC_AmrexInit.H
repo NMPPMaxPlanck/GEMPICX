@@ -12,6 +12,7 @@ namespace Gempic
  */
 void overwrite_amrex_parser_defaults ()
 {
+    BL_PROFILE("Gempic::overwrite_amrex_parser_defaults()");
     amrex::ParmParse ppAmrex("amrex");
 
     // Abort the simulation when we run out of GPU memory

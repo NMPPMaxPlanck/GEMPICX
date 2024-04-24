@@ -52,6 +52,7 @@ public:
         ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
             rdName, indexNum, isLastType)
     {
+        BL_PROFILE("Gempic::Io::GaussError::GaussError()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -88,6 +89,7 @@ public:
                         amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>,
                                         numspec>& partGr) final
     {
+        BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
         constexpr int noutputs = 1;
         this->m_data.resize(noutputs, 0.0);
         this->m_data[0] = compute_gauss_error(infra, fieldsDiagnostics, partGr);
@@ -99,7 +101,7 @@ public:
         amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
             partGr)
     {
-        BL_PROFILE("reduced_diag::compute_gauss_error");
+        BL_PROFILE("Gempic::Io::GaussError::compute_gauss_error()");
         static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};
 
         auto& rho = *fieldsDiagnostics["rho"];
@@ -173,6 +175,7 @@ private:
     ComputeMethod choose_computation_method (
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics)
     {
+        BL_PROFILE("Gempic::Io::GaussError::choose_computation_method()");
         using namespace Forms;
         if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("divD"))
         {

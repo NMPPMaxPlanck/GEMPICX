@@ -106,7 +106,9 @@ public:
                        amrex::Real weight,
                        amrex::ParticleTile<ParticleType, vdim + ndata, 0>& particles)
     // amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
-    {  // Array of Structures
+    {
+        //BL_PROFILE("Gempic::Particle::ParticleGroups::add_particle()");
+        // Array of Structures
         // new particle:
         ParticleType p;
         p.id() = ParticleType::NextID();
@@ -136,6 +138,7 @@ public:
 
     void copy (ParticleGroups<vdim, ndata>& source, bool local = false)
     {
+        BL_PROFILE("Gempic::Particle::ParticleGroups::copy()");
         this->charge = source.get_charge();
         this->mass = source.get_mass();
         this->copyParticles(source, local);

@@ -23,8 +23,8 @@ using namespace Gempic::Forms;
 int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
-
     {
+        BL_PROFILE("main()");
         /* Initialize the infrastructure */
         // const amrex::RealBox realBox({AMREX_D_DECL(-M_PI, -M_PI, -M_PI)},{AMREX_D_DECL( M_PI,
         // M_PI, M_PI)});

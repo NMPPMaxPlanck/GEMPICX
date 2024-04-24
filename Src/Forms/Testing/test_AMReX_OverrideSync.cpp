@@ -11,6 +11,7 @@ using namespace amrex;
 
 void main_main ()
 {
+    BL_PROFILE("main()");
     //-----------------------------------------------------------------------------
     // Initialize structures
 

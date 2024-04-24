@@ -34,6 +34,7 @@ void convolve_filter (amrex::Vector<amrex::Real> &oldS,
                       const amrex::Real alpha,
                       const int ipass)
 {
+    BL_PROFILE("Gempic::Filter::Impl::convolve_filter()");
     const amrex::Real beta{0.5 - 0.5 * alpha};
 
     // element 0 has to be treated in its own way
@@ -54,6 +55,7 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real> &stencil,
                       const amrex::Real alpha,
                       const bool doCompensation)
 {
+    BL_PROFILE("Gempic::Filter::Impl::compute_stencil()");
     amrex::Vector<amrex::Real> oldS(1u + npass + static_cast<size_t>(doCompensation), 0.);
     amrex::Vector<amrex::Real> newS(oldS.size(), 0.);
 
@@ -89,6 +91,7 @@ class BilinearFilter : public Filter
 public:
     BilinearFilter()
     {
+        BL_PROFILE("Gempic::Filter::Impl::BilinearFilter::BilinearFilter()");
         Io::Parameters params("Filter", "class BilinearFilter");
         // Filter parameters
         // If true, a bilinear filter is used to smooth charge and currents
@@ -117,7 +120,7 @@ public:
 
     void compute_stencils ()
     {
-        BL_PROFILE("BilinearFilter::ComputeStencils()");
+        BL_PROFILE("Gempic::Filter::Impl::BilinearFilter::compute_stencils()");
         AMREX_D_DECL(Impl::compute_stencil(m_stencilX, m_nPass[xDir], m_alpha, m_compensate),
                      Impl::compute_stencil(m_stencilY, m_nPass[yDir], m_alpha, m_compensate),
                      Impl::compute_stencil(m_stencilZ, m_nPass[zDir], m_alpha, m_compensate));

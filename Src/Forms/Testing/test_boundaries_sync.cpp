@@ -10,6 +10,7 @@ int main (int argc, char *argv[])
     amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD);
     Gempic::Io::Parameters parameters{};
     {
+        BL_PROFILE("main()");
         // const amrex::RealBox realBox({AMREX_D_DECL(-M_PI,-M_PI,-M_PI)},{AMREX_D_DECL(M_PI, M_PI,
         // M_PI)});
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};

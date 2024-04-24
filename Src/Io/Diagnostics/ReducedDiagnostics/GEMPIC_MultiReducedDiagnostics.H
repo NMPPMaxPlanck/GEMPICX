@@ -58,6 +58,7 @@ public:
     /// constructor
     MultiReducedDiagnostics(std::shared_ptr<Forms::DeRhamComplex> drc)
     {
+        BL_PROFILE("Gempic::Io::MultiReduceDiagnostics()");
         read_params();
         if (!m_plotRd)
         {
@@ -71,6 +72,7 @@ public:
      */
     void init_data (std::shared_ptr<Forms::DeRhamComplex> drc)
     {
+        BL_PROFILE("Gempic::Io::MultiReduceDiagnostics::init_data()");
         if (!m_plotRd)
         {
             return;
@@ -89,6 +91,7 @@ public:
      */
     void load_balance ()
     {
+        BL_PROFILE("Gempic::Io::MultiReduceDiagnostics::load_balance()");
         // loop over all reduced diags
         for (size_t iRd{0}; iRd < m_rdNames.size(); ++iRd)
         {
@@ -106,6 +109,7 @@ public:
         amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
             partGr)
     {
+        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::compute_diags()");
         if (!m_plotRd)
         {
             return;
@@ -126,6 +130,7 @@ public:
     /** Loop over all ReducedDiagnostics and call their WriteToFile */
     void write_to_file (int step, amrex::Real dt)
     {
+        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::write_to_file()");
         // Only the I/O rank does
         if (!amrex::ParallelDescriptor::IOProcessor() || !m_plotRd)
         {
@@ -150,6 +155,7 @@ public:
 private:
     void read_params ()
     {
+        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::read_params()");
         // read reduced diags names
         Parameters ppGempic("ReducedDiagnostics");
         ppGempic.get_or_set("computeMissingFields", m_computeMissingFields);
@@ -197,6 +203,7 @@ private:
                           int& indexNum,
                           bool isLastType)
     {
+        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::get_diagnostics_type()");
         if (diagType == "ElecFieldEnergy")
         {
             using ElecEnergy = ElecFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;

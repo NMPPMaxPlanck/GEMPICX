@@ -50,6 +50,7 @@ public:
     void solve_hodge_cg (Forms::DeRhamField<Grid::primal, Space::edge> primalEdgeField,
                          Forms::DeRhamField<Grid::dual, Space::face> dualFaceField)
     {
+        BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::solve_hodge_cg()");
         //    DeRhamField<Grid::primal, Space::edge> residual(deRham);  //, d(m_deRham),
         //    z(m_deRham);
         m_deRham->hodge(dualFaceField, m_residual);
@@ -78,6 +79,7 @@ public:
                                  Forms::DeRhamField<Grid::dual, Space::cell>& dualCellOut,
                                  Forms::DeRhamField<Grid::primal, Space::node>& primalNodeIn)
     {
+        BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::apply_poisson_operator()");
         auto deRham{primalNodeIn.m_deRham};
         Forms::DeRhamField<Grid::primal, Space::edge> tempPrimalEdge(deRham);
         Forms::DeRhamField<Grid::dual, Space::face> tempDualFace(deRham);

@@ -33,6 +33,7 @@ std::map<int, std::string> hodges{
 
 amrex::Real test12 (int n)
 {
+    BL_PROFILE("Gempic::Forms::amrex::Real test12()");
     // Initialize the infrastructure
     // const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
@@ -134,6 +135,7 @@ amrex::Real test12 (int n)
 
 amrex::Real test21 (int n)
 {
+    BL_PROFILE("Gempic::Forms::amrex::Real test21()");
     // Initialize the infrastructure
     // const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
@@ -235,6 +237,7 @@ amrex::Real test21 (int n)
 
 amrex::Real test03 (int n)
 {
+    BL_PROFILE("Gempic::Forms::amrex::Real test03()");
     // Initialize the infrastructure
     // const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
@@ -313,6 +316,7 @@ amrex::Real test03 (int n)
 
 amrex::Real test30 (int n)
 {
+    BL_PROFILE("Gempic::Forms::amrex::Real test30()");
     // Initialize the infrastructure
     // const amrex::RealBox realBox({AMREX_D_DECL(0.3, 0.6, 0.4)},{AMREX_D_DECL(1.3, 1.6, 1.4)});
     const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
@@ -393,6 +397,7 @@ int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
     {
+        BL_PROFILE("main()");
         const int coarse = 16;
         const int fine = 32;
         amrex::Real errorCoarse;
