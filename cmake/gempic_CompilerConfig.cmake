@@ -20,6 +20,16 @@ else()
   message(STATUS "GEMPIC-Compiler: Unknown compiler")
 endif()
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_IS_SUPPORTED OUTPUT IPO_ERROR_MSG)
+if(IPO_IS_SUPPORTED)
+  message(STATUS "IPO/LTO enabled")
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) # All targets instantiated afterwards
+else()
+  message(STATUS "IPO/LTO not supported: ${IPO_ERROR_MSG}")
+endif()
+
+
 if(GEMPIC_USE_CUDA)
   add_definitions(-DGEMPIC_GPU)
   if(($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*"))

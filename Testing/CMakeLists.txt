@@ -1,16 +1,16 @@
 # enable gtest tests
 enable_testing()
 
-add_executable ( GtestTests GEMPIC_UnitTests.cpp )
+add_executable (GtestTests GEMPIC_UnitTests.cpp)
 
 target_include_directories(GtestTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory( TestUtils )
-add_subdirectory( Filter )
-add_subdirectory( Forms )
-add_subdirectory( Io )
-add_subdirectory( ParticleMeshCoupling )
-add_subdirectory( TimeLoop )
+add_subdirectory(TestUtils)
+add_subdirectory(Filter)
+add_subdirectory(Forms)
+add_subdirectory(Io)
+add_subdirectory(ParticleMeshCoupling)
+add_subdirectory(TimeLoop)
 
 add_custom_command(
   TARGET GtestTests POST_BUILD
@@ -24,13 +24,13 @@ add_custom_command(
 include(GoogleTest)
 # Setup target to be compiled with CUDA and be linked against CUDA-enabled AMReX
 # MUST be done AFTER all sources have been assigned to target
-if (GEMPIC_USE_CUDA)
-  setup_target_for_cuda_compilation( GtestTests )
+if(GEMPIC_USE_CUDA)
+  setup_target_for_cuda_compilation(GtestTests)
 endif(GEMPIC_USE_CUDA)
   
 target_link_libraries(
   GtestTests
-  PUBLIC AMReX::amrex AMReX::Flags_CXX
+  PRIVATE GEMPICX
   GTest::gtest_main
   GTest::gmock
   )

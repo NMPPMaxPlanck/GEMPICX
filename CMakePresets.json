@@ -43,6 +43,7 @@
         {
             "name": "mpcdf-gpu-3D",
             "displayName": "GPU settings for Raven 3D",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "raven-env",
                 "mpi-compiler",
@@ -56,6 +57,7 @@
         {
             "name": "mpcdf-gpu-2D",
             "displayName": "GPU settings for Raven 2D",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "raven-env",
                 "mpi-compiler",
@@ -69,6 +71,7 @@
         {
             "name": "mpcdf-gpu-1D",
             "displayName": "GPU settings for Raven 1D",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "raven-env",
                 "mpi-compiler",
