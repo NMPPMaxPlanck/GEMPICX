@@ -1,29 +1,32 @@
-# Find the AMReX library
-find_package( AMReX CONFIG )
-if(NOT AMReX_FOUND)
-    message(STATUS "Fetching AMReX from https://github.com/AMReX-Codes/amrex.git")
-    FetchContent_Declare(
-    AMReX
-    GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
-    GIT_TAG 23.09
-    SOURCE_DIR "${CMAKE_SOURCE_DIR}/third_party/amrex-src"
-    )
+macro(set_amrex_options_from_gempic)
+  # set( AMReX_HDF5 TRUE CACHE BOOL "AMReX Option set within GEMPIC")
+  set( AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
+  if( GEMPIC_USE_CUDA )
+      if(IPO_IS_SUPPORTED)
+        set(AMReX_CUDA_LTO ON CACHE STRING "AMReX Option set withing GEMPIC")
+      endif()
+      set( AMReX_GPU_BACKEND CUDA CACHE STRING "AMReX Option set within GEMPIC")
+      if( $ENV{HOST} MATCHES "raven")
+        set( AMReX_CUDA_ARCH "Ampere" CACHE STRING "AMReX Option set within GEMPIC")
+      endif()
+  endif()
+  if( GEMPIC_USE_OMP ) 
+      set( AMReX_OMP  ON CACHE BOOL "AMReX Option set within GEMPIC")
+  else()
+      set( AMReX_OMP OFF CACHE BOOL "AMReX Option set within GEMPIC")
+  endif()
+endmacro()
 
-    # set( AMReX_HDF5 TRUE CACHE BOOL "AMReX Option set within GEMPIC")
-    set( AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
-    if( GEMPIC_USE_CUDA )
-        set( AMReX_GPU_BACKEND CUDA CACHE STRING "AMReX Option set within GEMPIC")
-        if( $ENV{HOST} MATCHES "raven")
-          set( AMReX_CUDA_ARCH "Ampere" CACHE STRING "AMReX Option set within GEMPIC")
-        endif()
-    endif()
-    if( GEMPIC_USE_OMP ) 
-        set( AMReX_OMP  ON CACHE BOOL "AMReX Option set within GEMPIC")
-    else()
-        set( AMReX_OMP OFF CACHE BOOL "AMReX Option set within GEMPIC")
-    endif()
-
-    FetchContent_MakeAvailable(AMReX)
+include(cmake/gempic_FetchContent_Declare.cmake)
+gempic_FetchContent_Declare(AMReX
+             SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/amrex-src
+             GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
+             GIT_TAG 24.04
+             GIT_PROGRESS ON # AMReX takes long enough that this is nice instead of noise.
+             )
+if (NOT ${AMReX_FOUND}) # only true if package was installed
+  set_amrex_options_from_gempic() # and only if not do the settings matter.
+  FetchContent_MakeAvailable(AMReX)
 endif()
 
 if(GEMPIC_USE_CUDA)
@@ -52,4 +55,3 @@ if(GEMPIC_USE_CUDA)
   endfunction()
   
 endif(GEMPIC_USE_CUDA)
-

@@ -45,7 +45,7 @@ build-test_gcc_3D:
     - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-3D
-    - cmake --build ./build -j 20
+    - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
 
@@ -55,7 +55,7 @@ build-test_gcc_2D:
     - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-2D
-    - cmake --build ./build -j 20
+    - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
 
@@ -65,7 +65,7 @@ build-test_gcc_1D:
     - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-1D
-    - cmake --build ./build -j 20
+    - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
 
@@ -87,7 +87,7 @@ build-test_gpu_3D:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-3D
-    - cmake --build $BUILD_DIR -j 20
+    - cmake --build $BUILD_DIR -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
@@ -100,7 +100,7 @@ build-test_gpu_2D:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-2D
-    - cmake --build $BUILD_DIR -j 20
+    - cmake --build $BUILD_DIR -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
@@ -113,7 +113,7 @@ build-test_gpu_1D:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-1D
-    - cmake --build $BUILD_DIR -j 20
+    - cmake --build $BUILD_DIR -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
