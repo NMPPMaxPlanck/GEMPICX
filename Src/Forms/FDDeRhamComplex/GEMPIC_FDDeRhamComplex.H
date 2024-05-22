@@ -140,6 +140,7 @@ inline void matrix_mult (amrex::Geometry geom,
                          amrex::MultiFab& multiOutput)
 {
     BL_PROFILE("Gempic::Forms::matrix_mult()");
+    int nComps{multiInput.nComp()};
     for (amrex::MFIter mfi(multiOutput); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.validbox();
@@ -147,8 +148,8 @@ inline void matrix_mult (amrex::Geometry geom,
         amrex::Array4<amrex::Real const> const& vecIn = multiInput[mfi].const_array();
         amrex::Array4<amrex::Real> const& vecOut = multiOutput[mfi].array();
 
-        ParallelFor(bx,
-                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        ParallelFor(bx, nComps,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                     {
                         amrex::Real val = 0.0;
 
@@ -157,9 +158,9 @@ inline void matrix_mult (amrex::Geometry geom,
                             int shift = d - (stencilLength + 1) / 2 + 1;
                             val += stencil[d] * vecIn(i + (direction == xDir ? shift : 0),
                                                       j + (direction == yDir ? shift : 0),
-                                                      k + (direction == zDir ? shift : 0));
+                                                      k + (direction == zDir ? shift : 0), n);
                         }
-                        vecOut(i, j, k) = val;
+                        vecOut(i, j, k, n) = val;
                     });
     }
     multiOutput.FillBoundary(geom.periodicity());
@@ -222,36 +223,79 @@ public:
 
     ~FDDeRhamComplex() override;
 
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+    // 0-/3-forms
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::node>& field) override;
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+                    amrex::Real t,
+                    DeRhamField<Grid::primal, Space::node>& field) override;
+
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::cell>& field,
                     int gaussNodes = 6) override;
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+                    amrex::Real t,
+                    DeRhamField<Grid::primal, Space::cell>& field,
+                    int gaussNodes = 6) override;
+
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::node>& field) override;
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+                    amrex::Real t,
+                    DeRhamField<Grid::dual, Space::node>& field) override;
+
+    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::cell>& field,
                     int gaussNodes = 6) override;
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+                    amrex::Real t,
+                    DeRhamField<Grid::dual, Space::cell>& field,
+                    int gaussNodes = 6) override;
+
+    // 1-/2-forms
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::edge>& field,
                     int gaussNodes = 6) override;
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+    void projection(
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Real t,
+        DeRhamField<Grid::dual, Space::edge>& field,
+        int gaussNodes = 6) override;
+
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::face>& field,
                     int gaussNodes = 6) override;
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+    void projection(
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Real t,
+        DeRhamField<Grid::primal, Space::face>& field,
+        int gaussNodes = 6) override;
+
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::edge>& field,
                     int gaussNodes = 6) override;
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
+    void projection(
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Real t,
+        DeRhamField<Grid::primal, Space::edge>& field,
+        int gaussNodes = 6) override;
+
+    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::face>& field,
                     int gaussNodes = 6) override;
+    void projection(
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Real t,
+        DeRhamField<Grid::dual, Space::face>& field,
+        int gaussNodes = 6) override;
 
     void hodge(const DeRhamField<Grid::dual, Space::cell>& threeForm,
                DeRhamField<Grid::primal, Space::node>& zeroForm,

@@ -16,7 +16,7 @@ namespace Gempic::Io
 {
 /**
  * \brief This class contains a vector of all full diagnostics in the simulation.
- * Full diagnostics save all the field and/or particle data at chose time steps
+ * Full diagnostics save all the field and/or particle data at chosen time steps
  */
 template <int vdim, int numspec, int ndata>
 class MultiDiagnostics
@@ -93,7 +93,7 @@ public:
 
     FullDiagnostics<vdim, numspec, ndata>& get_diag (int idiag) { return *m_alldiags[idiag]; }
     int get_total_diags () { return m_ndiags; }
-    int get_ncomp (int idiag) { return m_alldiags[idiag]->get_ncomp(); }
+    int get_num_group_members (int idiag) { return m_alldiags[idiag]->get_num_group_members(); }
 
 private:
     /** Vector of pointers to all diagnostics */

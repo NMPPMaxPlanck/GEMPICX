@@ -91,6 +91,7 @@ int main (int argc, char *argv[])
         e3 -= e1;
         e2 *= scalar;
 
+#if (GEMPIC_SPACEDIM == 3)
         // Visualize fields
         for (int comp = 0; comp < 3; ++comp)
         {
@@ -107,14 +108,13 @@ int main (int argc, char *argv[])
                 GEMPIC_D_LOOP_BEGIN(for (int i = lo.x; i <= hi.x; ++i),
                                     for (int j = lo.y; j <= hi.y; ++j),
                                     for (int k = lo.z; k <= hi.z; ++k))
-#if (GEMPIC_SPACEDIM == 3)
                     amrex::Print()
                         << "(" << i << "," << j << "," << k << ") E1: " << e1Mf(i, j, k)
                         << " E2: " << e2Mf(i, j, k) << " E3: " << e3Mf(i, j, k) << std::endl;
-#endif
                 GEMPIC_D_LOOP_END
             }
         }
+#endif
     }
     amrex::Finalize();
 }

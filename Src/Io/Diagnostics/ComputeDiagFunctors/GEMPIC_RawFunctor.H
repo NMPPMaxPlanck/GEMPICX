@@ -21,8 +21,8 @@ public:
                   to the output diagnostic MultiFab, mfDst.
      * \param[in] ncomp Number of component of mfSrc to cell-center in dst multifab.
      */
-    RawFunctor(const amrex::MultiFab* const mfSrc, const amrex::IntVect crseRatio, int ncomp = 1) :
-        ComputeDiagFunctor(ncomp, crseRatio), m_mfSrc(mfSrc)
+    RawFunctor(const amrex::MultiFab* const mfSrc, const amrex::IntVect crseRatio) :
+        ComputeDiagFunctor(mfSrc->nComp(), crseRatio), m_mfSrc(mfSrc)
     {
         BL_PROFILE("RawFunctor::RawFunctor()");
     }
@@ -41,7 +41,7 @@ public:
         BL_PROFILE("RawFunctor::operator()");
         // Copying raw file
         // std::cout<<"Reached copying files\n";
-        amrex::Copy(mfDst, *m_mfSrc, 0, 0, 1, 0);
+        amrex::Copy(mfDst, *m_mfSrc, 0, 0, mfDst.nComp(), 0);
         // mf_dst.ParallelCopy( *m_mf_src, 0, dcomp, m_mf_src->nComp() );
     }
 

@@ -92,10 +92,10 @@
 #endif
 // NOLINTEND(bugprone-macro-parentheses)
 
-#if GEMPIC_SPACEDIM == 1
 /**
  * The GEMPIC_D_LOOP_END macro ends a nested for loop begun by GEMPIC_D_LOOP_BEGIN
  */
+#if GEMPIC_SPACEDIM == 1
 #define GEMPIC_D_LOOP_END }
 #elif GEMPIC_SPACEDIM == 2
 #define GEMPIC_D_LOOP_END \

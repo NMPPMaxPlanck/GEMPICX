@@ -30,33 +30,19 @@ void define_expected (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.tilebox();
     amrex::Array4<amrex::Real> const& expected = mfAllDiagExpected[mfi].array();
 
-    ParallelFor(bx,
-                [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                {
-                    AMREX_D_TERM(amrex::Real x{(i + 0.5) * dx[xDir]};
-                                 , amrex::Real y{(j + 0.5) * dx[yDir]};
-                                 , amrex::Real z{(k + 0.5) * dx[zDir]};)
-                    expected(i, j, k, 0) = 1;  // rho 3-form needs to be constant
-#if GEMPIC_SPACEDIM == 3
-                    expected(i, j, k, 1) = 2 + y + z;  // Ex 1-form constant in x direction
-                    expected(i, j, k, 2) = x + 2 * z;  // Ey 1-form constant in y direction
-                    expected(i, j, k, 3) = 2 * x + y;  // Ez 1-form constant in z direction
-                    expected(i, j, k, 4) = 5 + x;      // Bz 2-form constant in y and z directions
-                    expected(i, j, k, 5) = 6 + x + y + z;  // phi linear
-#elif GEMPIC_SPACEDIM == 2
-                    expected(i,j,k,1) = 2 + y; // Ex
-                    expected(i,j,k,2) = x;     // Ey
-                    expected(i,j,k,3) = 2 * x + y; // Ez
-                    expected(i,j,k,4) = 5.0 + x;   // Bx
-                    expected(i,j,k,5) = 6 + x + y; // phi
-#elif GEMPIC_SPACEDIM == 1
-                    expected(i,j,k,1) = 2;     // Ex 
-                    expected(i,j,k,2) = x;     // Ey
-                    expected(i,j,k,3) = 2 * x; // Ez
-                    expected(i,j,k,4) = 5.0 + x;   // Bx
-                    expected(i,j,k,5) = 6 + x; // phi
-#endif
-                });
+    ParallelFor(
+        bx,
+        [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        {
+            AMREX_D_TERM(amrex::Real x{(i + 0.5) * dx[xDir]};, amrex::Real y{(j + 0.5) * dx[yDir]};
+                         , amrex::Real z{(k + 0.5) * dx[zDir]};)
+            expected(i, j, k, 0) = 1;                          // rho 3-form needs to be constant
+            expected(i, j, k, 1) = GEMPIC_D_ADD(2, y, z);      // Ex 1-form constant in x direction
+            expected(i, j, k, 2) = GEMPIC_D_ADD(x, 0, 2 * z);  // Ey 1-form constant in y direction
+            expected(i, j, k, 3) = GEMPIC_D_ADD(2 * x, y, 0);  // Ez 1-form constant in z direction
+            expected(i, j, k, 4) = 5 + x;  // Bz 2-form constant in y and z directions
+            expected(i, j, k, 5) = GEMPIC_D_ADD(6 + x, y, z);  // phi linear
+        });
 }
 
 class FullDiagnosticsTest : public testing::Test
@@ -198,7 +184,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     fullDiagn.filter_compute_pack_flush(0);
 
     // Create multifab containing expected values of cell centered fields
-    int ncomp = fullDiagn.get_ncomp(1);  // nb of field diagnostics
+    int ncomp = fullDiagn.get_num_group_members(1);  // nb of field diagnostics
     amrex::IntVect nghost = amrex::IntVect{AMREX_D_DECL(0, 0, 0)};
     amrex::MultiFab mfAllDiagExpected(m_infra.m_grid, m_infra.m_distriMap, ncomp, nghost);
     // Compare read and expected values. Low order interpolation of forms is used

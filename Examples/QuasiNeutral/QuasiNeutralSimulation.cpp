@@ -132,19 +132,12 @@ int main (int argc, char *argv[])
             rho.post_particle_loop_sync();
 
             // filter(rho, rhoTemp, npass);
-            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data);
 
-            for (int component = 0; component < vdim; component++)
-            {
-                currentDensity.m_data[component].SumBoundary(0, 1, nGhost,
-                                                             amrex::IntVect(AMREX_D_DECL(0, 0, 0)),
-                                                             infra.m_geom.periodicity());
-            }
-            currentDensity.average_sync();
-            currentDensity.fill_boundary();
+            currentDensity.post_particle_loop_sync();
 
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data);
             deRham->hodge(rhoTemp, phi);
             deRham->grad(phi, E);
             // E *= -1.0;
@@ -210,7 +203,7 @@ int main (int argc, char *argv[])
                     rho.post_particle_loop_sync();
 
                     // Apply filter and compute phi with filtered rho
-                    biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+                    biFilter->apply_stencil(rhoTemp.m_data, rho.m_data);
                     deRham->hodge(rhoTemp, phi);
                     deRham->grad(phi, E);
                     // E *= -1.0;

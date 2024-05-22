@@ -107,39 +107,54 @@ public:
                 maskX = amrex::OwnerMask(*fieldsDiagnostics["Ex"], infra.m_geom.periodicity());
                 this->m_data[xDir] =
                     0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Ex"], 0,
-                                               *fieldsDiagnostics["Dx"], 0, 1, 0, 0);
+                                               *fieldsDiagnostics["Dx"], 0,
+                                               fieldsDiagnostics["Ex"]->nComp(), 0, 0);
                 maskY = amrex::OwnerMask(*fieldsDiagnostics["Ey"], infra.m_geom.periodicity());
                 this->m_data[yDir] =
                     0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Ey"], 0,
-                                               *fieldsDiagnostics["Dy"], 0, 1, 0, 0);
+                                               *fieldsDiagnostics["Dy"], 0,
+                                               fieldsDiagnostics["Ey"]->nComp(), 0, 0);
                 maskZ = amrex::OwnerMask(*fieldsDiagnostics["Ez"], infra.m_geom.periodicity());
                 this->m_data[zDir] =
                     0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Ez"], 0,
-                                               *fieldsDiagnostics["Dz"], 0, 1, 0, 0);
+                                               *fieldsDiagnostics["Dz"], 0,
+                                               fieldsDiagnostics["Ez"]->nComp(), 0, 0);
                 return;
             case ComputeMethod::missingD:
                 this->m_deRham->hodge(*m_E, *m_D);
                 maskX = amrex::OwnerMask(*fieldsDiagnostics["Ex"], infra.m_geom.periodicity());
-                this->m_data[xDir] = 0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Ex"], 0,
-                                                                m_D->m_data[xDir], 0, 1, 0, 0);
+                this->m_data[xDir] =
+                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Ex"], 0,
+                                               m_D->m_data[xDir], 0,
+                                               fieldsDiagnostics["Ex"]->nComp(), 0, 0);
                 maskY = amrex::OwnerMask(*fieldsDiagnostics["Ey"], infra.m_geom.periodicity());
-                this->m_data[yDir] = 0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Ey"], 0,
-                                                                m_D->m_data[yDir], 0, 1, 0, 0);
+                this->m_data[yDir] =
+                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Ey"], 0,
+                                               m_D->m_data[yDir], 0,
+                                               fieldsDiagnostics["Ey"]->nComp(), 0, 0);
                 maskZ = amrex::OwnerMask(*fieldsDiagnostics["Ez"], infra.m_geom.periodicity());
-                this->m_data[zDir] = 0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Ez"], 0,
-                                                                m_D->m_data[zDir], 0, 1, 0, 0);
+                this->m_data[zDir] =
+                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Ez"], 0,
+                                               m_D->m_data[zDir], 0,
+                                               fieldsDiagnostics["Ez"]->nComp(), 0, 0);
                 return;
             case ComputeMethod::missingE:
                 this->m_deRham->hodge(*m_D, *m_E);
                 maskX = amrex::OwnerMask(*fieldsDiagnostics["Dx"], infra.m_geom.periodicity());
-                this->m_data[xDir] = 0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Dx"], 0,
-                                                                m_E->m_data[xDir], 0, 1, 0, 0);
+                this->m_data[xDir] =
+                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Dx"], 0,
+                                               m_E->m_data[xDir], 0,
+                                               fieldsDiagnostics["Dx"]->nComp(), 0, 0);
                 maskY = amrex::OwnerMask(*fieldsDiagnostics["Dy"], infra.m_geom.periodicity());
-                this->m_data[yDir] = 0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Dy"], 0,
-                                                                m_E->m_data[yDir], 0, 1, 0, 0);
+                this->m_data[yDir] =
+                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Dy"], 0,
+                                               m_E->m_data[yDir], 0,
+                                               fieldsDiagnostics["Dy"]->nComp(), 0, 0);
                 maskZ = amrex::OwnerMask(*fieldsDiagnostics["Dz"], infra.m_geom.periodicity());
-                this->m_data[zDir] = 0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Dz"], 0,
-                                                                m_E->m_data[zDir], 0, 1, 0, 0);
+                this->m_data[zDir] =
+                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Dz"], 0,
+                                               m_E->m_data[zDir], 0,
+                                               fieldsDiagnostics["Dz"]->nComp(), 0, 0);
                 return;
         }
     }
@@ -168,19 +183,20 @@ private:
                 (!fieldsDiagnostics.count("Dx") || !fieldsDiagnostics.count("Dy") ||
                  !fieldsDiagnostics.count("Dz")))
             {
-                this->m_E =
-                    std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham);
                 int srcComp{0};
                 int dstComp{0};
-                int numComps{1};
+                int nComps{fieldsDiagnostics["Ex"]->nComp()};
+                this->m_E = std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
+                                                                                     nComps);
                 amrex::Copy(this->m_E->m_data[xDir], *fieldsDiagnostics["Ex"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_E->m_data[yDir], *fieldsDiagnostics["Ey"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_E->m_data[zDir], *fieldsDiagnostics["Ez"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
 
-                this->m_D = std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham);
+                this->m_D =
+                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
 
                 return ComputeMethod::missingD;
             }
@@ -191,17 +207,18 @@ private:
             {
                 int srcComp{0};
                 int dstComp{0};
-                int numComps{1};
-                this->m_D = std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham);
+                int nComps{fieldsDiagnostics["Dx"]->nComp()};
+                this->m_D =
+                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
                 amrex::Copy(this->m_D->m_data[xDir], *fieldsDiagnostics["Dx"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_D->m_data[yDir], *fieldsDiagnostics["Dy"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_D->m_data[zDir], *fieldsDiagnostics["Dz"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
 
-                this->m_E =
-                    std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham);
+                this->m_E = std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
+                                                                                     nComps);
 
                 return ComputeMethod::missingE;
             }

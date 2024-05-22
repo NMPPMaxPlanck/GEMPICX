@@ -8,6 +8,7 @@
 #define GEMPIC_FILTER_H_
 
 #include <algorithm>
+#include <limits>
 
 #include <AMReX_Array4.H>
 #include <AMReX_BaseFwd.H>
@@ -84,15 +85,17 @@ public:
      * \param dcomp first component of dstmf on which the filter is applied
      * \param ncomp Number of components on which the filter is applied.
      */
-    void apply_stencil (
-        const amrex::MultiFab& srcmf, amrex::MultiFab& dstmf, int scomp, int dcomp, int ncomp)
+    void apply_stencil (const amrex::MultiFab& srcmf,
+                        amrex::MultiFab& dstmf,
+                        int scomp = 0,
+                        int dcomp = 0,
+                        int ncomp = std::numeric_limits<int>::max())
     {
         BL_PROFILE("Gempic::Filter::Filter::apply_stencil()");
         if (!m_useFilter)
         {
             return;
         }
-        BL_PROFILE("Filter::ApplyStencil(MultiFab)");
         ncomp = std::min(ncomp, srcmf.nComp());
         // amrex::FArrayBox tmpfab;
         for (amrex::MFIter mfi(dstmf); mfi.isValid(); ++mfi)

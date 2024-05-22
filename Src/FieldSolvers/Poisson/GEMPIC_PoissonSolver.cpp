@@ -61,7 +61,7 @@ void PoissonSolver::solve (const ComputationalDomain& infra,
         amrex::Real ninv =
             1.0 / GEMPIC_D_MULT(infra.m_nCell[xDir], infra.m_nCell[yDir], infra.m_nCell[zDir]);
         amrex::Real rhoSumNinv = rhoSum * ninv;
-        rho.m_data.plus(-rhoSumNinv, 0, 1);
+        rho -= rhoSumNinv;
         // for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
         // {
         //     const amrex::Box &bx = mfi.validbox();
@@ -103,6 +103,7 @@ void PoissonSolver::subtract_constant_part (const ComputationalDomain& infra,
                                            const int nGhost)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::subtract_constant_part()");
+    // In the context of the Poisson solver rho has always one component.
     const int nComp = 1;
     // Calculates a nodal mask for rho
     std::unique_ptr<amrex::iMultiFab> nodalMask;
@@ -145,5 +146,5 @@ void PoissonSolver::subtract_constant_part (const ComputationalDomain& infra,
 
     amrex::ParallelAllReduce::Sum(nm1, amrex::ParallelContext::CommunicatorSub());
     amrex::ParallelAllReduce::Sum(counter, amrex::ParallelContext::CommunicatorSub());
-    rho.m_data.plus(-nm1 / ((double)counter), nGhost);
+    rho -= nm1 / static_cast<amrex::Real>(counter);
 }

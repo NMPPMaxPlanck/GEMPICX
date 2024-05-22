@@ -230,8 +230,7 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
             // with the remaining entries being 0
             0);
     }
-    m_rhoPtr->m_data.SumBoundary(0, 1, m_nghosts, m_dstNGhosts, m_infra.m_geom.periodicity());
-    m_rhoPtr->m_data.FillBoundary(m_infra.m_geom.periodicity());
+    m_rhoPtr->post_particle_loop_sync();
 
     // Maximum occurs evenly split between 2^GEMPIC_SPACEDIM nodes. The sum is still 1.
     EXPECT_EQ(expectedVal, m_rhoPtr->m_data.norm0());
@@ -281,8 +280,7 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
                     // with the remaining entries being 0
                     0);
     }
-    m_rhoPtr->m_data.SumBoundary(0, 1, m_nghosts, m_dstNGhosts, m_infra.m_geom.periodicity());
-    m_rhoPtr->m_data.FillBoundary(m_infra.m_geom.periodicity());
+    m_rhoPtr->post_particle_loop_sync();
 
     // Maximum occurs on node (0, 0, 0) with value (3/4)^GEMPIC_SPACEDIM. The sum is still 1.
     EXPECT_EQ(pow(0.75, GEMPIC_SPACEDIM), m_rhoPtr->m_data.norm0());
@@ -327,8 +325,7 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
                     // with the remaining entries being 0
                     0);
     }
-    m_rhoPtr->m_data.SumBoundary(0, 1, m_nghosts, m_dstNGhosts, m_infra.m_geom.periodicity());
-    m_rhoPtr->m_data.FillBoundary(m_infra.m_geom.periodicity());
+    m_rhoPtr->post_particle_loop_sync();
 
     // The maximum expectedVal depends on the dimension on the problem
     EXPECT_EQ(std::max(expectedValA, expectedValB), m_rhoPtr->m_data.norm0());
@@ -370,8 +367,7 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
                      { return AMREX_D_TERM(a <= 1, &&b <= 1, &&c <= 1); }},
                     {expectedValA, expectedValB}, 0);
     }
-    m_rhoPtr->m_data.SumBoundary(0, 1, m_nghosts, m_dstNGhosts, m_infra.m_geom.periodicity());
-    m_rhoPtr->m_data.FillBoundary(m_infra.m_geom.periodicity());
+    m_rhoPtr->post_particle_loop_sync();
 
     EXPECT_EQ(expectedValA, m_rhoPtr->m_data.norm0());
     EXPECT_EQ(4, m_rhoPtr->m_data.norm1(0, m_infra.m_geom.periodicity()));
@@ -426,8 +422,7 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
             }
         }
     }
-    m_rhoPtr->m_data.SumBoundary(0, 1, m_nghosts, m_dstNGhosts, m_infra.m_geom.periodicity());
-    m_rhoPtr->m_data.FillBoundary(m_infra.m_geom.periodicity());
+    m_rhoPtr->post_particle_loop_sync();
 
     // The maximum expectedVal depends on the dimension on the problem
     EXPECT_EQ(std::max(std::abs(expectedValA), std::abs(expectedValB)), m_rhoPtr->m_data.norm0());

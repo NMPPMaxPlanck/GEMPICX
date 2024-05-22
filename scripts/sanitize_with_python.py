@@ -107,11 +107,15 @@ def correct_in_files(oldPattern, newPattern, fileList, linenums=[]):
         oldPattern = re.compile(oldPattern)
     if isinstance(fileList, str) or isinstance(fileList, pathlib.Path):
         fileList = [pathlib.Path(fileList).resolve()]
+    if linenums:
+        if not isinstance(linenums, list):
+            linenums = [linenums]
+        linenums = [number if isinstance(number, int) else int(number) for number in linenums]
 
     with fileinput.input(files=fileList, inplace=True) as input:
         if linenums:
-            for linenum, line in enumerate(input):
-                if linenum in linenums:
+            for line in input:
+                if fileinput.lineno() in linenums:
                     changedLine = re.sub(oldPattern, newPattern, line)
                     print(changedLine, end='')
                 else:
@@ -194,8 +198,7 @@ def fix_folders_syntax(folderNames, forceMove=False):
                                             occurrences.append({'lineNum': lineNum, 'fileName': str(fileName)})
                                             break
                             if occurrences:
-                                warningMsg = ''
-                                warningMsg += "Remember to change the folder names the following places (if applicable):\n"
+                                warningMsg = "Remember to change the folder names the following places (if applicable):\n"
                                 for occurence in occurrences:
                                     warningMsg += f"{occurence['fileName']}:{occurence['lineNum']}\n"
                                 warnings.warn(warningMsg)
@@ -344,6 +347,42 @@ def curate_compile_commands(buildDir: pathlib.Path, folders):
     with open(compileCommandsFile, 'w', encoding='utf-8') as file:
         json.dump(compileCommandsNoThirdParty, file, indent=2)
 
+def parse_git_word_diff(gitDiffOut, word='', change=''):
+    """
+    Reads a git diff --word-diff, trying to find places where 'word' was removed/added
+    yields tuples of (filename, lineNumbers)
+    """
+    if not word or not change:
+        warnings.warn("keyword arguments 'word' and 'change' MUST be passed to parse_git_word_diff")
+        return
+    if change=='removed' or change=='-':
+        keyword = '-' + word
+    elif change=='added' or change=='+':
+        keyword = '+' + word
+    else:
+        warnings.warn(f"Unrecognised 'change' argument, '{change}'")
+        return
+
+    lineNumbersToCorrect = []
+    for line in gitDiffOut.stdout.split('\n'):
+        if line.startswith('+++'): # starting new file
+            if lineNumbersToCorrect: # yield changes (if any) for previous file
+                yield file, lineNumbersToCorrect
+                lineNumbersToCorrect = []
+            file = pathlib.Path(line.split('+++ ')[-1])
+        elif line.startswith('@@'): # the line numbers of a change
+            lineNumStr = line.split(' +')[1].split(' @')[0] # get line number(s)
+            if ',' in lineNumStr: # several lines
+                start, length = lineNumStr.split(',')
+                lineNumbers = list(range(int(start), int(length)))
+            else: # one line
+                lineNumbers = [int(lineNumStr)]
+        elif line.startswith(keyword): # The change we're actually looking for
+            lineNumbersToCorrect += lineNumbers
+    if lineNumbersToCorrect: # yield changes (if any) for last file
+        yield file, lineNumbersToCorrect
+
+
 def fix_destroyed_lambda_captures():
     """
     Fix the destroyed lambda captures
@@ -353,18 +392,9 @@ def fix_destroyed_lambda_captures():
     Use git diff --cached for staged changes
     """
     gitDiffOut = subprocess.run(r'git diff -S"\[=\]" --pickaxe-regex --no-prefix --word-diff-regex="\[=\]" --word-diff=porcelain -I"=[^\]]" -U0', shell=True, capture_output=True, text=True)
-    for line in gitDiffOut.stdout.split('\n'):
-        if line.startswith('+++'):
-            file = pathlib.Path(line.split('+++ ')[-1])
-        elif line.startswith('@@'):
-            lineNumStr = line.split(' +')[1].split(' @')[0] # get line number(s)
-            if len(',' in lineNumStr): # several lines
-                start, length = lineNumStr.split(',')
-                linenums = list(range(start, length))
-            else: # one line
-                linenums = [lineNumStr]
-        elif line.startswith('-['): # [=] has been changed. We change it back
-            correct_in_files(r'\[[^\]]* AMREX_GPU', '[=] AMREX_GPU', file, linenums=linenums)
+    # Finds every instance where '[=]' was removed
+    for file, lineNumbers in parse_git_word_diff(gitDiffOut, word='[=]', change='removed'):
+        correct_in_files(r'\[[^\]]*\] AMREX_GPU', '[=] AMREX_GPU', file, linenums=lineNumbers)
 
 def restore_compile_commands(buildDir: pathlib.Path):
     compileCommandsFile = buildDir / 'compile_commands.json'

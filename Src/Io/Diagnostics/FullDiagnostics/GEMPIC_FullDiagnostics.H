@@ -49,7 +49,7 @@ public:
         // compute the necessary fields and store result in m_mf_outputs.
         if (!m_plotParticles)
         {
-            for (int i = 0; i < m_nComps; i++)
+            for (int i = 0; i < m_nGroupMembers; i++)
             {
                 if (m_mfOutputs.size() > 1)
                 {
@@ -96,7 +96,7 @@ public:
         }
     }
     /// getter for number of components of full diagnostics
-    int get_ncomp () { return m_nComps; }
+    int get_num_group_members () { return m_nGroupMembers; }
 
     /** Vector of (pointers to) functors to compute output fields, per level,
      * per component. This allows for simple operations (averaging to
@@ -120,8 +120,8 @@ private:
 
         // reading variable names for diagnostic
         ppDiagName.get_or_set("varNames", m_diagVarnames);
-        m_nComps = static_cast<int>(m_diagVarnames.size());
-        m_allFieldFunctors.resize(m_nComps);
+        m_nGroupMembers = static_cast<int>(m_diagVarnames.size());
+        m_allFieldFunctors.resize(m_nGroupMembers);
 
         // reading format of file to be written
         ppDiagName.get_or_set("format", m_format);
@@ -183,7 +183,7 @@ private:
     /** Index of diagnostics in MultiDiagnostics::alldiags */
     int m_diagIndex;
 
-    int m_nComps{0};
+    int m_nGroupMembers{0};
 
     /** format for output files, "plotfile" or "openpmd" or "sensei" or "ascent"
      * The checkpoint format is applicable for FullDiagnostics only.
@@ -344,7 +344,7 @@ private:
                 // Multifab output needs to be defined but not filled when using particles
                 amrex::IntVect ngrow{AMREX_D_DECL(0, 0, 0)};  // no ghost cells needed
                 m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
-                    amrex::MultiFab(compDom.m_grid, compDom.m_distriMap, m_nComps, ngrow)));
+                    amrex::MultiFab(compDom.m_grid, compDom.m_distriMap, m_nGroupMembers, ngrow)));
                 m_geomOutput = compDom.m_geom;
             }
         }
@@ -353,11 +353,11 @@ private:
             if (m_diagFunctor == "CellCenter")
             {
                 m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
-                    amrex::MultiFab(compDom.m_grid, compDom.m_distriMap, m_nComps,
+                    amrex::MultiFab(compDom.m_grid, compDom.m_distriMap, m_nGroupMembers,
                                     nghost)));  // ngrow required for interpolation
                 m_geomOutput = compDom.m_geom;
 
-                for (int i = 0; i < m_nComps; i++)
+                for (int i = 0; i < m_nGroupMembers; i++)
                 {
                     if (fieldsDiagnostics.find(m_diagVarnames[i]) != fieldsDiagnostics.end())
                     {
@@ -374,7 +374,7 @@ private:
             }
             else if (m_diagFunctor == "raw")
             {
-                for (int i{0}; i < m_nComps; ++i)
+                for (int i{0}; i < m_nGroupMembers; ++i)
                 {
                     if (fieldsDiagnostics.find(m_diagVarnames[i]) != fieldsDiagnostics.end())
                     {
@@ -384,7 +384,8 @@ private:
                         // changed in operator()
                         m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(amrex::MultiFab(
                             convert(compDom.m_grid, fieldsDiagnostics[m_diagVarnames[i]]->ixType()),
-                            compDom.m_distriMap, 1, 0)));  // ncomp 1, ngrow 0 as just copying
+                            compDom.m_distriMap, fieldsDiagnostics[m_diagVarnames[i]]->nComp(),
+                            0)));  // ngrow 0 as just copying
                     }
                     else
                     {
