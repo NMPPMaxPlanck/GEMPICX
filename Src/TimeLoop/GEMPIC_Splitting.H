@@ -180,7 +180,6 @@ public:
         amrex::Real xNew = pos[dir] + dt * vel[dir];
 
         spline.template update1_d_splines<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
-        spline.template update1_d_primitive<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
 
         ParticleMeshCoupling::accumulate_j_integrate_b<dir>(spline, chargeWeight, dx, bA, jA,
                                                             bfields);

@@ -182,16 +182,16 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
         amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
         EXPECT_EQ(1., result);
 
-        spline.template update1_d_primitive<xDir>(1, 1, 1);
+        spline.template update1_d_splines<xDir>(1, 1, 1);
         EXPECT_EQ(1., spline.m_primitiveNew[xDir][0]);
         if constexpr (GEMPIC_SPACEDIM > 1)
         {
-            spline.template update1_d_primitive<yDir>(1, 1, 1);
+            spline.template update1_d_splines<yDir>(1, 1, 1);
             EXPECT_EQ(1., spline.m_primitiveNew[yDir][0]);
         }
         if constexpr (GEMPIC_SPACEDIM == 3)
         {
-            spline.template update1_d_primitive<zDir>(1, 1, 1);
+            spline.template update1_d_splines<zDir>(1, 1, 1);
             EXPECT_EQ(1., spline.m_primitiveNew[zDir][0]);
         }
     }
@@ -246,7 +246,6 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
         EXPECT_EQ(-0.1, primitiveDifference);
 
         spline.template update1_d_splines<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
-        spline.template update1_d_primitive<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
 
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
@@ -316,7 +315,6 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
         EXPECT_EQ(-0.1, primitiveDifference);
 
         spline.template update1_d_splines<yDir>(0.5, m_infra.m_plo[yDir], m_infra.m_dxi[yDir]);
-        spline.template update1_d_primitive<yDir>(0.5, m_infra.m_plo[yDir], m_infra.m_dxi[yDir]);
 
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir]);
         EXPECT_EQ(0, spline.m_firstIndex[yDir]);
@@ -381,8 +379,11 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
             spline.template compute_primitive_difference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
         EXPECT_EQ(-0.0125, primitiveDifference);
 
+        primitiveDifference =
+            spline.template compute_primitive_difference<xDir>({AMREX_D_DECL(1, 1, 1)}, 2);
+        EXPECT_EQ(-1, primitiveDifference);
+
         spline.template update1_d_splines<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
-        spline.template update1_d_primitive<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
 
         EXPECT_EQ(-1, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
@@ -399,6 +400,10 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
         primitiveDifference =
             spline.template compute_primitive_difference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
         EXPECT_EQ(0.0125, primitiveDifference);
+
+        primitiveDifference =
+            spline.template compute_primitive_difference<xDir>({AMREX_D_DECL(1, 1, 1)}, 2);
+        EXPECT_EQ(0, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);
 }

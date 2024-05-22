@@ -149,8 +149,8 @@ namespace Gempic::ParticleMeshCoupling
 template <>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b<xDir, MockSpline<1, 1, 1>, 4>(
     MockSpline<1, 1, 1> &spline,
-    amrex::Real weight,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+    amrex::Real const weight,
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(4 / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, 4> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields)
