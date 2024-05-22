@@ -43,27 +43,26 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bA;
     for (int cc = 0; cc < (int(vDim / 2.5) * 2 + 1); cc++) bA[cc] = (B.m_data[cc])[pti].array();
 
-    amrex::ParallelFor(
-        np,
-        [=] AMREX_GPU_DEVICE(long pp)
-        {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> posStart;
-            for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
-            {
-                posStart[d] = partData[pp * 0].pos(d);
-            }
+    amrex::ParallelFor(np,
+                       [=] AMREX_GPU_DEVICE(long pp)
+                       {
+                           amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> posStart;
+                           for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+                           {
+                               posStart[d] = partData[pp * 0].pos(d);
+                           }
 
-            amrex::Real xEnd = 0;
+                           amrex::Real xEnd = 0;
 
-            ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ> spline{
-                posStart, infra.m_plo, infra.m_dxi};
+                           ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ> spline{
+                               posStart, infra.m_plo, infra.m_dxi};
 
-            spline.template update1_d_splines<pDir>(xEnd, infra.m_plo[xDir], infra.m_dxi[xDir]);
-            spline.template update1_d_primitive<pDir>(xEnd, infra.m_plo[xDir], infra.m_dxi[xDir]);
+                           spline.template update1_d_splines<pDir>(xEnd, infra.m_plo[xDir],
+                                                                   infra.m_dxi[xDir]);
 
-            ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(spline, weight, dx, bA, jA,
-                                                                 *bfieldsGPU);
-        });
+                           ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(
+                               spline, weight, dx, bA, jA, *bfieldsGPU);
+                       });
 
     aaBfields.copyToHost(&bfields, 1);
 }

@@ -3,6 +3,16 @@
 
 namespace Gempic::ParticleMeshCoupling
 {
+namespace Impl
+{
+enum class PrimitiveDifferenceRegion
+{
+    firstSpline,
+    noSplines,
+    bothSplines,
+    lastSpline,
+};
+}  //namespace Impl
 
 /**
  * @brief Objects of this class will carry the information of all non-vanishing grid B-splines on a
@@ -586,14 +596,21 @@ public:
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
-        BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::SplineWithPrimitive()");
+        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::SplineWithPrimitive()");
         m_firstIndexOld = {};
 
         m_primitiveNew = {};
 
-        AMREX_D_TERM((update1_d_primitive<xDir>(position[xDir], plo[xDir], dxInverse[xDir]));
-                     , (update1_d_primitive<yDir>(position[yDir], plo[yDir], dxInverse[yDir]));
-                     , (update1_d_primitive<zDir>(position[zDir], plo[zDir], dxInverse[zDir])););
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> refOffsets = {
+            AMREX_D_DECL(this->template init_b_splines_at_positions<xDir>(position[xDir], plo[xDir],
+                                                                          dxInverse[xDir]),
+                         this->template init_b_splines_at_positions<yDir>(position[yDir], plo[yDir],
+                                                                          dxInverse[yDir]),
+                         this->template init_b_splines_at_positions<zDir>(position[zDir], plo[zDir],
+                                                                          dxInverse[zDir]))};
+        AMREX_D_TERM((update1_d_primitive<xDir>(refOffsets[xDir]));
+                     , (update1_d_primitive<yDir>(refOffsets[yDir]));
+                     , (update1_d_primitive<zDir>(refOffsets[zDir])););
     }
 
     /**
@@ -603,6 +620,8 @@ public:
      * first field-coefficient corresponding to a non-zero spline at the particle location.
      */
     amrex::GpuArray<int, GEMPIC_SPACEDIM> m_firstIndexOld;
+    // The actually first index of the two primitives
+    amrex::GpuArray<int, GEMPIC_SPACEDIM> m_firstIndexStart;
 
     using primitiveType =
         amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<degX, degY, degZ>::s_maxDeg>,
@@ -616,6 +635,16 @@ public:
      * @brief primitive of the old spline
      */
     primitiveType m_primitiveOld;
+
+    /**
+     * @brief order of primitives
+     */
+    enum PrimitiveOrder
+    {
+        oldFirst,
+        newFirst,
+    };
+    amrex::GpuArray<PrimitiveOrder, GEMPIC_SPACEDIM> m_primitiveOrders;
 
     /**
      * @brief sets the values of the contributing cell- and node-splines at the given particle
@@ -636,8 +665,9 @@ public:
                                                   const amrex::Real plo,
                                                   const amrex::Real dxInverseDir)
     {
-        BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_splines()");
+        // BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_splines()");
         this->m_firstIndexOld[dir] = std::move(this->m_firstIndex[dir]);
+
         const amrex::Real refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
@@ -650,6 +680,8 @@ public:
         }
         this->template spline_eval<deg, SplineBase<degX, degY, degZ>::s_maxDeg + 1>(
             refOffset, this->m_nodeSplineVals[dir]);
+
+        update1_d_primitive<dir>(refOffset);
     }
 
     /**
@@ -666,13 +698,19 @@ public:
      * @param dxInverseDir Inverse of the cell size in the given direction
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update1_d_primitive (const amrex::Real position,
-                                                    const amrex::Real plo,
-                                                    const amrex::Real dxInverseDir)
+    AMREX_GPU_HOST_DEVICE void update1_d_primitive (const amrex::Real refOffset)
     {
-        BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_primitive()");
-        const amrex::Real refOffset =
-            this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
+        // BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_primitive()");
+        if (this->m_firstIndex[dir] < this->m_firstIndexOld[dir])
+        {
+            this->m_firstIndexStart[dir] = this->m_firstIndex[dir];
+            this->m_primitiveOrders[dir] = newFirst;
+        }
+        else
+        {
+            this->m_firstIndexStart[dir] = this->m_firstIndexOld[dir];
+            this->m_primitiveOrders[dir] = oldFirst;
+        }
 
         m_primitiveOld[dir] = std::move(m_primitiveNew[dir]);
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
@@ -680,7 +718,107 @@ public:
     }
 
     /**
+     * @brief Utility function for selecting a cellIndex corresponding to the primitive difference
+     * calculated in compute_primitive_difference
+     *
+     * @param i, j, k The indices for the loop, with i the index in compute_primitive_difference
+     */
+    template <Direction pDir>
+    AMREX_GPU_HOST_DEVICE inline amrex::Dim3 select_primitive_cellindex (const int i,
+                                                                         const int j,
+                                                                         const int k)
+    {
+        if constexpr (pDir == xDir)
+        {
+            return {GEMPIC_D_PAD(this->m_firstIndexStart[xDir] + i, this->m_firstIndex[yDir] + j,
+                                 this->m_firstIndex[zDir] + k)};
+        }
+        else if constexpr (pDir == yDir)
+        {
+            return {GEMPIC_D_PAD(this->m_firstIndex[xDir] + k, this->m_firstIndexStart[yDir] + i,
+                                 this->m_firstIndex[zDir] + j)};
+        }
+        else if constexpr (pDir == zDir)
+        {
+            return {GEMPIC_D_PAD(this->m_firstIndex[xDir] + j, this->m_firstIndex[yDir] + k,
+                                 this->m_firstIndexStart[zDir] + i)};
+        }
+    }
+    /**
      * @brief Compute the difference between primitives of the old spline and the new spline
+     *
+     * @tparam dir The direction in which to compute
+     * @tparam region The region of the calculation. Can be one of four:
+     *                firstSpline: Only the lowest index spline needs to be taken into account
+     *                lastSpline: Only the highest index spline needs to be taken into account
+     *                noSplines: Region between splines
+     *                bothSplines: Both splines need to be taken into account
+     *
+     * @param dx Cell size in all three directions x, y and z (It's an array)
+     * @param index Index at which to evaluate the primitive difference
+     *
+     * @return primitiveDifference The difference between primitives of the old spline and the new
+     * spline
+     */
+    template <Direction dir, Impl::PrimitiveDifferenceRegion region>
+    AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
+    {
+        //BL_PROFILE(
+        //    "Gempic::ParticleMeshCoupling::SplineWithPrimitive::compute_primitive_difference()");
+        using namespace Impl;  // utility functions for this function
+        constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
+        // Size of support of difference of primitives
+        const int localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
+
+        if (this->m_primitiveOrders[dir] == oldFirst)
+        {
+            if constexpr (region == PrimitiveDifferenceRegion::firstSpline)
+            {
+                return this->m_primitiveOld[dir][index] * dx[dir];
+            }
+            else if constexpr (region == PrimitiveDifferenceRegion::noSplines)
+            {
+                return dx[dir];
+            }
+            else if constexpr (region == PrimitiveDifferenceRegion::bothSplines)
+            {
+                return (this->m_primitiveOld[dir][index] -
+                        this->m_primitiveNew[dir][index + deg - localSize]) *
+                       dx[dir];
+            }
+            else  //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
+            {
+                return (1 - this->m_primitiveNew[dir][index + deg - localSize]) * dx[dir];
+            }
+        }
+        // switching all primitives and all signs
+        else  //if (this->m_primitiveOrders[dir] == newFirst)
+        {
+            if constexpr (region == PrimitiveDifferenceRegion::firstSpline)
+            {
+                return -this->m_primitiveNew[dir][index] * dx[dir];
+            }
+            else if constexpr (region == PrimitiveDifferenceRegion::noSplines)
+            {
+                return -dx[dir];
+            }
+            else if constexpr (region == PrimitiveDifferenceRegion::bothSplines)
+            {
+                return -(this->m_primitiveNew[dir][index] -
+                         this->m_primitiveOld[dir][index + deg - localSize]) *
+                       dx[dir];
+            }
+            else  //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
+            {
+                return -(1 - this->m_primitiveOld[dir][index + deg - localSize]) * dx[dir];
+            }
+        }
+    }
+
+    /**
+     * @brief Compute the difference between primitives of the old spline and the new spline. Slower
+     * version for when the regime is unknown
      *
      * @tparam dir The direction in which to compute: x = 0, y = 1, z = 2
      *
@@ -691,53 +829,37 @@ public:
      * spline
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
+    AMREX_GPU_HOST_DEVICE inline amrex::Real compute_primitive_difference (
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
     {
-        BL_PROFILE(
-            "Gempic::ParticleMeshCoupling::SplineWithPrimitive::compute_primitive_difference()");
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
-        const int localSize =
-            std::abs(SplineBase<degX, degY, degZ>::m_firstIndex[dir] - this->m_firstIndexOld[dir]) +
-            deg;
-
-        amrex::Real primitiveDifference = 0;
-
-        if (this->m_firstIndexOld[dir] < this->m_firstIndex[dir])
+        const int localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
+        if (index >= localSize || index < 0)
         {
-            if (index < deg)
-            {
-                primitiveDifference = this->m_primitiveOld[dir][index] * dx[dir];
-            }
-            if (index >= deg && index < localSize)
-            {
-                primitiveDifference = dx[dir];
-            }
-            if (index >= localSize - deg && index <= localSize - 1)
-            {
-                primitiveDifference -= this->m_primitiveNew[dir][index + deg - localSize] * dx[dir];
-            }
+            return 0;
         }
-        else
+        else if (index < std::min(deg, localSize - deg))
         {
-            if (index < deg)
-            {
-                primitiveDifference = -this->m_primitiveNew[dir][index] * dx[dir];
-            }
-            if (index >= deg && index < localSize)
-            {
-                primitiveDifference = -dx[dir];
-            }
-            if (index >= localSize - deg && index <= localSize - 1)
-            {
-                primitiveDifference += this->m_primitiveOld[dir][index + deg - localSize] * dx[dir];
-            }
+            constexpr auto region{Impl::PrimitiveDifferenceRegion::firstSpline};
+            return this->compute_primitive_difference<dir, region>(dx, index);
         }
-
-        return primitiveDifference;
+        else if (index >= std::max(deg, localSize - deg))
+        {
+            constexpr auto region{Impl::PrimitiveDifferenceRegion::lastSpline};
+            return this->compute_primitive_difference<dir, region>(dx, index);
+        }
+        else if (index >= deg && index < localSize - deg)
+        {
+            constexpr auto region{Impl::PrimitiveDifferenceRegion::noSplines};
+            return this->compute_primitive_difference<dir, region>(dx, index);
+        }
+        else  // (index < deg && index >= localSize - deg)
+        {
+            constexpr auto region{Impl::PrimitiveDifferenceRegion::bothSplines};
+            return this->compute_primitive_difference<dir, region>(dx, index);
+        }
     }
-
     /**
      * @brief Compute and store the values of the primitive at regular values x+i
      *
@@ -749,7 +871,7 @@ public:
      */
     // NOLINTBEGIN(readability-magic-numbers)
     template <int degree, unsigned int length>
-    AMREX_GPU_HOST_DEVICE constexpr void primitive_eval (
+    AMREX_GPU_HOST_DEVICE inline constexpr void primitive_eval (
         const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
     {
         amrex::Real factor = 0;

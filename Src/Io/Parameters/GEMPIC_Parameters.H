@@ -94,7 +94,11 @@ void set_shared_param (parmParseType& sharedParam, const std::array<T, GEMPIC_SP
 {
     BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::array)");
     parmParseArrayType tmp;
+#ifdef _WIN32
+    auto tmpIt{tmp.begin()};
+#else
     auto* tmpIt{tmp.begin()};
+#endif
     for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
     {
         *tmpIt = value[i];

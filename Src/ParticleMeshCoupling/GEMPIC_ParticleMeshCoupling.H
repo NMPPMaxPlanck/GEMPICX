@@ -15,6 +15,93 @@
 
 namespace Gempic::ParticleMeshCoupling
 {
+namespace Impl
+{
+template <Direction pDir, int pDir1, int pDir2, typename splineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void update_j_component (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    splineType const &spline,
+    amrex::Dim3 const &cellIndex,
+    int const j,
+    int const k,
+    double const chargeWeight,
+    double const primitiveDifference)
+{
+    double sCoeff =
+        chargeWeight * GEMPIC_D_MULT(primitiveDifference, spline.m_nodeSplineVals[pDir1][j],
+                                     spline.m_nodeSplineVals[pDir2][k]);
+
+    amrex::HostDevice::Atomic::Add(jArray[pDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                                   sCoeff);
+}
+
+template <int pDir1, int pDir2, typename splineType, unsigned int bDim>
+AMREX_GPU_HOST_DEVICE inline amrex::Real update_integrated_b_component (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
+    splineType const &spline,
+    amrex::Dim3 const &cellIndex,
+    int const j,
+    int const k,
+    double const primitiveDifference)
+{
+    double sCoeff = GEMPIC_D_MULT(primitiveDifference, spline.m_cellSplineVals[pDir1][j],
+                                  spline.m_nodeSplineVals[pDir2][k]);
+
+    return sCoeff * (bArray[pDir2])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+}
+
+template <Direction pDir,
+          int pDir1,
+          int pDir2,
+          int degP1,
+          int degP2,
+          typename splineType,
+          unsigned int bDim,
+          unsigned int vDim>
+AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b_loop (
+    splineType &spline,
+    amrex::Real const chargeWeight,
+    amrex::Real const primitiveDifference,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    amrex::GpuArray<amrex::Real, 2> &fields,
+    int const i)
+{
+    for (int j = 0; j <= degP1; ++j)
+    {
+        for (int k = 0; k <= degP2; ++k)
+        {
+            amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(i, j, k);
+
+            update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, j, k, chargeWeight,
+                                                   primitiveDifference);
+
+            // Update two components of B
+            if (j < degP1)
+            {
+                fields[xDir] += update_integrated_b_component<pDir1, pDir2>(
+                    bArray, spline, cellIndex, j, k, primitiveDifference);
+            }
+            if (k < degP2)
+            {
+                fields[yDir] += update_integrated_b_component<pDir2, pDir1>(
+                    bArray, spline, cellIndex, k, j, primitiveDifference);
+            }
+        }
+        /* In case of performance issues, we _might_ be able to wring something extra out of looping
+        // kk to < degP2, removing the check on fields[yDir], and uncommenting the following lines.
+        amrex::Dim3 cellIndex = select_primitive_cellindex<pDir>(spline.m_firstIndexStart[pDir],
+        spline.m_firstIndex, ii, jj, degP2);
+
+        update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, jj, degP2, chargeWeight,
+        primitiveDifference);
+
+        fields[xDir] += update_integrated_b_component<pDir1, pDir2>(bArray, spline, cellIndex, jj,
+        degP2, primitiveDifference);
+        //*/
+    }
+}
+}  //namespace Impl
 /**
  * @brief Updates J and computes an integrated B on a given particle trajectory along one grid
  * direction
@@ -74,87 +161,74 @@ namespace Gempic::ParticleMeshCoupling
  * @todo Rewrite to avoid excessive branching
  */
 
-template <Direction pDir, typename splineType, unsigned int vDim>
+template <Direction pDir, typename splineType, unsigned int vDim, unsigned int bDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     splineType &spline,
-    amrex::Real chargeWeight,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> const &bArray,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
+    using namespace Impl;  // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
 
-    const int degP1 = spline.s_splineDegrees[pDir1];
-    const int degP2 = spline.s_splineDegrees[pDir2];
+    constexpr int degP = splineType::s_splineDegrees[pDir];
+    constexpr int degP1 = splineType::s_splineDegrees[pDir1];
+    constexpr int degP2 = splineType::s_splineDegrees[pDir2];
 
     fields = {0., 0.};
     // Size of support of difference of primitives
     // check for ghost cells
     int localSize = std::abs(spline.m_firstIndex[pDir] - spline.m_firstIndexOld[pDir]) +
                     spline.s_splineDegrees[pDir];
-    int firstIndexStart = spline.m_firstIndexOld[pDir];
-    if (spline.m_firstIndex[pDir] < spline.m_firstIndexOld[pDir])
+
+    // Region of only first spline
+    for (int ii = 0; ii < std::min(degP, localSize - degP); ++ii)
     {
-        firstIndexStart = spline.m_firstIndex[pDir];
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
+            spline, chargeWeight, primitiveDifference, bArray, jArray, fields, ii);
     }
 
-    // Add particle contribution to J
-    for (int jj = 0; jj <= degP1; ++jj)
+    // Region of no splines (may not exist)
+    for (int ii = degP; ii < localSize - degP; ++ii)
     {
-        for (int kk = 0; kk <= degP2; ++kk)
-        {
-            for (int ii = 0; ii <= localSize; ++ii)
-            {
-                amrex::Real primitiveDifference =
-                    spline.template compute_primitive_difference<pDir>(dx, ii);
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
 
-                amrex::Dim3 cellIndex;
-                if (pDir == xDir)
-                {
-                    cellIndex = {GEMPIC_D_PAD(firstIndexStart + ii, spline.m_firstIndex[yDir] + jj,
-                                              spline.m_firstIndex[zDir] + kk)};
-                }
-                else if (pDir == yDir)
-                {
-                    cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + kk, firstIndexStart + ii,
-                                              spline.m_firstIndex[zDir] + jj)};
-                }
-                else if (pDir == zDir)
-                {
-                    cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + jj,
-                                              spline.m_firstIndex[yDir] + kk,
-                                              firstIndexStart + ii)};
-                }
-                double sCoeff =
-                    GEMPIC_D_MULT(primitiveDifference, spline.m_nodeSplineVals[pDir1][jj],
-                                  spline.m_nodeSplineVals[pDir2][kk]);
-                amrex::HostDevice::Atomic::Add(
-                    jArray[pDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * chargeWeight);
-                // Update two components of B
-                if (jj < degP1)
-                {
-                    double sCoeff =
-                        GEMPIC_D_MULT(primitiveDifference, spline.m_cellSplineVals[pDir1][jj],
-                                      spline.m_nodeSplineVals[pDir2][kk]);
-
-                    fields[xDir] +=
-                        sCoeff * (bArray[pDir2])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-                }
-                if (kk < degP2)
-                {
-                    double sCoeff =
-                        GEMPIC_D_MULT(primitiveDifference, spline.m_nodeSplineVals[pDir1][jj],
-                                      spline.m_cellSplineVals[pDir2][kk]);
-                    fields[yDir] +=
-                        sCoeff * (bArray[pDir1])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-                }
-            }
-        }
+        accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
+            spline, chargeWeight, primitiveDifference, bArray, jArray, fields, ii);
     }
+
+    // Region of both splines (may not exist)
+    for (int ii = localSize - degP; ii < degP; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
+            spline, chargeWeight, primitiveDifference, bArray, jArray, fields, ii);
+    }
+
+    // Region of only last spline
+    for (int ii = std::max(degP, localSize - degP); ii < localSize; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
+            spline, chargeWeight, primitiveDifference, bArray, jArray, fields, ii);
+    }
+    //*/
 }
 
 /*!
