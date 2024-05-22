@@ -532,7 +532,9 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
     amrex::Real errorEyNorm0 = errorE.m_data[yDir].norm0();
     amrex::Real errorEzNorm0 = errorE.m_data[zDir].norm0();
 
-    EXPECT_NEAR(0, std::max({errorExNorm0, errorEyNorm0, errorEzNorm0}), m_tol);
+    EXPECT_NEAR(0, errorExNorm0, m_tol);
+    EXPECT_NEAR(0, errorEyNorm0, m_tol);
+    EXPECT_NEAR(0, errorEzNorm0, m_tol);
 
     // Run the same test for face integrals
     // Declare the fields

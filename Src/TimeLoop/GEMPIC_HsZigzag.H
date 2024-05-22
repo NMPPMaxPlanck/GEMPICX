@@ -233,20 +233,8 @@ public:
                 partGr[spec]->Redistribute();
             }
 
-            // Sum boundary of J and overwrite overlap with averageSync
-            // evaluate the spline
-
-            // Then Fill Boundary of J
-            auto nGhost = deRham->get_n_ghost();
-            amrex::IntVect nGhosts{nGhost};
-            amrex::IntVect dstNGhosts{AMREX_D_DECL(0, 0, 0)};
-            for (int comp = 0; comp < 3; ++comp)
-            {
-                (J.m_data[comp]).SumBoundary(0, 1, nGhosts, dstNGhosts, infra.m_geom.periodicity());
-            }
-
-            J.average_sync();
-            J.fill_boundary();
+            // Sum boundary of J and overwrite overlap with averageSync, then Fill Boundary of J
+            J.post_particle_loop_sync();
 
             // J *= dt;
             D -= J;

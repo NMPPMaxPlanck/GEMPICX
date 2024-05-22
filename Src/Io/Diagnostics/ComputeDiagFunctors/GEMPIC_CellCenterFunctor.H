@@ -25,9 +25,8 @@ public:
      */
     CellCenterFunctor(const amrex::MultiFab* const mfSrc,
                       amrex::Real scaling,
-                      const amrex::IntVect crseRatio,
-                      int ncomp = 1) :
-        ComputeDiagFunctor(ncomp, crseRatio), m_mfSrc(mfSrc)
+                      const amrex::IntVect crseRatio) :
+        ComputeDiagFunctor(mfSrc->nComp(), crseRatio), m_mfSrc(mfSrc)
     {
         BL_PROFILE("CellCenterFunctor::CellCenterFunctor()");
         m_scaling = scaling;

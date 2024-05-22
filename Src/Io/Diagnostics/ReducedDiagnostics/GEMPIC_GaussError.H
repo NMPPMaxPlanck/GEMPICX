@@ -141,8 +141,8 @@ public:
             }
         }
         // get number of ghost cells
-        rho.SumBoundary(0, 1, this->m_deRham->get_n_ghost(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)),
-                        infra.m_geom.periodicity());
+        rho.SumBoundary(0, rho.nComp(), this->m_deRham->get_n_ghost(),
+                        amrex::IntVect(AMREX_D_DECL(0, 0, 0)), infra.m_geom.periodicity());
         rho.AverageSync(infra.m_geom.periodicity());
         rho.FillBoundary(infra.m_geom.periodicity());
 
@@ -162,7 +162,7 @@ public:
                 break;
         }
         // Compare rho computed from particles with div D coming from Maxwell
-        divD->minus(rho, 0, 1, 0);
+        divD->minus(rho, 0, divD->nComp(), 0);
         amrex::Real diffNorm = Gempic::Utils::gempic_norm(*divD, infra, 2);
         return (diffNorm / rhoNorm);
     }
@@ -183,40 +183,44 @@ private:
         }
         else if (this->m_computeMissingFields)
         {
-            if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("D"))
+            if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("Dx") &&
+                fieldsDiagnostics.count("Dy") && fieldsDiagnostics.count("Dz"))
             {
                 int srcComp{0};
                 int dstComp{0};
-                int numComps{1};
-                this->m_D = std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham);
+                int nComps{fieldsDiagnostics["Dx"]->nComp()};
+                this->m_D =
+                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
                 amrex::Copy(this->m_D->m_data[xDir], *fieldsDiagnostics["Dx"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_D->m_data[yDir], *fieldsDiagnostics["Dy"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_D->m_data[zDir], *fieldsDiagnostics["Dz"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
 
                 this->m_divD =
-                    std::make_shared<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham);
+                    std::make_shared<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
                 return ComputeMethod::missingDivD;
             }
-            else if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("E"))
+            else if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("Ex") &&
+                     fieldsDiagnostics.count("Ey") && fieldsDiagnostics.count("Ez"))
             {
-                this->m_E =
-                    std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham);
                 int srcComp{0};
                 int dstComp{0};
-                int numComps{1};
+                int nComps{fieldsDiagnostics["Ex"]->nComp()};
+                this->m_E =
+                    std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham);
                 amrex::Copy(this->m_E->m_data[xDir], *fieldsDiagnostics["Ex"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_E->m_data[yDir], *fieldsDiagnostics["Ey"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
                 amrex::Copy(this->m_E->m_data[zDir], *fieldsDiagnostics["Ez"], srcComp, dstComp,
-                            numComps, this->m_deRham->get_n_ghost());
+                            nComps, this->m_deRham->get_n_ghost());
 
-                this->m_D = std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham);
+                this->m_D =
+                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
                 this->m_divD =
-                    std::make_shared<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham);
+                    std::make_shared<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
                 return ComputeMethod::missingD;
             }
             else

@@ -61,7 +61,7 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
             }
             // Copy into rho
             rhoTemp.fill_boundary();
-            amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nghost);
+            amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, rho.m_data.nComp(), nghost);
         }
     }
     // Compensation step
@@ -91,7 +91,7 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
         }
         // Copy into rho
         rhoTemp.fill_boundary();
-        amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nghost);
+        amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, rho.m_data.nComp(), nghost);
     }
 }
 
@@ -201,15 +201,15 @@ int main (int argc, char *argv[])
 
             for (int component = 0; component < vdim; component++)
             {
-                currentDensity.m_data[component].SumBoundary(0, 1, nGhost,
-                                                             amrex::IntVect(AMREX_D_DECL(0, 0, 0)),
-                                                             infra.m_geom.periodicity());
+                currentDensity.m_data[component].SumBoundary(
+                    0, currentDensity.m_data[component].nComp(), nGhost,
+                    amrex::IntVect(AMREX_D_DECL(0, 0, 0)), infra.m_geom.periodicity());
             }
             currentDensity.average_sync();
             currentDensity.fill_boundary();
 
             // Filter rho and compute phi with filtered array
-            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, rho.m_data.nComp());
             deRham->hodge(rhoTemp, phi);
             deRham->grad(phi, E);
             // E *= -1.0;
@@ -274,7 +274,7 @@ int main (int argc, char *argv[])
 
                     rho.post_particle_loop_sync();
                     // Filter rho and compute phi with filtered array
-                    biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+                    biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, rho.m_data.nComp());
                     deRham->hodge(rhoTemp, phi);
                     deRham->grad(phi, E);
                     // E *= -1.0;
@@ -361,10 +361,10 @@ int main (int argc, char *argv[])
                 rho.post_particle_loop_sync();
 
                 //filter(rho, rhoTemp, npass);
-                // biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, 1);
+                // biFilter->apply_stencil(rhoTemp.m_data, rho.m_data, 0, 0, rho.m_data.nComp());
                 // // Copy into rho
                 // rhoTemp.fill_boundary();
-                // amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nGhost);
+                // amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, rho.m_data.nComp(), nGhost);
 
                 redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, ions);
                 redDiagn.write_to_file(tStep + 1, dt);

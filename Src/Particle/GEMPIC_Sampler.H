@@ -252,6 +252,7 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
 {
     BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
 
+#if (GEMPIC_SPACEDIM == 3)
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{AMREX_D_DECL(
         infra.m_geom.ProbLo()[xDir], infra.m_geom.ProbLo()[yDir], infra.m_geom.ProbLo()[zDir])};
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{
@@ -310,7 +311,6 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
     amrex::GpuArray<amrex::Real, MAXGAUSS> velCum;
     std::partial_sum(vWeight.begin(), vWeight.end(), velCum.begin());
 
-#if (GEMPIC_SPACEDIM == 3)
     constexpr amrex::Real epsilon = std::numeric_limits<amrex::Real>::epsilon();
 
     // MFI that adds particle from the model cell to all cells
@@ -434,8 +434,10 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
                 }
             });
     }
-#endif
     amrex::Print() << "init_full_domain_gpu OK\n";
+#endif
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(GEMPIC_SPACEDIM == 3,
+                                     "init_full_domain_gpu only works for 3D");
 }
 
 /**

@@ -103,7 +103,7 @@ void filter (DeRhamField<Grid::dual, Space::cell> &rho,
             }
             // Copy into rho
             rhoTemp.fill_boundary();
-            amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, 1, nghost);
+            amrex::Copy(rho.m_data, rhoTemp.m_data, 0, 0, rho.m_data.nComp(), nghost);
         }
     }
 }

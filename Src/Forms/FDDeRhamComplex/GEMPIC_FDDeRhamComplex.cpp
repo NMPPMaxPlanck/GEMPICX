@@ -142,40 +142,62 @@ FDDeRhamComplex::~FDDeRhamComplex() {}
  *
  * For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::primal, Space::node>& field)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::primal, Space::node>& field)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, node>)");
+    size_t nComps{static_cast<size_t>(funcs.size())};
+    int nCompField{field.m_data.nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data.nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
+
+    const amrex::RealVect dr = m_dr;
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
+
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
-        const amrex::RealVect dr = m_dr;
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
+        amrex::AsyncArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
+        auto* const funcsGpuPtr = funcsGpu.data();
 
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
                     r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
                 // Assign point values to zeroForm
-                zeroForm(i, j, k) = func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                zeroForm(i, j, k, n) = funcsGpuPtr[n](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
             });
     }
 
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+                                        amrex::Real t,
+                                        DeRhamField<Grid::primal, Space::node>& field)
+{
+    amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcs{func};
+    projection(funcs, t, field);
 }
 
 /**
@@ -194,12 +216,22 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::primal, Space::cell>& field,
-                                 int gaussNodes)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::primal, Space::cell>& field,
+    int gaussNodes)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, cell>)");
+    amrex::Long nComps{funcs.size()};
+    int nCompField{field.m_data.nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data.nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -222,9 +254,12 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
+        amrex::AsyncArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
+        auto* const funcsGpuPtr = funcsGpu.data();
+
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -234,7 +269,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir], r[zDir] + drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(for (int qx = 0; qx < nQuad; ++qx),
@@ -245,19 +280,28 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                       midpoint[yDir] + quadPoints[qy] * drHalf[yDir],
                                       midpoint[zDir] + quadPoints[qz] * drHalf[zDir])};
 
-                    // Increment integral according to quadrature rule in the z direction with dx
-                    // and dy
+                    // Increment integral according to quadrature rule in the z direction with
+                    // dx and dy
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], quadWeights[qz]) *
-                                func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                funcsGpuPtr[n](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to degrees of freedom
-                threeForm(i, j, k) =
+                threeForm(i, j, k, n) =
                     integral * GEMPIC_D_MULT(drHalf[xDir], drHalf[yDir], drHalf[zDir]);
             });
     }
 
     field.fill_boundary();
+}
+
+inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+                                        amrex::Real t,
+                                        DeRhamField<Grid::primal, Space::cell>& field,
+                                        int gaussNodes)
+{
+    amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcs{func};
+    this->projection(funcs, t, field, gaussNodes);
 }
 
 /**
@@ -276,11 +320,22 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
 *
 * @return void
 */
-void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::dual, Space::node>& field)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::dual, Space::node>& field)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, node>)");
+    amrex::Long nComps{funcs.size()};
+    int nCompField{field.m_data.nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data.nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
+
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
@@ -289,8 +344,11 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::RealVect dr = m_dr;
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
-        ParallelFor(bx,
-                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        amrex::AsyncArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
+        auto* const funcsGpuPtr = funcsGpu.data();
+
+        ParallelFor(bx, nComps,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                     {
                         // Compute the position of the point i + 1/2, j + 1/2, k + 1/2
                         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
@@ -299,12 +357,21 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                          r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
                         // Assign point values to zeroForm
-                        zeroForm(i, j, k) = func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                        zeroForm(i, j, k, n) =
+                            funcsGpuPtr[n](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                     });
     }
 
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+                                        amrex::Real t,
+                                        DeRhamField<Grid::dual, Space::node>& field)
+{
+    amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcs{func};
+    this->projection(funcs, t, field);
 }
 
 /**
@@ -324,12 +391,22 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::dual, Space::cell>& field,
-                                 int gaussNodes)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::dual, Space::cell>& field,
+    int gaussNodes)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, cell>)");
+    amrex::Long nComps{funcs.size()};
+    int nCompField{field.m_data.nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data.nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -352,9 +429,12 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
+        amrex::AsyncArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
+        auto* const funcsGpuPtr = funcsGpu.data();
+
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -365,7 +445,7 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir], r[zDir] - drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(for (int qx = 0; qx < nQuad; ++qx),
@@ -376,20 +456,29 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
                                       midpoint[yDir] + quadPoints[qy] * drHalf[yDir],
                                       midpoint[zDir] + quadPoints[qz] * drHalf[zDir])};
 
-                    // Increment integral according to quadrature rule in the z direction with dx
-                    // and dy
+                    // Increment integral according to quadrature rule in the z direction with
+                    // dx and dy
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], quadWeights[qz]) *
-                                func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                funcsGpuPtr[n](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to degrees of freedom
-                threeForm(i, j, k) =
+                threeForm(i, j, k, n) =
                     integral * GEMPIC_D_MULT(drHalf[xDir], drHalf[yDir], drHalf[zDir]);
             });
     }
 
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+                                        amrex::Real t,
+                                        DeRhamField<Grid::dual, Space::cell>& field,
+                                        int gaussNodes)
+{
+    amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcs{func};
+    this->projection(funcs, t, field, gaussNodes);
 }
 
 /**
@@ -409,12 +498,22 @@ void FDDeRhamComplex::projection (amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> fun
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::dual, Space::edge>& field,
-                                 int gaussNodes)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::dual, Space::edge>& field,
+    int gaussNodes)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, edge>)");
+    auto nComps{static_cast<size_t>(funcs.size())};
+    int nCompField{field.m_data[xDir].nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data[xDir].nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -424,6 +523,10 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
+    amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcsGpu{
+        nComps};
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
+    auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
     // Do the loop over comp-direction
     for (int comp = 0; comp < 3; ++comp)
@@ -436,52 +539,64 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             const amrex::RealVect dr = m_dr;
             const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
-            ParallelFor(
-                bx,
-                [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                {
-                    // Compute the position of the point i + 1/2, j + 1/2, k + 1/2
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
-                        AMREX_D_DECL(r0[xDir] + 0.5 * dr[xDir] + i * dr[xDir],
-                                     r0[yDir] + 0.5 * dr[yDir] + j * dr[yDir],
-                                     r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
-
-#if (GEMPIC_SPACEDIM < 3)
-                    if (comp < GEMPIC_SPACEDIM)  // 1-forms in 1D, 2D are node centered in the last
-                                                 // 1, 2 components respectively
-#endif
-                    {
-                        const amrex::Real drHalf = dr[comp] / 2;
-                        // Midpoint for the quadrature rule
-                        amrex::Real midpoint = r[comp] - drHalf;
-                        amrex::Real integral = 0.0;
-
-                        // Integral over the edge along the comp direction
-                        for (int q = 0; q < nQuad; ++q)
+            ParallelFor(bx, nComps,
+                        [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                         {
-                            // Update location of quadrature point
-                            r[comp] = midpoint + quadPoints[q] * drHalf;
+                            // Compute the position of the point i + 1/2, j + 1/2, k + 1/2
+                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                                AMREX_D_DECL(r0[xDir] + 0.5 * dr[xDir] + i * dr[xDir],
+                                             r0[yDir] + 0.5 * dr[yDir] + j * dr[yDir],
+                                             r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
-                            // Increment integral according to quadrature rule
-                            integral += quadWeights[q] *
-                                        func[comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
-                        }
-
-                        // Rescale the integral and assign it to array of degrees of freedom
-                        oneForm(i, j, k) = integral * drHalf;
-                    }
 #if (GEMPIC_SPACEDIM < 3)
-                    else
-                    {
-                        oneForm(i, j, k) = func[comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
-                    }
+                            if (comp < GEMPIC_SPACEDIM)  // 1-forms in 1D, 2D are node centered in
+                                                         // the last 1, 2 components respectively
 #endif
-                });
+                            {
+                                const amrex::Real drHalf = dr[comp] / 2;
+                                // Midpoint for the quadrature rule
+                                amrex::Real midpoint = r[comp] - drHalf;
+
+                                amrex::Real integral{0.0};
+
+                                // Integral over the edge along the comp direction
+                                for (int q = 0; q < nQuad; ++q)
+                                {
+                                    // Update location of quadrature point
+                                    r[comp] = midpoint + quadPoints[q] * drHalf;
+
+                                    // Increment integral according to quadrature rule
+                                    integral += quadWeights[q] *
+                                                funcsGpuPtr[n][comp](
+                                                    AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                }
+
+                                // Rescale the integral and assign it to array of degrees of freedom
+                                oneForm(i, j, k, n) = integral * drHalf;
+                            }
+#if (GEMPIC_SPACEDIM < 3)
+                            else
+                            {
+                                oneForm(i, j, k, n) = funcsGpuPtr[n][comp](
+                                    AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                            }
+#endif
+                        });
         }
     }
 
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    amrex::Real t,
+    DeRhamField<Grid::dual, Space::edge>& field,
+    int gaussNodes)
+{
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcs{func};
+    this->projection(funcs, t, field, gaussNodes);
 }
 
 /**
@@ -500,12 +615,22 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::primal, Space::face>& field,
-                                 int gaussNodes)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::primal, Space::face>& field,
+    int gaussNodes)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, face>)");
+    auto nComps{static_cast<size_t>(funcs.size())};
+    int nCompField{field.m_data[xDir].nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data[xDir].nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -515,6 +640,10 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
+    amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcsGpu{
+        nComps};
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
+    auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.m_data[xDir], true); mfi.isValid(); ++mfi)
@@ -529,8 +658,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -540,7 +669,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir], r[zDir] + drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(, for (int qy = 0; qy < nQuad; ++qy),
@@ -550,12 +679,12 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                       midpoint[zDir] + quadPoints[qz] * drHalf[zDir])};
 
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) *
-                                func[xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]),
-                                           t);  // in 1D this is just evalutation
+                                funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]),
+                                                     t);  // in 1D this is just evalutation
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
-                twoForm(i, j, k) = GEMPIC_D_MULT(integral, drHalf[yDir], drHalf[zDir]);
+                twoForm(i, j, k, n) = GEMPIC_D_MULT(integral, drHalf[yDir], drHalf[zDir]);
             });
     }
 
@@ -572,8 +701,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -583,7 +712,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir], r[zDir] + drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(for (int qx = 0; qx < nQuad; ++qx), ,
@@ -593,11 +722,11 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                       midpoint[zDir] + quadPoints[qz] * drHalf[zDir])};
 
                     integral += GEMPIC_D_MULT(quadWeights[qx], 1., quadWeights[qz]) *
-                                func[yDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                funcsGpuPtr[n][yDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
-                twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[xDir], 1, drHalf[zDir]);
+                twoForm(i, j, k, n) = GEMPIC_D_MULT(integral * drHalf[xDir], 1, drHalf[zDir]);
             });
     }
 
@@ -613,8 +742,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -624,7 +753,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir], r[zDir] + drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(for (int qx = 0; qx < nQuad; ++qx),
@@ -634,16 +763,26 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                       midpoint[yDir] + quadPoints[qy] * drHalf[yDir], r[zDir])};
 
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], 1.) *
-                                func[zDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                funcsGpuPtr[n][zDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
-                twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[xDir], drHalf[yDir], 1);
+                twoForm(i, j, k, n) = GEMPIC_D_MULT(integral * drHalf[xDir], drHalf[yDir], 1);
             });
     }
 
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    amrex::Real t,
+    DeRhamField<Grid::primal, Space::face>& field,
+    int gaussNodes)
+{
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcs{func};
+    this->projection(funcs, t, field, gaussNodes);
 }
 
 /**
@@ -662,13 +801,22 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::primal, Space::edge>& field,
-                                 int gaussNodes)
-
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::primal, Space::edge>& field,
+    int gaussNodes)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, edge>)");
+    auto nComps{static_cast<size_t>(funcs.size())};
+    int nCompField{field.m_data[xDir].nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data[xDir].nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -678,6 +826,10 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
+    amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcsGpu{
+        nComps};
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
+    auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
     // Do the loop over comp-direction
     for (int comp = 0; comp < 3; ++comp)
@@ -691,8 +843,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
             ParallelFor(
-                bx,
-                [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                bx, nComps,
+                [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                 {
                     // Compute the position of the point i, j, k
                     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -706,7 +858,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                         const amrex::Real drHalf = dr[comp] / 2;
                         // Midpoint for the quadrature rule
                         amrex::Real midpoint = r[comp] + drHalf;
-                        amrex::Real integral = 0.0;
+
+                        amrex::Real integral{0.0};
 
                         // Integral over the edge along the comp direction
                         for (int q = 0; q < nQuad; ++q)
@@ -715,17 +868,19 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                             r[comp] = midpoint + quadPoints[q] * drHalf;
 
                             // Increment integral according to quadrature rule
-                            integral += quadWeights[q] *
-                                        func[comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                            integral +=
+                                quadWeights[q] *
+                                funcsGpuPtr[n][comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                         }
 
                         // Rescale the integral and assign it to array of degrees of freedom
-                        oneForm(i, j, k) = integral * drHalf;
+                        oneForm(i, j, k, n) = integral * drHalf;
                     }
 #if (GEMPIC_SPACEDIM < 3)
                     else
                     {
-                        oneForm(i, j, k) = func[comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                        oneForm(i, j, k, n) =
+                            funcsGpuPtr[n][comp](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                     }
 #endif
                 });
@@ -734,6 +889,16 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
 
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    amrex::Real t,
+    DeRhamField<Grid::primal, Space::edge>& field,
+    int gaussNodes)
+{
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcs{func};
+    this->projection(funcs, t, field, gaussNodes);
 }
 
 /**
@@ -753,12 +918,22 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
  *
  * @return void
  */
-void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> func,
-                                 amrex::Real t,
-                                 DeRhamField<Grid::dual, Space::face>& field,
-                                 int gaussNodes)
+void FDDeRhamComplex::projection (
+    const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Real t,
+    DeRhamField<Grid::dual, Space::face>& field,
+    int gaussNodes)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, face>)");
+    auto nComps{static_cast<size_t>(funcs.size())};
+    int nCompField{field.m_data[xDir].nComp()};
+    std::string msg = "The number of functions (" + std::to_string(nComps) +
+                      ") doesn't correspond to the number of DeRhamField components (" +
+                      std::to_string(nCompField) + ").";
+    if (field.m_data[xDir].nComp() != funcs.size())
+    {
+        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+    }
     const int nQuad =
         (gaussNodes <= s_m_maxGaussNodes) ? (gaussNodes > 0 ? gaussNodes : 1) : s_m_maxGaussNodes;
     if (nQuad != gaussNodes)
@@ -768,6 +943,10 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
+    amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcsGpu{
+        nComps};
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
+    auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.m_data[xDir], true); mfi.isValid(); ++mfi)
@@ -782,8 +961,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -795,7 +974,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir], r[zDir] - drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(, for (int qy = 0; qy < nQuad; ++qy),
@@ -805,12 +984,12 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                       midpoint[zDir] + quadPoints[qz] * drHalf[zDir])};
 
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) *
-                                func[xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]),
-                                           t);  // in 1D this is just evalutation
+                                funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]),
+                                                     t);  // in 1D this is just evalutation
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
-                twoForm(i, j, k) = GEMPIC_D_MULT(integral, drHalf[yDir], drHalf[zDir]);
+                twoForm(i, j, k, n) = GEMPIC_D_MULT(integral, drHalf[yDir], drHalf[zDir]);
             });
     }
 
@@ -828,8 +1007,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -840,7 +1019,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir], r[zDir] - drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(for (int qx = 0; qx < nQuad; ++qx), ,
@@ -850,11 +1029,11 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                       midpoint[zDir] + quadPoints[qz] * drHalf[zDir])};
 
                     integral += GEMPIC_D_MULT(quadWeights[qx], 1., quadWeights[qz]) *
-                                func[yDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                funcsGpuPtr[n][yDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
-                twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[xDir], 1, drHalf[zDir]);
+                twoForm(i, j, k, n) = GEMPIC_D_MULT(integral * drHalf[xDir], 1, drHalf[zDir]);
             });
     }
 
@@ -871,8 +1050,8 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(
-            bx,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+            bx, nComps,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
@@ -883,7 +1062,7 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
                     r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir], r[zDir] - drHalf[zDir])};
 
-                amrex::Real integral = 0.0;
+                amrex::Real integral{0.0};
 
                 // Integral over the xy plane and z direction
                 GEMPIC_D_LOOP_BEGIN(for (int qx = 0; qx < nQuad; ++qx),
@@ -893,15 +1072,25 @@ void FDDeRhamComplex::projection (amrex::Array<amrex::ParserExecutor<GEMPIC_SPAC
                                       midpoint[yDir] + quadPoints[qy] * drHalf[yDir], r[zDir])};
 
                     integral += GEMPIC_D_MULT(quadWeights[qx], quadWeights[qy], 1.) *
-                                func[zDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
+                                funcsGpuPtr[n][zDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), t);
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
-                twoForm(i, j, k) = GEMPIC_D_MULT(integral * drHalf[xDir], drHalf[yDir], 1);
+                twoForm(i, j, k, n) = GEMPIC_D_MULT(integral * drHalf[xDir], drHalf[yDir], 1);
             });
     }
     field.fill_boundary();
     field.average_sync();
+}
+
+inline void FDDeRhamComplex::projection(
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    amrex::Real t,
+    DeRhamField<Grid::dual, Space::face>& field,
+    int gaussNodes)
+{
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>> funcs{func};
+    this->projection(funcs, t, field, gaussNodes);
 }
 
 void FDDeRhamComplex::hodge_scheme_selector (anyFieldConstRef f1, anyFieldRef f2, amrex::Real weight)
