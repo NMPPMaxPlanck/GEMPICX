@@ -27,7 +27,7 @@ void Verbosity::set_level (int level)
 
 Verbosity::Verbosity(int level) { set_level(level); }
 
-unsigned int Verbosity::level()
+int Verbosity::level ()
 {
     s_settable = false;
     return s_verbosityLevel;

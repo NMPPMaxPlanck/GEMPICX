@@ -280,6 +280,46 @@ def fix_files_syntax(folders, forceMove=False):
         print("C) test_aNy_StYlE.cpp (deprecated)")
         print("D) CamelCase.H or CamelCase.cpp (other folders)")
 
+def exclude_subproject_clang_tools(subProjectFolders) -> tuple:
+    """
+    Renames .clang-tidy and .clang-format files in certain folders into unused.clang-...
+    This is done to avoid them being used by our clang-tidy/-format processes, because the writers
+    of these tools couldn't be bothered to include a mechanism to ignore specific directories ...
+    Returns a tuple of two lists:
+    1) The original file names
+    2) The renamed file names
+    """
+    if not isinstance(subProjectFolders, list):
+        subProjectFolders = [subProjectFolders]
+    # Collect all files matching the glob patterns
+    filelist = []
+    for subfolder in subProjectFolders:
+        filelist += list(pathlib.Path(subfolder).resolve().rglob('.clang-*'))
+
+    oldNames = []
+    newNames = []
+    for file in filelist:
+        oldNames += [file.absolute()]
+        newFileName = file.with_name('unused'+file.name) 
+        file.rename(newFileName)
+        newNames += [newFileName]
+    
+    return oldNames, newNames
+    
+
+def undo_exclude_subproject_clang_tools(changedFiles, originalNames):
+    """
+    Undoes the changes made by exclude_subproject_clang_tools
+    """
+    if not isinstance(changedFiles, list):
+        changedFiles = [changedFiles]
+    if not isinstance(originalNames, list):
+        originalNames = [originalNames]
+    if len(changedFiles) != len(originalNames):
+        raise RuntimeError("undo_exclude_subproject_clang_tools needs the same number of changed filenames as original filenames.")
+    for file, original in zip(changedFiles, originalNames):
+        pathlib.Path(file).resolve().rename(original)
+
 def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> bool:
     """
     Checks if Clang-Tidy or Clang-Format is
@@ -516,6 +556,7 @@ def main():
     initDir = pathlib.Path.cwd().resolve()
     if (initDir.stem == 'scripts'):
         os.chdir('..')
+    originalNames, changedFiles = exclude_subproject_clang_tools('third_party')
     try:
         # In case you didn't care about case before, you do now.
         subprocess.run('git config --local core.ignorecase false', shell=True)
@@ -526,6 +567,7 @@ def main():
         gempic_run_clang_tidy(args.folders)
         gempic_run_clang_format(args.folders)
     finally:
+        undo_exclude_subproject_clang_tools(changedFiles, originalNames)
         os.chdir(initDir)
 
 if __name__=='__main__':

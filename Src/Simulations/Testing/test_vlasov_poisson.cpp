@@ -147,7 +147,7 @@ int main (int argc, char *argv[])
         amrex::Print() << "Bz " << Bz << std::endl;
 
         // Initialize Poisson solver
-        FieldSolvers::PoissonSolver poisson(deRham);
+        FieldSolvers::PoissonSolver poisson(deRham, infra);
         // Initialize particle groups
         amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> electrons;
         init_particles(infra, electrons, InitMethod::fullDomainCpu);
@@ -198,7 +198,7 @@ int main (int argc, char *argv[])
             filter(rho, rhoTemp, npass);
             write_rho(rho, infra, 0, 0);
             // solve Poisson. AMReX nodal based Poisson solver is used
-            poisson.solve(infra, rho, phi);
+            poisson.solve_amrex(rho, phi);
             deRham->grad(phi, E);
             E *= -1.0;
             write_ex(E, infra, 0, 0);
@@ -265,7 +265,7 @@ int main (int argc, char *argv[])
                     // solve Poisson. AMReX nodal based Poisson solver is used (Hodge needs to be
                     // applied first)
                     // deRham->hodgeFD<hodgeDegree>(rho, phiTemp);
-                    poisson.solve(infra, rho, phi);
+                    poisson.solve_amrex(rho, phi);
                     deRham->grad(phi, E);
                     E *= -1.0;
 

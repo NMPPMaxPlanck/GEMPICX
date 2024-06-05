@@ -8,23 +8,24 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_AmrexInit.H"
+#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_MultiFullDiagnostics.H"
+#include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
+#include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Sampler.H"
-//#include "GEMPIC_PoissonSolver.H"
-#include "GEMPIC_BilinearFilter.H"
-#include "GEMPIC_MultiFullDiagnostics.H"
-#include "GEMPIC_MultiReducedDiagnostics.H"
 
 using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
 using namespace ParticleMeshCoupling;
+using namespace FieldSolvers;
 
 int main (int argc, char *argv[])
 {
@@ -36,15 +37,15 @@ int main (int argc, char *argv[])
     constexpr int ndata{1};  // Needs to be 1 so that the correct ParIter type is defined. Putting 4
                              // gets a non-defined type
     // Spline degrees
-    constexpr int degx{1};
-    constexpr int degy{1};
-    constexpr int degz{1};
+    constexpr int degx{3};
+    constexpr int degy{3};
+    constexpr int degz{3};
     constexpr int maxSplineDegree{std::max(std::max(degx, degy), degz)};
     //
     constexpr int hodgeDegree{2};
 
     {
-        BL_PROFILE("quasiNeutMain()");
+        BL_PROFILE("ElectrostaticMain()");
         // Parameters::setPrintOutput();  // uncomment to print an output file
         Io::Parameters parameters{};
 
@@ -55,6 +56,39 @@ int main (int argc, char *argv[])
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
+        // Initialize simulation
+        Io::Parameters paramsSim("Sim");
+        std::string simType{"UNDEFINED"};
+        paramsSim.get_or_set("Type", simType);
+
+        auto poisson = std::make_shared<PoissonSolver>(deRham, infra);
+        ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
+                          DeRhamField<Grid::primal, Space::node>, Operator::poisson>
+            cgPoisson(deRham, poisson);
+
+        amrex::Real te{1.0};  // electron temperature (default 1.0)
+
+        if (simType == "QuasiNeutral")
+        {
+            amrex::Print() << "****************************\n";
+            amrex::Print() << "* Quasi-neutral simulation *\n";
+            amrex::Print() << "****************************\n";
+            paramsSim.get_or_set("Te", te);
+        }
+        else if (simType == "VlasovPoisson")
+        {
+            amrex::Print() << "*****************************\n";
+            amrex::Print() << "* Vlasov-Poisson simulation *\n";
+            amrex::Print() << "*****************************\n";
+        }
+        else
+        {
+            amrex::AllPrint() << "Simulation type " << simType << " is not implemented"
+                              << std::endl;
+            amrex::Abort();
+        }
+
+        // initialize fields
         auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
 
         DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
@@ -63,9 +97,8 @@ int main (int argc, char *argv[])
         DeRhamField<Grid::dual, Space::face> D(deRham, "D");
         DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
         DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
-        DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
+        DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
-        DeRhamField<Grid::dual, Space::face> currentDensity(deRham, "J");
 
         // Initialize particle groups
         amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> ions;
@@ -78,7 +111,6 @@ int main (int argc, char *argv[])
         amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
 
         {  // "Time Loop" scope. Should be a separate function
-            // const int npass = 0; // Number of filter passes
 
             // Initialize full diagnostics and write initial time step
             Io::Parameters params("TimeLoop");
@@ -86,9 +118,6 @@ int main (int argc, char *argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            Io::Parameters paramsSim("Sim");
-            amrex::Real te{1.0};  // electron temperature (default 1.0)
-            paramsSim.get_or_set("Te", te);
             auto nGhost = deRham->get_n_ghost();
             Io::MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
             fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, ions,
@@ -131,23 +160,24 @@ int main (int argc, char *argv[])
 
             rho.post_particle_loop_sync();
 
-            // filter(rho, rhoTemp, npass);
-            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data);
-
-            currentDensity.post_particle_loop_sync();
-
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rhoTemp.m_data, rho.m_data);
-            deRham->hodge(rhoTemp, phi);
-            deRham->grad(phi, E);
-            // E *= -1.0;
-            E *= -te;
+            biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
+            if (simType == "QuasiNeutral")
+            {
+                deRham->hodge(rhoFiltered, phi);
+                deRham->grad(phi, E);
+                E *= -te;
+            }
+            else if (simType == "VlasovPoisson")
+            {
+                //poisson->solve_amrex(rhoFiltered, phi);
+                cgPoisson.solve(rhoFiltered, phi);
+                deRham->grad(phi, E);
+                E *= -1.0;
+            }
 
             // D is also needed to compute energy
             deRham->hodge(E, D);
-
-            // computing rho from D to check Gauss law // Makes no sense for quasi-neutral model
-            // deRham->div(D,rho_gauss_law); //must be done before writing reduced diagnostics
 
             // Write initial time step
             redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, ions);
@@ -156,13 +186,12 @@ int main (int argc, char *argv[])
 
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
+                rho.m_data.setVal(0.0);
                 for (int spec = 0; spec < numspec; spec++)
                 {
                     amrex::Real charge = ions[spec]->get_charge();
                     amrex::Real chargemass = charge / ions[spec]->get_mass();
                     amrex::Real a = 0.5 * chargemass * dt * Bz;
-
-                    rho.m_data.setVal(0.0);
 
                     for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid();
                          ++pti)
@@ -203,11 +232,22 @@ int main (int argc, char *argv[])
                     rho.post_particle_loop_sync();
 
                     // Apply filter and compute phi with filtered rho
-                    biFilter->apply_stencil(rhoTemp.m_data, rho.m_data);
-                    deRham->hodge(rhoTemp, phi);
-                    deRham->grad(phi, E);
-                    // E *= -1.0;
-                    E *= -te;
+                    biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
+                    if (simType == "QuasiNeutral")
+                    {
+                        deRham->hodge(rhoFiltered, phi);
+                        deRham->grad(phi, E);
+                        E *= -te;
+                    }
+                    else if (simType == "VlasovPoisson")
+                    {
+                        // set initial guess phi to 0
+                        phi.m_data.setVal(0.0);
+                        //poisson->solve_amrex(rhoFiltered, phi);
+                        cgPoisson.solve(rhoFiltered, phi);
+                        deRham->grad(phi, E);
+                        E *= -1.0;
+                    }
                     // D is also needed to compute energy
                     deRham->hodge(E, D);
 
@@ -294,7 +334,7 @@ int main (int argc, char *argv[])
 
                 if (tStep % 10 == 0)
                 {
-                    std::cout << "Time Step: " << tStep + 1 << std::endl;
+                    amrex::Print() << "Time Step: " << tStep + 1 << '\n';
                 }
             }
         }  // end of "time loop" scope

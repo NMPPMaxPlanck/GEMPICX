@@ -29,10 +29,10 @@ struct Verbosity
     /**
      * @brief Get verbosity level for Gempic
      */
-    static unsigned int level();
+    static int level();
 
 private:
-    inline static unsigned int s_verbosityLevel{0};
+    inline static int s_verbosityLevel{0};
     inline static bool s_settable{true};
 };
 }  // namespace Gempic::Utils

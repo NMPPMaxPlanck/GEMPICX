@@ -237,7 +237,7 @@ void FDDeRhamComplex::projection (
     if (nQuad != gaussNodes)
     {
         amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using "
-                       << nQuad << " nodes instead!" << std::endl;
+                       << nQuad << " nodes instead!\n";
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
@@ -308,7 +308,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 
 * @brief Computes the Restriction operator \f$\tilde{R}_0\f$
 *
 * Description:
-* Using the geometric degrees of freedeom:
+* Using the geometric degrees of freedom:
 * Evaluates func at time t on the nodes of the dual grid
 *
 * For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
@@ -378,7 +378,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 
  * @brief Computes the Restriction operator \f$\tilde{R}_3\f$
  *
  * Description:
- * Using the geometric degrees of freedeom:
+ * Using the geometric degrees of freedom:
  * Integrates func at time t over the cells of the dual grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
@@ -412,7 +412,7 @@ void FDDeRhamComplex::projection (
     if (nQuad != gaussNodes)
     {
         amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using "
-                       << nQuad << " nodes instead!" << std::endl;
+                       << nQuad << " nodes instead!\n";
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
@@ -519,7 +519,7 @@ void FDDeRhamComplex::projection (
     if (nQuad != gaussNodes)
     {
         amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using "
-                       << nQuad << " nodes instead!" << std::endl;
+                       << nQuad << " nodes instead!\n";
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
@@ -636,7 +636,7 @@ void FDDeRhamComplex::projection (
     if (nQuad != gaussNodes)
     {
         amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using "
-                       << nQuad << " nodes instead!" << std::endl;
+                       << nQuad << " nodes instead!\n";
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
@@ -822,7 +822,7 @@ void FDDeRhamComplex::projection (
     if (nQuad != gaussNodes)
     {
         amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using "
-                       << nQuad << " nodes instead!" << std::endl;
+                       << nQuad << " nodes instead!\n";
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];
@@ -939,7 +939,7 @@ void FDDeRhamComplex::projection (
     if (nQuad != gaussNodes)
     {
         amrex::Print() << "Gauss formula with " << gaussNodes << " nodes not available, using "
-                       << nQuad << " nodes instead!" << std::endl;
+                       << nQuad << " nodes instead!\n";
     }
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadPoints = m_quadPoints[nQuad - 1];
     const amrex::GpuArray<amrex::Real, s_m_maxGaussNodes> quadWeights = m_quadWeights[nQuad - 1];

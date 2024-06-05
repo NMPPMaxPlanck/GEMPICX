@@ -1,25 +1,16 @@
-file(GLOB VERBOSITY "../../Utils/GEMPIC_Verbosity.cpp")
-file(GLOB PARAMETERS "../../Io/Parameters/GEMPIC_Parameters.cpp")
-file(GLOB FDDERHAMCOMPLEX "../../Forms/FDDeRhamComplex/GEMPIC_FDDeRhamComplex.cpp")
-file(GLOB DERIVATIVES "../../Forms/GEMPIC_ExtDerivatives.cpp")
-file(GLOB POISSON "../Poisson/GEMPIC_PoissonSolver.cpp")
-
 add_executable(test_maxwell_FDsolver_degree_2 test_maxwell_FDsolver_degree_2.cpp)
 add_executable(test_maxwell_FDsolver_degree_4 test_maxwell_FDsolver_degree_4.cpp)
 add_executable(test_maxwell_FDsolver_degree_6 test_maxwell_FDsolver_degree_6.cpp)
-add_executable(test_Poisson test_Poisson.cpp)
 
 if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(test_maxwell_FDsolver_degree_2)
   setup_target_for_cuda_compilation(test_maxwell_FDsolver_degree_4)
   setup_target_for_cuda_compilation(test_maxwell_FDsolver_degree_6)
-  setup_target_for_cuda_compilation(test_Poisson)                  
 endif()
 
 target_link_libraries(test_maxwell_FDsolver_degree_2 GEMPICX)
 target_link_libraries(test_maxwell_FDsolver_degree_4 GEMPICX)
 target_link_libraries(test_maxwell_FDsolver_degree_6 GEMPICX)
-target_link_libraries(test_Poisson GEMPICX)
 
 #target_link_libraries( test_FillBD ${AMReX_LIBRARIES} )
 

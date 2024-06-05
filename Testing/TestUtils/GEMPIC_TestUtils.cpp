@@ -63,6 +63,7 @@ void compare_fields (const char file[],
                      amrex::Array4<amrex::Real> const& fieldArr,
                      amrex::Array4<amrex::Real> const& fieldArr2,
                      amrex::Box const& bx,
+                     amrex::Real tol,
                      int ncomp)
 {
     const auto lo = amrex::lbound(bx);
@@ -76,7 +77,7 @@ void compare_fields (const char file[],
                 for (int k{lo.z}; k <= hi.z; k++)
                 {
                     const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
-                    EXPECT_NEAR(*fieldArr.ptr(idx, comp), *fieldArr2.ptr(idx, comp), 1e-14)
+                    EXPECT_NEAR(*fieldArr.ptr(idx, comp), *fieldArr2.ptr(idx, comp), tol)
                         << file << ":" << line
                         << ": Unequal arrays.\nIndices: " << string_array(idx, GEMPIC_SPACEDIM)
                         << "\tComponent: " << comp;
