@@ -136,7 +136,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
     {
         loopRun = true;
 
-        // Expect all entires to be 1
+        // Expect all entries to be 1
         check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);

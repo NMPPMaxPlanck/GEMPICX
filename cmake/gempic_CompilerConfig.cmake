@@ -44,7 +44,7 @@ if(GEMPIC_USE_CUDA)
   # NVCC('s version of EDG?) is very trigger happy and does not respect [[maybe_unused]].
   # Warning tag name found at:
   # http://www.ssl.berkeley.edu/~jimm/grizzly_docs/SSL/opt/intel/cc/9.0/lib/locale/en_US/mcpcom.msg
-  set(CMAKE_CUDA_FLAGS "-lcusparse -lcurand -Xcudafe --diag_suppress=set_but_not_used" )
+  set(CMAKE_CUDA_FLAGS "-lcusparse -lcurand -Xcudafe --diag_suppress=set_but_not_used")
 
 
   # This doesn't do anything but avoid an AMReX warning -- CMAKE_CUDA_HOST_COMPILER must be specified as a -D option on the first invocation of cmake as it is used during the compiler detection process.

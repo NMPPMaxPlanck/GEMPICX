@@ -156,6 +156,55 @@ struct DeRhamField
      */
     void post_particle_loop_sync();
 };
+// Helper functions for field types
+template <Grid grid, Space space>
+struct FieldTypes
+{
+    static constexpr Grid s_gridType{grid};
+    static constexpr Space s_spaceType{space};
+    FieldTypes(const DeRhamField<grid, space>&){};
+    FieldTypes(std::reference_wrapper<const DeRhamField<grid, space>>){};
+};
+
+template <Grid grid>
+constexpr Grid get_opposite_grid ()
+{
+    if constexpr (grid == Grid::primal)
+    {
+        return Grid::dual;
+    }
+    else if constexpr (grid == Grid::dual)
+    {
+        return Grid::primal;
+    }
+}
+
+template <Space space>
+constexpr Space get_opposite_space ()
+{
+    if constexpr (space == Space::node)
+    {
+        return Space::cell;
+    }
+    else if constexpr (space == Space::cell)
+    {
+        return Space::node;
+    }
+    else if constexpr (space == Space::face)
+    {
+        return Space::edge;
+    }
+    else if constexpr (space == Space::edge)
+    {
+        return Space::face;
+    }
+}
+
+template <Grid grid>
+constexpr Grid oppositeGrid{get_opposite_grid<grid>()};
+
+template <Space space>
+constexpr Space oppositeSpace{get_opposite_space<space>()};
 
 // One- or Two-form, i.e., space is either edge or face
 template <Grid grid, Space space>
@@ -941,6 +990,254 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
 }
 ///@endcond
 
+/// Copy of fields
+/// @tparam grid Grid type.
+/// @tparam space Space type.
+/// @param fieldOut The field to be copied into
+/// @param fieldIn The field to be copied from
+template <Grid grid, Space space>
+inline void copy (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& fieldOut,
+    const DeRhamField<grid, space>& fieldIn)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::copy");
+    auto nGhost = fieldIn.m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        amrex::Copy(fieldOut.m_data[comp], fieldIn.m_data[comp], 0, 0, fieldIn.m_data[comp].nComp(),
+                    nGhost);
+    }
+}
+
+/// Copy of fields
+/// @tparam grid Grid type.
+/// @tparam space Space type.
+/// @param fieldOut The field to be copied into
+/// @param fieldIn The field to be copied from
+template <Grid grid, Space space>
+inline void copy (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& fieldOut,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& fieldIn)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::copy(oppositeForm)");
+    auto nGhost = fieldIn.m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        amrex::Copy(fieldOut.m_data[comp], fieldIn.m_data[comp], 0, 0, fieldIn.m_data[comp].nComp(),
+                    nGhost);
+    }
+}
+
+template <Grid grid, Space space>
+inline void copy (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& fieldOut,
+    const DeRhamField<grid, space>& fieldIn)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::copy");
+    auto nGhost = fieldIn.m_deRham->get_n_ghost();
+    amrex::Copy(fieldOut.m_data, fieldIn.m_data, 0, 0, fieldIn.m_data.nComp(), nGhost);
+}
+template <Grid grid, Space space>
+inline void copy (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& fieldOut,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& fieldIn)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::copy(oppositeForm)");
+    auto nGhost = fieldIn.m_deRham->get_n_ghost();
+    amrex::Copy(fieldOut.m_data, fieldIn.m_data, 0, 0, fieldIn.m_data.nComp(), nGhost);
+}
+
+// compute linear combinations of fields
+/**
+ * Performs a linear combination operation on two DeRhamField objects for one or two forms.
+ *
+ * @param result The result of the linear combination operation.
+ * @param a The scaling factor for the first field.
+ * @param field1 The first DeRhamField object.
+ * @param b The scaling factor for the second field.
+ * @param field2 The second DeRhamField object.
+ */
+template <Grid grid, Space space>
+inline void linear_combination (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& result,
+    amrex::Real a,
+    const DeRhamField<grid, space>& field1,
+    amrex::Real b,
+    const DeRhamField<grid, space>& field2)
+{
+    BL_PROFILE("Gempic::Forms::linearCombination()");
+    auto nGhost = result.m_deRham->get_n_ghost();
+    amrex::LinComb(result.m_data, a, field1.m_data, 0, b, field2.m_data, 0, 0,
+                   field1.m_data.nComp(), nGhost);
+}
+
+/**
+ * Performs a linear combination operation on two DeRhamField objects for one or two forms.
+ *
+ * @param result The result of the linear combination operation.
+ * @param a The scaling factor for the first field.
+ * @param field1 The first DeRhamField object.
+ * @param b The scaling factor for the second field.
+ * @param field2 The second DeRhamField object.
+ */
+template <Grid grid, Space space>
+inline void linear_combination (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& result,
+    amrex::Real a,
+    const DeRhamField<grid, space>& field1,
+    amrex::Real b,
+    const DeRhamField<grid, space>& field2)
+{
+    BL_PROFILE("Gempic::Forms::linearCombination()");
+    auto nGhost = result.m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        amrex::LinComb(result.m_data[comp], a, field1.m_data[comp], 0, b, field2.m_data[comp], 0, 0,
+                       field1.m_data[comp].nComp(), nGhost);
+    }
+}
+
+/**
+ * Performs a linear combination operation on two DeRhamField objects for zero or three forms.
+ *
+ * @param result The result of the linear combination operation.
+ * @param a The scaling factor for the first field.
+ * @param field1 The first DeRhamField object.
+ * @param b The scaling factor for the second field.
+ * @param field2 The second DeRhamField object on the opposite grid and space.
+ */
+template <Grid grid, Space space>
+inline void linear_combination (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& result,
+    amrex::Real a,
+    const DeRhamField<grid, space>& field1,
+    amrex::Real b,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+{
+    BL_PROFILE("Gempic::Forms::linearCombination()");
+    auto nGhost = result.m_deRham->get_n_ghost();
+    amrex::LinComb(result.m_data, a, field1.m_data, 0, b, field2.m_data, 0, 0,
+                   field1.m_data.nComp(), nGhost);
+}
+
+/**
+ * Performs a linear combination operation on two DeRhamField objects for one or two forms.
+ *
+ * @param result The result of the linear combination operation.
+ * @param a The scaling factor for the first field.
+ * @param field1 The first DeRhamField object.
+ * @param b The scaling factor for the second field.
+ * @param field2 The second DeRhamField object on the opposite grid and space.
+ */
+template <Grid grid, Space space>
+inline void linear_combination (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& result,
+    amrex::Real a,
+    const DeRhamField<grid, space>& field1,
+    amrex::Real b,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+{
+    BL_PROFILE("Gempic::Forms::linearCombination()");
+    auto nGhost = result.m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        amrex::LinComb(result.m_data[comp], a, field1.m_data[comp], 0, b, field2.m_data[comp], 0, 0,
+                       field1.m_data[comp].nComp(), nGhost);
+    }
+}
+
+/**
+ * @brief Computes the dot product of two fields on the same grid.
+ *
+ * @tparam grid Grid type.
+ * @tparam space Space type.
+ * @tparam std::enable_if_t<isOneOrTwoForm<space>> Enables the function only if space is one or
+ * two form.
+ * @param field1 The first field.
+ * @param field2 The second field.
+ *
+ * @return The dot product of the fields.
+ */
+template <Grid grid, Space space>
+inline amrex::Real dot_product (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
+    const DeRhamField<grid, space>& field2)
+{
+    // Compute the dot product by summing the dot product of each component.
+    amrex::Real dotProd{0};               // Initialize the dot product to 0.
+    for (int comp = 0; comp < 3; ++comp)  // Loop over each component.
+    {
+        dotProd += amrex::MultiFab::Dot(field1.m_data[comp], 0, field2.m_data[comp], 0,
+                                        field1.m_data[comp].nComp(), 0);
+    }
+    return dotProd;  // Return the computed dot product.
+}
+
+/**
+ * @brief Computes the dot product of two DeRham fields on the same grid and space
+ * for zero and three forms
+ * @tparam grid The grid type of the DeRham field.
+ * @tparam space The space type of the DeRham field.
+ * @param field1 The first DeRham field.
+ * @param field2 The second DeRham field.
+ *
+ * @return The dot product of the two fields.
+ */
+template <Grid grid, Space space>
+inline amrex::Real dot_product (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
+    const DeRhamField<grid, space>& field2)
+{
+    amrex::Real dotProd =
+        amrex::MultiFab::Dot(field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
+    return dotProd;
+}
+
+/**
+ * Computes the dot product of two DeRham fields on opposite grid and space
+ * for one and two forms
+ * @tparam GridType The grid type of the first DeRham field.
+ * @tparam SpaceType The space type of the first DeRham field.
+ * @param field1 The first DeRham field.
+ * @param field2 The second DeRham field.
+ *
+ * @return The dot product of the two fields.
+ */
+template <Grid grid, Space space>
+inline amrex::Real dot_product (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+{
+    amrex::Real result = 0;
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        result += amrex::MultiFab::Dot(field1.m_data[comp], 0, field2.m_data[comp], 0,
+                                       field1.m_data[comp].nComp(), 0);
+    }
+    return result;
+}
+
+/**
+ * Calculates the dot product of two DeRham fields on opposite grid and space.
+ *
+ * @tparam grid The grid type of the DeRham field.
+ * @tparam space The space type of the DeRham field.
+ *
+ * @param field1 The first DeRham field.
+ * @param field2 The second DeRham field.
+ *
+ * @return The dot product of the two fields.
+ */
+template <Grid grid, Space space>
+inline amrex::Real dot_product (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+{
+    amrex::Real dotProd =
+        amrex::MultiFab::Dot(field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
+    return dotProd;
+}
+
 }  // namespace Gempic::Forms
 
 namespace Gempic::Forms::Impl
@@ -967,55 +1264,6 @@ using unwrap_reference_t = typename UnwrapReference<T>::type;
 
 template <class T>
 using unwrap_ref_decay_t = typename UnwrapRefDecay<T>::type;
-
-template <Grid grid, Space space>
-struct FieldTypes
-{
-    static constexpr Grid s_gridType{grid};
-    static constexpr Space s_spaceType{space};
-    FieldTypes(const DeRhamField<grid, space>&){};
-    FieldTypes(std::reference_wrapper<const DeRhamField<grid, space>>){};
-};
-
-template <Grid grid>
-constexpr Grid get_opposite_grid ()
-{
-    if constexpr (grid == Grid::primal)
-    {
-        return Grid::dual;
-    }
-    else if constexpr (grid == Grid::dual)
-    {
-        return Grid::primal;
-    }
-}
-
-template <Space space>
-constexpr Space get_opposite_space ()
-{
-    if constexpr (space == Space::node)
-    {
-        return Space::cell;
-    }
-    else if constexpr (space == Space::cell)
-    {
-        return Space::node;
-    }
-    else if constexpr (space == Space::face)
-    {
-        return Space::edge;
-    }
-    else if constexpr (space == Space::edge)
-    {
-        return Space::face;
-    }
-}
-
-template <Grid grid>
-constexpr Grid oppositeGrid{get_opposite_grid<grid>()};
-
-template <Space space>
-constexpr Space oppositeSpace{get_opposite_space<space>()};
 }  // namespace Gempic::Forms::Impl
 
 #endif

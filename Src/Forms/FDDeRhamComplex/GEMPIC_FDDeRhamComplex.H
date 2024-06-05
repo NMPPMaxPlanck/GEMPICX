@@ -63,7 +63,7 @@ inline auto get_hodge_stencils ()
                 stencilCellToNode[4] = 3. / 640.;
                 break;
             default:
-                amrex::Print() << "Degree not implemented" << std::endl;
+                AMREX_ASSERT("Degree not implemented");
                 break;
         }
 
@@ -108,7 +108,7 @@ inline auto get_hodge_stencils ()
                 stencilNodeToCell = stencilCellToNode;
                 break;
             default:
-                amrex::Print() << "Degree not implemented" << std::endl;
+                AMREX_ASSERT("Degree not implemented");
                 break;
         }
 

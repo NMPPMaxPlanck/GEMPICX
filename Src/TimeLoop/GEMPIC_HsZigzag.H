@@ -311,7 +311,7 @@ public:
             }
             dRms = std::sqrt((1. / 16.) * dRms);
 
-            amrex::Print() << "finished time-step: " << tStep << " D_rms: " << dRms << std::endl;
+            amrex::Print() << "finished time-step: " << tStep << " D_rms: " << dRms << '\n';
         }
     }
 };

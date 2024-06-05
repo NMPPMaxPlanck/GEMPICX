@@ -22,7 +22,7 @@ CMakeUserPresets.json
 runs*/**
 
 # Operating System specific excludes
-.DS_store
+.DS_Store
 
 # Third Party Downloaded with CMake FetchContent
 third_party/amrex-src
@@ -42,4 +42,3 @@ doc/sphinx/_build/
 doc/sphinx/latex/*.rst
 **/Plotfiles/**/*
 scripts/build_dir.txt
-tidyOutput.txt

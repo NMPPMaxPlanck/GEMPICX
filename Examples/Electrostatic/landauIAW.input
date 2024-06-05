@@ -1,17 +1,17 @@
 # General setting
-simName = "Bernstein_waves"
+Sim.Type = "QuasiNeutral"
 
 # Grid parameters
-nCellVector = 128 8 8
-maxGridSizeVector = 32 8 8
+nCellVector = 32 8 8
+maxGridSizeVector = 8 8 8
 isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
 Particle.speciesNames = ions
-Particle.ions.nPartPerCell = 1000 # number of Particles per cell
+Particle.ions.nPartPerCell = 1000 # number of particles per cell (use 1000 for 3D, 10000 for 2D, 100000 for 1D)
 Particle.ions.charge = 1.0 # vector (one entry per species)
 Particle.ions.mass = 1.0 # vector (one entry per species)
-Particle.ions.density = "1.0 + 0.05 * cos(kvarx * x)"
+Particle.ions.density = "1.0 + 0.04 * cos(kvarx * x)"
 Particle.ions.numGaussians = 1
 
 # Gaussian parameters
@@ -20,42 +20,37 @@ Particle.ions.G0.vThermal = 1 1 1
 Particle.ions.G0.vWeight = 1.0
 
 # wave vector
-k = .3 .3  0.004166666666666667
+k = 1.0 1.0 1.0
 
 # Simulation parameters
-TimeLoop.nSteps = 50000
+TimeLoop.nSteps = 500
 TimeLoop.dt = 0.02
-Sim.Te = 2.5
+Sim.Te = 10
+
+# Filter
+Filter.enable = 1
+Filter.nPass = 3 3 3
 
 # Function parameters
 Function.Bx = "0.0"
 Function.By = "0.0"
-Function.Bz = "1.0"
-
-# Filter
-Filter.enable = 0
-Filter.npassEachDir = 3 3 3
+Function.Bz = "0.0"
 
 # Diagnostics
-# Full Diagnostics
+#Full Diagnostics 
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field 
-
-FullDiagnostics.part.varNames = ions # default name for a particle group
-FullDiagnostics.part.saveInterval = 10000
+FullDiagnostics.part.varNames = ions
+FullDiagnostics.part.saveInterval = 1000
 FullDiagnostics.part.functor = raw
-
-FullDiagnostics.field.varNames = rho Ex 
+FullDiagnostics.field.varNames = rho Ex phi
 FullDiagnostics.field.functor = CellCenter 
 FullDiagnostics.field.saveInterval = 1
 
-# Reduced Diagnostics
+# Reduced Diagnostics 
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
-ReducedDiagnostics.saveInterval = 1 # saveInterval for all groupings not specifying their own
-
+ReducedDiagnostics.saveInterval = 1 # saveInterva
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
 ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
-
 ReducedDiagnostics.Part.types = Particle
-

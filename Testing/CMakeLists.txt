@@ -6,6 +6,7 @@ add_executable (GtestTests GEMPIC_UnitTests.cpp)
 target_include_directories(GtestTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(TestUtils)
+add_subdirectory(FieldSolvers)
 add_subdirectory(Filter)
 add_subdirectory(Forms)
 add_subdirectory(Io)

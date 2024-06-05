@@ -6,41 +6,44 @@
 using namespace Gempic::FieldSolvers;
 
 /**
- * @brief Implementation of Poisson solvers
- * @p Parameters
- * @p rho, which is a dual 3-form
- * @p phi, which is a primal 0-form
+ * @brief Construct a new Poisson Solver:: Poisson Solver object
  *
- *
+ * @param deRham
  */
-
-PoissonSolver::PoissonSolver(std::shared_ptr<Forms::DeRhamComplex> deRham) :
-    m_deRham{deRham}, m_residual{deRham}
+PoissonSolver::PoissonSolver(std::shared_ptr<Forms::DeRhamComplex> deRham,
+                             const ComputationalDomain& infra) :
+    m_deRham{deRham}, m_infra{infra}, m_primalEdge(deRham), m_dualFace(deRham)
 {
-    m_maxCoarseningLevel = 0;  // no multigrid (else 30 (from tutorial))
+    m_maxCoarseningLevel = 10;
     m_maxIter = 100;
     m_mgBottomMaxIter = 100;
     m_maxFmgIter = 0;
-    m_verbose = 0;
-    m_bottomVerbose = 0;
-    m_maxsteps = 100;
+    m_verbose = Gempic::Utils::Verbosity::level();
+    m_bottomVerbose = m_verbose;
 }
 
 PoissonSolver::~PoissonSolver() {}
 
-void PoissonSolver::solve (const ComputationalDomain& infra,
-                          Forms::DeRhamField<Grid::dual, Space::cell>& rho,
-                          Forms::DeRhamField<Grid::primal, Space::node>& phi)
+/**
+ * Solves the Poisson equation for the given dual and primal fields using the second order AMReX
+ * nodal Poisson solver
+ *
+ * @param rho The dual field representing the right-hand side of the equation.
+ * @param phi The primal field to store the solution of the equation.
+ *
+ * @throws None
+ */
+void PoissonSolver::solve_amrex (Forms::DeRhamField<Grid::dual, Space::cell>& rho,
+                                Forms::DeRhamField<Grid::primal, Space::node>& phi)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::solve()");
+
     amrex::LPInfo lpInfo;
     lpInfo.setMaxCoarseningLevel(m_maxCoarseningLevel);
 
-    // amrex::MLEBNodeFDLaplacian linop({params.geometry()}, {params.grid()}, {params.distriMap()},
-    // lpInfo);
-
-    amrex::MLNodeLaplacian linop({infra.m_geom}, {infra.m_grid}, {infra.m_distriMap}, lpInfo, {},
-                                 1.0);
+    amrex::Real sigma = -1.0;
+    amrex::MLNodeLaplacian linop({m_infra.m_geom}, {m_infra.m_grid}, {m_infra.m_distriMap}, lpInfo,
+                                 {}, sigma);
 
     // Set boundary conditions on linear operator for lower end and higher end
     linop.setDomainBC({AMREX_D_DECL(amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic,
@@ -48,33 +51,8 @@ void PoissonSolver::solve (const ComputationalDomain& infra,
                       {AMREX_D_DECL(amrex::LinOpBCType::Periodic, amrex::LinOpBCType::Periodic,
                                     amrex::LinOpBCType::Periodic)});
 
-    // Additional parameters for Poisson
-    // m_sigma = {AMREX_D_DECL(-1., -1., -1.)};
-    // linop.setSigma( m_sigma);
-
-    // Sum of rhs needs to be 0 in domain is periodic in all directions
-    if (infra.m_geom.isAllPeriodic())
-    {
-        amrex::Real rhoSum = rho.m_data.sum_unique(0, false, infra.m_geom.periodicity());
-        amrex::Print().SetPrecision(17)
-            << " sum " << rhoSum << " " << rhoSum / (64 * 64 * 64) << std::endl;
-        amrex::Real ninv =
-            1.0 / GEMPIC_D_MULT(infra.m_nCell[xDir], infra.m_nCell[yDir], infra.m_nCell[zDir]);
-        amrex::Real rhoSumNinv = rhoSum * ninv;
-        rho -= rhoSumNinv;
-        // for (amrex::MFIter mfi(rho.data); mfi.isValid(); ++mfi)
-        // {
-        //     const amrex::Box &bx = mfi.validbox();
-        //     amrex::Array4<amrex::Real> const &rhoarr = (rho.data)[mfi].array();
-        //     ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        //     {
-        //         amrex::Print().SetPrecision(15) << " rho " << rhoarr(i,j,k) << std::endl;
-        //         rhoarr(i, j, k) =  rhoarr(i, j, k) -rhoSum*Ninv;
-        //     });
-        // }
-        rhoSum = rho.m_data.sum_unique(0, false, infra.m_geom.periodicity());
-        amrex::Print().SetPrecision(15) << " sum2 " << rhoSum << std::endl;
-    }
+    // Sum of rhs needs to be 0 if domain is periodic in all directions
+    subtract_constant_part(rho);
 
     // Initialize solver class
     amrex::MLMG mlmg(linop);
@@ -86,65 +64,84 @@ void PoissonSolver::solve (const ComputationalDomain& infra,
     mlmg.setVerbose(m_verbose);
     mlmg.setBottomVerbose(m_bottomVerbose);
     mlmg.setBottomSolver(amrex::BottomSolver::cg);
-    amrex::Real relTol = 1.e-11;
+    amrex::Real relTol = 1.e-10;
     amrex::Real absTol = 1.e-12;
-    // Solve Poisson
+    // Solve Poisson equation
     mlmg.solve({&phi.m_data}, {&rho.m_data}, relTol, absTol);
     // AMReX Poisson solver does not use Hodge. Need to rescale phi
-    auto const dr = infra.m_dx;
-    phi.m_data.mult(1 / GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]));
+    phi *= m_infra.m_dxi[GEMPIC_SPACEDIM];
 
     phi.average_sync();
     phi.fill_boundary();
 }
 
-void PoissonSolver::subtract_constant_part (const ComputationalDomain& infra,
-                                           Forms::DeRhamField<Grid::dual, Space::cell>& rho,
-                                           const int nGhost)
+/**
+ * Applies the Poisson operator to the given primal and dual fields.
+ * The Poisson operator applies successively the grad, the hodge operator and the divergence
+ * The order of the solver is hodgedegree
+ *
+ * @param phi The primal field to apply the operator to.
+ * @param rho The dual field to store the result of the operator application.
+ *
+ * @throws None
+ */
+void PoissonSolver::apply_poisson_operator (DeRhamField<Grid::primal, Space::node>& phi,
+                                           DeRhamField<Grid::dual, Space::cell>& rho)
+{
+    BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::apply_poisson_operator()");
+    m_deRham->grad(phi, m_primalEdge);
+    m_primalEdge *= -1;  // E = -grad phi
+    m_deRham->hodge(m_primalEdge, m_dualFace);
+    m_deRham->div(m_dualFace, rho);
+    // add penalty term to avoid nullspace
+    // amrex::Real penalty = 1.0e-8;
+    // rho += penalty;
+    // Sum of rhs needs to be 0 if domain is periodic in all directions
+    // subtract_constant_part(rho);
+}
+
+/**
+ * Applies the Poisson operator with inverse Hodge transformation to the given primal and dual
+ * fields. The order of the solver is hodgedegree - 2 (for hodgedegree = 4 and 6) and 2 for
+ * hodgedegree = 2, for which Hodge is diagonal
+ *
+ * @param phi The primal field to apply the operator to.
+ * @param rho The dual field to store the result of the operator application after inverse Hodge
+ * transformation.
+ *
+ * @return None
+ */
+void PoissonSolver::apply_poisson_operator_inverse_hodge (
+    DeRhamField<Grid::primal, Space::node>& phi, DeRhamField<Grid::dual, Space::cell>& rho)
+{
+    BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::apply_poisson_operator_inverse_hodge()");
+    // Conjugate gradient to compute inverse Hodge
+    if (!m_cgHodge)
+    {
+        m_cgHodge = std::make_unique<
+            ConjugateGradient<DeRhamField<Grid::primal, Space::edge>,
+                              DeRhamField<Grid::dual, Space::face>, Operator::hodge>>(m_deRham);
+    }
+
+    m_deRham->grad(phi, m_primalEdge);
+    m_primalEdge *= -1;  // E = -grad phi
+    m_cgHodge->solve(m_primalEdge, m_dualFace);
+    m_deRham->div(m_dualFace, rho);
+
+    // Sum of rhs needs to be 0 if domain is periodic in all directions
+    subtract_constant_part(rho);
+}
+
+/// Ensures that the average value of the field is 0 if domain is periodic in all directions
+void PoissonSolver::subtract_constant_part (DeRhamField<Grid::dual, Space::cell>& rho)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::subtract_constant_part()");
-    // In the context of the Poisson solver rho has always one component.
-    const int nComp = 1;
-    // Calculates a nodal mask for rho
-    std::unique_ptr<amrex::iMultiFab> nodalMask;
-    nodalMask = std::make_unique<amrex::iMultiFab>(
-        convert(infra.m_grid, amrex::IntVect::TheNodeVector()), infra.m_distriMap, nComp, nGhost);
-
-    for (amrex::MFIter mfi(*nodalMask); mfi.isValid(); ++mfi)
+    if (m_deRham->get_periodicity().isAllPeriodic())
     {
-        const amrex::Box& bx = mfi.validbox();
-        amrex::IntVect hi = {bx.bigEnd()};
-
-        amrex::Array4<int> const& maskArr = (*nodalMask)[mfi].array();
-        ParallelFor(bx,
-                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                    {
-                        // if-loop to exclude ownership for the point that is at the upper
-                        // boundary for nodal directions
-                        if ((i <= (hi[xDir] - 1)) && (j <= (hi[yDir] - 1)) && (k <= (hi[zDir] - 1)))
-                        {
-                            maskArr(i, j, k) = 1.0;
-                        }
-                    });
+        amrex::Real rhoSum = rho.m_data.sum_unique(0, false, m_infra.m_geom.periodicity());
+        amrex::Real ninv = 1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir],
+                                               m_infra.m_nCell[zDir]);
+        amrex::Real rhoSumNinv = rhoSum * ninv;
+        rho -= rhoSumNinv;
     }
-
-    amrex::Real nm1 = 0.0;
-    int counter = 0;
-    for (amrex::MFIter mfi(rho.m_data, true); mfi.isValid(); ++mfi)
-    {
-        amrex::Box const& bx = mfi.growntilebox(0);
-        auto const& a = rho.m_data.const_array(mfi);
-        amrex::Array4<int const> const& mfab = nodalMask->const_array(mfi);
-        AMREX_LOOP_3D(bx, i, j, k, {
-            if (mfab(i, j, k))
-            {
-                nm1 += a(i, j, k, 0);
-                counter++;
-            }
-        });
-    }
-
-    amrex::ParallelAllReduce::Sum(nm1, amrex::ParallelContext::CommunicatorSub());
-    amrex::ParallelAllReduce::Sum(counter, amrex::ParallelContext::CommunicatorSub());
-    rho -= nm1 / static_cast<amrex::Real>(counter);
 }
