@@ -135,6 +135,7 @@ axs[0].set_title("Real part")
 axs[1].set_title("Imaginary part")    
 axs[2].set_title("Log plot of modulus squared")
 fig.legend()
+plt.show()
 #plt.savefig("FourierBiFi4Comp")
 
 
@@ -144,6 +145,7 @@ plt.plot(arr1[:,0])
 plt.plot(arr1[:,1])
 plt.plot(arr1[:,15])
 plt.plot(arr1[:,50])
+plt.show()
 print(arr1[:,1])
 
 # %%
@@ -187,6 +189,6 @@ plt.plot(time[:itmax],np.log(ex2[:itmax]))
 # Analytical solution and linear damping rate
 plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.cos(omegar*time[:itmax]-phase)*np.exp(gamma*time[:itmax]))**2))
 plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.exp(gamma*time[:itmax]))**2))
-
+plt.show()
 
 # %%

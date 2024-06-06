@@ -1,1 +1,0 @@
-# time   E-energy-components   B-energy-components   kinetic-energy   momentum-components gauss-error total-energy energy-error

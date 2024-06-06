@@ -73,28 +73,27 @@ cmake --build build/cpu-release-3D
 
 ## Run a simulation
 
-Example simulations and input files can be found in `Src/Simulations`. 
+Example simulations and input files can be found in `Examples`. 
 Create a directory from which the simulation can be started. We run the simulation in a subdirectory of `gempic` project directory which is not 
 recommended for real production runs.
 ```sh
-mkdir runs/gempic_quickstart
+mkdir -p runs/gempic_quickstart
 cd runs/gempic_quickstart
-cp ../../build/cpu-release-3D/Src/Simulations/Testing/test_bernstein_waves .
-cp ../../Src/Simulations/Testing/IOFiles3D/test_bernstein_waves_input.input .
+cp ../../build/cpu-release-3D/Examples/Electrostatic/electrostatic .
+cp ../../Examples/Electrostatic/landauVP.input .
 ```
-Optionally, change the value of the parameter `TimeLoop.nSteps` in the input file `test_bernstein_waves_input.input` to reduce the runtime.
 Now run the simulation using
 ```sh
-./test_bernstein_waves test_bernstein_waves_input.input 
+./electrostatic landauVP.input 
 ```
 
 ## Plot simple diagnostics
-Some jupyter notebooks can be found in `gempic/post_processing` and adapted to the user run.
+Some python scripts (can be converted jupyter notebooks) can be found in `Examples` and adapted to the user run.
 Just do (still in the `gempic_quickstart` run folder)
 
 ```sh
-cp ../../post_processing/rho_slices.py .
-python3 rho_slices.py 
+cp ../../Examples/Electrostatic/LandauVP.py .
+python3 LandauVP.py
 ```
 
 # Settings for vscode
