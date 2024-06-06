@@ -1,1 +1,2 @@
 add_subdirectory(Testing)
+target_sources(GEMPICX PRIVATE GEMPIC_SobolSampler.cpp)
