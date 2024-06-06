@@ -75,7 +75,6 @@ target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Checkpoint
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Profiling")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Parameters")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Particle")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Simulations")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/TimeLoop")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/TimeLoop/HamiltonianSplitting")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}")
