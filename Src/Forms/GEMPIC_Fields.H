@@ -233,6 +233,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
 
     void post_particle_loop_sync();
     void operator*=(amrex::Real dt);
+    void operator*=(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space>&);
     void operator-=(DeRhamField<grid, space>&);
     void operator+=(amrex::Real c);
@@ -264,6 +265,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 
     void post_particle_loop_sync();
     void operator*=(amrex::Real dt);
+    void operator*=(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space>&);
     void operator-=(DeRhamField<grid, space>&);
     void operator+=(amrex::Real c);
@@ -311,6 +313,7 @@ protected:
     amrex::DistributionMapping m_distriMap;
     amrex::Geometry m_geom;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> m_dxInv;
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_dx;
     int m_hodgeDegree;
 
     // Number of ghost cells along each direction
@@ -333,6 +336,7 @@ public:
         m_geom = infra.m_geom;
         m_hodgeDegree = hodgeDegree;
         m_dxInv = infra.m_dxi;
+        m_dx = infra.m_dx;
 
         /* Ghost cells are decided for the fields by the degree of the Hodge.
         ** Needs to be changed for particles and decided by spline degree:
@@ -384,6 +388,15 @@ public:
 
     /// Getter for the periodicity
     const amrex::Periodicity get_periodicity () const { return m_geom.periodicity(); }
+
+    /// Getter for dx
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& get_dx () const { return m_dx; }
+
+    /// Getter for prob lo
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> get_prob_lo () const
+    {
+        return m_geom.ProbLoArray();
+    }
 
     // map of pointers to the field multifabs for the diagnostics
     std::map<std::string, amrex::MultiFab*> m_fieldsDiagnostics;
@@ -897,6 +910,99 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=()");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.mult(dt, nGhost[xDir]);
+}
+
+// Multiply by parsed function
+template <Grid grid, Space space>
+inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator*=(
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=(function)");
+
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& dx = m_deRham->get_dx();
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_deRham->get_prob_lo();
+
+    int nComps{m_data[xDir].nComp()};
+
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        for (amrex::MFIter mfi(m_data[comp], true); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const& form = (m_data[comp])[mfi].array();
+
+            ParallelFor(
+                bx, nComps,
+                [r0, comp, dx, form, func] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+                {
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r;
+                    if constexpr ((grid == Grid::primal && space == Space::edge) ||
+                                  (grid == Grid::dual && space == Space::face))
+                    {
+                        // midpoints of primal edge / dual face
+                        r = {AMREX_D_DECL(r0[xDir] + (i + (comp == xDir ? 0.5 : 0)) * dx[xDir],
+                                          r0[yDir] + (j + (comp == yDir ? 0.5 : 0)) * dx[yDir],
+                                          r0[zDir] + (k + (comp == zDir ? 0.5 : 0)) * dx[zDir])};
+                    }
+                    else
+                    {
+                        // midpoints of primal face / dual edge
+                        r = {AMREX_D_DECL(
+                            r0[xDir] + (i + ((comp == yDir || comp == zDir) ? 0.5 : 0)) * dx[xDir],
+                            r0[yDir] + (j + ((comp == xDir || comp == zDir) ? 0.5 : 0)) * dx[yDir],
+                            r0[zDir] +
+                                (k + ((comp == xDir || comp == yDir) ? 0.5 : 0)) * dx[zDir])};
+                    }
+                    form(i, j, k, n) =
+                        form(i, j, k, n) * func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), 0.);
+                });
+        }
+    }
+    this->fill_boundary();
+    this->average_sync();
+}
+
+template <Grid grid, Space space>
+inline void
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::operator*=(
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=(function)");
+
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& dx = m_deRham->get_dx();
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_deRham->get_prob_lo();
+
+    int nComps{m_data.nComp()};
+
+    for (amrex::MFIter mfi(m_data, true); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
+        amrex::Array4<amrex::Real> const& form = (m_data)[mfi].array();
+
+        ParallelFor(bx, nComps,
+                    [r0, dx, form, func] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+                    {
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r;
+                        if constexpr ((grid == Grid::primal && space == Space::node) ||
+                                      (grid == Grid::dual && space == Space::cell))
+                        {
+                            // primal nodes / dual cell midpoints
+                            r = {AMREX_D_DECL(r0[xDir] + i * dx[xDir], r0[yDir] + j * dx[yDir],
+                                              r0[zDir] + k * dx[zDir])};
+                        }
+                        else
+                        {
+                            // primal cell midpoints / dual nodes
+                            r = {AMREX_D_DECL(r0[xDir] + (i + 0.5) * dx[xDir],
+                                              r0[yDir] + (j + 0.5) * dx[yDir],
+                                              r0[zDir] + (k + 0.5) * dx[zDir])};
+                        }
+                        form(i, j, k, n) =
+                            form(i, j, k, n) * func(AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), 0.);
+                    });
+    }
+    this->fill_boundary();
+    this->average_sync();
 }
 
 // plusEqual
