@@ -179,7 +179,7 @@ public:
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i()");
         amrex::Real xNew = pos[dir] + dt * vel[dir];
 
-        spline.template update1_d_splines<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
+        spline.template update_1d_splines<dir>(xNew, infra.m_plo[dir], infra.m_dxi[dir]);
 
         ParticleMeshCoupling::accumulate_j_integrate_b<dir>(spline, chargeWeight, dx, bA, jA,
                                                             bfields);

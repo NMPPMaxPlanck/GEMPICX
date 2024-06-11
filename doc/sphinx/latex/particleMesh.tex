@@ -22,109 +22,123 @@
 \newcommand{\prim}{\texttt{prim}}
 
 \begin{document}
-    \section{Particle-Mesh Coupling}
+\section{Particle-Mesh Coupling}
 
-    \subsection{Smoothing particle splines}
+\subsection{Smoothing particle splines}
 
-    The Particle-Mesh coupling algorithms are based on a spline smoothing of the particle Dirac distribution in the discrete Lagrangian functional.
-    Associated with a particle with arbitrary position $\mathbf{x}_p = (x_p, y_p, z_p)$, the \textbf{particle spline} is a tensor product 
-    $$
-    S_h( \mathbf{x}-\mathbf{x}_p) = S_{\Delta x}^{d_x-1}(x-x_p)S_{\Delta y}^{d_y-1}(y-y_p)S_{\Delta z}^{d_z-1}(z-z_p)
-    $$
-    involving univariate scaled splines of the form
-    $S_h^d(x)=\frac 1h S^d(\frac {x}{h})$,
-    where $S^d$ is the centered reference cardinal B-spline of degree $d$ defined recursively by 
-    $$S^0(x)= \begin{cases} 1  &\text{ if } ~ -\frac{1}{2} \leq x \leq \frac{1}{2} \\ 0 & \text{ else} \end{cases}$$
-    $$ S^d(x) = S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-x') \dd x'.$$
-    \textbf{Properties of the cardinal B-spline}
-    \begin{itemize}
-        \item The cardinal splines are even ($S^d(x) = S^d(-x)$)
-        \item The support of $S^d$ is $\left[-\frac{d+1}{2},\frac{d+1}{2} \right]$
-        \item Both the reference and scaled cardinal splines have unit integral:
-        $$ \int_{-\infty}^{\infty} S^d(x) \dd x = \int_{-\infty}^{\infty} S_h^d(x) \dd x = 1$$
-        \item Denoting grid nodes by $x_i = ih$, the scaled cardinal B-spline verifies
-        \begin{equation} \label{splinerel}
-            \int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = hS_h^d(x_i-x_p) = S^d\Big(\frac {x_i-x_p}{h}\Big)
-        \end{equation}
-    \end{itemize}
+The Particle-Mesh coupling algorithms are based on a spline smoothing of the
+particle Dirac distribution in the discrete Lagrangian functional.
+Associated with a particle with arbitrary position 
+$\mathbf{x}_p = (x_p,y_p, z_p)$, the \textbf{particle spline} is a tensor product 
+\begin{align*}
+S_h( \mathbf{x}-\mathbf{x}_p) = S_{\Delta x}^{d_x-1}(x-x_p)S_{\Delta y}^{d_y-1}(y-y_p)S_{\Delta z}^{d_z-1}(z-z_p)
+\end{align*}
+involving univariant scaled splines of the form $S_h^d(x)=\frac 1h S^d(\frac{x}{h})$. The scaled splines transform the properties of the B-spline $S^d$
+with $h=1$ to equidistant grids with $h\neq1$. 
 
-    \subsection{Node and cell splines at particle positions}
+The cardinal B-spline of degree $d$ which is centered around can be defined
+recursively using the following convolution
+\begin{align*}
+S^d(x) &= S^0 * S^{d-1} (x) = \int_{-\frac{1}{2}}^{\frac{1}{2}} S^{d-1} (x-x') \dd x'
+\end{align*}
+with 
+\begin{align*}
+S^0(x) &= \begin{cases}
+     1  &\text{ if } ~ -\frac{1}{2} \leq x \leq \frac{1}{2} \\ 
+     0 & \text{ else} 
+          \end{cases}
+\end{align*}
+\paragraph{Properties of the cardinal B-spline}
+\begin{itemize}
+    \item The cardinal splines are even ($S^d(x) = S^d(-x)$)
+    \item The support of $S^d$ is $\left[-\frac{d+1}{2},\frac{d+1}{2}\right]$
+    \item The support of $S^d_h$ is $\left[-\frac{d+1}{2}h,\frac{d+1}{2}h\right]$ 
+    \item Both the
+    reference and scaled cardinal splines have unit integral:
+    $$ \int_{-\infty}^{\infty} S^d(x) \dd x = \int_{-\infty}^{\infty} S_h^d(x) \dd x = 1$$
+    \item Denoting grid nodes by $x_i = ih$, the scaled cardinal B-spline verifies
+    \begin{equation} \label{splinerel}
+        \int_{x_{i-\frac{1}{2}}}^{x_{i+\frac{1}{2}}} S_h^{d-1}(x-x_p)\dd x = hS_h^d(x_i-x_p) = S^d\Big(\frac {x_i-x_p}{h}\Big)
+    \end{equation}
+\end{itemize}
 
-    The coupling scheme then involves two kinds of univariate B-splines, evaluated at particle positions:
-    \begin{itemize}
-        
-        \item \textbf{node splines} centered on grid nodes, of the form
-        $$ 
-        S^\node_i(x_p) := S^d \Big(\frac{x_p-x_i}{h}\Big)
-        $$
-        This spline is supported on the interval $\left[x_i -\frac{(d+1)h}{2}, x_i + \frac{(d+1)h}{2} \right]$,
-        and its values are independent of the grid size.
+\subsection{Node and cell splines at particle positions}
 
-        \item \textbf{cell splines} centered on cell midpoints, of the form
-        $$ 
-        S^\cell_i(x_p) := \frac 1h S^{d-1}\Big(\frac{x_p - x_\iph}{h}\Big)
-        $$
-        This spline is centered on the supported on the interval $\left[x_\iph -\frac{dh}{2}, x_\iph + \frac{dh}{2} \right]$,
-        and its cell-integrals are independent of the grid size.
-
-    \end{itemize}
-    These splines naturally appear in the variational scheme since the above relation \eqref{splinerel} implies that 
-    the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell (resp. node) spline evaluated at the particle position.
-
-
-    \subsection{Reduction of particle splines}
-
-    The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. 
-    Specifically, dual geometric degrees of freedom are products of univariate cell and node splines evaluated at the particles:
-    $$
-    \begin{aligned}
-        \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
-        \tcR_1(\mathbf{e}_x S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
-        \tcR_1(\mathbf{e}_y S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
-        \tcR_1(\mathbf{e}_z S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
-        \tcR_2(\mathbf{e}_x S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p)\\
-        \tcR_2(\mathbf{e}_y S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
-        \tcR_2(\mathbf{e}_z S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &= S^\node_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
-        \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k}                &= S^\node_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p).
-    \end{aligned}
-    $$
-
-    \subsection{Smoothed particle quantities}
-
-    The smoothed particle distribution function is of the form
-    $$ 
-    f(t,\mathbf{x},\mathbf{v}) = \sum_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t))\delta (\mathbf{v}-\mathbf{v}_p(t)).
-    $$
-    It follows that the particle charge and current densities are respectively
-    $$
-    \rho(t,\mathbf{x}) = \sum_p q_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t)), ~~~~ \bJ(t,\mathbf{x}) = \sum_p q_p w_p \mathbf{v}_p(t) S_h(\mathbf{x}-\mathbf{x}_p(t)).
-    $$
-    In the GEMPIC theory, these two densities play the role of Maxwell source terms through their dual degrees of freedom 
-    on the grid.
+The coupling scheme then involves two kinds of univariate B-splines, evaluated at particle positions:
+\begin{itemize}
     
-    Specifically, the particle charge density $\rho$ is represented as a 3-form on the dual mesh which is 
-    characterized by the dual cell integrals $\tilde{\arr{\rho}} = \tcR_3(\rho)$ in $\tilde{ \cC}_3$,
-    By linearity of the reduction operators, these degrees of freedom %(the dual cell integrals) 
-    read %of $\rho$, which are its coefficients in $\tilde{ \cC}_3$, are 
+    \item \textbf{node splines} centered on grid nodes, of the form
+    $$ 
+    S^\node_i(x_p) := S^d \Big(\frac{x_p-x_i}{h}\Big)
     $$
-    \tilde{\arr{\rho}}_{i,j,k}(t) := \tcR_3(\rho(t))_{i,j,k}
-    = \sum_p q_p w_p S^\node_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\node_k(z_p(t)).
-    $$
-    As for the particle current density $\bJ$, it is represented as a 2-form on the dual mesh. 
-    Thus it is characterized 
-    by its fluxes through all the faces of the mesh, gathered in the vector 
-    $\tilde{\arrJ} = \tcR_2( \mathbf{J})$ in $\tilde{ \cC}_2$. These coefficients read
-        % imilarly the coefficients of $\mathbf{J}$ in $\tilde{ \cC}_2$ are 
-    $$
-    \begin{aligned}
-    \tilde{\arrJ}_{\iph,j,k}(t) &:= \tcR_2( \mathbf{J}(t))_{\iph,j,k} = \sum_p q_p w_p v_{p,x}(t) S^\cell_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\node_k(z_p(t)) \\ 
-    \tilde{\arrJ}_{i,\jph,k}(t) &:= \tcR_2( \mathbf{J}(t))_{i,\jph,k} =\sum_p q_p w_p v_{p,y}(t) S^\node_i(x_p(t))\, S^\cell_j(y_p(t)) \,S^\node_k(z_p(t)) \\
-    \tilde{\arrJ}_{i,j,\kph}(t) &:= \tcR_2( \mathbf{J}(t))_{i,j,\kph} = \sum_p q_p w_p v_{p,z}(t) S^\node_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\cell_k(z_p(t)) \\
-    \end{aligned}
-    $$
-    which correspond respectively to the three components of $\mathbf{J}$, i.e.  $J_x$, $J_y$, $J_z$ 
+    This spline is supported on the interval $\left[x_i -\frac{(d+1)h}{2}, x_i + \frac{(d+1)h}{2} \right]$,
+    and its values are independent of the grid size.
 
-    \subsection{Smoothed electromagnetic fields}
+    \item \textbf{cell splines} centered on cell midpoints, of the form
+    $$ 
+    S^\cell_i(x_p) := \frac 1h S^{d-1}\Big(\frac{x_p - x_\iph}{h}\Big)
+    $$
+    This spline is centered on the supported on the interval $\left[x_\iph -\frac{dh}{2}, x_\iph + \frac{dh}{2} \right]$,
+    and its cell-integrals are independent of the grid size.
+
+\end{itemize}
+These splines naturally appear in the variational scheme since the above relation \eqref{splinerel} implies that 
+the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell (resp. node) spline evaluated at the particle position.
+
+
+\subsection{Reduction of particle splines}
+
+The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. 
+Specifically, dual geometric degrees of freedom are products of univariate cell and node splines evaluated at the particles:
+$$
+\begin{aligned}
+    \tcR_0(S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,\kph} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
+    \tcR_1(\mathbf{e}_x S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,\kph} &= S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\cell_k(z_p)\\
+    \tcR_1(\mathbf{e}_y S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,\kph} &= S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
+    \tcR_1(\mathbf{e}_z S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,\jph,k} &= S^\cell_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
+    \tcR_2(\mathbf{e}_x S_h(\mathbf{x}-\mathbf{x}_p))_{\iph,j,k} &= S^\cell_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p)\\
+    \tcR_2(\mathbf{e}_y S_h(\mathbf{x}-\mathbf{x}_p))_{i,\jph,k} &= S^\node_i(x_p)\,S^\cell_j(y_p) \, S^\node_k(z_p)\\
+    \tcR_2(\mathbf{e}_z S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,\kph} &= S^\node_i(x_p)\,S^\node_j(y_p) \, S^\cell_k(z_p)\\
+    \tcR_3(S_h(\mathbf{x}-\mathbf{x}_p))_{i,j,k}                &= S^\node_i(x_p)\,S^\node_j(y_p) \, S^\node_k(z_p).
+\end{aligned}
+$$
+
+\subsection{Smoothed particle quantities}
+
+The smoothed particle distribution function is of the form
+$$ 
+f(t,\mathbf{x},\mathbf{v}) = \sum_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t))\delta (\mathbf{v}-\mathbf{v}_p(t)).
+$$
+It follows that the particle charge and current densities are respectively
+$$
+\rho(t,\mathbf{x}) = \sum_p q_p w_p S_h(\mathbf{x}-\mathbf{x}_p(t)), ~~~~ \bJ(t,\mathbf{x}) = \sum_p q_p w_p \mathbf{v}_p(t) S_h(\mathbf{x}-\mathbf{x}_p(t)).
+$$
+In the GEMPIC theory, these two densities play the role of Maxwell source terms through their dual degrees of freedom 
+on the grid.
+
+Specifically, the particle charge density $\rho$ is represented as a 3-form on the dual mesh which is 
+characterized by the dual cell integrals $\tilde{\arr{\rho}} = \tcR_3(\rho)$ in $\tilde{ \cC}_3$,
+By linearity of the reduction operators, these degrees of freedom %(the dual cell integrals) 
+read %of $\rho$, which are its coefficients in $\tilde{ \cC}_3$, are 
+$$
+\tilde{\arr{\rho}}_{i,j,k}(t) := \tcR_3(\rho(t))_{i,j,k}
+= \sum_p q_p w_p S^\node_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\node_k(z_p(t)).
+$$
+As for the particle current density $\bJ$, it is represented as a 2-form on the dual mesh. 
+Thus it is characterized 
+by its fluxes through all the faces of the mesh, gathered in the vector 
+$\tilde{\arrJ} = \tcR_2( \mathbf{J})$ in $\tilde{ \cC}_2$. These coefficients read
+    % imilarly the coefficients of $\mathbf{J}$ in $\tilde{ \cC}_2$ are 
+$$
+\begin{aligned}
+\tilde{\arrJ}_{\iph,j,k}(t) &:= \tcR_2( \mathbf{J}(t))_{\iph,j,k} = \sum_p q_p w_p v_{p,x}(t) S^\cell_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\node_k(z_p(t)) \\ 
+\tilde{\arrJ}_{i,\jph,k}(t) &:= \tcR_2( \mathbf{J}(t))_{i,\jph,k} =\sum_p q_p w_p v_{p,y}(t) S^\node_i(x_p(t))\, S^\cell_j(y_p(t)) \,S^\node_k(z_p(t)) \\
+\tilde{\arrJ}_{i,j,\kph}(t) &:= \tcR_2( \mathbf{J}(t))_{i,j,\kph} = \sum_p q_p w_p v_{p,z}(t) S^\node_i(x_p(t))\, S^\node_j(y_p(t)) \,S^\cell_k(z_p(t)) \\
+\end{aligned}
+$$
+which correspond respectively to the three components of $\mathbf{J}$, i.e.  $J_x$, $J_y$, $J_z$ 
+
+\subsection{Smoothed electromagnetic fields}
 
 The discrete electric field $\bE$ is characterized by its integrals on the edges of the primal grid, % denoted by $\arrE$, where 
 \begin{itemize}

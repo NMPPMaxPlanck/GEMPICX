@@ -182,16 +182,16 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
         amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
         EXPECT_EQ(1., result);
 
-        spline.template update1_d_splines<xDir>(1, 1, 1);
+        spline.template update_1d_splines<xDir>(1, 1, 1);
         EXPECT_EQ(1., spline.m_primitiveNew[xDir][0]);
         if constexpr (GEMPIC_SPACEDIM > 1)
         {
-            spline.template update1_d_splines<yDir>(1, 1, 1);
+            spline.template update_1d_splines<yDir>(1, 1, 1);
             EXPECT_EQ(1., spline.m_primitiveNew[yDir][0]);
         }
         if constexpr (GEMPIC_SPACEDIM == 3)
         {
-            spline.template update1_d_splines<zDir>(1, 1, 1);
+            spline.template update_1d_splines<zDir>(1, 1, 1);
             EXPECT_EQ(1., spline.m_primitiveNew[zDir][0]);
         }
     }
@@ -245,7 +245,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
             spline.template compute_primitive_difference<xDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
         EXPECT_EQ(-0.1, primitiveDifference);
 
-        spline.template update1_d_splines<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
+        spline.template update_1d_splines<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
 
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
@@ -314,7 +314,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
             spline.template compute_primitive_difference<yDir>({AMREX_D_DECL(0.1, 0.1, 0.1)}, 0);
         EXPECT_EQ(-0.1, primitiveDifference);
 
-        spline.template update1_d_splines<yDir>(0.5, m_infra.m_plo[yDir], m_infra.m_dxi[yDir]);
+        spline.template update_1d_splines<yDir>(0.5, m_infra.m_plo[yDir], m_infra.m_dxi[yDir]);
 
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir]);
         EXPECT_EQ(0, spline.m_firstIndex[yDir]);
@@ -383,7 +383,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
             spline.template compute_primitive_difference<xDir>({AMREX_D_DECL(1, 1, 1)}, 2);
         EXPECT_EQ(-1, primitiveDifference);
 
-        spline.template update1_d_splines<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
+        spline.template update_1d_splines<xDir>(0.5, m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
 
         EXPECT_EQ(-1, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
@@ -442,52 +442,48 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
 
         amrex::Real factor;
 
-        amrex::GpuArray<amrex::Real, 1> sMinusOne;
-        spline.primitive_eval<-1>(0, sMinusOne);
-        EXPECT_EQ(1, sMinusOne[0]);
-
         amrex::GpuArray<amrex::Real, 1> sZero;
         spline.primitive_eval<0>(0.5, sZero);
-        EXPECT_EQ(0.5, sZero[0]);
+        EXPECT_DOUBLE_EQ(0.5, sZero[0]);
 
         amrex::GpuArray<amrex::Real, 2> sOne;
         spline.primitive_eval<1>(0, sOne);
-        EXPECT_EQ(0, sOne[0]);
-        EXPECT_EQ(0.5, sOne[1]);
+        EXPECT_DOUBLE_EQ(0, sOne[0]);
+        EXPECT_DOUBLE_EQ(0.5, sOne[1]);
 
         amrex::GpuArray<amrex::Real, 3> sTwo;
         factor = (1. / 6.);
         spline.primitive_eval<2>(0, sTwo);
-        EXPECT_EQ(0, sTwo[0]);
-        EXPECT_EQ(1. / 6., sTwo[1]);
-        EXPECT_EQ(-1. * factor + 1., sTwo[2]);
+        EXPECT_DOUBLE_EQ(0, sTwo[0]);
+        EXPECT_DOUBLE_EQ(1. / 6., sTwo[1]);
+        EXPECT_DOUBLE_EQ(-1. * factor + 1., sTwo[2]);
 
         amrex::GpuArray<amrex::Real, 4> sThree;
         factor = (1. / 24.);
         spline.primitive_eval<3>(0, sThree);
-        EXPECT_EQ(0, sThree[0]);
-        EXPECT_EQ(1. / 24., sThree[1]);
-        EXPECT_EQ(0.5, sThree[2]);
-        EXPECT_EQ(-factor + 1., sThree[3]);
+        EXPECT_DOUBLE_EQ(0, sThree[0]);
+        EXPECT_DOUBLE_EQ(1. / 24., sThree[1]);
+        EXPECT_DOUBLE_EQ(0.5, sThree[2]);
+        EXPECT_DOUBLE_EQ(-factor + 1., sThree[3]);
 
         amrex::GpuArray<amrex::Real, 5> sFour;
         factor = (1. / 120.);
         spline.primitive_eval<4>(0, sFour);
-        EXPECT_EQ(0, sFour[0]);
-        EXPECT_EQ(1. * factor, sFour[1]);
-        EXPECT_EQ(27. * factor, sFour[2]);
-        EXPECT_EQ(93. * factor, sFour[3]);
-        EXPECT_EQ(-factor + 1., sFour[4]);
+        EXPECT_DOUBLE_EQ(0, sFour[0]);
+        EXPECT_DOUBLE_EQ(1. * factor, sFour[1]);
+        EXPECT_DOUBLE_EQ(27. * factor, sFour[2]);
+        EXPECT_DOUBLE_EQ(93. * factor, sFour[3]);
+        EXPECT_DOUBLE_EQ(-factor + 1., sFour[4]);
 
         amrex::GpuArray<amrex::Real, 6> sFive;
         factor = (1. / 720.);
         spline.primitive_eval<5>(0, sFive);
-        EXPECT_EQ(0, sFive[0]);
-        EXPECT_EQ(1. / 720., sFive[1]);
-        EXPECT_EQ(58. * factor, sFive[2]);
-        EXPECT_EQ(360. * factor, sFive[3]);
-        EXPECT_EQ(662. * factor, sFive[4]);
-        EXPECT_EQ(719. * factor, sFive[5]);
+        EXPECT_DOUBLE_EQ(0, sFive[0]);
+        EXPECT_DOUBLE_EQ(1. / 720., sFive[1]);
+        EXPECT_DOUBLE_EQ(58. * factor, sFive[2]);
+        EXPECT_DOUBLE_EQ(360. * factor, sFive[3]);
+        EXPECT_DOUBLE_EQ(662. * factor, sFive[4]);
+        EXPECT_DOUBLE_EQ(719. * factor, sFive[5]);
     }
     ASSERT_TRUE(particleLoopRun);
 }

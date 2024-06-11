@@ -57,7 +57,7 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
                            ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ> spline{
                                posStart, infra.m_plo, infra.m_dxi};
 
-                           spline.template update1_d_splines<pDir>(xEnd, infra.m_plo[xDir],
+                           spline.template update_1d_splines<pDir>(xEnd, infra.m_plo[xDir],
                                                                    infra.m_dxi[xDir]);
 
                            ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(
