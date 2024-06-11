@@ -14,6 +14,7 @@ CMakeUserPresets.json
 # IDE Specific Excludes
 .vscode/
 .idea/
+.venv
 
 # Non Source Directories
 *build*/**

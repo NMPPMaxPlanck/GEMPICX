@@ -1,6 +1,8 @@
 #ifndef SPLINE_CLASS_
 #define SPLINE_CLASS_
 
+#include "GEMPIC_BSpline.H"
+
 namespace Gempic::ParticleMeshCoupling
 {
 namespace Impl
@@ -15,87 +17,71 @@ enum class PrimitiveDifferenceRegion
 }  //namespace Impl
 
 /**
- * @brief Objects of this class will carry the information of all non-vanishing grid B-splines on a
- * given particle position
+ * @brief Implementation of the B-Splines based on the description given
+ *   in @verbatim embed:rst:inline :ref:`Particle-Mesh Coupling` @endverbatim
  *
- * Description:
- * Two types of univariate B-splines are involved:
  *
- *  - "node splines" (centered on integer nodes) defined as
+ * @details Calculate and store "node", "cell" spline values for every
+ *          degree of freedom which has non vanishing support for a given degree at
+ *          \f$(x_p,y_p,z_p)\f$, which is an arbitrary reference position
+ *          (e.g. particle coordinate).
+ *          The implemented tensor product spline function is
+ *          @f[
+ *          S^{degX}(x - x_p)S^{degY}(y - y_p)S^{degY}(z - z_p).
+ *          @f]
+ *          which has a symmetric support around the reference position.
  *
- *    \f$ \mathrm{nodeS}_i( x ) := \mathrm{ref}_{S_{degX}}( (x - nx_i)/dx )  \f$
+ *          For every Direction which GEMPIC was compiled for an object of the class
+ *          stores the values:
  *
- *  - "cell splines" (centered on cell mid-points) defined as
+ *          - \f$ \{\mathrm{S}^{\mathrm{cell}}_{i}(x_p)\} \f$ in @link m_cellSplineVals @endlink
+ *          - \f$ \{\mathrm{S}^{\mathrm{node}}_{i}(x_p)\} \f$ in @link m_nodeSplineVals @endlink
  *
- *    \f$ \mathrm{cellS}_i( x ) := (1/dx) * \mathrm{ref}_{S_{degX-1}}( (x - nx_{i+1/2})/dx ) \f$
+ *          where \f$ \{i\} \f$ are the sets of the degrees of which contribute to the
+ *          particle position \f$x_p\f$ with a non vanishing support. More details on the
+ *          support of "cell" and "node" splines can be found in the documentation page
+ *          @verbatim embed:rst:inline :ref:`Particle-Mesh Coupling` @endverbatim.
  *
- * where:
+ *         Additionally, this class implements the reduction operators \f$\tilde{\mathcal{R}} \f$
+ *         defined in @verbatim embed:rst:inline :ref:`Particle-Mesh Coupling` @endverbatim
  *
- *  - \f$ \mathrm{ref}_{S_{deg}} \f$ is the (symmetric, centered) cardinal B-spline of degree deg
- * with support [-(deg+1)/2, (deg+1)/2]
- *  - dx is the cell size (in the relevant direction)
- *  - \f$ nx_i \f$ = (plo + i * dx) is the i-th grid node (in the relevant direction)
  *
- * These splines obtained by applying the dual node- and cell- reduction operators
- * (corresponding to \f$ t_{R0} \f$ and \f$ t_{R1} \f$ in 1D) to the "particle spline"
- *
- *    \f$ \mathrm{partS}( x - x_p ) := (1/dx) * \mathrm{ref}_{S_{degX-1}}( (x - x_p)/dx ) \f$
- *
- * (centered at the particle, with support [\f$ x_p-degX/2 \f$, \f$ x_p+degX/2 \f$] and unit
- * integral), indeed:
- *
- *  - the reduction on a dual node yields a "cell spline" evaluated at the particle:
- *
- *      \f$ t_{R0_i}( \mathrm{partS}(x-x_p) ) = \mathrm{partS}( nx_{i+1/2} - x_p ) =
- * \mathrm{cellS}_i( x_p ) \f$
- *
- *  - the reduction on a dual cell yields a "node spline" evaluated at the particle:
- *
- *      \f$ t_{R1_i}( \mathrm{partS}(x-x_p) ) = \int_{nx_{i-1/2}}^{nx_{i+1/2}} \mathrm{partS}( x  -
- * x_p ) = \mathrm{nodeS}_i( x_p ) \f$
+ * ToDo: Extract the mappings between different spaces in the
+ * deRahm complex. Those are bloating the class.
  *
  * @tparam degX : degree of the node-spline in x-direction
  * @tparam degY : degree of the node-spline in y-direction
  * @tparam degZ : degree of the node-spline in z-direction
  */
-
 template <int degX, int degY, int degZ>
 class SplineBase
 {
 public:
     /**
-     * @brief Construct a new SplineBase object
-     *
-     * Description:
-     * for a given (particle) position \f$ xx_p \f$, this constructor computes the values of
-     *  - firstIndex[dir] for each direction (the index of the first splines contributing to \f$
-     xx_p \f$)
-     *  - cellSplineVals[dir] the array containing the non-zero values of cell splines at \f$ xx_p
-     \f$
-     *  - nodeSplineVals[dir] the array containing the non-zero values of node splines at \f$ xx_p
-     \f$
+     * @brief Constructor calculates the contribution of spline values at the degrees of freedom
      *
      * @param position : position of the particle
      * @param plo : low end of the problem domain
      * @param dxInverse : inverse of the cell size in all three directions x, y and z
 
      * @details Additional details about dxInverse
-     *  - dxInverse[xDir] == 1/dx
-     *  - dxInverse[yDir] == 1/dy
-     *  - dxInverse[zDir] == 1/dz
+     *  - dxInverse[Direction::xDir] == 1/dx
+     *  - dxInverse[Direction::yDir] == 1/dy
+     *  - dxInverse[Direction::zDir] == 1/dz
      *  - (Potentially dim < 3)
-     *  - dxInverse[GEMPIC_SPACEDIM] == dxInverse[xDir] * .. * dxInverse[GEMPIC_SPACEDIM-1]
+     *  - dxInverse[GEMPIC_SPACEDIM] == dxInverse[Direction::xDir] * .. *
+     dxInverse[GEMPIC_SPACEDIM-1]
     */
-
     AMREX_GPU_HOST_DEVICE SplineBase (
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
     {
         //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::SplineBase()");
-        AMREX_D_TERM((update1_d_splines<xDir>(position[xDir], plo[xDir], dxInverse[xDir]));
-                     , (update1_d_splines<yDir>(position[yDir], plo[yDir], dxInverse[yDir]));
-                     , (update1_d_splines<zDir>(position[zDir], plo[zDir], dxInverse[zDir])););
+        AMREX_D_TERM(
+            (update_1d_splines<Direction::xDir>(position[xDir], plo[xDir], dxInverse[xDir]));
+            , (update_1d_splines<Direction::yDir>(position[yDir], plo[yDir], dxInverse[yDir]));
+            , (update_1d_splines<Direction::zDir>(position[zDir], plo[zDir], dxInverse[zDir])););
     }
 
     /**
@@ -112,75 +98,51 @@ public:
      * @brief firstIndex[dir] is the index of the first spline(s) contributing at the particle
      * position, along direction dir
      *
-     * Description:
+     * @details
      *
-     * this array is computed in the function initBSplinesAtPositions: its values are such that we
-     * have
+     * - Contribution for node splines:
      *
-     *   \f$ S_i(x_p) > 0\f$ only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX
+     *   \f$ S_i(x) > 0 \f$ for i = firstIndex[Direction] .. firstIndex[Direction] + deg
      *
-     *   \f$ S_j(y_p) > 0\f$ only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY
+     * - Contribution for cell splines
      *
-     *   \f$ S_k(z_p) > 0\f$ only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ
-     *
-     * for S = nodeS and
-     *
-     *   \f$ S_i(x_p) > 0 \f$ only for  i = firstIndex[xDir] .. firstIndex[xDir] + degX - 1
-     *
-     *   \f$ S_j(y_p) > 0 \f$ only for  j = firstIndex[yDir] .. firstIndex[yDir] + degY - 1
-     *
-     *   \f$ S_k(z_p) > 0 \f$ only for  k = firstIndex[zDir] .. firstIndex[zDir] + degZ - 1
-     *
-     * for S = cellS
+     *   \f$ S_i(x) > 0 \f$ for i = firstIndex[Direction] .. firstIndex[Direction] + deg - 1
      */
     amrex::GpuArray<int, GEMPIC_SPACEDIM> m_firstIndex;
 
     /**
-     * @brief Values of cell-splines at the particle position
+     * @brief Values of a cell spline at the degrees of freedom to a particle position \f$ x_p \f$
      *
-     * Description:
-     *
-     * this array is computed in the function update1DSplines,
-     * it will store the values of the univariate cell-splines at the particle position:
-     *
-     *   cellSplineVals[xDir][i] = \f$ \mathrm{cellS}_{\mathrm{firstIndex[xDir]}+i}(x_p) \f$ for  i
-     * = 0 .. degX - 1
-     *
-     *   cellSplineVals[yDir][j] = \f$ \mathrm{cellS}_{\mathrm{firstIndex[yDir]}+j}(y_p) \f$ for  j
-     * = 0 .. degY - 1
-     *
-     *   cellSplineVals[zDir][k] = \f$ \mathrm{cellS}_{\mathrm{firstIndex[zDir]}+k}(z_p) \f$ for  k
-     * = 0 .. degZ - 1
-     *
-     * where cellS is the univariate cell spline defined in the Class docstring
+     * @details m_cellSplineVals[Direction][i] = \f$
+     * \mathrm{S}^{\mathrm{cell}}_{\mathrm{firstIndex[Direction]}+i}(x_p) \f$ for  i = 0 .. deg - 1
+     * when called with
+     *  - degree = degX
+     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
+     * this class computes
+     *  s[i] = \f$ \mathrm{S}^{degX}\f$(firstIndex[dir] - (\f$ x_p \f$ - plo)/dx + i) = \f$
+     * \mathrm{S}^{\mathrm{node}}_i(x_p) \f$
      */
     amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg>, GEMPIC_SPACEDIM> m_cellSplineVals;
 
     /**
-     * @brief Values of node-splines at the particle position
+     * @brief Values of a node spline at the degrees of freedom to a particle position \f$ x_p \f$
      *
-     * Description:
-     *
-     * this array is computed in the function update1DSplines,
-     * it will store the values of the univariate cell-splines at the particle position:
-     *
-     *   nodeSplineVals[xDir][i] = \f$ \mathrm{nodeS}_{\mathrm{firstIndex[xDir]}+i}(x_p) \f$ for  i
-     * = 0 .. degX
-     *
-     *   nodeSplineVals[yDir][j] = \f$ \mathrm{nodeS}_{\mathrm{firstIndex[yDir]}+j}(y_p) \f$ for  j
-     * = 0 .. degY
-     *
-     *   nodeSplineVals[zDir][k] = \f$ \mathrm{nodeS}_{\mathrm{firstIndex[zDir]}+k}(z_p) \f$ for  k
-     * = 0 .. degZ
-     *
-     * where nodeS is the univariate cell spline defined in the Class docstring
+     * @details nodeSplineVals[Direction][i] = \f$
+     * \mathrm{S}^{node}_{\mathrm{firstIndex[Direction]}+i}(x_p) \f$ for  i = 0 .. deg
+     * when called with
+     *  - degree = degX-1
+     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
+     * this class computes
+     *  s[i] = \f$ S^{degX-1}\f$(firstIndex[dir] + 1/2 - (\f$ x_p \f$ - plo)/dx + i)
+     * = dx * \f$ \mathrm{S}^{\mathrm{cell}}_{i}(x_p) \f$
      */
     amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg + 1>, GEMPIC_SPACEDIM> m_nodeSplineVals;
 
     /**
+     * //ToDo either change members and do not return anything or return something and be const.
      * @brief Compute the first spline index and the offset for a given particle position
      *
-     * Description:
+     * @details
      * Given a particle position \f$ x_p \f$ in the given direction dir, this function computes:
      *  - firstIndex[dir] : the index of the first contributing spline (see above):
      * and
@@ -192,7 +154,7 @@ public:
      * will be used in the function splineEval to compute the values of the node- and cell-splines
      * at \f$ x_p \f$
      *
-     * @tparam dir : the direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir : the direction in which to compute
      *
      * @param position : position of the particle
      * @param plo : low end of the problem domain
@@ -215,25 +177,23 @@ public:
     }
 
     /**
-     * @brief sets the values of the contributing cell- and node-splines at the given particle
-     * position
+     * @brief Set the values of the contributing cell- and node-splines for the position \f$ x_p \f$
      *
-     * Description:
-     * after this function call, the values of cellSplineVals[dir][i] and nodeSplineVals[dir][i]
-     * are set for i = 0 .. deg, according to their documentation above
+     * @details Set cellSplineVals and nodeSplineVals for the direction according to their
+     * documentation
      *
-     * @tparam dir : the direction in which to compute: xDir, yDir, zDir
+     * @tparam dir : the direction in which to compute: Direction::xDir, Direction::yDir,
+     * Direction::zDir
      *
      * @param position Current position of the particle
      * @param plo : low end of the problem domain
      * @param dxInverseDir : inverse of the cell size in the given direction
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update1_d_splines (const amrex::Real position,
+    AMREX_GPU_HOST_DEVICE void update_1d_splines (const amrex::Real position,
                                                   const amrex::Real plo,
                                                   const amrex::Real dxInverseDir)
     {
-        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::update1_d_splines()");
         const amrex::Real refOffset = init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
         constexpr int deg{s_splineDegrees[dir]};
@@ -285,38 +245,44 @@ public:
                       "Function called with primal form, or superfluous direction supplied.");
         if constexpr (form == Field::DualTwoForm)
         {
-            if constexpr (dir == xDir)
+            if constexpr (dir == Direction::xDir)
             {
-                return GEMPIC_D_MULT(m_cellSplineVals[xDir][i], m_nodeSplineVals[yDir][j],
-                                     m_nodeSplineVals[zDir][k]);
+                return GEMPIC_D_MULT(m_cellSplineVals[Direction::xDir][i],
+                                     m_nodeSplineVals[Direction::yDir][j],
+                                     m_nodeSplineVals[Direction::zDir][k]);
             }
-            else if constexpr (dir == yDir)
+            else if constexpr (dir == Direction::yDir)
             {
-                return GEMPIC_D_MULT(m_nodeSplineVals[xDir][i], m_cellSplineVals[yDir][j],
-                                     m_nodeSplineVals[zDir][k]);
+                return GEMPIC_D_MULT(m_nodeSplineVals[Direction::xDir][i],
+                                     m_cellSplineVals[Direction::yDir][j],
+                                     m_nodeSplineVals[Direction::zDir][k]);
             }
-            else if constexpr (dir == zDir)
+            else if constexpr (dir == Direction::zDir)
             {
-                return GEMPIC_D_MULT(m_nodeSplineVals[xDir][i], m_nodeSplineVals[yDir][j],
-                                     m_cellSplineVals[zDir][k]);
+                return GEMPIC_D_MULT(m_nodeSplineVals[Direction::xDir][i],
+                                     m_nodeSplineVals[Direction::yDir][j],
+                                     m_cellSplineVals[Direction::zDir][k]);
             }
         }
         else if constexpr (form == Field::DualOneForm)
         {
-            if constexpr (dir == xDir)
+            if constexpr (dir == Direction::xDir)
             {
-                return GEMPIC_D_MULT(m_nodeSplineVals[xDir][i], m_cellSplineVals[yDir][j],
-                                     m_cellSplineVals[zDir][k]);
+                return GEMPIC_D_MULT(m_nodeSplineVals[Direction::xDir][i],
+                                     m_cellSplineVals[Direction::yDir][j],
+                                     m_cellSplineVals[Direction::zDir][k]);
             }
-            else if constexpr (dir == yDir)
+            else if constexpr (dir == Direction::yDir)
             {
-                return GEMPIC_D_MULT(m_cellSplineVals[xDir][i], m_nodeSplineVals[yDir][j],
-                                     m_cellSplineVals[zDir][k]);
+                return GEMPIC_D_MULT(m_cellSplineVals[Direction::xDir][i],
+                                     m_nodeSplineVals[Direction::yDir][j],
+                                     m_cellSplineVals[Direction::zDir][k]);
             }
-            else if constexpr (dir == zDir)
+            else if constexpr (dir == Direction::zDir)
             {
-                return GEMPIC_D_MULT(m_cellSplineVals[xDir][i], m_cellSplineVals[yDir][j],
-                                     m_nodeSplineVals[zDir][k]);
+                return GEMPIC_D_MULT(m_cellSplineVals[Direction::xDir][i],
+                                     m_cellSplineVals[Direction::yDir][j],
+                                     m_nodeSplineVals[Direction::zDir][k]);
             }
         }
     }
@@ -329,13 +295,15 @@ public:
                       "Function called with primal form, or no direction supplied.");
         if constexpr (form == Field::DualThreeForm)
         {
-            return GEMPIC_D_MULT(m_nodeSplineVals[xDir][i], m_nodeSplineVals[yDir][j],
-                                 m_nodeSplineVals[zDir][k]);
+            return GEMPIC_D_MULT(m_nodeSplineVals[Direction::xDir][i],
+                                 m_nodeSplineVals[Direction::yDir][j],
+                                 m_nodeSplineVals[Direction::zDir][k]);
         }
         else if constexpr (form == Field::DualZeroForm)
         {
-            return GEMPIC_D_MULT(m_cellSplineVals[xDir][i], m_cellSplineVals[yDir][j],
-                                 m_cellSplineVals[zDir][k]);
+            return GEMPIC_D_MULT(m_cellSplineVals[Direction::xDir][i],
+                                 m_cellSplineVals[Direction::yDir][j],
+                                 m_cellSplineVals[Direction::zDir][k]);
         }
     }
 
@@ -343,10 +311,8 @@ public:
      * @brief Compute the value of the spline-smoothed field at a particle position, from its l-form
      * coefficients
      *
-     * Description:
-     *
-     * Given a primal l-form (l = 1 or 2) field with coefficients (edge or face dofs) \f$ F_{ijk}
-     * \f$ this function computes the value of the spline-smoothed field at \f$ xx_p: \f$
+     * @details Given a primal l-form (l = 1 or 2) field with coefficients (edge or face dofs) \f$
+     * F_{ijk} \f$ this function computes the value of the spline-smoothed field at \f$ xx_p: \f$
      *
      * \f$ F^S(xx_p) = \sum_d (e_d * \sum_{ijk} F_{ijk} * t_{R\{3-l\}_{ijk}}(e_d *
      * \mathrm{partS}(xx-xx_p))) \f$
@@ -409,9 +375,9 @@ public:
         GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                             for (int kk = 0; kk <= degZ; ++kk))
             const amrex::Dim3 cellIndex =
-                (amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[xDir] + ii,
-                                             this->m_firstIndex[yDir] + jj,
-                                             this->m_firstIndex[zDir] + kk)})
+                (amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
+                                             this->m_firstIndex[Direction::yDir] + jj,
+                                             this->m_firstIndex[Direction::zDir] + kk)})
                     .dim3();
 
             // Ensure that we only access existing elements of cellSplineVals
@@ -425,9 +391,10 @@ public:
             }
             if (xCond)
             {
-                const amrex::Real sCoeff = eval_b_spline<complement_form<form>(), xDir>(ii, jj, kk);
-                fields[xDir] +=
-                    sCoeff * (fieldArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+                const amrex::Real sCoeff =
+                    eval_b_spline<complement_form<form>(), Direction::xDir>(ii, jj, kk);
+                fields[Direction::xDir] += sCoeff * (fieldArray[Direction::xDir])(
+                                                        cellIndex.x, cellIndex.y, cellIndex.z, 0);
             }
 
             if constexpr (vDim > 1)
@@ -444,9 +411,10 @@ public:
                 if (yCond)
                 {
                     const amrex::Real sCoeff =
-                        eval_b_spline<complement_form<form>(), yDir>(ii, jj, kk);
-                    fields[yDir] +=
-                        sCoeff * (fieldArray[yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+                        eval_b_spline<complement_form<form>(), Direction::yDir>(ii, jj, kk);
+                    fields[Direction::yDir] +=
+                        sCoeff *
+                        (fieldArray[Direction::yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
                 }
             }
             if constexpr (vDim == 3)
@@ -463,9 +431,10 @@ public:
                 if (zCond)
                 {
                     const amrex::Real sCoeff =
-                        eval_b_spline<complement_form<form>(), zDir>(ii, jj, kk);
-                    fields[zDir] +=
-                        sCoeff * (fieldArray[zDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+                        eval_b_spline<complement_form<form>(), Direction::zDir>(ii, jj, kk);
+                    fields[Direction::zDir] +=
+                        sCoeff *
+                        (fieldArray[Direction::zDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
                 }
             }
         GEMPIC_D_LOOP_END
@@ -476,26 +445,9 @@ public:
     /**
      * @brief Compute and store the values of the cardinal spline at regular values x+i
      *
-     * Description:
-     *
-     * given 0 <= xRef < 1, compute and store the values
-     *   \f$ s[i] = \mathrm{ref}_{S_{degree}}(x+i-(deg+1)/2) \f$ for i = 0 .. degree
-     * where \f$ \mathrm{ref}_{S_{degree}} \f$ is the centered cardinal B-spline of given degree
-     * with support [-(degree+1)/2, (degree+1)/2]
-     *
-     * when called with
-     *  - degree = degX-1
-     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
-     * this function computes
-     *  s[i] = \f$ \mathrm{ref}_{S_{degX-1}}\f$(firstIndex[dir] + 1/2 - (\f$ x_p \f$ - plo)/dx + i)
-     * = dx * \f$ \mathrm{cellS}_{i}(x_p) \f$
-     *
-     * when called with
-     *  - degree = degX
-     *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
-     * this function computes
-     *  s[i] = \f$ \mathrm{ref}_{S_{degX}}\f$(firstIndex[dir] - (\f$ x_p \f$ - plo)/dx + i) = \f$
-     * \mathrm{nodeS}_i(x_p) \f$
+     * @details Given 0 <= xRef < 1, compute and store the values \f$ s[i] =
+     * S^{degree}(x+i-(deg+1)/2) \f$ for i = 0 .. degree. Here \f$ S^{degree} \f$ is the centered
+     * cardinal B-spline of given degree with support [-(degree+1)/2, (degree+1)/2]
      *
      * @tparam degree : degree of the cardinal spline
      * @tparam length : length of the stored array
@@ -508,53 +460,7 @@ public:
     AMREX_GPU_HOST_DEVICE constexpr void spline_eval (const amrex::Real xRef,
                                                       amrex::GpuArray<amrex::Real, length> &s) const
     {
-        amrex::Real factor = 0;
-        switch (degree)
-        {
-            case 0:
-                s[0] = 1.;
-                break;
-            case 1:
-                s[0] = xRef;
-                s[1] = 1. - xRef;
-                break;
-            case 2:
-                s[0] = (xRef * xRef) * 0.5;
-                s[1] = (1. - xRef) * xRef + 0.5;
-                s[2] = ((xRef - 2.) * xRef + 1.) * 0.5;
-                break;
-            case 3:
-                factor = 1. / 6.;
-                s[0] = (xRef * xRef * xRef) * factor;
-                s[1] = (((-xRef + 1) * xRef + 1.) * 3. * xRef + 1.) * factor;
-                s[2] = ((3. * xRef - 6.) * xRef * xRef + 4.) * factor;
-                // s[3] = pow((1. - xRef), 3) * factor;
-                s[3] = (((-xRef + 3.) * xRef - 3.) * xRef + 1.) * factor;
-                break;
-            case 4:
-                factor = 1. / 24.;
-                s[0] = (xRef * xRef * xRef * xRef) * factor;
-                s[1] = ((((-xRef + 1.) * 4. * xRef + 6.) * xRef + 4.) * xRef + 1.) * factor;
-                s[2] = ((((6. * xRef - 12.) * xRef - 6.) * xRef + 12.) * xRef + 11.) * factor;
-                s[3] = ((((-4. * xRef + 12.) * xRef - 6.) * xRef - 12.) * xRef + 11.) * factor;
-                // s[4] = pow(1. - xRef, 4) * factor;
-                s[4] = ((((xRef - 4.) * xRef + 6.) * xRef - 4.) * xRef + 1.) * factor;
-                break;
-            case 5:
-                factor = 1. / 120.;
-
-                s[0] = (xRef * xRef * xRef * xRef * xRef) * factor;
-                s[1] = (((((-xRef + 1.) * xRef + 2.) * xRef + 2.) * xRef + 1.) * 5. * xRef + 1.) *
-                       factor;
-                s[2] = (((((xRef - 2.) * xRef - 2.) * xRef + 2.) * xRef + 5.) * 10. * xRef + 26.) *
-                       factor;
-                s[3] = (((-xRef + 3.) * xRef * xRef - 6.) * xRef * 10. * xRef + 66.) * factor;
-                s[4] = (((((xRef - 4.) * xRef + 4.) * xRef + 4.) * xRef - 10.) * 5. * xRef + 26.) *
-                       factor;
-                s[5] =
-                    (((((-xRef + 5.) * xRef - 10.) * xRef + 10.) * xRef - 5.) * xRef + 1.) * factor;
-                break;
-        }
+        s = cardinal_b_splines<degree, length>(xRef);
     }
     // NOLINTEND(readability-magic-numbers)
 };
@@ -584,9 +490,9 @@ public:
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
      * @details Additional details about xInverse
-     *  - dxInverse[xDir] == 1/dx
-     *  - dxInverse[yDir] == 1/dy
-     *  - dxInverse[zDir] == 1/dz
+     *  - dxInverse[Direction::xDir] == 1/dx
+     *  - dxInverse[Direction::yDir] == 1/dy
+     *  - dxInverse[Direction::zDir] == 1/dz
      *  - (Potentially dim < 3)
      *  - dxInverse[dim] == 1/(dx * dy * dz)
      */
@@ -661,7 +567,7 @@ public:
      * @param dxInverseDir : inverse of the cell size in the given direction
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update1_d_splines (const amrex::Real position,
+    AMREX_GPU_HOST_DEVICE void update_1d_splines (const amrex::Real position,
                                                   const amrex::Real plo,
                                                   const amrex::Real dxInverseDir)
     {
@@ -874,77 +780,7 @@ public:
     AMREX_GPU_HOST_DEVICE inline constexpr void primitive_eval (
         const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
     {
-        amrex::Real factor = 0;
-        switch (degree)
-        {
-            case -1:
-                s[0] = 1;
-                break;
-            case 0:
-                s[0] = xRef;
-                break;
-            case 1:
-                s[0] = (xRef * xRef) * 0.5;
-                s[1] = ((-xRef + 2.) * xRef + 1) * 0.5;
-                break;
-            case 2:
-                factor = (1. / 6.);
-                s[0] = (xRef * xRef * xRef) * factor;
-                s[1] = (((-2. * xRef + 3) * xRef + 3.) * xRef + 1.) * factor;
-                s[2] = (((-xRef + 3.) * xRef - 1.) * xRef - 1.) * factor + 1.;
-                break;
-            case 3:
-                factor = (1. / 24.);
-                s[0] = (xRef * xRef * xRef * xRef) * factor;
-                s[1] = -pow(xRef, 4) / 8. + pow(xRef, 3) / 6. + pow(xRef, 2) / 4. + xRef / 6. +
-                       1. / 24.;
-                s[2] = pow(xRef, 4) / 8. - pow(xRef, 3) / 3. + xRef * 2. / 3. + 0.5;
-                // s[3] = -pow((1. - xRef), 4) * factor + 1.;
-                s[3] = -((((xRef - 4.) * xRef + 6) * xRef - 4.) * xRef + 1) * factor + 1.;
-                break;
-            case 4:
-                factor = (1. / 120.);
-                s[0] = (xRef * xRef * xRef * xRef * xRef) * factor;
-                s[1] = (((((-4. * xRef + 5.) * xRef + 10.) * xRef + 10.) * xRef + 5.) * xRef + 1.) *
-                       factor;
-                s[2] =
-                    (((((6. * xRef - 15.) * xRef - 10.) * xRef + 30.) * xRef + 55.) * xRef + 27.) *
-                    factor;
-                s[3] =
-                    (((((-4. * xRef + 15.) * xRef - 10.) * xRef - 30.) * xRef + 55.) * xRef + 93.) *
-                    factor;
-                // s[4] = ((((xRef - 5.) * xRef + 8) * x*x - 5.) * xRef + 1.) * factor + 1.;
-                s[4] = -(((((-xRef + 5.) * xRef - 10.) * xRef + 10.) * xRef - 5.) * xRef + 1.) *
-                           factor +
-                       1.;
-                break;
-            case 5:
-                factor = (1. / 720.);
-                s[0] = pow(xRef, 6) * factor;
-                s[1] =
-                    ((((((-5. * xRef + 6.) * xRef + 15.) * xRef + 20.) * xRef + 15.) * xRef + 6.) *
-                         xRef +
-                     1.) *
-                    factor;
-                s[2] = ((((((10. * xRef - 24.) * xRef - 30.) * xRef + 40.) * xRef + 150.) * xRef +
-                         156.) *
-                            xRef +
-                        58.) *
-                       factor;
-                s[3] = ((((-10. * xRef + 36.) * xRef * xRef - 120.) * xRef * xRef + 396.) * xRef +
-                        360.) *
-                       factor;
-                s[4] = ((((((5. * xRef - 24.) * xRef + 30.) * xRef + 40.) * xRef - 150.) * xRef +
-                         156.) *
-                            xRef +
-                        662.) *
-                       factor;
-                s[5] = ((((((-xRef + 6.) * xRef - 15.) * xRef + 20.) * xRef - 15.) * xRef + 6.) *
-                            xRef +
-                        719.) *
-                       factor;
-                break;
-        }
+        s = cardinal_b_splines_primitive<degree, length>(xRef);
     }
     // NOLINTEND(readability-magic-numbers)
 };

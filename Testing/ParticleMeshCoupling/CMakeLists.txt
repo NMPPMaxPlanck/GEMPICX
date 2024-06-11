@@ -4,6 +4,7 @@ set(TMP_TEST_SOURCES
     EvaluateEField_test.cpp
     SplineBase_test.cpp
     SplineWithPrimitive_test.cpp
+    BSpline_test.cpp
     )
 if("${AMReX_SPACEDIM}" STREQUAL "3") # accumulate_J_integrate_B_test is not ready
   LIST(APPEND TMP_TEST_SOURCES AccumulateJIntegrateB_test.cpp)

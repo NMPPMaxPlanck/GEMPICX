@@ -291,7 +291,7 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
         EXPECT_CALL(spline, initBSplinesAtPositions(1, 1, 1)).WillOnce(::testing::Return(1));
 
         amrex::Real result = spline.initBSplinesAtPositions(1, 1, 1);
-        spline.template update1_d_splines<xDir>(1, 1, 1);
+        spline.template update_1d_splines<xDir>(1, 1, 1);
 
         EXPECT_EQ(1., result);
         EXPECT_EQ(1., spline.m_cellSplineVals[xDir][0]);
