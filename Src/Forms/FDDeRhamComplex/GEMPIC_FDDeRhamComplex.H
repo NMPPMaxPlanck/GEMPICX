@@ -5,6 +5,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Interpolation.H"
 
 namespace Gempic::Forms
 {
@@ -322,6 +323,47 @@ public:
                DeRhamField<Grid::dual, Space::cell>& threeForm,
                amrex::Real weight = 1.) override;
 
+    /**
+     * @brief Computes the Interpolation operator \f$I_0\f$
+     *
+     * Description:
+     * Using the geometric degrees of freedeom:
+     * Interpolates nodes of the primal grid using Lagrange polynomials of degree (dim - 1)
+     *
+     * @param field : DeRhamField<dual, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
+     * @param evalShift : amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>, point to be interpolated
+     *
+     * @return void
+     */
+    void eval_form(const DeRhamField<Grid::primal, Space::cell>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues) override;
+    void eval_form(const DeRhamField<Grid::dual, Space::cell>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues) override;
+    void eval_form(const DeRhamField<Grid::primal, Space::face>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues,
+                   Direction dir) override;
+    void eval_form(const DeRhamField<Grid::dual, Space::face>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues,
+                   Direction dir) override;
+    void eval_form(const DeRhamField<Grid::primal, Space::edge>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues,
+                   Direction dir) override;
+    void eval_form(const DeRhamField<Grid::dual, Space::edge>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues,
+                   Direction dir) override;
+    void eval_form(const DeRhamField<Grid::primal, Space::node>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues) override;
+    void eval_form(const DeRhamField<Grid::dual, Space::node>& field,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   amrex::MultiFab& pointValues) override;
+
 private:
     void hodge_scheme_selector(anyFieldConstRef f1, anyFieldRef f2, amrex::Real weight = 1.);
 
@@ -329,6 +371,35 @@ private:
     void hodge_degree_selector(anyFieldConstRef hodgeSrc,
                                anyFieldRef hodgeDst,
                                amrex::Real weight = 1.);
+
+    inline void eval_form_direction_selector (
+        anyFieldConstRef field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues,
+        Direction dir)
+    {
+        switch (dir)
+        {
+            case xDir:
+                this->eval_form_degree_selector<xDir>(field, evalShift, pointValues);
+                break;
+            case yDir:
+                this->eval_form_degree_selector<yDir>(field, evalShift, pointValues);
+                break;
+            case zDir:
+                this->eval_form_degree_selector<zDir>(field, evalShift, pointValues);
+                break;
+            default:
+                AMREX_ASSERT("Unrecognized direction passed to eval_form");
+                break;
+        }
+    }
+
+    template <Direction dir = xDir, int hodgeDegreeIdx = 0>
+    void eval_form_degree_selector(
+        anyFieldConstRef field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues);
 
     template <int hodgeDegree, HodgeScheme hodgeScheme>
     void hodge_operator(const DeRhamField<Grid::dual, Space::cell>& threeForm,
@@ -864,6 +935,56 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
         std::string str =
             "No such degree " + std::to_string(m_hodgeDegree) + " for selected Hodge scheme";
         amrex::Assert("Incompatible Hodge degree and Hodge scheme", "GEMPIC_FDDeRhamComplex.H",
+                      __LINE__, str.c_str());
+    }
+}
+
+template <Direction dir, int testDegInd>
+void FDDeRhamComplex::eval_form_degree_selector (
+    anyFieldConstRef field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::eval_form_degree_selector()")
+    constexpr auto validDegreesArray = valid_degrees<HodgeScheme::FDHodge>();
+    if constexpr (testDegInd < validDegreesArray.size())
+    {
+        if (this->m_hodgeDegree == validDegreesArray[testDegInd])
+        {
+            //
+            std::visit(
+                [this, &validDegreesArray, &evalShift, &pointValues] (const auto& fieldArg)
+                {
+                    using namespace Impl;
+                    FieldTypes fieldTypes{fieldArg};
+                    constexpr Grid grid = fieldTypes.s_gridType;
+                    constexpr Space space = fieldTypes.s_spaceType;
+                    constexpr int degree = validDegreesArray[testDegInd];
+                    if constexpr (fieldTypes.s_spaceType == Space::node ||
+                                  fieldTypes.s_spaceType == Space::cell)
+                    {
+                        const amrex::MultiFab& data = fieldArg.get().m_data;
+                        eval_form_component<degree, grid, space>(evalShift, data, pointValues,
+                                                                 this->m_dr, this->m_geom);
+                    }
+                    else
+                    {
+                        const amrex::MultiFab& data = fieldArg.get().m_data[dir];
+                        eval_form_component<degree, grid, space, dir>(evalShift, data, pointValues,
+                                                                      this->m_dr, this->m_geom);
+                    }
+                },
+                field);
+        }
+        else
+        {
+            eval_form_degree_selector<dir, testDegInd + 1>(field, evalShift, pointValues);
+        }
+    }
+    else
+    {
+        std::string str = "No such degree " + std::to_string(m_hodgeDegree) + " for eval_form";
+        amrex::Assert("Incompatible Hodge degree and eval_form", "GEMPIC_FDDeRhamComplex.H",
                       __LINE__, str.c_str());
     }
 }

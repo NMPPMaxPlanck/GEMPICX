@@ -17,7 +17,7 @@
 #define check_field(...) GEMPIC_Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
 
 using namespace Gempic;
-using namespace Gempic::Forms;
+using namespace Forms;
 
 namespace
 {
@@ -459,7 +459,7 @@ protected:
     void SetUp () override { m_infra = Gempic::ComputationalDomain{}; }
 };
 
-TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
+TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
 {
     // Parse analytical fields and and initialize parserEval
 #if (GEMPIC_SPACEDIM == 1)
@@ -730,7 +730,7 @@ TEST_F(FDDeRhamComplexProjectionTest, test_projection_one_two_forms)
     EXPECT_NEAR(0, std::max({errorDxNorm0, errorDyNorm0, errorDzNorm0}), m_tol);
 }
 
-TEST_F(FDDeRhamComplexProjectionTest, test_projection_zero_three_forms)
+TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
 {
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,

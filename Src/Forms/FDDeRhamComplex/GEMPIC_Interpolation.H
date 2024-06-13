@@ -2,12 +2,12 @@
 #define GEMPIC_INTERPOLATION_H_
 
 #include <AMReX_SPACE.H>
+#include <AMReX_Vector.H>
 
 #include "GEMPIC_Fields.H"
 
 namespace Gempic::Forms
 {
-
 /**
  * @brief Evaluates a 1D Lagrange polynomial
  *
@@ -153,6 +153,279 @@ AMREX_GPU_DEVICE amrex::Real eval_edge (const int polyIndex,
     return val;
 }
 // NOLINTEND(readability-magic-numbers)
+
+template <int degree, Grid grid>
+AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (const int polyIndex,
+                                                               const amrex::Real xk,
+                                                               const amrex::Real dx,
+                                                               const amrex::Real y)
+{
+    if constexpr (grid == Grid::primal)
+    {
+        return eval_lagrange<degree>(polyIndex, xk, dx, y);
+    }
+    else
+    {
+        return eval_lagrange<degree>(polyIndex, xk + dx, dx, y);
+    }
+}
+
+template <int degree, Grid grid, Space space, Direction dir, Direction coordinate>
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
+                                                 const amrex::Real xk,
+                                                 const amrex::Real dx,
+                                                 const amrex::Real y)
+{
+    static_assert(space == Space::face || space == Space::edge,
+                  "Tried to call 1-/2-form choose_eval with a 0-/3-form.\n\tThe 0-/3-form "
+                  "choose_eval function takes no direction template argument.");
+    if constexpr ((space == Space::edge && dir != coordinate) ||
+                  (space == Space::face && dir == coordinate))
+    {
+        return eval_lagrange_primal_dual<degree, grid>(polyIndex, xk, dx, y);
+    }
+    else
+    {
+        return eval_edge<degree>(polyIndex, xk, dx, y);
+    }
+}
+
+template <int degree, Grid grid, Space space>
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
+                                                 const amrex::Real xk,
+                                                 const amrex::Real dx,
+                                                 const amrex::Real y)
+{
+    static_assert(space == Space::node || space == Space::cell,
+                  "Tried to call 0-/3-form choose_eval with a 1-/2-form.\n\tThe 1-/2-form "
+                  "choose_eval function takes a direction template argument.");
+    if constexpr (space == Space::node)
+    {
+        return eval_lagrange_primal_dual<degree, grid>(polyIndex, xk, dx, y);
+    }
+    else  // if constexpr (space == Space::edge)
+    {
+        return eval_edge<degree>(polyIndex, xk, dx, y);
+    }
+}
+
+/**
+ * @brief Function that computes the interpolant for a given component of a 0-/3-form.
+ *
+ * @tparam degree order or Lagrange interpolation (only even order implemented)
+ * @tparam grid primal or dual
+ * @tparam space node or cell, corresponding to 0- or 3-forms
+ * @param evalShift shift from lower corner of primal cell (between 0 and 1)
+ * @param data multifab containing degrees of freedom of form to be evaluated
+ * @param values cell centered multifab returning the values at points defined by evalShift
+ * @param dr cell size
+ * @param geom
+ */
+template <int degree, Grid grid, Space space>
+void eval_form_component (
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> &evalShift,
+    const amrex::MultiFab &data,
+    amrex::MultiFab &values,
+    const amrex::RealVect &dr,
+    const amrex::Geometry &geom)
+{
+    static_assert(space == Space::cell || space == Space::node,
+                  "Tried to call 0-/3-form eval_form_component with a 1-/2-form.\n\tThe 1-/2-form "
+                  "eval_form_component function takes a direction template argument.");
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = geom.ProbLoArray();
+
+    auto nEvals{static_cast<size_t>(evalShift.size())};
+    int nComp{data.nComp()};
+    int outputNComp{values.nComp()};
+    AMREX_ASSERT_WITH_MESSAGE(nEvals * nComp == outputNComp,
+                              "Output MultiFab of eval_form must have enough components to hold "
+                              "all evaluations for all field components.");
+
+    int abcTop{degree / 2};
+
+    if constexpr (space == Space::node)
+    {
+        abcTop += 1;
+    }
+
+    // Copy evalShift to GPU array
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nEvals};
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
+                          evalShiftGpu.begin());
+    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+
+    for (amrex::MFIter mfi(values); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.validbox();
+        amrex::Array4<const amrex::Real> const &funcMF = data[mfi].array();
+        amrex::Array4<amrex::Real> const &valuesMF = values[mfi].array();
+
+        /// @todo: Reversing the order of for-loops would obviate the need for a DeviceVector.
+        ///        It would, however, start nEvals ParallelFor loops. Is it a good idea?
+        ParallelFor(
+            bx, nComp,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+            {
+                for (int evalInd{0}; evalInd < nEvals; ++evalInd)
+                {
+                    // position of point to be evaluated with respect to grid (primal or dual)
+                    // evalshift is always given with respect to primal grid
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                        AMREX_D_DECL(r0[xDir] + (i + evalShiftGpuPtr[evalInd][xDir]) * dr[xDir],
+                                     r0[yDir] + (j + evalShiftGpuPtr[evalInd][yDir]) * dr[yDir],
+                                     r0[zDir] + (k + evalShiftGpuPtr[evalInd][zDir]) * dr[zDir])};
+
+                    // position of the grid point (x_i, y_j, z_k) to the left of evalshift
+                    // (different for primal and dual grids)
+                    // evalshift is always given with respect to primal grid
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr;
+                    if constexpr (grid == Grid::primal)
+                    {
+                        rr = {AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir],
+                                           r0[zDir] + k * dr[zDir])};
+                    }
+                    else if constexpr (grid == Grid::dual)
+                    {
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> shiftDualGrid = {AMREX_D_DECL(
+                            (std::round(evalShiftGpuPtr[evalInd][xDir]) - 0.5) * dr[xDir],
+                            (std::round(evalShiftGpuPtr[evalInd][yDir]) - 0.5) * dr[yDir],
+                            (std::round(evalShiftGpuPtr[evalInd][zDir]) - 0.5) * dr[zDir])};
+                        rr = {AMREX_D_DECL(r0[xDir] + i * dr[xDir] + shiftDualGrid[xDir],
+                                           r0[yDir] + j * dr[yDir] + shiftDualGrid[yDir],
+                                           r0[zDir] + k * dr[zDir] + shiftDualGrid[zDir])};
+                    }
+
+                    amrex::Real fval = 0.0;
+                    GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+                    GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < abcTop; ++a),
+                                        for (int b = 1 - degree / 2; b < abcTop; ++b),
+                                        for (int c = 1 - degree / 2; c < abcTop; ++c))
+                        fval +=
+                            funcMF(i + a, j + b, k + c, n) *
+                            GEMPIC_D_MULT(
+                                (choose_eval<degree, grid, space>(a, rr[xDir], dr[xDir], r[xDir])),
+                                (choose_eval<degree, grid, space>(b, rr[yDir], dr[yDir], r[yDir])),
+                                (choose_eval<degree, grid, space>(c, rr[zDir], dr[zDir], r[zDir])));
+                    GEMPIC_D_LOOP_END
+                    valuesMF(i, j, k, n * nEvals + evalInd) = fval;
+                }
+            });
+    }
+}
+/**
+ * @brief Function that computes the interpolant for a given component of a 1-/2-form.
+ *
+ * @tparam degree order or Lagrange interpolation (only even order implemented)
+ * @tparam grid primal or dual
+ * @tparam space edge or face, corresponding to 1- or 2-forms
+ * @param evalShift shift from lower corner of primal cell (between 0 and 1)
+ * @param data multifab containing degrees of freedom of form to be evaluated
+ * @param values cell centered multifab returning the values at points defined by evalShift
+ * @param dr cell size
+ * @param geom
+ * @param dir xDir, yDir, zDir
+ */
+template <int degree, Grid grid, Space space, Direction dir>
+void eval_form_component (
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> &evalShift,
+    const amrex::MultiFab &data,
+    amrex::MultiFab &values,
+    const amrex::RealVect &dr,
+    const amrex::Geometry &geom)
+{
+    static_assert(space == Space::face || space == Space::edge,
+                  "Tried to call 1-/2-form "
+                  "eval_form_component with a 0-/3-form.\n\tThe 0-/3-form "
+                  "eval_form_component function takes no direction template argument.");
+
+    auto nEvals{static_cast<size_t>(evalShift.size())};
+    int nComp{data.nComp()};
+    int outputNComp{values.nComp()};
+    AMREX_ASSERT_WITH_MESSAGE(nEvals * nComp == outputNComp,
+                              "Output MultiFab of eval_form must have enough components to hold "
+                              "all evaluations for all field components (in one direction).");
+
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = geom.ProbLoArray();
+
+    amrex::GpuArray<int, 3> dirShift = {0, 0, 0};
+
+    if constexpr (space == Space::edge)
+    {
+        dirShift = {1, 1, 1};
+        dirShift[dir] = 0;
+    }
+    else  // if constexpr (space == Space::face)
+    {
+        dirShift[dir] = 1;
+    }
+
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nEvals};
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
+                          evalShiftGpu.begin());
+    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+
+    for (amrex::MFIter mfi(values); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.validbox();
+        amrex::Array4<const amrex::Real> const &funcMF = data[mfi].array();
+        amrex::Array4<amrex::Real> const &valuesMF = values[mfi].array();
+
+        /// @todo: Reversing the order of for-loops would obviate the need for a DeviceVector.
+        ///        It would, however, start nEvals ParallelFor loops. Is it a good idea?
+        ParallelFor(
+            bx, nComp,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+            {
+                for (int evalInd{0}; evalInd < nEvals; ++evalInd)
+                {
+                    // position of point to be evaluated with respect to grid (primal or
+                    // dual) evalshift is always given with respect to primal grid
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                        AMREX_D_DECL(r0[xDir] + (i + evalShiftGpuPtr[evalInd][xDir]) * dr[xDir],
+                                     r0[yDir] + (j + evalShiftGpuPtr[evalInd][yDir]) * dr[yDir],
+                                     r0[zDir] + (k + evalShiftGpuPtr[evalInd][zDir]) * dr[zDir])};
+
+                    // position of the grid point (x_i, y_j, z_k) to the left of evalshift
+                    // (different for primal and dual grids)
+                    // evalshift is always given with respect to primal grid
+                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr;
+                    if constexpr (grid == Grid::primal)
+                    {
+                        rr = {AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir],
+                                           r0[zDir] + k * dr[zDir])};
+                    }
+                    else if constexpr (grid == Grid::dual)
+                    {
+                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> shiftDualGrid = {AMREX_D_DECL(
+                            (std::round(evalShiftGpuPtr[evalInd][xDir]) - 0.5) * dr[xDir],
+                            (std::round(evalShiftGpuPtr[evalInd][yDir]) - 0.5) * dr[yDir],
+                            (std::round(evalShiftGpuPtr[evalInd][zDir]) - 0.5) * dr[zDir])};
+                        rr = {AMREX_D_DECL(r0[xDir] + i * dr[xDir] + shiftDualGrid[xDir],
+                                           r0[yDir] + j * dr[yDir] + shiftDualGrid[yDir],
+                                           r0[zDir] + k * dr[zDir] + shiftDualGrid[zDir])};
+                    }
+
+                    amrex::Real fval = 0.0;
+                    GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+                    GEMPIC_D_LOOP_BEGIN(
+                        for (int a = 1 - degree / 2; a < degree / 2 + dirShift[xDir]; ++a),
+                        for (int b = 1 - degree / 2; b < degree / 2 + dirShift[yDir]; ++b),
+                        for (int c = 1 - degree / 2; c < degree / 2 + dirShift[zDir]; ++c))
+                        fval += funcMF(i + a, j + b, k + c, n) *
+                                GEMPIC_D_MULT((choose_eval<degree, grid, space, dir, xDir>(
+                                                  a, rr[xDir], dr[xDir], r[xDir])),
+                                              (choose_eval<degree, grid, space, dir, yDir>(
+                                                  b, rr[yDir], dr[yDir], r[yDir])),
+                                              (choose_eval<degree, grid, space, dir, zDir>(
+                                                  c, rr[zDir], dr[zDir], r[zDir])));
+                    GEMPIC_D_LOOP_END
+                    valuesMF(i, j, k, n * nEvals + evalInd) = fval;
+                }
+            });
+    }
+}
 
 /**
  * @brief Computes the maximum norm w.r.t. the values at the cell midpoints

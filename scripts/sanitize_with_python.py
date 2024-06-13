@@ -40,7 +40,7 @@ def convert_to_gempic_name(arg: str) -> str:
     arg = 'GEMPIC_' + convert_to_camel_case(arg)
     return arg
 
-def convert_to_test_name(arg: str) ->str:
+def convert_to_test_name(arg: str) -> str:
     """
     Converts filenames to 'CamelCase_test'
     """
@@ -251,7 +251,7 @@ def fix_files_syntax(folders, forceMove=False):
             if gempicCamelCase.fullmatch(file.stem) or testCase.fullmatch(file.stem):
                 continue
             elif outdatedTestCase.fullmatch(file.stem):
-                warnings.warn(f"Warning: The naming (and probably type) of the test file '{str(file)}' is deprecated.")
+                warnings.warn(f"The naming (and probably type) of the test file '{str(file)}' is deprecated.")
                 continue
             # Make an educated guess as to the correct format
             elif folderName.resolve().is_relative_to(srcFolder):
@@ -320,23 +320,34 @@ def undo_exclude_subproject_clang_tools(changedFiles, originalNames):
     for file, original in zip(changedFiles, originalNames):
         pathlib.Path(file).resolve().rename(original)
 
-def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> bool:
+def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> tuple[bool, str]:
     """
     Checks if Clang-Tidy or Clang-Format is
     A) Available
     B) An acceptable version
+
+    Returns a tuple of
+    (acceptable version found, optional version string)
     """
     try:
-        output=subprocess.run("clang-tidy --version", shell=True, capture_output=True, text=True)
+        output=subprocess.run(f"clang-{tidyOrFormat} --version", shell=True, capture_output=True, text=True)
         version=int(re.sub(r'^.*?version (\d+)\.\d+\..*$', r'\g<1>', output.stdout.replace('\n','')))
         if minVersion <= version <= maxVersion:
-            return True
+            return True, ""
         else:
             msg=f'clang-{tidyOrFormat} version is {version}, but accepted versions are {minVersion}-{maxVersion}. Skipping run.'
     except (FileNotFoundError):
         msg=f'clang-{tidyOrFormat} was not found. Did you install it?'
+
+    for version in range(maxVersion, minVersion - 1, -1):
+        try:
+            output=subprocess.run(f"clang-{tidyOrFormat}-{version} --help", shell=True, capture_output=True, text=True)
+            return True, f"-{version}"
+        except (FileNotFoundError):
+            continue
+        
     warnings.warn(msg)
-    return False
+    return False, ""
 
 def read_build_info() -> tuple[pathlib.Path, str]:
     """
@@ -448,7 +459,8 @@ def gempic_run_clang_tidy(folders):
     The compile_commands.json file, as well as the scripts/build_dir.txt file
     pointing to it, are created at cmake configuration time.
     """
-    if not clang_version_is_ok('tidy'):
+    clangVersionIsOkay, versionString = clang_version_is_ok('tidy')
+    if not clangVersionIsOkay:
         return
 
     buildDir, includeLibs = read_build_info()
@@ -458,7 +470,7 @@ def gempic_run_clang_tidy(folders):
     print("Running Clang-Tidy ...")
     try:
         # Run Clang-Tidy on all files in folders
-        clangTidyOut = subprocess.run(f'run-clang-tidy -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True)
+        clangTidyOut = subprocess.run(f'run-clang-tidy{versionString} -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True)
         outfile = buildDir / 'tidyOutput.out'
         with open(outfile, 'w') as file:
             file.write(clangTidyOut.stdout)
@@ -466,7 +478,7 @@ def gempic_run_clang_tidy(folders):
             print(f"Clang-Tidy ran succesfully. See '{str(outfile)}' for the output.")
             fix_destroyed_lambda_captures()
         else:
-            warnings.warn(f"Clang-Tidy failed with the message:\n{clangTidyOut.stderr}")
+            warnings.warn(f"Clang-Tidy failed with the message:\n{clangTidyOut.stderr}\nSee '{str(outfile)}' for the output.")
     except (FileNotFoundError):
         warnings.warn("clang-tidy-run not found! Did you install Clang-Tidy?")
 
@@ -519,14 +531,15 @@ def gempic_run_clang_format(folders):
     """
     Run Clang-Format and fix the mistakes introduced thereby.
     """
-    if not clang_version_is_ok('format'):
+    clangVersionIsOkay, versionString = clang_version_is_ok('format')
+    if not clangVersionIsOkay:
         return
 
     print("Running Clang-Format ... ", end='')
     for file in find_files(["*.cpp", "*.H"], folders=folders):
         fix_includes(file)
         try:
-            clangFormatOut = subprocess.run(f'clang-format -i -style=file {file}', shell=True, capture_output=True, text=True)
+            clangFormatOut = subprocess.run(f'clang-format{versionString} -i -style=file {file}', shell=True, capture_output=True, text=True)
 
             if clangFormatOut.returncode == 0:
                 fix_lambda_brackets(file)
