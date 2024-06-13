@@ -681,6 +681,124 @@ public:
     virtual void hodge(const DeRhamField<Grid::primal, Space::node>& zeroForm,
                        DeRhamField<Grid::dual, Space::cell>& threeForm,
                        amrex::Real weight = 1.) = 0;
+
+    /**
+     * @brief Evaluation of a 0-/3-form DeRhamField of nVar variables at points in each cell given
+     *        by a positive normalized shift from the lower corner of the cell
+     * @param field       The field to evaluate
+     * @param evalShift   The time step at which to evaluate the functions
+     * @param pointValues Output cell-centered MultiFab containing nVar * nEvals components in the
+     *                    order
+     *                    var=0 eval=0,
+     *                    var=0 eval=1,
+     *                    ...,
+     *                    var=0 shift=nEvals,
+     *                    var=1 shift=0,
+     *                    ...,
+     *                    var=nVar shift=nEvals
+     */
+    virtual void eval_form(
+        const DeRhamField<Grid::primal, Space::cell>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues) = 0;
+    virtual void eval_form(
+        const DeRhamField<Grid::dual, Space::cell>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues) = 0;
+    virtual void eval_form(
+        const DeRhamField<Grid::primal, Space::node>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues) = 0;
+    virtual void eval_form(
+        const DeRhamField<Grid::dual, Space::node>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues) = 0;
+    /**
+     * @brief Evaluation of a 1-/2-form DeRhamField of nVar variables (and three components) in one
+     *        direction in each cell given by a positive normalized shift from the lower corner of
+     *        the cell
+     * @param field       The field to evaluate
+     * @param evalShift   The time step at which to evaluate the functions
+     * @param pointValues Output cell-centered MultiFab containing nVar * nEvals components in the
+     *                    order
+     *                    var=0 eval=0,
+     *                    var=0 eval=1,
+     *                    ...,
+     *                    var=0 shift=nEvals,
+     *                    var=1 shift=0,
+     *                    ...,
+     *                    var=nVar shift=nEvals
+     * @param dir         Direction of field to evaluate
+     */
+    virtual void eval_form(
+        const DeRhamField<Grid::primal, Space::face>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues,
+        Direction dir) = 0;
+    virtual void eval_form(
+        const DeRhamField<Grid::dual, Space::face>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues,
+        Direction dir) = 0;
+    virtual void eval_form(
+        const DeRhamField<Grid::primal, Space::edge>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues,
+        Direction dir) = 0;
+    virtual void eval_form(
+        const DeRhamField<Grid::dual, Space::edge>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::MultiFab& pointValues,
+        Direction dir) = 0;
+
+    /**
+     * @brief Evaluation of a 1-/2-form DeRhamField of nVar variables (and three components) in
+     *        each cell given by a positive normalized shift from the lower corner of the cell
+     * @param field       The field to evaluate
+     * @param evalShift   The time step at which to evaluate the functions
+     * @param pointValues 3D output array of cell-centered MultiFabs each containing nVar * nEvals
+     *                    components in the order
+     *                    var=0 eval=0,
+     *                    var=0 eval=1,
+     *                    ...,
+     *                    var=0 shift=nEvals,
+     *                    var=1 shift=0,
+     *                    ...,
+     *                    var=nVar shift=nEvals
+     */
+    inline void eval_forms (
+        const DeRhamField<Grid::primal, Space::face>& field,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        amrex::Array<amrex::MultiFab*, 3>& pointValues)
+    {
+        eval_form(field, evalShift, *pointValues[xDir], xDir);
+        eval_form(field, evalShift, *pointValues[yDir], yDir);
+        eval_form(field, evalShift, *pointValues[zDir], zDir);
+    }
+    void eval_forms (const DeRhamField<Grid::dual, Space::face>& field,
+                     const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                     amrex::Array<amrex::MultiFab*, 3>& pointValues)
+    {
+        eval_form(field, evalShift, *pointValues[xDir], xDir);
+        eval_form(field, evalShift, *pointValues[yDir], yDir);
+        eval_form(field, evalShift, *pointValues[zDir], zDir);
+    }
+    void eval_forms (const DeRhamField<Grid::primal, Space::edge>& field,
+                     const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                     amrex::Array<amrex::MultiFab*, 3>& pointValues)
+    {
+        eval_form(field, evalShift, *pointValues[xDir], xDir);
+        eval_form(field, evalShift, *pointValues[yDir], yDir);
+        eval_form(field, evalShift, *pointValues[zDir], zDir);
+    }
+    void eval_forms (const DeRhamField<Grid::dual, Space::edge>& field,
+                     const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                     amrex::Array<amrex::MultiFab*, 3>& pointValues)
+    {
+        eval_form(field, evalShift, *pointValues[xDir], xDir);
+        eval_form(field, evalShift, *pointValues[yDir], yDir);
+        eval_form(field, evalShift, *pointValues[zDir], zDir);
+    }
 };
 
 // Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type

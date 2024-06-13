@@ -1,6 +1,8 @@
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Interpolation.H"
 
 using namespace Gempic::Forms;
 
@@ -169,7 +171,7 @@ void FDDeRhamComplex::projection (
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();  //mfi.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
         amrex::AsyncArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
@@ -245,7 +247,7 @@ void FDDeRhamComplex::projection (
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();  // tilebox();
         amrex::Array4<amrex::Real> const& threeForm = (field.m_data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -338,7 +340,7 @@ void FDDeRhamComplex::projection (
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();  //.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -420,7 +422,7 @@ void FDDeRhamComplex::projection (
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();  //projections are done also on ghost cells
         amrex::Array4<amrex::Real> const& threeForm = (field.m_data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -533,7 +535,7 @@ void FDDeRhamComplex::projection (
     {
         for (amrex::MFIter mfi(field.m_data[comp], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.tilebox();
+            const amrex::Box& bx = mfi.growntilebox();  //.tilebox();
             amrex::Array4<amrex::Real> const& oneForm = (field.m_data[comp])[mfi].array();
 
             const amrex::RealVect dr = m_dr;
@@ -648,7 +650,7 @@ void FDDeRhamComplex::projection (
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.m_data[xDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[xDir])[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -691,7 +693,7 @@ void FDDeRhamComplex::projection (
     // y-direction. Plane XZ
     for (amrex::MFIter mfi(field.m_data[yDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();
 
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[yDir])[mfi].array();
 
@@ -733,7 +735,7 @@ void FDDeRhamComplex::projection (
     // z-direction. Plane XY
     for (amrex::MFIter mfi(field.m_data[zDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[zDir])[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -836,7 +838,7 @@ void FDDeRhamComplex::projection (
     {
         for (amrex::MFIter mfi(field.m_data[comp], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.tilebox();
+            const amrex::Box& bx = mfi.growntilebox();
             amrex::Array4<amrex::Real> const& oneForm = (field.m_data[comp])[mfi].array();
 
             const amrex::RealVect dr = m_dr;
@@ -951,7 +953,7 @@ void FDDeRhamComplex::projection (
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.m_data[xDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[xDir])[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -996,7 +998,7 @@ void FDDeRhamComplex::projection (
     // y-direction. Plane XZ
     for (amrex::MFIter mfi(field.m_data[yDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();
 
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[yDir])[mfi].array();
 
@@ -1040,7 +1042,7 @@ void FDDeRhamComplex::projection (
     // z-direction. Plane XY
     for (amrex::MFIter mfi(field.m_data[zDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[zDir])[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -1162,4 +1164,72 @@ void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::node>& zeroF
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,node,dual,cell,weight)");
     hodge_scheme_selector(zeroForm, threeForm, weight);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::primal, Space::cell>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues)
+{
+    this->eval_form_degree_selector(field, evalShift, pointValues);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::dual, Space::cell>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues)
+{
+    this->eval_form_degree_selector(field, evalShift, pointValues);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::primal, Space::face>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues,
+    Direction dir)
+{
+    this->eval_form_direction_selector(field, evalShift, pointValues, dir);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::dual, Space::face>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues,
+    Direction dir)
+{
+    this->eval_form_direction_selector(field, evalShift, pointValues, dir);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::primal, Space::edge>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues,
+    Direction dir)
+{
+    this->eval_form_direction_selector(field, evalShift, pointValues, dir);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::dual, Space::edge>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues,
+    Direction dir)
+{
+    this->eval_form_direction_selector(field, evalShift, pointValues, dir);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::primal, Space::node>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues)
+{
+    this->eval_form_degree_selector(field, evalShift, pointValues);
+}
+
+void FDDeRhamComplex::eval_form (
+    const DeRhamField<Grid::dual, Space::node>& field,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    amrex::MultiFab& pointValues)
+{
+    this->eval_form_degree_selector(field, evalShift, pointValues);
 }
