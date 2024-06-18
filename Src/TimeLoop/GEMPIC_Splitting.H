@@ -162,7 +162,9 @@ public:
      * @param dt : time step
      *
      */
-    template <Direction dir, class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
+    template <Direction dir,
+              class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>,
+              unsigned int bdim>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i (
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& pos,
         amrex::GpuArray<amrex::Real, vdim>& vel,
@@ -171,7 +173,7 @@ public:
         amrex::GpuArray<amrex::Real, 2> bfields,
         amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
-        amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> const& bA,
+        amrex::GpuArray<amrex::Array4<amrex::Real>, bdim> const& bA,
         amrex::Real const chargemass,
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
@@ -184,8 +186,11 @@ public:
         ParticleMeshCoupling::accumulate_j_integrate_b<dir>(spline, chargeWeight, dx, bA, jA,
                                                             bfields);
 
-        if (vdim > 1) vel[(dir + 1) % 3] = vel[(dir + 1) % 3] - chargemass * bfields[0];
-        if (vdim > 2) vel[(dir + 2) % 3] = vel[(dir + 2) % 3] + chargemass * bfields[1];
+        if (vdim > 1) vel[(dir + 1) % vdim] = vel[(dir + 1) % vdim] - chargemass * bfields[dir % 2];
+        if (vdim > 2)
+        {
+            vel[(dir + 2) % vdim] = vel[(dir + 2) % vdim] + chargemass * bfields[(dir + 1) % 2];
+        }
         pos[dir] = xNew;
     }
 
