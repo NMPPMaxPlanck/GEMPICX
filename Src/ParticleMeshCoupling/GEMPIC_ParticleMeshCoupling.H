@@ -79,13 +79,13 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b_loop (
             // Update two components of B
             if (j < degP1)
             {
-                fields[xDir] += update_integrated_b_component<pDir1, pDir2>(
-                    bArray, spline, cellIndex, j, k, primitiveDifference);
+                fields[0] += update_integrated_b_component<pDir1, pDir2>(bArray, spline, cellIndex,
+                                                                         j, k, primitiveDifference);
             }
             if (k < degP2)
             {
-                fields[yDir] += update_integrated_b_component<pDir2, pDir1>(
-                    bArray, spline, cellIndex, k, j, primitiveDifference);
+                fields[1] += update_integrated_b_component<pDir2, pDir1>(bArray, spline, cellIndex,
+                                                                         k, j, primitiveDifference);
             }
         }
         /* In case of performance issues, we _might_ be able to wring something extra out of looping
