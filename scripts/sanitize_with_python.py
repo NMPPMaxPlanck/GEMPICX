@@ -6,6 +6,7 @@ import pathlib
 import re
 import subprocess
 import warnings
+import signal
 
 def warning_format_no_traceback(message, category, filename, lineno, line=None):
     return f'{category.__name__}: {message}\n'
@@ -307,18 +308,20 @@ def exclude_subproject_clang_tools(subProjectFolders) -> tuple:
     return oldNames, newNames
     
 
-def undo_exclude_subproject_clang_tools(changedFiles, originalNames):
+def undo_exclude_subproject_clang_tools(changedFileList, originalNameList):
     """
     Undoes the changes made by exclude_subproject_clang_tools
     """
-    if not isinstance(changedFiles, list):
-        changedFiles = [changedFiles]
-    if not isinstance(originalNames, list):
-        originalNames = [originalNames]
-    if len(changedFiles) != len(originalNames):
+    if not isinstance(changedFileList, list):
+        changedFileList = [changedFileList]
+    if not isinstance(originalNameList, list):
+        originalNameList = [originalNameList]
+    if len(changedFileList) != len(originalNameList):
         raise RuntimeError("undo_exclude_subproject_clang_tools needs the same number of changed filenames as original filenames.")
-    for file, original in zip(changedFiles, originalNames):
+    for file, original in zip(reversed(changedFileList), reversed(originalNameList)):
         pathlib.Path(file).resolve().rename(original)
+        changedFileList.pop()
+        originalNameList.pop()
 
 def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> tuple[bool, str]:
     """
@@ -336,7 +339,7 @@ def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> tupl
             return True, ""
         else:
             msg=f'clang-{tidyOrFormat} version is {version}, but accepted versions are {minVersion}-{maxVersion}. Skipping run.'
-    except (FileNotFoundError):
+    except FileNotFoundError:
         msg=f'clang-{tidyOrFormat} was not found. Did you install it?'
 
     for version in range(maxVersion, minVersion - 1, -1):
@@ -470,7 +473,15 @@ def gempic_run_clang_tidy(folders):
     print("Running Clang-Tidy ...")
     try:
         # Run Clang-Tidy on all files in folders
-        clangTidyOut = subprocess.run(f'run-clang-tidy{versionString} -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True)
+        # Start separate process because run-clang-tidy kills the entire process tree
+        try: # Windows?
+            clangTidyOut = subprocess.run(f'run-clang-tidy{versionString} -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        except AttributeError: # Unrecognised command, meaning we're most likely on a POSIX system
+            try: # POSIX
+                clangTidyOut = subprocess.run(f'run-clang-tidy -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, start_new_session=True, capture_output=True, text=True)
+            except TypeError:
+                warnings.warn("Interruptible Clang-tidy execution not possible -- don't try to interrupt ... ")
+                clangTidyOut = subprocess.run(f'run-clang-tidy -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True)
         outfile = buildDir / 'tidyOutput.out'
         with open(outfile, 'w') as file:
             file.write(clangTidyOut.stdout)
@@ -481,8 +492,8 @@ def gempic_run_clang_tidy(folders):
             warnings.warn(f"Clang-Tidy failed with the message:\n{clangTidyOut.stderr}\nSee '{str(outfile)}' for the output.")
     except (FileNotFoundError):
         warnings.warn("clang-tidy-run not found! Did you install Clang-Tidy?")
-
-    restore_compile_commands(buildDir)
+    finally:
+        restore_compile_commands(buildDir)
 
 def fix_includes(file):
     """
@@ -538,34 +549,34 @@ def gempic_run_clang_format(folders):
     print("Running Clang-Format ... ", end='')
     for file in find_files(["*.cpp", "*.H"], folders=folders):
         fix_includes(file)
-        try:
-            clangFormatOut = subprocess.run(f'clang-format{versionString} -i -style=file {file}', shell=True, capture_output=True, text=True)
+        clangFormatOut = subprocess.run(f'clang-format{versionString} -i -style=file {file}', shell=True, capture_output=True, text=True)
 
-            if clangFormatOut.returncode == 0:
-                fix_lambda_brackets(file)
-                fix_scoped_definition_spacing(file)
-            else:
-                warnings.warn(clangFormatOut.stderr)
-        except (FileNotFoundError):
-            warnings.warn("clang-format not found! Did you install Clang-Format?")
-            return
+        if clangFormatOut.returncode == 0:
+            fix_lambda_brackets(file)
+            fix_scoped_definition_spacing(file)
+        else:
+            warnings.warn(clangFormatOut.stderr)
     print("done.")
 
+def interrupt_handler(signum, frame):
+    """
+    Interrupt signal handler that disables user interrupts during cleanup
+    """
+    print(" -- Script interrupted. Cleaning up ...", end='')
+
 def main():
-    #folders = ['bad']
-    #forceMove = False
     parser=argparse.ArgumentParser(description="Cleanup script for GEMPIC that should be "
                                    "independent of OS. Requires (run-)clang-tidy and clang-format"
                                    "in path as well as Python 3.7+.")
     parser.add_argument('-forcemove', '-force-move', '--forceMove', action='store_true',
                         help='Git add files or create fake files to facilitate git move when fixing'
                         ' folder and file syntax. Fake files are automatically removed again.')
-    #parser.add_argument('-folders', nargs='*', action='append', dest='folders', default=['Src', 'Testing'], help='Folders to check folder and file syntax and run clang-tidy and -format on.')
     parser.add_argument('-folders', '--folders', nargs='+', default=['Src', 'Testing', 'Examples'], metavar='FOLDER',
                         help='Folders to sanitize, (re)creating the folder list (default: %(default)s)')
     parser.add_argument('-add-folders', '--add-folders', nargs='+', action='extend', dest='folders',metavar='FOLDER',
                         help='Add folders to sanitize, extending the list of folders')
     args = parser.parse_args()
+
     initDir = pathlib.Path.cwd().resolve()
     if (initDir.stem == 'scripts'):
         os.chdir('..')
@@ -580,8 +591,21 @@ def main():
         gempic_run_clang_tidy(args.folders)
         gempic_run_clang_format(args.folders)
     finally:
+        # Interrupt signals to fool proof against several CTRL+C from impatient users
+        try: # Interrupt signal in Windows
+            signal.signal(signal.CTRL_C_EVENT, interrupt_handler)
+        except AttributeError: # Interrupt signal in POSIX
+            signal.signal(signal.SIGINT, interrupt_handler)
+
+        # cleanup
         undo_exclude_subproject_clang_tools(changedFiles, originalNames)
         os.chdir(initDir)
+
+        try: # Interrupt signal in Windows
+            signal.signal(signal.CTRL_C_EVENT, signal.default_int_handler)
+        except AttributeError: # Interrupt signal in POSIX
+            signal.signal(signal.SIGINT, signal.default_int_handler)
+        print("Script done.")
 
 if __name__=='__main__':
     main()
