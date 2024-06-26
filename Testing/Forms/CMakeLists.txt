@@ -4,4 +4,5 @@ target_sources(GtestTests PRIVATE
     EvalForm_test.cpp
     Fields_test.cpp
     FieldMultiplyByFunction_test.cpp
+    ExtDerivatives_test.cpp
     )

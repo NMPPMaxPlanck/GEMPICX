@@ -546,6 +546,19 @@ public:
     void curl(const DeRhamField<Grid::dual, Space::edge>&, DeRhamField<Grid::dual, Space::face>&);
     void div(const DeRhamField<Grid::dual, Space::face>&, DeRhamField<Grid::dual, Space::cell>&);
 
+    void a_times_grad(const DeRhamField<Grid::primal, Space::node>&,
+                      DeRhamField<Grid::primal, Space::edge>&,
+                      amrex::Real);
+    void a_times_grad(const DeRhamField<Grid::dual, Space::node>&,
+                      DeRhamField<Grid::dual, Space::edge>&,
+                      amrex::Real);
+    void add_dt_curl(const DeRhamField<Grid::primal, Space::edge>&,
+                     DeRhamField<Grid::primal, Space::face>&,
+                     amrex::Real dt);
+    void add_dt_curl(const DeRhamField<Grid::dual, Space::edge>&,
+                     DeRhamField<Grid::dual, Space::face>&,
+                     amrex::Real dt);
+
     //------------
     // Projections
     //------------
