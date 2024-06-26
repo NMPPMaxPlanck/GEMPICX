@@ -1,7 +1,0 @@
-2D test passed
-max Error curlE[xDir] = 3.33067e-16
-max Error curlE[yDir] = 3.33067e-16
-max Error curlE[zDir] = 3.88578e-16
-max Error curlH[xDir] = 4.44089e-16
-max Error curlH[yDir] = 4.44089e-16
-max Error curlH[zDir] = 3.33067e-16
