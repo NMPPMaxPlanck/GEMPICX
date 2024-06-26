@@ -1,0 +1,41 @@
+# General setting
+simName = "ColdPlasma"
+
+# Grid parameters
+nCellVector = 512 1 1
+maxGridSizeVector = 256 1 1
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# wave vector
+k = 0.05 6.283185307179586 6.283185307179586
+
+# Simulation parameters
+TimeLoop.nSteps = 1000
+TimeLoop.dt = 0.1
+
+# Function parameters
+# background magnetic field
+Function.BBackgroundX = "1"
+Function.BBackgroundY = "1"
+Function.BBackgroundZ = "1"
+# cold plasma
+Function.DensityField = "1."
+Function.DensityFieldInv = "1." # 1/DensityField needed for energy computation
+
+# Diagnostics
+# Full Diagnostics
+FullDiagnostics.enable = 1 # 0 for true, 0 for false
+FullDiagnostics.groupNames = field
+
+FullDiagnostics.field.varNames = Ez
+FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.saveInterval = 1
+
+# Reduced Diagnostics
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = ElecEnergy MagEnergy ColdEnergy
+ReducedDiagnostics.saveInterval = 1 # saveInterval for all groupings not specifying their own
+
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.ColdEnergy.types = CurrentFieldEnergy
