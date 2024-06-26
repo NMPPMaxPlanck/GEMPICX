@@ -276,6 +276,13 @@ public:
         OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) = 0;
 };
 
+// Cold plasma step
+void apply_h_j(std::shared_ptr<FDDeRhamComplex> deRham,
+               DeRhamField<Grid::dual, Space::face>& D,
+               DeRhamField<Grid::dual, Space::face>& J,
+               amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBEquilibrium,
+               amrex::Real dt);
+
 }  // namespace Gempic::TimeLoop
 
 #endif

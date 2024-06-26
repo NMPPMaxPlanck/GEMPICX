@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "GEMPIC_CurrentFieldEnergy.H"
 #include "GEMPIC_ElecFieldEnergy.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GaussError.H"
@@ -213,6 +214,12 @@ private:
         {
             using MagEnergy = MagFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
             return std::make_unique<MagEnergy>(name, indexNum, isLastType);
+        }
+        else if (diagType == "CurrentFieldEnergy")
+        {
+            using CurrentEnergy =
+                CurrentFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
+            return std::make_unique<CurrentEnergy>(name, indexNum, isLastType);
         }
         else if (diagType == "GaussError")
         {
