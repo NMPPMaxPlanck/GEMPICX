@@ -92,7 +92,8 @@
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "AMReX_SPACEDIM": "3"
+                "AMReX_SPACEDIM": "3",
+                "GEMPIC_USE_LTO": "OFF"
             }
         },
         {
@@ -105,7 +106,8 @@
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "AMReX_SPACEDIM": "2"
+                "AMReX_SPACEDIM": "2",
+                "GEMPIC_USE_LTO": "OFF"
             }
         },
         {
@@ -118,7 +120,8 @@
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "AMReX_SPACEDIM": "1"
+                "AMReX_SPACEDIM": "1",
+                "GEMPIC_USE_LTO": "OFF"
             }
         },
         {
