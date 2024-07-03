@@ -18,19 +18,25 @@ Function.Bz = "1.0"
 
 # Parameters for class Particle:
 Particle.speciesNames = "ions" 
+Particle.sampler = "PseudoRandom"
+Particle.seed = 925
 
 # Parameters for class ParticleGroups (ions):
 Particle.ions.charge = 1
 Particle.ions.mass = 1
+Particle.ions.compNames = "vx" "vy" "vz" "weight" 
 
 # Parameters for function init_particles_full_domain (ions):
 Particle.ions.nPartPerCell = 10
 k = 1 1 0.3  # read from file
 Particle.ions.density = "1.0 + 0.01 * cos(kvarx * x)"
 Particle.ions.numGaussians = 1
-Particle.ions.G0.vMean = 0 0 0
-Particle.ions.G0.vThermal = 1 1 1
+Particle.ions.G0.vMean = 0 0 0 
+Particle.ions.G0.vThermal = 1 1 1 
 Particle.ions.G0.vWeight = 1
+
+# Parameters for class Particle.ions:
+Particle.ions.sampler = "PseudoRandom"
 
 # Parameters for class TimeLoop:
 TimeLoop.dt = 0.02

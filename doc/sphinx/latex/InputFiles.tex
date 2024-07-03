@@ -281,8 +281,11 @@ Particle input variables are divided into species with subscopes given by user p
 # Note that no naming style is enforced.
 # The name has to match that given to Reduced- and FullDiagnostics.
 Particle.speciesNames = any_names yOU WANT # String vector. No default.
+Particle.sampler = PseudoRandom # String. Default is PseudoRandom.
+Particle.seed = 1234 # Integer. Default is 925.
 # Number of particles per cell
 # Parameters for the first species
+Particle.{speciesName}.sampler = Sobol # overrides general sampling scheme for {speciesName}.
 Particle.{speciesName}.nPartPerCell = 10 # Integer. No default.
 Particle.{speciesName}.charge = -1.0 # Real. Default 1.0.
 Particle.{speciesName}.mass = 1.0 # Real. Default 1.0.

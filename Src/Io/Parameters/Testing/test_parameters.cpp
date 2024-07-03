@@ -59,7 +59,7 @@ int main (int argc, char* argv[])
 
         // Initialize particle groups
         amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> ions;
-        init_particles(infra, ions, InitMethod::fullDomainCpu);
+        init_particles(infra, ions);
 
         {  // "Time Loop" scope. Should be a separate function
             Io::Parameters params("TimeLoop");

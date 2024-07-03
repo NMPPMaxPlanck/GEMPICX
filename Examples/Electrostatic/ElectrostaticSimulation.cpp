@@ -102,7 +102,7 @@ int main (int argc, char *argv[])
 
         // Initialize particle groups
         amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> ions;
-        init_particles(infra, ions, InitMethod::fullDomainCpu);
+        init_particles(infra, ions);
 
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
