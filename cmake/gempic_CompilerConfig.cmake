@@ -20,13 +20,16 @@ else()
   message(STATUS "GEMPIC-Compiler: Unknown compiler")
 endif()
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT IPO_IS_SUPPORTED OUTPUT IPO_ERROR_MSG)
-if(IPO_IS_SUPPORTED)
-  message(STATUS "IPO/LTO enabled")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) # All targets instantiated afterwards
-else()
-  message(STATUS "IPO/LTO not supported: ${IPO_ERROR_MSG}")
+
+if(GEMPIC_USE_LTO)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT IPO_IS_SUPPORTED OUTPUT IPO_ERROR_MSG)
+  if(IPO_IS_SUPPORTED)
+    message(STATUS "IPO/LTO enabled")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE) # All targets instantiated afterwards
+  else()
+    message(STATUS "IPO/LTO not supported: ${IPO_ERROR_MSG}")
+  endif()
 endif()
 
 
