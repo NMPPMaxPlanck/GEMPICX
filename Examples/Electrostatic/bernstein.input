@@ -8,6 +8,7 @@ isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
 Particle.speciesNames = ions
+Particle.sampler = Sobol
 Particle.ions.nPartPerCell = 1000 # number of Particles per cell
 Particle.ions.charge = 1.0 # vector (one entry per species)
 Particle.ions.mass = 1.0 # vector (one entry per species)

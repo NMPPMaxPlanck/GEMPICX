@@ -27,25 +27,19 @@
 
 namespace Gempic::Particle
 {
-enum class InitMethod
-{
-    cellwise,
-    fullDomainCpu,
-    fullDomainCpuSobol,
-    fullDomainGpu
-};
-
 template <unsigned int vdim, unsigned int numspec, unsigned int ndata>
 inline void init_particles (
     ComputationalDomain infra,
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles,
-    const amrex::GpuArray<InitMethod, numspec>& initMet,
-    int rSeed = 925)
+    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(infra,particles,initMetArr)");
+    BL_PROFILE("Gempic::Particle::init_particles(infra,particles)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
+    std::string globalSamplerName{"PseudoRandom"};
+    params.get_or_set("sampler", globalSamplerName);
+    int rSeed{925};
+    params.get_or_set("seed", rSeed);
     params.print_class_parameters();
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(speciesNames.size() == numspec,
                                      "The number of species in the input file must match the "
@@ -53,37 +47,78 @@ inline void init_particles (
 
     for (int species{0}; species < numspec; ++species)
     {
-        particles[species] = std::make_shared<ParticleGroups<vdim>>(speciesNames[species], infra);
+        particles[species] =
+            std::make_shared<ParticleGroups<vdim, ndata>>(speciesNames[species], infra);
 
-        switch (initMet[species])
-        {
-            case InitMethod::cellwise:
-                init_particles_cellwise(infra, particles[species], rSeed);
-                break;
-            case InitMethod::fullDomainCpu:
-                init_particles_full_domain(infra, particles[species], species, rSeed);
-                break;
-            case InitMethod::fullDomainGpu:
-                init_particles_full_domain_gpu(infra, particles[species], species, rSeed);
-                break;
-            case InitMethod::fullDomainCpuSobol:
-                init_particles_full_domain_sobol(infra, particles[species], species, rSeed);
-                break;
-        }
+        sample_species(infra, particles[species], species, globalSamplerName, rSeed);
     }
 }
 
 template <unsigned int vdim, unsigned int numspec, unsigned int ndata>
 inline void init_particles (
     ComputationalDomain infra,
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles,
-    InitMethod initMet,
-    int rSeed = 925)
+    amrex::GpuArray<std::shared_ptr<ParticleGroupsLinVlasov<vdim, ndata>>, numspec>&
+        particlesLinVlasov,
+    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(infra,particles,initMet)");
-    amrex::GpuArray<InitMethod, numspec> initMethodsArray;
-    initMethodsArray.fill(initMet);
-    init_particles(infra, particles, initMethodsArray, rSeed);
+    BL_PROFILE("Gempic::Particle::init_particles(infra,particlesLinVlasov,particles)");
+    Io::Parameters params("Particle");
+    amrex::Vector<std::string> speciesNames;
+    params.get("speciesNames", speciesNames);
+    std::string globalSamplerName{"PseudoRandom"};
+    params.get_or_set("sampler", globalSamplerName);
+    int rSeed{925};
+    params.get_or_set("seed", rSeed);
+    params.print_class_parameters();
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(speciesNames.size() == numspec,
+                                     "The number of species in the input file must match the "
+                                     "number of species in the simulation!");
+
+    for (int species{0}; species < numspec; ++species)
+    {
+        particlesLinVlasov[species] =
+            std::make_shared<ParticleGroupsLinVlasov<vdim, ndata>>(speciesNames[species], infra);
+        particles[species] =
+            std::static_pointer_cast<ParticleGroups<vdim, ndata>>(particlesLinVlasov[species]);
+
+        sample_species(infra, particles[species], species, globalSamplerName, rSeed);
+    }
+}
+
+template <unsigned int vdim, unsigned int ndata>
+inline void sample_species (ComputationalDomain infra,
+                            std::shared_ptr<ParticleGroups<vdim, ndata>>& partGr,
+                            int species,
+                            std::string globalSamplerName,
+                            int rSeed)
+{
+    BL_PROFILE("Gempic::Particle::sample_species(infra,partGr,species,globalSamplerName,rSeed)");
+
+    std::string speciesName{partGr->get_name()};
+    Io::Parameters params("Particle." + speciesName);
+    std::string samplerName{globalSamplerName};
+    params.get_or_set("sampler", samplerName);
+
+    if (samplerName == "Cellwise")
+    {
+        init_particles_cellwise(infra, partGr, rSeed);
+    }
+    else if (samplerName == "PseudoRandom")
+    {
+        init_particles_full_domain(infra, partGr, species, rSeed);
+    }
+    else if (samplerName == "Sobol")
+    {
+        init_particles_full_domain_sobol(infra, partGr, species, rSeed);
+    }
+    else if (samplerName == "FullDomainGpu")
+    {
+        init_particles_full_domain_gpu(infra, partGr, species, rSeed);
+    }
+    else
+    {
+        amrex::Abort("Unknown particle initialization method: " + samplerName);
+    }
 }
 
 using ParticleType = amrex::Particle<0, 0>;  // For SoA attributes
@@ -205,7 +240,7 @@ void init_particles_cellwise (ComputationalDomain infra,
         // Adding particle from the model cell to all cells
         for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
         {
-            amrex::ParticleTile<ParticleType, vdim + 1, 0>& particles =
+            amrex::ParticleTile<ParticleType, vdim + ndata, 0>& particles =
                 ppg->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
             const amrex::Box& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};

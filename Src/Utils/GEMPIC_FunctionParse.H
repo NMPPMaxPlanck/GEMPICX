@@ -79,6 +79,32 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
 }
 
 /**
+ * @brief Compiles an array of AMReX parsers into an array of compiled executors.
+ *
+ * Description:
+ * Convenience function to compile functions using AMReX's Parser module from uncompiled parse
+ * objects (parseArray).
+ *
+ * @tparam functionNumber : The number of functions in the parser array.
+ * @param parseArray : An array of AMReX parsers to compile.
+ *
+ * @return functionArray : An array of compiled executors for the given parsers.
+ */
+template <size_t functionNumber>
+auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
+{
+    BL_PROFILE("Gempic::Utils::compile_functions(parseArray)");
+
+    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, functionNumber> evalArray;
+
+    for (size_t index{0}; index < functionNumber; ++index)
+    {
+        evalArray[index] = parseArray[index].template compile<GEMPIC_SPACEDIM + 1>();
+    }
+    return evalArray;
+}
+
+/**
  * @brief Parse function based on string. Please keep parse object (return arg 1) alive.
  *
  * Description:
@@ -116,5 +142,24 @@ inline auto parse_function (const std::string& variableString)
     Io::Parameters params{"Function", "function parseFunction"};
     return parse_function(variableString, params);
 }
+
+/**
+ * @brief Compiles an AMReX parser into a compiled executor.
+ *
+ * Description:
+ * Convenience function to compile a single function using AMReX's Parser module from uncompiled
+ * parse object.
+ *
+ * @param parser : A single AMReX parser to compile.
+ *
+ * @return function : Compiled executors for the given parser.
+ */
+inline auto compile_function (amrex::Parser parser)
+{
+    BL_PROFILE("Gempic::Utils::compile_function(parser)");
+    auto eval = parser.template compile<GEMPIC_SPACEDIM + 1>();
+    return eval;
+}
+
 }  // namespace Gempic::Utils
 #endif

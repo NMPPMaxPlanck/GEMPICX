@@ -141,7 +141,6 @@ void main_main ()
     BL_PROFILE("main()");
     //------------------------------------------------------------------------------
     Io::Parameters parameters{};
-    int species = 0;  // only one species
 
     double twopi = 4 * asin(1.0);
     const amrex::Vector<amrex::Real> k{AMREX_D_DECL(twopi, twopi, twopi)};
@@ -151,29 +150,23 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize Particle Groups
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGrCell;
-    init_particles(domain, partGrCell, InitMethod::cellwise);
-
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGrFull;
-    init_particles(domain, partGrFull, InitMethod::fullDomainCpu);
-
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGrFullGpu;
-    init_particles(domain, partGrFullGpu, InitMethod::fullDomainGpu);
+    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGr;
+    init_particles(domain, partGr);
 
     // Print particles data
     bool printPart = false;
     if (printPart)
     {
-        print_particles(partGrCell, species);
-        print_particles(partGrFull, species);
-        // print_particles(part_gr_full_gpu, species);
+        print_particles(partGr, 0);
+        print_particles(partGr, 1);
+        // print_particles(partGr, 2);
     }
 
     amrex::PrintToFile("test_sampler.tmp") << "\n";
     // Print analytical solution
     amrex::PrintToFile("test_sampler.tmp") << "1";
 
-    Io::Parameters params("Particle." + partGrCell[0]->get_name());
+    Io::Parameters params("Particle." + partGr[0]->get_name());
     amrex::Vector<amrex::Vector<amrex::Real>> vMean{};
     amrex::Vector<amrex::Vector<amrex::Real>> vThermal{};
     amrex::Vector<amrex::Real> vWeight{};
@@ -211,8 +204,8 @@ void main_main ()
     }
     amrex::PrintToFile("test_sampler.tmp") << " " << mom2 << "\n";
     // Print computed solutions
-    print_v_moments(partGrCell, species);
-    print_v_moments(partGrFull, species);
+    print_v_moments(partGr, 0);
+    print_v_moments(partGr, 1);
     // print_vMoments(part_gr_full_gpu, species);
 }
 
@@ -225,7 +218,7 @@ int main (int argc, char* argv[])
         if (amrex::ParallelDescriptor::MyProc() == 0) remove("test_sampler.tmp.0");
 
         const unsigned int vdim = 3;
-        const unsigned int numspec = 1;
+        const unsigned int numspec = 3;
         main_main<vdim, numspec>();
 
         if (amrex::ParallelDescriptor::MyProc() == 0)

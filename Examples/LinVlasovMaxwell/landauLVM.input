@@ -1,0 +1,66 @@
+# General setting
+simName = "LinVlasovMaxwell"
+
+# Grid parameters
+nCellVector = 32 1 1
+maxGridSizeVector = 16 1 1
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+Particle.speciesNames = electrons
+Particle.sampler = Sobol
+Particle.seed = 123
+Particle.electrons.nPartPerCell = 1000 # number of Particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "0.04 * cos(kvarx * x)"
+Particle.electrons.numGaussians = 1
+Particle.electrons.compNames = vx vy vz weight s0
+Particle.electrons.vThermalBackground = 1.0
+Particle.electrons.densityBackground = "1.0"
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0
+Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vWeight = 1.0
+
+# wave vector
+k = 0.4 6.283185307179586 6.283185307179586
+
+# Simulation parameters
+TimeLoop.nSteps = 500
+TimeLoop.dt = 0.04
+
+# Function parameters
+Function.BPrimXx = "0"
+Function.BPrimXy = "0"
+Function.BPrimXz = "0"
+Function.BPrimYx = "0"
+Function.BPrimYy = "0"
+Function.BPrimYz = "0"
+Function.BPrimZx = "0"
+Function.BPrimZy = "0"
+Function.BPrimZz = "0"
+
+# Diagnostics
+# Full Diagnostics
+FullDiagnostics.enable = 0 # 1 for true, 0 for false
+FullDiagnostics.groupNames = field part
+
+FullDiagnostics.part.varNames = electrons
+FullDiagnostics.part.saveInterval = 1
+FullDiagnostics.part.functor = raw
+
+FullDiagnostics.field.varNames = Ex
+FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.saveInterval = 1
+
+# Reduced Diagnostics
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
+ReducedDiagnostics.saveInterval = 1 # saveInterval for all groupings not specifying their own
+
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+
+ReducedDiagnostics.Part.types = ParticleLinVlasov

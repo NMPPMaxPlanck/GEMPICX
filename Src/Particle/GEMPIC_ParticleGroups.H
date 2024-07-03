@@ -9,6 +9,7 @@
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
 #include <AMReX_IntVect.H>
+#include <AMReX_Parser.H>
 #include <AMReX_Particle.H>
 #include <AMReX_Particles.H>
 #include <AMReX_Print.H>
@@ -17,6 +18,7 @@
 #include <AMReX_StructOfArrays.H>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FunctionParse.H"
 
 namespace Gempic::Particle
 {
@@ -34,11 +36,13 @@ private:
     amrex::ParticleReal m_charge = 1;
     amrex::ParticleReal m_mass = 1;
     std::string m_name = "particles";
+    amrex::Vector<std::string> m_compNames = {"vx", "vy", "vz", "weight"};
 
 public:
     amrex::ParticleReal get_charge () { return m_charge; }
     amrex::ParticleReal get_mass () { return m_mass; }
     std::string get_name () { return m_name; }
+    amrex::Vector<std::string> get_comp_names () { return m_compNames; }
 
     /**
      * Default Constructor.
@@ -49,6 +53,14 @@ public:
                    amrex::BoxArray grid) :
         amrex::ParticleContainer<0, 0, vdim + ndata, 0>(geom, distriMap, grid)
     {
+        if constexpr (vdim < 3)
+        {
+            m_compNames.resize(vdim + ndata);
+            if constexpr (vdim + ndata > 0)
+            {
+                m_compNames[vdim + ndata - 1] = "weight";
+            }
+        }
     }
     // Explicit const
     /**
@@ -63,21 +75,21 @@ public:
                    amrex::Real mass,
                    std::string& name,
                    ComputationalDomain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid),
-        m_charge(charge),
-        m_mass(mass),
-        m_name(name)
+        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
+        m_charge = charge;
+        m_mass = mass;
+        m_name = name;
     }
     ParticleGroups(amrex::Real charge, amrex::Real mass, ComputationalDomain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid),
-        m_charge(charge),
-        m_mass(mass)
+        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
+        m_charge = charge;
+        m_mass = mass;
     }
 
     ParticleGroups(int species, ComputationalDomain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
+        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         std::string specString = "Particle.species" + std::to_string(species);
         Io::Parameters params(specString);
@@ -87,13 +99,14 @@ public:
     }
 
     ParticleGroups(const std::string& speciesName, ComputationalDomain ifr) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(ifr.m_geom, ifr.m_distriMap, ifr.m_grid),
-        m_name{speciesName}
+        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
+        m_name = speciesName;
         std::string specString = "Particle." + speciesName;
         Io::Parameters params(specString, "class ParticleGroups (" + speciesName + ')');
         params.get_or_set("charge", m_charge);
         params.get_or_set("mass", m_mass);
+        params.get_or_set("compNames", m_compNames);
     }
 
     /**
@@ -144,6 +157,33 @@ public:
         this->copyParticles(source, local);
     }
 };
+
+/**
+ * Subclass for linearized Vlasov simulation. Every species needs density and thermal velocity of
+ * the equilibrium distribution function around which linearization was performed.
+ */
+template <unsigned int vdim, unsigned int ndata = 1>
+class ParticleGroupsLinVlasov : public ParticleGroups<vdim, ndata>
+{
+private:
+    amrex::Parser m_densityBackground;
+    amrex::ParticleReal m_vThermalBackground = 1;
+
+public:
+    amrex::Parser get_density_background () { return m_densityBackground; }
+    amrex::ParticleReal get_v_thermal_background () { return m_vThermalBackground; }
+
+    ParticleGroupsLinVlasov(const std::string& speciesName, ComputationalDomain ifr) :
+        ParticleGroups<vdim, ndata>(speciesName, ifr)
+    {
+        std::string specString = "Particle." + speciesName;
+        Io::Parameters params(specString, "class ParticleGroups (" + speciesName + ')');
+        auto [parser, eval] = Gempic::Utils::parse_function("densityBackground", params);
+        m_densityBackground = parser;
+        params.get_or_set("vThermalBackground", m_vThermalBackground);
+    }
+};
+
 // /**
 //  * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
 //  * velocity and the weight @p weight to the Particle Tile @p particles.

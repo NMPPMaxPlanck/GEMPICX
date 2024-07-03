@@ -86,6 +86,8 @@ protected:
         // particles (data read by particleGroups constructor)
         std::string speciesNames{"ions"};
         pp.add("Particle.speciesNames", speciesNames);
+        std::string samplerName{"PseudoRandom"};
+        pp.add("Particle.sampler", samplerName);
         amrex::Real charge{1.0};
         pp.add("Particle.ions.charge", charge);
         amrex::Real mass{1.0};
@@ -152,7 +154,7 @@ protected:
     void SetUp () override
     {
         m_infra = ComputationalDomain{};
-        init_particles(m_infra, m_particles, InitMethod::fullDomainCpu);
+        init_particles(m_infra, m_particles);
     }
 };
 

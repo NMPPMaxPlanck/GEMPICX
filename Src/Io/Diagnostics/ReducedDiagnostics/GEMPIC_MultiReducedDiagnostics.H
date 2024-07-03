@@ -231,6 +231,11 @@ private:
             using Part = Particle<vdim, numspec, degx, degy, degz, degree, ndata>;
             return std::make_unique<Part>(name, indexNum, isLastType);
         }
+        else if (diagType == "ParticleLinVlasov")
+        {
+            using Part = ParticleLinVlasov<vdim, numspec, degx, degy, degz, degree, ndata>;
+            return std::make_unique<Part>(name, indexNum, isLastType);
+        }
         else
         {
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(

@@ -64,19 +64,12 @@ public:
             const amrex::Vector<int>& writeIntComp = {};
             const amrex::Vector<std::string>& intCompNames = {};
             const amrex::Vector<int> writeRealComp(vdim + ndata, 1);
-            amrex::Vector<std::string> realCompNames = {"vx", "vy", "vz", "weight"};
-            if constexpr (vdim < 3)
-            {
-                realCompNames.resize(vdim + ndata);
-                if constexpr (vdim + ndata > 0)
-                {
-                    realCompNames[vdim + ndata - 1] = "weight";
-                }
-            }
+
             for (int idx = 0; idx < numspec; idx++)
             {
                 particles[idx]->WritePlotFile(filename, particles[idx]->get_name(), writeRealComp,
-                                              writeIntComp, realCompNames, intCompNames);
+                                              writeIntComp, particles[idx]->get_comp_names(),
+                                              intCompNames);
             }
         }
         write_job_info(filename);
