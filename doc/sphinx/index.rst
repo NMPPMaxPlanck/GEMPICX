@@ -20,10 +20,11 @@ Table of Contents
 ^^^^^^^^^^^^^^^^^
 
 .. toctree::
-
+   :maxdepth: 2
+   
    self
-   latex/deRham_diagrams
-   latex/deRhamComplex
+   latex/Maxwell_with_discrete_forms
+   latex/multiDdeRhamComplex
    latex/code_units
    latex/TimeLoops
    Forms/Forms

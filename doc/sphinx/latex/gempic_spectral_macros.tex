@@ -1,4 +1,4 @@
-%% Macros for Gempic/Gemif papers
+%% Macros for Gempic/Gempif papers
 %
 % legend for main math fonts:
 %
@@ -23,12 +23,13 @@
 %   \cL, \cI ...
 
 
-\usepackage[bbgreekl]{mathbbol}
-\usepackage{amsmath,amssymb}
-\usepackage{amsthm}  % added on 9.9.2020 -- no conflicts?
-%\usepackage{bm}
+% \usepackage[bbgreekl]{mathbbol}
+% \usepackage{amsmath,amssymb}
+% \usepackage{amsthm}  % added on 9.9.2020 -- no conflicts?
+% \usepackage{bm}
 %\usepackage{bbm}
-\usepackage{upgreek}
+% \usepackage{upgreek}
+
 
 \def\blankfirst{\phantom{V^0} }
 \def\blanksecond{\phantom{ \{ } } %\hspace*{-5pt}}
@@ -47,6 +48,8 @@
 \def\beq{\begin{equation}}
 \def\eeq{\end{equation}}
 
+\def\bs{\boldsymbol}
+
 \def\ds{\displaystyle}
 \def\nl{\newline}
 \def\noi{\noindent}  %\ni = reverse \in
@@ -58,7 +61,7 @@
 \def\eg{{\em e.g. }}
 \def\inc{{\rm in }}
 % need to be redefined for mathjax
-\newcommand{\bm}[1]{\bs {\rm #1}}
+\renewcommand{\bm}[1]{\bs {\rm #1}}
 \renewcommand{\mathbbm}[1]{\mathbb{#1}}
 
 \def\h{\hat}
@@ -159,6 +162,8 @@
 \def\matZ{\mathbb{Z}}
 \def\matLambda{\mathbb{\Lambda}}
 
+\newcommand{\tildemat}[1]{\tilde{\mathbb{#1}}}
+
 \def\LaB{\mathbb{\Lambda}} %% ?? delete
 
 % arrays of stacked quantities (dim = numerical parameter)
@@ -181,6 +186,8 @@
 \newcommand\arrZ{{\bm{\mathsf{Z}}}}
 \newcommand\arrLambda{{\bm{\mathsf{\Lambda}}}}
 \newcommand\arrsigma{{\bm{\mathsf{\sigma}}}}
+
+\newcommand{\tildearr}[1]{{\tilde{\bm{\mathsf{#1}}}}}
 
 % \newcommand\sfC{{\sf c}}
 % \newcommand\sfE{{\sf e}}
@@ -345,11 +352,17 @@
 \def\urho{{\u \rho}}
 \def\uJ{{\u \bJ}}
 
+\newcommand{\iph}{{i+\frac12}}
+\newcommand{\jph}{{j+\frac12}}
+\newcommand{\kph}{{k+\frac12}}
+\newcommand{\imh}{{i-\frac12}}
+\newcommand{\jmh}{{j-\frac12}}
+\newcommand{\kmh}{{k-\frac12}}
+
 %\newcommand{\bu}{{\bf u}}
 %\newcommand{\bv}{{\bf v}}
 %\newcommand{\bw}{{\bf w}}
 
-\def\bs{\boldsymbol}
 \def\vp{{\varphi}}
 \def\ve{{\varepsilon}}
 

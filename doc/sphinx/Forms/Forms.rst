@@ -1,17 +1,18 @@
-.. _api_Forms:
+.. _Operators_on_discrete_forms:
 
-Forms
-=====
+Operators on discrete forms
+===========================
+
+Here we give some details on the implementation of the discrete differential forms 
+used to represent the potentials, fields and densities in Gempic. 
+
 
 .. toctree::
    :maxdepth: 2
 
-   FDDeRhamComplex
+   ../latex/forms_and_operators
+   FormsDoxygen
+   
 
-   ExteriorDerivatives
-
-.. doxygenstruct:: Gempic::Forms::DeRhamField
-   :members:
-
-.. doxygenclass:: Gempic::Forms::DeRhamComplex
-   :members:
+   
+   
