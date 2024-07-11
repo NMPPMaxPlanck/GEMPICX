@@ -189,7 +189,7 @@ namespace
 AMReX is set up automatically, initiating the environment in each test based on the main GEMPIC build. This is done through the \verb|GEMPIC_UnitTests.cpp| file \loc{\main}.
 AMReX should accept any arguments given, but it is probably better to feign this functionality using either \lstinline{amrex::ParmParse} or the \lstinline{Parameters} class to set variables (to keep options contained), and change runtime variables in \verb|TestUtils/AmrexTestEnv.H| if needed. \todo{Move golden file ctests to \gt{}?}.
 
-\subsection{Testing GPU Code}\label{testing-gpu-code}
+\subsection{Testing GPU Code}\label{sec:testing-gpu-code}
 If there is one obvious flaw in choosing \gt, it's that it doesn't play well with CUDA. What this means is that any GPU code (such as \lstinline{amrex::ParallelFor}) must be put outside the test macros (\lstinline{TEST}, \lstinline{TEST_F} and \lstinline{TEST_P}) and into functions called from said macros instead. For examples, see the functions
 \begin{itemize} 
     \item \lstinline{update_rho_parallel_for} in \verb|DepositRho_test.cpp| or 
@@ -340,7 +340,7 @@ For an example, see \verb|spline_test.cpp| \loc{\pmc}.
 
     \item \emph{The CPU version runs fine, but GPU doesn't even build!\\ (or: My tests build and run, but I get mails that the pipeline failed every time I push.)}
 
-    See \hyperref[testing-gpu-code]{The GPU section}.
+    See the GPU section~\ref{sec:testing-gpu-code}.
 
     \item \emph{I get linker errors that some functions have multiple definitions}
     

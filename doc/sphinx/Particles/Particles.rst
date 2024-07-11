@@ -1,5 +1,5 @@
-Particles
-=========
+Particle-Mesh Coupling
+======================
 
 .. toctree::
    :maxdepth: 2

@@ -7,3 +7,4 @@ For Developers
    ../latex/tests
    ../latex/GoogleTest
    ../latex/CodeStyle
+   ../latex/ContributingToDoc

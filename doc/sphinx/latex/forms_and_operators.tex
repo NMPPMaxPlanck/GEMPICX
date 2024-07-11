@@ -1,0 +1,249 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\renewcommand{\Affilfont}{\footnotesize}
+%\renewcommand{\Authfont}{\normalsize}
+
+%\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+%%% \usepackage[colorlinks=true,urlcolor=cyan]{hyperref}%,linkcolor=green]{hyperref}
+
+%%%%%%%% MACROS
+\include{gempic_spectral_macros}
+
+\newcommand{\hi}{\hat{i}}
+\newcommand{\hj}{\hat{j}}
+\newcommand{\hk}{\hat{k}}
+
+% \newcommand{\arr}[1]{{\bs{\mathsf{#1}}}}
+
+% matrices
+\newcommand{\hodgeZero}{\mathbb{H}_0}
+\newcommand{\hodgeOne}{\mathbb{H}_1}
+\newcommand{\hodgeTwo}{\mathbb{H}_2}
+\newcommand{\hodgeThree}{\mathbb{H}_3}
+\newcommand{\hodgeDualZero}{\tilde{\mathbb{H}}_0}
+\newcommand{\hodgeDualOne}{\tilde{\mathbb{H}}_1}
+\newcommand{\hodgeDualTwo}{\tilde{\mathbb{H}}_2}
+\newcommand{\hodgeDualThree}{\tilde{\mathbb{H}}_3}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reduction operators}
+
+This section provides some details on the implementation of the reduction operators 
+$\mathcal{R}_{\ell}$ and $\tilde{\mathcal{R}}_{\ell}$ 
+described in Section \ref{sec:Maxwell_with_discrete_forms}.
+
+
+
+These operators map infinite-dimensional function spaces to the finite-dimensional ones 
+corresponding to the degrees of freedom:
+\begin{itemize}
+    \item reduction to 0-form coefficients compute point values on the nodes of the grid,
+    \item reduction to 1-form coefficients compute line integrals corresponding to circulations along edges of the grid,
+    \item reduction to 2-form coefficients compute surface integrals corresponding to fluxes along faces of the grid,
+    \item reduction to 3-form coefficients compute cell integrals on the grid,
+\end{itemize}
+where the grid is either the primal one (for the operators $\mathcal{R}_{\ell}$) 
+or the dual one (for the operators $\tilde{\mathcal{R}}_{\ell}$).
+
+Apart from the 0-form coefficients which are straightforward to evaluate, 
+Gauss quadrature formulas can be used to approximate the integrals: 
+
+\begin{equation}
+    \int_ a ^ b W(x) f(x) dx \approx \sum_{j=0}^{N-1} w_j f(q_j)
+\end{equation}
+%
+where $W(x)$ is a known function that can be chosen arbitrarily to fit the problem, $N$ is the number of abscissas $q_j$ in the interval $\left[a, b\right]$, and $w_j$ are the weights we assign to each abscissa in which $f$ is evaluated.
+
+The advantage of Gaussian quadratures is the possibility of choosing the weighting coefficients and the location of the abscissas at which the function is to be evaluated. Thus, we are able to integrate high order functions with higher accuracy (if the integrand is smooth and can be approximated well by a polynomial, such as periodic functions and waves).
+
+\subsection{Reduction to 1-form coefficients}
+We solve line integrals for the different degrees of freedom that correspond to the edges of the grid:
+
+\begin{equation}
+    f_{I,x}^1(i, j, k) = \int _{i} ^ {i+1} f_x (x, y_j, z_k) dx
+\end{equation}
+
+\begin{equation}
+    f_{I,y}^1(i, j, k) = \int _{j} ^ {j+1} f_y (x_i, y, z_k) dy
+\end{equation}
+
+\begin{equation}
+    f_{I,z}^1(i, j, k) = \int _{k} ^ {k+1} f_z (x_i, y_j, z) dz
+\end{equation}
+
+
+The following steps are used in order to implement the Gauss quadrature:
+
+\begin{itemize}
+    \item Initialize the abscissas (from -1 to 1) and the weights
+    \item Calculate the location of each point in the grid component-wise $\bfr = \{ r_{0,x} + idx, r_{0,y} + jdy, r_{0,z} + kdz \}$, $\bfr_0$ being the reference point and $i, j, k$ the indexes of the point in the grid (taking the centeredness of the grid into account; for the dual grid the point is shifted by a half).
+    \item Calculate the midpoint of the quadrature rule after having the position of the point in the grid: $\bfr_{comp,mid} = \bfr + \frac{d\bfr_{comp}}{2}$
+    \item Compute the integral along the direction of the component in two steps looping over the $N$ abscissas, which we denominate here by $q_l$ with $l$ an index ranging from $1$ to $N$:
+        \begin{enumerate}
+        \item Calculate the location of the quadrature point: $\bfr_{comp} = \bfr_{comp, mid} + q_l \frac{d\bfr_{comp}}{2}$
+        \item Increment the integral according to the quadrature rule: $integral += w_l f(r_x, r_y, r_z, t)$
+        \end{enumerate}
+    \item Re-scale the integral and assign it to the degrees of freedom: $f_{comp}^1(i, j, k) = integral * \frac{d\bfr_{comp}}{2}$
+\end{itemize}
+
+\subsection{Reduction to 2-form coefficients}
+The degrees of freedom are the faces of the grid. Therefore, face integrals have to be solved:
+
+\begin{equation}
+    f_{I,x}^2(i, j, k) = \int _{j} ^ {j+1} \int _{k} ^ {k+1} f_x (x_i, y, z) dy dz
+\end{equation}
+
+\begin{equation}
+    f_{I,y}^2(i, j, k) = \int _{i} ^ {i+1} \int _{k} ^ {k+1} f_y (x, y_j, z) dx dz
+\end{equation}
+
+\begin{equation}
+    f_{I,z}^2(i, j, k) = \int _{i} ^ {i+1} \int _{j} ^ {j+1} f_z (x, y, z_k) dx dy
+\end{equation}
+
+The implementation of the Gauss quadrature is similar to the one used for the 1-form, except here there are two midpoints (one for each direction integrated) and two integrals.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Hodge operators}
+
+
+This section provides some details on the implementation of the Hodge matrices
+$\mathbb{H}_{\ell}$ and $\tilde{\mathbb{H}}_{\ell}$ used in the GEMPIC code
+(as described for instance in Section~\ref{sec:maxwell_cont_discrete}).     
+
+
+\subsection{Definition of the Hodge operators}
+Starting with a cartesian 3D grid, a 2-form on the primal grid $\mathbf{f_2}$ such that 
+$ \mathbf{f}^2 = \{ f_{x}^2, f_{y}^2, f_{z}^2 \}$ and a 1-form on the dual grid $\mathbf{\tilde f^1}$ 
+such that $ \mathbf{\tilde f^1} = \{ \tilde f_{x}^1, \tilde f_{y}^1, \tilde f_{z}^1 \}$, for the calculation 
+of the hodge operator $\mathbf{H_2}\mathbf{f^2} = \mathbf{\tilde f^1}$ we consider:
+\linebreak
+
+The NodeToCell stencils, which we call $\mathbf{w}$: 
+
+\begin{itemize}
+    \item Degree 2: $\text{stencil} = 1$
+    \item Degree 4: $\text{stencil} = \{ \frac{1}{8}, \frac{6}{8}, \frac{1}{8} \}$ 
+    \item Degree 6: $\text{stencil} = \{ -\frac{7}{384}, \frac{44}{384}, \frac{310}{384}, \frac{44}{384}, -\frac{7}{384} \}$ 
+\end{itemize}
+
+The CellToNode stencils, which we call $\mathbf{h}$: 
+
+\begin{itemize}
+    \item Degree 2: $\text{stencil} = 1$
+    \item Degree 4: $\text{stencil} = \{ -\frac{1}{24}, \frac{13}{12}, -\frac{1}{24} \}$ 
+    \item Degree 6: $\text{stencil} = \{ \frac{3}{640}, -\frac{29}{480}, \frac{1067}{960}, -\frac{29}{480}, \frac{3}{640} \}$ 
+\end{itemize}
+
+The stencils will have subindices $i,j,k$ depending on whether they are applied to the $x, y, z$ direction. The degree is fixed from the beginning.
+\linebreak
+
+Therefore, the hodge formula for this map is the following for the x component, considering that for degree 2, 4 and 6, the values for $d$ are $0, 1$ and $2$ respectively:
+
+\begin{equation}
+    \sum_{s_i = -d} ^ {+d} \sum_{s_j = -d} ^ {+d} \sum_{s_k = -d} ^ {+d} w(s_i)h(s_j)h(s_k) f_{x}^2 (i + s_i, j + s_j, k + s_k) = \frac{\Delta y \Delta z}{\Delta x} f_{x}^1 (i, j, k)
+\end{equation}
+
+For the y component:
+
+\begin{equation}
+    \sum_{s_i = -d} ^ {+d} \sum_{s_j = -d} ^ {+d} \sum_{s_k = -d} ^ {+d} h(s_i)w(s_j)h(s_k) f_{y}^2 (i + s_i, j + s_j, k + s_k) = \frac{\Delta x \Delta z}{\Delta y} f_{y}^1 (i, j, k)
+\end{equation}
+
+For the z component:
+
+\begin{equation}
+    \sum_{s_i = -d} ^ {+d} \sum_{s_j = -d} ^ {+d} \sum_{s_k = -d} ^ {+d} h(s_i)h(s_j)w(s_k) f_{z}^2 (i + s_i, j + s_j, k + s_k) = \frac{\Delta x \Delta y}{\Delta z} f_{z}^1 (i, j, k)
+\end{equation}
+
+\subsection{Hodge algorithm}
+
+Using square brackets to denote an array of indices for the form, we transform the expression 
+\begin{equation}
+    \sum_{s_i = -d} ^ {+d} \sum_{s_j = -d} ^ {+d} \sum_{s_k = -d} ^ {+d} w[s_i]h[s_j]h[s_k] f_{x}^2 [i + s_i, j + s_j, k + s_k]
+\end{equation}
+
+into
+
+\begin{equation}
+    t_1 [i,j,k] = \sum_{s_k} h[s_k] f_x ^ 2[i, j, k + s_k]
+\end{equation}
+
+Since the sums are independent of each other:
+\begin{equation}
+    t_2 [i,j,k] = \sum_{s_j} h[s_j] t_1[i, j + s_j, k]
+\end{equation}
+
+\begin{equation}
+    t_3 [i,j,k] = \sum_{s_i} w[s_i] t_2[i + s_i, j, k]
+\end{equation}
+
+Where $t_1$ is a reference to the output, $t_2$ is a temporary MultiFab and $t_3$ is also a reference to the output. This avoids declaring three temporary MultiFabs (which is potentially very expensive and inefficient).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exterior derivatives}
+
+\subsection{Curl}
+\label{sec:curl}
+The curl is calculated applying the Stokes' theorem along all discrete elements of the domain. For example, if $\bfE$ is a 3D-vector defined in $\RR^3$, $\bff^1_{I} = (f^1_{I,x}, f^1_{I,y}, f^1_{I,z})$ the projections of $\bff$ to 1-forms (line integrals along each direction) and $\bff^2_{I} = (f^2_{I,x}, f^2_{I,y}, f^2_{I,z})$ the corresponding projections of $\bff$ to 2-forms (face integrals on the elements of the grid), then:
+
+\begin{equation}
+    \oint_{\partial \Sigma} \bff \cdot d\bfl = \iint_{\Sigma} \curl f \cdot d\bfS
+\end{equation}
+
+Which means that we can calculate the curl with the following relations applied to each component of the 2-form:
+
+\begin{align}
+    f^2_{I,x}(x, y, z) = f^1_{I,z}(x, y + dy, z) - f^1_{I,z}(x, y, z) - f^1_{I,y}(x, y, z + dz) + f^1_{I,y}(x, y, z)
+\end{align}
+
+\begin{align}
+    f^2_{I,y}(x, y, z) = f^1_{I,x}(x, y, z + dz) - f^1_{I,x}(x, y, z) - f^1_{I,z}(x + dx, y, z) + f^1_{I,z}(x, y, z)
+\end{align}
+
+\begin{align}
+    f^2_{I,z}(x, y, z) = f^1_{I,y}(x + dx, y, z) - f^1_{I,y}(x, y, z) - f^1_{I,x}(x, y + dy, z) + f^1_{I,z}(x, y, z)
+\end{align}
+
+\subsection{Div}
+To be included.
+
+\subsection{Grad}
+To be included.
+
+\end{document}

@@ -66,12 +66,12 @@
 
 \maketitle
 
-\section{Normalization in GEMPIC}
+\section{Code units: normalization in GEMPIC}
 
 \subsection{The Vlasov-Maxwell model}
 
-Vlasov equation for the distribution function of s particle species $s$ in SI units reads 
-\begin{equation}\label{Vlasov}
+The Vlasov equation for the distribution function of a particle species $s$ in SI units reads 
+\begin{equation}\label{eq:Vlasov}
 \partial_t f_s + \bv \cdot \nabla_{\bx} f_s + \frac{q_s}{m_s} \left( \bE + \bv \times \bB \right) \cdot \nabla_{\bv} f_s = 0
 \end{equation}
 along with Maxwell's equations
@@ -98,7 +98,7 @@ The initial condition for $f$ in general involves Maxwellians of the form
 where the thermal velocity of species $s$ is related to its temperature by $v_{th,s}=\sqrt{\frac{k_B T_s}{m_s}}$, where $k_B$ is the Boltzmann constant. 
 
 The total energy of the system is given by the Hamiltonian in SI units, 
-\begin{equation}\label{hamiltonian}
+\begin{equation}\label{eq:hamiltonian}
 \mathcal{H}=\sum_s\frac{m_s}{2}\int |\bv|^2 f_s \du\bx \du\bv + \frac{\varepsilon_0}{2} \int |\bE|^2 \du\bx + \frac{1}{2\mu_0} \int |\bB|^2 \du\bx.
 \end{equation}
 
@@ -127,7 +127,7 @@ Let us now define related physical reference quantities:
 \end{equation}
 
 Plugging these expressions into the Vlasov-Maxwell system, we get the dimensionless system
-\begin{equation}\label{Vlasovtr}
+\begin{equation}\label{eq:Vlasovtr}
 	\partial_{\tht} \fht_s + \frac{\vr\tr}{\xr}\vht \cdot \nablaxht \fht_s + \frac{\qr\Br\tr}{\mr} \frac{\qht_s}{\mht_s} \left( \frac{\Er}{\vr\Br}\Eht + \vht \times \Bht \right) \cdot \nablavht \fht_s = 0
 	\end{equation}
 	and Maxwell's equations
@@ -161,7 +161,7 @@ With these choices all the coefficients in our Vlasov-Maxwell system are set to 
 \end{equation}
 
 Finally the dimensionless Vlasov-Maxwell system implemented in the code reads
-\begin{equation}\label{Vlasovt}
+\begin{equation}\label{eq:Vlasovt}
 	\partial_{\tht} \fht_s + \vht \cdot \nablaxht \fht_s +  \frac{\qht_s}{\mht_s} \left( \Eht + \vht \times \Bht \right) \cdot \nablavht \fht_s = 0
 	\end{equation}
 	\begin{subequations}
@@ -183,7 +183,7 @@ Finally the dimensionless Vlasov-Maxwell system implemented in the code reads
 	Note that for the natural choice $\qr=e$ the electron charge, $Z_s$ is the charge state of species $s$.
 
 The total energy of the dimensionless system is given by the following dimensionless Hamiltonian, 
-	\begin{equation}\label{hamiltoniant}
+	\begin{equation}\label{eq:hamiltoniant}
 	\mathcal{H}=\sum_s\frac{\mht_s}{2}\int |\vht|^2 \fht_s \du\xht \du\vht + \frac{1}{2s_\omega^2} \int \|\Eht\|^2 \du\xht + \frac{s_v^2}{2s\omega^2} \int \|\Bht\|^2 \du\xht.
 	\end{equation}
 
@@ -201,6 +201,7 @@ $\lambda_D=\vthr/\omr$ the reference Debye length.
 A summary of the reference quantities for choice 1 ($\vr=c$) and choice 2 ($\vthr$) is given in table \ref{tab:refq}.
 
 \begin{table}[htbp]
+	    \caption{Reference quantities \label{tab:refq}}
 	\centering\begin{tabular}{c|c|c}
 		Reference quantity & Choice 1 & Choice 2 \\ \hline
 		$\nr$& arbitrary & arbitrary\\
@@ -213,8 +214,6 @@ A summary of the reference quantities for choice 1 ($\vr=c$) and choice 2 ($\vth
 		$\xr$& $s_\omega d_e$ & $s_\omega \lambda_D$ \\
 		$\Er$& $c\Br$ & $\vthr\Br$ \\
 	\end{tabular}
-	\caption{Reference quantities}
-	\label{tab:refq}
 \end{table}
 
 By default the two scaling parameters are set to 1. This means on the one hand ($s_v=1$) that the reference velocity is the speed of light, $c$, and on the other hand $(s_\omega=1$) that $\omega_{p,e}=\omega_{c,e}$, which imposes a dependence between $\nr$ and $\Br$.

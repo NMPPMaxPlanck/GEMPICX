@@ -90,6 +90,8 @@ language = 'en'
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+numfig = True
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
@@ -121,7 +123,7 @@ read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
+html_static_path = ['_static']
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)

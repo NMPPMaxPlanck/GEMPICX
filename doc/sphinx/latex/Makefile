@@ -1,4 +1,4 @@
-RST_FILES = deRham_diagrams.rst exteriorDerivatives.rst projections.rst hodge.rst tests.rst code_units.rst particleMesh.rst TimeLoops.rst deRhamComplex.rst GoogleTest.rst CodeStyle.rst InputFiles.rst
+RST_FILES = Maxwell_with_discrete_forms.rst multiDdeRhamComplex.rst tests.rst code_units.rst forms_and_operators.rst particleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst
 
 %.rst: %.tex
 	pandoc $< --mathjax --columns=120 --wrap=preserve --bibliography spectral_gempic.bib --citeproc -o $@

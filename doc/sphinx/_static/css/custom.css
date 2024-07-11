@@ -1,0 +1,17 @@
+/* moves equation numbering to the side of the equation (known sphinx_rtd_theme bug https://github.com/readthedocs/sphinx_rtd_theme/issues/301) */
+span.eqno {
+    float: right;
+}
+span.eqno a.headerlink {
+    position: relative;
+    z-index: 1;
+}
+
+.bd-main .bd-content .bd-article-container {
+    max-width: 100%;  /* default is 60em */
+  }
+
+.bd-page-width {
+max-width: 95%;  /* default is 88rem */
+}
+
