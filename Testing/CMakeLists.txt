@@ -12,6 +12,9 @@ add_subdirectory(Forms)
 add_subdirectory(Io)
 add_subdirectory(ParticleMeshCoupling)
 add_subdirectory(TimeLoop)
+if(GEMPIC_BUILD_EXAMPLES)
+  add_subdirectory(Examples)
+endif()
 
 add_custom_command(
   TARGET GtestTests POST_BUILD
