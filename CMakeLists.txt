@@ -90,7 +90,6 @@ if(GEMPIC_BUILD_TESTS)
 endif()
 if(GEMPIC_BUILD_EXAMPLES)
   include_directories("${CMAKE_SOURCE_DIR}/Examples")
-  include_directories("${CMAKE_SOURCE_DIR}/Examples/QuasiNeutral")
   # Add subfolder with examples
   add_subdirectory(Examples)
 endif()
