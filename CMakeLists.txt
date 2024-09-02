@@ -14,6 +14,7 @@ option(GEMPIC_USE_OMP "Use OpenMP Backend of AMReX (Not recommended due to reduc
 option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance" ON)
 option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." ON)
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
+option(GEMPIC_BUILD_DOCUMENTATION "Build the documentation. Only builds if depencies are met." ON)
 
 # Enable Languages
 enable_language(CXX)
@@ -82,8 +83,10 @@ target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}")
 
 # Add subfolder with source files of the library
 add_subdirectory(Src)
-# Add doxygen documentation
-add_subdirectory(doc)
+if(GEMPIC_BUILD_DOCUMENTATION)
+  # Add doxygen documentation
+  add_subdirectory(doc)
+endif()
 if(GEMPIC_BUILD_TESTS)
   # Add subfolder with tests
   add_subdirectory(Testing)

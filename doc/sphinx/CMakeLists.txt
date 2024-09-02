@@ -1,27 +1,54 @@
-#Check whether sphinx exists on the machine. If it does the job will pass, if not it fails 
+if(GEMPIC_DOCUMENTATION AND DOXYGEN_FOUND)
+  list(APPEND RST_FILES Maxwell_with_discrete_forms.rst multiDdeRhamComplex.rst tests.rst code_units.rst forms_and_operators.rst particleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst)
 
-#find_package(Sphinx PATHS ${CMAKE_SOURCE_DIR}/cmake)
-#if (SPHINX_FOUND)
-#    set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
-#    set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/doc/sphinx)
-#    set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
-#    add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
-#                       COMMAND 
-#                         ${SPHINX_EXECUTABLE} -b html
-#                         # Tell Breathe where to find the Doxygen output
-#                         -Dbreathe_projects.CatCutifier=${DOXYGEN_OUTPUT_DIR}/xml
-#                       ${SPHINX_SOURCE} ${SPHINX_BUILD}
-#                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#                       DEPENDS
-#                       # Other docs files you want to track should go here (or in some variable)
-#                       ${CMAKE_CURRENT_SOURCE_DIR}/index.rst
-#                       ${DOXYGEN_INDEX_FILE}
-#                       MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
-#                       COMMENT "Generating documentation with Sphinx")
-#
-#    # Nice named target so we can run the job easily
-#    add_custom_target(Sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
-#	message("Sphinx pages will be built according to CI")
-#else (SPHINX_FOUND)
-#	message("Sphinx is not installed")
-#endif (SPHINX_FOUND)
+  #Check whether sphinx exists on the machine. If it does the job will pass, if not it fails 
+  cmake_policy(SET CMP0094 NEW)
+  find_package(Python3)
+
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import sphinx;import breathe"
+    RESULT_VARIABLE SPHINX_AND_BREATHE_NOT_FOUND
+    ERROR_VARIABLE PYTHON_MODULE_ERROR
+    ECHO_ERROR_VARIABLE
+  )
+
+  if(SPHINX_AND_BREATHE_NOT_FOUND)
+    message(WARNING "${PYTHON_MODULE_ERROR}\nPython3 found: ${Python3_EXECUTABLE}")
+    message(WARNING "Sphinx, Breathe or Python is not installed. Building the documentation is not possible. If you have a virtual environment, did you activate it?")
+  else()
+    set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
+    set(SPHINX_BUILD ${CMAKE_BINARY_DIR}/documentation)
+    set(LATEX_INPUT ${SPHINX_SOURCE}/latex)
+    set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
+
+    foreach(RSTF ${RST_FILES})
+      string(REGEX REPLACE "[.]rst$" ".tex" LATEXF ${RSTF})
+      add_custom_command(OUTPUT ${RSTF}
+        DEPENDS ${LATEXF}
+        COMMAND pandoc ${LATEXF} --mathjax --columns=120 --wrap=preserve --bibliography spectral_gempic.bib --citeproc -o ${RSTF}
+        COMMAND ${Python3_EXECUTABLE} convertEq.py ${RSTF}
+        VERBATIM
+
+        WORKING_DIRECTORY ${LATEX_INPUT}
+      )
+      add_custom_target(${RSTF} ALL DEPENDS ${LATEX_INPUT}/${RSTF})
+    endforeach()
+    
+    list(TRANSFORM RST_FILES PREPEND ${LATEX_INPUT}/)
+    list(APPEND DOCUMENTATION_DEPENDENCIES ${RST_FILES} ${SPHINX_SOURCE}/index.rst ${DOXYGEN_INDEX_FILE})
+
+    add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
+      COMMAND ${Python3_EXECUTABLE} -m sphinx -b html
+              # Tell Breathe where to find the Doxygen output
+              -Dbreathe_projects.gempic=${DOXYGEN_OUTPUT_DIR}
+              ${SPHINX_SOURCE} ${SPHINX_BUILD}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      DEPENDS ${DOCUMENTATION_DEPENDENCIES}
+      MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
+      COMMENT "Generating documentation with Sphinx"
+    )
+
+    add_custom_target(doc ALL DEPENDS ${SPHINX_INDEX_FILE})
+    message(STATUS "Documentation can be built with the command `cmake --build ${CMAKE_BINARY_DIR} --target doc`")
+  endif()
+endif()

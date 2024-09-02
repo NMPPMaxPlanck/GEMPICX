@@ -7,10 +7,12 @@ New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 - [CMake](https://cmake.org/cmake/help/latest/index.html)
 - [numdiff](https://www.nongnu.org/numdiff/) (To be deprecated. See issue #99)
 - Documentation:
-  - Doxygen 
-  - Sphinx
-  - [Breathe](https://breathe.readthedocs.io/en/latest/)
+  - [Doxygen](www.doxygen.org) 
+  - Python 3
+    - [Sphinx](https://www.sphinx-doc.org)
+    - [Breathe](https://breathe.readthedocs.io/en/latest/)
 - Postprocessing:
+  - Python 3
   - [Graphviz](http://www.graphviz.org/) (for graphical visualization of objects)
 
 
@@ -22,7 +24,7 @@ All available presets can be listed using
 cmake --list-presets
 ```
 
-If more specific presets are required to build on systems which are not defined we recommened to store these presets in a `CMakeUserPresets.json` file.
+If more specific presets are required to build on systems which are not defined we recommend storing these presets in a `CMakeUserPresets.json` file.
 
 Building GEMPIC using presets can be done by following the instructions below. Use different build directories for different presets.
 ```
@@ -53,6 +55,11 @@ using `-D GEMPIC_OPTION Argument`
 | `AMReX_SPACEDIM`   | The dimension of the simulation (`1`, `2` or `3`)  | `3`           |
 | `GEMPIC_USE_CUDA`  | Use CUDA Backend of AMReX                    | `OFF`         |
 | `GEMPIC_USE_OMP`   | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)               | `OFF`         |
+| `GEMPIC_USE_CUDA`  | Use CUDA Backend of AMReX                    | `OFF`         |
+| `GEMPIC_USE_LTO`   | Use Link-Time Optimization <br> (Turning it off reduces compile time, but may reduce performance)| `ON`      |
+| `GEMPIC_BUILD_TESTS` | Build the tests. Currently only toggles unit tests. | `ON` |
+| `GEMPIC_BUILD_EXAMPLES` | Build the examples. Currently only toggles all or none. | `ON` |
+| `GEMPIC_BUILD_DOCUMENTATION` | Build the documentation. Only builds if depencies are met. | `ON` |
 
 
 # Quickstart Example
@@ -111,26 +118,10 @@ python3 LandauVP.py
   - (lldb) Cmake: debugs the target that is set in vscode (without input file). Can be used to debug ctests
 
 # Using QT-creator with gempic
-Do NOT open amrex as a project with QT-creator. This will build a second instance of amrex and gempic will not be able to find either of them. Building gempic as a project automatically links it to amrex, so amrex doesn't need to be set up as project itself.
-
 Steps to set up gempic in QT-creator:  
 1.) In QT-creator: File -> Open file or project -> click on CMakeLists.txt file  
 2.) On Sidebar, click Projects and set correct build directory  
 3.) If project doesn't compile automatically: close qccreator and reopen it, load project  
 
-# Output of simulation
-The executable simulations/valsov\_maxwell/vlasov\_maxwell generates output. This information is written into a file called simulation\_name\_tmp.output every 5 steps in case the simulation is interrupted. Each row contains the following information for one step:  
-time | Ex | Ey | Ez | Bx | By | Bz | kinetic energy | momentumx | momentumy | momentumz| gauss error  
-where the 2-norm has been applied to all the fields. If the simulation is run for dimensions other than 3d3v, then the corresponding components are not part of the output.
-
 # Documentation
 [Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
-The documentation is constructed using Sphinx, and its source code can be found in the `gempic/doc/sphinx` folder.
-
-The documentation can be build locally on your computer following the 
-steps below. This is only recommended if a developer needs to extend
-the existing documentation and needs to check his or her changes.
-  - Install the required packages: `sphinx`, `breathe`, `sphinx_rtd_theme`, `pandoc`, `doxygen`
-  - Follow the `script` in the `pages` section of the CI configuration [.gitlab-ci.yml](./.gitlab-ci.yml) to build the documentation
-    (Except the last step which publishes the documentation.)
-  - The generated HTML files can be found in the `_build/html/` folder. Open `index.html` in your browser to view the documentation.

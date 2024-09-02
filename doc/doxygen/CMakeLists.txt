@@ -5,24 +5,29 @@ option(GEMPIC_DOCUMENTATION "Build Doxygen documentation" ON)
 if(GEMPIC_DOCUMENTATION)
   #check if Doxygen is installed
   find_package(Doxygen)
+  set(DOXYGEN_FOUND ${DOXYGEN_FOUND} PARENT_SCOPE)
   if(DOXYGEN_FOUND)
-    file(GLOB_RECURSE GEMPIC_PUBLIC_HEADERS ${CMAKE_SOURCE_DIR}/src/*.h)
+    file(GLOB_RECURSE CONFIGURE_DEPENDS GEMPIC_PUBLIC_HEADERS ${CMAKE_SOURCE_DIR}/Src/*.H)
+   
+    set(DOXYGEN_WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})    
+
+    set(DOXYGEN_INTERNAL_OUTPUT_DIR ${CMAKE_BINARY_DIR}/doc)
+    set(DOXYGEN_OUTPUT_DIR ${DOXYGEN_INTERNAL_OUTPUT_DIR}/xml)
+    set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/index.xml)
     
-    set(DOXYGEN_INDEX_FILE ${CMAKE_CURRENT_SOURCE_DIR}/html/index.html)
-    # set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-    #set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-    #Replace variables inside @@ with the current values
-    #configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
-    #file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
+    set(DOXYGEN_OUTPUT_DIR ${DOXYGEN_OUTPUT_DIR} PARENT_SCOPE)
+    set(DOXYGEN_INDEX_FILE ${DOXYGEN_INDEX_FILE} PARENT_SCOPE)
+
     add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
       DEPENDS ${GEMPIC_PUBLIC_HEADERS}
-      COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile.in
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMAND DOXYGEN_INTERNAL_OUTPUT_DIR=${DOXYGEN_INTERNAL_OUTPUT_DIR} ${DOXYGEN_EXECUTABLE} Doxyfile.in
+      WORKING_DIRECTORY ${DOXYGEN_WORKING_DIR}
       MAIN_DEPENDENCY Doxyfile.in
-      COMMENT "Generating docs")
+      COMMENT "Generating docs (working folder: ${DOXYGEN_WORKING_DIR})"
+    )
     add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
   else(DOXYGEN_FOUND)
-    message("Doxygen is not installed")
+    message(WARNING "Doxygen is not installed. Documentation will not be built.")
   endif(DOXYGEN_FOUND)
 endif(GEMPIC_DOCUMENTATION)
 

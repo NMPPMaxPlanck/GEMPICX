@@ -103,6 +103,7 @@ QUIET                  = YES
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../../Src
+OUTPUT_DIRECTORY = $(DOXYGEN_INTERNAL_OUTPUT_DIR)
 
 # If the value of the INPUT tag contains directories, you can use the
 # FILE_PATTERNS tag to specify one or more wildcard patterns (like *.cpp and
