@@ -119,11 +119,30 @@
 \tableofcontents
 
 \section{Contributing to the documentation}
+The documentation is constructed using Sphinx, and its source code can be found in the \verb|gempic/doc/sphinx| folder.
+
+Documentation sections may be added using rst or LaTeX files (which are converted to rst).
+
+\subsection{Building the documentation}
+If a developer needs to extend the existing documentation and needs to check his or her changes, the documentation can be built locally on the computer following the steps below. 
+\begin{enumerate}
+   \item Install the required packages: \verb|sphinx|, \verb|breathe|, \verb|sphinx_rtd_theme|, \verb|pandoc|, \verb|doxygen|
+   \item Configure with cmake if you haven't done so already\footnote{If you use a virtual environment or a conda environment for Python, remember to activate it \emph{before} configuring.} -- \emph{e.g.} using one of the presets
+   \item In your build directory, use the command \verb|cmake --build . --target doc| to build the documentation (or simply \verb|make doc|/\verb|ninja doc| if you're using GNU Makefiles/Ninja)
+   \item The generated HTML files can be found in the \verb|/PATH/TO/GEMPIC/BUILD/DIR/documentation/| folder. Open \verb|index.html| in your browser to view the documentation
+\end{enumerate}
 
 
-Documentation sections may be added using rst or latex files (which are converted to rst).
+\subsection{Adding LaTeX files to the documentation}
+LaTeX files need to be converted to the .rst format and then referred to from the appropriate place in the documentation:
+\begin{enumerate}
+   \item Add the LaTeX file (\emph{e.g.} \verb|someLatexFile.tex|) to the \verb|doc/sphinx/latex| folder
+   \item Add the .rst file (\emph{e.g.} \verb|someLatexFile.rst|) to the list in the top of \verb|doc/sphinx/CMakeLists.txt|
+   \item Add the .rst file (\emph{e.g.} \verb|latex/someLatexFile.rst|) either to \verb|doc/sphinx/index.rst| or to any of the other non-LaTeX rst files referred to there.
+\end{enumerate}
+The LaTeX files themselves can be most forms of valid LaTeX, with a few caveats mentioned in \ref{sec:labels_in_latex}.
 
-\subsection{Using references in latex documentation files}
+\subsection{Using references in LaTeX documentation files}
 \label{sec:refs_in_latex}
 
 References to equations and sections can done as follows:
@@ -166,7 +185,6 @@ References to equations and sections can done as follows:
     \verb|\ref{tab:refq}| gives \ref{tab:refq}.
 
 \end{itemize}
-
 
 \subsection{Musical interlude}
 
@@ -251,10 +269,10 @@ Lu nei si not sicodor
 Ah es la bebi la dai big iour
 
 
-\subsection{Using labels in latex documentation files}
+\subsection{Using labels in LaTeX documentation files}
 \label{sec:labels_in_latex}
 
-Sections, equations, tables and figures can have labels in latex files.
+Sections, equations, tables and figures can have labels in LaTeX files.
 
 \begin{itemize}
     \item 
