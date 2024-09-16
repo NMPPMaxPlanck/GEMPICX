@@ -599,9 +599,7 @@ public:
      *
      * @tparam dir The direction in which to compute: x = 0, y = 1, z = 2
      *
-     * @param position Current position of the particle
-     * @param plo (rename this one)
-     * @param dxInverseDir Inverse of the cell size in the given direction
+     * @param refOffset Normalized offset position of the particle
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update1_d_primitive (const amrex::Real refOffset)

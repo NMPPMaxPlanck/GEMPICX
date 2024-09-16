@@ -11,7 +11,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 
-\include{gempic_spectral_macros}
+\include{gempic_latex_macros}
 
 \renewcommand{\part}{\texttt{part}}
 \newcommand{\cell}{\texttt{cell}}
@@ -23,13 +23,13 @@
 
 
 
-\section{Smoothing B-splines}
+\section{Smoothing B-Splines}
 
 The Particle-Mesh coupling algorithms are based on a spline smoothing of the 
 particle Dirac distribution in the discrete Lagrangian functional.
 Let us first recall the definition of cardinal B-splines.
 
-\subsection{Cardinal B-splines}
+\subsection{Cardinal B-Splines}
 \label{sec:card_B_splines}
 
 The cardinal B-spline of degree $d$ centered at $x=0$ can be defined
@@ -57,7 +57,7 @@ S^0(x) &= \begin{cases}
     \end{equation}
 \end{itemize}
 
-\subsection{Particle B-splines}
+\subsection{Particle B-Splines}
 \label{sec:part_splines}
 
 Associated with a particle with arbitrary position 
@@ -85,7 +85,7 @@ and smoothed charge and current particle densities in configuration space
 \end{equation}
 
 
-\subsection{Node and cell splines at particle positions}
+\subsection{Node and Cell Splines at Particle Positions}
 \label{sec:node_cell_splines}
 
 The coupling of particles and fields (as described below) involves two kinds of univariate B-splines, attached to grid nodes and cells
@@ -111,7 +111,7 @@ These splines naturally appear in the variational scheme since the above relatio
 the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell (resp. node) spline evaluated at the particle position.
 
 
-\section{Reduction of particle splines}
+\section{Reduction of Particle Splines}
 \label{sec:reduction_part_splines}
 
 The reduction operators on the dual mesh for our smoothing function constructed from the cardinal B-Spline can be computed based on the properties above. 
@@ -129,7 +129,7 @@ $$
 \end{aligned}
 $$
 
-\subsection{2D version}
+\subsection{Reduction in 2D}
 
 Using the degrees of freedom defined in Section~\ref{sec:dofs_2D}, we find 
 
@@ -147,7 +147,7 @@ $$
 $$
 
 
-\subsection{1D version}
+\subsection{Reduction in 1D}
 
 Using the degrees of freedom defined in Section~\ref{sec:dofs_1D}, , we find 
 
@@ -164,7 +164,7 @@ $$
 \end{aligned}
 $$
 
-\section{Deposition (reduction) of particle densities }
+\section{Deposition (Reduction) of Particle Densities }
 \label{sec:deposition_of_part_densities}
 
 In GEMPIC, the charge and current particle densities \ref{eq:rho_J_part}
@@ -193,7 +193,7 @@ $$
 $$
 which correspond respectively to the three components of $\mathbf{J}$, i.e.  $J_x$, $J_y$, $J_z$ 
 
-\section{Smoothed electromagnetic fields}
+\section{Smoothed Electromagnetic Fields}
 
 The discrete electric field $\bE$ is characterized by its integrals on the edges of the primal grid, which can be found 
 in Section~\ref{sec:dofs_and_reductions}.
@@ -247,7 +247,7 @@ $$
 \end{aligned}
 $$
 
-\subsection{2D version}
+\subsection{Field Smoothing in 2D}
 
 In 2D the smoothed electric field is again defined by 
 $$
@@ -271,13 +271,13 @@ $$
 
 \dots
 
-\subsection{1D version}
+\subsection{Field Smoothing in 1D}
 
 \dots
 
 
 
-\section{Exact computation of time integrated $J_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
+\section{Exact Computation of Time Integrated $J_x$, $v_{p,x}B_y(x_p)$ and $v_{p,x}B_z(x_p)$ }
 
 One step of the hamiltonian splitting algorithm consists of pushing the particles successively in the three axes and updating positions, velocities and electric field, leaving the magnetic field constant.
 Let us describe this algorithm when the particles are pushed in the $x$-direction. The two other directions are handled similarly.  
@@ -341,7 +341,7 @@ $$
 $$
 where $\big[S^\prim_i(x_p)\big]_{t_0}^{t_1} = S^\prim_i(x_p(t_1))-S^\prim_i(x_p(t_0))$ is the primitive difference.
 
-\subsection{2D version}
+\subsection{2D Version}
 In the case of two spatial dimensions, we still perform all three splitting steps for $\mathcal{H}_{p}$. This results in the following systems that need to be solved:
 
 Keeping only $\mathcal{H}_{p,x}$, the following system needs to be solved
@@ -422,7 +422,7 @@ $$
 \end{aligned}
 $$
 
-\subsection{1D version}
+\subsection{1D Version}
 For keeping only $\mathcal{H}_{p,x}$, the following system needs to be solved
 
 $$

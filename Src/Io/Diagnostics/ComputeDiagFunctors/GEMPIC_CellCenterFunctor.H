@@ -21,7 +21,6 @@ public:
      * \param[in] scaling scaling factor.
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, mfSrc,
                   to the output diagnostic MultiFab, mfDst.
-     * \param[in] ncomp Number of component of mfSrc to cell-center in dst multifab.
      */
     CellCenterFunctor(const amrex::MultiFab* const mfSrc,
                       amrex::Real scaling,

@@ -1,6 +1,6 @@
 .. _Operators_on_discrete_forms:
 
-Operators on discrete forms
+Operators on Discrete Forms
 ===========================
 
 Here we give some details on the implementation of the discrete differential forms 

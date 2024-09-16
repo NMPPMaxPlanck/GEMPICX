@@ -11,8 +11,8 @@ using namespace Gempic::TimeLoop;
  * @param pos : position of the given particle
  * @param posOld : duplicate of pos to evaluate difference of primitives
  * @param vel : velocity of the given particle
- * @param funBPrimX, funcBPrimY, funcBPrimZ : functions that evaluate primitives of the B-field
- * @param chargemass : (q/m)_p ratio
+ * @param funcBPrimX, funcBPrimY, funcBPrimZ : functions that evaluate primitives of the B-field
+ * @param chargeMass : (q/m)_p ratio
  * @param dt : time step
  *
  */

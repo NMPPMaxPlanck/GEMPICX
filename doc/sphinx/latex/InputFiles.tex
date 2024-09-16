@@ -104,7 +104,7 @@
 \usetikzlibrary{decorations.text,decorations.shapes}
 
 %%%%%%%% MACROS
-\input{gempic_spectral_macros}
+\input{gempic_latex_macros}
 
 \title{Input Files}
 
@@ -129,7 +129,7 @@ The \amrex{} framework provides a simple way to give input parameters to a simul
    $ ./executable inputFile.input 
 \end{lstlisting}
 
-\subsection{Overall structure}
+\subsection{The Broad Strokes of Input Files}
 An input file consists of separate lines of variables, each with the variable name, an equals (\verb|=|) sign and one or more values. Variables can have an optional scope, typically corresponding to a class, and values are separated by spaces:
 \begin{lstlisting}[language=pkgconfig]
 # Comments begin with '#'

@@ -211,7 +211,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
  * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
@@ -316,7 +316,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 
 * For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
 *
 
-* @param func : ParserExecutor, function to be projected
+* @param funcs : ParserExecutor, functions to be projected
 * @param t : Real, time at which func is to be evaluated
 * @param field : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
 *
@@ -385,7 +385,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$ holding the cell
  * integrals
@@ -492,7 +492,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 
  *
  * For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
@@ -610,7 +610,7 @@ inline void FDDeRhamComplex::projection(
  *
  * For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
  * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
@@ -656,7 +656,7 @@ void FDDeRhamComplex::projection (
         const amrex::RealVect dr = m_dr;
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_geom.ProbLoArray();
 
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
+        [[maybe_unused]] const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(
@@ -668,8 +668,9 @@ void FDDeRhamComplex::projection (
                     r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
                 // Midpoint for the quadrature rule
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
-                    r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir], r[zDir] + drHalf[zDir])};
+                [[maybe_unused]] amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {
+                    AMREX_D_DECL(r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir],
+                                 r[zDir] + drHalf[zDir])};
 
                 amrex::Real integral{0.0};
 
@@ -796,7 +797,7 @@ inline void FDDeRhamComplex::projection(
  *
  * For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
  * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
@@ -912,7 +913,7 @@ inline void FDDeRhamComplex::projection(
  *
  * For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
  *
- * @param func : ParserExecutor, function to be projected
+ * @param funcs : ParserExecutor, functions to be projected
  * @param t : Real, time at which func is to be evaluated
  * @param field : DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$ holding the face
  * integrals
@@ -973,8 +974,9 @@ void FDDeRhamComplex::projection (
 
                 // Midpoint for the quadrature rule. The minus for dual means that it integrates
                 // from j-1/2 to j+1/2
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {AMREX_D_DECL(
-                    r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir], r[zDir] - drHalf[zDir])};
+                [[maybe_unused]] amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> midpoint = {
+                    AMREX_D_DECL(r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir],
+                                 r[zDir] - drHalf[zDir])};
 
                 amrex::Real integral{0.0};
 

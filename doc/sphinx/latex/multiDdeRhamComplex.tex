@@ -27,7 +27,7 @@
 %\usepackage[dvipsnames]{xcolor}
 
 %%%%%%%% MACROS
-\include{gempic_spectral_macros}
+\include{gempic_latex_macros}
 
 \newcommand{\hi}{\hat{i}}
 \newcommand{\hj}{\hat{j}}
@@ -53,9 +53,9 @@
 
 \begin{document}
 
-\section{multi-D de Rham complexes}
+\section{Multi-Dimensional de Rham Complexes}
 
-\subsection{The 3D de Rham complex}
+\subsection{The 3D de Rham Complex}
 
 As explained in Section \ref{sec:Maxwell_with_discrete_forms}
 the fields in GEMPIC are based on the 3D de Rham sequence
@@ -75,7 +75,7 @@ where
 \end{itemize}
 in accordance to the DOFs.
 
-\subsection{The stacked de Rham complex in 2D}
+\subsection{The Stacked de Rham Complex in 2D}
 \label{sec:stacked_deRham2D}
 
 In 2D (all fields only depend on $x$ and $y$) there are two de Rham sequences:
@@ -106,7 +106,7 @@ and the differential operators are
 \end{align*}
 This way, any code written for 3D works without any modifications to the fields just the same in 2D. A \verb|DeRhamField| defined on \verb|Space::edge| is still in $\mathcal{V}_1$, the only difference is that the third component will be node centered, since it belongs to $H(\mathbf{rot}; \Omega)$.
 
-\subsection{The stacked de Rham complex in 1D}
+\subsection{The Stacked de Rham Complex in 1D}
 \label{sec:stacked_deRham1D}
 
 In 1D (all fields only depend on $x$) the implementation follows the same lines. There is only one de Rham sequence
@@ -132,17 +132,17 @@ and the differential operators are
 This way, any code written for 3D works without any modifications to the fields just the same in 1D. A \verb|DeRhamField| defined on \verb|Space::edge| is still in $\mathcal{V}_1$, the only difference is that the second and third component will be node centered, since they belong to $H^1(\Omega)$.
 
 
-\subsection{Degrees of freedom in 3D}
+\subsection{Degrees of Freedom in 3D}
 
 The degrees of freedom in 3D were defined in Section \ref{sec:dofs_and_reductions}.
 
-\subsection{Degrees of freedom in 2D}
+\subsection{Degrees of Freedom in 2D}
 \label{sec:dofs_2D}
 
 In 2D, we assume that all the functions are constant along $z$.
 
 
-\subsubsection{Primal degrees of freedom}
+\subsubsection{2D Primal Degrees of Freedom}
 
 According to the above stacked de Rham sequence, we define
 
@@ -168,7 +168,7 @@ and
 \end{itemize}
 for the degrees of freedom in $\mathcal{C}_3^{2D}$,
 
-\subsubsection{Dual degrees of freedom}
+\subsubsection{2D Dual Degrees of Freedom}
 
 We define
 \begin{itemize}
@@ -193,12 +193,12 @@ and
 \end{itemize}
 for the degrees of freedom in $\tilde{\mathcal{C}}_3^{2D}$.
 
-\subsection{Degrees of freedom in 1D}
+\subsection{Degrees of Freedom in 1D}
 \label{sec:dofs_1D}
 
 In 1D, we assume that all the functions are constant along $y$ and $z$.
 
-\subsubsection{Primal degrees of freedom}
+\subsubsection{1D Primal Degrees of Freedom}
 
 According to the above stacked de Rham sequence, we define
 \begin{itemize}
@@ -223,7 +223,7 @@ and
 \end{itemize}
 for the degrees of freedom in $\mathcal{C}_3^{1D}$.
 
-\subsubsection{Dual degrees of freedom}
+\subsubsection{1D Dual Degrees of Freedom}
 
 We define
 \begin{itemize}

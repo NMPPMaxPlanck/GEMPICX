@@ -23,22 +23,22 @@ if(GEMPIC_DOCUMENTATION AND DOXYGEN_FOUND)
 
     foreach(RSTF ${RST_FILES})
       string(REGEX REPLACE "[.]rst$" ".tex" LATEXF ${RSTF})
-      add_custom_command(OUTPUT ${RSTF}
-        DEPENDS ${LATEXF}
-        COMMAND pandoc ${LATEXF} --mathjax --columns=120 --wrap=preserve --bibliography spectral_gempic.bib --citeproc -o ${RSTF}
+      add_custom_command(OUTPUT ${LATEX_INPUT}/${RSTF}
+        DEPENDS ${LATEX_INPUT}/${LATEXF}
+        COMMAND pandoc ${LATEXF} --mathjax --columns=120 --wrap=preserve --bibliography gempic_references.bib --citeproc -o ${RSTF}
         COMMAND ${Python3_EXECUTABLE} convertEq.py ${RSTF}
         VERBATIM
 
         WORKING_DIRECTORY ${LATEX_INPUT}
       )
-      add_custom_target(${RSTF} ALL DEPENDS ${LATEX_INPUT}/${RSTF})
     endforeach()
     
     list(TRANSFORM RST_FILES PREPEND ${LATEX_INPUT}/)
     list(APPEND DOCUMENTATION_DEPENDENCIES ${RST_FILES} ${SPHINX_SOURCE}/index.rst ${DOXYGEN_INDEX_FILE})
 
     add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
-      COMMAND ${Python3_EXECUTABLE} -m sphinx -b html
+      COMMAND ${Python3_EXECUTABLE} ${SPHINX_SOURCE}/callSphinxDuplicateNamespaceWarningSilenced.py
+              -m sphinx -b html
               # Tell Breathe where to find the Doxygen output
               -Dbreathe_projects.gempic=${DOXYGEN_OUTPUT_DIR}
               ${SPHINX_SOURCE} ${SPHINX_BUILD}

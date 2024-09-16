@@ -27,7 +27,7 @@
 %\usepackage[dvipsnames]{xcolor}
 
 %%%%%%%% MACROS
-\include{gempic_spectral_macros}
+\include{gempic_latex_macros}
 
 \newcommand{\hi}{\hat{i}}
 \newcommand{\hj}{\hat{j}}
@@ -57,9 +57,9 @@
 
 \begin{document}
 
-\section{Time loops}
+\section{Time Loops}
 
-\subsection{Hamiltonian splitting for Vlasov-Maxwell}
+\subsection{Hamiltonian Splitting for Vlasov-Maxwell}
 
 The semi-discrete Vlasov-Maxwell equations on staggered grids form a noncanonical Hamiltonian sytem of the form $\fract{\arrU}{t}=\mathcal{J}(\arrU)\nabla\cH$, where $\arrU$ stacks all
 the particle positions $\arrX$, velocities $\arrV$ as well as the electric field $\arrD$ and magnetic field $\arrB$.
@@ -146,7 +146,7 @@ including the last equation using the definition of $\tilde{\arrJ}_z$.
 
 In one space dimension, the same also applies to the previous step.
 
-\subsection{Algorithm for the $\cH_p$ part}
+\subsection{Algorithm for the $\cH_p$ Part}
 
 As we just saw, the  $\cH_p$ part of the hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting. 
 

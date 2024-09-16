@@ -19,7 +19,6 @@ public:
      * \param[in] mfSrc source multifab.
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, srcMf,
                   to the output diagnostic MultiFab, mfDst.
-     * \param[in] ncomp Number of component of mfSrc to cell-center in dst multifab.
      */
     RawFunctor(const amrex::MultiFab* const mfSrc, const amrex::IntVect crseRatio) :
         ComputeDiagFunctor(mfSrc->nComp(), crseRatio), m_mfSrc(mfSrc)

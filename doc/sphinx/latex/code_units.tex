@@ -66,9 +66,9 @@
 
 \maketitle
 
-\section{Code units: normalization in GEMPIC}
+\section{Code Units: Normalization in GEMPIC}
 
-\subsection{The Vlasov-Maxwell model}
+\subsection{The Vlasov-Maxwell Model}
 
 The Vlasov equation for the distribution function of a particle species $s$ in SI units reads 
 \begin{equation}\label{eq:Vlasov}
@@ -104,7 +104,7 @@ The total energy of the system is given by the Hamiltonian in SI units,
 
 
 
-\subsection{Dimensionless formulation}
+\subsection{Dimensionless Formulation}
 
 For all physical quantities we introduce a reference scale and a corresponding dimensionless quantity.
 First, for the independent variables, we write
@@ -187,7 +187,7 @@ The total energy of the dimensionless system is given by the following dimension
 	\mathcal{H}=\sum_s\frac{\mht_s}{2}\int |\vht|^2 \fht_s \du\xht \du\vht + \frac{1}{2s_\omega^2} \int \|\Eht\|^2 \du\xht + \frac{s_v^2}{2s\omega^2} \int \|\Bht\|^2 \du\xht.
 	\end{equation}
 
-	\subsection{Code units}
+	\subsection{Code Units}
 
 A plasma is characterized by three reference parameters: density, temperature and background magnetic field (for a magnetized plasma). In addition, the charge and mass of each species in the plasma need to be given. These reference values need to be set by the user. All the other plasma quantities follow from these.
 
@@ -221,7 +221,7 @@ By default the two scaling parameters are set to 1. This means on the one hand (
 Other values can be set in the input file by setting
 \verb|epref_ep0| ($=s_\omega$) and \verb|curlB_scaling| (=$s_v$).
 
-\subsection{Examples of plasma parameters}
+\subsection{Examples of Plasma Parameters}
 
 A magnetized plasma is characterized by its density $n$, its temperature $T$ and the magnitude of its external magnetic field $B$. With these quantities known in addition to the particle mass and charges, the following parameters can be computed  
 
