@@ -495,7 +495,7 @@ public:
         field.m_data.setVal(0.0);
     }
 
-    /// Function overloads for FillBoundary
+    /// Function overloads for FillBoundary. Exists for 1-/2-forms and 0-/3-forms
     // fillBoundary for One- or Two-forms
     template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
     void fill_boundary (DeRhamField<grid, space>& field)
@@ -506,6 +506,7 @@ public:
         field.m_data[zDir].FillBoundary(m_geom.periodicity());
     }
 
+    /// @cond DOXYGEN_IGNORE
     // fillBoundary for Zero- or Three-forms
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void fill_boundary (DeRhamField<grid, space>& field)
@@ -513,8 +514,9 @@ public:
         BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary(field)");
         field.m_data.FillBoundary(m_geom.periodicity());
     }
+    // @endcond
 
-    /// Function overloads for AverageSync
+    /// Function overloads for AverageSync. Exists for 1-/2-forms and 0-/3-forms
     // averageSync for One- or Two-forms
     template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
     void average_sync (DeRhamField<grid, space>& field)
@@ -525,6 +527,7 @@ public:
         field.m_data[zDir].AverageSync(m_geom.periodicity());
     }
 
+    // @cond DOXYGEN_IGNORE
     // averageSync for Zero- or Three-forms
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void average_sync (DeRhamField<grid, space>& field)
@@ -532,6 +535,7 @@ public:
         BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::average_sync(field)");
         field.m_data.AverageSync(m_geom.periodicity());
     }
+    /// @endcond
 
     //---------------------
     // exterior derivatives
@@ -567,47 +571,47 @@ public:
      * @brief Projection from an AMReX compiled function to a 0-/3-form DeRhamField of one variable
      * @param func        The function to be used
      * @param t           The time step at which to evaluate the function
-     * @param DeRhamField The field to project to
+     * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation (n/a for 0-forms)
      */
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::primal, Space::cell>&,
+                            DeRhamField<Grid::primal, Space::cell>& field,
                             int gaussNodes = 6) = 0;
     /**
      * @brief Projection from a vector of nVar AMReX compiled functions to a 0-/3-form
      *        DeRhamField of nVar variables
-     * @param func        Vector of the functions to be used
+     * @param funcs       Vector of the functions to be used
      * @param t           The time step at which to evaluate the functions
-     * @param DeRhamField The field to project to
+     * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
     virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
-                            DeRhamField<Grid::primal, Space::cell>&,
+                            DeRhamField<Grid::primal, Space::cell>& field,
                             int gaussNodes = 6) = 0;
 
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::primal, Space::node>&) = 0;
+                            DeRhamField<Grid::primal, Space::node>& field) = 0;
     virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
-                            DeRhamField<Grid::primal, Space::node>&) = 0;
+                            DeRhamField<Grid::primal, Space::node>& field) = 0;
 
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::dual, Space::node>&) = 0;
+                            DeRhamField<Grid::dual, Space::node>& field) = 0;
     virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
-                            DeRhamField<Grid::dual, Space::node>&) = 0;
+                            DeRhamField<Grid::dual, Space::node>& field) = 0;
 
     virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::dual, Space::cell>&,
+                            DeRhamField<Grid::dual, Space::cell>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
-                            DeRhamField<Grid::dual, Space::cell>&,
+                            DeRhamField<Grid::dual, Space::cell>& field,
                             int gaussNodes = 6) = 0;
 
     // 1-/2-forms
@@ -616,55 +620,55 @@ public:
      *        one variable (and three components)
      * @param func        Array of the functions to be used
      * @param t           The time step at which to evaluate the functions
-     * @param DeRhamField The field to project to
+     * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::dual, Space::edge>&,
+                            DeRhamField<Grid::dual, Space::edge>& field,
                             int gaussNodes = 6) = 0;
     /**
      * @brief Projection from a vector of nVar 3-arrays of AMReX compiled functions each to a 1-/2-
      *        form DeRhamField of nVar variables (and three components)
-     * @param func        Vector of arrays of the functions to be used
+     * @param funcs       Vector of arrays of the functions to be used
      * @param t           The time step at which to evaluate the functions
-     * @param DeRhamField The field to project to
+     * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
     virtual void projection(
         const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
-        DeRhamField<Grid::dual, Space::edge>&,
+        DeRhamField<Grid::dual, Space::edge>& field,
         int gaussNodes = 6) = 0;
 
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::primal, Space::face>&,
+                            DeRhamField<Grid::primal, Space::face>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
         const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
-        DeRhamField<Grid::primal, Space::face>&,
+        DeRhamField<Grid::primal, Space::face>& field,
         int gaussNodes = 6) = 0;
 
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::primal, Space::edge>&,
+                            DeRhamField<Grid::primal, Space::edge>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
         const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
-        DeRhamField<Grid::primal, Space::edge>&,
+        DeRhamField<Grid::primal, Space::edge>& field,
         int gaussNodes = 6) = 0;
 
     virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
-                            DeRhamField<Grid::dual, Space::face>&,
+                            DeRhamField<Grid::dual, Space::face>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
         const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
-        DeRhamField<Grid::dual, Space::face>&,
+        DeRhamField<Grid::dual, Space::face>& field,
         int gaussNodes = 6) = 0;
 
     //----------------

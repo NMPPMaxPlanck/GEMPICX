@@ -1,6 +1,6 @@
 .. _api_Particles:
 
-API: Particle mesh coupling
+API: Particle Mesh Coupling
 ===========================
 
 .. doxygenfile:: GEMPIC_SplineClass.H

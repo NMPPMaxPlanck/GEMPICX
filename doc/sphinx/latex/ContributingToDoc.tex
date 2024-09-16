@@ -103,7 +103,7 @@
 \usetikzlibrary{decorations.text,decorations.shapes}
 
 %%%%%%%% MACROS
-\input{gempic_spectral_macros}
+\input{gempic_latex_macros}
 
 \title{Coding Style and Conventions}
 
@@ -118,13 +118,13 @@
 
 \tableofcontents
 
-\section{Contributing to the documentation}
-The documentation is constructed using Sphinx, and its source code can be found in the \verb|gempic/doc/sphinx| folder.
+\section{Contributing to the Documentation}
+The documentation is constructed using Doxygen, Sphinx and Breathe, and its source code can be found in the \verb|gempic/doc| folder.
 
 Documentation sections may be added using rst or LaTeX files (which are converted to rst).
 
-\subsection{Building the documentation}
-If a developer needs to extend the existing documentation and needs to check his or her changes, the documentation can be built locally on the computer following the steps below. 
+\subsection{Building the Documentation}
+If a developer needs to extend the existing documentation and check their changes, the documentation can be built locally on the computer following the steps below. 
 \begin{enumerate}
    \item Install the required packages: \verb|sphinx|, \verb|breathe|, \verb|sphinx_rtd_theme|, \verb|pandoc|, \verb|doxygen|
    \item Configure with cmake if you haven't done so already\footnote{If you use a virtual environment or a conda environment for Python, remember to activate it \emph{before} configuring.} -- \emph{e.g.} using one of the presets
@@ -132,17 +132,33 @@ If a developer needs to extend the existing documentation and needs to check his
    \item The generated HTML files can be found in the \verb|/PATH/TO/GEMPIC/BUILD/DIR/documentation/| folder. Open \verb|index.html| in your browser to view the documentation
 \end{enumerate}
 
+\subsection{Using Doxygen}
+Doxygen documentation is automatically generated from header file comments of the format \verb|///| for line comments and \verb|/** ... */| for block comments. Special commands are all prefaced with \verb|@| or \verb|\|, \emph{e.g.}
+\begin{itemize}
+   \item \verb|@brief| or \verb|\brief| for a brief description of the class/struct/function,
+   \item \verb|@param| and \verb|tparam| for parameters and template parameters, respectively, 
+   \item \verb|@return| for the return value,
+   \item LaTex-like math can be written inside \verb|\f$ ... \f$|,
+   \item \ldots see \href{https://www.doxygen.nl/manual/commands.html}{the Doxygen documentation} for more commands
+\end{itemize}
+All classes, structs and functions should at least have a brief description as well as an explanation of any (template) parameters.
 
-\subsection{Adding LaTeX files to the documentation}
+\subsection{Adding Doxygen Output to the Documentation}
+Doxygen-generated documentation should be put in a separate .rst file pointed to in \verb|doc/sphinx/index.rst|
+The .rst file should begin with a label of the form \verb|.. _api_LabelName| and a heading beginning with \verb|API|.
+Doxygen output can then be added, using \emph{e.g.} \verb|.. doxygenfile:: GEMPIC_Something.H| to add all of the documentation from the file \verb|GEMPIC_Something.H|.
+See the \href{https://breathe.readthedocs.io/en/latest/directives.html}{documentation for Breathe} for more advanced directives.
+
+\subsection{Adding LaTeX Files to the Documentation}
 LaTeX files need to be converted to the .rst format and then referred to from the appropriate place in the documentation:
 \begin{enumerate}
    \item Add the LaTeX file (\emph{e.g.} \verb|someLatexFile.tex|) to the \verb|doc/sphinx/latex| folder
    \item Add the .rst file (\emph{e.g.} \verb|someLatexFile.rst|) to the list in the top of \verb|doc/sphinx/CMakeLists.txt|
    \item Add the .rst file (\emph{e.g.} \verb|latex/someLatexFile.rst|) either to \verb|doc/sphinx/index.rst| or to any of the other non-LaTeX rst files referred to there.
 \end{enumerate}
-The LaTeX files themselves can be most forms of valid LaTeX, with a few caveats mentioned in \ref{sec:labels_in_latex}.
+The LaTeX files themselves can be most forms of valid LaTeX, with a few caveats mentioned in \ref{sec:labels_in_latex}. The bibliography file \verb|doc/sphinx/latex/gempic_references.bib| is automatically included.
 
-\subsection{Using references in LaTeX documentation files}
+\subsection{Using References in LaTeX Documentation Files}
 \label{sec:refs_in_latex}
 
 References to equations and sections can done as follows:
@@ -186,7 +202,7 @@ References to equations and sections can done as follows:
 
 \end{itemize}
 
-\subsection{Musical interlude}
+\subsection{Musical Interlude}
 
 This section is just here to have a longer file, so that references can be properly tested.
 
@@ -269,7 +285,7 @@ Lu nei si not sicodor
 Ah es la bebi la dai big iour
 
 
-\subsection{Using labels in LaTeX documentation files}
+\subsection{Using Labels in LaTeX Documentation Files}
 \label{sec:labels_in_latex}
 
 Sections, equations, tables and figures can have labels in LaTeX files.

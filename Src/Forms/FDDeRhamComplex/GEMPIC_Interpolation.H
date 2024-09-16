@@ -319,12 +319,12 @@ void eval_form_component (
  * @tparam degree order or Lagrange interpolation (only even order implemented)
  * @tparam grid primal or dual
  * @tparam space edge or face, corresponding to 1- or 2-forms
+ * @tparam dir xDir, yDir, zDir
  * @param evalShift shift from lower corner of primal cell (between 0 and 1)
  * @param data multifab containing degrees of freedom of form to be evaluated
  * @param values cell centered multifab returning the values at points defined by evalShift
  * @param dr cell size
  * @param geom
- * @param dir xDir, yDir, zDir
  */
 template <int degree, Grid grid, Space space, Direction dir>
 void eval_form_component (

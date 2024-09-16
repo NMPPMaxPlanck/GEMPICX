@@ -248,9 +248,9 @@ int main (int argc, char *argv[])
                         }
 
                         // Compile functions on device
-                        auto funcBPrimX_ = Utils::compile_functions<3>(parseBPrimX);
-                        auto funcBPrimY_ = Utils::compile_functions<3>(parseBPrimY);
-                        auto funcBPrimZ_ = Utils::compile_functions<3>(parseBPrimZ);
+                        auto funcBPrimXDevice = Utils::compile_functions<3>(parseBPrimX);
+                        auto funcBPrimYDevice = Utils::compile_functions<3>(parseBPrimY);
+                        auto funcBPrimZDevice = Utils::compile_functions<3>(parseBPrimZ);
                         auto funcDensityBackground = Utils::compile_function(
                             partGrLinVlasov[spec]->get_density_background());
 
@@ -291,8 +291,9 @@ int main (int argc, char *argv[])
                                 gempic_deposit_j(spline, vel, f0 * charge * weight[pp], jA);
 
                                 // Particle push with Strang splitting in spatial components
-                                push_particle_constant_b(pos, posOld, vel, funcBPrimX_, funcBPrimY_,
-                                                         funcBPrimZ_, chargeMass, dt);
+                                push_particle_constant_b(pos, posOld, vel, funcBPrimXDevice,
+                                                         funcBPrimYDevice, funcBPrimZDevice,
+                                                         chargeMass, dt);
 
                                 // Write position and velocities
                                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)

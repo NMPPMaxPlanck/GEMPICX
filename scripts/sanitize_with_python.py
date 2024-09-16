@@ -345,6 +345,8 @@ def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> tupl
     for version in range(maxVersion, minVersion - 1, -1):
         try:
             output=subprocess.run(f"clang-{tidyOrFormat}-{version} --help", shell=True, capture_output=True, text=True)
+            if output.stderr:
+                continue
             return True, f"-{version}"
         except (FileNotFoundError):
             continue

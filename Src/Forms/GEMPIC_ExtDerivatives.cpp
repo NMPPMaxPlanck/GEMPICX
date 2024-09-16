@@ -628,6 +628,7 @@ void DeRhamComplex::grad (const DeRhamField<Grid::dual, Space::node> &zeroForm,
  * values
  * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$ holding
  * the resulting edge integrals
+ * @param a : multiplication factor
  *
  * @return void
  */

@@ -113,7 +113,7 @@
 \usetikzlibrary{decorations.text,decorations.shapes}
 
 %%%%%%%% MACROS
-\input{gempic_spectral_macros}
+\input{gempic_latex_macros}
 
 \title{Testing With \gt}
 
@@ -133,7 +133,7 @@ This note describes the usage of the \gt{} testing framework in GEMPIC as well a
 \tableofcontents
 
 \section{GoogleTest}
-\subsection{Overall structure}
+\subsection{Structure of Tests}
 All \gt{} unit tests are located \loc{\main}, in a structure mirroring the that of the \verb|Src| folder. For instance, since the \verb|deposit_rho| function is located in a file in \verb|Src/ParticleMeshCoupling|, the corresponding unit test, \verb|DepositRho_test.cpp|, is located \loc{\pmc}. 
 
 \subsection{Compiling with CMake}
@@ -332,7 +332,7 @@ Note that unlike a normal fixture class, class variables can only be accessed th
 For an example, see \verb|spline_test.cpp| \loc{\pmc}.
 \end{comment}
 
-\subsection*{Frequently Asked Questions}
+\subsection*{Frequently Asked Questions: GoogleTest}
 \begin{itemize}
     \item \emph{\ldots why?}
 

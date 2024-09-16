@@ -9,6 +9,7 @@ using namespace Gempic::FieldSolvers;
  * @brief Construct a new Poisson Solver:: Poisson Solver object
  *
  * @param deRham
+ * @param infra
  */
 PoissonSolver::PoissonSolver(std::shared_ptr<Forms::DeRhamComplex> deRham,
                              const ComputationalDomain& infra) :

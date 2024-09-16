@@ -3,7 +3,7 @@
 API: Forms and Operators
 ========================
 
-In Gempic, the discrete de Rham complexes described in Section :ref:`Maxwell_with_discrete_forms`
+In Gempic, the discrete de Rham complexes described in Section :ref:`sec:Maxwell_with_discrete_forms`
 are of Finite Difference type, which means that the discrete forms are primarily characterized 
 by their degrees of freedom on a (primal or dual) cartesian grid.
 

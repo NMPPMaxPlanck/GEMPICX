@@ -4,7 +4,7 @@
 
 #include <AMReX_Array.H>
 
-namespace Gempic
+namespace Gempic::ParticleMeshCoupling
 {
 // NOLINTBEGIN(readability-magic-numbers)
 // clang-format off
@@ -19,7 +19,7 @@ namespace Gempic
  *
  *          Example usage of \f$S^2(x)\f$:
  *          @code{cpp}
- *          auto res = cardinal_b_spline<2>(0.25);
+ *          auto res = cardinal_b_splines<2>(0.25);
  *          std::cout << "First polynomial interval S^2(-1.25)=" << res[0] << std::endl;
  *          std::cout << "Second polynomial interval S^2(-0.25)=" << res[1] << std::endl;
  *          std::cout << "Third polynomial interval S^2(0.75)=" << res[1] << std::endl;
@@ -108,7 +108,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines (a
  *        have been mapped into \f$x\in[0,1]\f$
  *
  * @details Implemented \f$\int_{-(degree+1)/2}^x S^{degree}(y) \mathrm{d}y \f$
- *          Otherwise this function executes the same behavior as @ref cardinal_b_spline
+ *          Otherwise this function executes the same behavior as @ref cardinal_b_splines
  *
  * @param x : \f$x\in[0,1]\f$
  * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
@@ -195,7 +195,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines_pr
  *        \f$x\in[0,1]\f$
  * 
  * @details Implemented \f$\partial_x S^{degree}(x)\f$
- *          Otherwise this function executes the same behavior as @ref cardinal_b_spline
+ *          Otherwise this function executes the same behavior as @ref cardinal_b_splines
  * @param x : \f$x\in[0,1]\f$
  * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
  *
@@ -269,7 +269,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> cardinal_b_spline
  *        \f$x\in[0,1]\f$
  * 
  * @details Implemented \f$\partial_x^2 S^{degree}(x)\f$
- *          Otherwise this function executes the same behavior as @ref cardinal_b_spline
+ *          Otherwise this function executes the same behavior as @ref cardinal_b_splines
  * 
  * @param x : \f$x\in[0,1]\f$
  * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
@@ -329,4 +329,4 @@ cardinal_b_splines_second_derivative (amrex::Real x)
     }
 }
 // NOLINTEND(readability-magic-numbers)
-}  //namespace Gempic
+}  //namespace Gempic::ParticleMeshCoupling

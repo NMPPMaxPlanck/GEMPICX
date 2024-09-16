@@ -332,6 +332,7 @@ public:
      *
      * @param field : DeRhamField<dual, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
      * @param evalShift : amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>, point to be interpolated
+     * @param pointValues : MultiFab in which to store the interpolated values
      *
      * @return void
      */
@@ -365,13 +366,42 @@ public:
                    amrex::MultiFab& pointValues) override;
 
 private:
+    /**
+     * @brief Selects a precompiled Hodge operator scheme from a runtime scheme parameter
+     *
+     * @param f1 const source field
+     * @param f2 destination field
+     * @param weight optional weight for the Hodge
+     */
     void hodge_scheme_selector(anyFieldConstRef f1, anyFieldRef f2, amrex::Real weight = 1.);
 
+    /**
+     * @brief Selects a precompiled Hodge operator from a runtime Hodge degree.
+     *
+     * Recursively calls itself until the runtime Hodge degree == validDegrees[hodgeDegreeIdx],
+     * then calls hodge<hodgeDegree, hodgeScheme>.
+     *
+     * @tparam hodgeScheme    Hodge scheme as found by hodge_scheme_selector
+     * @tparam hodgeDegreeIdx Not the Hodge degree! The index of the validDegrees array
+     * corresponding to the Hodge scheme.
+     *
+     * @param hodgeSrc const source field
+     * @param hodgeDst destination field
+     * @param weight optional weight for the hodge
+     */
     template <HodgeScheme hodgeScheme, int hodgeDegreeIdx = 0>
     void hodge_degree_selector(anyFieldConstRef hodgeSrc,
                                anyFieldRef hodgeDst,
                                amrex::Real weight = 1.);
 
+    /**
+     * @brief Selects a precompiled direction for eval_form from a runtime direction parameter
+     *
+     * @param field const source field
+     * @param evalShift vector of shifts from lower corner of primal cell (between 0 and 1)
+     * @param pointValues Multifab in which to store the interpolated values
+     * @param dir Direction in which to evaluate the interpolation(s)
+     */
     inline void eval_form_direction_selector (
         anyFieldConstRef field,
         const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
@@ -395,6 +425,22 @@ private:
         }
     }
 
+    /**
+     * @brief Selects a precompiled eval_form operator from a runtime Hodge degree.
+     *
+     * Recursively calls itself until the runtime Hodge degree == validDegrees[hodgeDegreeIdx],
+     * then calls
+     *   eval_form_component<degree, grid, space> for 0-/3-forms, or
+     *   eval_form_component<degree, grid, space, dir> for 1-/2-forms
+     *
+     * @tparam dir            Optional direction as found by eval_form_direction_selector
+     * @tparam hodgeDegreeIdx Not the Hodge degree! The index of the validDegrees array
+     * corresponding to the Hodge scheme. NOTE: Only Finite Difference Hodge schemes work for now.
+     *
+     * @param field const source field
+     * @param evalShift vector of shifts from lower corner of primal cell (between 0 and 1)
+     * @param pointValues Multifab in which to store the interpolated values
+     */
     template <Direction dir = xDir, int hodgeDegreeIdx = 0>
     void eval_form_degree_selector(
         anyFieldConstRef field,
@@ -899,12 +945,15 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
     {
         if (this->m_hodgeDegree == validDegreesArray[testDegInd])
         {
+            // Iterate over all types in anyFieldRef (all grid/space combinations) and select the
+            // correct one.
             std::visit(
                 [this, &validDegreesArray, weight] (const auto& hSrc, auto& hDst)
                 {
                     using namespace Impl;
                     using dstFieldTypename = unwrap_ref_decay_t<decltype(hDst)>;
                     FieldTypes srcFieldTypes{hSrc};
+                    // Check that the type of the source field is Hodge dual to the destination
                     if constexpr (std::is_same_v<
                                       dstFieldTypename,
                                       DeRhamField<oppositeGrid<srcFieldTypes.s_gridType>,
@@ -917,8 +966,7 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
                     {
                         std::string str =
                             "hodgeDegreeSelector must be called with field types that are deRham "
-                            "duals "
-                            "of each other.";
+                            "duals of each other.";
                         amrex::Assert("Incompatible Hodge operator fields",
                                       "GEMPIC_FDDeRhamComplex.H", __LINE__, str.c_str());
                     }
@@ -951,7 +999,8 @@ void FDDeRhamComplex::eval_form_degree_selector (
     {
         if (this->m_hodgeDegree == validDegreesArray[testDegInd])
         {
-            //
+            // Iterate over all types in anyFieldConstRef (all grid/space combinations) and select
+            // the correct one.
             std::visit(
                 [this, &validDegreesArray, &evalShift, &pointValues] (const auto& fieldArg)
                 {
@@ -960,6 +1009,7 @@ void FDDeRhamComplex::eval_form_degree_selector (
                     constexpr Grid grid = fieldTypes.s_gridType;
                     constexpr Space space = fieldTypes.s_spaceType;
                     constexpr int degree = validDegreesArray[testDegInd];
+                    // 0-/3-form call
                     if constexpr (fieldTypes.s_spaceType == Space::node ||
                                   fieldTypes.s_spaceType == Space::cell)
                     {
@@ -967,6 +1017,7 @@ void FDDeRhamComplex::eval_form_degree_selector (
                         eval_form_component<degree, grid, space>(evalShift, data, pointValues,
                                                                  this->m_dr, this->m_geom);
                     }
+                    // 1-/2-form call
                     else
                     {
                         const amrex::MultiFab& data = fieldArg.get().m_data[dir];
