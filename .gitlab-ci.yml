@@ -231,7 +231,6 @@ pages:
     paths:
       - public
 
-
 # --- BELOW
 # CI jobs to build and tag the Docker CI image on MPCDF GitLab,
 # edit 'scripts/Dockerfile-CI-Ubuntu2204' to trigger a rebuild,

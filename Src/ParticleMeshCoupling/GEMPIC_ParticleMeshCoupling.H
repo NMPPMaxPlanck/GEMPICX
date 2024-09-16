@@ -89,7 +89,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b_loop (
             }
         }
         /* In case of performance issues, we _might_ be able to wring something extra out of looping
-        // kk to < degP2, removing the check on fields[yDir], and uncommenting the following lines.
+        kk to < degP2, removing the check on fields[yDir], and uncommenting the following lines.
         amrex::Dim3 cellIndex = select_primitive_cellindex<pDir>(spline.m_firstIndexStart[pDir],
         spline.m_firstIndex, ii, jj, degP2);
 
@@ -98,7 +98,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b_loop (
 
         fields[xDir] += update_integrated_b_component<pDir1, pDir2>(bArray, spline, cellIndex, jj,
         degP2, primitiveDifference);
-        //*/
+        */
     }
 }
 }  //namespace Impl
@@ -228,7 +228,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
             spline, chargeWeight, primitiveDifference, bArray, jArray, fields, ii);
     }
-    //*/
 }
 
 /*!
