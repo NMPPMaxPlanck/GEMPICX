@@ -9,7 +9,7 @@
 #
 # Number of nodes and MPI tasks per node:
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=40
+#SBATCH --ntasks-per-node=72
 #
 #SBATCH --mail-type=none
 #SBATCH --mail-user=sonnen@ipp.mpg.de

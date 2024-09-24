@@ -11,7 +11,7 @@ include(cmake/gempic_version.cmake)
 
 option(GEMPIC_USE_CUDA "Use CUDA Backend of AMReX" OFF)
 option(GEMPIC_USE_OMP "Use OpenMP Backend of AMReX (Not recommended due to reduced performance)" OFF)
-option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance" ON)
+option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance" OFF)
 option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." ON)
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
 option(GEMPIC_BUILD_DOCUMENTATION "Build the documentation. Only builds if depencies are met." ON)
@@ -29,8 +29,8 @@ include(cmake/gempic_CompilerConfig.cmake)
 
 # Define cmake to use libraries from gcc-module not default gcc
 # This section is specific for MPCDF-Cluster configurations
-if(   ($ENV{HOST} MATCHES "raven")
-   OR ($ENV{HOST} MATCHES "cobra")
+if(   ($ENV{HOST} MATCHES "raven*")
+   OR ($ENV{HOST} MATCHES "viper*")
    OR (DEFINED ENV{GITLAB_CI})
    )
   set(CMAKE_BUILD_RPATH $ENV{GCC_HOME}/lib64)
@@ -46,7 +46,7 @@ if(GEMPIC_BUILD_TESTS)
   enable_testing()
   # This defines how the ctests are run
   message("HOST is $ENV{HOST}")
-  if(($ENV{HOST} MATCHES "cobra*") OR ($ENV{HOST} MATCHES "raven*") OR ($ENV{HOST} MATCHES "daint*"))
+  if(($ENV{HOST} MATCHES "viper*") OR ($ENV{HOST} MATCHES "raven*") OR ($ENV{HOST} MATCHES "daint*"))
     include(cmake/cobra_ctest.cmake)
   else()
     include(cmake/define_ctest.cmake)
