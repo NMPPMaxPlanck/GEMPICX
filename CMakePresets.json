@@ -10,6 +10,7 @@
             "name": "raven-env",
             "displayName": "Raven environment settings",
             "hidden": true,
+            "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CUDA_ARCHITECTURES": "80"
             }
