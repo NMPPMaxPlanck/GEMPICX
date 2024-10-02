@@ -26,14 +26,29 @@ function(confirm_tag _name _location) #GIT_TAG (optional argument)
                   WORKING_DIRECTORY ${_location}
                   OUTPUT_VARIABLE REPO_TAG
                   OUTPUT_STRIP_TRAILING_WHITESPACE
-                  )
-                  
-  # git describe --tags --dirty gives you a string consisting of
-  # The nearest tag name: "([^-]*)"
-  # (optionally, if you're not directly on a tag) The number of commits since then: "(-[0-9]+)?"
-  # (optionally, if you're not directly on a tag) The shortened SHA of the branch, prefaced with g
-  # (optionally, if the repo is dirty) ...-dirty (not searched for)
-  string(REGEX MATCH "([^-]*)(-[0-9]+)?(-g([^-]*))?" _ "${REPO_TAG}")
+                  ERROR_QUIET)
+
+  # Repositories with tags yield non-empty outputs
+  if (REPO_TAG)
+    set(TAGGED_REPO TRUE)
+    # git describe --tags --dirty gives you a string consisting of
+    # The nearest tag name: "([^-]*)"
+    # (optionally, if you're not directly on a tag) The number of commits since then: "(-[0-9]+)?"
+    # (optionally, if you're not directly on a tag) The shortened SHA of the branch, prefaced with g
+    # (optionally, if the repo is dirty) ...-dirty (not searched for)
+    string(REGEX MATCH "([^-]*)(-[0-9]+)?(-g([^-]*))?" _ "${REPO_TAG}")
+  # Repositories with no tags need --always
+  else()
+    execute_process(COMMAND git describe --dirty --always
+                    WORKING_DIRECTORY ${_location}
+                    OUTPUT_VARIABLE REPO_TAG
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    )
+    # git describe --dirty --always gives you a string consisting of
+    # The shortened SHA of the branch
+    # (optionally, if the repo is dirty) ...-dirty (not searched for)
+    string(REGEX MATCH "([^-]*)" _ "${REPO_TAG}")
+  endif()
 
   execute_process(COMMAND git rev-parse "${CMAKE_MATCH_0}"
                   WORKING_DIRECTORY ${_location}
@@ -41,12 +56,13 @@ function(confirm_tag _name _location) #GIT_TAG (optional argument)
                   OUTPUT_STRIP_TRAILING_WHITESPACE
                   )
 
-  if (${CMAKE_MATCH_COUNT} EQUAL 1)
-    set(VERSION_NAME "Version ${REPO_TAG}")
-  elseif(${REPO_TAG} MATCHES "-dirty")
-    set(VERSION_NAME "Commit ${REPO_COMMIT_ID} (dirty)")
+  if (TAGGED_REPO AND ${CMAKE_MATCH_COUNT} EQUAL 1)
+    set(VERSION_NAME "Version ${CMAKE_MATCH_0}")
   else()
     set(VERSION_NAME "Commit ${REPO_COMMIT_ID}")
+  endif()
+  if(${REPO_TAG} MATCHES "-dirty")
+    set(VERSION_NAME "${VERSION_NAME} (dirty)")
   endif()
 
   message(STATUS "Found ${_name}: ${${_name}_SOURCE_DIR} (${VERSION_NAME})")

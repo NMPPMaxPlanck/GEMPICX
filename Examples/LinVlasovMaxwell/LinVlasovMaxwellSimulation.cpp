@@ -1,3 +1,4 @@
+#include <git.h>
 #include <iostream>
 #include <random>
 
@@ -33,6 +34,14 @@ using namespace Utils;
 int main (int argc, char *argv[])
 {
     amrex::Initialize(argc, argv);
+
+    if (git::AnyUncommittedChanges())
+    {
+        std::cerr << "WARN: there were uncommitted changes at build-time." << std::endl;
+    }
+    amrex::Print() << "GEMPIC commit " << git::CommitSHA1() << " (" << git::Branch() << ")\n"
+                   << "describe " << git::Describe() << "\n"
+                   << std::endl;
 
     constexpr int vdim{3};
     constexpr int numspec{1};
