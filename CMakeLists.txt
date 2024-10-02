@@ -127,5 +127,14 @@ gempic_FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# Add cmake-git-version-tracking
+gempic_FetchContent_Declare(
+  cmake_git_version_tracking
+  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
+  GIT_TAG 6c0cb87edd029ddfb403a8e24577c144a03605a6
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/cmake_git_version_tracking-src
+)
+FetchContent_MakeAvailable(cmake_git_version_tracking)
+
 # Preparations necessary for clang-tidy
 include(cmake/clang_tidy.cmake)

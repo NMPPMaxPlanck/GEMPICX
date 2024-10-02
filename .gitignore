@@ -26,8 +26,7 @@ runs*/**
 .DS_Store
 
 # Third Party Downloaded with CMake FetchContent
-third_party/amrex-src
-third_party/googletest-src
+third_party
 
 # ToDo: Can the patterns below be removed?(Seems like absolute nonsense and repo structure problems. Should not be necessary to mention in .gitignore)
 gempic.config
