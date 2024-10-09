@@ -1,11 +1,4 @@
-variables:
-  UBUNTU_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-  UBUNTU_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:ubuntu2204_latest
-
-
 stages:
-  - build-docker
-  - deploy-docker
   - test
   - deploy
 
@@ -218,69 +211,29 @@ style-test_gpu_3D:
     - git diff --exit-code
   needs: ["build-test_gpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
-# Create and publish documentation pages (Ubuntu 20.04)
 pages:
-  image: $UBUNTU_RELEASE_IMAGE
+  image: ubuntu
   tags:
     - cloud
   stage: deploy
   only:
     - master
+  before_script:
+    - apt-get update
+    - apt-get install -y python3 python3.12-venv git cmake 
+    - apt-get install -y doxygen
+    - apt-get install -y wget
+    - wget https://github.com/jgm/pandoc/releases/download/3.5/pandoc-3.5-1-amd64.deb
+    - dpkg -i pandoc-3.5-1-amd64.deb
+    - python3.12 -m venv ./venv
+    - source ./venv/bin/activate
+    - pip3 install sphinx breathe sphinx_rtd_theme
   script:
-    - cmake -S . -B ./build --preset cpu-release-3D
+    - source ./venv/bin/activate
+    - cmake -S doc -B ./build
     - cmake --build ./build --target doc
     - mv build/documentation/ public/
+  needs: []
   artifacts:
     paths:
       - public
-
-# --- BELOW
-# CI jobs to build and tag the Docker CI image on MPCDF GitLab,
-# edit 'scripts/Dockerfile-CI-Ubuntu2204' to trigger a rebuild,
-# it should not be necessary to modify the jobs themselves ...
-# ---
-
-build-ubuntu-ci-image:
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  stage: build-docker
-  tags:
-    - cloud
-  only:
-    refs:
-      - master
-      - upgrade_ci_image_ubuntu_2204
-    changes:
-      - scripts/Dockerfile-CI-Ubuntu2204
-  script:
-    - mkdir -p /kaniko/.docker
-    - >-
-      echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-        >/kaniko/.docker/config.json
-    - >-
-      /kaniko/executor \
-        --context $CI_PROJECT_DIR \
-        --dockerfile $CI_PROJECT_DIR/scripts/Dockerfile-CI-Ubuntu2204 \
-        --destination $UBUNTU_TEST_IMAGE --reproducible -v debug
-
-deploy-ubuntu-ci-image:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/module-image/podman:latest
-  stage: deploy-docker
-  tags:
-    - cloud
-  only:
-    refs:
-      - master
-      - upgrade_ci_image_ubuntu_2204
-    changes:
-      - scripts/Dockerfile-CI-Ubuntu2204
-  variables:
-    BUILDAH_FORMAT: docker
-    BUILDAH_ISOLATION: chroot
-    STORAGE_DRIVER: vfs
-  script:
-    - podman login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-    - podman pull $UBUNTU_TEST_IMAGE
-    - podman tag  $UBUNTU_TEST_IMAGE $UBUNTU_RELEASE_IMAGE
-    - podman push $UBUNTU_RELEASE_IMAGE

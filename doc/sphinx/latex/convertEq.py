@@ -1,6 +1,6 @@
 import re
 import sys
-"""_summary_
+r"""_summary_
  Completes conversion of .tex file into .rst file for proper equation numbering and referencing, so that
  - a \label{*} in a math environment is replaced by :label: (keeping the actual label *)
  - a reference to {sec:*} is replaced by :ref: (keeping the actual reference *)
