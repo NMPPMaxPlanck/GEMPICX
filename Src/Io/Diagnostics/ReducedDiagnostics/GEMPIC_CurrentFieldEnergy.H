@@ -30,8 +30,8 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degree, int n
 class CurrentFieldEnergy : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
 {
 public:
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>> m_jField;
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>> m_jFieldT;
+    std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_jField;
+    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_jFieldT;
 
     enum class ComputeMethod
     {

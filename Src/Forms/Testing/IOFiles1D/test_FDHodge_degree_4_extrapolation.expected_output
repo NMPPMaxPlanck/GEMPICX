@@ -1,0 +1,6 @@
+1D Finite Difference Hodge degree 4 extrapolation convergence test:
+
+Hodge 0 -> 3 rate: 3.94
+Hodge 1 -> 2 rate: 3.98
+Hodge 2 -> 1 rate: 3.95
+Hodge 3 -> 0 rate: 3.88

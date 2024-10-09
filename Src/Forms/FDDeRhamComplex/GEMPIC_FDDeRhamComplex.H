@@ -44,19 +44,19 @@ inline auto get_hodge_stencils ()
                 stencilCellToNode[0] = 1.0;
                 break;
             case 4:
-                stencilNodeToCell[0] = 1. / 8.;
-                stencilNodeToCell[1] = 6. / 8.;
-                stencilNodeToCell[2] = 1. / 8.;
+                stencilNodeToCell[0] = 1. / 24.;
+                stencilNodeToCell[1] = 22. / 24.;
+                stencilNodeToCell[2] = 1. / 24.;
                 stencilCellToNode[0] = -1. / 24.;
                 stencilCellToNode[1] = 13. / 12.;
                 stencilCellToNode[2] = -1. / 24.;
                 break;
             case 6:
-                stencilNodeToCell[0] = -7. / 384.;
-                stencilNodeToCell[1] = 44. / 384.;
-                stencilNodeToCell[2] = 310. / 384.;
-                stencilNodeToCell[3] = 44. / 384.;
-                stencilNodeToCell[4] = -7. / 384;
+                stencilNodeToCell[0] = -17. / 5760.;
+                stencilNodeToCell[1] = 154. / 2880.;
+                stencilNodeToCell[2] = 863. / 960.;
+                stencilNodeToCell[3] = 154. / 2880.;
+                stencilNodeToCell[4] = -17. / 5760.;
                 stencilCellToNode[0] = 3. / 640.;
                 stencilCellToNode[1] = -29. / 480.;
                 stencilCellToNode[2] = 1067. / 960.;
@@ -134,17 +134,39 @@ inline auto get_hodge_stencils ()
  * @return void
  */
 
-template <Direction direction, unsigned int stencilLength>
-inline void matrix_mult (amrex::Geometry geom,
-                         amrex::GpuArray<amrex::Real, stencilLength> stencil,
-                         const amrex::MultiFab& multiInput,
-                         amrex::MultiFab& multiOutput)
+template <Direction direction, int hodgeDegree, unsigned int stencilLength>
+inline void apply_1d_hodge (amrex::Geometry geom,
+                            amrex::GpuArray<amrex::Real, stencilLength> stencil,
+                            const amrex::MultiFab& multiInput,
+                            amrex::MultiFab& multiOutput)
 {
-    BL_PROFILE("Gempic::Forms::matrix_mult()");
+    BL_PROFILE("Gempic::Forms::apply_1d_hodge()");
     int nComps{multiInput.nComp()};
     for (amrex::MFIter mfi(multiOutput); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box bx = mfi.validbox();
+
+        // Grow box to include sufficient number of ghost cells for stencil application in following
+        // non-periodic dimensions. In the periodic case, this is handled by FillBoundary.
+#if GEMPIC_SPACEDIM >= 2
+        constexpr int nGrow = hodgeDegree / 2 - 1;
+        if constexpr (direction == xDir)
+        {
+            if (!geom.isPeriodic(yDir))
+            {
+                bx.grow(yDir, nGrow);
+            }
+        }
+#endif
+#if GEMPIC_SPACEDIM == 3
+        if constexpr (direction == xDir || direction == yDir)
+        {
+            if (!geom.isPeriodic(zDir))
+            {
+                bx.grow(zDir, nGrow);
+            }
+        }
+#endif
 
         amrex::Array4<amrex::Real const> const& vecIn = multiInput[mfi].const_array();
         amrex::Array4<amrex::Real> const& vecOut = multiOutput[mfi].array();
@@ -512,15 +534,15 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
     const amrex::RealVect dr = this->m_dr;
     const amrex::Geometry geom = this->m_geom;
 
-    AMREX_D_TERM(
-        (matrix_mult<xDir>(
-            geom, stencilCellToNode, threeForm.m_data,
-            AMREX_D_PICK(zeroForm.m_data, this->m_tempPrimalZeroForm, zeroForm.m_data)));
-        , (matrix_mult<yDir>(geom, stencilCellToNode,
-                             AMREX_D_PICK((void), this->m_tempPrimalZeroForm, zeroForm.m_data),
-                             AMREX_D_PICK((void), zeroForm.m_data, this->m_tempPrimalZeroForm)));
-        ,
-        (matrix_mult<zDir>(geom, stencilCellToNode, this->m_tempPrimalZeroForm, zeroForm.m_data)););
+    AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
+        geom, stencilCellToNode, threeForm.m_data,
+        AMREX_D_PICK(zeroForm.m_data, this->m_tempPrimalZeroForm, zeroForm.m_data)));
+                 , (apply_1d_hodge<yDir, hodgeDegree>(
+                       geom, stencilCellToNode,
+                       AMREX_D_PICK((void), this->m_tempPrimalZeroForm, zeroForm.m_data),
+                       AMREX_D_PICK((void), zeroForm.m_data, this->m_tempPrimalZeroForm)));
+                 , (apply_1d_hodge<zDir, hodgeDegree>(
+                       geom, stencilCellToNode, this->m_tempPrimalZeroForm, zeroForm.m_data)););
 
     zeroForm.m_data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
 
@@ -559,14 +581,15 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
     const amrex::RealVect dr = this->m_dr;
     const amrex::Geometry geom = this->m_geom;
 
-    AMREX_D_TERM(
-        (matrix_mult<xDir>(
-            geom, stencilCellToNode, threeForm.m_data,
-            AMREX_D_PICK(zeroForm.m_data, this->m_tempDualZeroForm, zeroForm.m_data)));
-        , (matrix_mult<yDir>(geom, stencilCellToNode,
-                             AMREX_D_PICK((void), this->m_tempDualZeroForm, zeroForm.m_data),
-                             AMREX_D_PICK((void), zeroForm.m_data, this->m_tempDualZeroForm)));
-        , (matrix_mult<zDir>(geom, stencilCellToNode, this->m_tempDualZeroForm, zeroForm.m_data)););
+    AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
+        geom, stencilCellToNode, threeForm.m_data,
+        AMREX_D_PICK(zeroForm.m_data, this->m_tempDualZeroForm, zeroForm.m_data)));
+                 , (apply_1d_hodge<yDir, hodgeDegree>(
+                       geom, stencilCellToNode,
+                       AMREX_D_PICK((void), this->m_tempDualZeroForm, zeroForm.m_data),
+                       AMREX_D_PICK((void), zeroForm.m_data, this->m_tempDualZeroForm)));
+                 , (apply_1d_hodge<zDir, hodgeDegree>(geom, stencilCellToNode,
+                                                      this->m_tempDualZeroForm, zeroForm.m_data)););
 
     zeroForm.m_data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
 
@@ -608,16 +631,17 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
     for (int comp = 0; comp < 3; ++comp)
     {
         AMREX_D_TERM(
-            (matrix_mult<xDir>(geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode),
-                               twoForm.m_data[comp],
-                               AMREX_D_PICK(oneForm.m_data[comp], this->m_tempPrimalOneForm[comp],
-                                            oneForm.m_data[comp])));
-            , (matrix_mult<yDir>(
+            (apply_1d_hodge<xDir, hodgeDegree>(
+                geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode), twoForm.m_data[comp],
+                AMREX_D_PICK(oneForm.m_data[comp], this->m_tempPrimalOneForm[comp],
+                             oneForm.m_data[comp])));
+            , (apply_1d_hodge<yDir, hodgeDegree>(
                   geom, (comp == yDir ? stencilNodeToCell : stencilCellToNode),
                   AMREX_D_PICK((void), this->m_tempPrimalOneForm[comp], oneForm.m_data[comp]),
                   AMREX_D_PICK((void), oneForm.m_data[comp], this->m_tempPrimalOneForm[comp])));
-            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
-                                 this->m_tempPrimalOneForm[comp], oneForm.m_data[comp])););
+            , (apply_1d_hodge<zDir, hodgeDegree>(
+                  geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
+                  this->m_tempPrimalOneForm[comp], oneForm.m_data[comp])););
 
         if (comp == xDir)
         {
@@ -674,16 +698,17 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
     for (int comp = 0; comp < 3; ++comp)
     {
         AMREX_D_TERM(
-            (matrix_mult<xDir>(geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode),
-                               twoForm.m_data[comp],
-                               AMREX_D_PICK(oneForm.m_data[comp], this->m_tempDualOneForm[comp],
-                                            oneForm.m_data[comp])));
-            , (matrix_mult<yDir>(
+            (apply_1d_hodge<xDir, hodgeDegree>(
+                geom, (comp == xDir ? stencilNodeToCell : stencilCellToNode), twoForm.m_data[comp],
+                AMREX_D_PICK(oneForm.m_data[comp], this->m_tempDualOneForm[comp],
+                             oneForm.m_data[comp])));
+            , (apply_1d_hodge<yDir, hodgeDegree>(
                   geom, (comp == yDir ? stencilNodeToCell : stencilCellToNode),
                   AMREX_D_PICK((void), this->m_tempDualOneForm[comp], oneForm.m_data[comp]),
                   AMREX_D_PICK((void), oneForm.m_data[comp], this->m_tempDualOneForm[comp])));
-            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
-                                 this->m_tempDualOneForm[comp], oneForm.m_data[comp])););
+            , (apply_1d_hodge<zDir, hodgeDegree>(
+                  geom, (comp == zDir ? stencilNodeToCell : stencilCellToNode),
+                  this->m_tempDualOneForm[comp], oneForm.m_data[comp])););
 
         if (comp == xDir)
         {
@@ -739,16 +764,17 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
     for (int comp = 0; comp < 3; ++comp)
     {
         AMREX_D_TERM(
-            (matrix_mult<xDir>(geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell),
-                               oneForm.m_data[comp],
-                               AMREX_D_PICK(twoForm.m_data[comp], this->m_tempPrimalTwoForm[comp],
-                                            twoForm.m_data[comp])));
-            , (matrix_mult<yDir>(
+            (apply_1d_hodge<xDir, hodgeDegree>(
+                geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell), oneForm.m_data[comp],
+                AMREX_D_PICK(twoForm.m_data[comp], this->m_tempPrimalTwoForm[comp],
+                             twoForm.m_data[comp])));
+            , (apply_1d_hodge<yDir, hodgeDegree>(
                   geom, (comp == yDir ? stencilCellToNode : stencilNodeToCell),
                   AMREX_D_PICK((void), this->m_tempPrimalTwoForm[comp], twoForm.m_data[comp]),
                   AMREX_D_PICK((void), twoForm.m_data[comp], this->m_tempPrimalTwoForm[comp])));
-            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
-                                 this->m_tempPrimalTwoForm[comp], twoForm.m_data[comp])););
+            , (apply_1d_hodge<zDir, hodgeDegree>(
+                  geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
+                  this->m_tempPrimalTwoForm[comp], twoForm.m_data[comp])););
 
         if (comp == xDir)
         {
@@ -806,16 +832,17 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
     for (int comp = 0; comp < 3; ++comp)
     {
         AMREX_D_TERM(
-            (matrix_mult<xDir>(geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell),
-                               oneForm.m_data[comp],
-                               AMREX_D_PICK(twoForm.m_data[comp], this->m_tempDualTwoForm[comp],
-                                            twoForm.m_data[comp])));
-            , (matrix_mult<yDir>(
+            (apply_1d_hodge<xDir, hodgeDegree>(
+                geom, (comp == xDir ? stencilCellToNode : stencilNodeToCell), oneForm.m_data[comp],
+                AMREX_D_PICK(twoForm.m_data[comp], this->m_tempDualTwoForm[comp],
+                             twoForm.m_data[comp])));
+            , (apply_1d_hodge<yDir, hodgeDegree>(
                   geom, (comp == yDir ? stencilCellToNode : stencilNodeToCell),
                   AMREX_D_PICK((void), this->m_tempDualTwoForm[comp], twoForm.m_data[comp]),
                   AMREX_D_PICK((void), twoForm.m_data[comp], this->m_tempDualTwoForm[comp])));
-            , (matrix_mult<zDir>(geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
-                                 this->m_tempDualTwoForm[comp], twoForm.m_data[comp])););
+            , (apply_1d_hodge<zDir, hodgeDegree>(
+                  geom, (comp == zDir ? stencilCellToNode : stencilNodeToCell),
+                  this->m_tempDualTwoForm[comp], twoForm.m_data[comp])););
 
         if (comp == xDir)
         {
@@ -870,15 +897,15 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
     const amrex::RealVect dr = this->m_dr;
     const amrex::Geometry geom = this->m_geom;
 
-    AMREX_D_TERM(
-        (matrix_mult<xDir>(
-            geom, stencilNodeToCell, zeroForm.m_data,
-            AMREX_D_PICK(threeForm.m_data, this->m_tempPrimalThreeForm, threeForm.m_data)));
-        , (matrix_mult<yDir>(geom, stencilNodeToCell,
-                             AMREX_D_PICK((void), this->m_tempPrimalThreeForm, threeForm.m_data),
-                             AMREX_D_PICK((void), threeForm.m_data, this->m_tempPrimalThreeForm)));
-        , (matrix_mult<zDir>(geom, stencilNodeToCell, this->m_tempPrimalThreeForm,
-                             threeForm.m_data)););
+    AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
+        geom, stencilNodeToCell, zeroForm.m_data,
+        AMREX_D_PICK(threeForm.m_data, this->m_tempPrimalThreeForm, threeForm.m_data)));
+                 , (apply_1d_hodge<yDir, hodgeDegree>(
+                       geom, stencilNodeToCell,
+                       AMREX_D_PICK((void), this->m_tempPrimalThreeForm, threeForm.m_data),
+                       AMREX_D_PICK((void), threeForm.m_data, this->m_tempPrimalThreeForm)));
+                 , (apply_1d_hodge<zDir, hodgeDegree>(
+                       geom, stencilNodeToCell, this->m_tempPrimalThreeForm, threeForm.m_data)););
 
     threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
 
@@ -918,15 +945,15 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::nod
     const amrex::RealVect dr = this->m_dr;
     const amrex::Geometry geom = this->m_geom;
 
-    AMREX_D_TERM(
-        (matrix_mult<xDir>(
-            geom, stencilNodeToCell, zeroForm.m_data,
-            AMREX_D_PICK(threeForm.m_data, this->m_tempDualThreeForm, threeForm.m_data)));
-        , (matrix_mult<yDir>(geom, stencilNodeToCell,
-                             AMREX_D_PICK((void), this->m_tempDualThreeForm, threeForm.m_data),
-                             AMREX_D_PICK((void), threeForm.m_data, this->m_tempDualThreeForm)));
-        ,
-        (matrix_mult<zDir>(geom, stencilNodeToCell, this->m_tempDualThreeForm, threeForm.m_data)););
+    AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
+        geom, stencilNodeToCell, zeroForm.m_data,
+        AMREX_D_PICK(threeForm.m_data, this->m_tempDualThreeForm, threeForm.m_data)));
+                 , (apply_1d_hodge<yDir, hodgeDegree>(
+                       geom, stencilNodeToCell,
+                       AMREX_D_PICK((void), this->m_tempDualThreeForm, threeForm.m_data),
+                       AMREX_D_PICK((void), threeForm.m_data, this->m_tempDualThreeForm)));
+                 , (apply_1d_hodge<zDir, hodgeDegree>(
+                       geom, stencilNodeToCell, this->m_tempDualThreeForm, threeForm.m_data)););
 
     threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
 

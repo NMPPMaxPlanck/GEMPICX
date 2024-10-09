@@ -166,7 +166,7 @@ protected:
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
         // Not checking particles
-        const int nGhostExtra{0};  //{-s_maxSplineDegree};
+        const int nGhostExtra{1};  //{-s_maxSplineDegree};
 
         amrex::ParmParse pp;
         pp.addarr("domainLo", domainLo);

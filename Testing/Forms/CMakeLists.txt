@@ -1,4 +1,5 @@
 target_sources(GtestTests PRIVATE
+    BoundaryConditions_test.cpp
     FDDeRhamComplex_test.cpp
     FDDeRhamComplexProjection_test.cpp
     EvalForm_test.cpp

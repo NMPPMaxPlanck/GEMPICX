@@ -125,6 +125,20 @@ enum Error : int
     VerbosityAlreadySet = 5,
 };
 
+enum class Grid
+{
+    primal,
+    dual
+};
+
+enum class Space
+{
+    node,
+    edge,
+    face,
+    cell
+};
+
 enum class Field
 {
     PrimalZeroForm,

@@ -309,6 +309,15 @@ Variables read in the simulation by the helper function interpreter \verb|parse_
 Function.Bz = "1e-3 * cos(kvarx * x)" # String. No default.
 \end{lstlisting}
 
+\subsection{BoundaryCondition}
+Controls the boundary conditions on non-periodic domains (assuming your simulation supports this option). If the simulation domain contains non-periodic boundaries, i.e., \verb|isPeriodicVector| contains one or more 0 entries, boundary conditions can be provided. Specific boundary conditions can only be assigned to named fields. For all other fields the default is used.
+Particle boundary conditions must be implemented separately.
+\begin{lstlisting}[language=pkgconfig]
+# Boundary conditions for fields
+BoundaryCondition.E = PerfectlyConducting PerfectlyConducting # String vector. 2 entries for each non-periodic dimension (lower/upper)
+BoundaryCondition.Default = Natural Natural # String vector. Default "Natural" * 2 * dim_non_periodic
+\end{lstlisting}
+
 \subsection{Example of An Input File}
 Putting it all together, an input file might look like this:
 \begin{lstlisting}[language=pkgconfig]

@@ -1,6 +1,6 @@
 1D Finite Difference Hodge degree 6 convergence test:
 
-Hodge 1 -> 2 rate: 3.92
-Hodge 2 -> 1 rate: 5.08
-Hodge 0 -> 3 rate: 3.98
+Hodge 1 -> 2 rate: 5.87
+Hodge 2 -> 1 rate: 5.88
+Hodge 0 -> 3 rate: 5.97
 Hodge 3 -> 0 rate: 5.97

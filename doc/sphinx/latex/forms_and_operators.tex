@@ -246,4 +246,42 @@ To be included.
 \subsection{Grad}
 To be included.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discrete Boundary Conditions}
+\label{sec:discrete_bc}
+
+The choice of spaces in the de Rham diagram depends on the boundary conditions as mentioned in the section \ref{sec:boundary_conditions}. In the case of non-periodic domains, we enforce the boundary conditions on the primal spaces and no conditions on the dual spaces.
+
+Currently implemented boundary conditions are listed in table \ref{tab:implemented_bc}.
+\begin{table}[htbp]
+    \label{tab:implemented_bc}
+    \caption{Implemented boundary conditions}
+    \centering
+    \begin{tabular}{c|c}
+        Name & Condition \\ \hline
+        Natural & none \\
+        PerfectlyConducting & $\boldsymbol{E} \times \boldsymbol{n} = 0$, $\boldsymbol{B} \cdot \boldsymbol{n} = 0$ \\
+    \end{tabular}
+\end{table}
+
+\subsection{Extrapolation}
+
+An extrapolation to ghost cells must be used before any non-local operation (non-diagonal Hodges, dual differential operators, ...). The degree of the polynomial extrapolation is chosen as (Hodge degree - 1) to preserve the spatial convergence order. For natural boundary conditions, \verb|apply_bc| performs extrapolation to ghost cells without modifying values at the boundary. 
+
+\subsection{Perfectly Conducting}
+
+On a perfectly conducting metallic wall, tangential electric fields are immediately compensated by freely moving charge, leading to the boundary conditions
+\begin{align}
+    \boldsymbol{E} \times \boldsymbol{n} = 0, \quad \boldsymbol{B} \cdot \boldsymbol{n} = 0.
+\end{align}
+As a direct consequence, the electric field edge integrals along the boundary are zero. The same applies to the magnetic field fluxes through the boundary. Mathematically, these edge integrals and fluxes are no longer degrees of freedom and adapted operators would need to be used close to the boundary. In the implementation, the degrees of freedom are preserved and must be repeatedly set to zero - in return, the standard operators can be used on the entire domain.
+
+The function \verb|apply_bc| maps discrete forms from the periodic de Rham diagram to the diagram with homogeneous boundary conditions on the primal spaces by setting all degrees of freedom located on the boundary to zero. Extrapolation is then applied if necessary.
+
+\subsection{Remark on Projections}
+
+In case of non-periodic domains, care must be taken when projecting functions to dual degrees of freedom. Some of the dual projection operators may involve integration regions that are partially outside the physical domain. The fields are not defined outside the domain, so the projections cannot be applied directly.
+
+Projections to the primal discrete forms are always well defined. But the projections do not enforce boundary conditions, so \verb|apply_bc| may have to be used. Then the dual form is computed by a Hodge operator.
+
 \end{document}
