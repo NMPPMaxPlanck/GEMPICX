@@ -46,7 +46,7 @@ protected:
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         // Not checking particles
-        const int nGhostExtra{-s_maxSplineDegree};
+        const int nGhostExtra{0};
 
         amrex::ParmParse pp;
         pp.addarr("domainLo", domainLo);
@@ -88,7 +88,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
+    apply_1d_hodge<xDir, hodgeDegree>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 
@@ -128,7 +128,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
+    apply_1d_hodge<xDir, hodgeDegree>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 
@@ -168,7 +168,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
+    apply_1d_hodge<xDir, hodgeDegree>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 
@@ -199,7 +199,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTest)
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
+    apply_1d_hodge<xDir, hodgeDegree>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 
@@ -240,7 +240,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII)
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
+    apply_1d_hodge<xDir, hodgeDegree>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 
@@ -288,7 +288,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII)
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
 
-    matrix_mult<xDir>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
+    apply_1d_hodge<xDir, hodgeDegree>(m_infra.m_geom, stencilCellToNode, rho.m_data, phi.m_data);
 
     bool loopRun{false};
 

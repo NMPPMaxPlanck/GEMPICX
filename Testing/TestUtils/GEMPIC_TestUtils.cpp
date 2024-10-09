@@ -60,8 +60,8 @@ void check_field (const char file[],
 }
 void compare_fields (const char file[],
                      int line,
-                     amrex::Array4<amrex::Real> const& fieldArr,
-                     amrex::Array4<amrex::Real> const& fieldArr2,
+                     amrex::Array4<const amrex::Real> const& fieldArr,
+                     amrex::Array4<const amrex::Real> const& fieldArr2,
                      amrex::Box const& bx,
                      amrex::Real tol,
                      int ncomp)

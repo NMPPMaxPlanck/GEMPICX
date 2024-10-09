@@ -32,9 +32,9 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degree, int n
 class GaussError : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
 {
 public:
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>> m_E;
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>> m_D;
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> m_divD;
+    std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
+    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
+    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_divD;
 
     enum class ComputeMethod
     {

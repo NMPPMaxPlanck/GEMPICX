@@ -29,8 +29,8 @@ template <int vdim, int numspec, int degx, int degy, int degz, int degree, int n
 class MagFieldEnergy : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
 {
 public:
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>> m_B;
-    std::shared_ptr<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>> m_H;
+    std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::face>> m_B;
+    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::edge>> m_H;
 
     enum class ComputeMethod
     {

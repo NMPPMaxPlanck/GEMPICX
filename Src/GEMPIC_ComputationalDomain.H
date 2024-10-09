@@ -71,7 +71,7 @@ public:
         amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
         amrex::Vector<amrex::Real> k;
         // Non-periodic directions exist
-        if (!AMREX_D_TERM(m_isPeriodic[xDir], &&m_isPeriodic[yDir], &&m_isPeriodic[zDir]))
+        if (!(AMREX_D_TERM(m_isPeriodic[xDir], &&m_isPeriodic[yDir], &&m_isPeriodic[zDir])))
         {
             params.get_or_set("domainHi", domainHi);
         }
