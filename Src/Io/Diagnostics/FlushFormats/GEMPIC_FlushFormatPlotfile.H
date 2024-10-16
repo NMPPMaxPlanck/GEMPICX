@@ -26,8 +26,8 @@ const std::string defaultLevelPrefix{"Level_"};
  * In particular, function WriteToFile takes fields and particles as input arguments,
  * and writes data to file.
  */
-template <int vdim, int numspec, int ndata>
-class FlushFormatPlotfile : public FlushFormat<vdim, numspec, ndata>
+template <int vdim, int ndata>
+class FlushFormatPlotfile : public FlushFormat<vdim, ndata>
 {
 public:
     FlushFormatPlotfile() {}
@@ -39,8 +39,7 @@ public:
         amrex::Geometry& geom,
         const int iteration,
         const double time,
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>
-            particles,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> particles,
         int nlev,
         const std::string prefix,
         int fileMinDigits,
@@ -65,11 +64,11 @@ public:
             const amrex::Vector<std::string>& intCompNames = {};
             const amrex::Vector<int> writeRealComp(vdim + ndata, 1);
 
-            for (int idx = 0; idx < numspec; idx++)
+            for (auto& particleSpecies : particles)
             {
-                particles[idx]->WritePlotFile(filename, particles[idx]->get_name(), writeRealComp,
-                                              writeIntComp, particles[idx]->get_comp_names(),
-                                              intCompNames);
+                particleSpecies->WritePlotFile(filename, particleSpecies->get_name(), writeRealComp,
+                                               writeIntComp, particleSpecies->get_comp_names(),
+                                               intCompNames);
             }
         }
         write_job_info(filename);

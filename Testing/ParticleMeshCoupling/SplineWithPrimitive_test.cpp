@@ -53,7 +53,7 @@ protected:
     static const int s_spec{0};
 
     ComputationalDomain m_infra{false};  // "unitialized" computational domain
-    amrex::GpuArray<std::unique_ptr<ParticleGroups<s_vDim>>, s_numSpec> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
 
     static void SetUpTestSuite ()
     {
@@ -91,6 +91,7 @@ protected:
         m_infra = ComputationalDomain{};
 
         // particles
+        m_particleGroup.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
             m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);

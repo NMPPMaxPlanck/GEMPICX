@@ -22,8 +22,8 @@ using ::testing::Mock;
 
 namespace
 {
-template <int vDim, int numspec, int degX, int degY, int degZ, int degmw, int ndata>
-class MockHSZigZagC2 : public HSZigZagC2<vDim, numspec, degX, degY, degZ, degmw, ndata>
+template <int vDim, int degX, int degY, int degZ, int degmw, int ndata>
+class MockHSZigZagC2 : public HSZigZagC2<vDim, degX, degY, degZ, degmw, ndata>
 {
 public:
 };
@@ -72,9 +72,9 @@ protected:
     double mass{1};
 
     computational_domain infra{false};  // "uninitialized" computational domain
-    amrex::GpuArray<std::unique_ptr<particle_groups<vDim>>, numSpec> particleGroup;
+    std::vector<std::unique_ptr<particle_groups<vDim>>> particleGroup(numSpec);
 
-    MockHSZigZagC2<vDim, numSpec, degX, degY, degZ, degmw, nData> mockHSZigZagC2;
+    MockHSZigZagC2<vDim, degX, degY, degZ, degmw, nData> mockHSZigZagC2;
 
     static void SetUpTestSuite ()
     {

@@ -32,7 +32,7 @@ namespace Gempic::Io
  *  implemented in a derived class, and must override the (pure virtual)
  *  function ComputeDiags.
  */
-template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata>
+template <int vdim, int degx, int degy, int degz, int degree, int ndata>
 class ReducedDiagnostics
 {
 public:
@@ -148,8 +148,7 @@ public:
     virtual void compute_diags(
         ComputationalDomain& infra,
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>&
-            partGr) = 0;
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) = 0;
 
     /**
      * write to file function

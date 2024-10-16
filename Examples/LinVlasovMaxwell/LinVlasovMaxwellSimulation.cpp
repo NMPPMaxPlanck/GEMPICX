@@ -44,7 +44,6 @@ int main (int argc, char *argv[])
                    << std::endl;
 
     constexpr int vdim{3};
-    constexpr int numspec{1};
     constexpr int ndata{2};
 
     // Spline degrees
@@ -91,9 +90,8 @@ int main (int argc, char *argv[])
         amrex::Vector<std::string> speciesNames;
         params.get("speciesNames", speciesNames);
 
-        amrex::GpuArray<std::shared_ptr<ParticleGroupsLinVlasov<vdim, ndata>>, numspec>
-            partGrLinVlasov;
-        amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec> partGr;
+        std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vdim, ndata>>> partGrLinVlasov;
+        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>> partGr;
         init_particles(infra, partGrLinVlasov, partGr);
 
         // Domain volume and number of cells to normalize s0
@@ -112,21 +110,21 @@ int main (int argc, char *argv[])
             params.get("nSteps", nSteps);
             Io::Parameters paramsSim("Sim");
             auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
+            Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt);
             fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, partGr,
                                 nGhost);
 
             // Initialize reduced diagnostics and write initial time step
-            Io::MultiReducedDiagnostics<vdim, numspec, degx, degy, degz, hodgeDegree, ndata>
-                redDiagn(deRham);
+            Io::MultiReducedDiagnostics<vdim, degx, degy, degz, hodgeDegree, ndata> redDiagn(
+                deRham);
 
             // Deposit initial charge and compute s0
-            for (int spec = 0; spec < numspec; spec++)
+            for (auto &particleSpecies : partGrLinVlasov)
             {
-                amrex::Real charge = partGrLinVlasov[spec]->get_charge();
+                amrex::Real charge = particleSpecies->get_charge();
 
                 // Get species information for s0
-                std::string specString = "Particle." + partGrLinVlasov[spec]->get_name();
+                std::string specString = "Particle." + particleSpecies->get_name();
                 Io::Parameters params(specString);
                 int nPartPerCell;
                 params.get("nPartPerCell", nPartPerCell);
@@ -147,10 +145,10 @@ int main (int argc, char *argv[])
                                                                vThermal[zDir]};
                 amrex::GpuArray<amrex::Real, vdim> vMeanGPU{vMean[xDir], vMean[yDir], vMean[zDir]};
 
-                amrex::Real vThermalBackground = partGrLinVlasov[spec]->get_v_thermal_background();
+                amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
 
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGrLinVlasov[spec], 0);
-                     pti.isValid(); ++pti)
+                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
+                     ++pti)
                 {
                     const long np = pti.numParticles();
                     auto *const particles = pti.GetArrayOfStructs()().data();
@@ -164,7 +162,7 @@ int main (int argc, char *argv[])
 
                     //compile functions on device
                     auto funcDensityBackground =
-                        Utils::compile_function(partGrLinVlasov[spec]->get_density_background());
+                        Utils::compile_function(particleSpecies->get_density_background());
 
                     amrex::ParallelFor(
                         np,
@@ -225,15 +223,14 @@ int main (int argc, char *argv[])
                 }
                 J.fill_boundary();
 
-                for (int spec = 0; spec < numspec; spec++)
+                for (auto &particleSpecies : partGrLinVlasov)
                 {
-                    amrex::Real charge = partGrLinVlasov[spec]->get_charge();
-                    amrex::Real chargeMass = charge / partGrLinVlasov[spec]->get_mass();
-                    amrex::Real vThermalBackground =
-                        partGrLinVlasov[spec]->get_v_thermal_background();
+                    amrex::Real charge = particleSpecies->get_charge();
+                    amrex::Real chargeMass = charge / particleSpecies->get_mass();
+                    amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
                     amrex::Real vThermalBackground2 = vThermalBackground * vThermalBackground;
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGrLinVlasov[spec], 0);
+                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0);
                          pti.isValid(); ++pti)
                     {
                         const long np = pti.numParticles();
@@ -260,8 +257,8 @@ int main (int argc, char *argv[])
                         auto funcBPrimXDevice = Utils::compile_functions<3>(parseBPrimX);
                         auto funcBPrimYDevice = Utils::compile_functions<3>(parseBPrimY);
                         auto funcBPrimZDevice = Utils::compile_functions<3>(parseBPrimZ);
-                        auto funcDensityBackground = Utils::compile_function(
-                            partGrLinVlasov[spec]->get_density_background());
+                        auto funcDensityBackground =
+                            Utils::compile_function(particleSpecies->get_density_background());
 
                         amrex::ParallelFor(
                             np,
@@ -332,7 +329,7 @@ int main (int argc, char *argv[])
                                 gempic_deposit_j(spline, vel, f0 * charge * weight[pp], jA);
                             });
                     }
-                    partGrLinVlasov[spec]->Redistribute();
+                    particleSpecies->Redistribute();
                 }
 
                 J.post_particle_loop_sync();
@@ -342,15 +339,14 @@ int main (int argc, char *argv[])
                 deRham->hodge(D, E);
 
                 // He,particle
-                for (int spec = 0; spec < numspec; spec++)
+                for (auto &particleSpecies : partGrLinVlasov)
                 {
-                    amrex::Real charge = partGrLinVlasov[spec]->get_charge();
-                    amrex::Real chargeMass = charge / partGrLinVlasov[spec]->get_mass();
-                    amrex::Real vThermalBackground =
-                        partGrLinVlasov[spec]->get_v_thermal_background();
+                    amrex::Real charge = particleSpecies->get_charge();
+                    amrex::Real chargeMass = charge / particleSpecies->get_mass();
+                    amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
                     amrex::Real vThermalBackground2 = vThermalBackground * vThermalBackground;
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGrLinVlasov[spec], 0);
+                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0);
                          pti.isValid(); ++pti)
                     {
                         const long np = pti.numParticles();
@@ -368,8 +364,8 @@ int main (int argc, char *argv[])
                         }
 
                         //compile functions on device
-                        auto funcDensityBackground = Utils::compile_function(
-                            partGrLinVlasov[spec]->get_density_background());
+                        auto funcDensityBackground =
+                            Utils::compile_function(particleSpecies->get_density_background());
 
                         amrex::ParallelFor(
                             np,

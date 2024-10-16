@@ -69,8 +69,6 @@ public:
      * can be done one by one (see method add_particle) or with the particle samples in the folder
      * sampler.
      */
-    // particle_groups (amrex::GpuArray<amrex::Real, numspec> charge_in,
-    //                 amrex::GpuArray<amrex::Real, numspec> mass_in,
     ParticleGroups(amrex::Real charge,
                    amrex::Real mass,
                    std::string& name,

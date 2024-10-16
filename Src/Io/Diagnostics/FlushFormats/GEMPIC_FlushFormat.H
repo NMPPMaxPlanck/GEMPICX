@@ -8,7 +8,7 @@
 
 #include "GEMPIC_ParticleGroups.H"
 
-template <int vdim, int numspec, int ndata>
+template <int vdim, int ndata>
 class FlushFormat
 {
 public:
@@ -21,8 +21,7 @@ public:
         amrex::Geometry& geom,
         const int iteration,
         const double time,
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>
-            particles,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> particles,
         int nlev,
         const std::string prefix,
         const int fileMinDigits,

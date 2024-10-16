@@ -249,7 +249,6 @@ public:
 };
 
 template <unsigned int vdim,
-          unsigned int numspec,
           int degx,
           int degy,
           int degz,
@@ -270,7 +269,7 @@ public:
         DeRhamField<Grid::dual, Space::face>& J,
         ComputationalDomain infra,
         const amrex::Real dt,
-        amrex::GpuArray<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& partGr,
+        std::vector<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
         const int nSteps,
         int strangOrder,
         OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) = 0;

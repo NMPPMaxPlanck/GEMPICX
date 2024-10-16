@@ -24,7 +24,7 @@
 
 namespace Gempic::Io
 {
-template <int vdim, int numspec, int ndata>
+template <int vdim, int ndata>
 class FullDiagnostics
 {
 public:
@@ -64,12 +64,11 @@ public:
     }
 
     /** Initialize pointers to main fields and allocate output multifab m_mf_outputs. */
-    void init_data (
-        ComputationalDomain& compDom,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::map<std::string, amrex::Real>& fieldsScaling,
-        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec> ions,
-        amrex::IntVect& nGhost)
+    void init_data (ComputationalDomain& compDom,
+                    std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+                    std::map<std::string, amrex::Real>& fieldsScaling,
+                    std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> ions,
+                    amrex::IntVect& nGhost)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::init_data()");
         // initialize member variables and arrays in base class::Diagnostics
@@ -147,7 +146,7 @@ private:
         // Construct Flush class.
         if (m_format == "plotfile")
         {
-            m_flushFormat = std::make_unique<FlushFormatPlotfile<vdim, numspec, ndata>>();
+            m_flushFormat = std::make_unique<FlushFormatPlotfile<vdim, ndata>>();
             //} else if (m_format == "checkpoint"){
             // creating checkpoint format
             // m_flush_format = std::make_unique<FlushFormatCheckpoint>() ;
@@ -192,7 +191,7 @@ private:
     /** Whether this iteration has already been dumped, to avoid writing data twice */
     int m_alreadyDone = false;
     /** This class is responsible for flushing the data to file */
-    std::unique_ptr<FlushFormat<vdim, numspec, ndata>> m_flushFormat;
+    std::unique_ptr<FlushFormat<vdim, ndata>> m_flushFormat;
     /** output multifab, where all fields are computed (cell-centered or back-transformed)
      *  and stacked.
      *  The first vector is for total number of snapshots. (=1 for FullDiagnostics)
@@ -212,7 +211,7 @@ private:
      */
     amrex::Geometry m_geomOutput;
 
-    amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec> m_particles;
+    std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> m_particles;
 
     /** Coarsening ratio such that, fields are averaged to the coarsened grid.
      * The ratio should render the grid to be coarsenable (as defined by AMReX). */
@@ -266,7 +265,7 @@ private:
      */
     std::string get_diag_type (
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& particles)
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::get_diag_type()");
         bool particleType{false};
@@ -281,9 +280,9 @@ private:
             else
             {
                 bool diagNameMatched{false};
-                for (int species{0}; species < numspec; ++species)
+                for (auto& particleSpecies : particles)
                 {
-                    if (diagName == particles[species]->get_name())
+                    if (diagName == particleSpecies->get_name())
                     {
                         particleType = true;
                         diagNameMatched = true;
@@ -330,7 +329,7 @@ private:
         ComputationalDomain& compDom,
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
         std::map<std::string, amrex::Real>& fieldsScaling,
-        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& particles,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& particles,
         amrex::IntVect& nghost)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::initialize_field_functors_and_buffer_data()");

@@ -78,7 +78,7 @@ protected:
     amrex::Array<amrex::Real, s_numSpec> m_mass{1, 0.1};
 
     ComputationalDomain m_infra{false};  // "uninitialized" computational domain
-    amrex::GpuArray<std::unique_ptr<ParticleGroups<s_vDim>>, s_numSpec> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
     // amrex::MultiFab rho;
     std::unique_ptr<DeRhamField<Grid::dual, Space::cell>> m_rhoPtr;
@@ -124,6 +124,7 @@ protected:
         m_rhoPtr = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(m_deRham);
 
         // particles
+        m_particleGroup.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
             m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);

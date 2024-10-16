@@ -30,8 +30,8 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the Momentum and Kinetic Energy.
  */
-template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata>
-class Particle : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int degree, int ndata>
+class Particle : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
 {
 public:
     /**
@@ -41,8 +41,7 @@ public:
      * @param[in] isLastType is this the last type in the group?
      */
     Particle(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
-            rdName, indexNum, isLastType)
+        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
     {
         BL_PROFILE("Gempic::Io::Particle::Particle()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -85,21 +84,20 @@ public:
     void compute_diags (
         ComputationalDomain& infra,
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
-            partGr) final
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr) final
     {
         BL_PROFILE("Gempic::Io::Particle::compute_diags()");
         constexpr int noutputs = 4;
         this->m_data.assign(noutputs, 0.0);
 
-        for (int spec = 0; spec < numspec; spec++)
+        for (auto& particleSpecies : partGr)
         {
             amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum, amrex::ReduceOpSum,
                              amrex::ReduceOpSum>
                 reduceOps;
             auto particleTmp = amrex::ParticleReduce<
                 amrex::ReduceData<amrex::Real, amrex::Real, amrex::Real, amrex::Real>>(
-                *partGr[spec],
+                *particleSpecies,
                 [=] AMREX_GPU_HOST_DEVICE(
                     const amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
                                                        0>& pt,
@@ -125,10 +123,10 @@ public:
                 {Px, Py, Pz, pe}, amrex::ParallelDescriptor::IOProcessorNumber());
 
             // save results for this species i_s into m_data
-            this->m_data[0] += partGr[spec]->get_mass() * Px;
-            this->m_data[1] += partGr[spec]->get_mass() * Py;
-            this->m_data[2] += partGr[spec]->get_mass() * Pz;
-            this->m_data[3] += partGr[spec]->get_mass() * pe;
+            this->m_data[0] += particleSpecies->get_mass() * Px;
+            this->m_data[1] += particleSpecies->get_mass() * Py;
+            this->m_data[2] += particleSpecies->get_mass() * Pz;
+            this->m_data[3] += particleSpecies->get_mass() * pe;
         }
     }
     // end void Particle::ComputeDiags
@@ -138,8 +136,8 @@ public:
  *  This class mainly contains a function that
  *  computes the Momentum and Kinetic Energy for LinVlasov Model.
  */
-template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata>
-class ParticleLinVlasov : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int degree, int ndata>
+class ParticleLinVlasov : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
 {
 public:
     /**
@@ -149,8 +147,7 @@ public:
      * @param[in] isLastType is this the last type in the group?
      */
     ParticleLinVlasov(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
-            rdName, indexNum, isLastType)
+        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
     {
         if (amrex::ParallelDescriptor::IOProcessor())
         {
@@ -188,17 +185,15 @@ public:
     void compute_diags (
         ComputationalDomain& infra,
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
-            partGr) final
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr) final
     {
         constexpr int noutputs = 2;
         this->m_data.assign(noutputs, 0.0);
 
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>>,
-                        numspec>
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>>>
             partGrLinVlasov;
 
-        for (int spec = 0; spec < numspec; spec++)
+        for (int spec = 0; spec < partGr.size(); spec++)
         {
             partGrLinVlasov[spec] =
                 std::dynamic_pointer_cast<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>>(

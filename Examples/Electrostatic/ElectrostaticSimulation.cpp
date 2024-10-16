@@ -33,7 +33,6 @@ int main (int argc, char *argv[])
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     constexpr int vdim{3};
-    constexpr int numspec{1};
     constexpr int ndata{1};  // Needs to be 1 so that the correct ParIter type is defined. Putting 4
                              // gets a non-defined type
     // Spline degrees
@@ -101,7 +100,7 @@ int main (int argc, char *argv[])
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
 
         // Initialize particle groups
-        amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> ions;
+        std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
         init_particles(infra, ions);
 
         // Initializing filter
@@ -119,20 +118,19 @@ int main (int argc, char *argv[])
             int nSteps;
             params.get("nSteps", nSteps);
             auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
+            Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt);
             fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, ions,
                                 nGhost);
 
             // Initialize reduced diagnostics and write initial time step
-            Io::MultiReducedDiagnostics<vdim, numspec, degx, degy, degz, hodgeDegree, 1> redDiagn(
-                deRham);
+            Io::MultiReducedDiagnostics<vdim, degx, degy, degz, hodgeDegree, 1> redDiagn(deRham);
 
             // Deposit initial charge
-            for (int spec = 0; spec < numspec; spec++)
+            for (auto &particleSpecies : ions)
             {
-                amrex::Real charge = ions[spec]->get_charge();
+                amrex::Real charge = particleSpecies->get_charge();
 
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid();
+                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
                      ++pti)
                 {
                     const long np = pti.numParticles();
@@ -187,14 +185,14 @@ int main (int argc, char *argv[])
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
                 rho.m_data.setVal(0.0);
-                for (int spec = 0; spec < numspec; spec++)
+                for (auto &particleSpecies : ions)
                 {
-                    amrex::Real charge = ions[spec]->get_charge();
-                    amrex::Real chargemass = charge / ions[spec]->get_mass();
+                    amrex::Real charge = particleSpecies->get_charge();
+                    amrex::Real chargemass = charge / particleSpecies->get_mass();
                     amrex::Real a = 0.5 * chargemass * dt * Bz;
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid();
-                         ++pti)
+                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0);
+                         pti.isValid(); ++pti)
                     {
                         const long np = pti.numParticles();
                         const auto &particles = pti.GetArrayOfStructs()().data();
@@ -227,7 +225,7 @@ int main (int argc, char *argv[])
                             });
                     }
 
-                    ions[spec]->Redistribute();
+                    particleSpecies->Redistribute();
 
                     rho.post_particle_loop_sync();
 
@@ -253,8 +251,8 @@ int main (int argc, char *argv[])
 
                     rho.m_data.setVal(0.0);
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*ions[spec], 0); pti.isValid();
-                         ++pti)
+                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0);
+                         pti.isValid(); ++pti)
                     {
                         const long np = pti.numParticles();
                         const auto &particles = pti.GetArrayOfStructs()().data();
@@ -324,7 +322,7 @@ int main (int argc, char *argv[])
                                 gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
                             });
                     }
-                    ions[spec]->Redistribute();
+                    particleSpecies->Redistribute();
                 }
                 rho.post_particle_loop_sync();
 

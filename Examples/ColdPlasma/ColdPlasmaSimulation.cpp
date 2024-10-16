@@ -35,7 +35,6 @@ int main (int argc, char* argv[])
     amrex::Initialize(argc, argv);
 
     constexpr int vdim{3};
-    constexpr int numspec{0};
     constexpr int ndata{1};
 
     // Spline degrees
@@ -74,7 +73,7 @@ int main (int argc, char* argv[])
         TimeLoop::OperatorHamilton<vdim, degx, degy, degz, hodgeDegree> operatorHamilton;
 
         // Initialize particle groups
-        amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec> partGr;
+        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>> partGr;
 
         {
             // Initialize full diagnostics and write initial time step
@@ -85,7 +84,7 @@ int main (int argc, char* argv[])
             params.get("nSteps", nSteps);
             Io::Parameters paramsSim("Sim");
             auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vdim, numspec, ndata> fullDiagn(dt);
+            Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt);
             fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, partGr,
                                 nGhost);
 
@@ -115,8 +114,8 @@ int main (int argc, char* argv[])
             deRham->hodge(E, D);
 
             // Initialize reduced diagnostics and write initial time step
-            Io::MultiReducedDiagnostics<vdim, numspec, degx, degy, degz, hodgeDegree, ndata>
-                redDiagn(deRham);
+            Io::MultiReducedDiagnostics<vdim, degx, degy, degz, hodgeDegree, ndata> redDiagn(
+                deRham);
 
             // Write initial time step
             redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);

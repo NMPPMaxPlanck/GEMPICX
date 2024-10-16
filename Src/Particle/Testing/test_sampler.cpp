@@ -36,9 +36,8 @@ using namespace Gempic;
 // using namespace Field_solvers;
 using namespace Particle;
 
-template <unsigned int vdim, unsigned int numspec>
-void print_particles (amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
-                      const int species)
+template <unsigned int vdim>
+void print_particles (std::vector<std::shared_ptr<ParticleGroups<vdim>>>& partGr, const int species)
 {
     BL_PROFILE("Gempic::Particle::print_particles()");
     std::ofstream ofs("particles.out", std::ofstream::out);
@@ -71,12 +70,11 @@ void print_particles (amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, num
  * Particle<NStructReal+NArrayReal, NStructInt+NArrayInt> is used
  *
  * @tparam vdim
- * @tparam numspec
  * @param partGr
  * @param species
  */
-template <unsigned int vdim, unsigned int numspec>
-void print_v_moments (const amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec>& partGr,
+template <unsigned int vdim>
+void print_v_moments (const std::vector<std::shared_ptr<ParticleGroups<vdim>>>& partGr,
                       const int species)
 {
     BL_PROFILE("Gempic::Particle::print_v_moments");
@@ -135,7 +133,7 @@ void print_v_moments (const amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>
     amrex::PrintToFile("test_sampler.tmp") << " " << vMoment[vdim + 1] << "\n";
 }
 
-template <unsigned int vdim, unsigned int numspec>
+template <unsigned int vdim>
 void main_main ()
 {
     BL_PROFILE("main()");
@@ -150,7 +148,7 @@ void main_main ()
 
     //------------------------------------------------------------------------------
     // Initialize Particle Groups
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> partGr;
+    std::vector<std::shared_ptr<ParticleGroups<vdim>>> partGr;
     init_particles(domain, partGr);
 
     // Print particles data
@@ -218,8 +216,7 @@ int main (int argc, char* argv[])
         if (amrex::ParallelDescriptor::MyProc() == 0) remove("test_sampler.tmp.0");
 
         const unsigned int vdim = 3;
-        const unsigned int numspec = 3;
-        main_main<vdim, numspec>();
+        main_main<vdim>();
 
         if (amrex::ParallelDescriptor::MyProc() == 0)
         {

@@ -27,10 +27,9 @@
 
 namespace Gempic::Particle
 {
-template <unsigned int vdim, unsigned int numspec, unsigned int ndata>
-inline void init_particles (
-    ComputationalDomain infra,
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles)
+template <unsigned int vdim, unsigned int ndata>
+inline void init_particles (ComputationalDomain infra,
+                            std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& particles)
 {
     BL_PROFILE("Gempic::Particle::init_particles(infra,particles)");
     Io::Parameters params("Particle");
@@ -41,11 +40,10 @@ inline void init_particles (
     int rSeed{925};
     params.get_or_set("seed", rSeed);
     params.print_class_parameters();
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(speciesNames.size() == numspec,
-                                     "The number of species in the input file must match the "
-                                     "number of species in the simulation!");
 
-    for (int species{0}; species < numspec; ++species)
+    particles.resize(speciesNames.size());
+
+    for (int species{0}; species < speciesNames.size(); ++species)
     {
         particles[species] =
             std::make_shared<ParticleGroups<vdim, ndata>>(speciesNames[species], infra);
@@ -54,12 +52,11 @@ inline void init_particles (
     }
 }
 
-template <unsigned int vdim, unsigned int numspec, unsigned int ndata>
+template <unsigned int vdim, unsigned int ndata>
 inline void init_particles (
     ComputationalDomain infra,
-    amrex::GpuArray<std::shared_ptr<ParticleGroupsLinVlasov<vdim, ndata>>, numspec>&
-        particlesLinVlasov,
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim, ndata>>, numspec>& particles)
+    std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vdim, ndata>>>& particlesLinVlasov,
+    std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& particles)
 {
     BL_PROFILE("Gempic::Particle::init_particles(infra,particlesLinVlasov,particles)");
     Io::Parameters params("Particle");
@@ -70,11 +67,11 @@ inline void init_particles (
     int rSeed{925};
     params.get_or_set("seed", rSeed);
     params.print_class_parameters();
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(speciesNames.size() == numspec,
-                                     "The number of species in the input file must match the "
-                                     "number of species in the simulation!");
 
-    for (int species{0}; species < numspec; ++species)
+    particlesLinVlasov.resize(speciesNames.size());
+    particles.resize(speciesNames.size());
+
+    for (int species{0}; species < speciesNames.size(); ++species)
     {
         particlesLinVlasov[species] =
             std::make_shared<ParticleGroupsLinVlasov<vdim, ndata>>(speciesNames[species], infra);
@@ -490,7 +487,6 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
  * random sequence
  *
  * @tparam vdim Number of velocity components associated with the particles
- * @tparam numspec Number of particle species
  * @tparam ndata Number of further amount of data components to be stored, e.g. particle weight
  * @param infra Computational Domain
  * @param ppg Particle group
@@ -662,7 +658,6 @@ void init_particles_full_domain (ComputationalDomain infra,
  * Box-Muller algorithm
  *
  * @tparam vdim Number of velocity components associated with the particles
- * @tparam numspec Number of particle species
  * @tparam ndata Number of further amount of data components to be stored, e.g. particle weight
  * @param infra Computational Domain
  * @param ppg Particle group

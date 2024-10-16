@@ -81,7 +81,7 @@ protected:
     static const int s_spec{0};
 
     ComputationalDomain m_infra{false};  // "uninitialized" computational domain
-    amrex::GpuArray<std::unique_ptr<ParticleGroups<s_vDim>>, s_numSpec> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
     static void SetUpTestSuite ()
@@ -124,6 +124,7 @@ protected:
                                                      HodgeScheme::FDHodge);
 
         // particles
+        m_particleGroup.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
             m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);
@@ -423,11 +424,8 @@ TEST_F(EvaluateEFieldTestCustomInfrastructure, Scaling)
                                                   HodgeScheme::FDHodge)};
 
     // particle groups
-    const int numspec{1};
-    for (int spec{0}; spec < numspec; spec++)
-    {
-        m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, infra);
-    }
+    m_particleGroup.resize(s_numSpec);
+    m_particleGroup[0] = std::make_unique<ParticleGroups<s_vDim>>(0, infra);
 
     // Adding particle to one cell
     const int numParticles{1};
