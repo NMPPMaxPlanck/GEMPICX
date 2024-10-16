@@ -27,7 +27,6 @@ namespace Gempic::TimeLoop
 {
 
 template <unsigned int vdim,
-          unsigned int numspec,
           int degx,
           int degy,
           int degz,
@@ -37,23 +36,22 @@ template <unsigned int vdim,
           bool profiling = true,
           bool output = true>
 class HSZigZagC2
-    : public Splitting<vdim, numspec, degx, degy, degz, degmw, ndata, electromagnetic, profiling>
+    : public Splitting<vdim, degx, degy, degz, degmw, ndata, electromagnetic, profiling>
 {
 public:
-    void time_loop (
-        std::shared_ptr<FDDeRhamComplex> deRham,
-        DeRhamField<Grid::dual, Space::cell>& rho,
-        DeRhamField<Grid::primal, Space::edge>& E,
-        DeRhamField<Grid::primal, Space::face>& B,
-        DeRhamField<Grid::dual, Space::face>& D,
-        DeRhamField<Grid::dual, Space::edge>& H,
-        DeRhamField<Grid::dual, Space::face>& J,
-        ComputationalDomain infra,
-        const amrex::Real dt,
-        amrex::GpuArray<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec>& partGr,
-        const int nSteps,
-        int strangOrder,
-        OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) override
+    void time_loop (std::shared_ptr<FDDeRhamComplex> deRham,
+                    DeRhamField<Grid::dual, Space::cell>& rho,
+                    DeRhamField<Grid::primal, Space::edge>& E,
+                    DeRhamField<Grid::primal, Space::face>& B,
+                    DeRhamField<Grid::dual, Space::face>& D,
+                    DeRhamField<Grid::dual, Space::edge>& H,
+                    DeRhamField<Grid::dual, Space::face>& J,
+                    ComputationalDomain infra,
+                    const amrex::Real dt,
+                    std::vector<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
+                    const int nSteps,
+                    int strangOrder,
+                    OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) override
     {
         BL_PROFILE("Gempic::TimeLoop::HSZigZagC2::time_loop()");
 
@@ -104,12 +102,12 @@ public:
 
             J.fill_boundary();
 
-            for (int spec = 0; spec < numspec; spec++)
+            for (auto& particleSpecies : partGr)
             {
-                amrex::Real chargemass = partGr[spec]->getCharge() / partGr[spec]->getMass();
-                amrex::Real charge = partGr[spec]->getCharge();
+                amrex::Real chargemass = particleSpecies->getCharge() / particleSpecies->getMass();
+                amrex::Real charge = particleSpecies->getCharge();
 
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid();
+                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
                      ++pti)
                 {
                     amrex::Particle<0, 0>* AMREX_RESTRICT particles =
@@ -230,7 +228,7 @@ public:
                             // exit(0);
                         });
                 }
-                partGr[spec]->Redistribute();
+                particleSpecies->Redistribute();
             }
 
             // Sum boundary of J and overwrite overlap with averageSync, then Fill Boundary of J
@@ -240,11 +238,11 @@ public:
             D -= J;
 
             // Second particle loop for particle part from H_E
-            for (int spec = 0; spec < numspec; spec++)
+            for (auto& particleSpecies : partGr)
             {
-                amrex::Real chargemass = partGr[spec]->getCharge() / partGr[spec]->getMass();
+                amrex::Real chargemass = particleSpecies->getCharge() / particleSpecies->getMass();
 
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid();
+                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
                      ++pti)
                 {
                     amrex::Particle<0, 0>* AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
@@ -287,7 +285,7 @@ public:
                                                                 chargemass, 0.5 * dt, pp);
                         });
                 }
-                partGr[spec]->Redistribute();
+                particleSpecies->Redistribute();
             }
             // end treat particles
 

@@ -35,7 +35,7 @@ namespace Gempic::Io
  * general functions to initialize, compute, and write these diagnostics
  * to file.
  */
-template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata = 1>
+template <int vdim, int degx, int degy, int degz, int degree, int ndata = 1>
 class MultiReducedDiagnostics
 {
 public:
@@ -52,8 +52,8 @@ public:
     bool m_computeMissingFields = false;
 
     /// m_multi_rd stores a pointer to each reduced diagnostics
-    std::vector<std::vector<
-        std::unique_ptr<ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>>>>
+    std::vector<
+        std::vector<std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>>>>
         m_multiRds;
 
     /// constructor
@@ -107,8 +107,7 @@ public:
     void compute_diags (
         ComputationalDomain& infra,
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
-            partGr)
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::compute_diags()");
         if (!m_plotRd)
@@ -198,7 +197,7 @@ private:
         // end loop over all reduced diags
     }
 
-    std::unique_ptr<ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>>
+    std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>>
     get_diagnostics_type (const std::string& diagType,
                           const std::string& name,
                           int& indexNum,
@@ -207,33 +206,32 @@ private:
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::get_diagnostics_type()");
         if (diagType == "ElecFieldEnergy")
         {
-            using ElecEnergy = ElecFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
+            using ElecEnergy = ElecFieldEnergy<vdim, degx, degy, degz, degree, ndata>;
             return std::make_unique<ElecEnergy>(name, indexNum, isLastType);
         }
         else if (diagType == "MagFieldEnergy")
         {
-            using MagEnergy = MagFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
+            using MagEnergy = MagFieldEnergy<vdim, degx, degy, degz, degree, ndata>;
             return std::make_unique<MagEnergy>(name, indexNum, isLastType);
         }
         else if (diagType == "CurrentFieldEnergy")
         {
-            using CurrentEnergy =
-                CurrentFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>;
+            using CurrentEnergy = CurrentFieldEnergy<vdim, degx, degy, degz, degree, ndata>;
             return std::make_unique<CurrentEnergy>(name, indexNum, isLastType);
         }
         else if (diagType == "GaussError")
         {
-            using GaussErr = GaussError<vdim, numspec, degx, degy, degz, degree, ndata>;
+            using GaussErr = GaussError<vdim, degx, degy, degz, degree, ndata>;
             return std::make_unique<GaussErr>(name, indexNum, isLastType);
         }
         else if (diagType == "Particle")
         {
-            using Part = Particle<vdim, numspec, degx, degy, degz, degree, ndata>;
+            using Part = Particle<vdim, degx, degy, degz, degree, ndata>;
             return std::make_unique<Part>(name, indexNum, isLastType);
         }
         else if (diagType == "ParticleLinVlasov")
         {
-            using Part = ParticleLinVlasov<vdim, numspec, degx, degy, degz, degree, ndata>;
+            using Part = ParticleLinVlasov<vdim, degx, degy, degz, degree, ndata>;
             return std::make_unique<Part>(name, indexNum, isLastType);
         }
         else
@@ -241,9 +239,8 @@ private:
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
                 false, diagType + " is not a valid type for reduced diagnostic in group " + name);
             // this is never reached
-            return std::make_unique<
-                ElecFieldEnergy<vdim, numspec, degx, degy, degz, degree, ndata>>(name, indexNum,
-                                                                                 isLastType);
+            return std::make_unique<ElecFieldEnergy<vdim, degx, degy, degz, degree, ndata>>(
+                name, indexNum, isLastType);
         }
     }
 };

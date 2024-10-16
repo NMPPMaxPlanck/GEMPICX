@@ -85,7 +85,7 @@ protected:
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(s_vDim / 2.5) * 2 + 1> m_bA;
 
     ComputationalDomain m_infra{false};  // "uninitialized" computational domain
-    amrex::GpuArray<std::unique_ptr<ParticleGroups<s_vDim>>, s_numSpec> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
     static const Direction s_pDim{yDir};
@@ -136,6 +136,7 @@ protected:
                                                      HodgeScheme::FDHodge);
 
         // particles
+        m_particleGroup.resize(s_numSpec);
         for (int species{0}; species < s_numSpec; species++)
         {
             m_particleGroup[species] = std::make_unique<ParticleGroups<s_vDim>>(species, m_infra);

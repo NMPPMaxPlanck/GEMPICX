@@ -3,9 +3,6 @@
 
 #define GEMPIC_SPACEDIM AMREX_SPACEDIM
 
-#define GEMPIC_NUMSPEC 1
-#define GEMPIC_ELECTROMAGNETIC true
-
 #define MAXGAUSS 2  // maximum number of velocity gaussians
 
 #define GEMPIC_CTEST_TOL 1e-4

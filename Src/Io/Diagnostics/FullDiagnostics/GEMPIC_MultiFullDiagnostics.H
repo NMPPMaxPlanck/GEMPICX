@@ -18,7 +18,7 @@ namespace Gempic::Io
  * \brief This class contains a vector of all full diagnostics in the simulation.
  * Full diagnostics save all the field and/or particle data at chosen time steps
  */
-template <int vdim, int numspec, int ndata>
+template <int vdim, int ndata>
 class MultiDiagnostics
 {
 public:
@@ -35,8 +35,8 @@ public:
         m_alldiags.resize(m_ndiags);
         for (int i = 0; i < m_ndiags; i++)
         {
-            m_alldiags[i] = std::make_unique<FullDiagnostics<vdim, numspec, ndata>>(
-                i, m_diagsNames[i], dt, m_defaultSaveInterval);
+            m_alldiags[i] = std::make_unique<FullDiagnostics<vdim, ndata>>(i, m_diagsNames[i], dt,
+                                                                           m_defaultSaveInterval);
         }
     }
     /** \brief Read Input parameters. Called in constructor. */
@@ -54,12 +54,11 @@ public:
         }
     }
     /** \brief Loop over diags in alldiags and call their InitDiags */
-    void init_data (
-        ComputationalDomain& compDom,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::map<std::string, amrex::Real>& fieldsScaling,
-        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>, numspec> particles,
-        amrex::IntVect& nghost)
+    void init_data (ComputationalDomain& compDom,
+                    std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+                    std::map<std::string, amrex::Real>& fieldsScaling,
+                    std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> particles,
+                    amrex::IntVect& nghost)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics::init_data()");
         for (auto& diag : m_alldiags)
@@ -91,13 +90,13 @@ public:
         }
     }
 
-    FullDiagnostics<vdim, numspec, ndata>& get_diag (int idiag) { return *m_alldiags[idiag]; }
+    FullDiagnostics<vdim, ndata>& get_diag (int idiag) { return *m_alldiags[idiag]; }
     int get_total_diags () { return m_ndiags; }
     int get_num_group_members (int idiag) { return m_alldiags[idiag]->get_num_group_members(); }
 
 private:
     /** Vector of pointers to all diagnostics */
-    amrex::Vector<std::unique_ptr<FullDiagnostics<vdim, numspec, ndata>>> m_alldiags;
+    amrex::Vector<std::unique_ptr<FullDiagnostics<vdim, ndata>>> m_alldiags;
     int m_ndiags = 0; /**< number of different diagnostics */
     std::vector<std::string> m_diagsNames;
     int m_defaultSaveInterval{100};  // default save interval for all full diagnostics

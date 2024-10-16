@@ -25,8 +25,8 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the field energy.
  */
-template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata>
-class MagFieldEnergy : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int degree, int ndata>
+class MagFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
 {
 public:
     std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::face>> m_B;
@@ -45,8 +45,7 @@ public:
      * @param[in] isLastType is this the last type in the group?
      */
     MagFieldEnergy(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
-            rdName, indexNum, isLastType)
+        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::MagFieldEnergy()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -84,10 +83,10 @@ public:
     /**
      * This function computes the magnetic energy (EF) component wise
      */
-    void compute_diags (ComputationalDomain& infra,
-                        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-                        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>,
-                                        numspec>& partGr) final
+    void compute_diags (
+        ComputationalDomain& infra,
+        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::compute_diags()");
         static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};

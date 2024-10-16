@@ -39,14 +39,8 @@ AMREX_GPU_HOST_DEVICE void push_v_efield<4>(amrex::GpuArray<amrex::Real, 4> &vel
 
 namespace
 {
-template <unsigned int vDim,
-          unsigned int numspec,
-          int degX,
-          int degY,
-          int degZ,
-          int hodgeDegree,
-          unsigned int ndata>
-class MockHSZigZagC2 : public HSZigZagC2<vDim, numspec, degX, degY, degZ, hodgeDegree, ndata>
+template <unsigned int vDim, int degX, int degY, int degZ, int hodgeDegree, unsigned int ndata>
+class MockHSZigZagC2 : public HSZigZagC2<vDim, degX, degY, degZ, hodgeDegree, ndata>
 {
 public:
 };
@@ -91,7 +85,7 @@ protected:
     Io::Parameters m_parameters{};
 
     ComputationalDomain m_infra{false};  // "uninitialized" computational domain
-    amrex::GpuArray<std::unique_ptr<ParticleGroups<s_vDim>>, s_numSpec> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
     static void SetUpTestSuite ()
@@ -134,6 +128,7 @@ protected:
                                                      HodgeScheme::FDHodge);
 
         // particles
+        m_particleGroup.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
             m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);

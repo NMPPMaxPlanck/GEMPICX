@@ -28,8 +28,8 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the field energy.
  */
-template <int vdim, int numspec, int degx, int degy, int degz, int degree, int ndata>
-class GaussError : public ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int degree, int ndata>
+class GaussError : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
 {
 public:
     std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
@@ -49,8 +49,7 @@ public:
      * @param[in] isLastType is this the last type in the group?
      */
     GaussError(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, numspec, degx, degy, degz, degree, ndata>(
-            rdName, indexNum, isLastType)
+        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
     {
         BL_PROFILE("Gempic::Io::GaussError::GaussError()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -84,10 +83,10 @@ public:
     /**
      * This function computes the Gauss Error
      */
-    void compute_diags (ComputationalDomain& infra,
-                        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-                        amrex::GpuArray<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>,
-                                        numspec>& partGr) final
+    void compute_diags (
+        ComputationalDomain& infra,
+        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
     {
         BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
         constexpr int noutputs = 1;
@@ -98,8 +97,7 @@ public:
     amrex::Real compute_gauss_error (
         ComputationalDomain& infra,
         std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        amrex::GpuArray<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>, numspec>&
-            partGr)
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
     {
         BL_PROFILE("Gempic::Io::GaussError::compute_gauss_error()");
         static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};
@@ -108,11 +106,12 @@ public:
 
         // Deposit charges in rho:
         rho.setVal(0.0);
-        for (int spec = 0; spec < numspec; spec++)
+        for (auto& particleSpecies : partGr)
         {
-            amrex::Real charge = partGr[spec]->get_charge();
+            amrex::Real charge = particleSpecies->get_charge();
 
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid(); ++pti)
+            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
+                 ++pti)
             {
                 const long np = pti.numParticles();
                 const auto& particles = pti.GetArrayOfStructs()().data();

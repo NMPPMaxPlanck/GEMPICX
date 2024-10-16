@@ -34,7 +34,6 @@ int main (int argc, char* argv[])
     Io::Parameters parameters{};
 
     constexpr unsigned int vdim{3};
-    constexpr unsigned int numspec{1};
     // Spline degrees. Linear splines is ok
     constexpr int degx{1};
     constexpr int degy{1};
@@ -58,7 +57,7 @@ int main (int argc, char* argv[])
         [[maybe_unused]] DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
         // Initialize particle groups
-        amrex::GpuArray<std::shared_ptr<ParticleGroups<vdim>>, numspec> ions;
+        std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
         init_particles(infra, ions);
 
         {  // "Time Loop" scope. Should be a separate function

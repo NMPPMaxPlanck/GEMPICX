@@ -30,11 +30,10 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     // particle data
     static const int s_vdim{3};
-    static const int s_numspec{1};
 
     //
     ComputationalDomain m_infra{false};  // "uninitialized" periodic computational domain
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<s_vdim>>, s_numspec> m_particles;
+    std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
     //
     Io::Parameters m_parameters{};
 
@@ -147,8 +146,7 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
 
     // Initialize reduced diagnostics
-    Io::MultiReducedDiagnostics<s_vdim, s_numspec, s_degX, s_degY, s_degZ, hodgeDegree, 1> redDiagn(
-        deRham);
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, hodgeDegree, 1> redDiagn(deRham);
     // Compute and write reduced diagnostics
     redDiagn.compute_diags(m_infra, deRham->m_fieldsDiagnostics, m_particles);
     redDiagn.write_to_file(0, 1.0);

@@ -56,12 +56,11 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     // particle data
     static const int s_vdim{3};
-    static const int s_numspec{1};
     static const int s_ndata{1};
 
     //
     ComputationalDomain m_infra{false};  // "uninitialized" computational domain
-    amrex::GpuArray<std::shared_ptr<ParticleGroups<s_vdim>>, s_numspec> m_particles;
+    std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
     // std::unique_ptr<amrex::MultiFab>  mf_all_diag;
     //
     Io::Parameters m_parameters{};
@@ -179,7 +178,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
 
     amrex::Real dt = 1.0;
     auto nGhost = deRham->get_n_ghost();
-    Io::MultiDiagnostics<s_vdim, s_numspec, s_ndata> fullDiagn(dt);
+    Io::MultiDiagnostics<s_vdim, s_ndata> fullDiagn(dt);
     fullDiagn.init_data(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, m_particles,
                         nGhost);
     // Compute and write diagnostics

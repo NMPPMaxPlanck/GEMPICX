@@ -34,10 +34,9 @@ std::string string_array (const T& valArray, int length)
 
 // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
 // of all particles to be added.
-template <unsigned int vdim, unsigned int numSpec, size_t numParticles>
+template <unsigned int vdim, size_t numParticles>
 void add_single_particles (
-    amrex::GpuArray<std::unique_ptr<Gempic::Particle::ParticleGroups<vdim>>, numSpec>&
-        particleGroup,
+    std::vector<std::unique_ptr<Gempic::Particle::ParticleGroups<vdim>>>& particleGroup,
     Gempic::ComputationalDomain& infra,
     amrex::Array<amrex::Real, numParticles>& weights,
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
