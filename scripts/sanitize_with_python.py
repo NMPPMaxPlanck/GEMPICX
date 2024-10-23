@@ -334,7 +334,10 @@ def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> tupl
     """
     try:
         output=subprocess.run(f"clang-{tidyOrFormat} --version", shell=True, capture_output=True, text=True)
-        version=int(re.sub(r'^.*?version (\d+)\.\d+\..*$', r'\g<1>', output.stdout.replace('\n','')))
+        if output.stdout:
+            version=int(re.sub(r'^.*?version (\d+)\.\d+\..*$', r'\g<1>', output.stdout.replace('\n','')))
+        else:
+            raise FileNotFoundError
         if minVersion <= version <= maxVersion:
             return True, ""
         else:
