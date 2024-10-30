@@ -187,7 +187,7 @@ int main (int argc, char *argv[])
 
                             SplineBase<degx, degy, degz> spline(pos, infra.m_plo, infra.m_dxi);
 
-                            gempic_deposit_rho(spline, f0 * charge * weight[pp], rhoarr);
+                            gempic_deposit_rho(rhoarr, spline, f0 * charge * weight[pp]);
 
                             // Compute s0 multiplied by number of particles as needed for electric
                             // field update and particle energy
@@ -212,9 +212,9 @@ int main (int argc, char *argv[])
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
                 // Hb
-                operatorHamilton.apply_h_b(deRham, B, D, H, auxDualF2, 0.5 * dt);
+                operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
                 // He,field (also computes E from D, needed in He,particle)
-                operatorHamilton.apply_h_e_field(deRham, E, B, D, auxPrimalF2, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
 
                 // Deposit particles in J and push particles: H_p = H_p1 + H_p2 + H_p3
                 for (int comp = 0; comp < 3; ++comp)
@@ -403,9 +403,9 @@ int main (int argc, char *argv[])
                 }
 
                 //He,field
-                operatorHamilton.apply_h_e_field(deRham, E, B, D, auxPrimalF2, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
                 //Hb
-                operatorHamilton.apply_h_b(deRham, B, D, H, auxDualF2, 0.5 * dt);
+                operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 //write outputs
                 redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);

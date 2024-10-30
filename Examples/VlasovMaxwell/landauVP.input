@@ -1,0 +1,58 @@
+# General setting
+Sim.Type = "VlasovPoisson"
+
+# Grid parameters
+nCellVector = 32 4 4
+maxGridSizeVector = 4 4 4
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+Particle.speciesNames = electrons
+Particle.electrons.nPartPerCell = 1000 # number of particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "1.0 + 0.04 * cos(kvarx * x)"
+Particle.electrons.numGaussians = 1
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0
+Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vWeight = 1.0
+
+# wave vector
+k = 0.4 0.4 0.4
+
+# Simulation parameters
+TimeLoop.nSteps = 500
+TimeLoop.dt = 0.02
+
+# Filter
+Filter.enable = 1
+Filter.nPass = 1 1 1
+
+# Function parameters
+Function.Ex = "0.0"
+Function.Ey = "0.0"
+Function.Ez = "0.0"
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "0.0"
+
+# Diagnostics
+#Full Diagnostics 
+FullDiagnostics.enable = 1 # 1 for true, 0 for false
+FullDiagnostics.groupNames = part field 
+FullDiagnostics.part.varNames = electrons
+FullDiagnostics.part.saveInterval = 1000
+FullDiagnostics.field.varNames = rho Ex phi
+FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.saveInterval = 1
+
+# Reduced Diagnostics 
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
+ReducedDiagnostics.saveInterval = 1 # saveInterva
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.GaussError.types = GaussError
+ReducedDiagnostics.Part.types = Particle

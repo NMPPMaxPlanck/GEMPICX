@@ -85,9 +85,9 @@ public:
     }
 
     /**
-     * @brief An array of spline degrees stored for convenience
+     * @brief An array of spline degrees stored for convenience. Some may be unused in 1D or 2D
      */
-    static constexpr int s_splineDegrees[GEMPIC_SPACEDIM] = {AMREX_D_DECL(degX, degY, degZ)};
+    static constexpr int s_splineDegrees[3] = {degX, degY, degZ};
 
     /**
      * @brief Max spline degree stored fo convenience
@@ -167,7 +167,6 @@ public:
                                                                    const amrex::Real plo,
                                                                    const amrex::Real dxInverseDir)
     {
-        // BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::init_b_splines_at_positions()");
         amrex::Real radius = (s_splineDegrees[dir] + 1.) / 2.;
         amrex::Real normalizedPos = (position - plo) * dxInverseDir;
         m_firstIndex[dir] = 1. + floor(normalizedPos - radius);
@@ -240,7 +239,6 @@ public:
     template <Field form, Direction dir>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
     {
-        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::eval_b_spline()");
         static_assert(form == Field::DualOneForm || form == Field::DualTwoForm,
                       "Function called with primal form, or superfluous direction supplied.");
         if constexpr (form == Field::DualTwoForm)
@@ -290,7 +288,6 @@ public:
     template <Field form>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
     {
-        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::eval_b_spline()");
         static_assert(form == Field::DualZeroForm || form == Field::DualThreeForm,
                       "Function called with primal form, or no direction supplied.");
         if constexpr (form == Field::DualThreeForm)
@@ -358,7 +355,6 @@ public:
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> eval_spline_field (
         const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
     {
-        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::eval_spline_field()");
         static_assert(form == Field::PrimalOneForm || form == Field::PrimalTwoForm,
                       "Attempting smoothing of incorrect field type.");
         bool xCond{false};
@@ -502,7 +498,6 @@ public:
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
-        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::SplineWithPrimitive()");
         m_firstIndexOld = {};
 
         m_primitiveNew = {};
@@ -571,7 +566,6 @@ public:
                                                   const amrex::Real plo,
                                                   const amrex::Real dxInverseDir)
     {
-        // BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_splines()");
         this->m_firstIndexOld[dir] = std::move(this->m_firstIndex[dir]);
 
         const amrex::Real refOffset =
@@ -604,7 +598,6 @@ public:
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update1_d_primitive (const amrex::Real refOffset)
     {
-        // BL_PROFILE("Gempic::ParticleMeshCoupling::SplineWithPrimitive::update1_d_primitive()");
         if (this->m_firstIndex[dir] < this->m_firstIndexOld[dir])
         {
             this->m_firstIndexStart[dir] = this->m_firstIndex[dir];
@@ -679,21 +672,20 @@ public:
         {
             if constexpr (region == PrimitiveDifferenceRegion::firstSpline)
             {
-                return this->m_primitiveOld[dir][index] * dx[dir];
+                return this->m_primitiveOld[dir][index];
             }
             else if constexpr (region == PrimitiveDifferenceRegion::noSplines)
             {
-                return dx[dir];
+                return 1.0;
             }
             else if constexpr (region == PrimitiveDifferenceRegion::bothSplines)
             {
                 return (this->m_primitiveOld[dir][index] -
-                        this->m_primitiveNew[dir][index + deg - localSize]) *
-                       dx[dir];
+                        this->m_primitiveNew[dir][index + deg - localSize]);
             }
             else  //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
             {
-                return (1 - this->m_primitiveNew[dir][index + deg - localSize]) * dx[dir];
+                return (1 - this->m_primitiveNew[dir][index + deg - localSize]);
             }
         }
         // switching all primitives and all signs
@@ -701,21 +693,20 @@ public:
         {
             if constexpr (region == PrimitiveDifferenceRegion::firstSpline)
             {
-                return -this->m_primitiveNew[dir][index] * dx[dir];
+                return -this->m_primitiveNew[dir][index];
             }
             else if constexpr (region == PrimitiveDifferenceRegion::noSplines)
             {
-                return -dx[dir];
+                return -1.0;
             }
             else if constexpr (region == PrimitiveDifferenceRegion::bothSplines)
             {
                 return -(this->m_primitiveNew[dir][index] -
-                         this->m_primitiveOld[dir][index + deg - localSize]) *
-                       dx[dir];
+                         this->m_primitiveOld[dir][index + deg - localSize]);
             }
             else  //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
             {
-                return -(1 - this->m_primitiveOld[dir][index + deg - localSize]) * dx[dir];
+                return -(1 - this->m_primitiveOld[dir][index + deg - localSize]);
             }
         }
     }

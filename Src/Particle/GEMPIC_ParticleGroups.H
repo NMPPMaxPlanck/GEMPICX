@@ -154,6 +154,48 @@ public:
         this->mass = source.get_mass();
         this->copyParticles(source, local);
     }
+    /**
+     * Resets the total weight of the particle group to the specified target weight.
+     * This is needed to correct sampling errorsfor low particle counts and non-symmetric velocity
+     * distributions.
+     *
+     * @param targetWeight the new total weight of the particle group
+     *
+     * @returns None
+     */
+    void reset_total_weight (amrex::Real targetWeight)
+    {
+        BL_PROFILE("Gempic::Particle::ParticleGroups::reset_total_weight(totalWeight)");
+
+        // Compute total weight of particle group
+        amrex::ReduceOps<amrex::ReduceOpSum> reduceOps;
+        auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real>>(
+            *this,
+            [=] AMREX_GPU_HOST_DEVICE(
+                const amrex::ConstParticleTileData<ParticleType, vdim + ndata, 0>& pt,
+                const int pp) -> amrex::GpuTuple<amrex::Real>
+            {
+                auto weight = pt.m_rdata[vdim][pp];
+                return weight;
+            },
+            reduceOps);
+
+        amrex::Real W = amrex::get<0>(particleTmp);
+
+        // reduced sum over mpi ranks
+        amrex::ParallelDescriptor::ReduceRealSum(W);
+
+        // Remove average weight from all particles
+        auto totalNumberOfParticles = this->TotalNumberOfParticles();
+        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*this, 0); pti.isValid(); ++pti)
+        {
+            const long np = pti.numParticles();
+            auto* const particles = pti.GetArrayOfStructs()().data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+            amrex::Real averageDiff = (targetWeight - W) / totalNumberOfParticles;
+            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) { weight[pp] += averageDiff; });
+        }
+    }
 };
 
 /**

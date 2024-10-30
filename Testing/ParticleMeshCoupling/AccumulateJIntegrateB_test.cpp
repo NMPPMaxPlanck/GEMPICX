@@ -60,8 +60,8 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
                            spline.template update_1d_splines<pDir>(xEnd, infra.m_plo[xDir],
                                                                    infra.m_dxi[xDir]);
 
-                           ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(
-                               spline, weight, dx, bA, jA, *bfieldsGPU);
+                           ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(*bfieldsGPU, spline,
+                                                                                weight, dx, bA, jA);
                        });
 
     aaBfields.copyToHost(&bfields, 1);

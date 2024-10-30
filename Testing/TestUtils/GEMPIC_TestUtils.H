@@ -2,6 +2,7 @@
 #define TEST_UTILS_H_
 
 #include <algorithm>  // std::all_of, for add_particles function
+#include <optional>
 
 #include <AMReX.H>
 
@@ -103,8 +104,9 @@ void add_single_particles (
  * fulfill a given condition.
  * @param checks: vector<amrex::Real>, Vector of values to compare to if indices fulfill the
  * corresponding condVec condition.
- * @param defCheck: amrex::Real, Default value for all indices not fulfilling any of the given
- * conditions.
+ * @param defCheck: optional amrex::Real, Default value for all indices not fulfilling any of the
+ * given conditions. Defaults to {} (empty optional), meaning no check is performed.
+ * @param tol: amrex::Real, relative tolerance
  */
 using condLambda = bool (*)(AMREX_D_DECL(int, int, int));
 void check_field(const char file[],
@@ -113,7 +115,8 @@ void check_field(const char file[],
                  amrex::Dim3 const&& top,
                  std::vector<condLambda>&& condVec,
                  std::vector<amrex::Real>&& checks,
-                 amrex::Real defCheck);
+                 std::optional<amrex::Real> defCheck = {},
+                 amrex::Real tol = 1e-14);
 
 /* Helper function to check that the entries of two fields are equal.
  *
@@ -123,6 +126,7 @@ void check_field(const char file[],
  * @param fieldArr: amrex::Array4, array containing field values in an easily reached accessor
  * @param fieldArr2: amrex::Array4, array containing field values in an easily reached accessor
  * @param bx: amrex::Box used to find the boundaries of fieldArr and fieldArr2
+ * @param tol: amrex::Real, relative tolerance
  * @param ncomp: number of components of the two multifabs
  */
 void compare_fields(const char file[],

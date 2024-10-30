@@ -233,6 +233,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
     void operator*=(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space>&);
     void operator-=(DeRhamField<grid, space>&);
+    DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
     void operator+=(amrex::Real c);
     void operator-=(amrex::Real c);
 };
@@ -268,6 +269,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     void operator*=(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space>&);
     void operator-=(DeRhamField<grid, space>&);
+    DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
     void operator+=(amrex::Real c);
     void operator-=(amrex::Real c);
 };
@@ -1375,6 +1377,40 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
     auto nGhost = m_deRham->get_n_ghost();
     m_data.plus(-c, nGhost[xDir]);
 }
+
+// minus
+template <Grid grid, Space space>
+inline DeRhamField<grid, space>
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator-(
+    DeRhamField<grid, space>& form)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-(MultiFab)");
+    DeRhamField<grid, space> result(m_deRham);
+    auto nGhost = m_deRham->get_n_ghost();
+
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        amrex::Copy(result.m_data[comp], m_data[comp], 0, 0, m_data[comp].nComp(), nGhost);
+        amrex::Subtract(result.m_data[comp], form.m_data[comp], 0, 0, form.m_data[comp].nComp(),
+                        nGhost);
+    }
+    return result;
+}
+
+template <Grid grid, Space space>
+inline DeRhamField<grid, space>
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::operator-(
+    DeRhamField<grid, space>& form)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-(MultiFab)");
+    DeRhamField<grid, space> result(m_deRham);
+
+    amrex::Copy(result.m_data, m_data, 0, 0, m_data.nComp(), 0);
+    amrex::Subtract(result.m_data, form.m_data, 0, 0, form.m_data.nComp(), 0);
+
+    return result;
+}
+
 ///@endcond
 
 /// Copy of fields

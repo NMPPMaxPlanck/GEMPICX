@@ -1,3 +1,4 @@
 add_subdirectory(ColdPlasma)
 add_subdirectory(Electrostatic)
 add_subdirectory(LinVlasovMaxwell)
+add_subdirectory(VlasovMaxwell)

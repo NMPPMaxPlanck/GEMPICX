@@ -5,7 +5,7 @@
 namespace Gempic::Test::Utils
 {
 /* Helper function to check entries of a field given a series of conditions and a default
- * value. Check order is prioritized, so a set of indices only fulfill the first succesful
+ * value. Check order is prioritized, so a set of indices only fulfill the first successful
  * condition.
  *
  * Parameters:
@@ -27,7 +27,8 @@ void check_field (const char file[],
                   amrex::Dim3 const&& top,
                   std::vector<condLambda>&& condVec,
                   std::vector<amrex::Real>&& checks,
-                  amrex::Real defCheck)
+                  std::optional<amrex::Real> defCheck,
+                  amrex::Real tol)
 {
     for (int i{0}; i <= top.x; i++)
     {
@@ -41,17 +42,18 @@ void check_field (const char file[],
                 {
                     if (cond(AMREX_D_DECL(i, j, k)))
                     {
-                        EXPECT_NEAR(checks[condNum], *fieldArr.ptr(idx, 0), 1e-14)
+                        EXPECT_NEAR(checks[condNum], *fieldArr.ptr(idx, 0), tol)
                             << file << ":" << line << ": Failed condition " << condNum
                             << ".\nIndices: " << string_array(idx, GEMPIC_SPACEDIM);
                         break;
                     }
                     condNum++;
                 }
-                if (condNum == condVec.size())
+                if (condNum == condVec.size() && defCheck)
                 {
-                    EXPECT_NEAR(defCheck, *fieldArr.ptr(idx, 0), 1e-14)
-                        << file << ":" << line << ": Failed default value check:" << defCheck
+                    EXPECT_NEAR(defCheck.value(), *fieldArr.ptr(idx, 0), tol)
+                        << file << ":" << line
+                        << ": Failed default value check: " << defCheck.value()
                         << ".\nIndices: " << string_array(idx, GEMPIC_SPACEDIM);
                 }
             }

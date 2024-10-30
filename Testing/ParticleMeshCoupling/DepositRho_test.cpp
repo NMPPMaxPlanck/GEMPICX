@@ -47,8 +47,8 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
                                position, infra.m_plo, infra.m_dxi);
                            // Needs at least max(degX, degY, degZ) ghost cells
-                           ParticleMeshCoupling::gempic_deposit_rho(spline, charge * weight[pp],
-                                                                    rhoarr);
+                           ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline,
+                                                                    charge * weight[pp]);
                        });
 }
 
@@ -183,7 +183,7 @@ TEST_F(DepositRhoTest, NullTest)
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
                                                                         m_infra.m_dxi);
 
-        ParticleMeshCoupling::gempic_deposit_rho(spline, 0, rhoarr);
+        ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline, 0);
     }
     ASSERT_TRUE(particleLoopRun);
 
