@@ -125,10 +125,10 @@ int main (int argc, char* argv[])
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
                 // Hb
-                operatorHamilton.apply_h_b(deRham, B, D, H, auxDualF2, 0.5 * dt);
+                operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 // He,field (also computes E from D, needed in He,particle)
-                operatorHamilton.apply_h_e_field(deRham, E, B, D, auxPrimalF2, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
                 deRham->hodge(E, auxDualF2);  // Copy?? -> diagonal, same cost?
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;
@@ -138,14 +138,14 @@ int main (int argc, char* argv[])
                 apply_h_j(deRham, D, jFieldT, funcBBackground, dt);
 
                 //He,field
-                operatorHamilton.apply_h_e_field(deRham, E, B, D, auxPrimalF2, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
                 deRham->hodge(E, auxDualF2);
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;
                 jFieldT -= auxDualF2;
 
                 //Hb
-                operatorHamilton.apply_h_b(deRham, B, D, H, auxDualF2, 0.5 * dt);
+                operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 // Compute and scale primal field for cold plasma energy
                 deRham->hodge(jFieldT, jField);

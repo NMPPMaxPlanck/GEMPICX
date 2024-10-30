@@ -126,7 +126,7 @@ public:
 
                     amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                     amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-                    amrex::GpuArray<amrex::Array4<amrex::Real>, int(vdim / 2.5) * 2 + 1> bA;
+                    amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> bA;
 
                     // amrex::Print() << "np: " << np << std::endl;
 
@@ -139,7 +139,7 @@ public:
                     // amrex::Print() << "eA[0] = " << eA[0](0, 0, 0) << std::endl;
 
                     // B.fillBoundary();
-                    for (int cc = 0; cc < int(vdim / 2.5) * 2 + 1; cc++)
+                    for (int cc = 0; cc < vdim; cc++)
                     {
                         bA[cc] = (B.m_data[cc])[pti].array();
                     }

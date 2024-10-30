@@ -156,12 +156,17 @@ int main (int argc, char *argv[])
                             SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
                                                                 infra.m_dxi);
                             // Needs at least max(degx, degy, degz) ghost cells
-                            gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
+                            gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
                         });
                 }
             }
 
             rho.post_particle_loop_sync();
+
+            // Add background charge (needs to be done after post_particle_loop_sync)
+            amrex::Real rhoBackground = 1.0;
+            rho +=
+                rhoBackground * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
 
             // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
@@ -230,7 +235,7 @@ int main (int argc, char *argv[])
                                 SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
                                                                     infra.m_dxi);
 
-                                gempic_deposit_rho(spline, charge * weight[pp], rhoarr);
+                                gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
                             });
                     }
 
@@ -304,8 +309,10 @@ int main (int argc, char *argv[])
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);
 
                                 // push v with the electric field over dt/2
-                                push_v_efield(vel, dt * 0.5, chargemass, efield);
-
+                                for (int i = 0; i < vdim; i++)
+                                {
+                                    vel[i] += 0.5 * dt * chargemass * efield[i];
+                                }
                                 // rotate v with magnetic field over dt
                                 amrex::Real vx = vel[xDir];
                                 amrex::Real vy = vel[yDir];
@@ -315,7 +322,10 @@ int main (int argc, char *argv[])
                                 vel[yDir] = (vy * (1. - a * a) - 2. * a * vx) / (1. + a * a);
 
                                 // push v with the electric field over dt/2
-                                push_v_efield(vel, dt * 0.5, chargemass, efield);
+                                for (int i = 0; i < vdim; i++)
+                                {
+                                    vel[i] += 0.5 * dt * chargemass * efield[i];
+                                }
 
                                 // update global particle velocities arrays
                                 velx[pp] = vel[xDir];
@@ -331,7 +341,7 @@ int main (int argc, char *argv[])
                                 SplineBase<degx, degy, degz> splineNew(positionParticle,
                                                                        infra.m_plo, infra.m_dxi);
 
-                                gempic_deposit_rho(splineNew, charge * weight[pp], rhoarr);
+                                gempic_deposit_rho(rhoarr, splineNew, charge * weight[pp]);
                             });
                     }
                     particleSpecies->Redistribute();

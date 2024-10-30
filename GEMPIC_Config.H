@@ -49,6 +49,19 @@
 
 #if GEMPIC_SPACEDIM == 1
 /**
+ * The GEMPIC_D_PAD_ONE(a,b,c) macro replaces the last arguments by one
+ * in a comma-separated list of the 3 arguments of the call,
+ * depending on the value of GEMPIC_SPACEDIM.
+ */
+#define GEMPIC_D_PAD_ONE(a, b, c) a, 1, 1
+#elif GEMPIC_SPACEDIM == 2
+#define GEMPIC_D_PAD_ONE(a, b, c) a, b, 1
+#elif GEMPIC_SPACEDIM == 3
+#define GEMPIC_D_PAD_ONE(a, b, c) a, b, c
+#endif
+
+#if GEMPIC_SPACEDIM == 1
+/**
  * The GEMPIC_D_EXCL(a,b,c) macro evaluates the elements of a
  * comma-separated list of the third, second or all three of the arguments of the call,
  * depending on the value of GEMPIC_SPACEDIM.

@@ -134,8 +134,8 @@ public:
                         ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
                             positionParticle, infra.m_plo, infra.m_dxi);
 
-                        ParticleMeshCoupling::gempic_deposit_rho(spline, charge * weight[pp],
-                                                                 rhoarr);
+                        ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline,
+                                                                 charge * weight[pp]);
                     });
             }
         }
@@ -144,6 +144,11 @@ public:
                         amrex::IntVect(AMREX_D_DECL(0, 0, 0)), infra.m_geom.periodicity());
         rho.AverageSync(infra.m_geom.periodicity());
         rho.FillBoundary(infra.m_geom.periodicity());
+
+        // Add background charge (multiply by volume for 3 form dof) (assuming here it is 1.0.
+        /// @todo: FIX LATER)
+        rho.plus(1.0 * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]),
+                 this->m_deRham->get_n_ghost()[0]);
 
         amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho, infra, 2);
 

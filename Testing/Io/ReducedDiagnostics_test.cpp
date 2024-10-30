@@ -196,7 +196,7 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     std::getline(inputGauss, line);  // first line not used
     std::getline(inputGauss, line);
     std::stringstream splitLineGauss(line);
-    double error;
+    double error{0.0};
     splitLineGauss >> step >> t >> error;
     EXPECT_NEAR(error, 1.0, 1e-12);  // actual error not checked
 }
