@@ -212,7 +212,7 @@ int main (int argc, char *argv[])
 
                                                amrex::Real chargeWeight = charge * weight[pp];
 
-                                               operatorHamilton.template apply_h_p(
+                                               operatorHamilton.apply_h_p(
                                                    pos, vel, infra, spline, infra.m_dx, jA, bA,
                                                    chargeOverMass, chargeWeight, dt);
 

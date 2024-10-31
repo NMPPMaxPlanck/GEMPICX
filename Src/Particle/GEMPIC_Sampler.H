@@ -726,7 +726,7 @@ void init_particles_full_domain_sobol (ComputationalDomain infra,
 
         long long int sobolSeed =
             GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) + species * 1000;
-        int numDim = GEMPIC_SPACEDIM + 2 * vdim;
+        constexpr int numDim = GEMPIC_SPACEDIM + 2 * vdim;
         double quasi[numDim];
         std::mt19937 gen(GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) +
                          species * 1000);
