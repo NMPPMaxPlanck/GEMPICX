@@ -512,30 +512,32 @@ void DeRhamComplex::a_times_grad (const DeRhamField<Grid::primal, Space::node> &
                             [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                             {
                                 oneFormMF(i, j, k, n) =
-                                    a * zeroFormMF(i + 1, j, k, n) + zeroFormMF(i, j, k, n);
+                                    a * (zeroFormMF(i + 1, j, k, n) - zeroFormMF(i, j, k, n));
                             });
             }
 
             if (comp == yDir)
             {
-                ParallelFor(bx, nComps,
-                            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
-                            {
-                                oneFormMF(i, j, k, n) = GEMPIC_D_ADD(
-                                    0., a * zeroFormMF(i, j + 1, k, n) + zeroFormMF(i, j, k, n),
-                                    0.);
-                            });
+                ParallelFor(
+                    bx, nComps,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+                    {
+                        oneFormMF(i, j, k, n) =
+                            a * (GEMPIC_D_ADD(
+                                    0., zeroFormMF(i, j + 1, k, n) - zeroFormMF(i, j, k, n), 0.));
+                    });
             }
 
             if (comp == zDir)
             {
-                ParallelFor(bx, nComps,
-                            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
-                            {
-                                oneFormMF(i, j, k, n) = GEMPIC_D_ADD(
-                                    0., 0.,
-                                    a * zeroFormMF(i, j, k + 1, n) + zeroFormMF(i, j, k, n));
-                            });
+                ParallelFor(
+                    bx, nComps,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+                    {
+                        oneFormMF(i, j, k, n) =
+                            a * (GEMPIC_D_ADD(0., 0.,
+                                              zeroFormMF(i, j, k + 1, n) - zeroFormMF(i, j, k, n)));
+                    });
             }
         }
         oneForm.m_data[comp].AverageSync(m_geom.periodicity());
@@ -655,30 +657,32 @@ void DeRhamComplex::a_times_grad (const DeRhamField<Grid::dual, Space::node> &ze
                             [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                             {
                                 oneFormMF(i, j, k, n) =
-                                    a * zeroFormMF(i, j, k, n) + zeroFormMF(i - 1, j, k, n);
+                                    a * (zeroFormMF(i, j, k, n) - zeroFormMF(i - 1, j, k, n));
                             });
             }
 
             if (comp == yDir)
             {
-                ParallelFor(bx, nComps,
-                            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
-                            {
-                                oneFormMF(i, j, k, n) = GEMPIC_D_ADD(
-                                    0., a * zeroFormMF(i, j, k, n) + zeroFormMF(i, j - 1, k, n),
-                                    0.);
-                            });
+                ParallelFor(
+                    bx, nComps,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+                    {
+                        oneFormMF(i, j, k, n) =
+                            a * (GEMPIC_D_ADD(
+                                    0., zeroFormMF(i, j, k, n) - zeroFormMF(i, j - 1, k, n), 0.));
+                    });
             }
 
             if (comp == zDir)
             {
-                ParallelFor(bx, nComps,
-                            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
-                            {
-                                oneFormMF(i, j, k, n) = GEMPIC_D_ADD(
-                                    0., 0.,
-                                    a * zeroFormMF(i, j, k, n) + zeroFormMF(i, j, k - 1, n));
-                            });
+                ParallelFor(
+                    bx, nComps,
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+                    {
+                        oneFormMF(i, j, k, n) =
+                            a * (GEMPIC_D_ADD(0., 0.,
+                                              zeroFormMF(i, j, k, n) - zeroFormMF(i, j, k - 1, n)));
+                    });
             }
         }
         oneForm.m_data[comp].AverageSync(m_geom.periodicity());

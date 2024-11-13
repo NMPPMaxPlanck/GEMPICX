@@ -43,8 +43,8 @@ int main (int argc, char *argv[])
                    << "describe " << git::Describe() << "\n"
                    << std::endl;
 
-    constexpr int vdim{3};
-    constexpr int ndata{2};
+    constexpr int vDim{3};
+    constexpr int nData{3};
 
     // Spline degrees
     constexpr int degx{1};
@@ -63,35 +63,29 @@ int main (int argc, char *argv[])
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
-        auto [parseBPrimX, funcBPrimX] =
-            Utils::parse_functions<3>({"BPrimXx", "BPrimXy", "BPrimXz"});
-        auto [parseBPrimY, funcBPrimY] =
-            Utils::parse_functions<3>({"BPrimYx", "BPrimYy", "BPrimYz"});
-        auto [parseBPrimZ, funcBPrimZ] =
-            Utils::parse_functions<3>({"BPrimZx", "BPrimZy", "BPrimZz"});
+        auto [parseBBackground, funcBBackground] =
+            Utils::parse_functions<3>({"BBackgroundX", "BBackgroundY", "BBackgroundZ"});
 
         DeRhamField<Grid::primal, Space::edge> E(deRham, "E");
         DeRhamField<Grid::dual, Space::face> D(deRham, "D");
         DeRhamField<Grid::primal, Space::face> B(deRham, "B");
+        DeRhamField<Grid::primal, Space::face> bBackground(deRham, funcBBackground);
         DeRhamField<Grid::dual, Space::edge> H(deRham, "H");
         DeRhamField<Grid::dual, Space::face> J(deRham, "J");
         DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
-        // temporary fields
-        DeRhamField<Grid::primal, Space::face> auxPrimalF2(deRham);
-        DeRhamField<Grid::dual, Space::face> auxDualF2(deRham);
 
         // Initialize needed propagators/solvers
         Gempic::FieldSolvers::PoissonSolver poisson(deRham, infra);
-        TimeLoop::OperatorHamilton<vdim, degx, degy, degz, hodgeDegree> operatorHamilton;
+        TimeLoop::OperatorHamilton<vDim, degx, degy, degz, hodgeDegree> operatorHamilton;
 
         // Initialize particle groups
         Io::Parameters params("Particle");
         amrex::Vector<std::string> speciesNames;
         params.get("speciesNames", speciesNames);
 
-        std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vdim, ndata>>> partGrLinVlasov;
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>> partGr;
+        std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vDim, nData>>> partGrLinVlasov;
+        std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>> partGr;
         init_particles(infra, partGrLinVlasov, partGr);
 
         // Domain volume and number of cells to normalize s0
@@ -110,12 +104,12 @@ int main (int argc, char *argv[])
             params.get("nSteps", nSteps);
             Io::Parameters paramsSim("Sim");
             auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt);
+            Io::MultiDiagnostics<vDim, nData> fullDiagn(dt);
             fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, partGr,
                                 nGhost);
 
             // Initialize reduced diagnostics and write initial time step
-            Io::MultiReducedDiagnostics<vdim, degx, degy, degz, hodgeDegree, ndata> redDiagn(
+            Io::MultiReducedDiagnostics<vDim, degx, degy, degz, hodgeDegree, nData> redDiagn(
                 deRham);
 
             // Deposit initial charge and compute s0
@@ -141,13 +135,13 @@ int main (int argc, char *argv[])
                 amrex::Vector<amrex::Real> vMean;
                 params.get("G0.vMean", vMean);
                 params.get("G0.vThermal", vThermal);
-                amrex::GpuArray<amrex::Real, vdim> vThermalGPU{vThermal[xDir], vThermal[yDir],
+                amrex::GpuArray<amrex::Real, vDim> vThermalGPU{vThermal[xDir], vThermal[yDir],
                                                                vThermal[zDir]};
-                amrex::GpuArray<amrex::Real, vdim> vMeanGPU{vMean[xDir], vMean[yDir], vMean[zDir]};
+                amrex::GpuArray<amrex::Real, vDim> vMeanGPU{vMean[xDir], vMean[yDir], vMean[zDir]};
 
                 amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
 
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
+                for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid();
                      ++pti)
                 {
                     const long np = pti.numParticles();
@@ -155,8 +149,9 @@ int main (int argc, char *argv[])
                     auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
                     auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
                     auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                    auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-                    auto *const s0 = pti.GetStructOfArrays().GetRealData(vdim + 1).data();
+                    auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
+                    auto *const s0 = pti.GetStructOfArrays().GetRealData(4).data();
+                    auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
 
                     amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
 
@@ -169,25 +164,25 @@ int main (int argc, char *argv[])
                         [=] AMREX_GPU_DEVICE(long pp)
                         {
                             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                            amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
+                            amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
 
                             for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
                             {
                                 pos[d] = particles[pp].pos(d);
                             }
 
-                            amrex::Real f0 = eval_sqrt_maxwellian(
+                            sqrtf0[pp] = eval_sqrt_maxwellian(
                                 vel,
                                 funcDensityBackground(AMREX_D_DECL(pos[xDir], pos[yDir], pos[zDir]),
                                                       0.),
                                 vThermalBackground);
 
                             // Rescale weights to remove f0 from energy computation
-                            weight[pp] /= f0;
+                            weight[pp] /= sqrtf0[pp];
 
                             SplineBase<degx, degy, degz> spline(pos, infra.m_plo, infra.m_dxi);
 
-                            gempic_deposit_rho(rhoarr, spline, f0 * charge * weight[pp]);
+                            gempic_deposit_rho(rhoarr, spline, sqrtf0[pp] * charge * weight[pp]);
 
                             // Compute s0 multiplied by number of particles as needed for electric
                             // field update and particle energy
@@ -230,7 +225,7 @@ int main (int argc, char *argv[])
                     amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
                     amrex::Real vThermalBackground2 = vThermalBackground * vThermalBackground;
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0);
+                    for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0);
                          pti.isValid(); ++pti)
                     {
                         const long np = pti.numParticles();
@@ -238,27 +233,27 @@ int main (int argc, char *argv[])
                         auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
                         auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
                         auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-                        auto *const s0 = pti.GetStructOfArrays().GetRealData(vdim + 1).data();
+                        auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
+                        auto *const s0 = pti.GetStructOfArrays().GetRealData(4).data();
+                        auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
 
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-                        for (int cc = 0; cc < vdim; cc++)
+                        amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
+                        for (int cc = 0; cc < 3; cc++)
                         {
                             eA[cc] = (E.m_data[cc])[pti].array();
                         }
 
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
-                        for (int cc = 0; cc < vdim; cc++)
+                        amrex::GpuArray<amrex::Array4<amrex::Real>, 3> bA;
+                        for (int cc = 0; cc < 3; cc++)
+                        {
+                            bA[cc] = (bBackground.m_data[cc])[pti].array();
+                        }
+
+                        amrex::GpuArray<amrex::Array4<amrex::Real>, 3> jA;
+                        for (int cc = 0; cc < 3; cc++)
                         {
                             jA[cc] = (J.m_data[cc])[pti].array();
                         }
-
-                        // Compile functions on device
-                        auto funcBPrimXDevice = Utils::compile_functions<3>(parseBPrimX);
-                        auto funcBPrimYDevice = Utils::compile_functions<3>(parseBPrimY);
-                        auto funcBPrimZDevice = Utils::compile_functions<3>(parseBPrimZ);
-                        auto funcDensityBackground =
-                            Utils::compile_function(particleSpecies->get_density_background());
 
                         amrex::ParallelFor(
                             np,
@@ -266,40 +261,30 @@ int main (int argc, char *argv[])
                             {
                                 // Local arrays for particle position and velocities
                                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> posOld;
-                                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
+                                amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
                                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
                                 {
                                     pos[d] = particles[pp].pos(d);
-                                    posOld[d] = particles[pp].pos(d);
                                 }
 
-                                amrex::Real f0 = eval_sqrt_maxwellian(
-                                    vel,
-                                    funcDensityBackground(
-                                        AMREX_D_DECL(pos[xDir], pos[yDir], pos[zDir]), 0.),
-                                    vThermalBackground);
-
-                                ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
+                                ParticleMeshCoupling::SplineWithPrimitive<degx, degy, degz> spline(
                                     pos, infra.m_plo, infra.m_dxi);
 
                                 // He,particle
-                                amrex::GpuArray<amrex::Real, vdim> efield =
+                                amrex::GpuArray<amrex::Real, 3> efield =
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);
-                                weight[pp] += 0.5 * dt * chargeMass / vThermalBackground2 * f0 *
+                                weight[pp] += 0.5 * dt * chargeMass / vThermalBackground2 *
+                                              sqrtf0[pp] *
                                               (efield[xDir] * vel[xDir] + efield[yDir] * vel[yDir] +
                                                efield[zDir] * vel[zDir]) /
                                               s0[pp];
 
-                                // Add particle contribution to J
-                                gempic_deposit_j(spline, vel, f0 * charge * weight[pp], jA);
-
-                                // Particle push with Strang splitting in spatial components
-                                push_particle_constant_b(pos, posOld, vel, funcBPrimXDevice,
-                                                         funcBPrimYDevice, funcBPrimZDevice,
-                                                         chargeMass, dt);
+                                // Push particle and integrate current
+                                operatorHamilton.template apply_h_p(
+                                    pos, vel, infra, spline, infra.m_dx, jA, bA, chargeMass,
+                                    sqrtf0[pp] * charge * weight[pp], dt);
 
                                 // Write position and velocities
                                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
@@ -309,33 +294,13 @@ int main (int argc, char *argv[])
                                 velx[pp] = vel[xDir];
                                 vely[pp] = vel[yDir];
                                 velz[pp] = vel[zDir];
-
-                                //Update splines with new particle position
-                                AMREX_D_TERM(
-                                    (spline.update_1d_splines<Direction::xDir>(
-                                        pos[xDir], infra.m_plo[xDir], infra.m_dxi[xDir]));
-                                    , (spline.update_1d_splines<Direction::yDir>(
-                                          pos[yDir], infra.m_plo[yDir], infra.m_dxi[yDir]));
-                                    , (spline.update_1d_splines<Direction::zDir>(
-                                          pos[zDir], infra.m_plo[zDir], infra.m_dxi[zDir])););
-
-                                f0 = eval_sqrt_maxwellian(
-                                    vel,
-                                    funcDensityBackground(
-                                        AMREX_D_DECL(pos[xDir], pos[yDir], pos[zDir]), 0.),
-                                    vThermalBackground);
-
-                                // Add particle contribution to J
-                                gempic_deposit_j(spline, vel, f0 * charge * weight[pp], jA);
                             });
                     }
                     particleSpecies->Redistribute();
                 }
 
                 J.post_particle_loop_sync();
-                J *= dt / 2;
                 D -= J;
-
                 deRham->hodge(D, E);
 
                 // He,particle
@@ -346,7 +311,7 @@ int main (int argc, char *argv[])
                     amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
                     amrex::Real vThermalBackground2 = vThermalBackground * vThermalBackground;
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0);
+                    for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0);
                          pti.isValid(); ++pti)
                     {
                         const long np = pti.numParticles();
@@ -354,11 +319,12 @@ int main (int argc, char *argv[])
                         auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
                         auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
                         auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-                        auto *const s0 = pti.GetStructOfArrays().GetRealData(vdim + 1).data();
+                        auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
+                        auto *const s0 = pti.GetStructOfArrays().GetRealData(4).data();
+                        auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
 
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-                        for (int cc = 0; cc < vdim; cc++)
+                        amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
+                        for (int cc = 0; cc < 3; cc++)
                         {
                             eA[cc] = (E.m_data[cc])[pti].array();
                         }
@@ -373,7 +339,7 @@ int main (int argc, char *argv[])
                             {
                                 // Local arrays for particle position and velocities
                                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
+                                amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
                                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
@@ -381,7 +347,7 @@ int main (int argc, char *argv[])
                                     pos[d] = particles[pp].pos(d);
                                 }
 
-                                amrex::Real f0 = eval_sqrt_maxwellian(
+                                sqrtf0[pp] = eval_sqrt_maxwellian(
                                     vel,
                                     funcDensityBackground(
                                         AMREX_D_DECL(pos[xDir], pos[yDir], pos[zDir]), 0.),
@@ -390,10 +356,11 @@ int main (int argc, char *argv[])
                                 ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
                                     pos, infra.m_plo, infra.m_dxi);
 
-                                amrex::GpuArray<amrex::Real, vdim> efield =
+                                amrex::GpuArray<amrex::Real, 3> efield =
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);
 
-                                weight[pp] += 0.5 * dt * chargeMass / vThermalBackground2 * f0 *
+                                weight[pp] += 0.5 * dt * chargeMass / vThermalBackground2 *
+                                              sqrtf0[pp] *
                                               (efield[xDir] * vel[xDir] + efield[yDir] * vel[yDir] +
                                                efield[zDir] * vel[zDir]) /
                                               s0[pp];
@@ -406,6 +373,9 @@ int main (int argc, char *argv[])
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
                 //Hb
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
+
+                // Update primal electric field for energy computation
+                deRham->hodge(D, E);
 
                 //write outputs
                 redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);

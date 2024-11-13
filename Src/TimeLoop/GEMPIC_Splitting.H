@@ -384,17 +384,6 @@ public:
         OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) = 0;
 };
 
-// push particle in constant magnetic field
-AMREX_GPU_HOST_DEVICE void push_particle_constant_b(
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& pos,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& posOld,
-    amrex::GpuArray<amrex::Real, 3>& vel,
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBPrimX,
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBPrimY,
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBPrimZ,
-    amrex::Real const chargeMass,
-    amrex::Real const dt);
-
 // Cold plasma step
 void apply_h_j(std::shared_ptr<FDDeRhamComplex> deRham,
                DeRhamField<Grid::dual, Space::face>& D,

@@ -15,7 +15,7 @@ Particle.electrons.charge = -1.0 # vector (one entry per species)
 Particle.electrons.mass = 1.0 # vector (one entry per species)
 Particle.electrons.density = "0.04 * cos(kvarx * x)"
 Particle.electrons.numGaussians = 1
-Particle.electrons.compNames = vx vy vz weight s0
+Particle.electrons.compNames = vx vy vz weight s0 sqrtf0
 Particle.electrons.vThermalBackground = 1.0
 Particle.electrons.densityBackground = "1.0"
 
@@ -32,15 +32,9 @@ TimeLoop.nSteps = 500
 TimeLoop.dt = 0.04
 
 # Function parameters
-Function.BPrimXx = "0"
-Function.BPrimXy = "0"
-Function.BPrimXz = "0"
-Function.BPrimYx = "0"
-Function.BPrimYy = "0"
-Function.BPrimYz = "0"
-Function.BPrimZx = "0"
-Function.BPrimZy = "0"
-Function.BPrimZz = "0"
+Function.BBackgroundX = "0"
+Function.BBackgroundY = "0"
+Function.BBackgroundZ = "0"
 
 # Diagnostics
 # Full Diagnostics

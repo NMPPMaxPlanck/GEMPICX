@@ -190,15 +190,14 @@ public:
         constexpr int noutputs = 2;
         this->m_data.assign(noutputs, 0.0);
 
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>>>
-            partGrLinVlasov;
+        std::shared_ptr<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>> partGrLinVlasov;
 
         for (int spec = 0; spec < partGr.size(); spec++)
         {
-            partGrLinVlasov[spec] =
+            partGrLinVlasov =
                 std::dynamic_pointer_cast<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>>(
                     partGr[spec]);
-            amrex::Real vThermalBackground = partGrLinVlasov[spec]->get_v_thermal_background();
+            amrex::Real vThermalBackground = partGrLinVlasov->get_v_thermal_background();
             amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum> reduceOps;
             auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real, amrex::Real>>(
                 *partGr[spec],

@@ -2,8 +2,6 @@ function(append_testconfig FILE)
   file(APPEND ${FILE} "\n\n")
   file(APPEND ${FILE} "# The following lines overwrite existing values to reduce runtime of example scripts for testing purposes\n")
   file(APPEND ${FILE} "TimeLoop.nSteps = 1\n")
-  file(APPEND ${FILE} "ReducedDiagnostics.enable = 0\n")
-  file(APPEND ${FILE} "FullDiagnostics.enable = 0\n")
 endfunction()
 
 function(select_executable NAME)
