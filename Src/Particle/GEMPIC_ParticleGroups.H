@@ -39,18 +39,18 @@ private:
     amrex::Vector<std::string> m_compNames = {"vx", "vy", "vz", "weight"};
 
 public:
-    amrex::ParticleReal get_charge () { return m_charge; }
-    amrex::ParticleReal get_mass () { return m_mass; }
-    std::string get_name () { return m_name; }
-    amrex::Vector<std::string> get_comp_names () { return m_compNames; }
+    amrex::ParticleReal get_charge () const { return m_charge; }
+    amrex::ParticleReal get_mass () const { return m_mass; }
+    std::string get_name () const { return m_name; }
+    amrex::Vector<std::string> get_comp_names () const { return m_compNames; }
 
     /**
      * Default Constructor.
      */
     ParticleGroups() {}
-    ParticleGroups(amrex::Geometry geom,
-                   amrex::DistributionMapping distriMap,
-                   amrex::BoxArray grid) :
+    ParticleGroups(const amrex::Geometry &geom,
+                   const amrex::DistributionMapping &distriMap,
+                   const amrex::BoxArray &grid) :
         amrex::ParticleContainer<0, 0, vdim + ndata, 0>(geom, distriMap, grid)
     {
         if constexpr (vdim < 3)
@@ -71,22 +71,22 @@ public:
      */
     ParticleGroups(amrex::Real charge,
                    amrex::Real mass,
-                   std::string& name,
-                   ComputationalDomain ifr) :
+                   const std::string &name,
+                   const ComputationalDomain &ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_charge = charge;
         m_mass = mass;
         m_name = name;
     }
-    ParticleGroups(amrex::Real charge, amrex::Real mass, ComputationalDomain ifr) :
+    ParticleGroups(amrex::Real charge, amrex::Real mass, const ComputationalDomain &ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_charge = charge;
         m_mass = mass;
     }
 
-    ParticleGroups(int species, ComputationalDomain ifr) :
+    ParticleGroups(int species, const ComputationalDomain &ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         std::string specString = "Particle.species" + std::to_string(species);
@@ -96,7 +96,7 @@ public:
         params.get_or_set("name", m_name);
     }
 
-    ParticleGroups(const std::string& speciesName, ComputationalDomain ifr) :
+    ParticleGroups(const std::string &speciesName, const ComputationalDomain &ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_name = speciesName;
@@ -115,7 +115,7 @@ public:
     void add_particle (amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
                        amrex::GpuArray<amrex::Real, vdim> velocity,
                        amrex::Real weight,
-                       amrex::ParticleTile<ParticleType, vdim + ndata, 0>& particles)
+                       amrex::ParticleTile<ParticleType, vdim + ndata, 0> &particles)
     // amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
     {
         //BL_PROFILE("Gempic::Particle::ParticleGroups::add_particle()");
@@ -147,7 +147,7 @@ public:
         particles.push_back(p);
     }
 
-    void copy (ParticleGroups<vdim, ndata>& source, bool local = false)
+    void copy (ParticleGroups<vdim, ndata> &source, bool local = false)
     {
         BL_PROFILE("Gempic::Particle::ParticleGroups::copy()");
         this->charge = source.get_charge();
@@ -172,7 +172,7 @@ public:
         auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real>>(
             *this,
             [=] AMREX_GPU_HOST_DEVICE(
-                const amrex::ConstParticleTileData<ParticleType, vdim + ndata, 0>& pt,
+                const amrex::ConstParticleTileData<ParticleType, vdim + ndata, 0> &pt,
                 const int pp) -> amrex::GpuTuple<amrex::Real>
             {
                 auto weight = pt.m_rdata[vdim][pp];
@@ -190,8 +190,7 @@ public:
         for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*this, 0); pti.isValid(); ++pti)
         {
             const long np = pti.numParticles();
-            auto* const particles = pti.GetArrayOfStructs()().data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+            auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
             amrex::Real averageDiff = (targetWeight - W) / totalNumberOfParticles;
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) { weight[pp] += averageDiff; });
         }
@@ -213,7 +212,7 @@ public:
     amrex::Parser get_density_background () { return m_densityBackground; }
     amrex::ParticleReal get_v_thermal_background () { return m_vThermalBackground; }
 
-    ParticleGroupsLinVlasov(const std::string& speciesName, ComputationalDomain ifr) :
+    ParticleGroupsLinVlasov(const std::string &speciesName, ComputationalDomain ifr) :
         ParticleGroups<vdim, ndata>(speciesName, ifr)
     {
         std::string specString = "Particle." + speciesName;

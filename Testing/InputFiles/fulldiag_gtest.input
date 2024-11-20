@@ -23,9 +23,9 @@ k = 0.3 0.3 0.004166666666666667
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field
 FullDiagnostics.field.varNames = rho Ex Ey Ez Bx By Bz phi
-FullDiagnostics.field.functor = CellCenter
+FullDiagnostics.field.outputProcessor = CellCenter
 FullDiagnostics.field.saveInterval = 1
-part.saveInterval = 1
+FullDiagnostics.part.saveInterval = 1
 
 # Function parameters
 Function.rho = "1.0"

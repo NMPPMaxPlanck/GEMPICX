@@ -224,6 +224,11 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
         const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
         const std::string& diagName);
 
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc,
+                const amrex::MultiFab& mfIn1,
+                const amrex::MultiFab& mfIn2,
+                const amrex::MultiFab& mfIn3);
+
     void fill_boundary();
     void average_sync();
     void apply_bc();
@@ -259,6 +264,8 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
                 const std::string& diagName);
+
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::MultiFab& mfIn);
 
     void fill_boundary();
     void average_sync();
@@ -423,10 +430,10 @@ public:
     int get_hodge_degree () const { return m_hodgeDegree; }
 
     // map of pointers to the field multifabs for the diagnostics
-    std::map<std::string, amrex::MultiFab*> m_fieldsDiagnostics;
+    std::map<std::string, const amrex::MultiFab> m_fieldsDiagnostics;
 
     // map of scaling parameters to go from degrees of freedom to point values for diagnostics
-    std::map<std::string, amrex::Real> m_fieldsScaling;
+    std::map<std::string, const amrex::Real> m_fieldsScaling;
 
     /// @brief Initializes fields and ties them to the grid.
     ///        Called from the DeRhamField constructors.
@@ -945,23 +952,29 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     DeRhamField{drc, nVar}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,diagName)");
-    m_deRham->m_fieldsDiagnostics[diagName + "x"] = &(this->m_data[xDir]);
-    m_deRham->m_fieldsDiagnostics[diagName + "y"] = &(this->m_data[yDir]);
-    m_deRham->m_fieldsDiagnostics[diagName + "z"] = &(this->m_data[zDir]);
+    m_deRham->m_fieldsDiagnostics.emplace(
+        diagName + "x", amrex::MultiFab(this->m_data[xDir], amrex::make_alias, 0, nVar));
+    m_deRham->m_fieldsDiagnostics.emplace(
+        diagName + "y", amrex::MultiFab(this->m_data[yDir], amrex::make_alias, 0, nVar));
+    m_deRham->m_fieldsDiagnostics.emplace(
+        diagName + "z", amrex::MultiFab(this->m_data[zDir], amrex::make_alias, 0, nVar));
 
     if constexpr (space == Space::edge)  // edge field
     {
         auto dxInv{m_deRham->get_dx_inv()};
-        m_deRham->m_fieldsScaling[diagName + "x"] = dxInv[xDir];
-        m_deRham->m_fieldsScaling[diagName + "y"] = GEMPIC_D_MULT(1.0, dxInv[yDir], 1.0);
-        m_deRham->m_fieldsScaling[diagName + "z"] = GEMPIC_D_MULT(1.0, 1.0, dxInv[zDir]);
+        m_deRham->m_fieldsScaling.emplace(diagName + "x", dxInv[xDir]);
+        m_deRham->m_fieldsScaling.emplace(diagName + "y", GEMPIC_D_MULT(1.0, dxInv[yDir], 1.0));
+        m_deRham->m_fieldsScaling.emplace(diagName + "z", GEMPIC_D_MULT(1.0, 1.0, dxInv[zDir]));
     }
     if constexpr (space == Space::face)  // face field
     {
         auto dxInv{m_deRham->get_dx_inv()};
-        m_deRham->m_fieldsScaling[diagName + "x"] = GEMPIC_D_MULT(1.0, dxInv[yDir], dxInv[zDir]);
-        m_deRham->m_fieldsScaling[diagName + "y"] = GEMPIC_D_MULT(dxInv[xDir], 1.0, dxInv[zDir]);
-        m_deRham->m_fieldsScaling[diagName + "z"] = GEMPIC_D_MULT(dxInv[xDir], dxInv[yDir], 1.0);
+        m_deRham->m_fieldsScaling.emplace(diagName + "x",
+                                          GEMPIC_D_MULT(1.0, dxInv[yDir], dxInv[zDir]));
+        m_deRham->m_fieldsScaling.emplace(diagName + "y",
+                                          GEMPIC_D_MULT(dxInv[xDir], 1.0, dxInv[zDir]));
+        m_deRham->m_fieldsScaling.emplace(diagName + "z",
+                                          GEMPIC_D_MULT(dxInv[xDir], dxInv[yDir], 1.0));
     }
 
     if (not m_deRham->get_geom().isAllPeriodic())
@@ -991,14 +1004,16 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     DeRhamField{drc, nVar}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,diagName)");
-    m_deRham->m_fieldsDiagnostics[diagName] = &(this->m_data);
+    m_deRham->m_fieldsDiagnostics.emplace(
+        diagName, amrex::MultiFab(this->m_data, amrex::make_alias, 0, nVar));
+
     if constexpr (space == Space::node)  // node field
     {
-        m_deRham->m_fieldsScaling[diagName] = 1.0;
+        m_deRham->m_fieldsScaling.emplace(diagName, 1.0);
     }
     if constexpr (space == Space::cell)  // cell field
     {
-        m_deRham->m_fieldsScaling[diagName] = m_deRham->get_dx_inv()[GEMPIC_SPACEDIM];
+        m_deRham->m_fieldsScaling.emplace(diagName, m_deRham->get_dx_inv()[GEMPIC_SPACEDIM]);
     }
 
     if (not m_deRham->get_geom().isAllPeriodic())
@@ -1075,6 +1090,19 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 }
 
 template <Grid grid, Space space>
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
+    std::shared_ptr<DeRhamComplex> drc,
+    const amrex::MultiFab& mfIn1,
+    const amrex::MultiFab& mfIn2,
+    const amrex::MultiFab& mfIn3) :
+    DeRhamField{drc, mfIn1.nComp()}
+{
+    m_data[xDir] = amrex::MultiFab(mfIn1, amrex::make_alias, 0, mfIn1.nComp());
+    m_data[yDir] = amrex::MultiFab(mfIn2, amrex::make_alias, 0, mfIn2.nComp());
+    m_data[zDir] = amrex::MultiFab(mfIn3, amrex::make_alias, 0, mfIn3.nComp());
+}
+
+template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
     amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
@@ -1094,6 +1122,14 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs,diagName)");
     m_deRham->projection(funcs, 0.0, *this);
+}
+
+template <Grid grid, Space space>
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
+    std::shared_ptr<DeRhamComplex> drc, const amrex::MultiFab& mfIn) :
+    DeRhamField{drc, mfIn.nComp()}
+{
+    m_data = amrex::MultiFab(mfIn, amrex::make_alias, 0, mfIn.nComp());
 }
 
 // Synchronization necessary after cpu and gpu particle loops

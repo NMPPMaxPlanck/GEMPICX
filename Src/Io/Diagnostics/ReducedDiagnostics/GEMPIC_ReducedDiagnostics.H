@@ -32,18 +32,15 @@ namespace Gempic::Io
  *  implemented in a derived class, and must override the (pure virtual)
  *  function ComputeDiags.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata>
+template <int vdim, int degx, int degy, int degz, int ndata>
 class ReducedDiagnostics
 {
 public:
-    /// output path (default)
-    std::string m_path = "ReducedDiagnostics/";
-
-    /// output extension (default)
-    std::string m_extension = "txt";
+    /// output path
+    std::string m_path;
 
     /// diags name
-    std::string m_rdName;
+    const std::string m_rdName;
 
     /// is this instance the first type of a group?
     bool m_isFirstType = true;
@@ -71,26 +68,33 @@ public:
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    ReducedDiagnostics(std::string rdName, int& indexNum, bool isLastType) :
+    ReducedDiagnostics(const std::string& rdName,
+                       int& indexNum,
+                       bool isLastType,
+                       const std::string& fileName) :
         m_rdName{rdName}, m_isLastType{isLastType}
     {
         BL_PROFILE("Gempic::Io::ReducedDiagnostics::ReducedDiagnostics()");
         m_isFirstType = (indexNum == 0);
         // BackwardCompatibility();
+        std::filesystem::path fileNamePathIn{fileName};
 
         Parameters ppRdName("ReducedDiagnostics." + m_rdName);
 
-        ppRdName.get_or_set("path", m_path);
+        std::string saveFolder = fileNamePathIn.parent_path().string();
+        ppRdName.get_or_set("saveFolder", saveFolder);
+        std::filesystem::path fileNamePathOut{saveFolder};
+        fileNamePathOut.has_parent_path() ? fileNamePathOut.remove_filename()
+                                          : fileNamePathOut += "/";
 
         if (m_isFirstType)
         {
             // ensure output directory exists
-            std::filesystem::path dirName{m_path};
-            dirName.remove_filename();
-            if (!(std::filesystem::exists(dirName)))
+            if (!(std::filesystem::exists(fileNamePathOut)))
             {
-                std::filesystem::create_directories(dirName);
+                std::filesystem::create_directories(fileNamePathOut);
             }
         }
         else
@@ -99,8 +103,28 @@ public:
             ppRdName.hide_class_output();
         }
 
-        // read extension
-        ppRdName.get_or_set("extension", m_extension);
+        // filename
+        std::string fileNameStem = fileNamePathIn.stem().string();
+        ppRdName.get_or_set("fileName", fileNameStem);
+        fileNamePathOut /= fileNameStem;
+
+        // fileName in input file might have contained an extension
+        if (fileNamePathOut.has_extension())
+        {
+            if (ppRdName.is_in_input_file("extension"))
+            {
+                amrex::Warning("Warning: extension supplied in \"ReducedDiagnostics." + rdName +
+                               ".fileName\". Ignoring \"extension\" input parameter\n");
+            }
+        }
+        else
+        {
+            // read extension
+            std::string fileNameExt = fileNamePathIn.extension().string();
+            ppRdName.get_or_set("extension", fileNameExt);
+            fileNamePathOut.replace_extension(fileNameExt);
+        }
+        m_path = fileNamePathOut.string();
 
         if (amrex::ParallelDescriptor::IOProcessor() && m_isFirstType)
         {
@@ -111,7 +135,7 @@ public:
             // replace / create output file
             if (m_isNotRestart)  // not a restart
             {
-                std::ofstream ofs{m_path + m_rdName + "." + m_extension, std::ios::trunc};
+                std::ofstream ofs{m_path, std::ios::trunc};
                 ofs.close();
             }
         }
@@ -128,8 +152,7 @@ public:
     virtual ~ReducedDiagnostics() = default;
 
     /**
-     * function to initialize data after amr
-     * levels are initialized.
+     * function to initialize data after amr levels are initialized.
      */
     virtual void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf)
     {
@@ -146,19 +169,22 @@ public:
      * function to compute diags
      */
     virtual void compute_diags(
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) = 0;
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) = 0;
 
     /**
      * write to file function
      */
-    virtual void write_to_file (amrex::Real dt, int step) const
+    virtual void write_to_file (int step, amrex::Real simTime) const
     {
         BL_PROFILE("Gempic::Io::ReducedDiagnostics::write_to_file()");
+        // Only the I/O rank does I/O
+        if (!amrex::ParallelDescriptor::IOProcessor())
+        {
+            return;
+        }
         // open file
-        std::ofstream ofs{m_path + m_rdName + "." + m_extension,
-                          std::ofstream::out | std::ofstream::app};
+        std::ofstream ofs{m_path, std::ofstream::out | std::ofstream::app};
 
         if (m_isFirstType)
         {
@@ -171,7 +197,7 @@ public:
             ofs << std::fixed << std::setprecision(14) << std::scientific;
 
             // write time
-            ofs << dt * (step);
+            ofs << simTime;
         }
         else
         {

@@ -55,9 +55,8 @@ FullDiagnostics.enable = 1 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field 
 FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 100
-FullDiagnostics.part.functor = raw
 FullDiagnostics.field.varNames = rho phi Ex Ey Bz
-FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter 
 FullDiagnostics.field.saveInterval = 10
 
 # Reduced Diagnostics 

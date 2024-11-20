@@ -1,0 +1,218 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,urlcolor=cyan]{hyperref}%,linkcolor=green]{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\usepackage{xstring}
+\usepackage{xparse}
+\usepackage{comment}
+\renewcommand{\Affilfont}{\footnotesize}
+
+%\renewcommand{\Authfont}{\normalsize}
+\usepackage{mdframed}
+\newenvironment{important}[1][]{%
+   \begin{mdframed}[%
+      backgroundcolor={red!15}, hidealllines=true,
+      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
+      splitbottomskip=2pt, splittopskip=4pt, #1]%
+   \makebox[0pt]{% ignore the withd of !
+      \smash{% ignor the height of !
+         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
+         \hspace*{-19pt}% move ! to the left
+         \raisebox{-2pt}{% move ! up a little
+            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
+         }%
+      }%
+   }%
+}{\end{mdframed}}
+%\usepackage{algpseudocode}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\definecolor{lightergray}{gray}{0.95}
+\definecolor{macrocolor}{RGB}{255,145,0}
+\definecolor{warningred}{RGB}{255,145,145}
+\newtcolorbox{customWarning}{colback=warningred,grow to right by=-10mm,grow to left by=-10mm, boxrule=0pt,boxsep=0pt,breakable}
+\usepackage{expl3}
+
+\ExplSyntaxOn
+
+% compile the expression
+\regex_new:N \l_CPP_uppercase_regex
+%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
+\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
+
+\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
+\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
+
+% a variant that expands the input fully
+\cs_generate_variant:Nn \regex_match:NnTF {NV}
+
+\NewDocumentCommand \ifuppercase { m m }
+{
+    % expand to actual underscore
+    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
+    \tl_set:cn { lst@um_ } { _ }
+    % match the current token
+    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
+    % reset
+    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
+}
+
+\ExplSyntaxOff
+
+
+
+\lstset{language=C++,
+        morekeywords={constexpr},
+        keywordstyle=\color{blue}\bfseries,
+        alsoletter={_},
+        basicstyle=\ttfamily,
+        columns=fullflexible,
+        identifierstyle=\ifuppercase{\color{macrocolor}\bfseries}{},
+        backgroundcolor=\color{lightergray}}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\input{gempic_latex_macros}
+
+\title{Diagnostics}
+
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This note describes the use of the two Diagnostics modules, FullDiagnostics and ReducedDiagnostics.
+\end{abstract}
+
+\tableofcontents
+%
+GEMPIC has two modules for outputting diagnostics: FullDiagnostics for outputting entire fields and ReducedDiagnostics for outputting metrics based on the fields.
+
+In simulation code a \lstinline|Diagnostics| object must be initialised in the main code, and a call to
+\lstinline|Diagnostics::compute_and_write_to_file|\\
+must then be made for each time step. This will automatically call both Diagnostics modules with the correct parameters.
+
+\section{The FullDiagnostics Module}
+FullDiagnostics produces one or more Paraview-readable AMReX-format output files with the binary data of the fields asked for in the input file (see the corresponding section in Input Files).
+Assuming the module is enabled in the input file, full diagnostic groups can be named and base parameters can be specified. Each diagnostics group can either treat particles or fields.
+
+Where particle positions are simply printed in binary, for fields there are a number of output processors to choose from, all selected via the line(s)
+\\\lstinline|FullDiagnostics.{groupName}.outputProcessor|\\
+in the input file:
+
+\begin{itemize}
+    \item \texttt{"Raw"}: The "\emph{raw}" field output, which is simply the field copied over with no processing. Due to the way Paraview works, the field is assumed to be node centered.
+    \item \texttt{"CellCenter"}: The interpolated field output for cell centered fields. Does a very simple linear interpolation to every node from all the nearest cell centers surrounding it.
+\end{itemize}
+If more advanced functionality is needed the user can also either write their own custom operator (\ref{sec:cusOp}) or custom class (\ref{sec:cusClass}), selecting the \verb|"Custom"| output processor and the appropriate \verb|customID|.
+Both these options require some extra work.
+
+\subsection{Custom Operators}\label{sec:cusOp}
+Users can add their own operators \emph{before the first instantiation of} \lstinline|FullDiagnostics| to be called on the GPU to calculate the output fields from the input fields specified by name in the input file. As such, they must have a very specific signature and be explicitly added to the list of custom processor options in the code:
+\begin{lstlisting}
+std::string id{"NameForCustomOperator"}; // note that ID must be CamelCase
+Gempic::Io::add_output_processor(
+    id,
+    [=] AMREX_GPU_DEVICE(
+        amrex::Array4<amrex::Real> dst,             // outputMultifab
+        const amrex::Array4<const amrex::Real> src, // inputMultifab
+        int nSrcComp,                               // # input multifab components
+        int i, int j, int k,                        // indices
+        double scaling,                             // scaling and shifts
+        double ishift, double jshift, double kshift)// for cell centered fields
+    {
+        ...
+    });
+\end{lstlisting}
+Note that even if your custom operator is only meant to work for node centered fields, it still must accept the values \verb|scaling|, \verb|ishift|, \verb|jshift| and \verb|kshift| needed for cell-centered fields.
+Also note that the lambdas of course can capture copyable objects to use for their functionality.
+
+Then, the custom operators are selected in the input file using the id given in the code:
+\\\lstinline|FullDiagnostics.{groupName}.customID = "NameForCustomOperator"|\\
+%
+For an example, see \verb|Testing/Io/FullDiagnostics_test.cpp|.
+
+\subsection{Custom Classes}\label{sec:cusClass}
+If an operator is not enough, users can also add their own custom class. This class must
+\begin{itemize}
+    \item inherit from \verb|Gempic::Io::CustomOutputProcessor|,
+    \item implement a public operator with the signature\\
+    \lstinline|void operator()(amrex::MultiFab& mfDst, int dcomp) const override|\\or\\
+    \lstinline|void operator()(amrex::MultiFab& mfDst, int dcomp) const final|,
+    where \lstinline|mfDst| is the output MultiFab to be written and \lstinline|dcomp| is the first component of \lstinline|mfDst| in which data is stored.
+\end{itemize}
+
+Finally, the custom class must be added in the code:
+\begin{lstlisting}
+    class YourOutputProcessor : public CustomOutputProcessor {...};
+    std::string id{"MyCustomClass"}; // note that ID must be CamelCase
+    Gempic::Io::add_output_processor<YourOutputProcessor>(id);
+\end{lstlisting}
+and selected in the input file:
+\\\lstinline|FullDiagnostics.{groupName}.customID = "MyCustomClass"|\\
+For an example, see \verb|Testing/Io/FullDiagnostics_test.cpp|.
+
+\section{The ReducedDiagnostics Module}
+ReducedDiagnostics produces one or more plaintext output files with the metrics asked for in the input file (see the corresponding section in Input Files).
+Assuming the module is enabled in the input file, reduced diagnostic groups can be named and base parameters can be specified. Each diagnostics group can treat both particles and fields.
+
+There are a number of outputs to choose from, all selected via the line(s) 
+\\\lstinline|ReducedDiagnostics.{groupName}.types|\\
+in the input file:
+
+\begin{itemize}
+    \item \texttt{Particle}: The particle metrics, which for now comprises the three dimensional momentum and total kinetic energy of all particles for each particle type.
+    \item \texttt{ElecFieldEnergy}: The electric field energy $\langle \arr{E}, \tilde{\arr{D}}\rangle/2$
+    \item \texttt{MagFieldEnergy}: The magnetic field energy $\langle \arr{B}, \tilde{\arr{H}}\rangle/2$
+    \item \texttt{GaussError}: The Gauss error $||\tilde{\arr{\rho}}-\Div \tilde{\arr{D}}||/||\tilde{\arr{\rho}}||$
+    \item \texttt{CurrentFieldEnergy}: The energy of a current field $\langle \arr{J}, \tilde{\arr{J}}\rangle/2$ where the primal and dual fields are related by the density $\tilde{\arr{J}} = n(x) \arr{J}$. If \lstinline|computeMissingFields| is used, the density has to be provided as function \lstinline|FieldDensity|/\lstinline|FieldDensityInv| in the input file.
+\end{itemize}
+It is currently not possible to provide custom expansions to this list.
+Note that multiple types can be selected for each reduced diagnostics group.
+There are two general modes for the ReducedDiagnostics module:
+\begin{itemize}
+    \item The user is responsible for keeping every field needed for their ReducedDiagnostics calculations up to date whenever \lstinline|ReducedDiagnostics::write_to_file| is called. This is the default.
+    \item The user does not need to provide all fields required for the ReducedDiagnostics calculations. The ReducedDiagnostics module will attempt to calculate the missing fields whenever \lstinline|Diagnostics::compute_and_write_to_file| is called. This may impact computation time, but can be useful when the fields in question are not needed for the main simulation.
+\end{itemize}
+The modes can be toggled via the input file switch
+\\\lstinline|ReducedDiagnostics.computeMissingFields|\\
+in general, and/or
+\\\lstinline|ReducedDiagnostics.{groupName}.computeMissingFields|\\
+for each group.
+\end{document}

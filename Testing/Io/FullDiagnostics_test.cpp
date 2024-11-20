@@ -141,8 +141,8 @@ protected:
         pp.add("FullDiagnostics.part.varNames", particle);
         amrex::Vector<std::string> fieldNames = {"rho", "Ex", "Ey", "Ez", "Bx", "phi"};
         pp.addarr("FullDiagnostics.field.varNames", fieldNames);
-        std::string cellCenterFunctor = "CellCenter";
-        pp.add("FullDiagnostics.field.functor", cellCenterFunctor);
+        std::string cellCenterOutputProcessor = "CellCenter";
+        pp.add("FullDiagnostics.field.outputProcessor", cellCenterOutputProcessor);
         int fieldSave{1};
         pp.add("FullDiagnostics.field.saveInterval", fieldSave);
         int partSave{1};
@@ -176,13 +176,10 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
     DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
 
-    amrex::Real dt = 1.0;
-    auto nGhost = deRham->get_n_ghost();
-    Io::MultiDiagnostics<s_vdim, s_ndata> fullDiagn(dt);
-    fullDiagn.init_data(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, m_particles,
-                        nGhost);
+    Io::MultiDiagnostics fullDiagn(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling,
+                                   m_particles);
     // Compute and write diagnostics
-    fullDiagn.filter_compute_pack_flush(0);
+    fullDiagn.filter_compute_pack_flush(0, 0.0);
 
     // Create multifab containing expected values of cell centered fields
     int ncomp = fullDiagn.get_num_group_members(1);  // nb of field diagnostics
@@ -205,6 +202,175 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     {
         const amrex::Box& bx = mfi.tilebox();
         compare_fields(mfAllDiag[mfi].array(), mfAllDiagExpected[mfi].array(), bx, ncomp);
+    }
+}
+
+void create_input_file_to_select_operator (const std::string& operatorId)
+{
+    // This part belongs in an input file when not doing testing
+    amrex::ParmParse pp;
+    const std::string groupNames{"field5"};
+    pp.add("FullDiagnostics.groupNames", groupNames);
+    const std::string saveFolder = {"FullDiagnostics/scalingTest"};
+    pp.add("FullDiagnostics.saveFolder", saveFolder);
+
+    const std::string varNames{"rho"};
+    pp.add("FullDiagnostics.field5.varNames", varNames);
+    pp.add("FullDiagnostics.field5.saveInterval", 1);
+    const std::string custom{"Custom"};
+    pp.add("FullDiagnostics.field5.outputProcessor", custom);
+    pp.add("FullDiagnostics.field5.customID", operatorId);
+}
+
+// create and add lambda, (this one multiplies by a constant and cell centers)
+void add_custom_processor (const std::string& operatorId, double multiplicationFactor)
+{
+    Gempic::Io::add_output_processor(
+        operatorId,
+        [=] AMREX_GPU_DEVICE(amrex::Array4<amrex::Real> dst,
+                             const amrex::Array4<const amrex::Real> src, int nSrcComp, int i, int j,
+                             int k, double scaling, double ishift, double jshift, double kshift)
+        {
+            dst(i, j, k) = multiplicationFactor * 0.125 * scaling *
+                           (src(i + ishift, j + jshift, k + kshift) + src(i, j, k) +
+                            src(i + ishift, j + jshift, k) + src(i, j, k + kshift) +
+                            src(i + ishift, j, k + kshift) + src(i, j + jshift, k) +
+                            src(i, j + jshift, k + kshift) + src(i + ishift, j, k));
+        });
+}
+
+TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOperatorOutputProcessor)
+{
+    // Details for the input file
+    double multiplicationFactor{5.0};
+    std::string operatorId{"scaleField" + std::to_string(static_cast<int>(multiplicationFactor))};
+    create_input_file_to_select_operator(operatorId);
+
+    // ------------------------------------ setup ------------------------------------
+    constexpr int hodgeDegree{2};
+    // Initialize the De Rham Complex with deg 2
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    // Initialize fields
+    [[maybe_unused]] auto [parseRho, funcRho] = Utils::parse_function("rho");
+
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, funcRho, "rho");
+
+    // create and add lambda, (this one multiplies by a constant and cell centers)
+    add_custom_processor(operatorId, multiplicationFactor);
+
+    // Initialize diagnostics
+    Io::MultiDiagnostics fullDiagn(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling,
+                                   m_particles);
+    // Compute and write diagnostics
+    fullDiagn.filter_compute_pack_flush(0, 0.0);
+
+    // ------------------------ Verify diagnostics output ------------------------
+    int ncomp = 1;
+    amrex::IntVect nghost = amrex::IntVect{AMREX_D_DECL(0, 0, 0)};
+
+    // Create expected value MultiFab
+    amrex::MultiFab multipliedBy5Expected(rho.m_data.boxArray(), rho.m_data.DistributionMap(),
+                                          ncomp, nghost);
+    multipliedBy5Expected.setVal(5.0);
+
+    // Read field diagnostics
+    amrex::MultiFab resultMf(rho.m_data.boxArray(), rho.m_data.DistributionMap(), ncomp, nghost);
+    std::string filename5 = "FullDiagnostics/scalingTest/plt_field5000000/Level_0/Cell";
+    amrex::VisMF::Read(resultMf, filename5);
+
+    // Compare read and expected values
+    for (amrex::MFIter mfi(resultMf); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
+        compare_fields(resultMf[mfi].array(), multipliedBy5Expected[mfi].array(), bx, ncomp);
+    }
+}
+
+// Silly minimal custom outputProcessor class example
+class DumbOutputProcessor : public Gempic::Io::CustomOutputProcessor
+{
+public:
+    static inline int s_counter{0};
+
+    DumbOutputProcessor(const amrex::MultiFab& mfSrc,
+                        const amrex::Real scaling,
+                        const amrex::IntVect crseRatio) :
+        CustomOutputProcessor{mfSrc, scaling, crseRatio}
+    {
+    }
+
+    void operator()(amrex::MultiFab& mfDst, int dcomp) const final
+    {
+        s_counter++;
+        amrex::Copy(mfDst, m_mfSrc, 0, dcomp, mfDst.nComp(), 0);
+    }
+};
+
+void create_input_file_to_select_custom_strategy (const std::string& customId)
+{
+    // This part belongs in an input file when not doing testing
+    amrex::ParmParse pp;
+    const std::string customEmpty{"customEmpty"};
+    pp.add("FullDiagnostics.groupNames", customEmpty);
+    std::string saveFolder = {"FullDiagnostics/CustomOutputProcessorTest"};
+    pp.add("FullDiagnostics.saveFolder", saveFolder);
+
+    const std::string varNames{"phi"};
+    pp.add("FullDiagnostics.customEmpty.varNames", varNames);
+    pp.add("FullDiagnostics.customEmpty.saveInterval", 1);
+
+    const std::string custom{"Custom"};
+    pp.add("FullDiagnostics.customEmpty.outputProcessor", custom);
+    pp.add("FullDiagnostics.customEmpty.customID", customId);
+}
+
+TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOutputProcessor)
+{
+    // Details for the input file
+    std::string customId{"counter"};
+    create_input_file_to_select_custom_strategy(customId);
+
+    // ------------------------------------ setup ------------------------------------
+    constexpr int hodgeDegree{2};
+    // Initialize the De Rham Complex with deg 2
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    // Initialize fields
+    [[maybe_unused]] auto [parsePhi, funcPhi] = Utils::parse_function("phi");
+
+    DeRhamField<Grid::primal, Space::node> phi(deRham, funcPhi, "phi");
+
+    // Add custom strategy, (this one does nothing except count how many times it's been used)
+    Gempic::Io::add_output_processor<DumbOutputProcessor>(customId);
+
+    // Initialize diagnostics
+    Io::MultiDiagnostics fullDiagn(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling,
+                                   m_particles);
+    // Check that it hasn't been used yet ...
+    EXPECT_EQ(DumbOutputProcessor::s_counter, 0);
+    // Compute and write diagnostics
+    fullDiagn.filter_compute_pack_flush(0, 0.0);
+
+    // Check that a copy operator was used (i.e. that DumbOutputProcessor's operator was called)
+    EXPECT_EQ(DumbOutputProcessor::s_counter, 1);
+
+    int ncomp = 1;
+    amrex::IntVect nghost = amrex::IntVect{AMREX_D_DECL(0, 0, 0)};
+
+    // read field diagnostics
+    amrex::MultiFab resultMf(phi.m_data.boxArray(), phi.m_data.DistributionMap(), ncomp, nghost);
+    std::string filename =
+        "FullDiagnostics/CustomOutputProcessorTest/plt_customEmpty000000/Level_0/Cell";
+    amrex::VisMF::Read(resultMf, filename);
+
+    // Compare read and expected values
+    for (amrex::MFIter mfi(resultMf); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box& bx = mfi.tilebox();
+        compare_fields(resultMf[mfi].array(), phi.m_data[mfi].array(), bx, ncomp);
     }
 }
 }  // namespace

@@ -28,13 +28,16 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the field energy.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata>
-class GaussError : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int ndata>
+class GaussError : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
-    std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
-    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
-    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_divD;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_rho;
+    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::edge>> m_constE;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_divD;
+    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constD;
+    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::cell>> m_constDivD;
 
     enum class ComputeMethod
     {
@@ -47,9 +50,13 @@ public:
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    GaussError(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
+    GaussError(const std::string& rdName,
+               int& indexNum,
+               bool isLastType,
+               const std::string& fileName) :
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::GaussError::GaussError()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -57,8 +64,7 @@ public:
             if (this->m_isNotRestart)
             {
                 // open file
-                std::ofstream ofs{this->m_path + this->m_rdName + "." + this->m_extension,
-                                  std::ofstream::out | std::ofstream::app};
+                std::ofstream ofs{this->m_path, std::ofstream::out | std::ofstream::app};
                 // write header row
                 if (this->m_isFirstType)
                 {
@@ -69,6 +75,10 @@ public:
                 }
                 ofs << this->m_sep;
                 ofs << "[" << ++indexNum << "]GaussError";
+                ofs << this->m_sep;
+                ofs << "[" << ++indexNum << "]divDNorm";
+                ofs << this->m_sep;
+                ofs << "[" << ++indexNum << "]rhoNorm";
                 if (this->m_isLastType)
                 {
                     ofs << std::endl;
@@ -81,31 +91,26 @@ public:
     // end constructor
 
     /**
+     * function to initialize data after amr levels are initialized.
+     */
+    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf) final
+    {
+        BL_PROFILE("Gempic::Io::GaussError::init_data()");
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, cmf);
+        m_computeMethod = choose_computation_method(this->m_deRham->m_fieldsDiagnostics);
+    }
+
+    /**
      * This function computes the Gauss Error
      */
     void compute_diags (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
     {
         BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
-        constexpr int noutputs = 1;
-        this->m_data.resize(noutputs, 0.0);
-        this->m_data[0] = compute_gauss_error(infra, fieldsDiagnostics, partGr);
-    }
-
-    amrex::Real compute_gauss_error (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
-    {
-        BL_PROFILE("Gempic::Io::GaussError::compute_gauss_error()");
-        static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};
-
-        auto& rho = *fieldsDiagnostics["rho"];
 
         // Deposit charges in rho:
-        rho.setVal(0.0);
+        m_rho->m_data.setVal(0.0);
         for (auto& particleSpecies : partGr)
         {
             amrex::Real charge = particleSpecies->get_charge();
@@ -117,7 +122,7 @@ public:
                 const auto& particles = pti.GetArrayOfStructs()().data();
                 const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
-                amrex::Array4<amrex::Real> const& rhoarr = rho[pti].array();
+                amrex::Array4<amrex::Real> const& rhoarr = m_rho->m_data[pti].array();
 
                 amrex::ParallelFor(
                     np,
@@ -139,92 +144,71 @@ public:
                     });
             }
         }
-        // get number of ghost cells
-        rho.SumBoundary(0, rho.nComp(), this->m_deRham->get_n_ghost(),
-                        amrex::IntVect(AMREX_D_DECL(0, 0, 0)), infra.m_geom.periodicity());
-        rho.AverageSync(infra.m_geom.periodicity());
-        rho.FillBoundary(infra.m_geom.periodicity());
+        m_rho->post_particle_loop_sync();
 
-        // Add background charge (multiply by volume for 3 form dof) (assuming here it is 1.0.
-        /// @todo: FIX LATER)
-        rho.plus(1.0 * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]),
-                 this->m_deRham->get_n_ghost()[0]);
-
-        amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho, infra, 2);
-
-        amrex::MultiFab* divD;
-        switch (computeMethod)
+        switch (m_computeMethod)
         {
             case ComputeMethod::missingNone:
-                divD = fieldsDiagnostics["divD"];
+                update_data(*m_rho, *m_constDivD, infra);
                 break;
             case ComputeMethod::missingD:
-                this->m_deRham->hodge(*m_E, *m_D);
-            case ComputeMethod::missingDivD:
+                this->m_deRham->hodge(*m_constE, *m_D);
                 this->m_deRham->div(*m_D, *m_divD);
-                divD = &(m_divD->m_data);
+                update_data(*m_rho, *m_divD, infra);
+                break;
+            case ComputeMethod::missingDivD:
+                this->m_deRham->div(*m_constD, *m_divD);
+                update_data(*m_rho, *m_divD, infra);
                 break;
         }
-        // Compare rho computed from particles with div D coming from Maxwell
-        divD->minus(rho, 0, divD->nComp(), 0);
-        amrex::Real diffNorm = Gempic::Utils::gempic_norm(*divD, infra, 2);
-        return (diffNorm / rhoNorm);
     }
 
 private:
+    ComputeMethod m_computeMethod;
     /**
      * Selects computation method based on missing fields and the input file switch
      * computeMissingFields
      */
-    ComputeMethod choose_computation_method (
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics)
+    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::GaussError::choose_computation_method()");
         using namespace Forms;
-        if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("divD"))
+        if (fieldMap.count("rho") && fieldMap.count("divD"))
         {
+            this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
+                this->m_deRham, fieldMap["rho"].nComp());
+            this->m_constDivD = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
+                this->m_deRham, fieldMap["divD"].nComp());
             return ComputeMethod::missingNone;
         }
         else if (this->m_computeMissingFields)
         {
-            if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("Dx") &&
-                fieldsDiagnostics.count("Dy") && fieldsDiagnostics.count("Dz"))
+            if (fieldMap.count("rho") && fieldMap.count("Dx") && fieldMap.count("Dy") &&
+                fieldMap.count("Dz"))
             {
-                int srcComp{0};
-                int dstComp{0};
-                int nComps{fieldsDiagnostics["Dx"]->nComp()};
-                this->m_D =
-                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
-                amrex::Copy(this->m_D->m_data[xDir], *fieldsDiagnostics["Dx"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_D->m_data[yDir], *fieldsDiagnostics["Dy"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_D->m_data[zDir], *fieldsDiagnostics["Dz"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
+                int nComps{fieldMap["Dx"].nComp()};
+                this->m_rho =
+                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
+                this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                    this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
 
                 this->m_divD =
-                    std::make_shared<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
+                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
                 return ComputeMethod::missingDivD;
             }
-            else if (fieldsDiagnostics.count("rho") && fieldsDiagnostics.count("Ex") &&
-                     fieldsDiagnostics.count("Ey") && fieldsDiagnostics.count("Ez"))
+            else if (fieldMap.count("rho") && fieldMap.count("Ex") && fieldMap.count("Ey") &&
+                     fieldMap.count("Ez"))
             {
-                int srcComp{0};
-                int dstComp{0};
-                int nComps{fieldsDiagnostics["Ex"]->nComp()};
-                this->m_E =
-                    std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham);
-                amrex::Copy(this->m_E->m_data[xDir], *fieldsDiagnostics["Ex"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_E->m_data[yDir], *fieldsDiagnostics["Ey"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_E->m_data[zDir], *fieldsDiagnostics["Ez"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
+                int nComps{fieldMap["Ex"].nComp()};
+                this->m_rho =
+                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
+                this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                    this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
 
                 this->m_D =
-                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
+                    std::make_unique<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
                 this->m_divD =
-                    std::make_shared<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
+                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
                 return ComputeMethod::missingD;
             }
             else
@@ -244,6 +228,34 @@ private:
             amrex::Assert("rho or divD not found", "GaussError.H", __LINE__, str.c_str());
         }
         return ComputeMethod::missingNone;  // never reached
+    }
+
+    /**
+     * This function computes the Gauss error by comparing rho computed from particles with
+     * div D coming from Maxwell
+     */
+    void update_data (const Forms::DeRhamField<Grid::dual, Space::cell>& rho,
+                      const Forms::DeRhamField<Grid::dual, Space::cell>& divD,
+                      const ComputationalDomain& infra)
+    {
+        BL_PROFILE("Gempic::Io::GaussError::update_data()");
+        constexpr int noutputs = 3;
+        this->m_data.resize(noutputs, 0.0);
+
+        amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, infra, 2);
+        amrex::Real divDNorm = Gempic::Utils::gempic_norm(divD.m_data, infra, 2);
+
+        amrex::MultiFab difference(divD.m_data.boxArray(), divD.m_data.DistributionMap(),
+                                   divD.m_data.nComp(), 0);
+        int srcComp{0};
+        int dstComp{0};
+        amrex::Copy(difference, divD.m_data, srcComp, dstComp, divD.m_data.nComp(), 0);
+        difference.minus(rho.m_data, srcComp, difference.nComp(), 0);
+        amrex::Real diffNorm = Gempic::Utils::gempic_norm(difference, infra, 2);
+
+        this->m_data[0] = diffNorm;
+        this->m_data[1] = divDNorm;
+        this->m_data[2] = rhoNorm;
     }
 };
 

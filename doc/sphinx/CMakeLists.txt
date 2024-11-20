@@ -1,10 +1,11 @@
 if(GEMPIC_DOCUMENTATION AND DOXYGEN_FOUND)
-  list(APPEND RST_FILES Maxwell_with_discrete_forms.rst multiDdeRhamComplex.rst tests.rst code_units.rst forms_and_operators.rst particleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst)
+  list(APPEND RST_FILES Maxwell_with_discrete_forms.rst multiDdeRhamComplex.rst tests.rst code_units.rst forms_and_operators.rst particleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst)
 
-  #Check whether sphinx exists on the machine. If it does the job will pass, if not it fails 
+  # Search for Python executables, starting with local environments first
   cmake_policy(SET CMP0094 NEW)
   find_package(Python3)
-
+  
+  #Check whether sphinx exists on the machine. If it does the job will pass, if not it fails 
   execute_process(
     COMMAND ${Python3_EXECUTABLE} -c "import sphinx;import breathe"
     RESULT_VARIABLE SPHINX_AND_BREATHE_NOT_FOUND

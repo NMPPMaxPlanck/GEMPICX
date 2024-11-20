@@ -11,10 +11,9 @@
 #include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_MultiFullDiagnostics.H"
-#include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
@@ -77,7 +76,7 @@ int main (int argc, char *argv[])
 
         // Initialize needed propagators/solvers
         Gempic::FieldSolvers::PoissonSolver poisson(deRham, infra);
-        TimeLoop::OperatorHamilton<vDim, degx, degy, degz, hodgeDegree> operatorHamilton;
+        TimeLoop::OperatorHamilton<vDim, degx, degy, degz> operatorHamilton;
 
         // Initialize particle groups
         Io::Parameters params("Particle");
@@ -96,21 +95,13 @@ int main (int argc, char *argv[])
         int nCells = GEMPIC_D_MULT(nCellVector[xDir], nCellVector[yDir], nCellVector[zDir]);
 
         {
-            // Initialize full diagnostics and write initial time step
+            // Initialize diagnostics and write initial time step
             Io::Parameters params("TimeLoop");
             amrex::Real dt;
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            Io::Parameters paramsSim("Sim");
-            auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vDim, nData> fullDiagn(dt);
-            fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, partGr,
-                                nGhost);
-
-            // Initialize reduced diagnostics and write initial time step
-            Io::MultiReducedDiagnostics<vDim, degx, degy, degz, hodgeDegree, nData> redDiagn(
-                deRham);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, partGr);
 
             // Deposit initial charge and compute s0
             for (auto &particleSpecies : partGrLinVlasov)
@@ -200,9 +191,8 @@ int main (int argc, char *argv[])
             deRham->hodge(E, D);
 
             // Write initial time step
-            redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);
-            redDiagn.write_to_file(0, dt);
-            fullDiagn.filter_compute_pack_flush(0);
+            amrex::Real simTime{0.0};
+            diagnostics.compute_and_write_to_file(0, simTime);
 
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
@@ -378,9 +368,8 @@ int main (int argc, char *argv[])
                 deRham->hodge(D, E);
 
                 //write outputs
-                redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);
-                redDiagn.write_to_file(tStep + 1, dt);
-                fullDiagn.filter_compute_pack_flush(tStep + 1);
+                simTime = dt * (tStep + 1);
+                diagnostics.compute_and_write_to_file(tStep + 1, simTime);
 
                 if (tStep % 10 == 0)
                 {

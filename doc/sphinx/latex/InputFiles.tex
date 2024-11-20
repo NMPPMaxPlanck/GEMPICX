@@ -205,6 +205,10 @@ Filter.compensate = 1 # Boolean (1/0). Default 0.
 Controls the behaviour of the full diagnostics module (assuming your simulation has this option).
 \begin{lstlisting}[language=pkgconfig]
 # FullDiagnostics class options
+# Names of individual components of fields that have several components.
+# Note that components are not the same as directions.
+# Note that the names are not explicitly given inside the FullDiagnostics scope.
+componentNames.{fieldName} = "density" "total pressure" # String vector. Default "var0" "var1" ...
 
 FullDiagnostics.enable = 1 # Boolean (1/0). Default 0.
 
@@ -215,9 +219,16 @@ FullDiagnostics.groupNames = any group_name yOu want # String vector. No default
 # unless they specify values themselves.
 FullDiagnostics.saveInterval = 55 # Integer. No default.
 
+# Where to save the output files. Overwrites default and is used for each group
+# unless they specify values themselves.
+FullDiagnostics.saveFolder = "FD/1/" # String. Default "FullDiagnostics/".
+
 ## Options for each individual group
+# Where to save the output files for this specific group
+FullDiagnostics.{groupName}.saveFolder = "FD/2/" # String. Default "FullDiagnostics/".
+
 # Prefix to output files
-FullDiagnostics.{groupName}.filePrefix = "." # String. Default "FullDiagnostics/plt_{groupName}".
+FullDiagnostics.{groupName}.filePrefix = "." # String. Default "plt_{groupName}".
 
 # Minimal number of digits of output file names, i.e. rho000001
 FullDiagnostics.{groupName}.fileMinDigits = 5 # Integer. Default 6.
@@ -232,9 +243,9 @@ FullDiagnostics.{groupName}.varNames = Ey Ez Bx # String vector. No default.
 # Format of the output files. Options are "plotfile" (and maybe some day "openPMD")
 FullDiagnostics.{groupName}.format = "plotfile" # String. Default "plotfile".
 
-# Print functor. Only applicable to fields. Options are "raw" and "CellCenter", detmining
+# Output processor. Only applicable to fields. Options are "Raw" and "CellCenter", determining
 # if you want the raw data or the interpolated values of the fields in the cell centers.
-FullDiagnostics.{groupName}.functor = "raw" # String. Default "raw".
+FullDiagnostics.{groupName}.outputProcessor = "Raw" # String. Default "Raw".
 
 # How often to output the diagnostics. Every n time steps.
 FullDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 100.
@@ -259,6 +270,14 @@ ReducedDiagnostics.groupNames = any group_name yOu want # String vector. No defa
 # unless they specify values themselves.
 ReducedDiagnostics.saveInterval = 55 # Integer. No default.
 
+# Where to save the output files. Overwrites default and is used for each group
+# unless they specify values themselves.
+ReducedDiagnostics.saveFolder = "RD/1/" # String. Default "ReducedDiagnostics/".
+
+# File extension of the output files. Overwrites default and is used for each group
+# unless they specify values themselves.
+ReducedDiagnostics.extension = "output" # String. Default "txt".
+
 ## Options for each individual group
 # Names of the variables in this group to output. Options are:
 # Particle ElecFieldEnergy MagFieldEnergy GaussError
@@ -267,13 +286,26 @@ ReducedDiagnostics.{groupName}.types = Particle GaussError # String vector. No d
 # How often to output the diagnostics. Every n time steps.
 ReducedDiagnostics.{groupName}.saveInterval = 10 # Integer. Default 1.
 
-# Where to save the output file
-ReducedDiagnostics.{groupName}.path = "Data/Values/" # String. Default "ReducedDiagnostics/".
+# Where to save the output file of this specific group
+ReducedDiagnostics.{groupName}.saveFolder = "RD/2/" # String. Default "ReducedDiagnostics/".
 
-# File extension of the output file
-ReducedDiagnostics.{groupName}.extension = "output" # String. Default "txt".
+# Name of output file of this specific group. Can include extension, which will be
+# overwritten by the .extension parameter if given.
+ReducedDiagnostics.{groupName}.fileName = lottery_numbers # String. Default {groupName}.
+
+# File extension of the output file of this specific group
+ReducedDiagnostics.{groupName}.extension = "output_special" # String. Default "txt".
 
 \end{lstlisting}
+
+\subsection{Parameters}
+The Parameters class itself has the setting to print a new input file with all of the parameters used in the simulation.\\
+For this to have any effect, however, one must call \lstinline|Parameters::set_print_output(true);| in the simulation \emph{before the first Parameters object is initialized}.
+\begin{lstlisting}[language=pkgconfig]
+# Parameters parameters
+outputFile = "simulationParameters.input"
+\end{lstlisting}
+
 \subsection{Particle}
 Particle input variables are divided into species with subscopes given by user provided \verb|speciesNames|:
 \begin{lstlisting}[language=pkgconfig]
@@ -324,6 +356,9 @@ Putting it all together, an input file might look like this:
 # Input file for adiabatic slab simulation
 simName = "test_adiabatic_slab"
 
+# output file with read and computed parameters
+outputFile = "test_adiabatic_slab_parameters.input"
+
 # Grid parameters
 nCellVector = 128 8 8
 maxGridSizeVector = 32 8 8
@@ -368,14 +403,13 @@ FullDiagnostics.enable = 1
 FullDiagnostics.groupNames = part_test Ez_raw plots 
 
 FullDiagnostics.part_test.varNames = ions
-FullDiagnostics.part_test.functor = raw
 
 FullDiagnostics.plots.varNames = Ey Ez Bx
-FullDiagnostics.plots.functor = CellCenter
+FullDiagnostics.plots.outputProcessor = CellCenter
 
 FullDiagnostics.Ez_raw.varNames = Ez
 FullDiagnostics.Ez_raw.saveInterval = 50
-FullDiagnostics.Ez_raw.functor = raw
+FullDiagnostics.Ez_raw.outputProcessor = Raw
 
 # Reduced Diagnostics 
 ReducedDiagnostics.groupNames = PartDiag FieldDiag GaussErr 

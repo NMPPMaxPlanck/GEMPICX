@@ -31,7 +31,6 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (const int polyIndex,
                                             const amrex::Real dx,
                                             const amrex::Real y)
 {
-    BL_PROFILE("Gempic::Forms::eval_lagrange()");
     amrex::GpuArray<amrex::Real, degree> vals;
     amrex::GpuArray<amrex::Real, degree> nodes;
     for (int j = 0; j < degree; ++j)
@@ -81,7 +80,6 @@ AMREX_GPU_DEVICE amrex::Real eval_edge (const int polyIndex,
                                         const amrex::Real dx,
                                         const amrex::Real y)
 {
-    BL_PROFILE("Gempic::Forms::eval_edge()");
     amrex::Real val = 0;
     amrex::Real diff = y - xk;
     switch (degree)

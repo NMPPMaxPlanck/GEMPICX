@@ -10,14 +10,54 @@
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
+#include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Sampler.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
+
+#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
 
 namespace
 {
 using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
+
+template <int vdim, int ndata, int degx, int degy, int degz>
+void update_rho (ComputationalDomain& infra,
+                 const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
+                 DeRhamField<Grid::dual, Space::cell>& rho)
+{
+    rho.m_data.setVal(0.0);
+    // Deposit initial charge
+    for (int spec = 0; spec < partGr.size(); spec++)
+    {
+        amrex::Real charge = partGr[spec]->get_charge();
+
+        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid(); ++pti)
+        {
+            const long np = pti.numParticles();
+            auto* const particles = pti.GetArrayOfStructs()().data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+
+            amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[pti].array();
+
+            amrex::ParallelFor(np,
+                               [=] AMREX_GPU_DEVICE(long pp)
+                               {
+                                   amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
+                                   for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                   {
+                                       positionParticle[d] = particles[pp].pos(d);
+                                   }
+                                   ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
+                                       positionParticle, infra.m_plo, infra.m_dxi);
+                                   ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline,
+                                                                            charge * weight[pp]);
+                               });
+        }
+    }
+    rho.post_particle_loop_sync();
+}
 
 class ReducedDiagnosticsTest : public testing::Test
 {
@@ -106,16 +146,18 @@ protected:
         // Parse reduced diagnostics
         amrex::ParmParse ppRedDiag("ReducedDiagnostics");
         amrex::Vector<std::string> reducedDiagsNames{"PartDiag", "FieldElec", "FieldMag",
-                                                     "GaussError"};
+                                                     "FieldCurrent", "GaussError"};
         int saveReduced{1};
         std::string fieldElecType{"ElecFieldEnergy"};
         std::string fieldMagType{"MagFieldEnergy"};
+        std::string fieldCurrentType{"CurrentFieldEnergy"};
         std::string partDiagType{"Particle"};
         std::string gaussErrorType{"GaussError"};
         ppRedDiag.addarr("groupNames", reducedDiagsNames);
         ppRedDiag.add("saveInterval", saveReduced);
         ppRedDiag.add("FieldElec.types", fieldElecType);
         ppRedDiag.add("FieldMag.types", fieldMagType);
+        ppRedDiag.add("FieldCurrent.types", fieldCurrentType);
         ppRedDiag.add("PartDiag.types", partDiagType);
         ppRedDiag.add("GaussError.types", gaussErrorType);
     }
@@ -144,12 +186,13 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
     DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
     DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
+    DeRhamField<Grid::primal, Space::edge> jField(deRham, funcE, "JField");
+    DeRhamField<Grid::dual, Space::face> jFieldT(deRham, funcE, "JFieldT");
 
     // Initialize reduced diagnostics
-    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, hodgeDegree, 1> redDiagn(deRham);
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham);
     // Compute and write reduced diagnostics
-    redDiagn.compute_diags(m_infra, deRham->m_fieldsDiagnostics, m_particles);
-    redDiagn.write_to_file(0, 1.0);
+    redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
     // check electric field diagnostics
     // Compare with the analytical values for the fields that we have defined above
@@ -177,6 +220,19 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     EXPECT_NEAR(by2, 0.5, 1e-7);
     EXPECT_NEAR(bz2, 0.5, 1e-7);
 
+    // check current field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputCurrent("ReducedDiagnostics/FieldCurrent.txt");
+    std::getline(inputCurrent, line);  // first line not used
+    std::getline(inputCurrent, line);
+    std::stringstream splitLineJ(line);
+    double jx2, jy2, jz2;
+    splitLineJ >> step >> t >> jx2 >> jy2 >> jz2;
+    // precision is not high as coarse grid is used as well as not periodic functions
+    EXPECT_NEAR(jx2, 0.25, 0.01);
+    EXPECT_NEAR(jy2, 0.25, 0.01);
+    EXPECT_NEAR(jz2, 0.125, 0.01);
+
     // check particle diagnostics
     // formulas for computing the exact values of the moments that are needed
     // are given in the file test_sampler.cpp
@@ -196,8 +252,272 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     std::getline(inputGauss, line);  // first line not used
     std::getline(inputGauss, line);
     std::stringstream splitLineGauss(line);
-    double error{0.0};
-    splitLineGauss >> step >> t >> error;
-    EXPECT_NEAR(error, 1.0, 1e-12);  // actual error not checked
+    double error;
+    double divDNorm;
+    double readRhoNorm;
+    splitLineGauss >> step >> t >> error >> divDNorm >> readRhoNorm;
+    EXPECT_NEAR(error / readRhoNorm, 1.0, 1e-12);  // actual error not checked
 }
+
+class ReducedDiagnosticsMissingFieldsTest : public ReducedDiagnosticsTest
+{
+protected:
+    static constexpr amrex::Real s_m_densityFieldFactor{0.5};
+    static void SetUpTestSuite ()
+    {
+        ReducedDiagnosticsTest::SetUpTestSuite();
+
+        amrex::ParmParse pp;
+        pp.add("Function.DensityField", std::to_string(s_m_densityFieldFactor));
+        pp.add("Function.DensityFieldInv", std::to_string(s_m_densityFieldFactor));
+
+        amrex::ParmParse ppRedDiag("ReducedDiagnostics");
+        ppRedDiag.add("computeMissingFields", 1);
+        amrex::Vector<std::string> reducedDiagsNames{"PartDiagMissing", "FieldElecMissing",
+                                                     "FieldMagMissing", "FieldCurrentMissing",
+                                                     "GaussErrorMissing"};
+        ppRedDiag.addarr("groupNames", reducedDiagsNames);
+        std::string fieldElecType{"ElecFieldEnergy"};
+        std::string fieldMagType{"MagFieldEnergy"};
+        std::string fieldCurrentType{"CurrentFieldEnergy"};
+        std::string partDiagType{"Particle"};
+        std::string gaussErrorType{"GaussError"};
+        ppRedDiag.addarr("groupNames", reducedDiagsNames);
+        ppRedDiag.add("FieldElecMissing.types", fieldElecType);
+        ppRedDiag.add("FieldMagMissing.types", fieldMagType);
+        ppRedDiag.add("FieldCurrentMissing.types", fieldCurrentType);
+        ppRedDiag.add("PartDiagMissing.types", partDiagType);
+        ppRedDiag.add("GaussErrorMissing.types", gaussErrorType);
+    }
+};
+
+TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
+{
+    constexpr int hodgeDegree{2};
+
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
+    [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
+
+    DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
+    DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
+    DeRhamField<Grid::dual, Space::face> jFieldT(deRham, funcE, "JFieldT");
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
+
+    // Initialize reduced diagnostics
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn{deRham};
+
+    // Compute and write reduced diagnostics
+    redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
+
+    // check electric field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputElec("ReducedDiagnostics/FieldElecMissing.txt");
+    std::string line;
+    std::getline(inputElec, line);  // first line not used
+    std::getline(inputElec, line);
+    std::stringstream splitLine(line);
+    double step, t, ex2, ey2, ez2;
+    splitLine >> step >> t >> ex2 >> ey2 >> ez2;
+    // precision is not high as coarse grid is used as well as not periodic functions
+    EXPECT_NEAR(ex2, 0.25, 0.01);
+    EXPECT_NEAR(ey2, 0.25, 0.02);
+    EXPECT_NEAR(ez2, 0.125, 0.02);
+
+    // check magnetic field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputMag("ReducedDiagnostics/FieldMagMissing.txt");
+    std::getline(inputMag, line);  // first line not used
+    std::getline(inputMag, line);
+    std::stringstream splitLineB(line);
+    double bx2, by2, bz2;
+    splitLineB >> step >> t >> bx2 >> by2 >> bz2;
+    EXPECT_NEAR(bx2, 1.0, 0.1);
+    EXPECT_NEAR(by2, 0.5, 1e-7);
+    EXPECT_NEAR(bz2, 0.5, 1e-7);
+
+    // check current field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputCurrent("ReducedDiagnostics/FieldCurrentMissing.txt");
+    std::getline(inputCurrent, line);  // first line not used
+    std::getline(inputCurrent, line);
+    std::stringstream splitLineJ(line);
+    double jx2, jy2, jz2;
+    splitLineJ >> step >> t >> jx2 >> jy2 >> jz2;
+    // precision is not high as coarse grid is used as well as not periodic functions
+    EXPECT_NEAR(jx2, 0.25 * s_m_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jy2, 0.25 * s_m_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jz2, 0.125 * s_m_densityFieldFactor, 0.01);
+
+    // check particle diagnostics
+    // formulas for computing the exact values of the moments that are needed
+    // are given in the file test_sampler.cpp
+    std::ifstream inputPart("ReducedDiagnostics/PartDiagMissing.txt");
+    std::getline(inputPart, line);  // first line not used
+    std::getline(inputPart, line);
+    std::stringstream splitLinePart(line);
+    double px, py, pz, kin;
+    splitLinePart >> step >> t >> px >> py >> pz >> kin;
+    EXPECT_NEAR(px, -1.0, 0.1);
+    EXPECT_NEAR(py, 1.0, 0.1);
+    EXPECT_NEAR(pz, 2.0, 0.1);
+    EXPECT_NEAR(kin, 10.0, 0.1);
+
+    // Test Gauss error (extra work because analytical field doesn't correspond to particles)
+    ///todo: This is not a good test because it focuses too much on internals of GEMPIC_GaussError
+    ///      It would be better to provide a D such that divD is equal to rho _with_ background.
+    DeRhamField<Grid::primal, Space::edge> E(deRham);
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
+    amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, m_infra, 2);
+
+    // extra work because poisson solver removes background
+    amrex::Real rhoSum = rho.m_data.sum_unique(0, false, m_infra.m_geom.periodicity());
+    amrex::Real ninv =
+        1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir], m_infra.m_nCell[zDir]);
+    amrex::Real rhoSumNinv = rhoSum * ninv;
+
+    auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
+    FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
+                                    DeRhamField<Grid::primal, Space::node>,
+                                    FieldSolvers::Operator::poissonInverseHodge>
+        cgPoisson(deRham, poisson);
+    cgPoisson.solve(rho, phi);
+    deRham->grad(phi, E);
+    E *= -1.0;
+    deRham->hodge(E, D);
+
+    redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
+
+    DeRhamField<Grid::dual, Space::cell> rhoBackground(deRham);
+    rhoBackground += rhoSumNinv;
+    amrex::Real rhoBackgroundNorm = Gempic::Utils::gempic_norm(rhoBackground.m_data, m_infra, 2);
+
+    std::ifstream inputGauss("ReducedDiagnostics/GaussErrorMissing.txt");
+    std::getline(inputGauss, line);  // first line not used
+    std::getline(inputGauss, line);
+    std::getline(inputGauss, line);  // skip first time step
+    std::stringstream splitLineGauss(line);
+    double error;
+    double divDNorm;
+    double readRhoNorm;
+    splitLineGauss >> step >> t >> error >> divDNorm >> readRhoNorm;
+    EXPECT_NEAR(error / readRhoNorm, rhoBackgroundNorm / rhoNorm, 1e-12);
+}
+
+TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
+{
+    constexpr int hodgeDegree{2};
+
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
+    [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
+
+    DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
+    DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
+    DeRhamField<Grid::primal, Space::edge> jField(deRham, funcE, "JField");
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
+
+    // Initialize reduced diagnostics
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham);
+    // Compute and write reduced diagnostics
+    redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
+
+    // check electric field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputElec("ReducedDiagnostics/FieldElecMissing.txt");
+    std::string line;
+    std::getline(inputElec, line);  // first line not used
+    std::getline(inputElec, line);
+    std::stringstream splitLine(line);
+    double step, t, ex2, ey2, ez2;
+    splitLine >> step >> t >> ex2 >> ey2 >> ez2;
+    // precision is not high as coarse grid is used as well as not periodic functions
+    EXPECT_NEAR(ex2, 0.25, 0.02);
+    EXPECT_NEAR(ey2, 0.25, 0.02);
+    EXPECT_NEAR(ez2, 0.125, 0.01);
+
+    // check magnetic field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputMag("ReducedDiagnostics/FieldMagMissing.txt");
+    std::getline(inputMag, line);  // first line not used
+    std::getline(inputMag, line);
+    std::stringstream splitLineB(line);
+    double bx2, by2, bz2;
+    splitLineB >> step >> t >> bx2 >> by2 >> bz2;
+    EXPECT_NEAR(bx2, 1.0, 0.1);
+    EXPECT_NEAR(by2, 0.5, 1e-7);
+    EXPECT_NEAR(bz2, 0.5, 1e-7);
+
+    // check current field diagnostics
+    // Compare with the analytical values for the fields that we have defined above
+    std::ifstream inputCurrent("ReducedDiagnostics/FieldCurrentMissing.txt");
+    std::getline(inputCurrent, line);  // first line not used
+    std::getline(inputCurrent, line);
+    std::stringstream splitLineJ(line);
+    double jx2, jy2, jz2;
+    splitLineJ >> step >> t >> jx2 >> jy2 >> jz2;
+    // precision is not high as coarse grid is used as well as not periodic functions
+    EXPECT_NEAR(jx2, 0.25 * s_m_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jy2, 0.25 * s_m_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jz2, 0.125 * s_m_densityFieldFactor, 0.01);
+
+    // check particle diagnostics
+    // formulas for computing the exact values of the moments that are needed
+    // are given in the file test_sampler.cpp
+    std::ifstream inputPart("ReducedDiagnostics/PartDiagMissing.txt");
+    std::getline(inputPart, line);  // first line not used
+    std::getline(inputPart, line);
+    std::stringstream splitLinePart(line);
+    double px, py, pz, kin;
+    splitLinePart >> step >> t >> px >> py >> pz >> kin;
+    EXPECT_NEAR(px, -1.0, 0.1);
+    EXPECT_NEAR(py, 1.0, 0.1);
+    EXPECT_NEAR(pz, 2.0, 0.1);
+    EXPECT_NEAR(kin, 10.0, 0.1);
+
+    // Test Gauss error (extra work because analytical field doesn't correspond to particles)
+    ///todo: This is not a good test because it focuses too much on internals of GEMPIC_GaussError
+    ///      It would be better to provide a D such that divD is equal to rho _with_ background.
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
+    amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, m_infra, 2);
+
+    // extra work because poisson solver removes background
+    amrex::Real rhoSum = rho.m_data.sum_unique(0, false, m_infra.m_geom.periodicity());
+    amrex::Real ninv =
+        1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir], m_infra.m_nCell[zDir]);
+    amrex::Real rhoSumNinv = rhoSum * ninv;
+
+    auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
+    FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
+                                    DeRhamField<Grid::primal, Space::node>,
+                                    FieldSolvers::Operator::poissonInverseHodge>
+        cgPoisson(deRham, poisson);
+    cgPoisson.solve(rho, phi);
+    deRham->grad(phi, E);
+    E *= -1.0;
+
+    redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
+
+    DeRhamField<Grid::dual, Space::cell> rhoBackground(deRham);
+    rhoBackground += rhoSumNinv;
+    amrex::Real rhoBackgroundNorm = Gempic::Utils::gempic_norm(rhoBackground.m_data, m_infra, 2);
+
+    std::ifstream inputGauss("ReducedDiagnostics/GaussErrorMissing.txt");
+    std::getline(inputGauss, line);  // first line not used
+    std::getline(inputGauss, line);
+    std::getline(inputGauss, line);  // skip first time step
+    std::stringstream splitLineGauss(line);
+    double error;
+    double divDNorm;
+    double readRhoNorm;
+    splitLineGauss >> step >> t >> error >> divDNorm >> readRhoNorm;
+    EXPECT_NEAR(error / readRhoNorm, rhoBackgroundNorm / rhoNorm, 1e-12);
+}
+
 }  // namespace

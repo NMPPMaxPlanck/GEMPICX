@@ -16,15 +16,16 @@ public:
 
     /** Flush fields and particles to file */
     virtual void write_to_file(
-        const amrex::Vector<std::string> varnames,
+        const amrex::Vector<std::string>& varnames,
         const amrex::MultiFab& mf,
         amrex::Geometry& geom,
         const int iteration,
         const double time,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> particles,
+        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>&
+            particles,
         int nlev,
-        const std::string prefix,
-        const int fileMinDigits,
+        const std::string& prefix,
+        int fileMinDigits,
         bool plotParticles,
         int bufferID = 1,
         int numBuffers = 1) const = 0;

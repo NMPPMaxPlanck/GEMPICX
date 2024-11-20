@@ -44,10 +44,9 @@ FullDiagnostics.groupNames = part field
 
 FullDiagnostics.part.varNames = ions # default name for a particle group
 FullDiagnostics.part.saveInterval = 10000
-FullDiagnostics.part.functor = raw
 
 FullDiagnostics.field.varNames = rho Ex 
-FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter 
 FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics

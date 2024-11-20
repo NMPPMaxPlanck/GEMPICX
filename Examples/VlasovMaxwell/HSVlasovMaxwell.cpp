@@ -11,10 +11,9 @@
 #include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_MultiFullDiagnostics.H"
-#include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
@@ -74,7 +73,7 @@ int main (int argc, char *argv[])
         ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
                           DeRhamField<Grid::primal, Space::node>, Operator::poisson>
             cgPoisson(deRham, poisson);
-        Gempic::TimeLoop::OperatorHamilton<vdim, degx, degy, degz, hodgeDegree> operatorHamilton;
+        Gempic::TimeLoop::OperatorHamilton<vdim, degx, degy, degz> operatorHamilton;
 
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
@@ -87,12 +86,8 @@ int main (int argc, char *argv[])
             int nSteps;
             params.get("nSteps", nSteps);
 
-            auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt);
-            fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, partGr,
-                                nGhost);
-            // Initialize reduced diagnostics
-            Io::MultiReducedDiagnostics<vdim, degx, degy, degz, hodgeDegree, 1> redDiagn(deRham);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, partGr);
+
             // Deposit initial charge
             rho.m_data.setVal(0.0);
 
@@ -148,9 +143,8 @@ int main (int argc, char *argv[])
             // compute div D for diagnostics
             deRham->div(D, divD);
 
-            redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);
-            redDiagn.write_to_file(0, dt);
-            fullDiagn.filter_compute_pack_flush(0);
+            amrex::Real simTime{0.0};
+            diagnostics.compute_and_write_to_file(0, simTime);
 
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
@@ -250,7 +244,6 @@ int main (int argc, char *argv[])
                         auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
                         auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
                         auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
                         amrex::Array4<amrex::Real> rhoarr;
@@ -295,9 +288,8 @@ int main (int argc, char *argv[])
 
                 // compute rho and div D for diagnostics
                 deRham->div(D, divD);
-                redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, partGr);
-                redDiagn.write_to_file(tStep + 1, dt);
-                fullDiagn.filter_compute_pack_flush(tStep + 1);
+                simTime = dt * (tStep + 1);
+                diagnostics.compute_and_write_to_file(tStep + 1, simTime);
 
                 amrex::Print() << "finished time-step: " << tStep << std::endl;
             }

@@ -25,12 +25,14 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the field energy.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata>
-class ElecFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int ndata>
+class ElecFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
-    std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
-    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
+    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
+    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::edge>> m_constE;
+    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constD;
 
     enum class ComputeMethod
     {
@@ -44,9 +46,13 @@ public:
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    ElecFieldEnergy(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
+    ElecFieldEnergy(const std::string& rdName,
+                    int& indexNum,
+                    bool isLastType,
+                    const std::string& fileName) :
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -54,8 +60,7 @@ public:
             if (this->m_isNotRestart)
             {
                 // open file
-                std::ofstream ofs{this->m_path + this->m_rdName + "." + this->m_extension,
-                                  std::ofstream::out | std::ofstream::app};
+                std::ofstream ofs{this->m_path, std::ofstream::out | std::ofstream::app};
                 // write header row
                 if (this->m_isFirstType)
                 {
@@ -82,141 +87,84 @@ public:
     // end constructor
 
     /**
+     * function to initialize data after amr levels are initialized.
+     */
+    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf) final
+    {
+        BL_PROFILE("Gempic::Io::ElecFieldEnergy::init_data()");
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, cmf);
+        m_computeMethod = choose_computation_method(this->m_deRham->m_fieldsDiagnostics);
+    }
+
+    /**
      * This function computes the electric field energy (EF) component wise:
      * epref_ep0 is the vacuum permittivity
      */
     void compute_diags (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>&) final
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::compute_diags()");
-        static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};
 
-        constexpr int noutputs = 3;
-        this->m_data.resize(noutputs, 0.0);
-
-        std::unique_ptr<amrex::iMultiFab> maskX;
-        std::unique_ptr<amrex::iMultiFab> maskY;
-        std::unique_ptr<amrex::iMultiFab> maskZ;
-
-        switch (computeMethod)
+        switch (m_computeMethod)
         {
             case ComputeMethod::missingNone:
-                maskX = amrex::OwnerMask(*fieldsDiagnostics["Ex"], infra.m_geom.periodicity());
-                this->m_data[xDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Ex"], 0,
-                                               *fieldsDiagnostics["Dx"], 0,
-                                               fieldsDiagnostics["Ex"]->nComp(), 0, 0);
-                maskY = amrex::OwnerMask(*fieldsDiagnostics["Ey"], infra.m_geom.periodicity());
-                this->m_data[yDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Ey"], 0,
-                                               *fieldsDiagnostics["Dy"], 0,
-                                               fieldsDiagnostics["Ey"]->nComp(), 0, 0);
-                maskZ = amrex::OwnerMask(*fieldsDiagnostics["Ez"], infra.m_geom.periodicity());
-                this->m_data[zDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Ez"], 0,
-                                               *fieldsDiagnostics["Dz"], 0,
-                                               fieldsDiagnostics["Ez"]->nComp(), 0, 0);
+                update_data(*m_constE, *m_constD, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingD:
-                this->m_deRham->hodge(*m_E, *m_D);
-                maskX = amrex::OwnerMask(*fieldsDiagnostics["Ex"], infra.m_geom.periodicity());
-                this->m_data[xDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Ex"], 0,
-                                               m_D->m_data[xDir], 0,
-                                               fieldsDiagnostics["Ex"]->nComp(), 0, 0);
-                maskY = amrex::OwnerMask(*fieldsDiagnostics["Ey"], infra.m_geom.periodicity());
-                this->m_data[yDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Ey"], 0,
-                                               m_D->m_data[yDir], 0,
-                                               fieldsDiagnostics["Ey"]->nComp(), 0, 0);
-                maskZ = amrex::OwnerMask(*fieldsDiagnostics["Ez"], infra.m_geom.periodicity());
-                this->m_data[zDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Ez"], 0,
-                                               m_D->m_data[zDir], 0,
-                                               fieldsDiagnostics["Ez"]->nComp(), 0, 0);
+                this->m_deRham->hodge(*m_constE, *m_D);
+                update_data(*m_constE, *m_D, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingE:
-                this->m_deRham->hodge(*m_D, *m_E);
-                maskX = amrex::OwnerMask(*fieldsDiagnostics["Dx"], infra.m_geom.periodicity());
-                this->m_data[xDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["Dx"], 0,
-                                               m_E->m_data[xDir], 0,
-                                               fieldsDiagnostics["Dx"]->nComp(), 0, 0);
-                maskY = amrex::OwnerMask(*fieldsDiagnostics["Dy"], infra.m_geom.periodicity());
-                this->m_data[yDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["Dy"], 0,
-                                               m_E->m_data[yDir], 0,
-                                               fieldsDiagnostics["Dy"]->nComp(), 0, 0);
-                maskZ = amrex::OwnerMask(*fieldsDiagnostics["Dz"], infra.m_geom.periodicity());
-                this->m_data[zDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["Dz"], 0,
-                                               m_E->m_data[zDir], 0,
-                                               fieldsDiagnostics["Dz"]->nComp(), 0, 0);
+                this->m_deRham->hodge(*m_constD, *m_E);
+                update_data(*m_E, *m_constD, infra.m_geom.periodicity());
                 return;
         }
     }
     // end void ElecFieldEnergy::ComputeDiags
 
 private:
+    ComputeMethod m_computeMethod;
+
     /**
      * Selects computation method based on missing fields and the input file switch
      * compute_missing_fields
      */
-    ComputeMethod choose_computation_method (
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics)
+    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::choose_computation_method()");
         using namespace Forms;
-        if (fieldsDiagnostics.count("Dx") && fieldsDiagnostics.count("Dy") &&
-            fieldsDiagnostics.count("Dz") && fieldsDiagnostics.count("Ex") &&
-            fieldsDiagnostics.count("Ey") && fieldsDiagnostics.count("Ez"))
+        if (fieldMap.count("Dx") && fieldMap.count("Dy") && fieldMap.count("Dz") &&
+            fieldMap.count("Ex") && fieldMap.count("Ey") && fieldMap.count("Ez"))
         {
+            this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
+            this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
             return ComputeMethod::missingNone;
         }
         else if (this->m_computeMissingFields)
         {
-            if (fieldsDiagnostics.count("Ex") && fieldsDiagnostics.count("Ey") &&
-                fieldsDiagnostics.count("Ez") &&
-                (!fieldsDiagnostics.count("Dx") || !fieldsDiagnostics.count("Dy") ||
-                 !fieldsDiagnostics.count("Dz")))
+            if (fieldMap.count("Ex") && fieldMap.count("Ey") && fieldMap.count("Ez") &&
+                (!fieldMap.count("Dx") || !fieldMap.count("Dy") || !fieldMap.count("Dz")))
             {
-                int srcComp{0};
-                int dstComp{0};
-                int nComps{fieldsDiagnostics["Ex"]->nComp()};
-                this->m_E = std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
-                                                                                     nComps);
-                amrex::Copy(this->m_E->m_data[xDir], *fieldsDiagnostics["Ex"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_E->m_data[yDir], *fieldsDiagnostics["Ey"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_E->m_data[zDir], *fieldsDiagnostics["Ez"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
+                int nComps{fieldMap["Ex"].nComp()};
+                this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                    this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
 
                 this->m_D =
-                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
+                    std::make_unique<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
 
                 return ComputeMethod::missingD;
             }
-            else if (fieldsDiagnostics.count("Dx") && fieldsDiagnostics.count("Dy") &&
-                     fieldsDiagnostics.count("Dz") &&
-                     (!fieldsDiagnostics.count("Ex") || !fieldsDiagnostics.count("Ey") ||
-                      !fieldsDiagnostics.count("Ez")))
+            else if (fieldMap.count("Dx") && fieldMap.count("Dy") && fieldMap.count("Dz") &&
+                     (!fieldMap.count("Ex") || !fieldMap.count("Ey") || !fieldMap.count("Ez")))
             {
-                int srcComp{0};
-                int dstComp{0};
-                int nComps{fieldsDiagnostics["Dx"]->nComp()};
-                this->m_D =
-                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
-                amrex::Copy(this->m_D->m_data[xDir], *fieldsDiagnostics["Dx"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_D->m_data[yDir], *fieldsDiagnostics["Dy"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_D->m_data[zDir], *fieldsDiagnostics["Dz"], srcComp, dstComp,
-                            nComps, this->m_deRham->get_n_ghost());
+                int nComps{fieldMap["Dx"].nComp()};
+                this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                    this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
 
-                this->m_E = std::make_shared<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
+                this->m_E = std::make_unique<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
                                                                                      nComps);
 
                 return ComputeMethod::missingE;
@@ -238,6 +186,27 @@ private:
             amrex::Assert("E or D not found", "ElecFieldEnergy.H", __LINE__, str.c_str());
         }
         return ComputeMethod::missingNone;  // never reached
+    }
+
+    /**
+     * This function computes the electric field energy (EF) component wise:
+     * epref_ep0 is the vacuum permittivity
+     */
+    void update_data (const Forms::DeRhamField<Grid::primal, Space::edge>& fieldE,
+                      const Forms::DeRhamField<Grid::dual, Space::face>& fieldD,
+                      const amrex::Periodicity& periodicity)
+    {
+        BL_PROFILE("Gempic::Io::ElecFieldEnergy::update_data()");
+        constexpr int noutputs = 3;
+        this->m_data.resize(noutputs, 0.0);
+
+        for (int dir = 0; dir < noutputs; dir++)
+        {
+            auto mask = amrex::OwnerMask(fieldE.m_data[dir], periodicity);
+            this->m_data[dir] =
+                0.5 * amrex::MultiFab::Dot(*mask, fieldE.m_data[dir], 0, fieldD.m_data[dir], 0,
+                                           fieldE.m_data[dir].nComp(), 0, 0);
+        }
     }
 };
 
