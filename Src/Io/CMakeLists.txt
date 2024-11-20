@@ -1,1 +1,2 @@
+add_subdirectory(Diagnostics)
 add_subdirectory(Parameters)

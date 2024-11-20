@@ -26,7 +26,7 @@ namespace Impl
  * @tparam SplineType : Necessary for mocking so the function can take mock spline types
  * @tparam vDim : Number of components of J
  *
- * @param jArray[out] : Degrees of freedom of J as dual 2-form
+ * @param[out] jArray : Degrees of freedom of J as dual 2-form
  * @param spline : Object containing spline values and the particle trajectory
  * @param cellIndex : Primitive cell index from spline
  * @param j : sum index for direction pDir1
@@ -345,7 +345,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
 #if GEMPIC_SPACEDIM == 2
     constexpr int degY = splineType::s_splineDegrees[yDir];
 #elif GEMPIC_SPACEDIM == 1
-    constexpr int degY = 0;
     constexpr int k = 0;
     constexpr int yNodeVal = 1;
     constexpr int yCellVal = 1;

@@ -30,13 +30,11 @@ template <unsigned int vdim,
           int degx,
           int degy,
           int degz,
-          int degmw,
           unsigned int ndata,
           bool electromagnetic = true,
           bool profiling = true,
           bool output = true>
-class HSZigZagC2
-    : public Splitting<vdim, degx, degy, degz, degmw, ndata, electromagnetic, profiling>
+class HSZigZagC2 : public Splitting<vdim, degx, degy, degz, ndata, electromagnetic, profiling>
 {
 public:
     void time_loop (std::shared_ptr<FDDeRhamComplex> deRham,
@@ -51,7 +49,7 @@ public:
                     std::vector<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
                     const int nSteps,
                     int strangOrder,
-                    OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) override
+                    OperatorHamilton<vdim, degx, degy, degz> operatorHamilton) override
     {
         BL_PROFILE("Gempic::TimeLoop::HSZigZagC2::time_loop()");
 

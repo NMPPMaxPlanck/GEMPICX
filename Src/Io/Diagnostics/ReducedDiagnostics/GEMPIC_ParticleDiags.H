@@ -30,8 +30,8 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the Momentum and Kinetic Energy.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata>
-class Particle : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int ndata>
+class Particle : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
     /**
@@ -39,9 +39,13 @@ public:
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    Particle(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
+    Particle(const std::string& rdName,
+             int& indexNum,
+             bool isLastType,
+             const std::string& fileName) :
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::Particle::Particle()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -49,8 +53,7 @@ public:
             if (this->m_isNotRestart)
             {
                 // open file
-                std::ofstream ofs{this->m_path + this->m_rdName + "." + this->m_extension,
-                                  std::ofstream::out | std::ofstream::app};
+                std::ofstream ofs{this->m_path, std::ofstream::out | std::ofstream::app};
                 // write header row
                 if (this->m_isFirstType)
                 {
@@ -82,9 +85,9 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr) final
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
+        final
     {
         BL_PROFILE("Gempic::Io::Particle::compute_diags()");
         constexpr int noutputs = 4;
@@ -136,8 +139,8 @@ public:
  *  This class mainly contains a function that
  *  computes the Momentum and Kinetic Energy for LinVlasov Model.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata>
-class ParticleLinVlasov : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int ndata>
+class ParticleLinVlasov : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
     /**
@@ -145,17 +148,20 @@ public:
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    ParticleLinVlasov(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
+    ParticleLinVlasov(const std::string& rdName,
+                      int& indexNum,
+                      bool isLastType,
+                      const std::string& fileName) :
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
             {
                 // open file
-                std::ofstream ofs{this->m_path + this->m_rdName + "." + this->m_extension,
-                                  std::ofstream::out | std::ofstream::app};
+                std::ofstream ofs{this->m_path, std::ofstream::out | std::ofstream::app};
                 // write header row
                 if (this->m_isFirstType)
                 {
@@ -183,9 +189,9 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr) final
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
+        final
     {
         constexpr int noutputs = 2;
         this->m_data.assign(noutputs, 0.0);

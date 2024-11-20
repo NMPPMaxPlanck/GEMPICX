@@ -35,25 +35,30 @@ namespace Gempic::Io
  * general functions to initialize, compute, and write these diagnostics
  * to file.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata = 1>
+template <int vdim, int degx, int degy, int degz, int ndata = 1>
 class MultiReducedDiagnostics
 {
 public:
-    /// Bool: whether or not reduced diagnostics are activated
-    int m_plotRd = 0;
+    /// whether or not reduced diagnostics are activated
+    bool m_plotRd = false;
 
-    /// names of reduced diagnostics
+    /// names of reduced diagnostics groups
     std::vector<std::string> m_rdNames;
 
-    /// save freq
+    /// save frequency
     std::vector<int> m_saveIntervals = {1};
 
+    /// save location
+    std::vector<std::string> m_saveFolder = {"ReducedDiagnostics"};
+
+    /// output extension (default)
+    std::string m_extension = "txt";
+
     /// create fields needed for computations if they are missing
-    bool m_computeMissingFields = false;
+    std::vector<bool> m_computeMissingFields = {false};
 
     /// m_multi_rd stores a pointer to each reduced diagnostics
-    std::vector<
-        std::vector<std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>>>>
+    std::vector<std::vector<std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, ndata>>>>
         m_multiRds;
 
     /// constructor
@@ -83,7 +88,7 @@ public:
         {
             for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
             {
-                m_multiRds[iRd][iType]->init_data(drc, m_computeMissingFields);
+                m_multiRds[iRd][iType]->init_data(drc, m_computeMissingFields[iRd]);
             }
         }
     }
@@ -105,34 +110,30 @@ public:
 
     /** Loop over all ReducedDiagnostics and call their ComputeDiags */
     void compute_diags (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::compute_diags()");
         if (!m_plotRd)
         {
             return;
         }
-        // GEMPIC_PROFILE("MultiReducedDiagnostics::ComputeDiags()");
 
         // loop over all reduced diags
         for (size_t iRd{0}; iRd < m_rdNames.size(); ++iRd)
         {
             for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
             {
-                m_multiRds[iRd][iType]->compute_diags(infra, fieldsDiagnostics, partGr);
+                m_multiRds[iRd][iType]->compute_diags(infra, partGr);
             }
         }
-        // end loop over all reduced diags
     }
 
-    /** Loop over all ReducedDiagnostics and call their WriteToFile */
-    void write_to_file (int step, amrex::Real dt)
+    /** Loop over all ReducedDiagnostics and call their write_to_file */
+    void write_to_file (int step, amrex::Real simTime)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::write_to_file()");
-        // Only the I/O rank does
-        if (!amrex::ParallelDescriptor::IOProcessor() || !m_plotRd)
+        if (!m_plotRd)
         {
             return;
         }
@@ -144,12 +145,37 @@ public:
             {
                 for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
                 {
-                    // call the write to file function
-                    m_multiRds[iRd][iType]->write_to_file(dt, step);
+                    m_multiRds[iRd][iType]->write_to_file(step, simTime);
                 }
             }
         }
-        // end loop over all reduced diags
+    }
+
+    /** Loop over all ReducedDiagnostics, update and call their write_to_file */
+    void compute_and_write_to_file (
+        int step,
+        amrex::Real simTime,
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr,
+        bool forceWrite = false)
+    {
+        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::update_and_write_to_file()");
+        if (!m_plotRd)
+        {
+            return;
+        }
+        // loop over all reduced diags
+        for (size_t iRd = 0; iRd < m_rdNames.size(); ++iRd)
+        {
+            if (forceWrite || (step) % m_saveIntervals[iRd] == 0)
+            {
+                for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
+                {
+                    m_multiRds[iRd][iType]->compute_diags(infra, partGr);
+                    m_multiRds[iRd][iType]->write_to_file(step, simTime);
+                }
+            }
+        }
     }
 
 private:
@@ -158,7 +184,6 @@ private:
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::read_params()");
         // read reduced diags names
         Parameters ppGempic("ReducedDiagnostics");
-        ppGempic.get_or_set("computeMissingFields", m_computeMissingFields);
         m_plotRd = !ppGempic.get_or_set("groupNames", m_rdNames);
         ppGempic.get_or_set("enable", m_plotRd);
 
@@ -173,10 +198,29 @@ private:
         ppGempic.get_or_set("saveInterval", m_saveIntervals[0]);
         m_saveIntervals.resize(m_rdNames.size(), m_saveIntervals[0]);
 
+        bool defaultCompute{m_computeMissingFields[0]};
+        ppGempic.get_or_set("computeMissingFields", defaultCompute);
+        m_computeMissingFields.resize(m_rdNames.size(), defaultCompute);
+
+        std::string saveFolder{"ReducedDiagnostics"};
+        ppGempic.get_or_set("saveFolder", saveFolder);
+
+        std::string extension{"txt"};
+        ppGempic.get_or_set("extension", extension);
+
+        std::filesystem::path fileName{saveFolder};
+        // user may or may not have provided a '/'
+        fileName.has_parent_path() ? fileName : fileName += "/";
         for (size_t idx{0}; idx < m_rdNames.size(); ++idx)
         {
             Parameters ppRdName("ReducedDiagnostics." + m_rdNames[idx]);
             ppRdName.get_or_set("saveInterval", m_saveIntervals[idx]);
+            bool groupDefaultCompute{m_computeMissingFields[idx]};
+            ppRdName.get_or_set("computeMissingFields", groupDefaultCompute);
+            m_computeMissingFields[idx] = groupDefaultCompute;
+
+            fileName.replace_filename(m_rdNames[idx]);
+            fileName.replace_extension(extension);
 
             // read reduced diags types
             std::vector<std::string> rdTypes;
@@ -191,56 +235,56 @@ private:
                            {
                                bool isLastType{++typeNum == numTypes};
                                return get_diagnostics_type(rdType, m_rdNames[idx], indexNum,
-                                                           isLastType);
+                                                           isLastType, fileName.string());
                            });
         }
-        // end loop over all reduced diags
     }
 
-    std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>>
-    get_diagnostics_type (const std::string& diagType,
-                          const std::string& name,
-                          int& indexNum,
-                          bool isLastType)
+    std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, ndata>> get_diagnostics_type (
+        const std::string& diagType,
+        const std::string& name,
+        int& indexNum,
+        bool isLastType,
+        const std::string& fileName)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::get_diagnostics_type()");
         if (diagType == "ElecFieldEnergy")
         {
-            using ElecEnergy = ElecFieldEnergy<vdim, degx, degy, degz, degree, ndata>;
-            return std::make_unique<ElecEnergy>(name, indexNum, isLastType);
+            using ElecEnergy = ElecFieldEnergy<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<ElecEnergy>(name, indexNum, isLastType, fileName);
         }
         else if (diagType == "MagFieldEnergy")
         {
-            using MagEnergy = MagFieldEnergy<vdim, degx, degy, degz, degree, ndata>;
-            return std::make_unique<MagEnergy>(name, indexNum, isLastType);
+            using MagEnergy = MagFieldEnergy<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<MagEnergy>(name, indexNum, isLastType, fileName);
         }
         else if (diagType == "CurrentFieldEnergy")
         {
-            using CurrentEnergy = CurrentFieldEnergy<vdim, degx, degy, degz, degree, ndata>;
-            return std::make_unique<CurrentEnergy>(name, indexNum, isLastType);
+            using CurrentEnergy = CurrentFieldEnergy<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<CurrentEnergy>(name, indexNum, isLastType, fileName);
         }
         else if (diagType == "GaussError")
         {
-            using GaussErr = GaussError<vdim, degx, degy, degz, degree, ndata>;
-            return std::make_unique<GaussErr>(name, indexNum, isLastType);
+            using GaussErr = GaussError<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<GaussErr>(name, indexNum, isLastType, fileName);
         }
         else if (diagType == "Particle")
         {
-            using Part = Particle<vdim, degx, degy, degz, degree, ndata>;
-            return std::make_unique<Part>(name, indexNum, isLastType);
+            using Part = Particle<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<Part>(name, indexNum, isLastType, fileName);
         }
         else if (diagType == "ParticleLinVlasov")
         {
-            using Part = ParticleLinVlasov<vdim, degx, degy, degz, degree, ndata>;
-            return std::make_unique<Part>(name, indexNum, isLastType);
+            using Part = ParticleLinVlasov<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<Part>(name, indexNum, isLastType, fileName);
         }
         else
         {
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
                 false, diagType + " is not a valid type for reduced diagnostic in group " + name);
             // this is never reached
-            return std::make_unique<ElecFieldEnergy<vdim, degx, degy, degz, degree, ndata>>(
-                name, indexNum, isLastType);
+            return std::make_unique<ElecFieldEnergy<vdim, degx, degy, degz, ndata>>(
+                name, indexNum, isLastType, fileName);
         }
     }
 };

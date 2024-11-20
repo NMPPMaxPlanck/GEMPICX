@@ -85,7 +85,7 @@ using namespace Forms;
  *
  *    where tCC is the matrix of the dual curl operator (mapping dual edge dofs to dual face dofs)
  */
-template <unsigned int vdim, int degx, int degy, int degz, int degmw>
+template <unsigned int vdim, int degx, int degy, int degz>
 class OperatorHamilton
 {
 public:
@@ -94,7 +94,7 @@ public:
      *
      * @tparam SplineType : spline class, for unit testing purposes
      *
-     * @param vel[out] : velocity of the given particle
+     * @param[out] vel : velocity of the given particle
      * @param eA : array of E field coefficients (primal edge dofs)
      * @param spline : object containing the values of non-zero grid splines at the particle
      * position
@@ -141,8 +141,8 @@ public:
      *
      * @tparam dir : direction of the splitting (starting at dir = 0)
      *
-     * @param pos[out] : position of the given particle
-     * @param vel[out] : velocity of the given particle
+     * @param[out] pos : position of the given particle
+     * @param[out] vel : velocity of the given particle
      * @param infra : computational domain
      * @param spline : object containing the values of non-zero grid splines at the particle
      * position
@@ -205,7 +205,7 @@ public:
      *
      * @tparam dir : direction of the splitting (starting at dir = 0)
      *
-     * @param vel[out] : velocity of the given particle
+     * @param[out] vel : velocity of the given particle
      * @param infra : computational domain
      * @param spline : object containing the values of non-zero grid splines at the particle
      * position
@@ -251,8 +251,8 @@ public:
     /**
      * @brief computes different fields in order to solve the ODE system (H_p) for one particle
      *
-     * @param pos[out] : position of the particle
-     * @param vel[out] : velocity of the article
+     * @param[out] pos : position of the particle
+     * @param[out] vel : velocity of the article
      * @param infra : computational domain
      * @param spline : object containing the values of non-zero grid splines at the particle
      * position
@@ -314,7 +314,7 @@ public:
      * @brief solves the ODE (Hb_D) corresponding to H_b part of the Hamiltonian
      * which is the ampere equation without current
      *
-     * @param D[out] : electric field as dual 2-form (modified by the function)
+     * @param[out] D : electric field as dual 2-form (modified by the function)
      * @param deRham : object describing the discrete de Rham sequence
      * @param B : magnetic field as primal 2-form
      * @param H : magnetic field as dual 1-form
@@ -337,7 +337,7 @@ public:
     /**
      * @brief solves equation (He_field), ie the Faraday equation
      *
-     * @param B[out] : magnetic field as primal 2-form (modified by the function)
+     * @param[out] B : magnetic field as primal 2-form (modified by the function)
      * @param deRham : object describing the discrete de Rham sequence
      * @param E : electric field as primal 1-form (temporary field)
      * @param D : electric field as dual 2-form (input of the function)
@@ -361,7 +361,6 @@ template <unsigned int vdim,
           int degx,
           int degy,
           int degz,
-          int degmw,
           unsigned int ndata,
           bool electromagnetic,
           bool profiling>
@@ -381,7 +380,7 @@ public:
         std::vector<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
         const int nSteps,
         int strangOrder,
-        OperatorHamilton<vdim, degx, degy, degz, degmw> operatorHamilton) = 0;
+        OperatorHamilton<vdim, degx, degy, degz> operatorHamilton) = 0;
 };
 
 // Cold plasma step

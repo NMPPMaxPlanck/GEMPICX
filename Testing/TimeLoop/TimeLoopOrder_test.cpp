@@ -134,8 +134,7 @@ public:
         DeRhamField<Grid::dual, Space::edge> H(deRham);
 
         // Advance Maxwell's equations using second-order Hamiltonian Strang splitting
-        Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ, s_hodgeDegree>
-            operatorHamilton;
+        Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
         int nt = 2;  // number of time steps
         amrex::Real dt = 0.001;
         for (int i = 0; i < nt; ++i)

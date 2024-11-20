@@ -11,10 +11,9 @@
 #include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_MultiFullDiagnostics.H"
-#include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
@@ -122,13 +121,7 @@ int main (int argc, char *argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            auto nGhost = deRham->get_n_ghost();
-            Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt);
-            fullDiagn.init_data(infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling, ions,
-                                nGhost);
-
-            // Initialize reduced diagnostics and write initial time step
-            Io::MultiReducedDiagnostics<vdim, degx, degy, degz, hodgeDegree, 1> redDiagn(deRham);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, ions);
 
             // Deposit initial charge
             for (auto &particleSpecies : ions)
@@ -192,9 +185,8 @@ int main (int argc, char *argv[])
             deRham->hodge(E, D);
 
             // Write initial time step
-            redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, ions);
-            redDiagn.write_to_file(0, dt);
-            fullDiagn.filter_compute_pack_flush(0);
+            amrex::Real simTime{0.0};
+            diagnostics.compute_and_write_to_file(0, simTime);
 
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
@@ -348,9 +340,8 @@ int main (int argc, char *argv[])
                 }
                 rho.post_particle_loop_sync();
 
-                redDiagn.compute_diags(infra, deRham->m_fieldsDiagnostics, ions);
-                redDiagn.write_to_file(tStep + 1, dt);
-                fullDiagn.filter_compute_pack_flush(tStep + 1);
+                simTime = dt * (tStep + 1);
+                diagnostics.compute_and_write_to_file(tStep + 1, simTime);
 
                 if (tStep % 10 == 0)
                 {

@@ -43,9 +43,8 @@ FullDiagnostics.enable = 1 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field 
 FullDiagnostics.part.varNames = ions
 FullDiagnostics.part.saveInterval = 1000
-FullDiagnostics.part.functor = raw
 FullDiagnostics.field.varNames = rho Ex phi
-FullDiagnostics.field.functor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter 
 FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics 

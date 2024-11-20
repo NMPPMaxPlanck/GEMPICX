@@ -26,12 +26,14 @@ namespace Gempic::Io
  *  This class mainly contains a function that
  *  computes the field energy.
  */
-template <int vdim, int degx, int degy, int degz, int degree, int ndata>
-class CurrentFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>
+template <int vdim, int degx, int degy, int degz, int ndata>
+class CurrentFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
-    std::shared_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_jField;
-    std::shared_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_jFieldT;
+    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_jField;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_jFieldT;
+    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::edge>> m_constJField;
+    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constJFieldT;
 
     enum class ComputeMethod
     {
@@ -45,9 +47,13 @@ public:
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    CurrentFieldEnergy(std::string rdName, int& indexNum, bool isLastType) :
-        ReducedDiagnostics<vdim, degx, degy, degz, degree, ndata>(rdName, indexNum, isLastType)
+    CurrentFieldEnergy(const std::string& rdName,
+                       int& indexNum,
+                       bool isLastType,
+                       const std::string& fileName) :
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -55,8 +61,7 @@ public:
             if (this->m_isNotRestart)
             {
                 // open file
-                std::ofstream ofs{this->m_path + this->m_rdName + "." + this->m_extension,
-                                  std::ofstream::out | std::ofstream::app};
+                std::ofstream ofs{this->m_path, std::ofstream::out | std::ofstream::app};
                 // write header row
                 if (this->m_isFirstType)
                 {
@@ -83,155 +88,102 @@ public:
     // end constructor
 
     /**
+     * function to initialize data after amr levels are initialized.
+     */
+    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf) final
+    {
+        BL_PROFILE("Gempic::Io::CurrentFieldEnergy::init_data()");
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, cmf);
+        m_computeMethod = choose_computation_method(this->m_deRham->m_fieldsDiagnostics);
+    }
+
+    /**
      * This function computes the current field energy component wise:
      */
     void compute_diags (
-        ComputationalDomain& infra,
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
+        const ComputationalDomain& infra,
+        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>&) final
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy::compute_diags()");
-        static ComputeMethod computeMethod{choose_computation_method(fieldsDiagnostics)};
 
-        constexpr int noutputs = 3;
-        this->m_data.resize(noutputs);
-
-        std::unique_ptr<amrex::iMultiFab> maskX;
-        std::unique_ptr<amrex::iMultiFab> maskY;
-        std::unique_ptr<amrex::iMultiFab> maskZ;
-
-        switch (computeMethod)
+        switch (m_computeMethod)
         {
             case ComputeMethod::missingNone:
-                maskX = amrex::OwnerMask(*fieldsDiagnostics["JFieldx"], infra.m_geom.periodicity());
-                this->m_data[xDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["JFieldx"], 0,
-                                               *fieldsDiagnostics["JFieldTx"], 0,
-                                               fieldsDiagnostics["JFieldx"]->nComp(), 0, 0);
-                maskY = amrex::OwnerMask(*fieldsDiagnostics["JFieldy"], infra.m_geom.periodicity());
-                this->m_data[yDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["JFieldy"], 0,
-                                               *fieldsDiagnostics["JFieldTy"], 0,
-                                               fieldsDiagnostics["JFieldy"]->nComp(), 0, 0);
-                maskZ = amrex::OwnerMask(*fieldsDiagnostics["JFieldz"], infra.m_geom.periodicity());
-                this->m_data[zDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["JFieldz"], 0,
-                                               *fieldsDiagnostics["JFieldTz"], 0,
-                                               fieldsDiagnostics["JFieldz"]->nComp(), 0, 0);
+                update_data(*m_constJField, *m_constJFieldT, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingJFieldT:
-                this->m_deRham->hodge(*m_jField, *m_jFieldT);
+                this->m_deRham->hodge(*m_constJField, *m_jFieldT);
                 *m_jFieldT *= m_weightFunc;
-                maskX = amrex::OwnerMask(*fieldsDiagnostics["JFieldx"], infra.m_geom.periodicity());
-                this->m_data[xDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["JFieldx"], 0,
-                                               m_jFieldT->m_data[xDir], 0,
-                                               fieldsDiagnostics["JFieldx"]->nComp(), 0, 0);
-                maskY = amrex::OwnerMask(*fieldsDiagnostics["JFieldy"], infra.m_geom.periodicity());
-                this->m_data[yDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["JFieldy"], 0,
-                                               m_jFieldT->m_data[yDir], 0,
-                                               fieldsDiagnostics["JFieldy"]->nComp(), 0, 0);
-                maskZ = amrex::OwnerMask(*fieldsDiagnostics["JFieldz"], infra.m_geom.periodicity());
-                this->m_data[zDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["JFieldz"], 0,
-                                               m_jFieldT->m_data[zDir], 0,
-                                               fieldsDiagnostics["JFieldz"]->nComp(), 0, 0);
+                update_data(*m_constJField, *m_jFieldT, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingJField:
-                this->m_deRham->hodge(*m_jFieldT, *m_jField);
+                this->m_deRham->hodge(*m_constJFieldT, *m_jField);
                 *m_jField *= m_weightFunc;
-                maskX =
-                    amrex::OwnerMask(*fieldsDiagnostics["JFieldTx"], infra.m_geom.periodicity());
-                this->m_data[xDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskX, *fieldsDiagnostics["JFieldTx"], 0,
-                                               m_jField->m_data[xDir], 0,
-                                               fieldsDiagnostics["JFieldTx"]->nComp(), 0, 0);
-                maskY =
-                    amrex::OwnerMask(*fieldsDiagnostics["JFieldTy"], infra.m_geom.periodicity());
-                this->m_data[yDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskY, *fieldsDiagnostics["JFieldTy"], 0,
-                                               m_jField->m_data[yDir], 0,
-                                               fieldsDiagnostics["JFieldTy"]->nComp(), 0, 0);
-                maskZ =
-                    amrex::OwnerMask(*fieldsDiagnostics["JFieldTz"], infra.m_geom.periodicity());
-                this->m_data[zDir] =
-                    0.5 * amrex::MultiFab::Dot(*maskZ, *fieldsDiagnostics["JFieldTz"], 0,
-                                               m_jField->m_data[zDir], 0,
-                                               fieldsDiagnostics["JFieldTz"]->nComp(), 0, 0);
+                update_data(*m_jField, *m_constJFieldT, infra.m_geom.periodicity());
                 return;
         }
     }
     // end void CurrentFieldEnergy::ComputeDiags
 
 private:
+    ComputeMethod m_computeMethod;
     amrex::Parser m_weightParser;
     amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> m_weightFunc;
     /**
      * Selects computation method based on missing fields and the input file switch
      * compute_missing_fields
      */
-    ComputeMethod choose_computation_method (
-        std::map<std::string, amrex::MultiFab*>& fieldsDiagnostics)
+    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy::choose_computation_method()");
         using namespace Forms;
-        if (fieldsDiagnostics.count("JFieldTx") && fieldsDiagnostics.count("JFieldTy") &&
-            fieldsDiagnostics.count("JFieldTz") && fieldsDiagnostics.count("JFieldx") &&
-            fieldsDiagnostics.count("JFieldy") && fieldsDiagnostics.count("JFieldz"))
+        if (fieldMap.count("JFieldTx") && fieldMap.count("JFieldTy") &&
+            fieldMap.count("JFieldTz") && fieldMap.count("JFieldx") && fieldMap.count("JFieldy") &&
+            fieldMap.count("JFieldz"))
         {
+            this->m_constJField = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                this->m_deRham, fieldMap["JFieldx"], fieldMap["JFieldy"], fieldMap["JFieldz"]);
+            this->m_constJFieldT = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                this->m_deRham, fieldMap["JFieldTx"], fieldMap["JFieldTy"], fieldMap["JFieldTz"]);
             return ComputeMethod::missingNone;
         }
         else if (this->m_computeMissingFields)
         {
-            if (fieldsDiagnostics.count("JFieldx") && fieldsDiagnostics.count("JFieldy") &&
-                fieldsDiagnostics.count("JFieldz") &&
-                (!fieldsDiagnostics.count("JFieldTx") || !fieldsDiagnostics.count("JFieldTy") ||
-                 !fieldsDiagnostics.count("JFieldTz")))
+            if (fieldMap.count("JFieldx") && fieldMap.count("JFieldy") &&
+                fieldMap.count("JFieldz") &&
+                (!fieldMap.count("JFieldTx") || !fieldMap.count("JFieldTy") ||
+                 !fieldMap.count("JFieldTz")))
             {
                 auto [weightParser, weightFunc] = Utils::parse_function("DensityField");
                 m_weightParser = weightParser;
                 m_weightFunc = weightFunc;
 
-                int srcComp{0};
-                int dstComp{0};
-                int nComps{fieldsDiagnostics["JFieldx"]->nComp()};
-                this->m_jField = std::make_shared<DeRhamField<Grid::primal, Space::edge>>(
-                    this->m_deRham, nComps);
-                amrex::Copy(this->m_jField->m_data[xDir], *fieldsDiagnostics["JFieldx"], srcComp,
-                            dstComp, nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_jField->m_data[yDir], *fieldsDiagnostics["JFieldy"], srcComp,
-                            dstComp, nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_jField->m_data[zDir], *fieldsDiagnostics["JFieldz"], srcComp,
-                            dstComp, nComps, this->m_deRham->get_n_ghost());
+                int nComps{fieldMap["JFieldx"].nComp()};
+                this->m_constJField =
+                    std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                        this->m_deRham, fieldMap["JFieldx"], fieldMap["JFieldy"],
+                        fieldMap["JFieldz"]);
 
                 this->m_jFieldT =
-                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
+                    std::make_unique<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
 
                 return ComputeMethod::missingJFieldT;
             }
-            else if (fieldsDiagnostics.count("JFieldTx") && fieldsDiagnostics.count("JFieldTy") &&
-                     fieldsDiagnostics.count("JFieldTz") &&
-                     (!fieldsDiagnostics.count("JFieldx") || !fieldsDiagnostics.count("JFieldy") ||
-                      !fieldsDiagnostics.count("JFieldz")))
+            else if (fieldMap.count("JFieldTx") && fieldMap.count("JFieldTy") &&
+                     fieldMap.count("JFieldTz") &&
+                     (!fieldMap.count("JFieldx") || !fieldMap.count("JFieldy") ||
+                      !fieldMap.count("JFieldz")))
             {
                 auto [weightParser, weightFunc] = Utils::parse_function("DensityFieldInv");
                 m_weightParser = weightParser;
                 m_weightFunc = weightFunc;
 
-                int srcComp{0};
-                int dstComp{0};
-                int nComps{fieldsDiagnostics["JFieldTx"]->nComp()};
-                this->m_jFieldT =
-                    std::make_shared<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
-                amrex::Copy(this->m_jFieldT->m_data[xDir], *fieldsDiagnostics["JFieldTx"], srcComp,
-                            dstComp, nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_jFieldT->m_data[yDir], *fieldsDiagnostics["JFieldTy"], srcComp,
-                            dstComp, nComps, this->m_deRham->get_n_ghost());
-                amrex::Copy(this->m_jFieldT->m_data[zDir], *fieldsDiagnostics["JFieldTz"], srcComp,
-                            dstComp, nComps, this->m_deRham->get_n_ghost());
+                int nComps{fieldMap["JFieldTx"].nComp()};
+                this->m_constJFieldT = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                    this->m_deRham, fieldMap["JFieldTx"], fieldMap["JFieldTy"],
+                    fieldMap["JFieldTz"]);
 
-                this->m_jField = std::make_shared<DeRhamField<Grid::primal, Space::edge>>(
+                this->m_jField = std::make_unique<DeRhamField<Grid::primal, Space::edge>>(
                     this->m_deRham, nComps);
 
                 return ComputeMethod::missingJField;
@@ -256,6 +208,26 @@ private:
                           str.c_str());
         }
         return ComputeMethod::missingNone;  // never reached
+    }
+
+    /**
+     * This function computes the current field energy component wise:
+     */
+    void update_data (const Forms::DeRhamField<Grid::primal, Space::edge>& fieldJ,
+                      const Forms::DeRhamField<Grid::dual, Space::face>& fieldJT,
+                      const amrex::Periodicity& periodicity)
+    {
+        BL_PROFILE("Gempic::Io::CurrentFieldEnergy::update_data()");
+        constexpr int noutputs = 3;
+        this->m_data.resize(noutputs, 0.0);
+
+        for (int dir = 0; dir < noutputs; dir++)
+        {
+            auto mask = amrex::OwnerMask(fieldJ.m_data[dir], periodicity);
+            this->m_data[dir] =
+                0.5 * amrex::MultiFab::Dot(*mask, fieldJ.m_data[dir], 0, fieldJT.m_data[dir], 0,
+                                           fieldJ.m_data[dir].nComp(), 0, 0);
+        }
     }
 };
 

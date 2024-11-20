@@ -103,15 +103,10 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
     amrex::Real chargeWeight = 2.0;
-    amrex::Real xPosOld = 2.5;
-    amrex::Real xPosNew = 2.6;
-    amrex::Real yPosOld = 3.7;
-    amrex::Real yPosNew = 4.2;
-    amrex::Real zPosOld = 2.2;
-    amrex::Real zPosNew = 2.0;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
+    AMREX_D_TERM(amrex::Real xPosNew = 2.6;, amrex::Real yPosNew = 4.2;, amrex::Real zPosNew = 2.0;)
 
     amrex::Real primDiffRef = 0;
-    amrex::Real xNodeVal = 0;
     amrex::Real yNodeVal = 0;
     amrex::Real zNodeVal = 0;
 
@@ -163,26 +158,15 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     {
         // Checking only the first index !=0, not the full field. Indices according to the current
         // setup!
-#if GEMPIC_SPACEDIM == 3
         check_field(J.m_data[0].array(mfi), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 6); }},
-                    {chargeWeight * primDiffRef * yNodeVal * zNodeVal}, {}, 1e-12);
-#elif GEMPIC_SPACEDIM == 2
-        check_field(J.m_data[0].array(mfi), m_infra.m_nCell.dim3(),
-                    {[] (AMREX_D_DECL(int i, int j, int k))
-                     { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
-                    {chargeWeight * primDiffRef * yNodeVal}, {}, 1e-12);
-#elif GEMPIC_SPACEDIM == 1
-        check_field(J.m_data[0].array(mfi), m_infra.m_nCell.dim3(),
-                    {[] (AMREX_D_DECL(int i, int j, int k))
-                     { return AMREX_D_TERM(i == 7, &&j == 0, &&k == 0); }},
-                    {chargeWeight * primDiffRef}, {}, 1e-12);
-#endif
+                    {chargeWeight * GEMPIC_D_MULT(primDiffRef, yNodeVal, zNodeVal)}, {}, 1e-12);
     }
 
     // TEST FOR Y DIRECTION
 #if GEMPIC_SPACEDIM > 1
+    amrex::Real xNodeVal = 0;
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions
@@ -221,19 +205,11 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     }
     for (amrex::MFIter mfi(J.m_data[1]); mfi.isValid(); ++mfi)
     {
-#if GEMPIC_SPACEDIM == 3
         check_field(J.m_data[1].array(mfi), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 12, &&k == 6); }},
-                    {chargeWeight * xNodeVal * primDiffRef * zNodeVal}, {}, 1e-12);
-#elif GEMPIC_SPACEDIM == 2
-        check_field(J.m_data[1].array(mfi), m_infra.m_nCell.dim3(),
-                    {[] (AMREX_D_DECL(int i, int j, int k))
-                     { return AMREX_D_TERM(i == 7, &&j == 12, &&k == 0); }},
-                    {chargeWeight * xNodeVal * primDiffRef}, {}, 1e-12);
-#endif
+                    {chargeWeight * GEMPIC_D_MULT(xNodeVal, primDiffRef, zNodeVal)}, {}, 1e-12);
     }
-#endif
 
     // TEST FOR Z DIRECTION
 #if GEMPIC_SPACEDIM > 2
@@ -282,6 +258,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
                     {chargeWeight * xNodeVal * yNodeVal * primDiffRef}, {}, 1e-12);
     }
 #endif
+#endif
 }
 
 #if GEMPIC_SPACEDIM < 3
@@ -300,19 +277,14 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     // conditions
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.001;
-    amrex::Real xPosOld = 2.5;
-    amrex::Real xPosNew = 2.6;
-    amrex::Real yPosOld = 3.7;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 0.0;)
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
     amrex::Real cfl{dt / m_infra.m_dx[0]};
     amrex::Real vx{1 * cfl}, vy{3.1 * cfl}, vz{-2.5 * cfl};
     amrex::GpuArray<amrex::Real, s_vDim> vel{vx, vy, vz};
 
-    int idxX = 0;
-    int idxY = 0;
-    amrex::Real xNodeVal = 0;
-    amrex::Real yNodeVal = 0;
+    AMREX_D_TERM(amrex::Real xNodeVal = 0;, amrex::Real yNodeVal = 0;, )
     amrex::Real dtv = 0;
 
     // Initialize the De Rham Complex
@@ -343,7 +315,6 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
             position, m_infra.m_plo, m_infra.m_dxi);
 
         dtv = dt * vel[yDir];
-        idxX = spline.m_firstIndex[xDir];
         xNodeVal = spline.m_nodeSplineVals[xDir][0];
 
 #if GEMPIC_SPACEDIM == 1
@@ -351,38 +322,24 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
                                                                bA, jA);
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_z(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
-    }
-    // check the first non-zero entry of the J field in xDir
-    for (amrex::MFIter mfi(J.m_data[1]); mfi.isValid(); ++mfi)
-    {
-        check_field(J.m_data[1].array(mfi), m_infra.m_nCell.dim3(),
-                    {[] (AMREX_D_DECL(int i, int j, int k))
-                     { return AMREX_D_TERM(i == 7, &&j == 0, &&k == 0); }},
-                    {chargeWeight * dtv * xNodeVal}, {}, 1e-12);
-    }
-    for (amrex::MFIter mfi(J.m_data[2]); mfi.isValid(); ++mfi)
-    {
-        check_field(J.m_data[2].array(mfi), m_infra.m_nCell.dim3(),
-                    {[] (AMREX_D_DECL(int i, int j, int k))
-                     { return AMREX_D_TERM(i == 7, &&j == 0, &&k == 0); }},
-                    {chargeWeight * dtv * xNodeVal}, {}, 1e-12);
-    }
-
 #elif GEMPIC_SPACEDIM == 2
-        idxY = spline.m_firstIndex[yDir];
         yNodeVal = spline.m_nodeSplineVals[yDir][0];
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_z(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
-    }
-    for (amrex::MFIter mfi(J.m_data[2]); mfi.isValid(); ++mfi)
-    {
-        check_field(J.m_data[2].array(mfi), m_infra.m_nCell.dim3(),
-                    {[] (AMREX_D_DECL(int i, int j, int k))
-                     { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
-                    {chargeWeight * dtv * xNodeVal * yNodeVal}, {}, 1e-12);
+#endif
     }
 
-#endif
+    for (int dir{GEMPIC_SPACEDIM}; dir < 3; ++dir)
+    {
+        // check the first non-zero entry of the J field in xDir
+        for (amrex::MFIter mfi(J.m_data[dir]); mfi.isValid(); ++mfi)
+        {
+            check_field(J.m_data[dir].array(mfi), m_infra.m_nCell.dim3(),
+                        {[] (AMREX_D_DECL(int i, int j, int k))
+                         { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
+                        {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);
+        }
+    }
 }
 #endif
 
@@ -400,27 +357,14 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 1.0;
-    amrex::Real xPosOld = 2.5;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     amrex::Real xPosNew = 3.2;
-    amrex::Real yPosOld = 3.7;
-    amrex::Real zPosOld = 2.2;
     amrex::Real valBx = 2.0;
     amrex::Real valBy = 3.0;
     amrex::Real valBz = 4.0;
     amrex::Real valJx = 5.0;
     amrex::Real valJy = 6.0;
     amrex::Real valJz = 7.0;
-
-#if GEMPIC_SPACEDIM == 1
-    amrex::GpuArray<amrex::Real, 3> dxdy{1.0, m_infra.m_dx[0], m_infra.m_dx[0]};
-#elif GEMPIC_SPACEDIM == 2
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1], m_infra.m_dx[0],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#elif GEMPIC_SPACEDIM == 3
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1] * m_infra.m_dx[2],
-                                         m_infra.m_dx[0] * m_infra.m_dx[2],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#endif
 
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
@@ -519,12 +463,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 
     amrex::Real chargeWeight = 2.0;
 
-    amrex::Real xPosOld = 2.5;
-    amrex::Real xPosNew = 3.2;
-    amrex::Real yPosOld = 1.7;
-    amrex::Real yPosNew = 2.1;
-    amrex::Real zPosOld = 2.2;
-    amrex::Real zPosNew = 0.0;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 1.7;, amrex::Real zPosOld = 2.2;)
+    AMREX_D_TERM(amrex::Real xPosNew = 3.2;, amrex::Real yPosNew = 2.1;, amrex::Real zPosNew = 0.0;)
 
     amrex::Real valBx = 3.0;
     amrex::Real valBy = 4.0;
@@ -542,16 +482,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-#if GEMPIC_SPACEDIM == 1
-    amrex::GpuArray<amrex::Real, 3> dxdy{1.0, m_infra.m_dx[0], m_infra.m_dx[0]};
-#elif GEMPIC_SPACEDIM == 2
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1], m_infra.m_dx[0],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#elif GEMPIC_SPACEDIM == 3
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1] * m_infra.m_dx[2],
-                                         m_infra.m_dx[0] * m_infra.m_dx[2],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#endif
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, m_infra.m_dx[1], m_infra.m_dx[2]),
+                                         GEMPIC_D_MULT(m_infra.m_dx[0], 1.0, m_infra.m_dx[2]),
+                                         GEMPIC_D_MULT(m_infra.m_dx[0], m_infra.m_dx[1], 1.0)};
 
     // fill the B field with the value 3 in xDirection (multiply by area for 2-form dofs)
     amrex::Real Bx{valBx};
@@ -637,24 +570,19 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Real vx{1 * cfl}, vy{3.1 * cfl}, vz{-2.5 * cfl};
     amrex::GpuArray<amrex::Real, s_vDim> vel{vx, vy, vz};
 
-    amrex::Real xPosOld = 2.5;
-    amrex::Real xPosNew = xPosOld + dt * vel[0];
-    amrex::Real yPosOld = 1.7;
-    amrex::Real yPosNew = yPosOld + dt * vel[1];
-    amrex::Real zPosOld = 2.2;
-    amrex::Real zPosNew = zPosOld + dt * vel[2];
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 1.7;, amrex::Real zPosOld = 2.2;)
+    AMREX_D_TERM(amrex::Real xPosNew = xPosOld + dt * vel[0];
+                 , amrex::Real yPosNew = yPosOld + dt * vel[1];
+                 , amrex::Real zPosNew = zPosOld + dt * vel[2];)
 
     amrex::Real valBx = 3.0;
     amrex::Real valBy = 4.0;
     amrex::Real valBz = 5.0;
 
     amrex::Real dtv = 0;
-    amrex::Real nodeSumX = 0;
-    amrex::Real cellSumXhalf = 0;
-    amrex::Real cellSumX = 0;
-    amrex::Real nodeSumY = 0;
-    amrex::Real cellSumYhalf = 0;
-    amrex::Real cellSumY = 0;
+    AMREX_D_TERM(amrex::Real nodeSumX = 0; amrex::Real cellSumXhalf = 0; amrex::Real cellSumX = 0;
+                 , amrex::Real nodeSumY = 0; amrex::Real cellSumYhalf = 0; amrex::Real cellSumY = 0;
+                 , )
 
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
@@ -668,12 +596,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-#if GEMPIC_SPACEDIM == 1
-    amrex::GpuArray<amrex::Real, 3> dxdy{1.0, m_infra.m_dx[0], m_infra.m_dx[0]};
-#elif GEMPIC_SPACEDIM == 2
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1], m_infra.m_dx[0],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#endif
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, m_infra.m_dx[1], m_infra.m_dx[2]),
+                                         GEMPIC_D_MULT(m_infra.m_dx[0], 1.0, m_infra.m_dx[2]),
+                                         GEMPIC_D_MULT(m_infra.m_dx[0], m_infra.m_dx[1], 1.0)};
 
     // fill the B field with the value 3 in xDirection (multiply by area for 2-form dofs)
     amrex::Real Bx{valBx};
@@ -765,8 +690,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
 TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 {
-    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ, s_hodgeDegree>
-        operatorHamilton;
+    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
 
     // Adding particle to one cell
     const int numParticles{1};
@@ -780,16 +704,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.1;  // set time step to 1.0 for testing purposes
     amrex::Real chargeOverMass = 0.6;
-    amrex::Real xPosOld = 2.5;
-    amrex::Real yPosOld = 3.2;
-    amrex::Real zPosOld = 2.2;
-
-    amrex::Real cellSumX = 0.0;
-    amrex::Real cellSumY = 0.0;
-    amrex::Real cellSumXhalf = 0.0;
-    amrex::Real cellSumYhalf = 0.0;
-    amrex::Real nodeSumX = 0.0;
-    amrex::Real nodeSumY = 0.0;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.2;, amrex::Real zPosOld = 2.2;)
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
     amrex::Real cfl{dt / m_infra.m_dx[0]};
@@ -808,16 +723,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-#if GEMPIC_SPACEDIM == 1
-    amrex::GpuArray<amrex::Real, 3> dxdy{1.0, m_infra.m_dx[0], m_infra.m_dx[0]};
-#elif GEMPIC_SPACEDIM == 2
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1], m_infra.m_dx[0],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#elif GEMPIC_SPACEDIM == 3
-    amrex::GpuArray<amrex::Real, 3> dxdy{m_infra.m_dx[1] * m_infra.m_dx[2],
-                                         m_infra.m_dx[0] * m_infra.m_dx[2],
-                                         m_infra.m_dx[0] * m_infra.m_dx[1]};
-#endif
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, m_infra.m_dx[1], m_infra.m_dx[2]),
+                                         GEMPIC_D_MULT(m_infra.m_dx[0], 1.0, m_infra.m_dx[2]),
+                                         GEMPIC_D_MULT(m_infra.m_dx[0], m_infra.m_dx[1], 1.0)};
 
     // fill the B field with the value 3 in xDirection (multiply by area for 2-form dofs)
     amrex::Real Bx{3.0};
@@ -890,7 +798,12 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx, vel[yDir], 1e-12);
 
 #elif GEMPIC_SPACEDIM == 2
-
+        amrex::Real cellSumX = 0.0;
+        amrex::Real cellSumY = 0.0;
+        amrex::Real cellSumXhalf = 0.0;
+        amrex::Real cellSumYhalf = 0.0;
+        amrex::Real nodeSumX = 0.0;
+        amrex::Real nodeSumY = 0.0;
         // apply h_p_i in y direction
         // reset random positions
         position[yDir] = yPosOld;
@@ -942,6 +855,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
                     vel[yDir], 1e-12);
 
 #elif GEMPIC_SPACEDIM == 1
+        amrex::Real cellSumX = 0.0;
+        amrex::Real cellSumXhalf = 0.0;
+        amrex::Real nodeSumX = 0.0;
         // apply h_p_i in y direction
         // reset velocities
         vel[xDir] = vx;
@@ -983,8 +899,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 // check for a constant E field
 TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 {
-    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ, s_hodgeDegree>
-        operatorHamilton;
+    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
 
     // Adding particle to one cell
     const int numParticles{1};
@@ -995,13 +910,10 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
-    amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.1;  // set time step to 0.1 for testing purposes
     amrex::Real chargeOverMass = 0.6;
 
-    amrex::Real xPosOld = 2.5;
-    amrex::Real yPosOld = 3.7;
-    amrex::Real zPosOld = 2.2;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     amrex::Real valEx = 3.0;
     amrex::Real valEy = 4.0;
     amrex::Real valEz = 5.0;

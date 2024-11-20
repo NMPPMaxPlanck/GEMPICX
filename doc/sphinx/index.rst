@@ -30,4 +30,5 @@ Table of Contents
    Forms/Forms
    Particles/Particles
    latex/InputFiles
+   latex/Diagnostics
    ForDevelopers/ForDevelopers
