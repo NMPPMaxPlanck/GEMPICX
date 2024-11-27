@@ -2,6 +2,9 @@
 
 New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 
+[![Documentation](https://img.shields.io/badge/documentation-006c66)](https://gempic.pages.mpcdf.de/gempic/)
+[![Master Pipeline Status](https://gitlab.mpcdf.mpg.de/gempic/gempic/badges/master/pipeline.svg)](https://gitlab.mpcdf.mpg.de/gempic/gempic/pipelines/master/latest)
+
 ## Requirements
 - [AMReX](https://github.com/AMReX-Codes/amrex)
 - [CMake](https://cmake.org/cmake/help/latest/index.html)
@@ -50,16 +53,16 @@ Do not use a number larger than the number of cores of the systems processor.
 The following options can be added to the personal build configuration of CMake
 using `-D GEMPIC_OPTION Argument`
 
-| CMake Option       | Description                                  | Default Value |
-|--------------------|----------------------------------------------|---------------|
-| `AMReX_SPACEDIM`   | The dimension of the simulation (`1`, `2` or `3`)  | `3`           |
-| `GEMPIC_USE_CUDA`  | Use CUDA Backend of AMReX                    | `OFF`         |
-| `GEMPIC_USE_OMP`   | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)               | `OFF`         |
-| `GEMPIC_USE_CUDA`  | Use CUDA Backend of AMReX                    | `OFF`         |
-| `GEMPIC_USE_LTO`   | Use Link-Time Optimization <br> (Turning it off reduces compile time, but may reduce performance)| `ON`      |
-| `GEMPIC_BUILD_TESTS` | Build the tests. Currently only toggles unit tests. | `ON` |
-| `GEMPIC_BUILD_EXAMPLES` | Build the examples. Currently only toggles all or none. | `ON` |
-| `GEMPIC_BUILD_DOCUMENTATION` | Build the documentation. Only builds if depencies are met. | `ON` |
+| CMake Option                 | Description                                                                                      | Default Value |
+|------------------------------|--------------------------------------------------------------------------------------------------|---------------|
+| `AMReX_SPACEDIM`             | The dimension of the simulation (`1`, `2` or `3`)                                                | `3`           |
+| `GEMPIC_USE_CUDA`            | Use CUDA Backend of AMReX                                                                        | `OFF`         |
+| `GEMPIC_USE_OMP`             | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)                   | `OFF`         |
+| `GEMPIC_USE_CUDA`            | Use CUDA Backend of AMReX                                                                        | `OFF`         |
+| `GEMPIC_USE_LTO`             | Use Link-Time Optimization <br> (Turning it off reduces compile time, but may reduce performance)| `ON`          |
+| `GEMPIC_BUILD_TESTS`         | Build the tests. Currently only toggles unit tests.                                              | `ON`          |
+| `GEMPIC_BUILD_EXAMPLES`      | Build the examples. Currently only toggles all or none.                                          | `ON`          |
+| `GEMPIC_BUILD_DOCUMENTATION` | Build the documentation. Only builds if depencies are met.                                       | `ON`          |
 
 
 # Quickstart Example
@@ -122,6 +125,3 @@ Steps to set up gempic in QT-creator:
 1.) In QT-creator: File -> Open file or project -> click on CMakeLists.txt file  
 2.) On Sidebar, click Projects and set correct build directory  
 3.) If project doesn't compile automatically: close qccreator and reopen it, load project  
-
-# Documentation
-[Documentation for Gempic](https://gempic.pages.mpcdf.de/gempic/)
