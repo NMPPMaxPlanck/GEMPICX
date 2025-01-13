@@ -272,9 +272,9 @@ int main (int argc, char *argv[])
                                               s0[pp];
 
                                 // Push particle and integrate current
-                                operatorHamilton.template apply_h_p(
-                                    pos, vel, infra, spline, infra.m_dx, jA, bA, chargeMass,
-                                    sqrtf0[pp] * charge * weight[pp], dt);
+                                operatorHamilton.apply_h_p(pos, vel, infra, spline, infra.m_dx, jA,
+                                                           bA, chargeMass,
+                                                           sqrtf0[pp] * charge * weight[pp], dt);
 
                                 // Write position and velocities
                                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
