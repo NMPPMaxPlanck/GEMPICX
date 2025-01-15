@@ -69,6 +69,8 @@ int main (int argc, char *argv[])
 
         std::vector<std::shared_ptr<ParticleGroups<vdim>>> partGr;
         init_particles(infra, partGr);
+        amrex::Real rhoBackground{1.0};
+        parameters.get_or_set("rhoBackground", rhoBackground);
 
         auto poisson = std::make_shared<PoissonSolver>(deRham, infra);
         ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
@@ -132,7 +134,6 @@ int main (int argc, char *argv[])
             rho.post_particle_loop_sync();
 
             // Add background charge (needs to be done after post_particle_loop_sync)
-            amrex::Real rhoBackground = 1.0;
             rho +=
                 rhoBackground * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
 
@@ -153,7 +154,8 @@ int main (int argc, char *argv[])
 
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
 
-                // initialize J to 0 for particle loop
+                // initialize rho and J to 0 for particle loop
+                rho.m_data.setVal(0.0);
                 for (int comp = 0; comp < vdim; ++comp)
                 {
                     J.m_data[comp].setVal(0.0);
@@ -245,6 +247,7 @@ int main (int argc, char *argv[])
                         auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
                         auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
                         auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                        auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
                         amrex::Array4<amrex::Real> rhoarr;
@@ -257,37 +260,45 @@ int main (int argc, char *argv[])
 
                         // loop over particles: add contribution of old particle position to J and
                         // push
-                        amrex::ParallelFor(np,
-                                           [=] AMREX_GPU_DEVICE(long pp)
-                                           {
-                                               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                               for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                                               {
-                                                   pos[d] = particles[pp].pos(d);
-                                               }
+                        amrex::ParallelFor(
+                            np,
+                            [=] AMREX_GPU_DEVICE(long pp)
+                            {
+                                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                {
+                                    pos[d] = particles[pp].pos(d);
+                                }
 
-                                               amrex::GpuArray<amrex::Real, vdim> vel{
-                                                   velx[pp], vely[pp], velz[pp]};
+                                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
+                                                                       velz[pp]};
 
-                                               SplineBase<degx, degy, degz> spline(pos, infra.m_plo,
-                                                                                   infra.m_dxi);
+                                SplineBase<degx, degy, degz> spline(pos, infra.m_plo, infra.m_dxi);
 
-                                               operatorHamilton.apply_h_e_particle(
-                                                   vel, eA, spline, chargeOverMass, 0.5 * dt);
-                                               velx[pp] = vel[xDir];
-                                               vely[pp] = vel[yDir];
-                                               velz[pp] = vel[zDir];
-                                           });
+                                operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass,
+                                                                    0.5 * dt);
+                                velx[pp] = vel[xDir];
+                                vely[pp] = vel[yDir];
+                                velz[pp] = vel[zDir];
+                                // compute rho for Gauss error diagnostics
+                                // in principle this should be computed only
+                                // if the Gauss error diagnostic is performed
+                                gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
+                            });
                     }
                     partGr[spec]->Redistribute();
                 }
                 // end treat particles
+                rho.post_particle_loop_sync();
+                // Add background charge (needs to be done after post_particle_loop_sync)
+                rho += rhoBackground *
+                       GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
 
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
 
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
-                // compute rho and div D for diagnostics
+                // compute div D for diagnostics
                 deRham->div(D, divD);
                 simTime = dt * (tStep + 1);
                 diagnostics.compute_and_write_to_file(tStep + 1, simTime);

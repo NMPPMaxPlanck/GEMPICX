@@ -39,6 +39,10 @@ public:
     std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constD;
     std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::cell>> m_constDivD;
 
+    // Initialization value needs to be chosen so that it is unlilkely to match computed value
+    amrex::Real m_rhoNorm{0.0};
+    amrex::Real m_divDNorm{0.0};
+
     enum class ComputeMethod
     {
         missingNone,
@@ -109,43 +113,6 @@ public:
     {
         BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
 
-        // Deposit charges in rho:
-        m_rho->m_data.setVal(0.0);
-        for (auto& particleSpecies : partGr)
-        {
-            amrex::Real charge = particleSpecies->get_charge();
-
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                 ++pti)
-            {
-                const long np = pti.numParticles();
-                const auto& particles = pti.GetArrayOfStructs()().data();
-                const auto weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-
-                amrex::Array4<amrex::Real> const& rhoarr = m_rho->m_data[pti].array();
-
-                amrex::ParallelFor(
-                    np,
-                    [=] AMREX_GPU_DEVICE(long pp)
-                    {
-                        // Local arrays for particle position
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                        {
-                            // positionParticle data structure needed for spline
-                            positionParticle[d] = particles[pp].pos(d);
-                        }
-
-                        ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                            positionParticle, infra.m_plo, infra.m_dxi);
-
-                        ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline,
-                                                                 charge * weight[pp]);
-                    });
-            }
-        }
-        m_rho->post_particle_loop_sync();
-
         switch (m_computeMethod)
         {
             case ComputeMethod::missingNone:
@@ -175,10 +142,10 @@ private:
         using namespace Forms;
         if (fieldMap.count("rho") && fieldMap.count("divD"))
         {
-            this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
-                this->m_deRham, fieldMap["rho"].nComp());
+            this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham,
+                                                                                 fieldMap["rho"]);
             this->m_constDivD = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
-                this->m_deRham, fieldMap["divD"].nComp());
+                this->m_deRham, fieldMap["divD"]);
             return ComputeMethod::missingNone;
         }
         else if (this->m_computeMissingFields)
@@ -187,8 +154,8 @@ private:
                 fieldMap.count("Dz"))
             {
                 int nComps{fieldMap["Dx"].nComp()};
-                this->m_rho =
-                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
+                this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
+                    this->m_deRham, fieldMap["rho"]);
                 this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
                     this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
 
@@ -200,8 +167,8 @@ private:
                      fieldMap.count("Ez"))
             {
                 int nComps{fieldMap["Ex"].nComp()};
-                this->m_rho =
-                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
+                this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
+                    this->m_deRham, fieldMap["rho"]);
                 this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
                     this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
 
@@ -244,6 +211,21 @@ private:
 
         amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, infra, 2);
         amrex::Real divDNorm = Gempic::Utils::gempic_norm(divD.m_data, infra, 2);
+
+        // Check that rho and divD have been updated
+        if (abs(rhoNorm - m_rhoNorm) < 1e-12 || abs(divDNorm - m_divDNorm) < 1e-12)
+        {
+            amrex::Warning("rhoNorm " + std::to_string(rhoNorm) + " divDNorm " +
+                           std::to_string(divDNorm) + "\n");
+            amrex::Warning("m_rhoNorm " + std::to_string(m_rhoNorm) + " m_divDNorm " +
+                           std::to_string(m_divDNorm) + "\n");
+            amrex::Warning("WARNING: GaussError: rho or divD may have not been updated\n");
+        }
+        else
+        {
+            m_rhoNorm = rhoNorm;
+            m_divDNorm = divDNorm;
+        }
 
         amrex::MultiFab difference(divD.m_data.boxArray(), divD.m_data.DistributionMap(),
                                    divD.m_data.nComp(), 0);
