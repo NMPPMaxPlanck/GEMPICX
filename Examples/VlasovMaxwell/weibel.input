@@ -2,35 +2,32 @@
 simName = "Weibel"
 
 # Grid parameters
-nCellVector = 64 32 4
-maxGridSizeVector = 8 4 4
+nCellVector = 32 8 8
+maxGridSizeVector = 8 8 4
 isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
  
 # Particle parameters
+rhoBackground = 1
 Particle.speciesNames = electrons
 Particle.electrons.nPartPerCell = 1000 # number of particles per cell
 Particle.electrons.charge = -1.0 # vector (one entry per species)
 Particle.electrons.mass = 1.0 # vector (one entry per species)
-Particle.electrons.density = "1.0 + 0.0 * cos(kvarx * x)"
+Particle.electrons.density = "1.0"
 Particle.electrons.numGaussians = 1
 Particle.sampler = Sobol
 # GPU settings
 
 # Gaussian parameters
 Particle.electrons.G0.vMean = 0.0 0.0 0.0
-Particle.electrons.G0.vThermal = 0.02 0.069282032 0.069282032 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
+Particle.electrons.G0.vThermal = 0.01414213562 0.04898979486 0.04898979486 # 0.02/sqrt(2) and sqrt(12)*0.02/sqrt(2)
 Particle.electrons.G0.vWeight = 1.0
 
 # wave vector
 k = 1.25 6.2831853071795864769252867665590057683 6.2831853071795864769252867665590057683 #1.25 1.25 
-# k = 1.25 1.25 1.25
 
 # Simulation parameters
-TimeLoop.nSteps = 500
-TimeLoop.dt = 0.02
-TimeLoop.saveFields = 10 
-TimeLoop.saveParticles = 5000 
-TimeLoop.save_checkpoint = 40000000
+TimeLoop.nSteps = 8000
+TimeLoop.dt = 0.05
 
 # Function parameters
 Function.Ex = "0.0"
@@ -41,23 +38,15 @@ Function.By = "0.0"
 Function.Bz = "1e-4 * cos(kvarx * x)"
 Function.phi = "0.0" #"4 * 0.5 * cos(0.5 * x)"
 
-# Choose the propagator: 0 - Boris-FD, 1 - HS-FEM
-#TimeLoop.propagator = 3
-#TimeLoop.strang_order = 2
-
-# Tolerances for iterative solver (if needed by the chosen propagator)
-#TimeLoop.toleranceParticles = 1.e-10
-#TimeLoop.max_coarsening_level = 0
-
 # Diagnostics
 #Full Diagnostics 
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field 
 FullDiagnostics.part.varNames = electrons
-FullDiagnostics.part.saveInterval = 100
+FullDiagnostics.part.saveInterval = 1000
 FullDiagnostics.field.varNames = rho phi Ex Ey Bz
 FullDiagnostics.field.outputProcessor = CellCenter 
-FullDiagnostics.field.saveInterval = 10
+FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics 
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false

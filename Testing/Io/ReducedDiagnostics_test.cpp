@@ -76,6 +76,8 @@ protected:
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
     //
     Io::Parameters m_parameters{};
+    //
+    const amrex::Real m_backgroundDensity{-1.0};  // so that \int rho dx = 0
 
     // Setup all the tests in the TestSuite
     static void SetUpTestSuite ()
@@ -192,6 +194,7 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     // Initialize reduced diagnostics
     Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham);
     // Compute and write reduced diagnostics
+    rho.m_data.setVal(m_backgroundDensity);  // give some non zero value to rho
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
     // check electric field diagnostics
@@ -310,6 +313,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn{deRham};
 
     // Compute and write reduced diagnostics
+    rho.m_data.setVal(m_backgroundDensity);  // give some non zero value to rho
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
     // check electric field diagnostics
@@ -371,13 +375,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
+    rho += m_backgroundDensity *
+           GEMPIC_D_MULT(m_infra.m_dx[xDir], m_infra.m_dx[yDir], m_infra.m_dx[zDir]);
     amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, m_infra, 2);
-
-    // extra work because poisson solver removes background
-    amrex::Real rhoSum = rho.m_data.sum_unique(0, false, m_infra.m_geom.periodicity());
-    amrex::Real ninv =
-        1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir], m_infra.m_nCell[zDir]);
-    amrex::Real rhoSumNinv = rhoSum * ninv;
 
     auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
     FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
@@ -391,10 +391,6 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
-    DeRhamField<Grid::dual, Space::cell> rhoBackground(deRham);
-    rhoBackground += rhoSumNinv;
-    amrex::Real rhoBackgroundNorm = Gempic::Utils::gempic_norm(rhoBackground.m_data, m_infra, 2);
-
     std::ifstream inputGauss("ReducedDiagnostics/GaussErrorMissing.txt");
     std::getline(inputGauss, line);  // first line not used
     std::getline(inputGauss, line);
@@ -404,7 +400,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     double divDNorm;
     double readRhoNorm;
     splitLineGauss >> step >> t >> error >> divDNorm >> readRhoNorm;
-    EXPECT_NEAR(error / readRhoNorm, rhoBackgroundNorm / rhoNorm, 1e-12);
+    EXPECT_NEAR(error, 0.0, 1e-12);
+    EXPECT_NEAR(divDNorm, readRhoNorm, 1e-12);
 }
 
 TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
@@ -425,6 +422,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     // Initialize reduced diagnostics
     Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham);
     // Compute and write reduced diagnostics
+    rho.m_data.setVal(m_backgroundDensity);  // give some non zero value to rho
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
     // check electric field diagnostics
@@ -485,13 +483,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     ///      It would be better to provide a D such that divD is equal to rho _with_ background.
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
+    rho += m_backgroundDensity *
+           GEMPIC_D_MULT(m_infra.m_dx[xDir], m_infra.m_dx[yDir], m_infra.m_dx[zDir]);
     amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, m_infra, 2);
-
-    // extra work because poisson solver removes background
-    amrex::Real rhoSum = rho.m_data.sum_unique(0, false, m_infra.m_geom.periodicity());
-    amrex::Real ninv =
-        1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir], m_infra.m_nCell[zDir]);
-    amrex::Real rhoSumNinv = rhoSum * ninv;
 
     auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
     FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
@@ -504,10 +498,6 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
-    DeRhamField<Grid::dual, Space::cell> rhoBackground(deRham);
-    rhoBackground += rhoSumNinv;
-    amrex::Real rhoBackgroundNorm = Gempic::Utils::gempic_norm(rhoBackground.m_data, m_infra, 2);
-
     std::ifstream inputGauss("ReducedDiagnostics/GaussErrorMissing.txt");
     std::getline(inputGauss, line);  // first line not used
     std::getline(inputGauss, line);
@@ -517,7 +507,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     double divDNorm;
     double readRhoNorm;
     splitLineGauss >> step >> t >> error >> divDNorm >> readRhoNorm;
-    EXPECT_NEAR(error / readRhoNorm, rhoBackgroundNorm / rhoNorm, 1e-12);
+    EXPECT_NEAR(error, 0.0, 1e-12);
+    EXPECT_NEAR(divDNorm, readRhoNorm, 1e-12);
 }
 
 }  // namespace
