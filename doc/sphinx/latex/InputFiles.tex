@@ -326,12 +326,20 @@ Particle.{speciesName}.mass = 1.0 # Real. Default 1.0.
 Particle.{speciesName}.density = "1.0 + 0.01 * cos(kvarx * x)" # String. No default.
 
 # Number of Gaussians making up the velocity distribution of the {speciesName}
-Particle.{speciesName}.numGaussians = 1 # Integer. Default 1.
+Particle.{speciesName}.numGaussians = 2 # Integer. Default 1.
 
 # Gaussian parameters for the first (G0) Gaussian. The sum of all Gaussian weights must be 1.0.
 Particle.{speciesName}.G0.vMean = 0.0 0.0 0.0 # Real vector. No default.
 Particle.{speciesName}.G0.vThermal = 1 1 1 # Real vector. No default.
-Particle.{speciesName}.G0.vWeight = 1.0 # Real. No default.
+Particle.{speciesName}.G0.vWeight = 0.7 # Real. No default.
+
+# Gaussian parameters for the second (G1) Gaussian. The sum of all Gaussian weights must be 1.0.
+# When using functions to specify particle velocities, all directions must be supplied.
+Particle.{speciesName}.G1.vMean = 0.0 0.0 0.0 # Real vector. No default.
+Particle.{speciesName}.G1.vThermal.x = "cos(kvarx * x)" # String. No default.
+Particle.{speciesName}.G1.vThermal.y = "1.0" # String. No default.
+Particle.{speciesName}.G1.vThermal.z = "1.0" # String. No default.
+Particle.{speciesName}.G1.vWeight = 0.3 # Real. No default.
 \end{lstlisting}
 
 \subsection{Function}
