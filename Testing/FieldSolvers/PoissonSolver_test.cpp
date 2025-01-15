@@ -1,8 +1,11 @@
+#include <iostream>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
 
+#include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_SplineClass.H"
@@ -131,6 +134,87 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     {
         const amrex::Box &bx = mfi.tilebox();
         compare_fields(phi.m_data.array(mfi), phiIn.m_data.array(mfi), bx, tol);
+    }
+}
+//}  // namespace
+
+//FFT test
+TEST_F(PoissonSolverTest, FFTSolverHodgeDegree2)
+{
+    const int hodgeDegree{2};
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    DeRhamField<Grid::primal, Space::node> anPhi(deRham, m_funcPhi);
+
+    // Use FFT-based solver
+    Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
+    poisson.solve_fft(rho, phi);
+
+    // Check error
+    amrex::Real tol = 4.203e-2;
+    // 3D, cell 8,maximum error error 2.5e-2, cell 16,maximum error error 6.48e-3, cell 32,maximum
+    // error error 1.606e-3, general size 16 for 1,2,3 error 4.203e-2
+    for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.tilebox();
+        compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
+    }
+}
+
+TEST_F(PoissonSolverTest, FFTSolverHodgeDegree4)
+{
+    const int hodgeDegree{4};
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    DeRhamField<Grid::primal, Space::node> anPhi(deRham, m_funcPhi);
+
+    // Use FFT-based solver
+    Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
+    poisson.solve_fft(rho, phi);
+
+    // Check error
+    amrex::Real tol = 1.28e-2;
+    //3D, cell 8, maximum error 4.9e-2;cell 16,maximum error error 1.28e-2, cell 32,maximum error
+    //error 3.203e-3, general size 16 for 1,2,3 error 1.28e-2
+    for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.tilebox();
+        compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
+    }
+}
+
+TEST_F(PoissonSolverTest, FFTSolverHodgeDegree6)
+{
+    const int hodgeDegree{6};
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    DeRhamField<Grid::primal, Space::node> anPhi(deRham, m_funcPhi);
+
+    // Use FFT-based solver
+    Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
+    poisson.solve_fft(rho, phi);
+
+    // Check error
+    amrex::Real tol = 1.28e-2;
+    //3D, cell 8, maximum error 5.1e-2, cell 16,maximum error error 1.28e-2, cell 32,maximum error
+    //error 3.2086e-3, larger errors than lower orders only occur at boundary, probably because of
+    //fluctuation, general size 16 for 1,2,3 error 1.28e-2
+    for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.tilebox();
+        compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
 }  // namespace
