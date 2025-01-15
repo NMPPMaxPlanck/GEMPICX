@@ -110,6 +110,9 @@ and evaluated at particle positions:
 These splines naturally appear in the variational scheme since the above relation \ref{eq:splinerel} implies that 
 the dual-node (resp. dual-cell) degree of freedom of a univariate particle spline is a cell (resp. node) spline evaluated at the particle position.
 
+\begin{note}
+    GEMPICX always uses the node spline degrees $d_x$, $d_y$, $d_z$ as parameters. These are set as constant expressions at the beginning of each simulation main file. The actual smoothing spline degree is one less in each direction!
+\end{note}
 
 \section{Reduction of Particle Splines}
 \label{sec:reduction_part_splines}

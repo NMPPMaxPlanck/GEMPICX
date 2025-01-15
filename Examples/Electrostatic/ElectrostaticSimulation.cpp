@@ -34,7 +34,7 @@ int main (int argc, char *argv[])
     constexpr int vdim{3};
     constexpr int ndata{1};  // Needs to be 1 so that the correct ParIter type is defined. Putting 4
                              // gets a non-defined type
-    // Spline degrees
+    // Node spline degrees (smoothing spline degree is one less in each direction)
     constexpr int degx{3};
     constexpr int degy{3};
     constexpr int degz{3};
