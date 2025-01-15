@@ -26,25 +26,6 @@
 \usepackage{comment}
 \renewcommand{\Affilfont}{\footnotesize}
 
-%\renewcommand{\Authfont}{\normalsize}
-\usepackage{mdframed}
-\newenvironment{important}[1][]{%
-   \begin{mdframed}[%
-      backgroundcolor={red!15}, hidealllines=true,
-      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
-      splitbottomskip=2pt, splittopskip=4pt, #1]%
-   \makebox[0pt]{% ignore the withd of !
-      \smash{% ignor the height of !
-         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
-         \hspace*{-19pt}% move ! to the left
-         \raisebox{-2pt}{% move ! up a little
-            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
-         }%
-      }%
-   }%
-}{\end{mdframed}}
-%\usepackage{algpseudocode}
-
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage[most]{tcolorbox}
@@ -162,16 +143,13 @@ To help enforce the above conventions we use two clang extra tools: \verb|clang-
 
 \verb|clang-tidy| is responsible for semantic style choices: parentheses around macro arguments, no cstyle casting, correct case for variables, functions and classes, etc. It takes minutes to run, with recent versions taking longer.
 
-%% None of this produces a coloured text box in the end. I give up.
-\begin{important}
-%\begin{customWarning}
+\begin{warning}
     Unfortunately, these tools still have some bugs. It is therefore recommended not to run them on their own, but instead run the script \verb|scripts/sanitize_code.sh| which speeds up the runtime of \verb|clang-tidy| and attempts to correct mistakes incurred by both tools.
     To format and lint your code before committing run:
 
     \verb|source scripts/sanitize_code.sh|\\
     The formatting should be done with clang-format and clang-tidy version 14 or 17, and preferably after configuring compilation for 3D.
-%\end{customWarning}
-\end{important}
+\end{warning}
 If you wish to do only linting or only formatting, uncomment the corresponding line at the end of \verb|script/sanitize_code.sh|. It is, however, not recommended to do only linting, and \verb|clang-format| takes seconds to run, so there should be no need.
     
 \subsection*{Frequently Asked Questions: Automatic Linting and Formatting}

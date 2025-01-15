@@ -36,7 +36,7 @@ int main (int argc, char* argv[])
     constexpr int vdim{3};
     constexpr int ndata{1};
 
-    // Spline degrees
+    // Node spline degrees (smoothing spline degree is one less in each direction)
     constexpr int degx{1};
     constexpr int degy{1};
     constexpr int degz{1};
