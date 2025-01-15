@@ -42,7 +42,9 @@ Particle.ions1.G1.vWeight = 0.25
 Particle.ions2.numGaussians = 2
 
 Particle.ions2.G0.vMean = 0.0 0.0 0.0
-Particle.ions2.G0.vThermal = 2.0 2.0 2.0
+Particle.ions2.G0.vThermal.x = "2.0 + 0.0 * sin(kvarx*x)" # functional vThermal input
+Particle.ions2.G0.vThermal.y = "2.0" # functional vThermal input
+Particle.ions2.G0.vThermal.z = "2.0" # functional vThermal input
 Particle.ions2.G0.vWeight = 0.75
 
 Particle.ions2.G1.vMean = 2.0 2.0 2.0
