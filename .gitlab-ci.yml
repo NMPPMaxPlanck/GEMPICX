@@ -10,6 +10,7 @@ stages:
     - module load git
     - module load anaconda/3/2023
 
+
 .hypre-installation:
   before_script:
     - mkdir -p third_party;pushd third_party
@@ -41,6 +42,7 @@ stages:
     - !reference [.mpcdf-modules,before_script]
     - module load gcc/12
     - module load openmpi/4.1
+    - module load fftw-mpi
     - module list
 
 build-test_gcc_3D:
@@ -82,6 +84,7 @@ build-test_gcc_1D:
     - !reference [.mpcdf-modules,before_script]
     - module load gcc/12
     - module load openmpi/4.1
+    - module load fftw-mpi
     - module list
     - !reference [.hypre-installation,before_script]
 
@@ -115,6 +118,7 @@ build-test_gcc_2D_hypre:
     - module load gcc/12
     - module load openmpi/4.1
     - module load cuda/12.2
+    - module load fftw-mpi
     - module list
 
 build-test_gpu_3D:
@@ -166,6 +170,7 @@ build-test_gpu_1D:
     - module load gcc/13 # clang/17+ needs gcc/13 libraries to run
     - module load openmpi/4.1
     - module load clang/17 
+    - module load fftw-mpi
     - module list
 
 build-test_clang_cpu_3D:

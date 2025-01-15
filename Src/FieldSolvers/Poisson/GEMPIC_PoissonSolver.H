@@ -1,9 +1,11 @@
 #ifndef GEMPIC_POISSONSOLVER_H_
 #define GEMPIC_POISSONSOLVER_H_
 
+#include <memory>
 #include <type_traits>
 
 #include <AMReX.H>
+#include <AMReX_FFT.H>  // Include FFT header for FFT Poisson Solver, but linker has some issues
 #include <AMReX_MFIter.H>
 #include <AMReX_MLEBNodeFDLaplacian.H>
 #include <AMReX_MLMG.H>
@@ -12,6 +14,7 @@
 #include <AMReX_MultiFabUtil.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Print.H>
+#include <AMReX_Vector.H>
 #include <AMReX_VisMF.H>
 #ifdef AMREX_USE_HYPRE
 #include <_hypre_IJ_mv.h>
@@ -446,6 +449,235 @@ public:
 
     void solve_amrex(DeRhamField<Grid::dual, Space::cell>& rho,
                      DeRhamField<Grid::primal, Space::node>& phi);
+
+    /** @brief FFT Poisson solver
+     *
+     *  needs rhs dual grid cell rho and the solution we want in primal grid node
+     *  Algorithm process:
+     *  equation: GHG^{\tilde} \phi = \rho
+     *  1. input \rho(cell value), calculate \phi(node value)
+     *  2. determine matrices G, H, G^{\tilde}:
+     *      ----dimension of equations (for G, G^{\tilde}, H)
+     *      ----order of Hodge matrix H (for H)
+     *      ----only need the first rows since they are all circulant
+     *  3.calculate eigenvalues of GHG^{\tilde} for its diagonal form D
+     *      ----eigenvalues_total = lamda_x + lamda_y + lamda_z
+     *      ----lamda_x_k = [2-2*cos(2*M_PI*k/Nx)]*(kth eigenvalue of hodge_x)
+     *  4.Apply FFT :
+     *      ----\phi = FFT_backward((FFT_forward(\rho) / eigenvalues))
+     *      ----amrex provides from real to complex and from complex to real.
+     *          In our case, both are needed
+     *
+     *  Due to the way the eigenvalues are calculated, it is necessary to perform the Fourier
+     *  transform between cell-centered MultiFabs.
+     *  \rho and \phi are both node-centered and as such, we need to copy values back and forth.
+     */
+
+    inline void solve_fft (DeRhamField<Grid::dual, Space::cell>& rho,
+                           DeRhamField<Grid::primal, Space::node>& phi)
+    {
+        Forms::HodgeScheme hodgeScheme = Gempic::Forms::HodgeScheme::FDHodge;
+
+        // get hodge degree from deRham complex
+        const int hodgeDegree = m_deRham->get_hodge_degree();
+        BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::solve_fft()");
+
+        // Check for periodic boundaries, required for FFT solver
+        if (!m_deRham->get_periodicity().isAllPeriodic())
+        {
+            amrex::Abort("FFT Poisson solver requires periodic boundary conditions");
+        }
+        subtract_constant_part(rho);
+
+        // define cell-centered containers for storing data, declaring 1 ghost cell to be able to
+        // copy back to the node-centered MultiFab, phi, without data loss.
+        amrex::MultiFab rhoFft(m_infra.m_grid, m_infra.m_distriMap, rho.m_data.nComp(), 1);
+        amrex::MultiFab phiFft(m_infra.m_grid, m_infra.m_distriMap, phi.m_data.nComp(), 1);
+
+        // assign values to containers from rho.m_data
+        for (amrex::MFIter mfi(rhoFft); mfi.isValid(); ++mfi)
+        {
+            auto const& rhoFftPtr = rhoFft.array(mfi);
+
+            auto const& rhoMDataPtr = rho.m_data.array(mfi);
+
+            const amrex::Box& bx = mfi.fabbox();
+
+            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+                               { rhoFftPtr(i, j, k) = rhoMDataPtr(i, j, k); });
+        }
+
+        //dimensions in x, y and z directions
+        AMREX_D_TERM(const int Nx = m_infra.m_nCell[xDir];, const int Ny = m_infra.m_nCell[yDir];
+                     , const int Nz = m_infra.m_nCell[zDir];)
+
+        // sizes in x, y and z directions
+        auto dx = m_infra.m_dx;
+
+        AMREX_D_TERM(auto eigenH0x = amrex::Vector<amrex::Real>(Nx, 1.0);
+                     , auto eigenH0y = amrex::Vector<amrex::Real>(Ny, 1.0);
+                     , auto eigenH0z = amrex::Vector<amrex::Real>(Nz, 1.0);)
+
+        if (hodgeScheme == Gempic::Forms::HodgeScheme::FDHodge)
+        {
+            switch (hodgeDegree)
+            {
+                case 2:
+                    for (int iter = 0; iter < Nx; iter++)
+                    {
+                        eigenH0x[iter] = dx.product() / (dx[xDir] * dx[xDir]);
+                    }
+
+#if AMREX_SPACEDIM > 1
+                    for (int iter = 0; iter < Ny; iter++)
+                    {
+                        eigenH0y[iter] = dx.product() / (dx[yDir] * dx[yDir]);
+                    }
+#if AMREX_SPACEDIM == 3
+                    for (int iter = 0; iter < Nz; iter++)
+                    {
+                        eigenH0z[iter] = dx.product() / (dx[zDir] * dx[zDir]);
+                    }
+#endif
+#endif
+                    break;
+                case 4:
+                    for (int iter = 0; iter < Nx; iter++)
+                    {
+                        eigenH0x[iter] = (13.0 - cos(2 * M_PI * iter / Nx)) * dx.product() /
+                                         (12 * dx[xDir] * dx[xDir]);
+                    }
+
+#if AMREX_SPACEDIM > 1
+                    for (int iter = 0; iter < Ny; iter++)
+                    {
+                        eigenH0y[iter] = (13.0 - cos(2 * M_PI * iter / Ny)) * dx.product() /
+                                         (12 * dx[yDir] * dx[yDir]);
+                    }
+#if AMREX_SPACEDIM == 3
+                    for (int iter = 0; iter < Nz; iter++)
+                    {
+                        eigenH0z[iter] = (13.0 - cos(2 * M_PI * iter / Nz)) * dx.product() /
+                                         (12 * dx[zDir] * dx[zDir]);
+                    }
+#endif
+#endif
+                    break;
+                case 6:
+                    for (int iter = 0; iter < Nx; iter++)
+                    {
+                        eigenH0x[iter] = (1067.0 - 116.0 * cos(2 * M_PI * iter / Nx) +
+                                          9.0 * cos(4 * M_PI * iter / Nx)) *
+                                         dx.product() / (960 * dx[xDir] * dx[xDir]);
+                    }
+
+#if AMREX_SPACEDIM > 1
+                    for (int iter = 0; iter < Ny; iter++)
+                    {
+                        eigenH0y[iter] = (1067.0 - 116.0 * cos(2 * M_PI * iter / Ny) +
+                                          9.0 * cos(4 * M_PI * iter / Ny)) *
+                                         dx.product() / (960 * dx[yDir] * dx[yDir]);
+                    }
+#if AMREX_SPACEDIM == 3
+                    for (int iter = 0; iter < Nz; iter++)
+                    {
+                        eigenH0z[iter] = (1067.0 - 116.0 * cos(2 * M_PI * iter / Nz) +
+                                          9.0 * cos(4 * M_PI * iter / Nz)) *
+                                         dx.product() / (960 * dx[zDir] * dx[zDir]);
+                    }
+#endif
+#endif
+                    break;
+                default:
+                    AMREX_ASSERT("Degree not implemented for three dimensional Hodge in FFT");
+                    break;
+            }
+
+            // calculate eigenvalues of the lhs matrix
+            AMREX_D_TERM(auto eigenvalues0x = amrex::Vector<amrex::Real>(Nx, 1.0);
+                         , auto eigenvalues0y = amrex::Vector<amrex::Real>(Ny, 1.0);
+                         , auto eigenvalues0z = amrex::Vector<amrex::Real>(Nz, 1.0);)
+
+            for (int iter = 0; iter < Nx; iter++)
+            {
+                eigenvalues0x[iter] = (2 - 2 * cos(2 * M_PI * iter / Nx)) * eigenH0x[iter];
+            }
+
+#if AMREX_SPACEDIM > 1
+            for (int iter = 0; iter < Ny; iter++)
+            {
+                eigenvalues0y[iter] = (2 - 2 * cos(2 * M_PI * iter / Ny)) * eigenH0y[iter];
+            }
+#if AMREX_SPACEDIM == 3
+            for (int iter = 0; iter < Nz; iter++)
+            {
+                eigenvalues0z[iter] = (2 - 2 * cos(2 * M_PI * iter / Nz)) * eigenH0z[iter];
+            }
+#endif
+#endif
+
+            // Handle the gpu parallel for for gpu running
+            AMREX_D_TERM(
+                amrex::Gpu::DeviceVector<amrex::Real> eigenvalues0xGpu(static_cast<size_t>(Nx));
+                , amrex::Gpu::DeviceVector<amrex::Real> eigenvalues0yGpu(static_cast<size_t>(Ny));
+                , amrex::Gpu::DeviceVector<amrex::Real> eigenvalues0zGpu(static_cast<size_t>(Nz));)
+
+            AMREX_D_TERM(amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0x.begin(),
+                                               eigenvalues0x.end(), eigenvalues0xGpu.begin());
+                         , amrex::Gpu::copyAsync (amrex::Gpu::hostToDevice, eigenvalues0y.begin(),
+                                                 eigenvalues0y.end(), eigenvalues0yGpu.begin());
+                         , amrex::Gpu::copyAsync (amrex::Gpu::hostToDevice, eigenvalues0z.begin(),
+                                                 eigenvalues0z.end(), eigenvalues0zGpu.begin());)
+
+            AMREX_D_TERM(auto* const eigenvalues0xGpuPtr = eigenvalues0xGpu.dataPtr();
+                         , auto* const eigenvalues0yGpuPtr = eigenvalues0yGpu.dataPtr();
+                         , auto* const eigenvalues0zGpuPtr = eigenvalues0zGpu.dataPtr();)
+
+            amrex::FFT::R2C r2c(m_infra.m_domain);
+            // Amrex FFT only fourier transforms the first component, so we need to do hacks
+            for (int comp{0}; comp < rho.m_data.nComp(); ++comp)
+            {
+                amrex::MultiFab rhoFftComp(rhoFft, amrex::make_alias, comp, 1);
+                amrex::MultiFab phiFftComp(phiFft, amrex::make_alias, comp, 1);
+                r2c.forwardThenBackward(rhoFftComp, phiFftComp,
+                                        [=] AMREX_GPU_DEVICE(int i, int j, int k, auto& sp)
+                                        {
+                                            auto eigenvalueSum{GEMPIC_D_ADD(
+                                                eigenvalues0xGpuPtr[i], eigenvalues0yGpuPtr[j],
+                                                eigenvalues0zGpuPtr[k])};
+                                            if (eigenvalueSum == 0)
+                                            {
+                                                sp = 0;
+                                            }
+                                            else
+                                            {
+                                                sp /= eigenvalueSum * GEMPIC_D_MULT(Nx, Ny, Nz);
+                                            }
+                                        });
+            }
+        }
+        else
+        {
+            amrex::Abort("The FFT Poison solver only works with Finite Difference Hodge");
+        }
+
+        //boundary handling
+        phiFft.FillBoundary(m_deRham->get_periodicity());
+
+        for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
+        {
+            auto const& phiFftPtr = phiFft.array(mfi);
+
+            auto const& phiMDataPtr = phi.m_data.array(mfi);
+
+            const amrex::Box& bx = mfi.validbox();
+
+            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+                               { phiMDataPtr(i, j, k) = phiFftPtr(i, j, k); });
+        }
+
+        phi.fill_boundary();
+    };
 
     void apply_poisson_operator(DeRhamField<Grid::primal, Space::node>& phi,
                                 DeRhamField<Grid::dual, Space::cell>& rho);

@@ -1,4 +1,5 @@
 macro(set_amrex_options_from_gempic)
+  set(AMReX_FFT ON CACHE BOOL "AMReX Option set within GEMPIC")
   # set(AMReX_HDF5 TRUE CACHE BOOL "AMReX Option set within GEMPIC")
   set(AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
   if(GEMPIC_USE_CUDA)
@@ -21,7 +22,8 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 gempic_FetchContent_Declare(AMReX
              SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/amrex-src
              GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
-             GIT_TAG 24.06 # after 24.05
+             GIT_TAG 041f225 # newest AMReX commit
+             #GIT_TAG 25.01
              GIT_PROGRESS ON # AMReX takes long enough that this is nice instead of noise.
              )
 if (NOT ${AMReX_FOUND}) # only true if package was installed
