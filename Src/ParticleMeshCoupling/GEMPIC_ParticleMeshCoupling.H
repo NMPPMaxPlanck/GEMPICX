@@ -821,7 +821,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  *
  * @param rho charge density to be computed
  * @param spline Splines evaluated at given particle position
- * @param chargeWeight Particle weight*charge
+ * @param chargeWeight Particle weight * charge
  */
 template <int degX, int degY, int degZ>
 AMREX_GPU_HOST_DEVICE inline void gempic_deposit_rho (amrex::Array4<amrex::Real> const &rho,

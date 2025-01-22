@@ -296,6 +296,8 @@ private:
         "k",
         "domainLo",
         "domainHi",
+        "sV",
+        "sOmega",
     });
 
 public:

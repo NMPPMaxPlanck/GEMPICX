@@ -64,7 +64,7 @@ amrex::Real test12 (int n)
     DeRhamField<Grid::dual, Space::face> dualTwoForm(deRham);
     DeRhamField<Grid::primal, Space::edge> primalOneForm(deRham);
 
-    const amrex::Real weight = 2. / 3.;
+    const amrex::Real weight = 3. / 2.;
 
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> func = {
@@ -112,7 +112,7 @@ amrex::Real test12 (int n)
     for (int i = 0; i < 3; ++i)
     {
         parser[i].define(func[i]);
-        parser[i].setConstant("w", 1 / weight);
+        parser[i].setConstant("w", weight);
         parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
     }
@@ -166,7 +166,7 @@ amrex::Real test21 (int n)
     DeRhamField<Grid::dual, Space::face> dualTwoForm(deRham);
     DeRhamField<Grid::primal, Space::edge> primalOneForm(deRham);
 
-    const amrex::Real weight = 2. / 3.;
+    const amrex::Real weight = 3. / 2.;
 
 #if (GEMPIC_SPACEDIM == 1)
     const amrex::Array<std::string, 3> func = {
@@ -214,7 +214,7 @@ amrex::Real test21 (int n)
     for (int i = 0; i < 3; ++i)
     {
         parser[i].define(func[i]);
-        parser[i].setConstant("w", 1 / weight);
+        parser[i].setConstant("w", weight);
         parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
     }
@@ -268,7 +268,7 @@ amrex::Real test03 (int n)
     DeRhamField<Grid::dual, Space::cell> dualThreeForm(deRham);
     DeRhamField<Grid::primal, Space::node> primalZeroForm(deRham);
 
-    const amrex::Real weight = 2. / 3.;
+    const amrex::Real weight = 3. / 2.;
 
 #if (GEMPIC_SPACEDIM == 1)
     const std::string func = "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))";
@@ -299,7 +299,7 @@ amrex::Real test03 (int n)
     deRham->hodge(primalZeroForm, dualThreeForm, weight);
 
     parser.define(func);
-    parser.setConstant("w", 1 / weight);
+    parser.setConstant("w", weight);
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 
@@ -347,7 +347,7 @@ amrex::Real test30 (int n)
     DeRhamField<Grid::dual, Space::cell> dualThreeForm(deRham);
     DeRhamField<Grid::primal, Space::node> primalZeroForm(deRham);
 
-    const amrex::Real weight = 2. / 3.;
+    const amrex::Real weight = 3. / 2.;
 
 #if (GEMPIC_SPACEDIM == 1)
     const std::string func = "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))";
@@ -378,7 +378,7 @@ amrex::Real test30 (int n)
     deRham->hodge(primalThreeForm, dualZeroForm, weight);
 
     parser.define(func);
-    parser.setConstant("w", 1 / weight);
+    parser.setConstant("w", 1 * weight);
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 

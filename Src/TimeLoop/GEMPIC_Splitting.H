@@ -319,6 +319,7 @@ public:
      * @param B : magnetic field as primal 2-form
      * @param H : magnetic field as dual 1-form
      * @param dt : time step
+     * @param scaling : scaling factor H := s_v^2 / s_omega^2 * B
      *
      */
     inline void apply_h_b (DeRhamField<Grid::dual, Space::face>& D,
@@ -330,7 +331,7 @@ public:
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell with no current
-        deRham->hodge(B, H);
+        deRham->hodge(B, H, deRham->scaling_bto_h());
         deRham->add_dt_curl(H, D, dt);
     }
 
@@ -342,6 +343,7 @@ public:
      * @param E : electric field as primal 1-form (temporary field)
      * @param D : electric field as dual 2-form (input of the function)
      * @param dt : time step
+     * @param scaling : scaling factor D := 1 / s_omega^2 * E
      *
      */
     inline void apply_h_e_field (DeRhamField<Grid::primal, Space::face>& B,
@@ -351,7 +353,7 @@ public:
                                  const amrex::Real dt)
     {
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
-        deRham->hodge(D, E);
+        deRham->hodge(D, E, deRham->scaling_dto_e());
         // Operator H_E for dt (-dt for the Faraday equation)
         deRham->add_dt_curl(E, B, -dt);
     }

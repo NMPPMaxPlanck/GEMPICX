@@ -5,7 +5,9 @@
 \newcommand{\bx}{\textbf{x}}
 \newcommand{\bv}{\textbf{v}}
 \newcommand{\bB}{\textbf{B}}
+\newcommand{\bH}{\textbf{H}}
 \newcommand{\bE}{\textbf{E}}
+\newcommand{\bD}{\textbf{D}}
 \newcommand{\bJ}{\textbf{J}}
 \newcommand{\du}{\,\mathrm{d}}
 
@@ -28,7 +30,6 @@
 \newcommand{\ompr}{\omega_{p,\mathrm{ref}}}
 \newcommand{\omcr}{\omega_{c,\mathrm{ref}}}
 
-
 \newcommand{\nablaht}{\hat{\nabla}}
 \newcommand{\nablaxht}{\hat{\nabla}_{\xht}}
 \newcommand{\nablavht}{\hat{\nabla}_{\vht}}
@@ -39,7 +40,9 @@
 \newcommand{\qht}{\hat{q}}
 \newcommand{\mht}{\hat{m}}
 \newcommand{\Eht}{\hat{\bE}}
+\newcommand{\Dht}{\hat{\bD}}
 \newcommand{\Bht}{\hat{\bB}}
+\newcommand{\Hht}{\hat{\bH}}
 \newcommand{\Jht}{\hat{\bJ}}
 \newcommand{\rhoht}{\hat{\rho}}
 \newcommand{\nht}{\hat{n}}
@@ -48,12 +51,7 @@
 \newcommand{\Apht}{\hat A_{\parallel}}
 \newcommand{\Tsht}{\hat{T_{s}}}
 \newcommand{\fht}{\hat{f}}
-
-
-
-
 \newcommand{\fsht}{\hat{f_s}}
-
 
 \newcommand{\muht}{\hat{\mu}}
 \newcommand{\vpht}{\hat{\vp}}
@@ -70,36 +68,36 @@
 
 \subsection{The Vlasov-Maxwell Model}
 
-The Vlasov equation for the distribution function of a particle species $s$ in SI units reads 
+The Vlasov equation for the distribution function of a particle species $s$ in SI units reads
 \begin{equation}\label{eq:Vlasov}
-\partial_t f_s + \bv \cdot \nabla_{\bx} f_s + \frac{q_s}{m_s} \left( \bE + \bv \times \bB \right) \cdot \nabla_{\bv} f_s = 0
+	\partial_t f_s + \bv \cdot \nabla_{\bx} f_s + \frac{q_s}{m_s} \left( \bE + \bv \times \bB \right) \cdot \nabla_{\bv} f_s = 0
 \end{equation}
 along with Maxwell's equations
 \begin{align}
-\frac{\partial \bB}{\partial t} + \nabla \times \bE &= 0, \\
-- \frac{\partial \bE}{\partial t} + c^2\nabla \times \bB &= \frac{1}{\varepsilon_0}\bJ, \\
-\nabla \cdot \bE &= \frac{\rho}{\varepsilon_0},\\
-\nabla \cdot \bB &= 0.
+	\frac{\partial \bB}{\partial t} + \nabla \times \bE      & = 0,                          \\
+	- \frac{\partial \bE}{\partial t} + c^2\nabla \times \bB & = \frac{1}{\varepsilon_0}\bJ, \\
+	\nabla \cdot \bE                                         & = \frac{\rho}{\varepsilon_0}, \\
+	\nabla \cdot \bB                                         & = 0.
 \end{align}
 
 The source terms of the Maxwell's equation are given by the velocity moments of the distribution function: the charge density
 \begin{align*}
-\rho= \sum_s q_s \int f_s \du\bv
+	\rho= \sum_s q_s \int f_s \du\bv
 \end{align*}
 and the current density
 \begin{align*}
-\bJ =\sum_s q_s\int \bv f_s \du\bv.
+	\bJ =\sum_s q_s\int \bv f_s \du\bv.
 \end{align*}
 This system additionally requires boundary conditions and initial conditions for $\mathbf{E}$, $\mathbf{B}$ and $f$.
 The initial condition for $f$ in general involves Maxwellians of the form
 \begin{equation}\label{eq:maxwellian}
 	f_{M,s}(\mathbf{x},\mathbf{v})= \frac{n(\mathbf{x})}{(2\pi v_{th,s}^2)^{\frac 32}} e^{-\frac{|\bv|^2}{2v_{th,s}^2}},
 \end{equation}
-where the thermal velocity of species $s$ is related to its temperature by $v_{th,s}=\sqrt{\frac{k_B T_s}{m_s}}$, where $k_B$ is the Boltzmann constant. 
+where the thermal velocity of species $s$ is related to its temperature by $v_{th,s}=\sqrt{\frac{k_B T_s}{m_s}}$, where $k_B$ is the Boltzmann constant.
 
-The total energy of the system is given by the Hamiltonian in SI units, 
+The total energy of the system is given by the Hamiltonian in SI units,
 \begin{equation}\label{eq:hamiltonian}
-\mathcal{H}=\sum_s\frac{m_s}{2}\int |\bv|^2 f_s \du\bx \du\bv + \frac{\varepsilon_0}{2} \int |\bE|^2 \du\bx + \frac{1}{2\mu_0} \int |\bB|^2 \du\bx.
+	\mathcal{H}=\sum_s\frac{m_s}{2}\int |\bv|^2 f_s \du\bx \du\bv + \frac{\varepsilon_0}{2} \int |\bE|^2 \du\bx + \frac{1}{2\mu_0} \int |\bB|^2 \du\bx.
 \end{equation}
 
 
@@ -109,17 +107,17 @@ The total energy of the system is given by the Hamiltonian in SI units,
 For all physical quantities we introduce a reference scale and a corresponding dimensionless quantity.
 First, for the independent variables, we write
 $$t= \tr \tht, ~~ \bx= \xr \xht, ~~ \bv = \vr \vht, ~~ q = \qr\qht, ~~~ m = \mr\mht.$$
-For the dependent variables we define 
+For the dependent variables we define
 \begin{align*}
-	&f(t,\bx,\bv) = \fr \fht(\tht, \xht, \vht),~~~
+	 & f(t,\bx,\bv) = \fr \fht(\tht, \xht, \vht),~~~
 	n(t,\bx) = \nr \nht(\tht, \xht), ~~~
-	\bE(t,\bx) = \Er \Eht(\tht, \xht), \\
-	&\bB(t,\bx) = \Br \Bht(\tht, \xht), ~~~
+	\bE(t,\bx) = \Er \Eht(\tht, \xht),               \\
+	 & \bB(t,\bx) = \Br \Bht(\tht, \xht), ~~~
 	\rho(t,\bx) = \qr\nr \rhoht(\tht, \xht), ~~~
-	\bJ(t,\bx) = \qr\nr\vr \Jht(\tht, \xht), \\
-	&T_s(t,\bx) = \Tr\Tsht(\tht, \xht).
-\end{align*} 
-so that for example 
+	\bJ(t,\bx) = \qr\nr\vr \Jht(\tht, \xht),         \\
+	 & T_s(t,\bx) = \Tr\Tsht(\tht, \xht).
+\end{align*}
+so that for example
 $$\partial_t n = \frac{1}{\tr}\partial_{\tht} \nht, ~~~ \nabla_\bx n =  \frac{1}{\xr}\nabla_\xht \nht.$$
 Let us now define related physical reference quantities:
 \begin{equation}
@@ -129,26 +127,26 @@ Let us now define related physical reference quantities:
 Plugging these expressions into the Vlasov-Maxwell system, we get the dimensionless system
 \begin{equation}\label{eq:Vlasovtr}
 	\partial_{\tht} \fht_s + \frac{\vr\tr}{\xr}\vht \cdot \nablaxht \fht_s + \frac{\qr\Br\tr}{\mr} \frac{\qht_s}{\mht_s} \left( \frac{\Er}{\vr\Br}\Eht + \vht \times \Bht \right) \cdot \nablavht \fht_s = 0
-	\end{equation}
-	and Maxwell's equations
-	\begin{subequations}
+\end{equation}
+and Maxwell's equations
+\begin{subequations}
 	\begin{align}
-	\frac{\partial \Bht}{\partial \tht} + \frac{\tr \Er}{\Br\xr}\nablaht \times \Eht &= 0 , \\
-	-  \frac{\partial \Eht}{\partial t} + \frac{\tr\Br}{\xr\Er} c^2\nabla \times \Bht &= \frac{\qr\nr\vr\tr}{\varepsilon_0\Er}\Jht , \\
-	\nablaht \cdot \Eht &= \frac{\qr\nr\xr}{\varepsilon_0\Er}\rhoht,\\
-	\nablaht \cdot \Bht &= 0.
+		\frac{\partial \Bht}{\partial \tht} + \frac{\tr \Er}{\Br\xr}\nablaht \times \Eht  & = 0 ,                                         \\
+		-  \frac{\partial \Eht}{\partial t} + \frac{\tr\Br}{\xr\Er} c^2\nabla \times \Bht & = \frac{\qr\nr\vr\tr}{\varepsilon_0\Er}\Jht , \\
+		\nablaht \cdot \Eht                                                               & = \frac{\qr\nr\xr}{\varepsilon_0\Er}\rhoht,   \\
+		\nablaht \cdot \Bht                                                               & = 0.
 	\end{align}
-	\end{subequations}
+\end{subequations}
 
-Using the relation between $\fr$ and $\nr$, the dimensionless Maxwellian is 
+Using the relation between $\fr$ and $\nr$, the dimensionless Maxwellian is
 \begin{equation}\label{eq:maxwellianD}
 	\fht_{M,s}(\xht,\vht)= \frac{\nht(\xht)}{(2\pi \hat{v}_{th,s}^2)^{\frac 32}} e^{-\frac{|\bv|^2}{2\hat{v}_{th,s}^2}},
-\end{equation}	
+\end{equation}
 
 We shall now choose the following relations between our reference quantities
 \begin{equation}
 	\frac{\vr\tr}{\xr}=1, ~~~ \frac{\Er}{\vr\Br}=1, ~~~ \frac{\qr\Br\tr}{\mr} = \omcr\tr =1.
-\end{equation} 	
+\end{equation}
 From these choices it follows that
 \begin{equation}
 	\frac{\tr \Er}{\Br\xr} = 1, ~~~ \frac{\tr\Br}{\xr\Er} c^2 = \frac{c^2}{\vr^2}, ~~~
@@ -160,107 +158,116 @@ With these choices all the coefficients in our Vlasov-Maxwell system are set to 
 	s_v = \frac{c}{\vr}, ~~~~ s_\omega = \frac{\ompr}{\omcr}.
 \end{equation}
 
-Finally the dimensionless Vlasov-Maxwell system implemented in the code reads
+Finally, the dimensionless Vlasov-Maxwell system reads
 \begin{equation}\label{eq:Vlasovt}
 	\partial_{\tht} \fht_s + \vht \cdot \nablaxht \fht_s +  \frac{\qht_s}{\mht_s} \left( \Eht + \vht \times \Bht \right) \cdot \nablavht \fht_s = 0
-	\end{equation}
-	\begin{subequations}
+\end{equation}
+\begin{subequations}
 	\begin{align}
-	\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht &= 0 , \\
-	-  \frac{\partial \Eht}{\partial t} + s_v^2\nablaht \times \Bht &= s_\omega^2\Jht , \\
-	\nablaht \cdot \Eht &= s_\omega^2\rhoht,\\
-	\nablaht \cdot \Bht &= 0.
+		\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht      & = 0 ,               \\
+		-  \frac{\partial \Eht}{\partial t} + s_v^2\nablaht \times \Bht & = s_\omega^2\Jht ,  \\
+		\nablaht \cdot \Eht                                             & = s_\omega^2\rhoht, \\
+		\nablaht \cdot \Bht                                             & = 0.
 	\end{align}
-	\end{subequations}
-	The source terms of the Maxwell's equation are given by the velocity moments of the distribution function: the charge density
-	\begin{align*}
+\end{subequations}
+Dividing Amp\`ere's equation by $s_\omega^2$ and defining $\Dht := \frac{1}{s_\omega^2} \Eht$, $\Hht := \frac{s_v^2}{s_\omega^2} \Bht$ allows us to write the equations in a four-field formulation suitable for our dual grid discretization. The scaling parameters are hidden in constitutive relations which become discrete Hodge operators in the numerical scheme. With these definitions, Maxwell's equations write
+\begin{subequations}
+	\begin{align}
+		\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht & = 0 ,     \\
+		-  \frac{\partial \Dht}{\partial t} + \nablaht \times \Hht & = \Jht ,  \\
+		\nablaht \cdot \Dht                                        & = \rhoht, \\
+		\nablaht \cdot \Bht                                        & = 0.
+	\end{align}
+\end{subequations}
+The source terms of the Maxwell's equation are given by the velocity moments of the distribution function: the charge density
+\begin{align*}
 	\rhoht= \sum_s Z_s \int \fht_s \du\vht
-	\end{align*}
-	and the current density
-	\begin{align*}
+\end{align*}
+and the current density
+\begin{align*}
 	\Jht =\sum_s Z_s\int \vht \fht_s \du\vht.
-	\end{align*}
-	Note that for the natural choice $\qr=e$ the electron charge, $Z_s$ is the charge state of species $s$.
+\end{align*}
+Note that for the natural choice $\qr=e$ the electron charge, $Z_s$ is the charge state of species $s$.
 
-The total energy of the dimensionless system is given by the following dimensionless Hamiltonian, 
-	\begin{equation}\label{eq:hamiltoniant}
-	\mathcal{H}=\sum_s\frac{\mht_s}{2}\int |\vht|^2 \fht_s \du\xht \du\vht + \frac{1}{2s_\omega^2} \int \|\Eht\|^2 \du\xht + \frac{s_v^2}{2s\omega^2} \int \|\Bht\|^2 \du\xht.
-	\end{equation}
+The total energy of the dimensionless system is given by the following dimensionless Hamiltonian,
+\begin{equation}\label{eq:hamiltoniant}
+	\mathcal{H}=\sum_s\frac{\mht_s}{2}\int |\vht|^2 \fht_s \du\xht \du\vht + \frac{1}{2} \int \Eht \cdot \Dht \du\xht + \frac{1}{2} \int \Bht \cdot \Hht \du\xht.
+\end{equation}
 
-	\subsection{Code Units}
+\subsection{Code Units}
 
 A plasma is characterized by three reference parameters: density, temperature and background magnetic field (for a magnetized plasma). In addition, the charge and mass of each species in the plasma need to be given. These reference values need to be set by the user. All the other plasma quantities follow from these.
 
 We choose the electrons as reference particles, so that
 $$\qr = e, ~~~ \mr=m_e, ~~~ \omcr=\frac{e\Br}{m_e}, ~~~ \ompr=\sqrt{\frac{e^2\nr}{\epsilon_0m_e}}, ~~~ \vthr= \sqrt{\frac{k_B \Tr}{m_e}} .$$
 
-In addition, in our scaling we made the assumptions that $\tr = \omcr^{-1}$. 
+In addition, in our scaling we made the assumptions that $\tr = \omcr^{-1}$.
 Then setting the reference velocity $\vr$ completely defines our two scaling parameters $s_v$ and $s_\omega$.
 We also denote by $d_e$ the electron skin depth (inertial length) and by
 $\lambda_D=\vthr/\omr$ the reference Debye length.
 A summary of the reference quantities for choice 1 ($\vr=c$) and choice 2 ($\vthr$) is given in table \ref{tab:refq}.
 
 \begin{table}[htbp]
-	    \caption{Reference quantities \label{tab:refq}}
+	\caption{Reference quantities \label{tab:refq}}
 	\centering\begin{tabular}{c|c|c}
-		Reference quantity & Choice 1 & Choice 2 \\ \hline
-		$\nr$& arbitrary & arbitrary\\
-		$\Tr$& arbitrary& arbitrary\\
-		$\Br$& arbitrary& arbitrary\\
-		$\qr$& e & e \\
-		$\mr$& $m_e$  & $m_e$  \\
-		$\tr$& $ \omcr^{-1}$ &$ \omcr^{-1}$\\
-		$\vr$& $c$ &$\vthr$ \\ 
-		$\xr$& $s_\omega d_e$ & $s_\omega \lambda_D$ \\
-		$\Er$& $c\Br$ & $\vthr\Br$ \\
+		Reference quantity & Choice 1       & Choice 2             \\ \hline
+		$\nr$              & arbitrary      & arbitrary            \\
+		$\Tr$              & arbitrary      & arbitrary            \\
+		$\Br$              & arbitrary      & arbitrary            \\
+		$\qr$              & e              & e                    \\
+		$\mr$              & $m_e$          & $m_e$                \\
+		$\tr$              & $ \omcr^{-1}$  & $ \omcr^{-1}$        \\
+		$\vr$              & $c$            & $\vthr$              \\
+		$\xr$              & $s_\omega d_e$ & $s_\omega \lambda_D$ \\
+		$\Er$              & $c\Br$         & $\vthr\Br$           \\
 	\end{tabular}
 \end{table}
 
 By default the two scaling parameters are set to 1. This means on the one hand ($s_v=1$) that the reference velocity is the speed of light, $c$, and on the other hand $(s_\omega=1$) that $\omega_{p,e}=\omega_{c,e}$, which imposes a dependence between $\nr$ and $\Br$.
 
 Other values can be set in the input file by setting
-\verb|epref_ep0| ($=s_\omega$) and \verb|curlB_scaling| (=$s_v$).
+\verb|sOmega| (for $s_\omega$) and \verb|sV| (for $s_v$).
 
 \subsection{Examples of Plasma Parameters}
 
-A magnetized plasma is characterized by its density $n$, its temperature $T$ and the magnitude of its external magnetic field $B$. With these quantities known in addition to the particle mass and charges, the following parameters can be computed  
+A magnetized plasma is characterized by its density $n$, its temperature $T$ and the magnitude of its external magnetic field $B$. With these quantities known in addition to the particle mass and charges, the following parameters can be computed
 
 \begin{itemize}
- \item Thermal velocity $v_{th}= \sqrt{\frac{k_B T}{m}}$ 
- \item Plasma frequency $\omega_p = \sqrt{\frac{q^2 n}{\epsilon_0 m}}$
- \item Cyclotron frequency  $\omega_c = \frac{q B}{m}$
- \item Thermal gyroradius $\rho_L = \frac{v_{th}}{\omega_c}$
- \item Inertial length $d=\frac{c}{\omega_p}$
- \item Debye length $\lambda_D = \frac{v_{th}}{\omega_p}$ 
- \item Alfven velocity $v_A = \frac{B_0}{\sqrt{\mu_0 m_i n}}$
- \item Ratio of thermal to magnetic energy $\beta = \frac{2\mu_0 n k_B T}{B_0^2}$
+	\item Thermal velocity $v_{th}= \sqrt{\frac{k_B T}{m}}$
+	\item Plasma frequency $\omega_p = \sqrt{\frac{q^2 n}{\epsilon_0 m}}$
+	\item Cyclotron frequency  $\omega_c = \frac{q B}{m}$
+	\item Thermal gyroradius $\rho_L = \frac{v_{th}}{\omega_c}$
+	\item Inertial length $d=\frac{c}{\omega_p}$
+	\item Debye length $\lambda_D = \frac{v_{th}}{\omega_p}$
+	\item Alfven velocity $v_A = \frac{B_0}{\sqrt{\mu_0 m_i n}}$
+	\item Ratio of thermal to magnetic energy $\beta = \frac{2\mu_0 n k_B T}{B_0^2}$
 \end{itemize}
 
 Let us give typical values for two kinds of magnetized plasmas: a magnetic fusion plasma and a ionosphere plasma, for only hydrogen ions, so that $q_i = -q_e = 1.6022\times 10^{-19} \,C$, $m_e =  9.1094 \times 10^{-31} \,kg$, $m_i=1.6726 \times 10^{-27}\,kg$.
 
 \textbf{Remark:}
-	 In plasma physics temperature is generally given in electron volt (eV). In order to get the thermal velocity in $m/s$ (SI) from a temperature in eV, the Boltzmann constant $k_B$ is replaced by the electron charge $e$ in the relation
-	$v_{th}= \sqrt{k_B T / m}$.
+In plasma physics temperature is generally given in electron volt (eV). In order to get the thermal velocity in $m/s$ (SI) from a temperature in eV, the Boltzmann constant $k_B$ is replaced by the electron charge $e$ in the relation
+$v_{th}= \sqrt{k_B T / m}$.
 
 \begin{tabular}{c|c|c|c}
-		 Parameter & Magnetic Fusion & Ionosphere & \\\hline 
-		$n$ $(m^{-3})$ &$10^{20}$ & $10^{12} $ & density\\
-		$T\,(eV)$  &$10^4$ & $0.1$ & temperature\\
-		$B\, (T)$  & $2$ & $0.35\times 10^{-4}$ & external magnetic field\\
-		$\lambda_D\,(m)$ & 7.439e-05& 2.352e-03  & Debye length\\
-		$v_{th,e}\,(m/s)$   &4.191e+07  & 1.325e+05  & electron thermal velocity\\
-		$\omega_{p,e}\,(s^{-1})$ & 5.634e+11& 5.634e+07  & electron plasma frequency\\
-		$\omega_{c,e}\,(s^{-1})$ & 3.513e+11& 6.147e+06  & electron cyclotron frequency\\
-		$r_{L,e}\,(m)$   & 1.193e-04 & 2.156e-02  & electron thermal Larmor radius\\
-		$d_e\,(m)$    & 5.321e-04 & 5.321e+00  & electron inertial length  (skin depth)\\
-		$\beta_e$ & 1.005e-01 & 3.283e-05  & ratio electron thermal / magnetic energy\\
-		$v_{th,i}\,(m/s)$ &  9.781e+05 & 3.093e+03  & ion thermal velocity\\
-		$\omega_{p,i}\,(s^{-1})$ & 1.315e+10& 1.315e+06  & ion plasma frequency\\
-		$\omega_{c,i}\,(s^{-1})$ & 1.913e+08& 3.348e+03  & ion cyclotron frequency\\
-		$r_{L,i}\,(m)$  &  5.112e-03 & 9.238e-01  & ion thermal Larmor radius\\
-		$d_i\,(m)$  &  2.280e-02  & 2.280e+02  & ion inertial length\\
-		$\beta_i$  & 1.005e-01 & 3.283e-05  & ratio ion thermal / magnetic energy\\
-		$v_A\,(m/s)$   &  4.362e+06 & 7.634e+05  &Alfven velocity \\
+	Parameter                & Magnetic Fusion & Ionosphere           &                                          \\\hline
+	$n$ $(m^{-3})$           & $10^{20}$       & $10^{12} $           & density                                  \\
+	$T\,(eV)$                & $10^4$          & $0.1$                & temperature                              \\
+	$B\, (T)$                & $2$             & $0.35\times 10^{-4}$ & external magnetic field                  \\
+	$\lambda_D\,(m)$         & 7.439e-05       & 2.352e-03            & Debye length                             \\
+	$v_{th,e}\,(m/s)$        & 4.191e+07       & 1.325e+05            & electron thermal velocity                \\
+	$\omega_{p,e}\,(s^{-1})$ & 5.634e+11       & 5.634e+07            & electron plasma frequency                \\
+	$\omega_{c,e}\,(s^{-1})$ & 3.513e+11       & 6.147e+06            & electron cyclotron frequency             \\
+	$r_{L,e}\,(m)$           & 1.193e-04       & 2.156e-02            & electron thermal Larmor radius           \\
+	$d_e\,(m)$               & 5.321e-04       & 5.321e+00            & electron inertial length  (skin depth)   \\
+	$\beta_e$                & 1.005e-01       & 3.283e-05            & ratio electron thermal / magnetic energy \\
+	$v_{th,i}\,(m/s)$        & 9.781e+05       & 3.093e+03            & ion thermal velocity                     \\
+	$\omega_{p,i}\,(s^{-1})$ & 1.315e+10       & 1.315e+06            & ion plasma frequency                     \\
+	$\omega_{c,i}\,(s^{-1})$ & 1.913e+08       & 3.348e+03            & ion cyclotron frequency                  \\
+	$r_{L,i}\,(m)$           & 5.112e-03       & 9.238e-01            & ion thermal Larmor radius                \\
+	$d_i\,(m)$               & 2.280e-02       & 2.280e+02            & ion inertial length                      \\
+	$\beta_i$                & 1.005e-01       & 3.283e-05            & ratio ion thermal / magnetic energy      \\
+	$v_A\,(m/s)$             & 4.362e+06       & 7.634e+05            & Alfven velocity                          \\
 \end{tabular}
 
 

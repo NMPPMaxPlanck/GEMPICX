@@ -5,7 +5,11 @@ simName = "Weibel"
 nCellVector = 32 8 8
 maxGridSizeVector = 8 8 4
 isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
- 
+
+# Scaling factors
+sV = 1
+sOmega = 1
+
 # Particle parameters
 rhoBackground = 1
 Particle.speciesNames = electrons
