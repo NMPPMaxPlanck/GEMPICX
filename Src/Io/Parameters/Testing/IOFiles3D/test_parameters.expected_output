@@ -10,6 +10,9 @@ ComputationalDomain.toleranceParticle = 1e-10
 nGhostExtra = 3 # set here
 nGhost = 4 4 4  # set here
 
+sV = 1 # set here
+sOmega = 1 # set here
+
 # Parameters for function parseFunctions:
 k = 1 1 0.3  # read from file
 Function.Bx = "0.0"
@@ -53,4 +56,6 @@ nCellVector = 128 8 8  # read from file
 nGhost = 4 4 4  # set by class DeRhamComplex
 nGhostExtra = 3 # set by class DeRhamComplex
 outputFile = "test_parameters.output" # read from file
+sOmega = 1 # set by Parameters class
+sV = 1 # set by Parameters class
 simName = "test_parameters" # read from file

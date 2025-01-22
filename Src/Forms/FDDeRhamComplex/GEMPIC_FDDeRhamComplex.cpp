@@ -3,6 +3,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
+#include "GEMPIC_Parameters.H"
 
 using namespace Gempic::Forms;
 
@@ -20,6 +21,13 @@ FDDeRhamComplex::FDDeRhamComplex(const ComputationalDomain& infra,
     }
     m_nGhost = DeRhamComplex::m_nGhost[xDir];
     m_hodgeScheme = hodgeScheme;
+
+    // Read the scaling factors from input file and compute value for the Hodge operator
+    Gempic::Io::Parameters parameters{};
+    m_sV = 1.0;
+    parameters.get_or_set("sV", m_sV);
+    m_sOmega = 1.0;
+    parameters.get_or_set("sOmega", m_sOmega);
 
     // There is only one components in each MultiFab as the different components of the forms are
     // centered differently
@@ -1235,3 +1243,9 @@ void FDDeRhamComplex::eval_form (
 {
     this->eval_form_degree_selector(field, evalShift, pointValues);
 }
+
+amrex::Real FDDeRhamComplex::scaling_eto_d() { return 1 / (m_sOmega * m_sOmega); }
+
+amrex::Real FDDeRhamComplex::scaling_dto_e() { return m_sOmega * m_sOmega; }
+
+amrex::Real FDDeRhamComplex::scaling_bto_h() { return m_sV * m_sV / (m_sOmega * m_sOmega); }

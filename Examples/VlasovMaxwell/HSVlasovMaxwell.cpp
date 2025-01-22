@@ -141,7 +141,7 @@ int main (int argc, char *argv[])
             cgPoisson.solve(rho, phi);
             deRham->a_times_grad(phi, ephi, -1);
             E += ephi;
-            deRham->hodge(E, D);
+            deRham->hodge(E, D, deRham->scaling_eto_d());
             // compute div D for diagnostics
             deRham->div(D, divD);
 
@@ -231,7 +231,7 @@ int main (int argc, char *argv[])
                 D -= J;
 
                 // E needed for pushing the particles
-                deRham->hodge(D, E);
+                deRham->hodge(D, E, deRham->scaling_dto_e());
 
                 // Second particle loop for particle part from H_E
                 for (int spec = 0; spec < numspec; spec++)

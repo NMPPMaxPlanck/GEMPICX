@@ -194,6 +194,7 @@ private:
                       const amrex::Periodicity& periodicity)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::update_data()");
+
         constexpr int noutputs = 3;
         this->m_data.resize(noutputs, 0.0);
 

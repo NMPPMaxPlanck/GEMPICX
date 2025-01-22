@@ -6,6 +6,10 @@ nCellVector = 32 4 4
 maxGridSizeVector = 4 4 4
 isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
 
+# Scaling factors
+sV = 1
+sOmega = 1
+
 # Particle parameters
 Particle.speciesNames = electrons
 Particle.electrons.nPartPerCell = 1000 # number of particles per cell

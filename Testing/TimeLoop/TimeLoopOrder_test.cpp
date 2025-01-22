@@ -29,6 +29,9 @@ namespace
 class HamiltonianSplittingOrderTest : public testing::Test
 {
 public:
+    static constexpr double s_sV{4.0};
+    static constexpr double s_sOmega{3.0};
+
     static constexpr int s_degX{3};
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
@@ -56,48 +59,58 @@ public:
 
         pp.addarr("maxGridSizeVector", maxGridSize);
         pp.addarr("isPeriodicVector", isPeriodic);
+
+        pp.add("sV", s_sV);
+        pp.add("sOmega", s_sOmega);
     }
 
-    void maxwellstrang_error (int n, double &bError, double &dError)
+    void maxwellstrang_error (double &bError,
+                              double &dError,
+                              int n,
+                              amrex::Real const sOmegaSquared,
+                              amrex::Real const sV)
     {
         // Analytical solutions in every direction (assuming k=1 in all directions)
+        const amrex::Real sDtoE = sOmegaSquared;            // scaling parameter: Hodge D -> E
+        const amrex::Real sBtoH = sV * sV / sOmegaSquared;  // scaling parameter: Hodge B -> H
+
 #if (GEMPIC_SPACEDIM == 1)
         const amrex::Array<std::string, 3> analyticalD = {
-            "0.",
-            "cos(x-t)",
-            "cos(x-t)",
+            "1 / sOmegaSquared * 0.",
+            "1 / sOmegaSquared * cos(x - sV * t)",
+            "1 / sOmegaSquared * cos(x - sV * t)",
         };
 
         const amrex::Array<std::string, 3> analyticalB = {
-            "0.",
-            "-cos(x-t)",
-            "cos(x-t)",
+            "1 / sV * 0.",
+            "-1 / sV * cos(x - sV * t)",
+            "1 / sV * cos(x - sV * t)",
         };
 #endif
 #if (GEMPIC_SPACEDIM == 2)
         const amrex::Array<std::string, 3> analyticalD = {
-            "cos(x+y-sqrt(2.0)*t)",
-            "-cos(x+y-sqrt(2.0)*t)",
-            "-sqrt(2)*cos(x+y-sqrt(2.0)*t)",
+            "1 / sOmegaSquared * cos(x + y -sqrt(2.0) * sV * t)",
+            "-1 / sOmegaSquared * cos(x + y -sqrt(2.0) * sV * t)",
+            "-1 / sOmegaSquared * sqrt(2) * cos(x + y -sqrt(2.0) * sV * t)",
         };
 
         const amrex::Array<std::string, 3> analyticalB = {
-            "-cos(x+y-sqrt(2.0)*t)",
-            "cos(x+y-sqrt(2.0)*t)",
-            "-sqrt(2)*cos(x+y-sqrt(2.0)*t)",
+            "-1 / sV * cos(x + y -sqrt(2.0) * sV * t)",
+            "1 / sV * cos(x + y -sqrt(2.0) * sV * t)",
+            "-1 / sV * sqrt(2) * cos(x + y -sqrt(2.0) * sV * t)",
         };
 #endif
 #if (GEMPIC_SPACEDIM == 3)
         const amrex::Array<std::string, 3> analyticalD = {
-            "cos(x+y+z-sqrt(3.0)*t)",
-            "-2*cos(x+y+z-sqrt(3.0)*t)",
-            "cos(x+y+z-sqrt(3.0)*t)",
+            "1 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
+            "-2 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
+            "1 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
         };
 
         const amrex::Array<std::string, 3> analyticalB = {
-            "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)",
-            "0.0",
-            "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)",
+            "1 / sV * sqrt(3) * cos(x + y + z -sqrt(3.0) * sV * t)",
+            "1 / sV * 0.0",
+            "-1 / sV * sqrt(3) * cos(x + y + z -sqrt(3.0) * sV * t)",
         };
 #endif
         // Initialize computational_domain
@@ -115,6 +128,8 @@ public:
         for (int i = 0; i < 3; ++i)
         {
             parserD[i].define(analyticalD[i]);
+            parserD[i].setConstant("sOmegaSquared", sOmegaSquared);
+            parserD[i].setConstant("sV", sV);
             parserD[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             funcD[i] = parserD[i].compile<s_nVar>();
         }
@@ -122,6 +137,8 @@ public:
         for (int i = 0; i < 3; ++i)
         {
             parserB[i].define(analyticalB[i]);
+            parserB[i].setConstant("sOmegaSquared", sOmegaSquared);
+            parserB[i].setConstant("sV", sV);
             parserB[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             funcB[i] = parserB[i].compile<s_nVar>();
         }
@@ -149,6 +166,7 @@ public:
             operatorHamilton.apply_h_e_field(B, deRham, E, D, dt / 2);
         }
 
+        dError = 0;
         for (int comp = 0; comp < 3; ++comp)
         {
             dError += max_error_midpoint<s_hodgeDegree>(
@@ -157,6 +175,7 @@ public:
                 2, true, comp, nt * dt);
         }
 
+        bError = 0;
         for (int comp = 0; comp < 3; ++comp)
         {
             bError += max_error_midpoint<s_hodgeDegree>(
@@ -171,12 +190,27 @@ TEST_F(HamiltonianSplittingOrderTest, MaxwellTest)
 {
     // Solves the sourceless Maxwell equations on a few time steps
     // Enables to test apply_h_b and apply_h_e_field
+    // including scaling parameters (i.e., epsilon_0 and mu_0 != 1)
+    // D = 1/s_omega^2 * E
+    // s_omega^2 = 3
+    // s_v = 4
+    // 1D
+    // E = [0, cos(x-s_v*t), cos(x-s_v*t)]
+    // B = 1/s_v * [0, -cos(x-s_v*t), cos(x-s_v*t)]
+    // 2D
+    // E = [cos(x+y-sqrt(2)*s_v*t), -cos(x+y-sqrt(2)*s_v*t), -sqrt(2)*cos(x+y-sqrt(2)*s_v*t)]
+    // B = 1/s_v * [cos(x+y-sqrt(2)*s_v*t), cos(x+y-sqrt(2)*s_v*t), -sqrt(2)*cos(x+y-sqrt(2)*s_v*t)]
+    // 3D
+    // E = [cos(x+y+z-sqrt(3)*s_v*t), -2*cos(x+y+z-sqrt(3)*s_v*t), cos(x+y+z-sqrt(3)*s_v*t)]
+    // B = 1/s_V * [sqrt(3)*cos(x+y+z-sqrt(3)*s_v*t), 0, -sqrt(3)*cos(x+y+z-sqrt(3)*s_v*t)]
     const int coarse = 30, fine = 60;
     amrex::Real bErrorCoarse, bErrorFine, dErrorCoarse, dErrorFine;
     amrex::Real tol = 0.01;
+    const amrex::Real sOmegaSquared = s_sOmega * s_sOmega;
+    const amrex::Real sV = s_sV;
 
-    this->maxwellstrang_error(coarse, bErrorCoarse, dErrorCoarse);
-    this->maxwellstrang_error(fine, bErrorFine, dErrorFine);
+    this->maxwellstrang_error(bErrorCoarse, dErrorCoarse, coarse, sOmegaSquared, sV);
+    this->maxwellstrang_error(bErrorFine, dErrorFine, fine, sOmegaSquared, sV);
 
     amrex::Real rateOfConvergenceB = std::log2(bErrorCoarse / bErrorFine);
     amrex::Real rateOfConvergenceD = std::log2(dErrorCoarse / dErrorFine);

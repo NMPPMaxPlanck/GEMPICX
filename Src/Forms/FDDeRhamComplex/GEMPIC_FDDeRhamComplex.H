@@ -233,6 +233,10 @@ private:
     amrex::Array<amrex::GpuArray<amrex::Real, s_m_maxGaussNodes>, s_m_nGaussFormulas> m_quadPoints;
     amrex::Array<amrex::GpuArray<amrex::Real, s_m_maxGaussNodes>, s_m_nGaussFormulas> m_quadWeights;
 
+    // define scaling parameters for the Hodges
+    amrex::Real m_sV;
+    amrex::Real m_sOmega;
+
 public:
     /// FDDeRhamComplex constructor
     /// @param infra
@@ -386,6 +390,13 @@ public:
     void eval_form(const DeRhamField<Grid::dual, Space::node>& field,
                    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues) override;
+
+    /**
+     * @brief Returns the scaling factor for the Hodges \f$I_0\f$
+     */
+    amrex::Real scaling_dto_e();
+    amrex::Real scaling_eto_d();
+    amrex::Real scaling_bto_h();
 
 private:
     /**
@@ -544,7 +555,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
                  , (apply_1d_hodge<zDir, hodgeDegree>(
                        geom, stencilCellToNode, this->m_tempPrimalZeroForm, zeroForm.m_data)););
 
-    zeroForm.m_data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
+    zeroForm.m_data.mult(weight / GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]));
 
     zeroForm.average_sync();
     zeroForm.fill_boundary();
@@ -591,7 +602,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
                  , (apply_1d_hodge<zDir, hodgeDegree>(geom, stencilCellToNode,
                                                       this->m_tempDualZeroForm, zeroForm.m_data)););
 
-    zeroForm.m_data.mult(1. / (GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight));
+    zeroForm.m_data.mult(weight / GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]));
 
     zeroForm.average_sync();
     zeroForm.fill_boundary();
@@ -645,17 +656,17 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
 
         if (comp == xDir)
         {
-            oneForm.m_data[comp].mult(dr[xDir] / (GEMPIC_D_MULT(1, dr[yDir], dr[zDir]) * weight));
+            oneForm.m_data[comp].mult(dr[xDir] * weight / GEMPIC_D_MULT(1, dr[yDir], dr[zDir]));
         }
         if (comp == yDir)
         {
-            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) /
-                                      (GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]) * weight));
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) * weight /
+                                      GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]));
         }
         if (comp == zDir)
         {
-            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) /
-                                      (GEMPIC_D_MULT(dr[xDir], dr[yDir], 1) * weight));
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) * weight /
+                                      GEMPIC_D_MULT(dr[xDir], dr[yDir], 1));
         }
     }
 
@@ -712,17 +723,17 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
 
         if (comp == xDir)
         {
-            oneForm.m_data[comp].mult(dr[xDir] / (GEMPIC_D_MULT(1, dr[yDir], dr[zDir]) * weight));
+            oneForm.m_data[comp].mult(dr[xDir] * weight / GEMPIC_D_MULT(1, dr[yDir], dr[zDir]));
         }
         if (comp == yDir)
         {
-            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) /
-                                      (GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]) * weight));
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, dr[yDir], 1) * weight /
+                                      GEMPIC_D_MULT(dr[xDir], 1, dr[zDir]));
         }
         if (comp == zDir)
         {
-            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) /
-                                      (GEMPIC_D_MULT(dr[xDir], dr[yDir], 1) * weight));
+            oneForm.m_data[comp].mult(GEMPIC_D_MULT(1, 1, dr[zDir]) * weight /
+                                      GEMPIC_D_MULT(dr[xDir], dr[yDir], 1));
         }
     }
 
@@ -778,18 +789,18 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
 
         if (comp == xDir)
         {
-            twoForm.m_data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) /
-                                      (GEMPIC_D_MULT(dr[xDir], 1, 1) * weight));
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) * weight /
+                                      GEMPIC_D_MULT(dr[xDir], 1, 1));
         }
         if (comp == yDir)
         {
-            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) /
-                                      (GEMPIC_D_MULT(1, dr[yDir], 1) * weight));
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) * weight /
+                                      GEMPIC_D_MULT(1, dr[yDir], 1));
         }
         if (comp == zDir)
         {
-            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) /
-                                      (GEMPIC_D_MULT(1, 1, dr[zDir]) * weight));
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) * weight /
+                                      GEMPIC_D_MULT(1, 1, dr[zDir]));
         }
     }
 
@@ -846,18 +857,18 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
 
         if (comp == xDir)
         {
-            twoForm.m_data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) /
-                                      (GEMPIC_D_MULT(dr[xDir], 1, 1) * weight));
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(1, dr[yDir], dr[zDir])) * weight /
+                                      GEMPIC_D_MULT(dr[xDir], 1, 1));
         }
         if (comp == yDir)
         {
-            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) /
-                                      (GEMPIC_D_MULT(1, dr[yDir], 1) * weight));
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], 1, dr[zDir])) * weight /
+                                      GEMPIC_D_MULT(1, dr[yDir], 1));
         }
         if (comp == zDir)
         {
-            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) /
-                                      (GEMPIC_D_MULT(1, 1, dr[zDir]) * weight));
+            twoForm.m_data[comp].mult((GEMPIC_D_MULT(dr[xDir], dr[yDir], 1)) * weight /
+                                      GEMPIC_D_MULT(1, 1, dr[zDir]));
         }
     }
 
@@ -907,7 +918,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
                  , (apply_1d_hodge<zDir, hodgeDegree>(
                        geom, stencilNodeToCell, this->m_tempPrimalThreeForm, threeForm.m_data)););
 
-    threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
+    threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight);
 
     threeForm.average_sync();
     threeForm.fill_boundary();
@@ -955,7 +966,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::nod
                  , (apply_1d_hodge<zDir, hodgeDegree>(
                        geom, stencilNodeToCell, this->m_tempDualThreeForm, threeForm.m_data)););
 
-    threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) / weight);
+    threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight);
 
     threeForm.average_sync();
     threeForm.fill_boundary();
