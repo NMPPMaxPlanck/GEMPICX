@@ -106,7 +106,7 @@ int main (int argc, char* argv[])
 
             E.fill_boundary();
             E.average_sync();
-            deRham->hodge(E, D);
+            deRham->hodge(D, E);
 
             // Write initial time step
             amrex::Real simTime{0.0};
@@ -119,17 +119,17 @@ int main (int argc, char* argv[])
 
                 // He,field (also computes E from D, needed in He,particle)
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
-                deRham->hodge(E, auxDualF2);  // Copy?? -> diagonal, same cost?
+                deRham->hodge(auxDualF2, E);  // Copy?? -> diagonal, same cost?
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;
                 jFieldT -= auxDualF2;
 
                 // Hj
-                apply_h_j(deRham, D, jFieldT, funcBBackground, dt);
+                apply_h_j(jFieldT, D, deRham, funcBBackground, dt);
 
                 //He,field
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
-                deRham->hodge(E, auxDualF2);
+                deRham->hodge(auxDualF2, E);
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;
                 jFieldT -= auxDualF2;
@@ -138,7 +138,7 @@ int main (int argc, char* argv[])
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 // Compute and scale primal field for cold plasma energy
-                deRham->hodge(jFieldT, jField);
+                deRham->hodge(jField, jFieldT);
                 jField *= funcDensityFieldInv;
 
                 //write outputs

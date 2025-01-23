@@ -149,7 +149,7 @@ void main_main ()
     //------------------------------------------------------------------------------
     // Initialize Particle Groups
     std::vector<std::shared_ptr<ParticleGroups<vdim>>> partGr;
-    init_particles(domain, partGr);
+    init_particles(partGr, domain);
 
     // Print particles data
     bool printPart = false;

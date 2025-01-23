@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
         DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
 
         std::vector<std::shared_ptr<ParticleGroups<vdim>>> partGr;
-        init_particles(infra, partGr);
+        init_particles(partGr, infra);
         amrex::Real rhoBackground{1.0};
         parameters.get_or_set("rhoBackground", rhoBackground);
 
@@ -138,12 +138,12 @@ int main (int argc, char *argv[])
                 rhoBackground * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
 
             // solve Poisson
-            cgPoisson.solve(rho, phi);
-            deRham->a_times_grad(phi, ephi, -1);
+            cgPoisson.solve(phi, rho);
+            deRham->a_times_grad(ephi, phi, -1);
             E += ephi;
-            deRham->hodge(E, D, deRham->scaling_eto_d());
+            deRham->hodge(D, E, deRham->scaling_eto_d());
             // compute div D for diagnostics
-            deRham->div(D, divD);
+            deRham->div(divD, D);
 
             amrex::Real simTime{0.0};
             diagnostics.compute_and_write_to_file(0, simTime);
@@ -231,7 +231,7 @@ int main (int argc, char *argv[])
                 D -= J;
 
                 // E needed for pushing the particles
-                deRham->hodge(D, E, deRham->scaling_dto_e());
+                deRham->hodge(E, D, deRham->scaling_dto_e());
 
                 // Second particle loop for particle part from H_E
                 for (int spec = 0; spec < numspec; spec++)
@@ -299,7 +299,7 @@ int main (int argc, char *argv[])
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 // compute div D for diagnostics
-                deRham->div(D, divD);
+                deRham->div(divD, D);
                 simTime = dt * (tStep + 1);
                 diagnostics.compute_and_write_to_file(tStep + 1, simTime);
 

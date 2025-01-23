@@ -105,7 +105,7 @@ int main (int argc, char *argv[])
 
         // Initialize particle groups
         std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
-        init_particles(infra, ions);
+        init_particles(ions, infra);
 
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
@@ -165,24 +165,24 @@ int main (int argc, char *argv[])
             biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
             if (simType == "QuasiNeutral")
             {
-                deRham->hodge(rhoFiltered, phi);
-                deRham->grad(phi, E);
+                deRham->hodge(phi, rhoFiltered);
+                deRham->grad(E, phi);
                 E *= -te;
             }
             else if (simType == "VlasovPoisson")
             {
                 //poisson->solve_amrex(rhoFiltered, phi);
 #ifdef AMREX_USE_HYPRE
-                hyprePoisson.solve(rhoFiltered, phi);
+                hyprePoisson.solve(phi, rhoFiltered);
 #else
-                cgPoisson.solve(rhoFiltered, phi);
+                cgPoisson.solve(phi, rhoFiltered);
 #endif
-                deRham->grad(phi, E);
+                deRham->grad(E, phi);
                 E *= -1.0;
             }
 
             // D is also needed to compute energy
-            deRham->hodge(E, D);
+            deRham->hodge(D, E);
 
             // Write initial time step
             amrex::Real simTime{0.0};
@@ -239,8 +239,8 @@ int main (int argc, char *argv[])
                     biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
                     if (simType == "QuasiNeutral")
                     {
-                        deRham->hodge(rhoFiltered, phi);
-                        deRham->grad(phi, E);
+                        deRham->hodge(phi, rhoFiltered);
+                        deRham->grad(E, phi);
                         E *= -te;
                     }
                     else if (simType == "VlasovPoisson")
@@ -248,15 +248,15 @@ int main (int argc, char *argv[])
                         // set initial guess phi to 0
                         phi.m_data.setVal(0.0);
 #ifdef AMREX_USE_HYPRE
-                        hyprePoisson.solve(rhoFiltered, phi);
+                        hyprePoisson.solve(phi, rhoFiltered);
 #else
-                        cgPoisson.solve(rhoFiltered, phi);
+                        cgPoisson.solve(phi, rhoFiltered);
 #endif
-                        deRham->grad(phi, E);
+                        deRham->grad(E, phi);
                         E *= -1.0;
                     }
                     // D is also needed to compute energy
-                    deRham->hodge(E, D);
+                    deRham->hodge(D, E);
 
                     rho.m_data.setVal(0.0);
 

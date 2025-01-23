@@ -153,7 +153,7 @@ protected:
     void SetUp () override
     {
         m_infra = ComputationalDomain{};
-        init_particles(m_infra, m_particles);
+        init_particles(m_particles, m_infra);
     }
 };
 

@@ -326,9 +326,19 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<type, length> inline operator+(
     return c;
 }
 
+/**
+ * @brief particle initializer
+ *
+ * @tparam vdim : Number of velocity components associated with the particles
+ * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] particles : particles that are initialised
+ * @param infra : Computational Domain
+ *
+ */
 template <unsigned int vDim, unsigned int nData>
-inline void init_particles (ComputationalDomain infra,
-                            std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles)
+inline void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
+                            ComputationalDomain infra)
 {
     BL_PROFILE("Gempic::Particle::init_particles(infra,particles)");
     Io::Parameters params("Particle");
@@ -347,15 +357,26 @@ inline void init_particles (ComputationalDomain infra,
         particles[species] =
             std::make_shared<ParticleGroups<vDim, nData>>(speciesNames[species], infra);
 
-        sample_species(infra, particles[species], species, globalSamplerName, rSeed);
+        sample_species(particles[species], infra, species, globalSamplerName, rSeed);
     }
 }
 
+/**
+ * @brief particle initializer
+ *
+ * @tparam vdim : Number of velocity components associated with the particles
+ * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] particles : particles that are initialised
+ * @param[out] particlesLinVlasov :
+ * @param infra : Computational Domain
+ *
+ */
 template <unsigned int vDim, unsigned int nData>
 inline void init_particles (
-    ComputationalDomain infra,
     std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vDim, nData>>>& particlesLinVlasov,
-    std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles)
+    std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
+    ComputationalDomain infra)
 {
     BL_PROFILE("Gempic::Particle::init_particles(infra,particlesLinVlasov,particles)");
     Io::Parameters params("Particle");
@@ -377,13 +398,26 @@ inline void init_particles (
         particles[species] =
             std::static_pointer_cast<ParticleGroups<vDim, nData>>(particlesLinVlasov[species]);
 
-        sample_species(infra, particles[species], species, globalSamplerName, rSeed);
+        sample_species(particles[species], infra, species, globalSamplerName, rSeed);
     }
 }
 
+/**
+ * @brief
+ *
+ * @tparam vdim : Number of velocity components associated with the particles
+ * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] partGr : Particle group
+ * @param infra : Computational Domain
+ * @param species :
+ * @param globalSamplerName :
+ * @param rSeed :
+ *
+ */
 template <unsigned int vDim, unsigned int nData>
-inline void sample_species (ComputationalDomain infra,
-                            std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
+inline void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
+                            ComputationalDomain infra,
                             int species,
                             std::string globalSamplerName,
                             int rSeed)
@@ -397,19 +431,19 @@ inline void sample_species (ComputationalDomain infra,
 
     if (samplerName == "Cellwise")
     {
-        init_particles_cellwise(infra, partGr, rSeed);
+        init_particles_cellwise(partGr, infra, rSeed);
     }
     else if (samplerName == "PseudoRandom")
     {
-        init_particles_full_domain(infra, partGr, species, rSeed);
+        init_particles_full_domain(partGr, infra, species, rSeed);
     }
     else if (samplerName == "Sobol")
     {
-        init_particles_full_domain_sobol(infra, partGr, species, rSeed);
+        init_particles_full_domain_sobol(partGr, infra, species, rSeed);
     }
     else if (samplerName == "FullDomainGpu")
     {
-        init_particles_full_domain_gpu(infra, partGr, species, rSeed);
+        init_particles_full_domain_gpu(partGr, infra, species, rSeed);
     }
     else
     {
@@ -417,10 +451,21 @@ inline void sample_species (ComputationalDomain infra,
     }
 }
 
+/**
+ * @brief
+ *
+ * @tparam vdim : Number of velocity components associated with the particles
+ * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] ppg : Particle group
+ * @param infra : Computational Domain
+ * @param rSeed :
+ *
+ */
 using ParticleType = amrex::Particle<0, 0>;  // For SoA attributes
 template <unsigned int vDim, unsigned int nData>
-void init_particles_cellwise (ComputationalDomain infra,
-                              std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+                              ComputationalDomain infra,
                               int rSeed = 925)
 {
     BL_PROFILE("Gempic::Particle::init_particles_cellwise(infra,ppg,rSeed)");
@@ -491,9 +536,21 @@ AMREX_GPU_HOST_DEVICE inline int get_cellid (
     AMREX_D_PICK(return ix;, return iy * n[xDir] + ix;, return (iz * n[yDir] + iy) * n[xDir] + ix;)
 }
 
+/**
+ * @brief
+ *
+ * @tparam vdim : Number of velocity components associated with the particles
+ * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] ppg : Particle group
+ * @param infra : Computational Domain
+ * @param species :
+ * @param rSeed :
+ *
+ */
 template <unsigned int vDim, unsigned int nData = 1>
-void init_particles_full_domain_gpu (ComputationalDomain infra,
-                                     std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+                                     ComputationalDomain infra,
                                      int species,
                                      int rSeed = 925)
 {
@@ -601,14 +658,15 @@ void init_particles_full_domain_gpu (ComputationalDomain infra,
  *
  * @tparam vDim Number of velocity components associated with the particles
  * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
- * @param infra Computational Domain
- * @param ppg Particle group
- * @param species
- * @param rSeed
+ *
+ * @param[out] ppg : Particle group
+ * @param infra : Computational Domain
+ * @param species :
+ * @param rSeed :
  */
 template <unsigned int vDim, unsigned int nData>
-void init_particles_full_domain (ComputationalDomain infra,
-                                 std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+                                 ComputationalDomain infra,
                                  int species,
                                  int rSeed = 925)
 {
@@ -679,14 +737,15 @@ void init_particles_full_domain (ComputationalDomain infra,
  *
  * @tparam vDim Number of velocity components associated with the particles
  * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
- * @param infra Computational Domain
- * @param ppg Particle group
- * @param species
- * @param rSeed
+ *
+ * @param[out] ppg : Particle group
+ * @param infra : Computational Domain
+ * @param species :
+ * @param rSeed :
  */
 template <unsigned int vDim, unsigned int nData>
-void init_particles_full_domain_sobol (ComputationalDomain infra,
-                                       std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
+                                       ComputationalDomain infra,
                                        int species,
                                        int rSeed = 925)
 {

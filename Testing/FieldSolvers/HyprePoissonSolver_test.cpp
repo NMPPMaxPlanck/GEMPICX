@@ -101,7 +101,7 @@ public:
         barr(0, 0, 0, 0) = 0.0;
 
         phi.m_data.setVal(0.0);
-        hyprePoisson.solve(rho, phi);
+        hyprePoisson.solve(phi, rho);
 
         barr(0, 0, 0, 0) = temp;
 

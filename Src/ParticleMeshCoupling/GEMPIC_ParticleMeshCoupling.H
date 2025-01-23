@@ -60,7 +60,7 @@ AMREX_GPU_HOST_DEVICE inline void update_j_component (
  * @tparam SplineType : Necessary for mocking so the function can take mock spline types
  * @tparam bDim : Number of components of B
  *
- * @param bArray : Degrees of freedom of B as primal 2-form
+ * @param[out] bArray : Degrees of freedom of B as primal 2-form
  * @param spline : Object containing spline values and the particle trajectory
  * @param cellIndex : Primitive cell index from spline
  * @param j : sum index for direction pDir1
@@ -819,9 +819,9 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * @tparam degY Spline degree in y
  * @tparam degZ Spline degree in z
  *
- * @param rho charge density to be computed
- * @param spline Splines evaluated at given particle position
- * @param chargeWeight Particle weight * charge
+ * @param[out] rho : charge density to be computed
+ * @param spline : Splines evaluated at given particle position
+ * @param chargeWeight : Particle weight * charge
  */
 template <int degX, int degY, int degZ>
 AMREX_GPU_HOST_DEVICE inline void gempic_deposit_rho (amrex::Array4<amrex::Real> const &rho,
@@ -842,12 +842,24 @@ AMREX_GPU_HOST_DEVICE inline void gempic_deposit_rho (amrex::Array4<amrex::Real>
     GEMPIC_D_LOOP_END
 }
 
+/**
+ * @brief
+ *
+ * @tparam degX Spline degree in x
+ * @tparam degY Spline degree in y
+ * @tparam degZ Spline degree in z
+ *
+ * @param[out] currentDensity : current density to be computed
+ * @param spline : Splines evaluated at given particle position
+ * @param vel : The velocity vector
+ * @param coeff :
+ */
 template <int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void gempic_deposit_j (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &currentDensity,
     SplineBase<degX, degY, degZ> const &spline,
     amrex::GpuArray<amrex::Real, vDim> const &vel,
-    amrex::Real coeff,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &currentDensity)
+    amrex::Real coeff)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::gempic_deposit_j()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )

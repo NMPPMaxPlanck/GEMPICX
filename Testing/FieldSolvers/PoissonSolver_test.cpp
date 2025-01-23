@@ -100,7 +100,7 @@ TEST_F(PoissonSolverTest, PoissonAMReX)
 
     // solve Poisson using AMReX solver
     Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
-    poisson.solve_amrex(rho, phi);
+    poisson.solve_amrex(phi, rho);
 
     // Check error
     amrex::Real tol = 1e-1;
@@ -121,13 +121,13 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     DeRhamField<Grid::primal, Space::node> phiIn(deRham, m_funcPhi);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    deRham->hodge(phiIn, rho);
+    deRham->hodge(rho, phiIn);
 
     ConjugateGradient<DeRhamField<Grid::dual, Space::cell>, DeRhamField<Grid::primal, Space::node>,
                       Operator::hodge>
         cgHodge(deRham);
 
-    cgHodge.solve(rho, phi);
+    cgHodge.solve(phi, rho);
 
     amrex::Real tol = 1e-12;
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
@@ -152,7 +152,7 @@ TEST_F(PoissonSolverTest, FFTSolverHodgeDegree2)
 
     // Use FFT-based solver
     Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
-    poisson.solve_fft(rho, phi);
+    poisson.solve_fft(phi, rho);
 
     // Check error
     amrex::Real tol = 4.203e-2;
@@ -178,7 +178,7 @@ TEST_F(PoissonSolverTest, FFTSolverHodgeDegree4)
 
     // Use FFT-based solver
     Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
-    poisson.solve_fft(rho, phi);
+    poisson.solve_fft(phi, rho);
 
     // Check error
     amrex::Real tol = 1.28e-2;
@@ -204,7 +204,7 @@ TEST_F(PoissonSolverTest, FFTSolverHodgeDegree6)
 
     // Use FFT-based solver
     Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
-    poisson.solve_fft(rho, phi);
+    poisson.solve_fft(phi, rho);
 
     // Check error
     amrex::Real tol = 1.28e-2;
@@ -280,7 +280,7 @@ TYPED_TEST(PoissonSolverTypedTest, AnalyticalLowTolerance)
                       TestFixture::s_operator>
         cgPoisson(deRham, poisson);
 
-    cgPoisson.solve(rho, phi);
+    cgPoisson.solve(phi, rho);
 
     // Check error
     amrex::Real tol = 1e-1;

@@ -100,9 +100,9 @@ amrex::Real test12 (int n)
 
     deRham->projection(funcP, 0.0, primalOneForm);
     primalOneForm.apply_bc();
-    deRham->hodge(primalOneForm, dualTwoForm);
-    dualTwoForm.apply_bc();
     deRham->hodge(dualTwoForm, primalOneForm);
+    dualTwoForm.apply_bc();
+    deRham->hodge(primalOneForm, dualTwoForm);
     primalOneForm.apply_bc();
 
     amrex::Real e = 0;
@@ -185,9 +185,9 @@ amrex::Real test21 (int n)
 
     deRham->projection(funcP, 0.0, primalTwoForm);
     primalTwoForm.apply_bc();
-    deRham->hodge(primalTwoForm, dualOneForm);
-    dualOneForm.apply_bc();
     deRham->hodge(dualOneForm, primalTwoForm);
+    dualOneForm.apply_bc();
+    deRham->hodge(primalTwoForm, dualOneForm);
     primalTwoForm.apply_bc();
 
     amrex::Real e = 0;
@@ -255,9 +255,9 @@ amrex::Real test03 (int n)
 
     deRham->projection(funcP, 0.0, primalZeroForm);
     primalZeroForm.apply_bc();
-    deRham->hodge(primalZeroForm, dualThreeForm);
-    dualThreeForm.apply_bc();
     deRham->hodge(dualThreeForm, primalZeroForm);
+    dualThreeForm.apply_bc();
+    deRham->hodge(primalZeroForm, dualThreeForm);
     primalZeroForm.apply_bc();
 
     amrex::Real e = max_error_midpoint<hodgeDegree>(
@@ -321,9 +321,9 @@ amrex::Real test30 (int n)
 
     deRham->projection(funcP, 0.0, primalThreeForm);
     primalThreeForm.apply_bc();
-    deRham->hodge(primalThreeForm, dualZeroForm);
-    dualZeroForm.apply_bc();
     deRham->hodge(dualZeroForm, primalThreeForm);
+    dualZeroForm.apply_bc();
+    deRham->hodge(primalThreeForm, dualZeroForm);
     primalThreeForm.apply_bc();
 
     amrex::Real e = max_error_midpoint<hodgeDegree>(

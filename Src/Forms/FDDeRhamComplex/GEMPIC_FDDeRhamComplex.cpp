@@ -1118,61 +1118,61 @@ void FDDeRhamComplex::hodge_scheme_selector (anyFieldConstRef f1, anyFieldRef f2
     }
 }
 
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::cell>& threeForm,
-                            DeRhamField<Grid::primal, Space::node>& zeroForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,cell,primal,node,weight)");
-    hodge_scheme_selector(threeForm, zeroForm, weight);
-}
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::cell>& threeForm,
-                            DeRhamField<Grid::dual, Space::node>& zeroForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,cell,dual,node,weight)");
-    hodge_scheme_selector(threeForm, zeroForm, weight);
-}
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::face>& twoForm,
-                            DeRhamField<Grid::primal, Space::edge>& oneForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,face,primal,edge,weight)");
-    hodge_scheme_selector(twoForm, oneForm, weight);
-}
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::face>& twoForm,
-                            DeRhamField<Grid::dual, Space::edge>& oneForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,face,dual,edge,weight)");
-    hodge_scheme_selector(twoForm, oneForm, weight);
-}
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::edge>& oneForm,
-                            DeRhamField<Grid::primal, Space::face>& twoForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,edge,primal,face,weight)");
-    hodge_scheme_selector(oneForm, twoForm, weight);
-}
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::edge>& oneForm,
-                            DeRhamField<Grid::dual, Space::face>& twoForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,edge,dual,face,weight)");
-    hodge_scheme_selector(oneForm, twoForm, weight);
-}
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::dual, Space::node>& zeroForm,
-                            DeRhamField<Grid::primal, Space::cell>& threeForm,
-                            amrex::Real weight)
-{
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,node,primal,cell,weight)");
-    hodge_scheme_selector(zeroForm, threeForm, weight);
-}
-
-void FDDeRhamComplex::hodge (const DeRhamField<Grid::primal, Space::node>& zeroForm,
-                            DeRhamField<Grid::dual, Space::cell>& threeForm,
+void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::node>& zeroForm,
+                            const DeRhamField<Grid::dual, Space::cell>& threeForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,node,dual,cell,weight)");
+    hodge_scheme_selector(threeForm, zeroForm, weight);
+}
+void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::node>& zeroForm,
+                            const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,node,primal,cell,weight)");
+    hodge_scheme_selector(threeForm, zeroForm, weight);
+}
+void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::edge>& oneForm,
+                            const DeRhamField<Grid::dual, Space::face>& twoForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,edge,dual,face,weight)");
+    hodge_scheme_selector(twoForm, oneForm, weight);
+}
+void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::edge>& oneForm,
+                            const DeRhamField<Grid::primal, Space::face>& twoForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,edge,primal,face,weight)");
+    hodge_scheme_selector(twoForm, oneForm, weight);
+}
+void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::face>& twoForm,
+                            const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,face,dual,edge,weight)");
+    hodge_scheme_selector(oneForm, twoForm, weight);
+}
+void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::face>& twoForm,
+                            const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,face,primal,edge,weight)");
+    hodge_scheme_selector(oneForm, twoForm, weight);
+}
+void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::cell>& threeForm,
+                            const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,cell,dual,node,weight)");
+    hodge_scheme_selector(zeroForm, threeForm, weight);
+}
+
+void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::cell>& threeForm,
+                            const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                            amrex::Real weight)
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,cell,primal,node,weight)");
     hodge_scheme_selector(zeroForm, threeForm, weight);
 }
 

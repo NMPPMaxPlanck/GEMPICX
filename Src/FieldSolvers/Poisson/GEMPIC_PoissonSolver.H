@@ -84,14 +84,14 @@ public:
     /**
      * Solves the linear system using Conjugate Gradient method.
      *
-     * @param b The right-hand side vector
-     * @param x The solution vector
+     * @param[out] x : The solution vector
+     * @param b : The right-hand side vector
      *
      * @return void
      *
      * @throws None
      */
-    void solve (rhs& b, sol& x)
+    void solve (sol& x, rhs& b)
     {
         amrex::Real pAp{0}, normResSquareOld{0}, normResSquareNew{0};
         amrex::Real alpha{0}, beta{0};
@@ -164,14 +164,14 @@ public:
      * Does not work well with the AMReX solver as a preconditioner (at least in periodic domain).
      * Can be useful later with a better preconditioner (from HYPRE for example)
      *
-     * @param b The right-hand side vector
-     * @param x The solution vector
+     * @param[out] x : The solution vector
+     * @param b : The right-hand side vector
      *
      * @return void
      *
      * @throws None
      */
-    void precond_solve (rhs& b, sol& x)
+    void precond_solve (sol& x, rhs& b)
     {
         amrex::Real pAp{0}, rdotzNew{0};
         amrex::Real alpha{0}, beta{0};
@@ -280,7 +280,16 @@ public:
         m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
     }
 
-    void solve (rhs& b, sol& x)
+    /**
+     *
+     * @param[out] x : The solution vector
+     * @param b : The right-hand side vector
+     *
+     * @return void
+     *
+     * @throws None
+     */
+    void solve (sol& x, rhs& b)
     {
         average_b_zero(b);  // average rhs to zero in periodic case
 
@@ -447,34 +456,38 @@ public:
 
     ~PoissonSolver();
 
-    void solve_amrex(DeRhamField<Grid::dual, Space::cell>& rho,
-                     DeRhamField<Grid::primal, Space::node>& phi);
+    void solve_amrex(DeRhamField<Grid::primal, Space::node>& phi,
+                     DeRhamField<Grid::dual, Space::cell>& rho);
 
     /** @brief FFT Poisson solver
      *
      *  needs rhs dual grid cell rho and the solution we want in primal grid node
      *  Algorithm process:
-     *  equation: GHG^{\tilde} \phi = \rho
-     *  1. input \rho(cell value), calculate \phi(node value)
-     *  2. determine matrices G, H, G^{\tilde}:
-     *      ----dimension of equations (for G, G^{\tilde}, H)
+     *  equation: GHG^{tilde} phi = rho
+     *  1. input rho(cell value), calculate phi(node value)
+     *  2. determine matrices G, H, G^{tilde}:
+     *      ----dimension of equations (for G, G^{tilde}, H)
      *      ----order of Hodge matrix H (for H)
      *      ----only need the first rows since they are all circulant
-     *  3.calculate eigenvalues of GHG^{\tilde} for its diagonal form D
+     *  3.calculate eigenvalues of GHG^{tilde} for its diagonal form D
      *      ----eigenvalues_total = lamda_x + lamda_y + lamda_z
      *      ----lamda_x_k = [2-2*cos(2*M_PI*k/Nx)]*(kth eigenvalue of hodge_x)
      *  4.Apply FFT :
-     *      ----\phi = FFT_backward((FFT_forward(\rho) / eigenvalues))
+     *      ----phi = FFT_backward((FFT_forward(rho) / eigenvalues))
      *      ----amrex provides from real to complex and from complex to real.
      *          In our case, both are needed
      *
      *  Due to the way the eigenvalues are calculated, it is necessary to perform the Fourier
      *  transform between cell-centered MultiFabs.
-     *  \rho and \phi are both node-centered and as such, we need to copy values back and forth.
+     *  rho and phi are both node-centered and as such, we need to copy values back and forth.
+     *
+     * @param[out] phi : The solution vector
+     * @param rho : The right-hand side vect
+     *
      */
 
-    inline void solve_fft (DeRhamField<Grid::dual, Space::cell>& rho,
-                           DeRhamField<Grid::primal, Space::node>& phi)
+    inline void solve_fft (DeRhamField<Grid::primal, Space::node>& phi,
+                           DeRhamField<Grid::dual, Space::cell>& rho)
     {
         Forms::HodgeScheme hodgeScheme = Gempic::Forms::HodgeScheme::FDHodge;
 
@@ -679,11 +692,11 @@ public:
         phi.fill_boundary();
     };
 
-    void apply_poisson_operator(DeRhamField<Grid::primal, Space::node>& phi,
-                                DeRhamField<Grid::dual, Space::cell>& rho);
+    void apply_poisson_operator(DeRhamField<Grid::dual, Space::cell>& rho,
+                                DeRhamField<Grid::primal, Space::node>& phi);
 
-    void apply_poisson_operator_inverse_hodge(DeRhamField<Grid::primal, Space::node>& phi,
-                                              DeRhamField<Grid::dual, Space::cell>& rho);
+    void apply_poisson_operator_inverse_hodge(DeRhamField<Grid::dual, Space::cell>& rho,
+                                              DeRhamField<Grid::primal, Space::node>& phi);
 
     void subtract_constant_part(DeRhamField<Grid::dual, Space::cell>& rho);
 };
@@ -693,15 +706,15 @@ inline void ConjugateGradient<rhs, sol, op>::cg_mat_mul(sol& x, rhs& Ax)
 {
     if constexpr (op == Operator::hodge)
     {
-        m_deRham->hodge(x, Ax);
+        m_deRham->hodge(Ax, x);
     }
     else if constexpr (op == Operator::poisson)
     {
-        m_poissonSolver->apply_poisson_operator(x, Ax);
+        m_poissonSolver->apply_poisson_operator(Ax, x);
     }
     else if constexpr (op == Operator::poissonInverseHodge)
     {
-        m_poissonSolver->apply_poisson_operator_inverse_hodge(x, Ax);
+        m_poissonSolver->apply_poisson_operator_inverse_hodge(Ax, x);
     }
     else
     {

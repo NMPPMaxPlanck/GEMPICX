@@ -617,27 +617,27 @@ public:
     //---------------------
     // exterior derivatives
     //---------------------
-    void grad(const DeRhamField<Grid::primal, Space::node>&,
-              DeRhamField<Grid::primal, Space::edge>&);
-    void curl(const DeRhamField<Grid::primal, Space::edge>&,
-              DeRhamField<Grid::primal, Space::face>&);
-    void div(const DeRhamField<Grid::primal, Space::face>&,
-             DeRhamField<Grid::primal, Space::cell>&);
-    void grad(const DeRhamField<Grid::dual, Space::node>&, DeRhamField<Grid::dual, Space::edge>&);
-    void curl(const DeRhamField<Grid::dual, Space::edge>&, DeRhamField<Grid::dual, Space::face>&);
-    void div(const DeRhamField<Grid::dual, Space::face>&, DeRhamField<Grid::dual, Space::cell>&);
+    void grad(DeRhamField<Grid::primal, Space::edge>&,
+              const DeRhamField<Grid::primal, Space::node>&);
+    void curl(DeRhamField<Grid::primal, Space::face>&,
+              const DeRhamField<Grid::primal, Space::edge>&);
+    void div(DeRhamField<Grid::primal, Space::cell>&,
+             const DeRhamField<Grid::primal, Space::face>&);
+    void grad(DeRhamField<Grid::dual, Space::edge>&, const DeRhamField<Grid::dual, Space::node>&);
+    void curl(DeRhamField<Grid::dual, Space::face>&, const DeRhamField<Grid::dual, Space::edge>&);
+    void div(DeRhamField<Grid::dual, Space::cell>&, const DeRhamField<Grid::dual, Space::face>&);
 
-    void a_times_grad(const DeRhamField<Grid::primal, Space::node>&,
-                      DeRhamField<Grid::primal, Space::edge>&,
+    void a_times_grad(DeRhamField<Grid::primal, Space::edge>&,
+                      const DeRhamField<Grid::primal, Space::node>&,
                       amrex::Real);
-    void a_times_grad(const DeRhamField<Grid::dual, Space::node>&,
-                      DeRhamField<Grid::dual, Space::edge>&,
+    void a_times_grad(DeRhamField<Grid::dual, Space::edge>&,
+                      const DeRhamField<Grid::dual, Space::node>&,
                       amrex::Real);
-    void add_dt_curl(const DeRhamField<Grid::primal, Space::edge>&,
-                     DeRhamField<Grid::primal, Space::face>&,
+    void add_dt_curl(DeRhamField<Grid::primal, Space::face>&,
+                     const DeRhamField<Grid::primal, Space::edge>&,
                      amrex::Real dt);
-    void add_dt_curl(const DeRhamField<Grid::dual, Space::edge>&,
-                     DeRhamField<Grid::dual, Space::face>&,
+    void add_dt_curl(DeRhamField<Grid::dual, Space::face>&,
+                     const DeRhamField<Grid::dual, Space::edge>&,
                      amrex::Real dt);
 
     //------------
@@ -751,29 +751,29 @@ public:
     //----------------
     // Hodge operators
     //----------------
-    virtual void hodge(const DeRhamField<Grid::dual, Space::cell>& threeForm,
-                       DeRhamField<Grid::primal, Space::node>& zeroForm,
+    virtual void hodge(DeRhamField<Grid::primal, Space::node>& zeroForm,
+                       const DeRhamField<Grid::dual, Space::cell>& threeForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::primal, Space::cell>& threeForm,
-                       DeRhamField<Grid::dual, Space::node>& zeroForm,
+    virtual void hodge(DeRhamField<Grid::dual, Space::node>& zeroForm,
+                       const DeRhamField<Grid::primal, Space::cell>& threeForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::dual, Space::face>& twoForm,
-                       DeRhamField<Grid::primal, Space::edge>& oneForm,
+    virtual void hodge(DeRhamField<Grid::primal, Space::edge>& oneForm,
+                       const DeRhamField<Grid::dual, Space::face>& twoForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::primal, Space::face>& twoForm,
-                       DeRhamField<Grid::dual, Space::edge>& oneForm,
+    virtual void hodge(DeRhamField<Grid::dual, Space::edge>& oneForm,
+                       const DeRhamField<Grid::primal, Space::face>& twoForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::dual, Space::edge>& oneForm,
-                       DeRhamField<Grid::primal, Space::face>& twoForm,
+    virtual void hodge(DeRhamField<Grid::primal, Space::face>& twoForm,
+                       const DeRhamField<Grid::dual, Space::edge>& oneForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::primal, Space::edge>& oneForm,
-                       DeRhamField<Grid::dual, Space::face>& twoForm,
+    virtual void hodge(DeRhamField<Grid::dual, Space::face>& twoForm,
+                       const DeRhamField<Grid::primal, Space::edge>& oneForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::dual, Space::node>& zeroForm,
-                       DeRhamField<Grid::primal, Space::cell>& threeForm,
+    virtual void hodge(DeRhamField<Grid::primal, Space::cell>& threeForm,
+                       const DeRhamField<Grid::dual, Space::node>& zeroForm,
                        amrex::Real weight = 1.) = 0;
-    virtual void hodge(const DeRhamField<Grid::primal, Space::node>& zeroForm,
-                       DeRhamField<Grid::dual, Space::cell>& threeForm,
+    virtual void hodge(DeRhamField<Grid::dual, Space::cell>& threeForm,
+                       const DeRhamField<Grid::primal, Space::node>& zeroForm,
                        amrex::Real weight = 1.) = 0;
 
     /**
