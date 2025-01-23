@@ -92,7 +92,7 @@ TEST_F(SplittingColdPlasmaTest, RotationZAxis)
     DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
     // Rotate J in X-Y plane by quarter turn
-    apply_h_j(deRham, D, J, funcB, 0.5 * M_PI);
+    apply_h_j(J, D, deRham, funcB, 0.5 * M_PI);
 
     bool loopRun{false};
 
@@ -155,7 +155,7 @@ TEST_F(SplittingColdPlasmaTest, RotationGeneralAxis)
     DeRhamField<Grid::dual, Space::face> J(deRham, funcJ);
 
     // Rotate J around (1,1,1) by half turn, time step scaled by 1/normB
-    apply_h_j(deRham, D, J, funcB, 0.5773502691896258 * M_PI);
+    apply_h_j(J, D, deRham, funcB, 0.5773502691896258 * M_PI);
 
     bool loopRun{false};
 

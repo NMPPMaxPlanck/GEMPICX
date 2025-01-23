@@ -155,26 +155,26 @@ std::tuple<amrex::Real, amrex::Real> maxwell (const int n)
     for (int i = 0; i < nt; ++i)
     {
         // solve Faraday equation for a half step
-        deRham->hodge(D, E);
-        deRham->curl(E, curlE);
+        deRham->hodge(E, D);
+        deRham->curl(curlE, E);
         curlE *= dt / 2;
         B -= curlE;
 
         // solve Ampère equation for a full step
-        deRham->hodge(B, H);
-        deRham->curl(H, curlH);
+        deRham->hodge(H, B);
+        deRham->curl(curlH, H);
         curlH *= dt;
         D += curlH;
 
         // solve Faraday's equation again for a half step
-        deRham->hodge(D, E);
-        deRham->curl(E, curlE);
+        deRham->hodge(E, D);
+        deRham->curl(curlE, E);
         curlE *= dt / 2;
         B -= curlE;
     }
 
-    deRham->div(D, divD);
-    deRham->div(B, divB);
+    deRham->div(divD, D);
+    deRham->div(divB, B);
     amrex::Print() << "Gauss errors: max(div D) = " << divD.m_data.norm0()
                    << ", max(div B) = " << divB.m_data.norm0() << std::endl;
 

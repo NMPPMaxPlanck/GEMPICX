@@ -437,7 +437,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     ASSERT_TRUE(particleLoopRun);
 
     // compute: div integratedJ
-    deRham->div(J, divJ);
+    deRham->div(divJ, J);
 
     // compute: rho^n - div integratedJ
     rhoMinJ = rhoOld - divJ;

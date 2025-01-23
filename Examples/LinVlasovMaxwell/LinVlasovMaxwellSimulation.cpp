@@ -85,7 +85,7 @@ int main (int argc, char *argv[])
 
         std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vDim, nData>>> partGrLinVlasov;
         std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>> partGr;
-        init_particles(infra, partGrLinVlasov, partGr);
+        init_particles(partGrLinVlasov, partGr, infra);
 
         // Domain volume and number of cells to normalize s0
         amrex::Real domainVolume =
@@ -185,10 +185,10 @@ int main (int argc, char *argv[])
 
             rho.post_particle_loop_sync();
 
-            poisson.solve_amrex(rho, phi);
-            deRham->grad(phi, E);
+            poisson.solve_amrex(phi, rho);
+            deRham->grad(E, phi);
             E *= -1.0;
-            deRham->hodge(E, D);
+            deRham->hodge(D, E);
 
             // Write initial time step
             amrex::Real simTime{0.0};
@@ -291,7 +291,7 @@ int main (int argc, char *argv[])
 
                 J.post_particle_loop_sync();
                 D -= J;
-                deRham->hodge(D, E);
+                deRham->hodge(E, D);
 
                 // He,particle
                 for (auto &particleSpecies : partGrLinVlasov)
@@ -365,7 +365,7 @@ int main (int argc, char *argv[])
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 // Update primal electric field for energy computation
-                deRham->hodge(D, E);
+                deRham->hodge(E, D);
 
                 //write outputs
                 simTime = dt * (tStep + 1);

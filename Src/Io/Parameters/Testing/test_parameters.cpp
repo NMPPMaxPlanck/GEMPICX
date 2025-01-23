@@ -58,7 +58,7 @@ int main (int argc, char* argv[])
 
         // Initialize particle groups
         std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
-        init_particles(infra, ions);
+        init_particles(ions, infra);
 
         {  // "Time Loop" scope. Should be a separate function
             Io::Parameters params("TimeLoop");

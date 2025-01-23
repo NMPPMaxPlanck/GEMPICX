@@ -29,13 +29,13 @@ PoissonSolver::~PoissonSolver() {}
  * Solves the Poisson equation for the given dual and primal fields using the second order AMReX
  * nodal Poisson solver
  *
- * @param rho The dual field representing the right-hand side of the equation.
- * @param phi The primal field to store the solution of the equation.
+ * @param[out] phi : The primal field to store the solution of the equation.
+ * @param rho : The dual field representing the right-hand side of the equation.
  *
  * @throws None
  */
-void PoissonSolver::solve_amrex (Forms::DeRhamField<Grid::dual, Space::cell>& rho,
-                                Forms::DeRhamField<Grid::primal, Space::node>& phi)
+void PoissonSolver::solve_amrex (Forms::DeRhamField<Grid::primal, Space::node>& phi,
+                                Forms::DeRhamField<Grid::dual, Space::cell>& rho)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::solve()");
 
@@ -81,19 +81,19 @@ void PoissonSolver::solve_amrex (Forms::DeRhamField<Grid::dual, Space::cell>& rh
  * The Poisson operator applies successively the grad, the hodge operator and the divergence
  * The order of the solver is hodgedegree
  *
- * @param phi The primal field to apply the operator to.
- * @param rho The dual field to store the result of the operator application.
+ * @param[out] rho : The dual field to store the result of the operator application.
+ * @param phi : The primal field to apply the operator to.
  *
  * @throws None
  */
-void PoissonSolver::apply_poisson_operator (DeRhamField<Grid::primal, Space::node>& phi,
-                                           DeRhamField<Grid::dual, Space::cell>& rho)
+void PoissonSolver::apply_poisson_operator (DeRhamField<Grid::dual, Space::cell>& rho,
+                                           DeRhamField<Grid::primal, Space::node>& phi)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::apply_poisson_operator()");
-    m_deRham->grad(phi, m_primalEdge);
+    m_deRham->grad(m_primalEdge, phi);
     m_primalEdge *= -1;  // E = -grad phi
-    m_deRham->hodge(m_primalEdge, m_dualFace);
-    m_deRham->div(m_dualFace, rho);
+    m_deRham->hodge(m_dualFace, m_primalEdge);
+    m_deRham->div(rho, m_dualFace);
     // add penalty term to avoid nullspace
     // amrex::Real penalty = 1.0e-8;
     // rho += penalty;
@@ -106,14 +106,14 @@ void PoissonSolver::apply_poisson_operator (DeRhamField<Grid::primal, Space::nod
  * fields. The order of the solver is hodgedegree - 2 (for hodgedegree = 4 and 6) and 2 for
  * hodgedegree = 2, for which Hodge is diagonal
  *
- * @param phi The primal field to apply the operator to.
- * @param rho The dual field to store the result of the operator application after inverse Hodge
- * transformation.
+ * @param[out] rho : The dual field to store the result of the operator application after inverse
+ * Hodge transformation.
+ * @param phi : The primal field to apply the operator to.
  *
  * @return None
  */
 void PoissonSolver::apply_poisson_operator_inverse_hodge (
-    DeRhamField<Grid::primal, Space::node>& phi, DeRhamField<Grid::dual, Space::cell>& rho)
+    DeRhamField<Grid::dual, Space::cell>& rho, DeRhamField<Grid::primal, Space::node>& phi)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::apply_poisson_operator_inverse_hodge()");
     // Conjugate gradient to compute inverse Hodge
@@ -124,10 +124,10 @@ void PoissonSolver::apply_poisson_operator_inverse_hodge (
                               DeRhamField<Grid::dual, Space::face>, Operator::hodge>>(m_deRham);
     }
 
-    m_deRham->grad(phi, m_primalEdge);
+    m_deRham->grad(m_primalEdge, phi);
     m_primalEdge *= -1;  // E = -grad phi
-    m_cgHodge->solve(m_primalEdge, m_dualFace);
-    m_deRham->div(m_dualFace, rho);
+    m_cgHodge->solve(m_dualFace, m_primalEdge);
+    m_deRham->div(rho, m_dualFace);
 
     // Sum of rhs needs to be 0 if domain is periodic in all directions
     subtract_constant_part(rho);

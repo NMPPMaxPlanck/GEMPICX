@@ -168,7 +168,7 @@ protected:
     void SetUp () override
     {
         m_infra = ComputationalDomain{};
-        init_particles(m_infra, m_particles);
+        init_particles(m_particles, m_infra);
     }
 };
 
@@ -384,10 +384,10 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
                                     DeRhamField<Grid::primal, Space::node>,
                                     FieldSolvers::Operator::poissonInverseHodge>
         cgPoisson(deRham, poisson);
-    cgPoisson.solve(rho, phi);
-    deRham->grad(phi, E);
+    cgPoisson.solve(phi, rho);
+    deRham->grad(E, phi);
     E *= -1.0;
-    deRham->hodge(E, D);
+    deRham->hodge(D, E);
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
@@ -492,8 +492,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
                                     DeRhamField<Grid::primal, Space::node>,
                                     FieldSolvers::Operator::poissonInverseHodge>
         cgPoisson(deRham, poisson);
-    cgPoisson.solve(rho, phi);
-    deRham->grad(phi, E);
+    cgPoisson.solve(phi, rho);
+    deRham->grad(E, phi);
     E *= -1.0;
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);

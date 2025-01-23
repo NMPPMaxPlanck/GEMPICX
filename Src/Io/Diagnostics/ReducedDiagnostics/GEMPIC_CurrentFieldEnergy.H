@@ -112,12 +112,12 @@ public:
                 update_data(*m_constJField, *m_constJFieldT, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingJFieldT:
-                this->m_deRham->hodge(*m_constJField, *m_jFieldT);
+                this->m_deRham->hodge(*m_jFieldT, *m_constJField);
                 *m_jFieldT *= m_weightFunc;
                 update_data(*m_constJField, *m_jFieldT, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingJField:
-                this->m_deRham->hodge(*m_constJFieldT, *m_jField);
+                this->m_deRham->hodge(*m_jField, *m_constJFieldT);
                 *m_jField *= m_weightFunc;
                 update_data(*m_jField, *m_constJFieldT, infra.m_geom.periodicity());
                 return;

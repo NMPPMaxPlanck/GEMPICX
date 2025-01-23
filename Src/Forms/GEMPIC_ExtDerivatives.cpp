@@ -10,17 +10,17 @@ using namespace Gempic::Forms;
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding
+ * the resulting face integrals
  * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
  * integrals
- * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding the
- * resulting face integrals
  *
  * @return void
  */
-void DeRhamComplex::curl (const DeRhamField<Grid::primal, Space::edge> &oneForm,
-                         DeRhamField<Grid::primal, Space::face> &twoForm)
+void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
+                         const DeRhamField<Grid::primal, Space::edge> &oneForm)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(primal,edge,primal,face)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -108,19 +108,19 @@ void DeRhamComplex::curl (const DeRhamField<Grid::primal, Space::edge> &oneForm,
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding
+ * the resulting face integrals
  * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
  * integrals
- * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding the
- * resulting face integrals
  * @param dt : time step by which curl is multiplied. Can be negative for subtraction.
  *
  * @return void
  */
-void DeRhamComplex::add_dt_curl (const DeRhamField<Grid::primal, Space::edge> &oneForm,
-                                DeRhamField<Grid::primal, Space::face> &twoForm,
+void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm,
+                                const DeRhamField<Grid::primal, Space::edge> &oneForm,
                                 amrex::Real dt)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::add_dt_curl(primal,edge,primal,face)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::add_dt_curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -208,17 +208,17 @@ void DeRhamComplex::add_dt_curl (const DeRhamField<Grid::primal, Space::edge> &o
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$
+ * holding the resulting face integrals
  * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
- * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$ holding
- * the resulting face integrals
  *
  * @return void
  */
-void DeRhamComplex::curl (const DeRhamField<Grid::dual, Space::edge> &oneForm,
-                         DeRhamField<Grid::dual, Space::face> &twoForm)
+void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
+                         const DeRhamField<Grid::dual, Space::edge> &oneForm)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(dual,edge,dual,face)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -309,19 +309,19 @@ void DeRhamComplex::curl (const DeRhamField<Grid::dual, Space::edge> &oneForm,
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$
+ * holding the resulting face integrals
  * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
- * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$ holding
- * the resulting face integrals
  * @param dt : time step by which curl is multiplied. Can be negative for subtraction.
  *
  * @return void
  */
-void DeRhamComplex::add_dt_curl (const DeRhamField<Grid::dual, Space::edge> &oneForm,
-                                DeRhamField<Grid::dual, Space::face> &twoForm,
+void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
+                                const DeRhamField<Grid::dual, Space::edge> &oneForm,
                                 amrex::Real dt)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::add_dt_curl(dual,edge,dual,face)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::add_dt_curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -412,17 +412,17 @@ void DeRhamComplex::add_dt_curl (const DeRhamField<Grid::dual, Space::edge> &one
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding
+ * the resulting edge integrals
  * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
  * values
- * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding the
- * resulting edge integrals
  *
  * @return void
  */
-void DeRhamComplex::grad (const DeRhamField<Grid::primal, Space::node> &zeroForm,
-                         DeRhamField<Grid::primal, Space::edge> &oneForm)
+void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
+                         const DeRhamField<Grid::primal, Space::node> &zeroForm)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(primal,node,primal,edge)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -481,19 +481,19 @@ void DeRhamComplex::grad (const DeRhamField<Grid::primal, Space::node> &zeroForm
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding
+ * the resulting edge integrals
  * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
  * values
- * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding the
- * resulting edge integrals
  * @param a : amrex::Real, constant to be multiplied with the gradient
  *
  * @return void
  */
-void DeRhamComplex::a_times_grad (const DeRhamField<Grid::primal, Space::node> &zeroForm,
-                                 DeRhamField<Grid::primal, Space::edge> &oneForm,
+void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
+                                 const DeRhamField<Grid::primal, Space::node> &zeroForm,
                                  amrex::Real a)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::a_times_grad(primal,node,primal,edge)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::a_times_grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -556,17 +556,17 @@ void DeRhamComplex::a_times_grad (const DeRhamField<Grid::primal, Space::node> &
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$
+ * holding the resulting edge integrals
  * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
  * values
- * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$ holding
- * the resulting edge integrals
  *
  * @return void
  */
-void DeRhamComplex::grad (const DeRhamField<Grid::dual, Space::node> &zeroForm,
-                         DeRhamField<Grid::dual, Space::edge> &oneForm)
+void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
+                         const DeRhamField<Grid::dual, Space::node> &zeroForm)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(dual,node,dual,edge)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -626,19 +626,19 @@ void DeRhamComplex::grad (const DeRhamField<Grid::dual, Space::node> &zeroForm,
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$
+ * holding the resulting edge integrals
  * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
  * values
- * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$ holding
- * the resulting edge integrals
  * @param a : Multiplication factor
  *
  * @return void
  */
-void DeRhamComplex::a_times_grad (const DeRhamField<Grid::dual, Space::node> &zeroForm,
-                                 DeRhamField<Grid::dual, Space::edge> &oneForm,
+void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
+                                 const DeRhamField<Grid::dual, Space::node> &zeroForm,
                                  amrex::Real a)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::a_times_grad(dual,node,dual,edge)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::a_times_grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -702,17 +702,17 @@ void DeRhamComplex::a_times_grad (const DeRhamField<Grid::dual, Space::node> &ze
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
+ * @param[out] threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$
+ * holding the resulting cell integrals
  * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$ holding the face
  * integrals
- * @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$ holding
- * the resulting cell integrals
  *
  * @return void
  */
-void DeRhamComplex::div (const DeRhamField<Grid::primal, Space::face> &twoForm,
-                        DeRhamField<Grid::primal, Space::cell> &threeForm)
+void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell> &threeForm,
+                        const DeRhamField<Grid::primal, Space::face> &twoForm)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::div(primal,face,primal,cell)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::div(primal,cell,primal,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
@@ -753,15 +753,15 @@ void DeRhamComplex::div (const DeRhamField<Grid::primal, Space::face> &twoForm,
  *
  * @param twoForm : DeRhamField<Grid::primal, Space::dual>, 2-form \f$\tilde{u}^2\f$ holding the
  * face integrals
- * @param threeForm : DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D} \tilde{u}^2\f$
- * holding the resulting cell integrals
+ * @param[out] threeForm : DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D}
+ * \tilde{u}^2\f$ holding the resulting cell integrals
  *
  * @return void
  */
-void DeRhamComplex::div (const DeRhamField<Grid::dual, Space::face> &twoForm,
-                        DeRhamField<Grid::dual, Space::cell> &threeForm)
+void DeRhamComplex::div (DeRhamField<Grid::dual, Space::cell> &threeForm,
+                        const DeRhamField<Grid::dual, Space::face> &twoForm)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex::div(dual,face,dual,cell)");
+    BL_PROFILE("Gempic::Forms::DeRhamComplex::div(dual,cell,dual,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {

@@ -324,29 +324,29 @@ public:
         DeRhamField<Grid::dual, Space::face>& field,
         int gaussNodes = 6) override;
 
-    void hodge(const DeRhamField<Grid::dual, Space::cell>& threeForm,
-               DeRhamField<Grid::primal, Space::node>& zeroForm,
+    void hodge(DeRhamField<Grid::primal, Space::node>& zeroForm,
+               const DeRhamField<Grid::dual, Space::cell>& threeForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::primal, Space::cell>& threeForm,
-               DeRhamField<Grid::dual, Space::node>& zeroForm,
+    void hodge(DeRhamField<Grid::dual, Space::node>& zeroForm,
+               const DeRhamField<Grid::primal, Space::cell>& threeForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::dual, Space::face>& twoForm,
-               DeRhamField<Grid::primal, Space::edge>& oneForm,
+    void hodge(DeRhamField<Grid::primal, Space::edge>& oneForm,
+               const DeRhamField<Grid::dual, Space::face>& twoForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::primal, Space::face>& twoForm,
-               DeRhamField<Grid::dual, Space::edge>& oneForm,
+    void hodge(DeRhamField<Grid::dual, Space::edge>& oneForm,
+               const DeRhamField<Grid::primal, Space::face>& twoForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::dual, Space::edge>& oneForm,
-               DeRhamField<Grid::primal, Space::face>& twoForm,
+    void hodge(DeRhamField<Grid::primal, Space::face>& twoForm,
+               const DeRhamField<Grid::dual, Space::edge>& oneForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::primal, Space::edge>& oneForm,
-               DeRhamField<Grid::dual, Space::face>& twoForm,
+    void hodge(DeRhamField<Grid::dual, Space::face>& twoForm,
+               const DeRhamField<Grid::primal, Space::edge>& oneForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::dual, Space::node>& zeroForm,
-               DeRhamField<Grid::primal, Space::cell>& threeForm,
+    void hodge(DeRhamField<Grid::primal, Space::cell>& threeForm,
+               const DeRhamField<Grid::dual, Space::node>& zeroForm,
                amrex::Real weight = 1.) override;
-    void hodge(const DeRhamField<Grid::primal, Space::node>& zeroForm,
-               DeRhamField<Grid::dual, Space::cell>& threeForm,
+    void hodge(DeRhamField<Grid::dual, Space::cell>& threeForm,
+               const DeRhamField<Grid::primal, Space::node>& zeroForm,
                amrex::Real weight = 1.) override;
 
     /**

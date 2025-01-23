@@ -331,8 +331,8 @@ public:
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell with no current
-        deRham->hodge(B, H, deRham->scaling_bto_h());
-        deRham->add_dt_curl(H, D, dt);
+        deRham->hodge(H, B, deRham->scaling_bto_h());
+        deRham->add_dt_curl(D, H, dt);
     }
 
     /**
@@ -353,9 +353,9 @@ public:
                                  const amrex::Real dt)
     {
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
-        deRham->hodge(D, E, deRham->scaling_dto_e());
+        deRham->hodge(E, D, deRham->scaling_dto_e());
         // Operator H_E for dt (-dt for the Faraday equation)
-        deRham->add_dt_curl(E, B, -dt);
+        deRham->add_dt_curl(B, E, -dt);
     }
 };
 
@@ -386,9 +386,9 @@ public:
 };
 
 // Cold plasma step
-void apply_h_j(std::shared_ptr<FDDeRhamComplex> deRham,
+void apply_h_j(DeRhamField<Grid::dual, Space::face>& J,
                DeRhamField<Grid::dual, Space::face>& D,
-               DeRhamField<Grid::dual, Space::face>& J,
+               std::shared_ptr<FDDeRhamComplex> deRham,
                amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBEquilibrium,
                amrex::Real dt);
 

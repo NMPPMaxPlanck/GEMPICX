@@ -112,11 +112,11 @@ public:
                 update_data(*m_constE, *m_constD, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingD:
-                this->m_deRham->hodge(*m_constE, *m_D);
+                this->m_deRham->hodge(*m_D, *m_constE);
                 update_data(*m_constE, *m_D, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingE:
-                this->m_deRham->hodge(*m_constD, *m_E);
+                this->m_deRham->hodge(*m_E, *m_constD);
                 update_data(*m_E, *m_constD, infra.m_geom.periodicity());
                 return;
         }

@@ -105,10 +105,10 @@ amrex::Real test12 (int n)
     }
 
     deRham->projection(funcP, 0.0, dualOneForm);
-    deRham->hodge(dualOneForm, primalTwoForm, weight);
+    deRham->hodge(primalTwoForm, dualOneForm, weight);
 
     deRham->projection(funcP, 0.0, primalOneForm);
-    deRham->hodge(primalOneForm, dualTwoForm, weight);
+    deRham->hodge(dualTwoForm, primalOneForm, weight);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -207,10 +207,10 @@ amrex::Real test21 (int n)
     }
 
     deRham->projection(funcP, 0.0, primalTwoForm);
-    deRham->hodge(primalTwoForm, dualOneForm, weight);
+    deRham->hodge(dualOneForm, primalTwoForm, weight);
 
     deRham->projection(funcP, 0.0, dualTwoForm);
-    deRham->hodge(dualTwoForm, primalOneForm, weight);
+    deRham->hodge(primalOneForm, dualTwoForm, weight);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -294,10 +294,10 @@ amrex::Real test03 (int n)
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 
     deRham->projection(funcP, 0.0, dualZeroForm);
-    deRham->hodge(dualZeroForm, primalThreeForm, weight);
+    deRham->hodge(primalThreeForm, dualZeroForm, weight);
 
     deRham->projection(funcP, 0.0, primalZeroForm);
-    deRham->hodge(primalZeroForm, dualThreeForm, weight);
+    deRham->hodge(dualThreeForm, primalZeroForm, weight);
 
     parser.define(func);
     parser.setConstant("w", weight);
@@ -373,10 +373,10 @@ amrex::Real test30 (int n)
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 
     deRham->projection(funcP, 0.0, dualThreeForm);
-    deRham->hodge(dualThreeForm, primalZeroForm, weight);
+    deRham->hodge(primalZeroForm, dualThreeForm, weight);
 
     deRham->projection(funcP, 0.0, primalThreeForm);
-    deRham->hodge(primalThreeForm, dualZeroForm, weight);
+    deRham->hodge(dualZeroForm, primalThreeForm, weight);
 
     parser.define(func);
     parser.setConstant("w", 1 * weight);

@@ -159,7 +159,7 @@ TEST_F(ExtDerivativesTest, Grad)
     DeRhamField<Grid::primal, Space::edge> analyticalGradField(deRham, funcGrad);
 
     // Calculate gradField from Field
-    deRham->grad(field, gradField);
+    deRham->grad(gradField, field);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -176,7 +176,7 @@ TEST_F(ExtDerivativesTest, Grad)
     // Take opposite for the analytical grad field
     analyticalGradField *= -1.0;
 
-    deRham->a_times_grad(field, gradField, -1.0);
+    deRham->a_times_grad(gradField, field, -1.0);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -196,7 +196,7 @@ TEST_F(ExtDerivativesTest, Grad)
     DeRhamField<Grid::dual, Space::edge> analyticalGradFieldDual(deRham, funcGrad);
 
     // Calculate gradFieldDual from FieldDual
-    deRham->grad(fieldDual, gradFieldDual);
+    deRham->grad(gradFieldDual, fieldDual);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -213,7 +213,7 @@ TEST_F(ExtDerivativesTest, Grad)
     // Take opposite for the analytical grad field
     analyticalGradFieldDual *= -1.0;
 
-    deRham->a_times_grad(fieldDual, gradFieldDual, -1.0);
+    deRham->a_times_grad(gradFieldDual, fieldDual, -1.0);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -252,7 +252,7 @@ TEST_F(ExtDerivativesTest, Curl)
     DeRhamField<Grid::primal, Space::face> analyticalCurlField(deRham, funcCurl);
 
     // Calculate curlField from Field
-    deRham->curl(field, curlField);
+    deRham->curl(curlField, field);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -273,7 +273,7 @@ TEST_F(ExtDerivativesTest, Curl)
         curlField.m_data[comp].setVal(0.0);
     }
 
-    deRham->add_dt_curl(field, curlField, dt);
+    deRham->add_dt_curl(curlField, field, dt);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -293,7 +293,7 @@ TEST_F(ExtDerivativesTest, Curl)
     DeRhamField<Grid::dual, Space::face> analyticalCurlFieldDual(deRham, funcCurl);
 
     // Calculate curlFieldDual from FieldDual
-    deRham->curl(fieldDual, curlFieldDual);
+    deRham->curl(curlFieldDual, fieldDual);
 
     // Calculate error
     for (int comp = 0; comp < 3; ++comp)
@@ -334,7 +334,7 @@ TEST_F(ExtDerivativesTest, Div)
     DeRhamField<Grid::primal, Space::cell> analyticalDivField(deRham, funcDiv);
 
     // Calculate DivField from Field
-    deRham->div(field, divField);
+    deRham->div(divField, field);
 
     // Calculate error
     for (amrex::MFIter mfi(divField.m_data); mfi.isValid(); ++mfi)
@@ -350,7 +350,7 @@ TEST_F(ExtDerivativesTest, Div)
     DeRhamField<Grid::dual, Space::cell> analyticalDivFieldDual(deRham, funcDiv);
 
     // Calculate divFieldDual from FieldDual
-    deRham->div(fieldDual, divFieldDual);
+    deRham->div(divFieldDual, fieldDual);
 
     // Calculate error
     for (amrex::MFIter mfi(divField.m_data); mfi.isValid(); ++mfi)
