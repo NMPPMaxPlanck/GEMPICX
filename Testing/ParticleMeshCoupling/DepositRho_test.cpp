@@ -47,8 +47,7 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
                                position, infra.m_plo, infra.m_dxi);
                            // Needs at least max(degX, degY, degZ) ghost cells
-                           ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline,
-                                                                    charge * weight[pp]);
+                           ParticleMeshCoupling::deposit_rho(rhoarr, spline, charge * weight[pp]);
                        });
 }
 
@@ -148,7 +147,8 @@ TEST_F(DepositRhoTest, NullTest)
         {{*m_infra.m_geom.ProbLo()}}};
 
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from Gempic::TestUtils::addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
@@ -183,7 +183,7 @@ TEST_F(DepositRhoTest, NullTest)
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
                                                                         m_infra.m_dxi);
 
-        ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline, 0);
+        ParticleMeshCoupling::deposit_rho(rhoarr, spline, 0);
     }
     ASSERT_TRUE(particleLoopRun);
 
@@ -208,7 +208,8 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
     amrex::Real expectedVal{charge * m_infra.m_dxi[GEMPIC_SPACEDIM] * weights[0] *
                             pow(0.5, GEMPIC_SPACEDIM)};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
     // Particle iteration ... over one particle.
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
@@ -250,7 +251,8 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
                        m_infra.m_geom.ProbLo(zDir) + 0.25 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
     // Particle iteration ... over one particle.
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
@@ -301,7 +303,8 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
     amrex::Array<amrex::Real, numParticles> weights{1, 3};
     amrex::Real expectedValA{1}, expectedValB{3 * pow(0.5, GEMPIC_SPACEDIM)};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
     // Particle iteration ... over two distant particles.
@@ -348,7 +351,8 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
     amrex::Real expectedValA{1 + 3 * pow(0.5, GEMPIC_SPACEDIM)};
     amrex::Real expectedValB{3 * pow(0.5, GEMPIC_SPACEDIM)};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
     // Particle iteration ... over two close particles.
@@ -388,8 +392,10 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
     amrex::Array<amrex::Real, numParticles> eWeights{3};
     int pSpec{0}, eSpec{1};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, pWeights, pPos, pSpec);
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, eWeights, ePos, eSpec);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[pSpec].get(), m_infra, pWeights,
+                                              pPos);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[eSpec].get(), m_infra, eWeights,
+                                              ePos);
 
     const auto pCharge{m_particleGroup[pSpec]->get_charge()};
     const auto eCharge{m_particleGroup[eSpec]->get_charge()};

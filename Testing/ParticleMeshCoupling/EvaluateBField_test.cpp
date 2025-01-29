@@ -129,7 +129,8 @@ TEST_F(EvaluateBFieldTest, NullTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
@@ -193,7 +194,8 @@ TEST_F(EvaluateBFieldTest, SingleParticleNode)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -238,7 +240,8 @@ TEST_F(EvaluateBFieldTest, SingleParticleMiddle)
                        m_infra.m_geom.ProbHi(yDir) - 1.5 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 1.5 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -283,7 +286,8 @@ TEST_F(EvaluateBFieldTest, SingleParticleUnevenNodeSplit)
                        m_infra.m_geom.ProbHi(yDir) - 1.25 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 1.25 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -328,7 +332,8 @@ TEST_F(EvaluateBFieldTest, DoubleParticleSeparate)
                        m_infra.m_geom.ProbLo(yDir) + 5.5 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 5.5 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -377,7 +382,8 @@ TEST_F(EvaluateBFieldTest, DoubleParticleOverlap)
                        m_infra.m_geom.ProbLo(yDir) + 0.5 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 0.5 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 

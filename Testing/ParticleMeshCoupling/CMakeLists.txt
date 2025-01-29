@@ -1,5 +1,8 @@
 set(TMP_TEST_SOURCES 
     DepositRho_test.cpp
+    DepositJ_test.cpp
+    DepositJcrossB_test.cpp
+    DepositDelDotS_test.cpp
     EvaluateBField_test.cpp
     EvaluateEField_test.cpp
     SplineBase_test.cpp

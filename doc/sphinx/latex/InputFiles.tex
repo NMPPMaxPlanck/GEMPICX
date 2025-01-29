@@ -358,6 +358,141 @@ BoundaryCondition.E = PerfectlyConducting PerfectlyConducting # String vector. 2
 BoundaryCondition.Default = Natural Natural # String vector. Default "Natural" * 2 * dim_non_periodic
 \end{lstlisting}
 
+\subsection{HYPRE}
+These parameters are for the \verb|HYPRE| library used to parallely solve large sparse linear systems. These can be found in the \verb|AMReX_HypreIJIface.cpp| file.
+
+There are 8 solver choices available:
+\begin{lstlisting}[language=pkgconfig]
+# hypre solver
+hypre.hypre_solver = GMRES # BoomerAMG(Default) GMRES COGMRES LGMRES FlexGMRES BiCGSTAB PCG Hybrid
+\end{lstlisting}
+
+There are 3 preconditioner choices available: 
+\begin{lstlisting}[language=pkgconfig]
+# hypre preconditioner
+hypre.hypre_preconditioner = BoomerAMG # BoomerAMG euclid none(Default. the default solver option "hypre.hypre_solver=BoomerAMG" will only work with "hypre.hypre_preconditioner=none")
+\end{lstlisting}
+
+Parameters for the \verb|BoomerAMG| preconditioner:
+\begin{lstlisting}[language=pkgconfig]
+# hypre BoomerAMG preconditioner configure
+hypre.bamg_max_iterations = 20 # integer. Default:20
+hypre.bamg_max_levels = 25 # integer. Default:25
+hypre.bamg_smooth_type = 6 # integer. Default:6
+\end{lstlisting}
+
+Depending on the value of the \verb|hypre.bamg_smooth_type| paramater used for the \verb|BoomerAMG| preconditioner, various other sub-parameters can be configured.
+Sub-parameters for \verb|hypre.bamg_smooth_type = 5|:
+\begin{lstlisting}[language=pkgconfig]
+# hypre options for BoomerAMG preconditioner for hypre.bamg_smooth_type = 5
+hypre.bamg_smooth_num_sweeps = 1 # integer. Default:1
+hypre.bamg_smooth_num_levels = 0 # integer. Default:0
+hypre.bamg_ilu_type = 0 # integer. Default:0
+hypre.bamg_ilu_level = 0 # integer. Default:0
+hypre.bamg_ilu_max_iter = 1 # integer. Default:1
+hypre.bamg_ilu_reordering_type = 1 # integer. Default:1 (1==RCM, 0==None)
+hypre.bamg_ilu_tri_solve = # integer. Default:1 0-iterative, 1-direct
+hypre.bamg_ilu_upper_jacobi_iters = 5 # integer. Default:5
+hypre.bamg_ilu_lower_jacobi_iters = 5 # integer. Default:5
+\end{lstlisting}
+
+Sub-parameters for \verb|hypre.bamg_smooth_type = 7|:
+\begin{lstlisting}[language=pkgconfig]
+# hypre options for BoomerAMG preconditioner for hypre.bamg_smooth_type = 7
+hypre.bamg_smooth_num_sweeps = 1 # integer. Default:1
+hypre.bamg_smooth_num_levels = 0 # integer. Default:0
+hypre.bamg_ilu_max_iter = 1 # integer. Default:1
+hypre.bamg_ilu_max_row_nnz = 1000 # integer. Default:1000
+hypre.bamg_ilu_drop_tol = 1.e-10 # real. Default:(1.0e-02 for hypre.bamg_smooth_type = 7 and 1.e-10 otherwise)
+\end{lstlisting}
+
+Sub-parameters for \verb|hypre.bamg_smooth_type = 9|:
+\begin{lstlisting}[language=pkgconfig]
+# hypre options for BoomerAMG preconditioner for hypre.bamg_smooth_type = 9
+hypre.bamg_smooth_num_sweeps = 1 # integer. Default:1
+hypre.bamg_smooth_num_levels = 0 # integer. Default:0
+\end{lstlisting}
+
+Parameters for the \verb|Euclid| preconditioner:
+\begin{lstlisting}[language=pkgconfig]
+# hypre Euclid preconditioner configure
+hypre.euclid_level = 4 # integer. Default:-1. for 3D problems set to 1, for 2D set to 4-8
+hypre.euclid_use_block_jacobi = 0 # integer. Default:0 (0==PILU, 1==Block Jacobi)
+hypre.euclid_stats = 0 # integer. Default:0 (0 1)
+hypre.euclid_mem = 0 # integer. Default:0 (0 1)
+\end{lstlisting}
+
+Parameters for the \verb|BoomerAMG| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre BoomerAMG solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+\end{lstlisting}
+
+Parameters for the \verb|GMRES| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre GMRES solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.num_krylov = 50 # integer. Default:50
+hypre.max_iterations = 200 # integer. Default:200
+\end{lstlisting}
+
+Parameters for the \verb|COGMRES| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre COGMRES solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.num_krylov = 50 # integer. Default:50
+hypre.max_iterations = 200 # integer. Default:200
+\end{lstlisting}
+
+Parameters for the \verb|LGMRES| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre LGMRES solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.num_krylov = 50 # integer. Default:50
+hypre.max_iterations = 200 # integer. Default:200
+\end{lstlisting}
+
+Parameters for the \verb|FlexGMRES| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre FlexGMRES solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.num_krylov = 50 # integer. Default:50
+hypre.max_iterations = 200 # integer. Default:200
+\end{lstlisting}
+
+Parameters for the \verb|BiCGSTAB| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre BiCGSTAB solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.max_iterations = 200 # integer. Default:200
+\end{lstlisting}
+
+Parameters for the \verb|PCG| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre PCG solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.max_iterations = 200 # integer. Default:200
+\end{lstlisting}
+
+Parameters for the \verb|Hybrid| solver:
+\begin{lstlisting}[language=pkgconfig]
+# hypre Hybrid solver configure
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.num_krylov = 50 # 50(default)
+hypre.hybrid_dscg_max_iter = 1000 # integer. Default:1000
+hypre.hybrid_pcg_max_iter = 100 # integer. Default:100
+hypre.hybrid_setup_type = 1 # integer. Default:1
+hypre.hybrid_solver_type = 1 # integer. Default:1(PCG) 2(GMRES) 3(BiCGSTAB)
+\end{lstlisting}
+
 \subsection{Example of An Input File}
 Putting it all together, an input file might look like this:
 \begin{lstlisting}[language=pkgconfig]
@@ -435,3 +570,4 @@ Function.Bz = "1e-3 * cos(kvarx * x)"
 \end{lstlisting}
 
 \end{document}
+

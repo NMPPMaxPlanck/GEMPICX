@@ -173,7 +173,7 @@ int main (int argc, char *argv[])
 
                             SplineBase<degx, degy, degz> spline(pos, infra.m_plo, infra.m_dxi);
 
-                            gempic_deposit_rho(rhoarr, spline, sqrtf0[pp] * charge * weight[pp]);
+                            deposit_rho(rhoarr, spline, sqrtf0[pp] * charge * weight[pp]);
 
                             // Compute s0 multiplied by number of particles as needed for electric
                             // field update and particle energy

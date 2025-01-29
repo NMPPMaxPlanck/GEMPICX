@@ -151,7 +151,8 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
@@ -215,7 +216,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
                        m_infra.m_geom.ProbHi(yDir) - 5.5 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 5.5 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
@@ -288,7 +290,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
                        m_infra.m_geom.ProbHi(yDir) - 5.25 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 5.25 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
@@ -373,7 +376,8 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
                        m_infra.m_geom.ProbLo(yDir) + 5.5 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 5.5 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
@@ -438,7 +442,8 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
                        m_infra.m_geom.ProbLo(yDir) + 0.5 * m_infra.m_dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 0.5 * m_infra.m_dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());

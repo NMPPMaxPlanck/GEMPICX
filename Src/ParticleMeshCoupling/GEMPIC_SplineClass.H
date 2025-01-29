@@ -90,7 +90,7 @@ public:
     static constexpr int s_splineDegrees[3] = {degX, degY, degZ};
 
     /**
-     * @brief Max spline degree stored fo convenience
+     * @brief Max spline degree stored for convenience
      */
     static constexpr int s_maxDeg{
         AMREX_D_PICK(degX, std::max(degX, degY), std::max(std::max(degX, degY), degZ))};
@@ -438,6 +438,53 @@ public:
         return (fields);
     }
 
+    template <unsigned int nWtsSum>
+    AMREX_GPU_HOST_DEVICE void eval_e_field_spline_weights (
+        amrex::GpuArray<amrex::Real, nWtsSum> &eWts,
+        amrex::GpuArray<amrex::IntVect, nWtsSum> &eCells) const
+    {
+        constexpr int nWtsX[3] = {degX, (degX + 1),
+                                  (degX + 1)};  // number of x,y,z-field weights in X-direction
+        constexpr int nWtsY[3] = {(degY + 1), degY,
+                                  (degY + 1)};  // number of x,y,z-field weights in Y-direction
+        constexpr int nWtsZ[3] = {(degZ + 1), (degZ + 1),
+                                  degZ};  // number of x,y,z-field weights in Z-direction
+
+        constexpr int nWts[3] = {
+            GEMPIC_D_MULT(nWtsX[xDir], nWtsY[xDir], nWtsZ[xDir]),   // number of x-field weights
+            GEMPIC_D_MULT(nWtsX[yDir], nWtsY[yDir], nWtsZ[yDir]),   // number of y-field weights
+            GEMPIC_D_MULT(nWtsX[zDir], nWtsY[zDir], nWtsZ[zDir])};  // number of z-field weights
+
+        constexpr int nWtsStart[3] = {0, nWts[xDir], (nWts[xDir] + nWts[yDir])};
+
+        GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
+
+        // Weights for E at particle location
+        for (int ndir = 0; ndir < 3; ++ndir)
+        {
+            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsX[ndir]; ++ii),
+                                for (int jj = 0; jj < nWtsY[ndir]; ++jj),
+                                for (int kk = 0; kk < nWtsZ[ndir]; ++kk))
+
+                const amrex::Real sCoeff =
+                    ((ndir == 0)
+                         ? eval_b_spline<complement_form<Field::PrimalOneForm>(), Direction::xDir>(
+                               ii, jj, kk)
+                         : ((ndir == 1) ? eval_b_spline<complement_form<Field::PrimalOneForm>(),
+                                                        Direction::yDir>(ii, jj, kk)
+                                        : eval_b_spline<complement_form<Field::PrimalOneForm>(),
+                                                        Direction::zDir>(ii, jj, kk)));
+
+                eWts[nWtsStart[ndir] + kk * nWtsY[ndir] * nWtsX[ndir] + jj * nWtsX[ndir] + ii] =
+                    sCoeff;
+                eCells[nWtsStart[ndir] + kk * nWtsY[ndir] * nWtsX[ndir] + jj * nWtsX[ndir] + ii] =
+                    amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
+                                                this->m_firstIndex[Direction::yDir] + jj,
+                                                this->m_firstIndex[Direction::zDir] + kk)};
+            GEMPIC_D_LOOP_END
+        }
+    }
+
     /**
      * @brief Compute and store the values of the cardinal spline at regular values x+i
      *
@@ -772,6 +819,250 @@ public:
         s = cardinal_b_splines_primitive<degree, length>(xRef);
     }
     // NOLINTEND(readability-magic-numbers)
+};
+
+/**
+ * @brief This object will contain the value of all the non-vanishing local spline basis functions
+ * at particle positions including first derivatives
+ *
+ * @details This class inherits from the SplineBase class and adds a derivative and methods for
+ * handling it
+ *
+ * @tparam degX Degree of the spline in x-direction
+ * @tparam degY Degree of the spline in y-direction
+ * @tparam degZ Degree of the spline in z-direction
+ */
+template <int degX, int degY, int degZ>
+class SplineWithFirstDerivative : public SplineBase<degX, degY, degZ>
+{
+public:
+    /**
+     * @brief Construct a new SplineWithFirstDerivative object
+     *
+     * @details Initialize the primitive by calling the update1DPrimitive method for each direction
+     * x, y and z
+     *
+     * @param position Current position of the particle
+     * @param plo (rename this one)
+     * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
+     * @details Additional details about xInverse
+     *  - dxInverse[Direction::xDir] == 1/dx
+     *  - dxInverse[Direction::yDir] == 1/dy
+     *  - dxInverse[Direction::zDir] == 1/dz
+     *  - (Potentially dim < 3)
+     *  - dxInverse[dim] == 1/(dx * dy * dz)
+     */
+    AMREX_GPU_HOST_DEVICE SplineWithFirstDerivative (
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse,
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dx) :
+        SplineBase<degX, degY, degZ>(position, plo, dxInverse)
+    {
+        m_cellSplineFirstDerivs = {};
+
+        m_nodeSplineFirstDerivs = {};
+
+        AMREX_D_TERM((update_1d_first_derivative<Direction::xDir>(position[xDir], plo[xDir],
+                                                                  dxInverse[xDir], dx[xDir]));
+                     , (update_1d_first_derivative<Direction::yDir>(position[yDir], plo[yDir],
+                                                                    dxInverse[yDir], dx[yDir]));
+                     , (update_1d_first_derivative<Direction::zDir>(position[zDir], plo[zDir],
+                                                                    dxInverse[zDir], dx[zDir])););
+    }
+
+    /**
+     * @brief first derivative of the cell spline
+     */
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<degX, degY, degZ>::s_maxDeg>,
+                    GEMPIC_SPACEDIM>
+        m_cellSplineFirstDerivs;
+
+    /**
+     * @brief first derivative of the node spline
+     */
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<degX, degY, degZ>::s_maxDeg + 1>,
+                    GEMPIC_SPACEDIM>
+        m_nodeSplineFirstDerivs;
+
+    /**
+     * @brief Set the values of the contributing cell- and node-spline derivatives for the position
+     * \f$ x_p \f$
+     *
+     * @details Set cellSplineVals and nodeSplineVals for the direction according to their
+     * documentation
+     *
+     * @tparam dir : the direction in which to compute: Direction::xDir, Direction::yDir,
+     * Direction::zDir
+     *
+     * @param position Current position of the particle
+     * @param plo : low end of the problem domain
+     * @param dxInverseDir : inverse of the cell size in the given direction
+     */
+    template <Direction dir>
+    AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (const amrex::Real position,
+                                                           const amrex::Real plo,
+                                                           const amrex::Real dxInverseDir,
+                                                           const amrex::Real dxDir)
+    {
+        const amrex::Real refOffset =
+            this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
+
+        constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
+        first_derivative_eval<deg - 1, SplineBase<degX, degY, degZ>::s_maxDeg>(
+            refOffset, m_cellSplineFirstDerivs[dir]);
+        // Scaling according to documentation
+        for (size_t i{0}; i < deg; i++)
+        {
+            m_cellSplineFirstDerivs[dir][i] *= dxInverseDir * dxInverseDir;
+        }
+        first_derivative_eval<deg, SplineBase<degX, degY, degZ>::s_maxDeg + 1>(
+            refOffset, m_nodeSplineFirstDerivs[dir]);
+        for (size_t i{0}; i < deg; i++)
+        {
+            m_nodeSplineFirstDerivs[dir][i] *= dxInverseDir;
+        }
+    }
+
+    /**
+     * @brief Compute and store the values of the derivative at regular values x+i
+     *
+     * @tparam degree : degree of the derivative
+     * @tparam length : length of the stored array
+     *
+     * @param xRef : the offset to integer positions at which the spline shall be evaluated
+     * @param s : the array in which the results will be stored
+     */
+    // NOLINTBEGIN(readability-magic-numbers)
+    template <int degree, unsigned int length>
+    AMREX_GPU_HOST_DEVICE inline constexpr void first_derivative_eval (
+        const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
+    {
+        s = cardinal_b_splines_first_derivative<degree>(xRef);
+    }
+    // NOLINTEND(readability-magic-numbers)
+
+    /**
+     * @brief Compute a dual dof derivative (defined by the corresponding reduction operator \f$
+     *t_{R\{3-l\}}) \f$ of a vectorized particle spline
+     *
+     * Description:
+     * This function computes a dual dof of the tensor-product particle spline
+     * centered at the particle position encoded in this spline object, with a vector orientation
+     *for l = 1 or 2 Field::DualOneForm Specifically, it computes
+     *  - \f$ t_{R\{3-l\}_{ijk}}(\mathrm{partS}(xx-xx_p)) \f$ if l = 0 or 3
+     *  - \f$ t_{R\{3-l\}_{ijk}}(e_{dir} * \mathrm{partS}(xx-xx_p)) \f$ if l = 1 or 2
+     * where
+     *   partS is the (tensor-product) particle spline defined above, centered at the particle
+     *position \f$ xx_p \f$
+     *
+     * According to the univariate formulas above:
+     *   \f$ t_{R0_i}(\mathrm{partS}(x-x_p)) = \mathrm{cellS}_i( x_p ) \f$
+     * and
+     *   \f$ t_{R1_i}(\mathrm{partS}(x-x_p)) = \mathrm{nodeS}_i( x_p ) \f$
+     * the multivariate dofs are obtained as products of univariate node- and cell-splines evaluated
+     *at the particle position
+     *
+     * @tparam form : index l of the associated dual form
+     * @tparam dir : for l = 1 or 2, the vectorized direction of the particle slpine: x = 0, y = 1,
+     *z = 2
+     *
+     * @param i The index of the x-dir basis function
+     * @param j The index of the y-dir basis function
+     * @param k The index of the z-dir basis function
+     *
+     * @return base The value of the calculated coefficient
+     */
+    template <Field form, Direction dir, Direction dirDeriv>
+    AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline_derivative (int i, int j, int k) const
+    {
+        static_assert(form == Field::DualOneForm || form == Field::DualTwoForm,
+                      "Function called with primal form, or superfluous direction supplied.");
+        if constexpr (form == Field::DualTwoForm)
+        {
+            if constexpr (dir == Direction::xDir)
+            {
+                return GEMPIC_D_MULT(
+                    ((dirDeriv == Direction::xDir)
+                         ? m_cellSplineFirstDerivs[Direction::xDir][i]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::xDir][i]),
+                    ((dirDeriv == Direction::yDir)
+                         ? m_nodeSplineFirstDerivs[Direction::yDir][j]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::yDir][j]),
+                    ((dirDeriv == Direction::zDir)
+                         ? m_nodeSplineFirstDerivs[Direction::zDir][k]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::zDir][k]));
+            }
+            else if constexpr (dir == Direction::yDir)
+            {
+                return GEMPIC_D_MULT(
+                    ((dirDeriv == Direction::xDir)
+                         ? m_nodeSplineFirstDerivs[Direction::xDir][i]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::xDir][i]),
+                    ((dirDeriv == Direction::yDir)
+                         ? m_cellSplineFirstDerivs[Direction::yDir][j]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::yDir][j]),
+                    ((dirDeriv == Direction::zDir)
+                         ? m_nodeSplineFirstDerivs[Direction::zDir][k]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::zDir][k]));
+            }
+            else if constexpr (dir == Direction::zDir)
+            {
+                return GEMPIC_D_MULT(
+                    ((dirDeriv == Direction::xDir)
+                         ? m_nodeSplineFirstDerivs[Direction::xDir][i]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::xDir][i]),
+                    ((dirDeriv == Direction::yDir)
+                         ? m_nodeSplineFirstDerivs[Direction::yDir][j]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::yDir][j]),
+                    ((dirDeriv == Direction::zDir)
+                         ? m_cellSplineFirstDerivs[Direction::zDir][k]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::zDir][k]));
+            }
+        }
+        else if constexpr (form == Field::DualOneForm)
+        {
+            if constexpr (dir == Direction::xDir)
+            {
+                return GEMPIC_D_MULT(
+                    ((dirDeriv == Direction::xDir)
+                         ? m_nodeSplineFirstDerivs[Direction::xDir][i]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::xDir][i]),
+                    ((dirDeriv == Direction::yDir)
+                         ? m_cellSplineFirstDerivs[Direction::yDir][j]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::yDir][j]),
+                    ((dirDeriv == Direction::zDir)
+                         ? m_cellSplineFirstDerivs[Direction::zDir][k]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::zDir][k]));
+            }
+            else if constexpr (dir == Direction::yDir)
+            {
+                return GEMPIC_D_MULT(
+                    ((dirDeriv == Direction::xDir)
+                         ? m_cellSplineFirstDerivs[Direction::xDir][i]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::xDir][i]),
+                    ((dirDeriv == Direction::yDir)
+                         ? m_nodeSplineFirstDerivs[Direction::yDir][j]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::yDir][j]),
+                    ((dirDeriv == Direction::zDir)
+                         ? m_cellSplineFirstDerivs[Direction::zDir][k]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::zDir][k]));
+            }
+            else if constexpr (dir == Direction::zDir)
+            {
+                return GEMPIC_D_MULT(
+                    ((dirDeriv == Direction::xDir)
+                         ? m_cellSplineFirstDerivs[Direction::xDir][i]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::xDir][i]),
+                    ((dirDeriv == Direction::yDir)
+                         ? m_cellSplineFirstDerivs[Direction::yDir][j]
+                         : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::yDir][j]),
+                    ((dirDeriv == Direction::zDir)
+                         ? m_nodeSplineFirstDerivs[Direction::zDir][k]
+                         : SplineBase<degX, degY, degZ>::m_nodeSplineVals[Direction::zDir][k]));
+            }
+        }
+    }
 };
 
 }  // namespace Gempic::ParticleMeshCoupling

@@ -96,7 +96,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -269,7 +270,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -352,7 +354,8 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -415,7 +418,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRhoOld(
             position, m_infra.m_plo, m_infra.m_dxi);
 
-        ParticleMeshCoupling::gempic_deposit_rho(rhoOldarr, splineRhoOld, chargeWeight);
+        ParticleMeshCoupling::deposit_rho(rhoOldarr, splineRhoOld, chargeWeight);
 
         // compute: integratedJ
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
@@ -432,7 +435,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
         // compute: rho^n+1
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRho(position, m_infra.m_plo,
                                                                            m_infra.m_dxi);
-        gempic_deposit_rho(rhoarr, splineRho, chargeWeight);
+        deposit_rho(rhoarr, splineRho, chargeWeight);
     }
     ASSERT_TRUE(particleLoopRun);
 
@@ -457,7 +460,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -558,7 +562,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -697,7 +702,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -906,7 +912,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
