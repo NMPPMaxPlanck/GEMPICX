@@ -51,8 +51,8 @@ void update_rho (ComputationalDomain& infra,
                                    }
                                    ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
                                        positionParticle, infra.m_plo, infra.m_dxi);
-                                   ParticleMeshCoupling::gempic_deposit_rho(rhoarr, spline,
-                                                                            charge * weight[pp]);
+                                   ParticleMeshCoupling::deposit_rho(rhoarr, spline,
+                                                                     charge * weight[pp]);
                                });
         }
     }

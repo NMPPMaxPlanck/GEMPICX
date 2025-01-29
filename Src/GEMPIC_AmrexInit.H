@@ -10,7 +10,7 @@ namespace Gempic
  *
  * This overwrites defaults in amrex::ParmParse for inputs.
  */
-void overwrite_amrex_parser_defaults ()
+inline void overwrite_amrex_parser_defaults ()
 {
     BL_PROFILE("Gempic::overwrite_amrex_parser_defaults()");
     amrex::ParmParse ppAmrex("amrex");

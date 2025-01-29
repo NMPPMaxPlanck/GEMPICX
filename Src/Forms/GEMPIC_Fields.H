@@ -210,6 +210,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
         m_bcFuncZ;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::array<int, 3> ncomponents);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func);
@@ -476,6 +477,36 @@ public:
         field.m_data[zDir].setVal(0.0);
     }
 
+    void initialize_field (DeRhamField<Grid::primal, Space::edge>& field,
+                           std::array<int, 3> ncomponents)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,edge,field)");
+        field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap,
+                                  ncomponents[xDir], m_nGhost);
+        field.m_data[xDir].setVal(0.0);
+        field.m_data[yDir].define(amrex::convert(m_grid, m_primalEdgeIndex[yDir]), m_distriMap,
+                                  ncomponents[yDir], m_nGhost);
+        field.m_data[yDir].setVal(0.0);
+        field.m_data[zDir].define(amrex::convert(m_grid, m_primalEdgeIndex[zDir]), m_distriMap,
+                                  ncomponents[zDir], m_nGhost);
+        field.m_data[zDir].setVal(0.0);
+    }
+
+    void initialize_field (DeRhamField<Grid::primal, Space::face>& field,
+                           std::array<int, 3> ncomponents)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,face,field)");
+        field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap,
+                                  ncomponents[xDir], m_nGhost);
+        field.m_data[xDir].setVal(0.0);
+        field.m_data[yDir].define(amrex::convert(m_grid, m_primalFaceIndex[yDir]), m_distriMap,
+                                  ncomponents[yDir], m_nGhost);
+        field.m_data[yDir].setVal(0.0);
+        field.m_data[zDir].define(amrex::convert(m_grid, m_primalFaceIndex[zDir]), m_distriMap,
+                                  ncomponents[zDir], m_nGhost);
+        field.m_data[zDir].setVal(0.0);
+    }
+
     void initialize_field (DeRhamField<Grid::primal, Space::cell>& field, int nVar = 1)
     {
         BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,cell,field)");
@@ -516,6 +547,36 @@ public:
         field.m_data[yDir].setVal(0.0);
         field.m_data[zDir].define(amrex::convert(m_grid, m_primalEdgeIndex[zDir]), m_distriMap,
                                   nVar, m_nGhost);
+        field.m_data[zDir].setVal(0.0);
+    }
+
+    void initialize_field (DeRhamField<Grid::dual, Space::edge>& field,
+                           std::array<int, 3> ncomponents)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,edge,field)");
+        field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap,
+                                  ncomponents[xDir], m_nGhost);
+        field.m_data[xDir].setVal(0.0);
+        field.m_data[yDir].define(amrex::convert(m_grid, m_primalFaceIndex[yDir]), m_distriMap,
+                                  ncomponents[yDir], m_nGhost);
+        field.m_data[yDir].setVal(0.0);
+        field.m_data[zDir].define(amrex::convert(m_grid, m_primalFaceIndex[zDir]), m_distriMap,
+                                  ncomponents[zDir], m_nGhost);
+        field.m_data[zDir].setVal(0.0);
+    }
+
+    void initialize_field (DeRhamField<Grid::dual, Space::face>& field,
+                           std::array<int, 3> ncomponents)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,face,field)");
+        field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap,
+                                  ncomponents[xDir], m_nGhost);
+        field.m_data[xDir].setVal(0.0);
+        field.m_data[yDir].define(amrex::convert(m_grid, m_primalEdgeIndex[yDir]), m_distriMap,
+                                  ncomponents[yDir], m_nGhost);
+        field.m_data[yDir].setVal(0.0);
+        field.m_data[zDir].define(amrex::convert(m_grid, m_primalEdgeIndex[zDir]), m_distriMap,
+                                  ncomponents[zDir], m_nGhost);
         field.m_data[zDir].setVal(0.0);
     }
 
@@ -899,10 +960,17 @@ public:
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc, int nVar) :
+    DeRhamField{drc, std::array<int, 3>{nVar, nVar, nVar}}
+{
+}
+
+template <Grid grid, Space space>
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
+    std::shared_ptr<DeRhamComplex> drc, std::array<int, 3> ncomponents) :
     m_deRham{drc}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc)");
-    m_deRham->initialize_field(*this, nVar);
+    m_deRham->initialize_field(*this, ncomponents);
 
     if (not m_deRham->get_geom().isAllPeriodic())
     {

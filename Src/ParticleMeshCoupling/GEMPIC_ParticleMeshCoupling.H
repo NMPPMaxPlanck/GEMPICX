@@ -824,11 +824,11 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * @param chargeWeight : Particle weight * charge
  */
 template <int degX, int degY, int degZ>
-AMREX_GPU_HOST_DEVICE inline void gempic_deposit_rho (amrex::Array4<amrex::Real> const &rho,
-                                                      SplineBase<degX, degY, degZ> &spline,
-                                                      amrex::Real chargeWeight)
+AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const &rho,
+                                               SplineBase<degX, degY, degZ> &spline,
+                                               amrex::Real chargeWeight)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::gempic_deposit_rho()");
+    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_rho()");
     GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -855,13 +855,13 @@ AMREX_GPU_HOST_DEVICE inline void gempic_deposit_rho (amrex::Array4<amrex::Real>
  * @param coeff :
  */
 template <int degX, int degY, int degZ, unsigned int vDim>
-AMREX_GPU_HOST_DEVICE inline void gempic_deposit_j (
+AMREX_GPU_HOST_DEVICE inline void deposit_j (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &currentDensity,
     SplineBase<degX, degY, degZ> const &spline,
     amrex::GpuArray<amrex::Real, vDim> const &vel,
     amrex::Real coeff)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::gempic_deposit_j()")
+    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_j()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -898,6 +898,139 @@ AMREX_GPU_HOST_DEVICE inline void gempic_deposit_j (
                 amrex::HostDevice::Atomic::Add(
                     currentDensity[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
                     sCoeff * coeff * vel[zDir]);
+            }
+        }
+    GEMPIC_D_LOOP_END
+}
+
+template <int degX, int degY, int degZ, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void deposit_jcrossb (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &lorentzForce,
+    SplineBase<degX, degY, degZ> const &spline,
+    amrex::GpuArray<amrex::Real, vDim> const &vel,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &bA,
+    amrex::Real coeff)
+{
+    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_jcrossb()");
+
+    amrex::GpuArray<amrex::Real, vDim> bfield =
+        spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
+    amrex::GpuArray<amrex::Real, vDim> vcrossb{
+        (vel[yDir] * bfield[zDir] - vel[zDir] * bfield[yDir]),
+        (vel[zDir] * bfield[xDir] - vel[xDir] * bfield[zDir]),
+        (vel[xDir] * bfield[yDir] - vel[yDir] * bfield[xDir])};
+
+    AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
+    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
+                        for (int kk = 0; kk <= degZ; ++kk))
+        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
+                                              spline.m_firstIndex[yDir] + jj,
+                                              spline.m_firstIndex[zDir] + kk)};
+
+        // Ensure that we only access existing elements of cellSplineVals
+        if (ii < degX)
+        {
+            double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk);
+            amrex::HostDevice::Atomic::Add(
+                lorentzForce[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                sCoeff * coeff * vcrossb[xDir]);
+        }
+
+        if constexpr (vDim > 1)
+        {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (jj < degY)
+            {
+                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, yDir>(ii, jj, kk);
+                amrex::HostDevice::Atomic::Add(
+                    lorentzForce[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    sCoeff * coeff * vcrossb[yDir]);
+            }
+        }
+        if constexpr (vDim == 3)
+        {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (kk < degZ)
+            {
+                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, zDir>(ii, jj, kk);
+                amrex::HostDevice::Atomic::Add(
+                    lorentzForce[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    sCoeff * coeff * vcrossb[zDir]);
+            }
+        }
+    GEMPIC_D_LOOP_END
+}
+
+template <int degX, int degY, int degZ, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &delDotS,
+    SplineWithFirstDerivative<degX, degY, degZ> const &spline,
+    amrex::GpuArray<amrex::Real, vDim> const &vel,
+    amrex::Real massWeight)
+{
+    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_deldot_s()")
+    AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
+    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
+                        for (int kk = 0; kk <= degZ; ++kk))
+        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
+                                              spline.m_firstIndex[yDir] + jj,
+                                              spline.m_firstIndex[zDir] + kk)};
+
+        // Ensure that we only access existing elements of cellSplineVals
+        if (ii < degX)
+        {
+            double sCoeffX =
+                spline.template eval_b_spline_derivative<Field::DualTwoForm, xDir, xDir>(ii, jj,
+                                                                                         kk);
+            double sCoeffY =
+                spline.template eval_b_spline_derivative<Field::DualTwoForm, xDir, yDir>(ii, jj,
+                                                                                         kk);
+            double sCoeffZ =
+                spline.template eval_b_spline_derivative<Field::DualTwoForm, xDir, zDir>(ii, jj,
+                                                                                         kk);
+            amrex::HostDevice::Atomic::Add(
+                delDotS[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                (GEMPIC_D_ADD(sCoeffX * vel[xDir], sCoeffY * vel[yDir], sCoeffZ * vel[zDir])) *
+                    massWeight * vel[xDir]);
+        }
+        if constexpr (vDim > 1)
+        {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (jj < degY)
+            {
+                double sCoeffX =
+                    spline.template eval_b_spline_derivative<Field::DualTwoForm, yDir, xDir>(ii, jj,
+                                                                                             kk);
+                double sCoeffY =
+                    spline.template eval_b_spline_derivative<Field::DualTwoForm, yDir, yDir>(ii, jj,
+                                                                                             kk);
+                double sCoeffZ =
+                    spline.template eval_b_spline_derivative<Field::DualTwoForm, yDir, zDir>(ii, jj,
+                                                                                             kk);
+                amrex::HostDevice::Atomic::Add(
+                    delDotS[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    (GEMPIC_D_ADD(sCoeffX * vel[xDir], sCoeffY * vel[yDir], sCoeffZ * vel[zDir])) *
+                        massWeight * vel[yDir]);
+            }
+        }
+        if constexpr (vDim == 3)
+        {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (kk < degZ)
+            {
+                double sCoeffX =
+                    spline.template eval_b_spline_derivative<Field::DualTwoForm, zDir, xDir>(ii, jj,
+                                                                                             kk);
+                double sCoeffY =
+                    spline.template eval_b_spline_derivative<Field::DualTwoForm, zDir, yDir>(ii, jj,
+                                                                                             kk);
+                double sCoeffZ =
+                    spline.template eval_b_spline_derivative<Field::DualTwoForm, zDir, zDir>(ii, jj,
+                                                                                             kk);
+                amrex::HostDevice::Atomic::Add(
+                    delDotS[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    (GEMPIC_D_ADD(sCoeffX * vel[xDir], sCoeffY * vel[yDir], sCoeffZ * vel[zDir])) *
+                        massWeight * vel[zDir]);
             }
         }
     GEMPIC_D_LOOP_END

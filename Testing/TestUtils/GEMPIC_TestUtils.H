@@ -37,24 +37,22 @@ std::string string_array (const T& valArray, int length)
 // of all particles to be added.
 template <unsigned int vdim, size_t numParticles>
 void add_single_particles (
-    std::vector<std::unique_ptr<Gempic::Particle::ParticleGroups<vdim>>>& particleGroup,
-    Gempic::ComputationalDomain& infra,
-    amrex::Array<amrex::Real, numParticles>& weights,
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
-    int spec = 0,
-    amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>&& velocities = {})
+    Gempic::Particle::ParticleGroups<vdim>* particleGroup,
+    const Gempic::ComputationalDomain& infra,
+    const amrex::Array<amrex::Real, numParticles>& weights,
+    const amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
+    const amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>& velocities = {})
 {
     amrex::Array<bool, numParticles> checklist{false};
 
-    for (amrex::MFIter mfi{particleGroup[0]->MakeMFIter(0)}; mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi{particleGroup->MakeMFIter(0)}; mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx{mfi.validbox()};
         amrex::IntVect lo{bx.smallEnd()};
         amrex::IntVect hi{bx.bigEnd()};
 
         amrex::ParticleTile<Gempic::Particle::ParticleType, vdim + 1, 0>& particles{
-            particleGroup[spec]->GetParticles(
-                0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
+            particleGroup->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
         for (int i{0}; i < numParticles; i++)
         {
             // make sure particle is within box (and not previously added? Why?)
@@ -66,8 +64,7 @@ void add_single_particles (
                     &&(lo[zDir] * infra.m_dx[zDir] <= positions[i][zDir]) &&
                         (positions[i][zDir] < (hi[zDir] + 1) * infra.m_dx[zDir])))
             {
-                particleGroup[spec]->add_particle(positions[i], velocities[i], weights[i],
-                                                  particles);
+                particleGroup->add_particle(positions[i], velocities[i], weights[i], particles);
                 checklist[i] = true;
             }
         }

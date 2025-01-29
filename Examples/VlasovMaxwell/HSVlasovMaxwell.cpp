@@ -126,7 +126,7 @@ int main (int argc, char *argv[])
                             SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
                                                                 infra.m_dxi);
                             // Needs at least max(degx, degy, degz) ghost cells
-                            gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
+                            deposit_rho(rhoarr, spline, charge * weight[pp]);
                         });
                 }
             }
@@ -260,31 +260,31 @@ int main (int argc, char *argv[])
 
                         // loop over particles: add contribution of old particle position to J and
                         // push
-                        amrex::ParallelFor(
-                            np,
-                            [=] AMREX_GPU_DEVICE(long pp)
-                            {
-                                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
-                                {
-                                    pos[d] = particles[pp].pos(d);
-                                }
+                        amrex::ParallelFor(np,
+                                           [=] AMREX_GPU_DEVICE(long pp)
+                                           {
+                                               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                                               for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                               {
+                                                   pos[d] = particles[pp].pos(d);
+                                               }
 
-                                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
-                                                                       velz[pp]};
+                                               amrex::GpuArray<amrex::Real, vdim> vel{
+                                                   velx[pp], vely[pp], velz[pp]};
 
-                                SplineBase<degx, degy, degz> spline(pos, infra.m_plo, infra.m_dxi);
+                                               SplineBase<degx, degy, degz> spline(pos, infra.m_plo,
+                                                                                   infra.m_dxi);
 
-                                operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass,
-                                                                    0.5 * dt);
-                                velx[pp] = vel[xDir];
-                                vely[pp] = vel[yDir];
-                                velz[pp] = vel[zDir];
-                                // compute rho for Gauss error diagnostics
-                                // in principle this should be computed only
-                                // if the Gauss error diagnostic is performed
-                                gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
-                            });
+                                               operatorHamilton.apply_h_e_particle(
+                                                   vel, eA, spline, chargeOverMass, 0.5 * dt);
+                                               velx[pp] = vel[xDir];
+                                               vely[pp] = vel[yDir];
+                                               velz[pp] = vel[zDir];
+                                               // compute rho for Gauss error diagnostics
+                                               // in principle this should be computed only
+                                               // if the Gauss error diagnostic is performed
+                                               deposit_rho(rhoarr, spline, charge * weight[pp]);
+                                           });
                     }
                     partGr[spec]->Redistribute();
                 }

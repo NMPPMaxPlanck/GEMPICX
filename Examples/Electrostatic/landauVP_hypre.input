@@ -1,0 +1,164 @@
+# General setting
+Sim.Type = "VlasovPoisson"
+
+# Grid parameters
+nGhostExtra = 4
+nCellVector = 32 16 8
+maxGridSizeVector = 8 8 8
+isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Particle parameters
+Particle.speciesNames = electrons
+Particle.sampler = Sobol
+Particle.electrons.nPartPerCell = 1000 # number of particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "1.0 + 0.04 * cos(kvarx * x)"
+Particle.electrons.numGaussians = 1
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0
+Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vWeight = 1.0
+
+# wave vector
+k = 0.4 0.4 0.4
+
+# Simulation parameters
+TimeLoop.nSteps = 500
+TimeLoop.dt = 0.02
+
+# Filter
+Filter.enable = 1
+Filter.nPass = 3 3 3
+
+# Function parameters
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "0.0"
+
+# Diagnostics
+#Full Diagnostics 
+FullDiagnostics.enable = 0 # 1 for true, 0 for false
+FullDiagnostics.groupNames = part field 
+FullDiagnostics.part.varNames = electrons
+FullDiagnostics.part.saveInterval = 1000
+FullDiagnostics.field.varNames = rho Ex phi
+FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.saveInterval = 1
+FullDiagnostics.saveFolder = "2D_o6_hy/1/" # String. Default "FullDiagnostics/".
+
+# Reduced Diagnostics 
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.saveInterval = 1 # saveInterva
+
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.Part.types = Particle
+
+
+############ HYPRE OPTIONS ############ refer to AMReX_HypreIJIface.cpp for checking below options
+
+hypre.hypre_solver = GMRES # BoomerAMG(default) GMRES COGMRES LGMRES FlexGMRES BiCGSTAB PCG Hybrid
+
+hypre.hypre_preconditioner = BoomerAMG # none(default: hypre.hypre_solver=BoomerAMG will only work with hypre.hypre_preconditioner=none) BoomerAMG euclid
+
+
+###### BoomerAMG preconditioner configure
+hypre.bamg_max_iterations = 1 # integer type
+hypre.bamg_max_levels = 20 # integer type
+hypre.bamg_smooth_type = 5 # integer type
+
+### options for hypre.bamg_smooth_type = 5
+#hypre.bamg_smooth_num_sweeps = 100 # integer type
+#hypre.bamg_smooth_num_levels = 100 # integer type
+#hypre.bamg_ilu_type =  # integer type
+#hypre.bamg_ilu_level =  # integer type
+#hypre.bamg_ilu_max_iter = 200 # integer type
+#hypre.bamg_ilu_reordering_type = 1
+#hypre.bamg_ilu_tri_solve = # integer type
+#hypre.bamg_ilu_upper_jacobi_iters = 200
+#hypre.bamg_ilu_lower_jacobi_iters = 200
+
+### options for hypre.bamg_smooth_type = 7
+#hypre.bamg_smooth_num_sweeps = 100 # integer type
+#hypre.bamg_smooth_num_levels = 100 # integer type
+hypre.bamg_ilu_max_iter = 200 # integer type
+hypre.bamg_ilu_max_row_nnz = 200 # integer type
+hypre.bamg_ilu_drop_tol = 1.e-10
+
+### options for hypre.bamg_smooth_type = 9
+#hypre.bamg_smooth_num_sweeps = 100 # integer type
+#hypre.bamg_smooth_num_levels = 100 # integer type
+
+
+###### Euclid preconditioner configure
+#hypre.euclid_level = 4 # for 3D problems set to 1, for 2D set to 4-8
+#hypre.euclid_use_block_jacobi = 0 # 0(PILU) 1(Block Jacobi)
+#hypre.euclid_stats = 0 # 0 1
+#hypre.euclid_mem = 0 # 0 1
+
+
+###### BoomerAMG solver configure
+hypre.verbose = 0 # 0(default) 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # 0(default) >1(latest residual available)
+
+
+###### GMRES solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.num_krylov = 50 # 50(default)
+#hypre.max_iterations = 200 # 200(default)
+
+
+###### COGMRES solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.num_krylov = 50 # 50(default)
+#hypre.max_iterations = 200 # 200(default)
+
+
+###### LGMRES solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.num_krylov = 50 # 50(default)
+#hypre.max_iterations = 200 # 200(default)
+
+
+###### FlexGMRES solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.num_krylov = 50 # 50(default)
+#hypre.max_iterations = 200 # 200(default)
+
+
+###### BiCGSTAB solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.max_iterations = 200 # 200(default)
+
+
+###### PCG solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.max_iterations = 200 # 200(default)
+
+
+###### Hybrid solver configure
+#hypre.verbose = 0 # 0(default)
+#hypre.logging = 0 # 0(default)
+#hypre.num_krylov = 50 # 50(default)
+hypre.hybrid_dscg_max_iter = 200
+hypre.hybrid_pcg_max_iter = 200
+#hypre.hybrid_setup_type
+#hypre.hybrid_solver_type = # integer type
+
+#######################################
+
+
+
+
+
+
+

@@ -149,7 +149,7 @@ int main (int argc, char *argv[])
                             SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
                                                                 infra.m_dxi);
                             // Needs at least max(degx, degy, degz) ghost cells
-                            gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
+                            deposit_rho(rhoarr, spline, charge * weight[pp]);
                         });
                 }
             }
@@ -227,7 +227,7 @@ int main (int argc, char *argv[])
                                 SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
                                                                     infra.m_dxi);
 
-                                gempic_deposit_rho(rhoarr, spline, charge * weight[pp]);
+                                deposit_rho(rhoarr, spline, charge * weight[pp]);
                             });
                     }
 
@@ -333,7 +333,7 @@ int main (int argc, char *argv[])
                                 SplineBase<degx, degy, degz> splineNew(positionParticle,
                                                                        infra.m_plo, infra.m_dxi);
 
-                                gempic_deposit_rho(rhoarr, splineNew, charge * weight[pp]);
+                                deposit_rho(rhoarr, splineNew, charge * weight[pp]);
                             });
                     }
                     particleSpecies->Redistribute();

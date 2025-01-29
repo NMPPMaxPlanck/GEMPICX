@@ -118,7 +118,8 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -176,7 +177,7 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), infra, weights, positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -220,7 +221,8 @@ TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -268,7 +270,8 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -311,7 +314,8 @@ TEST_F(SplineBaseTest, SplineEvalBSplineTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
@@ -361,7 +365,8 @@ TEST_F(SplineBaseTest, SplineSplineEvalTest)
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup, m_infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
+                                              positions);
 
     m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
 
