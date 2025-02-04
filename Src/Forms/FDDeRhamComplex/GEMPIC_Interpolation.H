@@ -445,7 +445,7 @@ void eval_form_component (
  */
 template <int degree>
 amrex::Real max_error_midpoint (amrex::Geometry geom,
-                                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+                                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> &func,
                                 amrex::MultiFab &funcH,
                                 amrex::RealVect dr,
                                 int form,

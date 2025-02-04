@@ -67,7 +67,7 @@ namespace
 void compute_analytical_scalar_function_parallel_for (
     amrex::MFIter &mfi,
     ComputationalDomain &mInfra,
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func,
+    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> &func,
     amrex::MultiFab &analyticalPointValues,
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> *const evalShiftGpuPtr,
     size_t nValues)

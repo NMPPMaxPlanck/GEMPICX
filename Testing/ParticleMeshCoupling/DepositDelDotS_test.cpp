@@ -303,13 +303,9 @@ TYPED_TEST(DepositDelDotSTest, SingleParticlePerCellDelDotS)
     amrex::Real tol = 0.15;
 
     amrex::Real rateOfConvergence;
-    constexpr int splineDegree = TestFixture::s_degX;
     errorCoarse = this->template del_dot_s_solve<coarse>();
-    amrex::Print() << "errorCoarse: " << errorCoarse << "\n";
     errorFine = this->template del_dot_s_solve<fine>();
-    amrex::Print() << "errorFine: " << errorFine << "\n";
     rateOfConvergence = std::log2(errorCoarse / errorFine);
-    amrex::Print() << "rate_of_convergence_" << splineDegree << ':' << rateOfConvergence << "\n";
     EXPECT_NEAR(rateOfConvergence, 2.0, tol);
 }
 }  // namespace

@@ -377,7 +377,6 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
     rho += m_backgroundDensity *
            GEMPIC_D_MULT(m_infra.m_dx[xDir], m_infra.m_dx[yDir], m_infra.m_dx[zDir]);
-    amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, m_infra, 2);
 
     auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
     FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
@@ -485,7 +484,6 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
     rho += m_backgroundDensity *
            GEMPIC_D_MULT(m_infra.m_dx[xDir], m_infra.m_dx[yDir], m_infra.m_dx[zDir]);
-    amrex::Real rhoNorm = Gempic::Utils::gempic_norm(rho.m_data, m_infra, 2);
 
     auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
     FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,

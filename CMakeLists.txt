@@ -37,22 +37,6 @@ if(   ($ENV{HOST} MATCHES "raven*")
   set(CMAKE_INSTALL_RPATH $ENV{GCC_HOME}/lib64)
 endif()
 
-if(GEMPIC_BUILD_TESTS)
-  # Give verbose output when tests fail
-  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-  set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS})
-  message("ctest command is: ${CMAKE_CTEST_COMMAND}")
-  # Enable ctests
-  enable_testing()
-  # This defines how the ctests are run
-  message("HOST is $ENV{HOST}")
-  if(($ENV{HOST} MATCHES "viper*") OR ($ENV{HOST} MATCHES "raven*") OR ($ENV{HOST} MATCHES "daint*"))
-    include(cmake/cobra_ctest.cmake)
-  else()
-    include(cmake/define_ctest.cmake)
-  endif()
-endif()
-
 include(cmake/gempic_AMReXConfig.cmake)
 
 add_library(GEMPICX STATIC)
@@ -63,7 +47,6 @@ target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Utils")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers/Poisson")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers/Quasineutral")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers/PoissonSolvers")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Filter")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Forms")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Forms/FDDeRhamComplex")
@@ -118,15 +101,6 @@ if(GEMPIC_USE_CUDA)
 message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
 message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
 endif()
-
-# Add gtest
-gempic_FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.14.0
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/googletest-src
-)
-FetchContent_MakeAvailable(googletest)
 
 # Add cmake-git-version-tracking
 gempic_FetchContent_Declare(

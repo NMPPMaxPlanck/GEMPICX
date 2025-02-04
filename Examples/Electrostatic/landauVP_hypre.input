@@ -38,7 +38,7 @@ Function.By = "0.0"
 Function.Bz = "0.0"
 
 # Diagnostics
-#Full Diagnostics 
+# Full Diagnostics 
 FullDiagnostics.enable = 0 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field 
 FullDiagnostics.part.varNames = electrons
@@ -50,7 +50,7 @@ FullDiagnostics.saveFolder = "2D_o6_hy/1/" # String. Default "FullDiagnostics/".
 
 # Reduced Diagnostics 
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
-ReducedDiagnostics.saveInterval = 1 # saveInterva
+ReducedDiagnostics.saveInterval = 1 #
 
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy

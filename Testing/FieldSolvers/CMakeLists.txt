@@ -1,7 +1,12 @@
 set(TMP_TEST_SOURCES 
     PoissonSolver_test.cpp
+    MaxwellFDSolver_test.cpp
     )
 if(AMReX_HYPRE)
-  LIST(APPEND TMP_TEST_SOURCES HyprePoissonSolver_test.cpp HypreQuasineutralCurlCurl_test.cpp HypreQuasineutralChargeMatrix_test.cpp HypreQuasineutralCurlCurlplusChargeMatrix_test.cpp)
+  LIST(APPEND TMP_TEST_SOURCES
+       HyprePoissonSolver_test.cpp
+       HypreQuasineutralCurlCurl_test.cpp
+       HypreQuasineutralChargeMatrix_test.cpp
+       HypreQuasineutralCurlCurlplusChargeMatrix_test.cpp)
 endif()
 target_sources(GtestTests PRIVATE ${TMP_TEST_SOURCES})
