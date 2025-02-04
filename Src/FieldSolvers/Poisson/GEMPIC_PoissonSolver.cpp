@@ -70,7 +70,7 @@ void PoissonSolver::solve_amrex (Forms::DeRhamField<Grid::primal, Space::node>& 
     // Solve Poisson equation
     mlmg.solve({&phi.m_data}, {&rho.m_data}, relTol, absTol);
     // AMReX Poisson solver does not use Hodge. Need to rescale phi
-    phi *= m_infra.m_dxi[GEMPIC_SPACEDIM];
+    phi *= 1.0 / (m_infra.cell_volume());
 
     phi.average_sync();
     phi.fill_boundary();

@@ -263,6 +263,7 @@ private:
     int m_verbose;
 
 public:
+    // Try to remove all raw pointer data management!
     HypreLinearSystem(ComputationalDomain* infr,
                       std::shared_ptr<DeRhamComplex> drc,
                       std::shared_ptr<PoissonSolver> pslv,
@@ -418,7 +419,7 @@ public:
                           amrex::Vector<amrex::MultiFab const*>{&(b.m_data)}, m_relTol, m_absTol,
                           m_maxiter);
 
-        x *= m_infra->m_dxi[AMREX_SPACEDIM];
+        x *= 1.0 / m_infra->cell_volume();
 
         x.average_sync();
         x.fill_boundary();
@@ -521,11 +522,12 @@ public:
         }
 
         //dimensions in x, y and z directions
-        AMREX_D_TERM(const int Nx = m_infra.m_nCell[xDir];, const int Ny = m_infra.m_nCell[yDir];
-                     , const int Nz = m_infra.m_nCell[zDir];)
+        AMREX_D_TERM(const int Nx = m_infra.box().size()[xDir];
+                     , const int Ny = m_infra.box().size()[yDir];
+                     , const int Nz = m_infra.box().size()[zDir];)
 
         // sizes in x, y and z directions
-        auto dx = m_infra.m_dx;
+        auto dx = m_infra.geometry().CellSizeArray();
 
         AMREX_D_TERM(auto eigenH0x = amrex::Vector<amrex::Real>(Nx, 1.0);
                      , auto eigenH0y = amrex::Vector<amrex::Real>(Ny, 1.0);

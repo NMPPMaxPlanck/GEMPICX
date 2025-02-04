@@ -37,33 +37,55 @@ public:
     amrex::Geometry m_geom;
     amrex::Box m_domain;
     amrex::DistributionMapping m_distriMap;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_dx;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_plo;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_phi;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> m_dxi;  // inverse of dx
 
-    amrex::Real m_toleranceParticle;  //
+    amrex::Geometry const& geometry () const { return m_geom; }
+    // @todo amrex::Geometry is not accessible on GPU. Therefore, we provide
+    // the geometry_data() function as an intermediate solution to access
+    // geometry data on GPU.
+    AMREX_GPU_HOST_DEVICE amrex::GeometryData const& geometry_data () const { return m_geomData; }
+    amrex::Box const& box () const { return m_geom.Domain(); }
+    AMREX_GPU_HOST_DEVICE amrex::Real cell_volume () const
+    {
+        double vol{1.0};
+        for (size_t dir = 0; dir < AMREX_SPACEDIM; dir++)
+        {
+            vol *= m_geomData.CellSize(dir);
+        }
+        return vol;
+    }
+    // @todo Place holder until we can replace by AMReX Geometry member function
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cell_size_array () const
+    {
+        return {{AMREX_D_DECL(m_geomData.CellSize(xDir), m_geomData.CellSize(yDir),
+                              m_geomData.CellSize(zDir))}};
+    }
+    // @todo Place holder until we can replace by AMReX Geometry member function
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inv_cell_size_array () const
+    {
+        return {{AMREX_D_DECL(1.0 / m_geomData.CellSize(xDir), 1.0 / m_geomData.CellSize(yDir),
+                              1.0 / m_geomData.CellSize(zDir))}};
+    }
 
     ComputationalDomain(bool){};  // bool constructor for deferred specification of domain
-
     ComputationalDomain()
     {
         BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
         Io::Parameters params("ComputationalDomain");
+        Io::Parameters functionParseParams;
         // Initialize infrastructure:
-        // params.get("nCellVector", n_cell);
-        // params.get("maxGridSizeVector", max_grid_size);
         amrex::Vector<int> nCellVector;
-        params.get("nCellVector", nCellVector);
+        params.get("nCell", nCellVector);
         amrex::Vector<int> maxGridSizeVector;
-        params.get("maxGridSizeVector", maxGridSizeVector);
+        params.get("maxGridSize", maxGridSizeVector);
         for (int i{0}; i < GEMPIC_SPACEDIM; ++i)
         {
             m_nCell[i] = nCellVector[i];
             m_maxGridSize[i] = maxGridSizeVector[i];
         }
 
-        params.get("isPeriodicVector", m_isPeriodic);
+        params.get("isPeriodic", m_isPeriodic);
         // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
         // Probably needs to check that both are not provided for the same direction?
         amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
@@ -79,13 +101,13 @@ public:
         if (AMREX_D_TERM(m_isPeriodic[xDir], || m_isPeriodic[yDir], || m_isPeriodic[zDir]))
         {
             // Attempt to use k first
-            if (params.exists("k"))
+            if (functionParseParams.exists("k"))
             {
                 if (params.is_in_input_file("domainHi"))
                 {
                     std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
                 }
-                params.get("k", k);
+                functionParseParams.get("k", k);
                 for (int i = 0; i < GEMPIC_SPACEDIM; i++)
                 {
                     if (m_isPeriodic[i] == 1)
@@ -125,19 +147,16 @@ public:
         // initialize distribution mapping needed to define MultiFabs
         m_distriMap.define(m_grid);
 
-        m_dxi[GEMPIC_SPACEDIM] = 1.;
         for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
         {
-            m_dx[cc] = m_geom.CellSize()[cc];
-            m_plo[cc] = m_geom.ProbLo()[cc];
-            m_phi[cc] = m_geom.ProbHi()[cc];
-            m_dxi[cc] = 1.0 / m_dx[cc];
-            m_dxi[GEMPIC_SPACEDIM] *= m_dxi[cc];  // inverse volume
+            m_plo[cc] = m_geom.ProbLo(cc);
+            m_phi[cc] = m_geom.ProbHi(cc);
         }
-
-        m_toleranceParticle = 1.e-10;
-        params.get_or_set("toleranceParticle", m_toleranceParticle);
+        m_geomData = m_geom.data();
     }
+
+private:
+    amrex::GeometryData m_geomData;
 };
 }  // namespace Gempic
 

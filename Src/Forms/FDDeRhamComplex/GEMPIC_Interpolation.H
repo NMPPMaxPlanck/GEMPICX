@@ -447,7 +447,7 @@ template <int degree>
 amrex::Real max_error_midpoint (amrex::Geometry geom,
                                 amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> &func,
                                 amrex::MultiFab &funcH,
-                                amrex::RealVect dr,
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr,
                                 int form,
                                 bool dual,
                                 int comp = 0,

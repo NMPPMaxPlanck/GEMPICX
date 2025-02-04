@@ -156,18 +156,13 @@ public:
                             }
 
                             ParticleMeshCoupling::SplineWithPrimitive<degx, degy, degz> spline(
-                                pos, infra.m_plo, infra.m_dxi);
+                                pos, infra.m_plo, infra.geometry().InvCellSizeArray());
 
                             operatorHamilton.apply_H_e_particle(eA, spline, vel, velx, vely, velz,
                                                                 chargemass, 0.5 * dt, pp);
 
-                            // amrex::Real weight =
-                            // charge*particles[pp].rdata(vdim)*infra.dxi[GEMPIC_SPACEDIM];
                             amrex::Real chargeWeight = charge * partWeight[pp];
 
-                            // for (unsigned int d=0;d<vdim;++d)
-                            // vel[d] = particles[pp].rdata(d);
-                            //  vel[d] = particle_attributes->GetRealData(d)[pp];
                             vel[xDir] = velx[pp];
                             vel[yDir] = vely[pp];
                             vel[zDir] = velz[pp];
@@ -176,16 +171,17 @@ public:
 
                             // push x1
                             operatorHamilton.template apply_H_p_i<xDir>(
-                                pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargemass,
-                                chargeWeight, 0.5 * dt);
+                                pos, vel, infra, spline, bfields, infra.geometry().CellSizeArray(),
+                                jA, bA, chargemass, chargeWeight, 0.5 * dt);
 
 #if GEMPIC_SPACEDIM > 1
                             if constexpr (vdim > 1)
                             {
                                 // push x2
                                 operatorHamilton.template apply_H_p_i<yDir>(
-                                    pos, vel, infra, spline, bfields, infra.m_dx, jA, bA,
-                                    chargemass, chargeWeight, 0.5 * dt);
+                                    pos, vel, infra, spline, bfields,
+                                    infra.geometry().CellSizeArray(), jA, bA, chargemass,
+                                    chargeWeight, 0.5 * dt);
                             }
 #endif
 #if GEMPIC_SPACEDIM == 3
@@ -193,8 +189,9 @@ public:
                             {
                                 // push x3
                                 operatorHamilton.template apply_H_p_i<zDir>(
-                                    pos, vel, infra, spline, bfields, infra.m_dx, jA, bA,
-                                    chargemass, chargeWeight, dt);
+                                    pos, vel, infra, spline, bfields,
+                                    infra.geometry().CellSizeArray(), jA, bA, chargemass,
+                                    chargeWeight, dt);
                             }
 #endif
 
@@ -203,15 +200,16 @@ public:
                             {
                                 // push x2
                                 operatorHamilton.template apply_H_p_i<yDir>(
-                                    pos, vel, infra, spline, bfields, infra.m_dx, jA, bA,
-                                    chargemass, chargeWeight, 0.5 * dt);
+                                    pos, vel, infra, spline, bfields,
+                                    infra.geometry().CellSizeArray(), jA, bA, chargemass,
+                                    chargeWeight, 0.5 * dt);
                             }
 #endif
 
                             // second half step of Hp1
                             operatorHamilton.template apply_H_p_i<xDir>(
-                                pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargemass,
-                                chargeWeight, 0.5 * dt);
+                                pos, vel, infra, spline, bfields, infra.geometry().CellSizeArray(),
+                                jA, bA, chargemass, chargeWeight, 0.5 * dt);
 
                             for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
                             {
@@ -277,7 +275,7 @@ public:
                             amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
                             ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                                pos, infra.m_plo, infra.m_dxi);
+                                pos, infra.m_plo, infra.geometry().InvCellSizeArray());
 
                             operatorHamilton.apply_H_e_particle(eA, spline, vel, velx, vely, velz,
                                                                 chargemass, 0.5 * dt, pp);

@@ -47,7 +47,7 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                position[d] = partData[0].pos(d);
                            }
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
-                               position, infra.m_plo, infra.m_dxi);
+                               position, infra.m_plo, infra.inv_cell_size_array());
 
                            efields[pp] =
                                spline.template eval_spline_field<Field::PrimalOneForm>(eArray);
@@ -97,11 +97,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // particle settings
         double charge{1};
@@ -189,8 +189,8 @@ TEST_F(EvaluateEFieldTest, NullTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
-                                                                        m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, m_infra.inv_cell_size_array());
 
         amrex::GpuArray<amrex::Real, s_vDim> efield =
             spline.template eval_spline_field<Field::PrimalOneForm>(eArray);
@@ -246,11 +246,12 @@ TEST_F(EvaluateEFieldTest, SingleParticleMiddle)
 {
     // Adding particle to one cell
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 1.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbHi(yDir) - 1.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbHi(zDir) - 1.5 * m_infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 1.5 * dx[xDir],
+                       m_infra.m_geom.ProbHi(yDir) - 1.5 * dx[yDir],
+                       m_infra.m_geom.ProbHi(zDir) - 1.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -287,11 +288,12 @@ TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
 {
     // Adding particle to one cell
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 1.25 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbHi(yDir) - 1.25 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbHi(zDir) - 1.25 * m_infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 1.25 * dx[xDir],
+                       m_infra.m_geom.ProbHi(yDir) - 1.25 * dx[yDir],
+                       m_infra.m_geom.ProbHi(zDir) - 1.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -327,12 +329,13 @@ TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
 TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
 {
     const int numParticles{2};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
-         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 5.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 5.5 * m_infra.m_dx[zDir])}}};
+         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 5.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -368,12 +371,13 @@ TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
 TEST_F(EvaluateEFieldTest, DoubleParticleOverlap)
 {
     const int numParticles{2};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
-         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 0.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 0.5 * m_infra.m_dx[zDir])}}};
+         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -420,8 +424,9 @@ TEST_F(EvaluateEFieldTestCustomInfrastructure, Scaling)
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 4, 2)};
     const int hodgeDegree{2};
 
-    parameters.set("nCellVector", nCell);
-    parameters.set("maxGridSizeVector", maxGridSize);
+    amrex::ParmParse pp;
+    pp.addarr("ComputationalDomain.nCell", nCell);
+    pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
 
     ComputationalDomain infra;
 
@@ -435,11 +440,12 @@ TEST_F(EvaluateEFieldTestCustomInfrastructure, Scaling)
 
     // Adding particle to one cell
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(infra.m_geom.ProbHi(xDir) - 1.25 * infra.m_dx[xDir],
-                       infra.m_geom.ProbHi(yDir) - 1.25 * infra.m_dx[yDir],
-                       infra.m_geom.ProbHi(zDir) - 1.25 * infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(infra.m_geom.ProbHi(xDir) - 1.25 * dx[xDir],
+                       infra.m_geom.ProbHi(yDir) - 1.25 * dx[yDir],
+                       infra.m_geom.ProbHi(zDir) - 1.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), infra, weights, positions);
 

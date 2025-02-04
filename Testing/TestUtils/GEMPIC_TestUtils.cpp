@@ -89,5 +89,29 @@ void compare_fields (const char file[],
         }
     }
 }
+double l_inf_error (amrex::Array4<const amrex::Real> const& a,
+                    amrex::Array4<const amrex::Real> const& b,
+                    amrex::Box const& bx,
+                    int ncomp)
+{
+    const auto lo = amrex::lbound(bx);
+    const auto hi = amrex::ubound(bx);
+    double lerr{};
+    for (int comp{0}; comp < ncomp; comp++)
+    {
+        for (int i{lo.x}; i <= hi.x; i++)
+        {
+            for (int j{lo.y}; j <= hi.y; j++)
+            {
+                for (int k{lo.z}; k <= hi.z; k++)
+                {
+                    const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
+                    lerr = std::max(std::abs(*a.ptr(idx, comp) - *b.ptr(idx, comp)), lerr);
+                }
+            }
+        }
+    }
+    return lerr;
+}
 
 }  // namespace Gempic::Test::Utils

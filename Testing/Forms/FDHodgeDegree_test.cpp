@@ -38,7 +38,8 @@ void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegr
     const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
     Gempic::Io::Parameters parameters{};
-    parameters.set("nCellVector", nCell);
+    amrex::ParmParse pp;
+    pp.addarr("ComputationalDomain.nCell", nCell);
     ComputationalDomain infra;
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
@@ -100,7 +101,7 @@ void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegr
         funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
     }
 
-    auto dr{amrex::RealVect{AMREX_D_DECL(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir])}};
+    auto dr{infra.cell_size_array()};
     auto form{static_cast<int>(space)};
     e1 = 0;
     e2 = 0;
@@ -120,7 +121,8 @@ void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineD
     const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
     Gempic::Io::Parameters parameters{};
-    parameters.set("nCellVector", nCell);
+    amrex::ParmParse pp;
+    pp.addarr("ComputationalDomain.nCell", nCell);
     ComputationalDomain infra;
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
@@ -165,7 +167,7 @@ void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineD
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
     funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
 
-    auto dr{amrex::RealVect{AMREX_D_DECL(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir])}};
+    auto dr{infra.cell_size_array()};
     auto form{static_cast<int>(space)};
     e1 = max_error_midpoint<hodgeDegree>(infra.m_geom, funcP, primalForm.m_data, dr, form, false);
     e2 = max_error_midpoint<hodgeDegree>(infra.m_geom, funcP, dualForm.m_data, dr, form, true);
@@ -197,10 +199,10 @@ public:
 
         /* Initialize the infrastructure */
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
 };
 

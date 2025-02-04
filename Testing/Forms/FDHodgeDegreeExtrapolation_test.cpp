@@ -37,7 +37,8 @@ double hodge_one_two_error (const int n, int maxSplineDegree = 3)
     const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
     Gempic::Io::Parameters parameters{};
-    parameters.set("nCellVector", nCell);
+    amrex::ParmParse pp;
+    pp.addarr("ComputationalDomain.nCell", nCell);
     ComputationalDomain infra;
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
@@ -90,7 +91,7 @@ double hodge_one_two_error (const int n, int maxSplineDegree = 3)
     deRham->hodge(primalForm, dualForm);
     primalForm.apply_bc();
 
-    auto dr{amrex::RealVect{AMREX_D_DECL(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir])}};
+    auto dr{infra.cell_size_array()};
     auto form{static_cast<int>(space)};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -107,7 +108,8 @@ double hodge_zero_three_error (const int n, int maxSplineDegree = 3)
     const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
     Gempic::Io::Parameters parameters{};
-    parameters.set("nCellVector", nCell);
+    amrex::ParmParse pp;
+    pp.addarr("ComputationalDomain.nCell", nCell);
     ComputationalDomain infra;
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
@@ -144,7 +146,7 @@ double hodge_zero_three_error (const int n, int maxSplineDegree = 3)
     deRham->hodge(primalForm, dualForm);
     primalForm.apply_bc();
 
-    auto dr{amrex::RealVect{AMREX_D_DECL(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir])}};
+    auto dr{infra.cell_size_array()};
     auto form{static_cast<int>(space)};
     return max_error_midpoint<hodgeDegree>(infra.m_geom, funcP, primalForm.m_data, dr, form, false);
 }
@@ -174,10 +176,10 @@ public:
 
         /* Initialize the infrastructure */
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
 };
 

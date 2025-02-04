@@ -39,7 +39,10 @@ endif()
 
 if(GEMPIC_USE_CUDA)
   add_definitions(-DGEMPIC_GPU)
+  # Do we really only compile for GPU on raven?
+  # Flags should probably revisited
   if($ENV{HOST} MATCHES "raven*")
+    # Are these flags reached at all? We do no compile GPU code with intel compiler
     if(CMAKE_CXX_COMPILER_ID MATCHES "Intel.*")  
       set(CMAKE_CUDA_FLAGS "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=mpiicpc -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand")
       set(CMAKE_CUDA_FLAGS_RELEASE "--Werror cross-execution-space-call --expt-extended-lambda --expt-relaxed-constexpr -ccbin=mpiicpc -I${CUDA_HOME}/include -L${CUDA_HOME}/lib64 -lcurand -arch sm_80")

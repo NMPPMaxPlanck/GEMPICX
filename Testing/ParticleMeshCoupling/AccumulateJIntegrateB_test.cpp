@@ -55,10 +55,10 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
                            amrex::Real xEnd = 0;
 
                            ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ> spline{
-                               posStart, infra.m_plo, infra.m_dxi};
+                               posStart, infra.m_plo, infra.inv_cell_size_array()};
 
-                           spline.template update_1d_splines<pDir>(xEnd, infra.m_plo[xDir],
-                                                                   infra.m_dxi[xDir]);
+                           spline.template update_1d_splines<pDir>(
+                               xEnd, infra.m_plo[xDir], 1.0 / infra.geometry_data().CellSize(xDir));
 
                            ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(*bfieldsGPU, spline,
                                                                                 weight, dx, bA, jA);
@@ -108,11 +108,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // particle settings
         double charge{1};
@@ -195,7 +195,7 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.m_dx, bfields);
+            pti, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
@@ -211,10 +211,11 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
 {
     // Adding particle to one cell
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbHi(yDir) - 5.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbHi(zDir) - 5.5 * m_infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.5 * dx[xDir],
+                       m_infra.m_geom.ProbHi(yDir) - 5.5 * dx[yDir],
+                       m_infra.m_geom.ProbHi(zDir) - 5.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -260,7 +261,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.m_dx, bfields);
+            pti, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
 
         EXPECT_NEAR(bfields[0], -4.5, 1e-15);
         EXPECT_NEAR(bfields[1], -4.5, 1e-15);
@@ -285,10 +286,11 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
 {
     // Adding particle to one cell
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.25 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbHi(yDir) - 5.25 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbHi(zDir) - 5.25 * m_infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.25 * dx[xDir],
+                       m_infra.m_geom.ProbHi(yDir) - 5.25 * dx[yDir],
+                       m_infra.m_geom.ProbHi(zDir) - 5.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -334,7 +336,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.m_dx, bfields);
+            pti, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
 
         EXPECT_NEAR(bfields[0], -4.75, 1e-15);
         EXPECT_NEAR(bfields[1], -4.75, 1e-15);
@@ -369,12 +371,13 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
 TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
 {
     const int numParticles{2};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
-         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 5.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 5.5 * m_infra.m_dx[zDir])}}};
+         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 5.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -420,7 +423,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.m_dx, bfields);
+            pti, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
@@ -435,12 +438,13 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
 TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
 {
     const int numParticles{2};
+    auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
-         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 0.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 0.5 * m_infra.m_dx[zDir])}}};
+         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -486,7 +490,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.m_dx, bfields);
+            pti, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);

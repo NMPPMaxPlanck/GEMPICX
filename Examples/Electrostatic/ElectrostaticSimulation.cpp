@@ -147,7 +147,7 @@ int main (int argc, char *argv[])
                                 positionParticle[d] = particles[pp].pos(d);
                             }
                             SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
-                                                                infra.m_dxi);
+                                                                infra.inv_cell_size_array());
                             // Needs at least max(degx, degy, degz) ghost cells
                             deposit_rho(rhoarr, spline, charge * weight[pp]);
                         });
@@ -158,8 +158,7 @@ int main (int argc, char *argv[])
 
             // Add background charge (needs to be done after post_particle_loop_sync)
             amrex::Real rhoBackground = 1.0;
-            rho +=
-                rhoBackground * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
+            rho += rhoBackground * infra.cell_volume();
 
             // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
@@ -225,7 +224,7 @@ int main (int argc, char *argv[])
                                 }
 
                                 SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
-                                                                    infra.m_dxi);
+                                                                    infra.inv_cell_size_array());
 
                                 deposit_rho(rhoarr, spline, charge * weight[pp]);
                             });
@@ -294,7 +293,7 @@ int main (int argc, char *argv[])
                                                                        velz[pp]};
 
                                 SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
-                                                                    infra.m_dxi);
+                                                                    infra.inv_cell_size_array());
 
                                 // evaluate the electric field
                                 amrex::GpuArray<amrex::Real, vdim> efield =
@@ -330,8 +329,8 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                SplineBase<degx, degy, degz> splineNew(positionParticle,
-                                                                       infra.m_plo, infra.m_dxi);
+                                SplineBase<degx, degy, degz> splineNew(
+                                    positionParticle, infra.m_plo, infra.inv_cell_size_array());
 
                                 deposit_rho(rhoarr, splineNew, charge * weight[pp]);
                             });

@@ -15,15 +15,15 @@ FDDeRhamComplex::FDDeRhamComplex(const ComputationalDomain& infra,
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
     // Parameters used in the projection and hodge
-    for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
+    for (size_t dir = 0; dir < GEMPIC_SPACEDIM; dir++)
     {
-        m_dr[i] = infra.m_dx[i];
+        m_dr[dir] = infra.geometry().CellSize(dir);
     }
     m_nGhost = DeRhamComplex::m_nGhost[xDir];
     m_hodgeScheme = hodgeScheme;
 
     // Read the scaling factors from input file and compute value for the Hodge operator
-    Gempic::Io::Parameters parameters{};
+    Gempic::Io::Parameters parameters{"FDDeRhamComplex"};
     m_sV = 1.0;
     parameters.get_or_set("sV", m_sV);
     m_sOmega = 1.0;

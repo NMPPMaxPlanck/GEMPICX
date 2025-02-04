@@ -56,13 +56,13 @@ void add_single_particles (
         for (int i{0}; i < numParticles; i++)
         {
             // make sure particle is within box (and not previously added? Why?)
-            if (!checklist[i] AMREX_D_TERM(
-                    &&(lo[xDir] * infra.m_dx[xDir] <= positions[i][xDir]) &&
-                        (positions[i][xDir] < (hi[xDir] + 1) * infra.m_dx[xDir]),
-                    &&(lo[yDir] * infra.m_dx[yDir] <= positions[i][yDir]) &&
-                        (positions[i][yDir] < (hi[yDir] + 1) * infra.m_dx[yDir]),
-                    &&(lo[zDir] * infra.m_dx[zDir] <= positions[i][zDir]) &&
-                        (positions[i][zDir] < (hi[zDir] + 1) * infra.m_dx[zDir])))
+            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = infra.geometry().CellSizeArray();
+            if (!checklist[i] AMREX_D_TERM(&&(lo[xDir] * dx[xDir] <= positions[i][xDir]) &&
+                                               (positions[i][xDir] < (hi[xDir] + 1) * dx[xDir]),
+                                           &&(lo[yDir] * dx[yDir] <= positions[i][yDir]) &&
+                                               (positions[i][yDir] < (hi[yDir] + 1) * dx[yDir]),
+                                           &&(lo[zDir] * dx[zDir] <= positions[i][zDir]) &&
+                                               (positions[i][zDir] < (hi[zDir] + 1) * dx[zDir])))
             {
                 particleGroup->add_particle(positions[i], velocities[i], weights[i], particles);
                 checklist[i] = true;
@@ -133,5 +133,10 @@ void compare_fields(const char file[],
                     amrex::Box const& bx,
                     amrex::Real tol = 1e-14,
                     int ncomp = 1);
+
+double l_inf_error(amrex::Array4<const amrex::Real> const& a,
+                   amrex::Array4<const amrex::Real> const& b,
+                   amrex::Box const& bx,
+                   int ncomp = 1);
 }  // namespace Gempic::Test::Utils
 #endif

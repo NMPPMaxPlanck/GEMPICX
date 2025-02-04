@@ -88,11 +88,8 @@ int main (int argc, char *argv[])
         init_particles(partGrLinVlasov, partGr, infra);
 
         // Domain volume and number of cells to normalize s0
-        amrex::Real domainVolume =
-            GEMPIC_D_MULT(infra.m_length[xDir], infra.m_length[yDir], infra.m_length[zDir]);
-        amrex::Vector<int> nCellVector;
-        parameters.get("nCellVector", nCellVector);
-        int nCells = GEMPIC_D_MULT(nCellVector[xDir], nCellVector[yDir], nCellVector[zDir]);
+        amrex::Real domainVolume = infra.geometry().ProbDomain().volume();
+        int nCells = infra.box().length3d().product();
 
         {
             // Initialize diagnostics and write initial time step
@@ -171,7 +168,8 @@ int main (int argc, char *argv[])
                             // Rescale weights to remove f0 from energy computation
                             weight[pp] /= sqrtf0[pp];
 
-                            SplineBase<degx, degy, degz> spline(pos, infra.m_plo, infra.m_dxi);
+                            SplineBase<degx, degy, degz> spline(pos, infra.m_plo,
+                                                                infra.inv_cell_size_array());
 
                             deposit_rho(rhoarr, spline, sqrtf0[pp] * charge * weight[pp]);
 
@@ -260,7 +258,7 @@ int main (int argc, char *argv[])
                                 }
 
                                 ParticleMeshCoupling::SplineWithPrimitive<degx, degy, degz> spline(
-                                    pos, infra.m_plo, infra.m_dxi);
+                                    pos, infra.m_plo, infra.inv_cell_size_array());
 
                                 // He,particle
                                 amrex::GpuArray<amrex::Real, 3> efield =
@@ -272,9 +270,9 @@ int main (int argc, char *argv[])
                                               s0[pp];
 
                                 // Push particle and integrate current
-                                operatorHamilton.apply_h_p(pos, vel, infra, spline, infra.m_dx, jA,
-                                                           bA, chargeMass,
-                                                           sqrtf0[pp] * charge * weight[pp], dt);
+                                operatorHamilton.apply_h_p(
+                                    pos, vel, infra, spline, infra.cell_size_array(), jA, bA,
+                                    chargeMass, sqrtf0[pp] * charge * weight[pp], dt);
 
                                 // Write position and velocities
                                 for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
@@ -344,7 +342,7 @@ int main (int argc, char *argv[])
                                     vThermalBackground);
 
                                 ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                                    pos, infra.m_plo, infra.m_dxi);
+                                    pos, infra.m_plo, infra.inv_cell_size_array());
 
                                 amrex::GpuArray<amrex::Real, 3> efield =
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);

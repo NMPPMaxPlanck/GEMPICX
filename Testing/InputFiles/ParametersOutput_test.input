@@ -3,9 +3,9 @@ simName = "ParametersOutput_test"
 outputFile = "ParametersOutput_test.output"
 
 # Grid parameters
-nCellVector = 128 8 8
-maxGridSizeVector = 32 8 8
-isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+ComputationalDomain.nCell = 128 8 8
+ComputationalDomain.maxGridSize = 32 8 8
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
 Particle.speciesNames = ions

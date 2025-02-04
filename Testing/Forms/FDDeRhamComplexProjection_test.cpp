@@ -32,8 +32,7 @@ void update_one_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (lineIntegral.m_data[comp])[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -89,8 +88,7 @@ void update_two_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (faceIntegral.m_data[comp])[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -148,8 +146,7 @@ void update_one_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (lineIntegralDual.m_data[comp])[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -207,8 +204,7 @@ void update_two_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (faceIntegralDual.m_data[comp])[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -267,8 +263,7 @@ void update_zero_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& zeroForm = (pointVals.m_data)[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -306,8 +301,7 @@ void update_zero_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& zeroForm = (pointValsDual.m_data)[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -346,8 +340,7 @@ void update_three_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& threeForm = (rhoAn.m_data)[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -386,8 +379,7 @@ void update_three_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& threeForm = (rhoAnDual.m_data)[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
@@ -449,11 +441,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
 
     void SetUp () override { m_infra = Gempic::ComputationalDomain{}; }

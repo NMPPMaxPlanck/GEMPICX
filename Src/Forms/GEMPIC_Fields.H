@@ -321,8 +321,6 @@ protected:
     // Computational grid
     amrex::BoxArray m_grid;
     amrex::DistributionMapping m_distriMap;
-    amrex::Geometry m_geom;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> m_dxInv;
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_dx;
     int m_hodgeDegree;
 
@@ -331,6 +329,8 @@ protected:
     amrex::IntVect m_nGhostRequired;
 
 public:
+    // ToDo: Temporary moved to be public until ComputationalDomain is removed
+    amrex::Geometry m_geom;
     /// Constructor for the DeRhamComplex class
     /// @param infra The computational domain needed to construct the class correctly
     /// @param hodgeDegree The degree of the Hodge scheme, used for a lower limit of ghost cells
@@ -346,8 +346,7 @@ public:
         m_distriMap = infra.m_distriMap;
         m_geom = infra.m_geom;
         m_hodgeDegree = hodgeDegree;
-        m_dxInv = infra.m_dxi;
-        m_dx = infra.m_dx;
+        m_dx = infra.geometry().CellSizeArray();
 
         /* Number of essential ghost cells is determined by degree of the Hodge and particle
         ** splines:
@@ -409,14 +408,8 @@ public:
     /// Getter for the number of ghost cells
     const amrex::IntVect& get_n_ghost () const { return m_nGhost; }
 
-    /// Getter for the cell size
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1>& get_dx_inv () const { return m_dxInv; }
-
     /// Getter for the periodicity
     const amrex::Periodicity get_periodicity () const { return m_geom.periodicity(); }
-
-    /// Getter for dx
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& get_dx () const { return m_dx; }
 
     /// Getter for prob lo
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> get_prob_lo () const
@@ -1029,14 +1022,14 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 
     if constexpr (space == Space::edge)  // edge field
     {
-        auto dxInv{m_deRham->get_dx_inv()};
+        auto dxInv{m_deRham->m_geom.InvCellSizeArray()};
         m_deRham->m_fieldsScaling.emplace(diagName + "x", dxInv[xDir]);
         m_deRham->m_fieldsScaling.emplace(diagName + "y", GEMPIC_D_MULT(1.0, dxInv[yDir], 1.0));
         m_deRham->m_fieldsScaling.emplace(diagName + "z", GEMPIC_D_MULT(1.0, 1.0, dxInv[zDir]));
     }
     if constexpr (space == Space::face)  // face field
     {
-        auto dxInv{m_deRham->get_dx_inv()};
+        auto dxInv{m_deRham->m_geom.InvCellSizeArray()};
         m_deRham->m_fieldsScaling.emplace(diagName + "x",
                                           GEMPIC_D_MULT(1.0, dxInv[yDir], dxInv[zDir]));
         m_deRham->m_fieldsScaling.emplace(diagName + "y",
@@ -1081,7 +1074,10 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     }
     if constexpr (space == Space::cell)  // cell field
     {
-        m_deRham->m_fieldsScaling.emplace(diagName, m_deRham->get_dx_inv()[GEMPIC_SPACEDIM]);
+        double invCellVol =
+            GEMPIC_D_MULT(m_deRham->m_geom.InvCellSize(xDir), m_deRham->m_geom.InvCellSize(yDir),
+                          m_deRham->m_geom.InvCellSize(zDir));
+        m_deRham->m_fieldsScaling.emplace(diagName, invCellVol);
     }
 
     if (not m_deRham->get_geom().isAllPeriodic())
@@ -1306,7 +1302,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=(function)");
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& dx = m_deRham->get_dx();
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_deRham->get_prob_lo();
 
     int nComps{m_data[xDir].nComp()};
@@ -1356,7 +1352,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=(function)");
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& dx = m_deRham->get_dx();
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_deRham->get_prob_lo();
 
     int nComps{m_data.nComp()};

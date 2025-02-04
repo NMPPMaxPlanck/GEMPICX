@@ -58,11 +58,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // particle settings
         double charge{1};
@@ -136,20 +136,20 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in x-direction
         position = {AMREX_D_DECL(xPosNew, yPosOld, zPosOld)};
 
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
-                                                m_infra.m_dxi[xDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+                                                m_infra.geometry().InvCellSize(xDir));
+        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
 
         // setup is in a way, that the first spline is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
             xDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::bothSplines>(
-            m_infra.m_dx, 0);
+            m_infra.geometry().CellSizeArray(), 0);
         primDiffRef = primitiveDifference;
 
         yNodeVal = spline.m_nodeSplineVals[yDir][0];
@@ -185,20 +185,20 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in y-direction
         position = {AMREX_D_DECL(xPosOld, yPosNew, zPosOld)};
 
         spline.template update_1d_splines<yDir>(position[yDir], m_infra.m_plo[yDir],
-                                                m_infra.m_dxi[yDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+                                                m_infra.geometry().InvCellSize(yDir));
+        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
 
         // setup is in a way, that the second index is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
             yDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::bothSplines>(
-            m_infra.m_dx, 1);
+            m_infra.geometry().CellSizeArray(), 1);
         primDiffRef = primitiveDifference;
 
         xNodeVal = spline.m_nodeSplineVals[xDir][0];
@@ -231,20 +231,20 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in y-direction
         position = {AMREX_D_DECL(xPosOld, yPosOld, zPosNew)};
 
         spline.template update_1d_splines<zDir>(position[zDir], m_infra.m_plo[zDir],
-                                                m_infra.m_dxi[zDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+                                                m_infra.geometry().InvCellSize(zDir));
+        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
 
         // setup is in a way, that the first spline is in the "firstSpline" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
             zDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::firstSpline>(
-            m_infra.m_dx, 0);
+            m_infra.geometry().CellSizeArray(), 0);
         primDiffRef = primitiveDifference;
 
         xNodeVal = spline.m_nodeSplineVals[xDir][0];
@@ -282,7 +282,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 0.0;)
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
-    amrex::Real cfl{dt / m_infra.m_dx[0]};
+    amrex::Real cfl{dt / m_infra.geometry().CellSize(xDir)};
     amrex::Real vx{1 * cfl}, vy{3.1 * cfl}, vz{-2.5 * cfl};
     amrex::GpuArray<amrex::Real, s_vDim> vel{vx, vy, vz};
 
@@ -314,7 +314,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         dtv = dt * vel[yDir];
         xNodeVal = spline.m_nodeSplineVals[xDir][0];
@@ -416,25 +416,25 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 
         // compute: rho^n
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRhoOld(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         ParticleMeshCoupling::deposit_rho(rhoOldarr, splineRhoOld, chargeWeight);
 
         // compute: integratedJ
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in x-direction
         position = {AMREX_D_DECL(xPosNew, yPosOld, zPosOld)};
 
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
-                                                m_infra.m_dxi[xDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+                                                m_infra.geometry().InvCellSize(xDir));
+        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
 
         // compute: rho^n+1
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRho(position, m_infra.m_plo,
-                                                                           m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRho(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
         deposit_rho(rhoarr, splineRho, chargeWeight);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -486,9 +486,10 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, m_infra.m_dx[1], m_infra.m_dx[2]),
-                                         GEMPIC_D_MULT(m_infra.m_dx[0], 1.0, m_infra.m_dx[2]),
-                                         GEMPIC_D_MULT(m_infra.m_dx[0], m_infra.m_dx[1], 1.0)};
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
+                                         GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
+                                         GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
 
     // fill the B field with the value 3 in xDirection (multiply by area for 2-form dofs)
     amrex::Real Bx{valBx};
@@ -519,34 +520,32 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            positionOld, m_infra.m_plo, m_infra.m_dxi);
+            positionOld, m_infra.m_plo, dxi);
 
         // update the splines in x direction
-        spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
-                                                m_infra.m_dxi[xDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+        spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir], dxi[xDir]);
+        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
         // For a constant B, primitive difference is B * (position - positionOld)
         EXPECT_NEAR(Bz * (position[xDir] - positionOld[xDir]), bfields[0], 1e-12);
         EXPECT_NEAR(By * (position[xDir] - positionOld[xDir]), bfields[1], 1e-12);
 
 #if GEMPIC_SPACEDIM > 1
         // update the splines in y direction
-        spline.template update_1d_splines<yDir>(position[yDir], m_infra.m_plo[yDir],
-                                                m_infra.m_dxi[yDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+        spline.template update_1d_splines<yDir>(position[yDir], m_infra.m_plo[yDir], dxi[yDir]);
+        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
         EXPECT_NEAR(Bx * (position[yDir] - positionOld[yDir]), bfields[0], 1e-12);
         EXPECT_NEAR(Bz * (position[yDir] - positionOld[yDir]), bfields[1], 1e-12);
 
 #endif
 #if GEMPIC_SPACEDIM == 3
         // update the splines in z direction
-        spline.template update_1d_splines<zDir>(position[zDir], m_infra.m_plo[zDir],
-                                                m_infra.m_dxi[zDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(bfields, spline, chargeWeight,
-                                                             m_infra.m_dx, bA, jA);
+        spline.template update_1d_splines<zDir>(position[zDir], m_infra.m_plo[zDir], dxi[zDir]);
+        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
+            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
         EXPECT_NEAR(By * (position[zDir] - positionOld[zDir]), bfields[0], 1e-12);
         EXPECT_NEAR(Bx * (position[zDir] - positionOld[zDir]), bfields[1], 1e-12);
 
@@ -571,7 +570,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Real dt = 0.001;
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
-    amrex::Real cfl{dt / m_infra.m_dx[0]};
+    amrex::Real cfl{dt / m_infra.geometry().CellSize(xDir)};
     amrex::Real vx{1 * cfl}, vy{3.1 * cfl}, vz{-2.5 * cfl};
     amrex::GpuArray<amrex::Real, s_vDim> vel{vx, vy, vz};
 
@@ -601,9 +600,10 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, m_infra.m_dx[1], m_infra.m_dx[2]),
-                                         GEMPIC_D_MULT(m_infra.m_dx[0], 1.0, m_infra.m_dx[2]),
-                                         GEMPIC_D_MULT(m_infra.m_dx[0], m_infra.m_dx[1], 1.0)};
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
+                                         GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
+                                         GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
 
     // fill the B field with the value 3 in xDirection (multiply by area for 2-form dofs)
     amrex::Real Bx{valBx};
@@ -634,11 +634,11 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            positionOld, m_infra.m_plo, m_infra.m_dxi);
+            positionOld, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         // update the splines in x direction
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
-                                                m_infra.m_dxi[xDir]);
+                                                m_infra.geometry().InvCellSize(xDir));
 
         for (int i = 0; i <= s_degX; ++i)
         {
@@ -713,7 +713,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.2;, amrex::Real zPosOld = 2.2;)
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
-    amrex::Real cfl{dt / m_infra.m_dx[0]};
+    amrex::Real cfl{dt / m_infra.geometry().CellSize(0)};
     amrex::Real vx{1 * cfl}, vy{3.1 * cfl}, vz{-2.5 * cfl};
     amrex::GpuArray<amrex::Real, s_vDim> vel{vx, vy, vz};
 
@@ -729,9 +729,10 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, m_infra.m_dx[1], m_infra.m_dx[2]),
-                                         GEMPIC_D_MULT(m_infra.m_dx[0], 1.0, m_infra.m_dx[2]),
-                                         GEMPIC_D_MULT(m_infra.m_dx[0], m_infra.m_dx[1], 1.0)};
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
+                                         GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
+                                         GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
 
     // fill the B field with the value 3 in xDirection (multiply by area for 2-form dofs)
     amrex::Real Bx{3.0};
@@ -759,12 +760,12 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         }
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         // apply h_p_i in x direction
         operatorHamilton.template apply_h_p_i<xDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.m_dx, jA, bA, chargeOverMass,
-                                                    chargeWeight, dt);
+                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+                                                    chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(xPosOld + dt * vel[xDir], position[0], 1e-12);
         EXPECT_NEAR(vy - dt * chargeOverMass * vel[xDir] * Bz, vel[yDir], 1e-12);
@@ -781,8 +782,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[zDir] = vz;
 
         operatorHamilton.template apply_h_p_i<yDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.m_dx, jA, bA, chargeOverMass,
-                                                    chargeWeight, dt);
+                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+                                                    chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(yPosOld + dt * vel[yDir], position[yDir], 1e-12);
         EXPECT_NEAR(vx + dt * chargeOverMass * vel[yDir] * Bz, vel[xDir], 1e-12);
@@ -796,8 +797,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[zDir] = vz;
 
         operatorHamilton.template apply_h_p_i<zDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.m_dx, jA, bA, chargeOverMass,
-                                                    chargeWeight, dt);
+                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+                                                    chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(zPosOld + dt * vel[zDir], position[zDir], 1e-12);
         EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By, vel[xDir], 1e-12);
@@ -820,8 +821,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[zDir] = vz;
 
         operatorHamilton.template apply_h_p_i<yDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.m_dx, jA, bA, chargeOverMass,
-                                                    chargeWeight, dt);
+                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+                                                    chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(yPosOld + dt * vel[yDir], position[yDir], 1e-12);
         EXPECT_NEAR(vx + dt * chargeOverMass * vel[yDir] * Bz, vel[xDir], 1e-12);
@@ -853,8 +854,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
             }
         }
 
-        operatorHamilton.template apply_h_p_i_euler<zDir>(
-            vel, m_infra, spline, bfields, m_infra.m_dx, jA, bA, chargeOverMass, chargeWeight, dt);
+        operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields,
+                                                          m_infra.geometry().CellSizeArray(), jA,
+                                                          bA, chargeOverMass, chargeWeight, dt);
         EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By * dxdy[1] * cellSumXhalf * nodeSumY,
                     vel[xDir], 1e-12);
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx * dxdy[0] * nodeSumX * cellSumYhalf,
@@ -880,8 +882,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
             }
         }
 
-        operatorHamilton.template apply_h_p_i_euler<yDir>(
-            vel, m_infra, spline, bfields, m_infra.m_dx, jA, bA, chargeOverMass, chargeWeight, dt);
+        operatorHamilton.template apply_h_p_i_euler<yDir>(vel, m_infra, spline, bfields,
+                                                          m_infra.geometry().CellSizeArray(), jA,
+                                                          bA, chargeOverMass, chargeWeight, dt);
         EXPECT_NEAR(vx + dt * chargeOverMass * vel[yDir] * Bz * dxdy[2] * cellSumX, vel[xDir],
                     1e-12);
         EXPECT_NEAR(vz - dt * chargeOverMass * vel[yDir] * Bx * nodeSumX, vel[zDir], 1e-12);
@@ -892,8 +895,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[yDir] = vy;
         vel[zDir] = vz;
 
-        operatorHamilton.template apply_h_p_i_euler<zDir>(
-            vel, m_infra, spline, bfields, m_infra.m_dx, jA, bA, chargeOverMass, chargeWeight, dt);
+        operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields,
+                                                          m_infra.geometry().CellSizeArray(), jA,
+                                                          bA, chargeOverMass, chargeWeight, dt);
         EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By * dxdy[1] * cellSumX, vel[xDir],
                     1e-12);
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx * nodeSumX, vel[yDir], 1e-12);
@@ -934,8 +938,11 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> eA;
 
-    amrex::GpuArray<amrex::Real, 3> dx{
-        GEMPIC_D_PAD_ONE(m_infra.m_dx[0], m_infra.m_dx[1], m_infra.m_dx[2])};
+    // These code sections would be much simpler if we consider only 3-D implementations and
+    // design away special cases.
+    amrex::GpuArray<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(m_infra.geometry().CellSize(xDir),
+                                                        m_infra.geometry().CellSize(yDir),
+                                                        m_infra.geometry().CellSize(zDir))};
 
     amrex::Real Ex{valEx}, Ey{valEy}, Ez{valEz};
     // fill the E field with the value 3 in xDirection (need to multiply by dx for corresponding
@@ -962,14 +969,14 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
         auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
         long pp = 0;
 
-        velx[0] = v[0] * m_infra.m_dx[0];
-        vely[0] = v[1] * m_infra.m_dx[1];
-        velz[0] = v[2] * m_infra.m_dx[2];
+        velx[0] = v[0] * m_infra.geometry().CellSize(xDir);
+        vely[0] = v[1] * m_infra.geometry().CellSize(yDir);
+        velz[0] = v[2] * m_infra.geometry().CellSize(zDir);
 
         amrex::GpuArray<amrex::Real, s_vDim> vel{velx[pp], vely[pp], velz[pp]};
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         for (int cc = 0; cc < 3; cc++)
         {
