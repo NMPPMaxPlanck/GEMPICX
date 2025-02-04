@@ -6,4 +6,7 @@ target_sources(GtestTests PRIVATE
     Fields_test.cpp
     FieldMultiplyByFunction_test.cpp
     ExtDerivatives_test.cpp
+    FDHodgeDegree_test.cpp
+    FDHodgeDegreeExtrapolation_test.cpp
+    ProjectionForms_test.cpp
     )

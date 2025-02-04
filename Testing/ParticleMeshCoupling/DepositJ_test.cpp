@@ -246,13 +246,9 @@ TYPED_TEST(DepositJTest, SingleParticlePerCellJ)
     amrex::Real tol = 0.1;
 
     amrex::Real rateOfConvergence;
-    constexpr int splineDegree = TestFixture::s_degX;
     errorCoarse = this->template j_solve<coarse>();
-    amrex::Print() << "errorCoarse: " << errorCoarse << "\n";
     errorFine = this->template j_solve<fine>();
-    amrex::Print() << "errorFine: " << errorFine << "\n";
     rateOfConvergence = std::log2(errorCoarse / errorFine);
-    amrex::Print() << "rate_of_convergence_" << splineDegree << ':' << rateOfConvergence << "\n";
     EXPECT_NEAR(rateOfConvergence, 2.0, tol);
 }
 }  // namespace

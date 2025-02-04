@@ -20,6 +20,7 @@ SpaceBeforeParensOptions:
 SpacesInLineCommentPrefix:
   Minimum: 0
   Maximum: -1
+# SpacesBeforeTrailingComments: 1
 # Sorting order for includes: 1) GEMPIC(X), 2) AMReX, 3) other third party libraries, 4) std library
 IncludeBlocks: Regroup
 IncludeIsMainRegex: "TreatNothingAsMain"

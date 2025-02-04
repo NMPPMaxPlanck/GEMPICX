@@ -1,6 +1,6 @@
 # General setting
-simName = "test_parameters"
-outputFile = "test_parameters.output"
+simName = "ParametersOutput_test"
+outputFile = "ParametersOutput_test.output"
 
 # Grid parameters
 nCellVector = 128 8 8

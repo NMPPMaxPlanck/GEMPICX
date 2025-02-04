@@ -213,7 +213,7 @@ private:
         amrex::Real divDNorm = Gempic::Utils::gempic_norm(divD.m_data, infra, 2);
 
         // Check that rho and divD have been updated
-        if (abs(rhoNorm - m_rhoNorm) < 1e-12 || abs(divDNorm - m_divDNorm) < 1e-12)
+        if (std::abs(rhoNorm - m_rhoNorm) < 1e-12 || std::abs(divDNorm - m_divDNorm) < 1e-12)
         {
             amrex::Warning("rhoNorm " + std::to_string(rhoNorm) + " divDNorm " +
                            std::to_string(divDNorm) + "\n");

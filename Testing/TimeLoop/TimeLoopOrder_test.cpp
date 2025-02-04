@@ -71,9 +71,6 @@ public:
                               amrex::Real const sV)
     {
         // Analytical solutions in every direction (assuming k=1 in all directions)
-        const amrex::Real sDtoE = sOmegaSquared;            // scaling parameter: Hodge D -> E
-        const amrex::Real sBtoH = sV * sV / sOmegaSquared;  // scaling parameter: Hodge B -> H
-
 #if (GEMPIC_SPACEDIM == 1)
         const amrex::Array<std::string, 3> analyticalD = {
             "1 / sOmegaSquared * 0.",

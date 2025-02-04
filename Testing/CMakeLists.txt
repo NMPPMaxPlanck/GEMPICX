@@ -1,5 +1,18 @@
-# enable gtest tests
+# Give verbose output when tests fail
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS})
+message("ctest command is: ${CMAKE_CTEST_COMMAND}")
+# Enable ctest and GoogleTest tests
 enable_testing()
+
+# Add gtest
+gempic_FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.14.0
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/googletest-src
+)
+FetchContent_MakeAvailable(googletest)
 
 add_executable (GtestTests GEMPIC_UnitTests.cpp)
 
@@ -10,6 +23,7 @@ add_subdirectory(FieldSolvers)
 add_subdirectory(Filter)
 add_subdirectory(Forms)
 add_subdirectory(Io)
+add_subdirectory(Particle)
 add_subdirectory(ParticleMeshCoupling)
 add_subdirectory(TimeLoop)
 if(GEMPIC_BUILD_EXAMPLES)
@@ -30,6 +44,7 @@ include(GoogleTest)
 # MUST be done AFTER all sources have been assigned to target
 if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(GtestTests)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --ptxas-options=--disable-optimizer-constants" )
 endif(GEMPIC_USE_CUDA)
   
 target_link_libraries(

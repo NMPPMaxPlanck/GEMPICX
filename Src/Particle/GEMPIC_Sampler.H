@@ -108,6 +108,7 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real get_gaussian_velocity (
     else
     {
         amrex::Abort("Unknown vThermal input format. Must be either constants or functions.");
+        return std::numeric_limits<amrex::Real>::signaling_NaN();  // won't be reached.
     }
     return vDev * z0 + vIniter.m_vMeanPtr[gaussId][cc];
 }
