@@ -73,15 +73,15 @@ protected:
         amrex::ParmParse pp;
         /* computational domain */
         amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
         pp.addarr("k", k);
         const amrex::Vector<int> nCell{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("nCellVector", nCell);
+        pp.addarr("ComputationalDomain.nCell", nCell);
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(4, 4, 4)};
-        pp.addarr("maxGridSizeVector", maxGridSize);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
         // particles (data read by particleGroups constructor)
         std::string speciesNames{"ions"};
         pp.add("Particle.speciesNames", speciesNames);
@@ -189,7 +189,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     // conditions for cell center interpolation given for each example
     for (amrex::MFIter mfi(mfAllDiagExpected); mfi.isValid(); ++mfi)
     {
-        define_expected(mfi, mfAllDiagExpected, m_infra.m_dx);
+        define_expected(mfi, mfAllDiagExpected, m_infra.geometry().CellSizeArray());
     }
 
     // read field diagnostics
@@ -273,7 +273,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOperatorOutputProcessor)
     // Create expected value MultiFab
     amrex::MultiFab multipliedBy5Expected(rho.m_data.boxArray(), rho.m_data.DistributionMap(),
                                           ncomp, nghost);
-    multipliedBy5Expected.setVal(5.0);
+    multipliedBy5Expected.setVal(multiplicationFactor);
 
     // Read field diagnostics
     amrex::MultiFab resultMf(rho.m_data.boxArray(), rho.m_data.DistributionMap(), ncomp, nghost);

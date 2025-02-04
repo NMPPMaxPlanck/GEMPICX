@@ -75,9 +75,7 @@ void compute_analytical_scalar_function_parallel_for (
     const amrex::Box &bx = mfi.validbox();
     amrex::Array4<amrex::Real> const &analyticalPointValuesMF = analyticalPointValues[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
-
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     ParallelFor(bx, nValues,
@@ -110,9 +108,7 @@ void compute_analytical_vector_function_parallel_for (
     const amrex::Box &bx = mfi.validbox();
     amrex::Array4<amrex::Real> const &analyticalPointValuesMF = analyticalPointValues[mfi].array();
 
-    const amrex::RealVect dr =
-        amrex::RealVect{AMREX_D_DECL(mInfra.m_dx[xDir], mInfra.m_dx[yDir], mInfra.m_dx[zDir])};
-
+    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
     const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     ParallelFor(
@@ -169,11 +165,11 @@ protected:
         const int nGhostExtra{1};  //{-s_maxSplineDegree};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
-        pp.addarr("domainHi", domainHi);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
         pp.add("nGhostExtra", nGhostExtra);
     }
 

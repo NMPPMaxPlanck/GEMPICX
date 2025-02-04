@@ -67,11 +67,11 @@ protected:
         const int nGhostExtra{0};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
-        pp.addarr("domainHi", domainHi);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
         pp.add("nGhostExtra", nGhostExtra);
         pp.addarr("BoundaryCondition.Default", bcVec);
     }

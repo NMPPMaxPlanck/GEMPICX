@@ -58,17 +58,17 @@ public:
         amrex::ParmParse pp;  // Used instead of input file
 
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
 
         const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("domainHi", domainHi);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
 
         // Grid parameters
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("maxGridSizeVector", maxGridSize);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
 
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // Particle parameters (data read by particle_groups constructor)
         std::string speciesNames{"ions"};
@@ -119,8 +119,9 @@ public:
         // For studies other than convergence, this should be in SetUpTestSuite under Grid
         // parameters
         Gempic::Io::Parameters parameters{};
+        amrex::ParmParse pp;
         const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-        parameters.set("nCellVector", nCell);
+        pp.addarr("ComputationalDomain.nCell", nCell);
 
         // Initialize computational_domain
         ComputationalDomain infra;
@@ -148,13 +149,14 @@ public:
         amrex::Array<amrex::Real, numParticles> weights;
 
         int i{0}, j{0}, k{0};
+        const auto &dx{infra.cell_size_array()};
         GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
                             for (k = 0; k < n; k++))
 
             amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> loc = {
-                AMREX_D_DECL(infra.m_geom.ProbLo(xDir) + (i + 0.5) * infra.m_dx[xDir],
-                             infra.m_geom.ProbLo(yDir) + (j + 0.5) * infra.m_dx[yDir],
-                             infra.m_geom.ProbLo(zDir) + (k + 0.5) * infra.m_dx[zDir])};
+                AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + 0.5) * dx[xDir],
+                             infra.geometry().ProbLo(yDir) + (j + 0.5) * dx[yDir],
+                             infra.geometry().ProbLo(zDir) + (k + 0.5) * dx[zDir])};
 
             positions[i + j * n + k * n * n] = {AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
 #if GEMPIC_SPACEDIM == 2
@@ -163,8 +165,7 @@ public:
 #elif GEMPIC_SPACEDIM == 3
             velocities[i + j * n + k * n * n] = {sin(loc[xDir]), sin(loc[yDir]), sin(loc[zDir])};
 #endif
-            weights[i + j * n + k * n * n] =
-                GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
+            weights[i + j * n + k * n * n] = infra.cell_volume();
 
         GEMPIC_D_LOOP_END
 
@@ -213,7 +214,7 @@ public:
                         }
 
                         SplineBase<s_degX, s_degY, s_degZ> spline(positionParticle, infra.m_plo,
-                                                                  infra.m_dxi);
+                                                                  infra.inv_cell_size_array());
 
                         amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
                         deposit_j(jA, spline, vel, charge * weight[pp]);
@@ -224,12 +225,12 @@ public:
 
         J -= jAn;
 
-        return (Utils::gempic_norm(J.m_data[xDir], infra, 1) * infra.m_dxi[yDir] *
-                    ((GEMPIC_SPACEDIM == 3) ? infra.m_dxi[zDir] : 1) +
-                Utils::gempic_norm(J.m_data[yDir], infra, 1) *
-                    ((GEMPIC_SPACEDIM == 3) ? infra.m_dxi[zDir] : 1) * infra.m_dxi[xDir] +
-                Utils::gempic_norm(J.m_data[zDir], infra, 1) * infra.m_dxi[xDir] *
-                    infra.m_dxi[yDir]);
+        amrex::GpuArray<amrex::Real, 3> dxi3d{GEMPIC_D_PAD_ONE(infra.geometry().InvCellSize(xDir),
+                                                               infra.geometry().InvCellSize(yDir),
+                                                               infra.geometry().InvCellSize(zDir))};
+        return (Utils::gempic_norm(J.m_data[xDir], infra, 1) * dxi3d[yDir] * dxi3d[zDir] +
+                Utils::gempic_norm(J.m_data[yDir], infra, 1) * dxi3d[zDir] * dxi3d[xDir] +
+                Utils::gempic_norm(J.m_data[zDir], infra, 1) * dxi3d[xDir] * dxi3d[yDir]);
     }
 };
 

@@ -62,17 +62,17 @@ public:
         amrex::ParmParse pp;  // Used instead of input file
 
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
 
         const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("domainHi", domainHi);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
 
         // Grid parameters
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("maxGridSizeVector", maxGridSize);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
 
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // Particle parameters (data read by particle_groups constructor)
         std::string speciesNames{"ions"};
@@ -136,8 +136,9 @@ public:
         // For studies other than convergence, this should be in SetUpTestSuite under Grid
         // parameters
         Gempic::Io::Parameters parameters{};
+        amrex::ParmParse pp;
         const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-        parameters.set("nCellVector", nCell);
+        pp.addarr("ComputationalDomain.nCell", nCell);
 
         // Initialize computational_domain
         ComputationalDomain infra;
@@ -171,6 +172,7 @@ public:
                          {AMREX_D_DECL(0.0, 0.0, 0.5)})};
 
         int i{0}, j{0}, k{0};
+        const auto dx{infra.cell_size_array()};
 
         for (int ndir = 0; ndir < GEMPIC_SPACEDIM; ++ndir)
         {
@@ -178,16 +180,15 @@ public:
                                 for (k = 0; k < n; k++))
 
                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> loc = {AMREX_D_DECL(
-                    infra.m_geom.ProbLo(xDir) + (i + offset[ndir][xDir]) * infra.m_dx[xDir],
-                    infra.m_geom.ProbLo(yDir) + (j + offset[ndir][yDir]) * infra.m_dx[yDir],
-                    infra.m_geom.ProbLo(zDir) + (k + offset[ndir][zDir]) * infra.m_dx[zDir])};
+                    infra.geometry().ProbLo(xDir) + (i + offset[ndir][xDir]) * dx[xDir],
+                    infra.geometry().ProbLo(yDir) + (j + offset[ndir][yDir]) * dx[yDir],
+                    infra.geometry().ProbLo(zDir) + (k + offset[ndir][zDir]) * dx[zDir])};
 
                 positions[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
                     AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
                 velocities[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
                 weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    (1.0 / GEMPIC_SPACEDIM) *
-                    GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
+                    (1.0 / GEMPIC_SPACEDIM) * infra.cell_volume();
             GEMPIC_D_LOOP_END
         }
 
@@ -207,16 +208,18 @@ public:
         HypreQuasineutralLinearSystem<DeRhamField<Grid::dual, Space::face>,
                                       DeRhamField<Grid::primal, Space::edge>, s_hodgeDegree, s_vdim,
                                       s_degX, s_degY, s_degZ>
-            hypreParticleRho(&infra, deRham);
+            hypreParticleRho(infra, deRham);
 
         hypreParticleRho.solve_particle_charge_e(rhoEAn, E, ions);
 
         E -= eAn;
 
-        return (Utils::gempic_norm(E.m_data[xDir], infra, 1) * infra.m_dxi[xDir] +
-                Utils::gempic_norm(E.m_data[yDir], infra, 1) * infra.m_dxi[yDir] +
-                Utils::gempic_norm(E.m_data[zDir], infra, 1) *
-                    ((GEMPIC_SPACEDIM == 3) ? infra.m_dxi[zDir] : 1));
+        amrex::GpuArray<amrex::Real, 3> dxi{GEMPIC_D_PAD_ONE(infra.geometry().InvCellSize(xDir),
+                                                             infra.geometry().InvCellSize(yDir),
+                                                             infra.geometry().InvCellSize(zDir))};
+        return Utils::gempic_norm (E.m_data[xDir], infra, 1) * dxi[xDir] +
+               Utils::gempic_norm(E.m_data[yDir], infra, 1) * dxi[yDir] +
+               Utils::gempic_norm(E.m_data[zDir], infra, 1) * dxi[zDir];
     }
 };
 

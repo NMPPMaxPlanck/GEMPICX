@@ -45,7 +45,7 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                position[d] = partData[pp].pos(d);
                            }
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
-                               position, infra.m_plo, infra.m_dxi);
+                               position, infra.m_plo, infra.inv_cell_size_array());
                            // Needs at least max(degX, degY, degZ) ghost cells
                            ParticleMeshCoupling::deposit_rho(rhoarr, spline, charge * weight[pp]);
                        });
@@ -95,11 +95,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // particle settings
         double charge{1};
@@ -180,8 +180,8 @@ TEST_F(DepositRhoTest, NullTest)
             position[d] = partData[0].pos(d);
         }
 
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
-                                                                        m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         ParticleMeshCoupling::deposit_rho(rhoarr, spline, 0);
     }
@@ -195,17 +195,18 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
 {
     ASSERT_EQ(0, m_rhoPtr->m_data.norm2(0, m_infra.m_geom.periodicity()));
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
 
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 0.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbHi(yDir) - 0.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbHi(zDir) - 0.5 * m_infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 0.5 * dx[xDir],
+                       m_infra.m_geom.ProbHi(yDir) - 0.5 * dx[yDir],
+                       m_infra.m_geom.ProbHi(zDir) - 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{3};
     // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be
     // non-zero and receiving 1/2^GEMPIC_SPACEDIM the weight of the particle (3)
     const auto charge{m_particleGroup[0]->get_charge()};
-    amrex::Real expectedVal{charge * m_infra.m_dxi[GEMPIC_SPACEDIM] * weights[0] *
+    amrex::Real expectedVal{charge * weights[0] / m_infra.cell_volume() *
                             pow(0.5, GEMPIC_SPACEDIM)};
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -244,11 +245,12 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
 {
     ASSERT_EQ(0, m_rhoPtr->m_data.norm2(0, m_infra.m_geom.periodicity()));
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
 
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.25 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 0.25 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 0.25 * m_infra.m_dx[zDir])}}};
+        {{AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.25 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 0.25 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 0.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -294,11 +296,12 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
 TEST_F(DepositRhoTest, DoubleParticleSeparate)
 {
     const int numParticles{2};
+    auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
-         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 5.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 5.5 * m_infra.m_dx[zDir])}}};
+         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 5.5 * dx[zDir])}}};
 
     amrex::Array<amrex::Real, numParticles> weights{1, 3};
     amrex::Real expectedValA{1}, expectedValB{3 * pow(0.5, GEMPIC_SPACEDIM)};
@@ -341,11 +344,12 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
 TEST_F(DepositRhoTest, DoubleParticleOverlap)
 {
     const int numParticles{2};
+    auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
-         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 0.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 0.5 * m_infra.m_dx[zDir])}}};
+         {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir],
+                       m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
+                       m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 3};
 
     amrex::Real expectedValA{1 + 3 * pow(0.5, GEMPIC_SPACEDIM)};
@@ -382,12 +386,12 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
 TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
 {
     const int numParticles{1};
+    auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> pPos{
         {{AMREX_D_DECL(0, 0, 0)}}};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> ePos{
-        {{AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * m_infra.m_dx[xDir],
-                       m_infra.m_geom.ProbLo(yDir) + 0.5 * m_infra.m_dx[yDir],
-                       m_infra.m_geom.ProbLo(zDir) + 0.5 * m_infra.m_dx[zDir])}}};
+    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> ePos{{{AMREX_D_DECL(
+        m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir], m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
+        m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> pWeights{1};
     amrex::Array<amrex::Real, numParticles> eWeights{3};
     int pSpec{0}, eSpec{1};

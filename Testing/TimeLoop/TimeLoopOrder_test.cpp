@@ -54,11 +54,10 @@ public:
 
         /* Initialize the infrastructure */
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
-        pp.addarr("domainHi", domainHi);
-
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         pp.add("sV", s_sV);
         pp.add("sOmega", s_sOmega);
@@ -113,8 +112,11 @@ public:
         // Initialize computational_domain
         const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
-        Gempic::Io::Parameters parameters{};
-        parameters.set("nCellVector", nCell);
+        amrex::ParmParse pp;
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        // Class that should acutally manage parameters instead of amrex::ParamParse
+        // Need an instance of this to use parameters in ComputationalDomain.
+        Gempic::Io::Parameters parameters;
         ComputationalDomain infra;
 
         // Project B and D to a primal and dual two form respectively
@@ -166,19 +168,17 @@ public:
         dError = 0;
         for (int comp = 0; comp < 3; ++comp)
         {
-            dError += max_error_midpoint<s_hodgeDegree>(
-                infra.m_geom, funcD[comp], D.m_data[comp],
-                amrex::RealVect{AMREX_D_DECL(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir])},
-                2, true, comp, nt * dt);
+            dError += max_error_midpoint<s_hodgeDegree>(infra.m_geom, funcD[comp], D.m_data[comp],
+                                                        infra.geometry().CellSizeArray(), 2, true,
+                                                        comp, nt * dt);
         }
 
         bError = 0;
         for (int comp = 0; comp < 3; ++comp)
         {
-            bError += max_error_midpoint<s_hodgeDegree>(
-                infra.m_geom, funcB[comp], B.m_data[comp],
-                amrex::RealVect{AMREX_D_DECL(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir])},
-                2, false, comp, nt * dt);
+            bError += max_error_midpoint<s_hodgeDegree>(infra.m_geom, funcB[comp], B.m_data[comp],
+                                                        infra.geometry().CellSizeArray(), 2, false,
+                                                        comp, nt * dt);
         }
     }
 };

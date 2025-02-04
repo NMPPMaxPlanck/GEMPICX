@@ -27,7 +27,7 @@ class MockSpline : public ParticleMeshCoupling::SplineWithPrimitive<degX, degY, 
 public:
     MockSpline(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const position,
                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &plo,
-               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> const &dxInverse) :
+               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dxInverse) :
         ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ>(position, plo, dxInverse)
     {
     }
@@ -68,11 +68,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // particle settings
         double charge{1};
@@ -128,12 +128,14 @@ TEST_F(SplineWithPrimitiveTest, SplineConstructorTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
 
-        AMREX_D_TERM(EXPECT_EQ(m_infra.m_dxi[xDir], spline.m_cellSplineVals[xDir][0]);
-                     , EXPECT_EQ(m_infra.m_dxi[yDir], spline.m_cellSplineVals[yDir][0]);
-                     , EXPECT_EQ(m_infra.m_dxi[zDir], spline.m_cellSplineVals[zDir][0]);)
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
+        ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, dxi);
+
+        AMREX_D_TERM(EXPECT_EQ(dxi[xDir], spline.m_cellSplineVals[xDir][0]);
+                     , EXPECT_EQ(dxi[yDir], spline.m_cellSplineVals[yDir][0]);
+                     , EXPECT_EQ(dxi[zDir], spline.m_cellSplineVals[zDir][0]);)
 
         AMREX_D_TERM(EXPECT_EQ(1., spline.m_nodeSplineVals[xDir][0]);
                      EXPECT_EQ(0., spline.m_nodeSplineVals[xDir][1]);
@@ -178,7 +180,8 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
         {
             position[d] = partData[0].pos(d);
         }
-        MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo, m_infra.m_dxi);
+        MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
+                                                  m_infra.geometry().InvCellSizeArray());
 
         EXPECT_CALL(spline, initBSplinesAtPositions(1, 1, 1)).WillRepeatedly(::testing::Return(1));
 
@@ -231,28 +234,32 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir] - spline.m_firstIndex[xDir]);
 
-        amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 0);
+        amrex::Real primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 0);
         EXPECT_EQ(-1, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 1);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 1);
         EXPECT_EQ(0, primitiveDifference);
-        spline.template update_1d_splines<xDir>(m_infra.m_plo[xDir] + 0.5 * m_infra.m_dx[xDir],
-                                                m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
+        spline.template update_1d_splines<xDir>(
+            m_infra.m_plo[xDir] + 0.5 * m_infra.geometry().CellSize(xDir), m_infra.m_plo[xDir],
+            m_infra.geometry().InvCellSize(xDir));
 
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 1);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 1);
         EXPECT_EQ(0, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 0);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 0);
         EXPECT_EQ(0.5, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -289,29 +296,33 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir]);
         EXPECT_EQ(0, spline.m_firstIndex[yDir]);
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir] - spline.m_firstIndex[yDir]);
 
-        amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<yDir>(m_infra.m_dx, 1);
+        amrex::Real primitiveDifference = spline.template compute_primitive_difference<yDir>(
+            m_infra.geometry().CellSizeArray(), 1);
         EXPECT_EQ(0, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<yDir>(m_infra.m_dx, 0);
+        primitiveDifference = spline.template compute_primitive_difference<yDir>(
+            m_infra.geometry().CellSizeArray(), 0);
         EXPECT_EQ(-1, primitiveDifference);
 
-        spline.template update_1d_splines<yDir>(m_infra.m_plo[xDir] + 0.5 * m_infra.m_dx[xDir],
-                                                m_infra.m_plo[yDir], m_infra.m_dxi[yDir]);
+        spline.template update_1d_splines<yDir>(
+            m_infra.m_plo[xDir] + 0.5 * m_infra.geometry().CellSize(xDir), m_infra.m_plo[yDir],
+            m_infra.geometry().InvCellSize(yDir));
 
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir]);
         EXPECT_EQ(0, spline.m_firstIndex[yDir]);
 
-        primitiveDifference = spline.template compute_primitive_difference<yDir>(m_infra.m_dx, 1);
+        primitiveDifference = spline.template compute_primitive_difference<yDir>(
+            m_infra.geometry().CellSizeArray(), 1);
         EXPECT_EQ(0, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<yDir>(m_infra.m_dx, 0);
+        primitiveDifference = spline.template compute_primitive_difference<yDir>(
+            m_infra.geometry().CellSizeArray(), 0);
         EXPECT_EQ(0.5, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -347,34 +358,39 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineWithPrimitive<2, 2, 2> spline(position, m_infra.m_plo,
-                                                                  m_infra.m_dxi);
+        ParticleMeshCoupling::SplineWithPrimitive<2, 2, 2> spline(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(-1, spline.m_firstIndex[xDir]);
         EXPECT_EQ(1, spline.m_firstIndexOld[xDir] - spline.m_firstIndex[xDir]);
 
-        amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 0);
+        amrex::Real primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 0);
         EXPECT_EQ(-0.125, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 2);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 2);
         EXPECT_EQ(-1, primitiveDifference);
 
-        spline.template update_1d_splines<xDir>(m_infra.m_plo[xDir] + 0.5 * m_infra.m_dx[xDir],
-                                                m_infra.m_plo[xDir], m_infra.m_dxi[xDir]);
+        spline.template update_1d_splines<xDir>(
+            m_infra.m_plo[xDir] + 0.5 * m_infra.geometry().CellSize(xDir), m_infra.m_plo[xDir],
+            m_infra.geometry().InvCellSize(xDir));
 
         EXPECT_EQ(-1, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
         EXPECT_EQ(-1, spline.m_firstIndexOld[xDir] - spline.m_firstIndex[xDir]);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 1);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 1);
         EXPECT_EQ(0.375, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 0);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 0);
         EXPECT_EQ(0.125, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(m_infra.m_dx, 2);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(
+            m_infra.geometry().CellSizeArray(), 2);
         EXPECT_EQ(0, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -411,7 +427,7 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.m_dxi);
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         amrex::Real factor;
 

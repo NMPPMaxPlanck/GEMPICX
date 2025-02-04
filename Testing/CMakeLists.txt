@@ -44,6 +44,8 @@ include(GoogleTest)
 # MUST be done AFTER all sources have been assigned to target
 if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(GtestTests)
+  # Too many amrex::ParserExecutor's inside ParallelFor loops. Only a problem because we gather all
+  # tests in one executable.
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --ptxas-options=--disable-optimizer-constants" )
 endif(GEMPIC_USE_CUDA)
   

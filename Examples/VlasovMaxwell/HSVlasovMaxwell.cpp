@@ -124,7 +124,7 @@ int main (int argc, char *argv[])
                                 positionParticle[d] = particles[pp].pos(d);
                             }
                             SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
-                                                                infra.m_dxi);
+                                                                infra.inv_cell_size_array());
                             // Needs at least max(degx, degy, degz) ghost cells
                             deposit_rho(rhoarr, spline, charge * weight[pp]);
                         });
@@ -134,8 +134,7 @@ int main (int argc, char *argv[])
             rho.post_particle_loop_sync();
 
             // Add background charge (needs to be done after post_particle_loop_sync)
-            rho +=
-                rhoBackground * GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
+            rho += rhoBackground * infra.cell_volume();
 
             // solve Poisson
             cgPoisson.solve(phi, rho);
@@ -198,7 +197,7 @@ int main (int argc, char *argv[])
                                                    pos[d] = particles[pp].pos(d);
                                                }
                                                SplineWithPrimitive<degx, degy, degz> spline(
-                                                   pos, infra.m_plo, infra.m_dxi);
+                                                   pos, infra.m_plo, infra.inv_cell_size_array());
 
                                                // Read out particle velocity
                                                amrex::GpuArray<amrex::Real, vdim> vel{
@@ -210,8 +209,8 @@ int main (int argc, char *argv[])
                                                amrex::Real chargeWeight = charge * weight[pp];
 
                                                operatorHamilton.apply_h_p(
-                                                   pos, vel, infra, spline, infra.m_dx, jA, bA,
-                                                   chargeOverMass, chargeWeight, dt);
+                                                   pos, vel, infra, spline, infra.cell_size_array(),
+                                                   jA, bA, chargeOverMass, chargeWeight, dt);
 
                                                for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
                                                {
@@ -272,8 +271,8 @@ int main (int argc, char *argv[])
                                                amrex::GpuArray<amrex::Real, vdim> vel{
                                                    velx[pp], vely[pp], velz[pp]};
 
-                                               SplineBase<degx, degy, degz> spline(pos, infra.m_plo,
-                                                                                   infra.m_dxi);
+                                               SplineBase<degx, degy, degz> spline(
+                                                   pos, infra.m_plo, infra.inv_cell_size_array());
 
                                                operatorHamilton.apply_h_e_particle(
                                                    vel, eA, spline, chargeOverMass, 0.5 * dt);
@@ -291,8 +290,7 @@ int main (int argc, char *argv[])
                 // end treat particles
                 rho.post_particle_loop_sync();
                 // Add background charge (needs to be done after post_particle_loop_sync)
-                rho += rhoBackground *
-                       GEMPIC_D_MULT(infra.m_dx[xDir], infra.m_dx[yDir], infra.m_dx[zDir]);
+                rho += rhoBackground * infra.cell_volume();
 
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
 

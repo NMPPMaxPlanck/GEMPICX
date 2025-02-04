@@ -50,7 +50,7 @@ void update_rho (ComputationalDomain& infra,
                                        positionParticle[d] = particles[pp].pos(d);
                                    }
                                    ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                                       positionParticle, infra.m_plo, infra.m_dxi);
+                                       positionParticle, infra.m_plo, infra.inv_cell_size_array());
                                    ParticleMeshCoupling::deposit_rho(rhoarr, spline,
                                                                      charge * weight[pp]);
                                });
@@ -87,15 +87,15 @@ protected:
         amrex::ParmParse pp;
         /* computational domain */
         amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
         pp.addarr("k", k);
         const amrex::Vector<int> nCell{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("nCellVector", nCell);
+        pp.addarr("ComputationalDomain.nCell", nCell);
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(4, 4, 4)};
-        pp.addarr("maxGridSizeVector", maxGridSize);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
         // particles (data read by particle_groups constructor)
         std::string speciesNames{"ions"};
         pp.add("Particle.speciesNames", speciesNames);
@@ -375,8 +375,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
-    rho += m_backgroundDensity *
-           GEMPIC_D_MULT(m_infra.m_dx[xDir], m_infra.m_dx[yDir], m_infra.m_dx[zDir]);
+    rho += m_backgroundDensity * m_infra.cell_volume();
 
     auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
     FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
@@ -482,8 +481,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     ///      It would be better to provide a D such that divD is equal to rho _with_ background.
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
-    rho += m_backgroundDensity *
-           GEMPIC_D_MULT(m_infra.m_dx[xDir], m_infra.m_dx[yDir], m_infra.m_dx[zDir]);
+    rho += m_backgroundDensity * m_infra.cell_volume();
 
     auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
     FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,

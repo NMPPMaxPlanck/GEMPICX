@@ -37,8 +37,8 @@ protected:
     {
         amrex::ParmParse pp;
 
-        pp.addarr("nCellVector", file_n_cell_vector());
-        pp.addarr("isPeriodicVector", file_is_periodic_vector());
+        pp.addarr("ComputationalDomain.nCell", file_n_cell_vector());
+        pp.addarr("ComputationalDomain.isPeriodic", file_is_periodic_vector());
 
         pp.add("Particle.species0.density", file_particle_species0_density());
     }
@@ -49,14 +49,14 @@ TEST_F(ParametersTest, InitMainInstanceAndGetSet)
     Parameters params{};
 
     amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
-    params.get("isPeriodicVector", isPeriodic);
+    params.get("ComputationalDomain.isPeriodic", isPeriodic);
     EXPECT_THAT(isPeriodic, ::testing::ElementsAreArray(file_is_periodic_vector()));
 
     // check for one vector. If the size is too small, there is no problem (and no warning!)
     // If the size is too large, the vector doesn't get resized, and amrex simply fills in until it
     // runs out of values.
     std::vector<int> something{0};
-    params.get_or_set("nCellVector", something);
+    params.get_or_set("ComputationalDomain.nCell", something);
     EXPECT_THAT(something, ::testing::ElementsAreArray(file_n_cell_vector()));
 
     amrex::Array<double, GEMPIC_SPACEDIM> k{AMREX_D_DECL(1.25, 1.25, 1.25)};

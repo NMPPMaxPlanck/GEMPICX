@@ -27,7 +27,7 @@ class MockSpline : public ParticleMeshCoupling::SplineBase<degX, degY, degZ>
 public:
     MockSpline(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &position,
                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &plo,
-               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> const &dxInverse) :
+               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dxInverse) :
         ParticleMeshCoupling::SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
     }
@@ -71,11 +71,11 @@ protected:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("k", k);
-        pp.addarr("nCellVector", nCell);
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // particle settings
         double charge{1};
@@ -136,8 +136,8 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
-                                                                        m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
         AMREX_D_TERM(EXPECT_EQ(1., spline.m_cellSplineVals[xDir][0]);
                      , EXPECT_EQ(1., spline.m_cellSplineVals[yDir][0]);
                      , EXPECT_EQ(1., spline.m_cellSplineVals[zDir][0]);)
@@ -163,8 +163,8 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
     const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 4, 2)};
 
     Io::Parameters parameters{};
-    parameters.set("nCellVector", nCell);
-    parameters.set("maxGridSizeVector", maxGridSize);
+    parameters.set("ComputationalDomain.nCell", nCell);
+    parameters.set("ComputationalDomain.maxGridSize", maxGridSize);
 
     ComputationalDomain infra;
 
@@ -194,12 +194,13 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, infra.m_plo,
-                                                                        infra.m_dxi);
 
-        AMREX_D_TERM(EXPECT_EQ(infra.m_dxi[xDir], spline.m_cellSplineVals[xDir][0]);
-                     , EXPECT_EQ(infra.m_dxi[yDir], spline.m_cellSplineVals[yDir][0]);
-                     , EXPECT_EQ(infra.m_dxi[zDir], spline.m_cellSplineVals[zDir][0]);)
+        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = infra.geometry().InvCellSizeArray();
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, infra.m_plo, dxi);
+
+        AMREX_D_TERM(EXPECT_EQ(dxi[xDir], spline.m_cellSplineVals[xDir][0]);
+                     , EXPECT_EQ(dxi[yDir], spline.m_cellSplineVals[yDir][0]);
+                     , EXPECT_EQ(dxi[zDir], spline.m_cellSplineVals[zDir][0]);)
 
         AMREX_D_TERM(EXPECT_EQ(1., spline.m_nodeSplineVals[xDir][0]);
                      EXPECT_EQ(0., spline.m_nodeSplineVals[xDir][1]);
@@ -239,15 +240,15 @@ TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
-                                                                        m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         amrex::Real xintOne = spline.init_b_splines_at_positions<xDir>(0, 0, 1);
         EXPECT_EQ(1., xintOne);
         EXPECT_EQ(0., spline.m_firstIndex[xDir]);
 
-        ParticleMeshCoupling::SplineBase<2, s_degY, s_degZ> splineDeg2(position, m_infra.m_plo,
-                                                                       m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<2, s_degY, s_degZ> splineDeg2(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
         amrex::Real xintTwo = splineDeg2.init_b_splines_at_positions<xDir>(0, 0, 1);
         EXPECT_EQ(0.5, xintTwo);
         EXPECT_EQ(-1., splineDeg2.m_firstIndex[xDir]);
@@ -288,7 +289,8 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
         {
             position[d] = partData[0].pos(d);
         }
-        MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo, m_infra.m_dxi);
+        MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
+                                                  m_infra.geometry().InvCellSizeArray());
 
         EXPECT_CALL(spline, initBSplinesAtPositions(1, 1, 1)).WillOnce(::testing::Return(1));
 
@@ -332,8 +334,8 @@ TEST_F(SplineBaseTest, SplineEvalBSplineTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
-                                                                        m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         amrex::Real sCoeff;
 
@@ -383,8 +385,8 @@ TEST_F(SplineBaseTest, SplineSplineEvalTest)
         {
             position[d] = partData[0].pos(d);
         }
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
-                                                                        m_infra.m_dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
 
         amrex::GpuArray<amrex::Real, 1> sZero;
         spline.spline_eval<0, 1>(0, sZero);

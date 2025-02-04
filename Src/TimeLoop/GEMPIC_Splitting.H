@@ -172,7 +172,8 @@ public:
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i()");
 
         amrex::Real posNew = pos[dir] + dt * vel[dir];
-        spline.template update_1d_splines<dir>(posNew, infra.m_plo[dir], infra.m_dxi[dir]);
+        spline.template update_1d_splines<dir>(posNew, infra.m_plo[dir],
+                                               1.0 / infra.geometry_data().CellSize(dir));
         ParticleMeshCoupling::accumulate_j_integrate_b<dir>(bfields, spline, chargeWeight, dx, bA,
                                                             jA);
         pos[dir] = posNew;
@@ -280,33 +281,33 @@ public:
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_x()");
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
 #if GEMPIC_SPACEDIM == 3
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
-        apply_h_p_i<zDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<zDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, dt);
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
 
 #elif GEMPIC_SPACEDIM == 2
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
-        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                                 chargeWeight, dt);
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
 
 #elif GEMPIC_SPACEDIM == 1
-        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                                 chargeWeight, 0.5 * dt);
-        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                                 chargeWeight, dt);
-        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                                 chargeWeight, 0.5 * dt);
 #endif
-        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, infra.m_dx, jA, bA, chargeOverMass,
+        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
     }
 

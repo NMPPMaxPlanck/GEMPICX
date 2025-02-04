@@ -47,11 +47,11 @@ public:
 
         /* Initialize the infrastructure */
         amrex::ParmParse pp;  // Used in lieu of input file
-        pp.addarr("domainLo", domainLo);
-        pp.addarr("domainHi", domainHi);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
 
-        pp.addarr("maxGridSizeVector", maxGridSize);
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
 
     // virtual void SetUp() will be called before each test is run.
@@ -79,8 +79,11 @@ public:
         // Initialize computational_domain
         const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
-        Gempic::Io::Parameters parameters{};
-        parameters.set("nCellVector", nCell);
+        amrex::ParmParse pp;
+        pp.addarr("ComputationalDomain.nCell", nCell);
+        // Class that should acutally manage parameters instead of amrex::ParamParse
+        // Need an instance of this to use parameters in ComputationalDomain.
+        Gempic::Io::Parameters parameters;
         ComputationalDomain infra;
 
         // Initialize the De Rham Complex

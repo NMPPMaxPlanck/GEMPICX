@@ -45,7 +45,7 @@ template <class rhs, class sol, int hodgeDegree, unsigned int vdim, int degx, in
 class HypreQuasineutralLinearSystem
 {
 private:
-    ComputationalDomain* m_infra;
+    ComputationalDomain m_infra;
     rhs m_residual, m_ap;
     sol m_p, m_z;
     amrex::Real m_relTol, m_absTol{1.e-15};
@@ -70,7 +70,7 @@ private:
         (2 * s_offz[zDir] + 1)};  // x,y,z-field bandwidths in z-direction
 
 public:
-    HypreQuasineutralLinearSystem(ComputationalDomain* infr,
+    HypreQuasineutralLinearSystem(ComputationalDomain infr,
                                   std::shared_ptr<DeRhamComplex> drc,
                                   amrex::Real tol = 1.e-11,
                                   int verbose = 0) :
@@ -189,7 +189,7 @@ public:
                 gdtmp = gid[n[0]](i,j,k);
 
                 assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
-                mat[icol] += 0.5*(rhoarrs[boxno](i,j,k) + rhoarrs[boxno](i+in[0],j+jn[0],k+kn[0])) * m_infra->m_dxi[AMREX_SPACEDIM] * edgetoface[n[0]];
+                mat[icol] += 0.5*(rhoarrs[boxno](i,j,k) + rhoarrs[boxno](i+in[0],j+jn[0],k+kn[0])) / m_infra.cell_volume() * edgetoface[n[0]];
                 // clang-format on
                 break;
             default:
@@ -251,7 +251,7 @@ public:
                 gdtmp = gid[0](i,j,k);
 
                 assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols2dz);
-                mat[icol] += (rhoarrs[boxno](i,j,k)) * m_infra->m_dxi[AMREX_SPACEDIM] * edgetoface[2];
+                mat[icol] += (rhoarrs[boxno](i,j,k)) / m_infra.cell_volume() * edgetoface[2];
                 // clang-format on
                 break;
             default:
@@ -393,12 +393,12 @@ public:
                                             sol& x,
                                             const DeRhamField<Grid::dual, Space::cell>& rho)
     {
-        auto const& nddom = amrex::surroundingNodes(m_infra->m_geom.Domain());
+        auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
         auto const& rhoarrs = (rho.m_data).arrays();
 
-        const auto dxi = m_infra->m_geom.InvCellSizeArray();
-        const auto dx = m_infra->m_geom.CellSizeArray();
+        const auto dxi = m_infra.inv_cell_size_array();
+        const auto dx = m_infra.cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{
             AMREX_D_DECL(static_cast<HYPRE_Real>(dxi[xDir] * dxi[xDir]),
@@ -442,7 +442,7 @@ public:
         amrex::HypreSolver<maxStencilSize> hypreSolver(
             {AMREX_D_DECL(x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
                           x.m_data[zDir].boxArray().ixType())},
-            b.m_deRham->get_n_ghost(), m_infra->m_geom, m_infra->m_grid, m_infra->m_distriMap,
+            b.m_deRham->get_n_ghost(), m_infra.geometry(), m_infra.m_grid, m_infra.m_distriMap,
             marker, filler, amrex::system::verbose);
 
         hypreSolver.solve(amrex::Vector<amrex::MultiFab*>{AMREX_D_DECL(
@@ -472,8 +472,8 @@ public:
         constexpr int maxStencilSize2Dz = 5;
 
         amrex::HypreSolver<maxStencilSize2Dz> hypreSolver2Dz(
-            {x.m_data[zDir].boxArray().ixType()}, b.m_deRham->get_n_ghost(), m_infra->m_geom,
-            m_infra->m_grid, m_infra->m_distriMap, marker, filler2Dz, amrex::system::verbose);
+            {x.m_data[zDir].boxArray().ixType()}, b.m_deRham->get_n_ghost(), m_infra.geometry(),
+            m_infra.m_grid, m_infra.m_distriMap, marker, filler2Dz, amrex::system::verbose);
 
         hypreSolver2Dz.solve(amrex::Vector<amrex::MultiFab*>{&(x.m_data[zDir])},
                              amrex::Vector<amrex::MultiFab const*>{&(b.m_data[zDir])}, m_relTol,
@@ -526,7 +526,7 @@ public:
                             positionParticle[d] = particles[pp].pos(d);
                         }
                         Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                            positionParticle, m_infra->m_plo, m_infra->m_dxi);
+                            positionParticle, m_infra.m_plo, m_infra.inv_cell_size_array());
 
                         get_e_weights_at_particle_positions_and_deposit_to_face(
                             eCoeffsA, spline, charge * weight[pp]);
@@ -536,10 +536,8 @@ public:
 
         for (int ndir = 0; ndir < vdim; ++ndir)
         {
-            eCoeffs.m_data[ndir].SumBoundary(m_infra->m_geom.periodicity());
-            //E_coeffs.m_data[ndir].FillBoundary(m_infra->m_geom.periodicity());
+            eCoeffs.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
         }
-        //display_E_coeffs_sums(E_coeffs);
 
         std::array<decltype(eCoeffs.m_data[0].arrays()), vdim> eCoeffsArrs;
         for (int ndir = 0; ndir < 3; ++ndir)
@@ -547,8 +545,7 @@ public:
             eCoeffsArrs[ndir] = (eCoeffs.m_data[ndir]).arrays();
         }
 
-        auto const& nddom = amrex::surroundingNodes(m_infra->m_geom.Domain());
-        const auto dxi = m_infra->m_geom.InvCellSizeArray();
+        auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
@@ -578,7 +575,7 @@ public:
         amrex::HypreSolver<maxStencilSize> hypreSolver(
             {AMREX_D_DECL(x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
                           x.m_data[zDir].boxArray().ixType())},
-            b.m_deRham->get_n_ghost(), m_infra->m_geom, m_infra->m_grid, m_infra->m_distriMap,
+            b.m_deRham->get_n_ghost(), m_infra.geometry(), m_infra.m_grid, m_infra.m_distriMap,
             marker, filler, amrex::system::verbose);
 
         hypreSolver.solve(amrex::Vector<amrex::MultiFab*>{AMREX_D_DECL(
@@ -603,8 +600,8 @@ public:
         constexpr int maxStencilSize2Dz = nMmCoeffs[zDir];
 
         amrex::HypreSolver<maxStencilSize2Dz> hypreSolver2Dz(
-            {x.m_data[zDir].boxArray().ixType()}, b.m_deRham->get_n_ghost(), m_infra->m_geom,
-            m_infra->m_grid, m_infra->m_distriMap, marker, filler2Dz, amrex::system::verbose);
+            {x.m_data[zDir].boxArray().ixType()}, b.m_deRham->get_n_ghost(), m_infra.geometry(),
+            m_infra.m_grid, m_infra.m_distriMap, marker, filler2Dz, amrex::system::verbose);
 
         hypreSolver2Dz.solve(amrex::Vector<amrex::MultiFab*>{&(x.m_data[zDir])},
                              amrex::Vector<amrex::MultiFab const*>{&(b.m_data[zDir])}, m_relTol,
@@ -656,7 +653,7 @@ public:
                             positionParticle[d] = particles[pp].pos(d);
                         }
                         Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                            positionParticle, m_infra->m_plo, m_infra->m_dxi);
+                            positionParticle, m_infra.m_plo, m_infra.inv_cell_size_array());
 
                         get_e_weights_at_particle_positions_and_deposit_to_face(
                             eCoeffsA, spline, charge * weight[pp]);
@@ -666,8 +663,7 @@ public:
 
         for (int ndir = 0; ndir < vdim; ++ndir)
         {
-            eCoeffs.m_data[ndir].SumBoundary(m_infra->m_geom.periodicity());
-            //E_coeffs.m_data[ndir].FillBoundary(m_infra->m_geom.periodicity());
+            eCoeffs.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
         }
 
         std::array<decltype(eCoeffs.m_data[0].arrays()), vdim> eCoeffsArrs;
@@ -676,10 +672,10 @@ public:
             eCoeffsArrs[ndir] = (eCoeffs.m_data[ndir]).arrays();
         }
 
-        auto const& nddom = amrex::surroundingNodes(m_infra->m_geom.Domain());
+        auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
-        const auto dxi = m_infra->m_geom.InvCellSizeArray();
-        const auto dx = m_infra->m_geom.CellSizeArray();
+        const auto dxi = m_infra.inv_cell_size_array();
+        const auto dx = m_infra.cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{
             AMREX_D_DECL(static_cast<HYPRE_Real>(dxi[xDir] * dxi[xDir]),
@@ -723,7 +719,7 @@ public:
         amrex::HypreSolver<maxStencilSize> hypreSolver(
             {AMREX_D_DECL(x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
                           x.m_data[zDir].boxArray().ixType())},
-            b.m_deRham->get_n_ghost(), m_infra->m_geom, m_infra->m_grid, m_infra->m_distriMap,
+            b.m_deRham->get_n_ghost(), m_infra.geometry(), m_infra.m_grid, m_infra.m_distriMap,
             marker, filler, amrex::system::verbose);
 
         hypreSolver.solve(amrex::Vector<amrex::MultiFab*>{AMREX_D_DECL(
@@ -751,8 +747,8 @@ public:
         constexpr int maxStencilSize2Dz = 5 + nMmCoeffs[zDir];
 
         amrex::HypreSolver<maxStencilSize2Dz> hypreSolver2Dz(
-            {x.m_data[zDir].boxArray().ixType()}, b.m_deRham->get_n_ghost(), m_infra->m_geom,
-            m_infra->m_grid, m_infra->m_distriMap, marker, filler2Dz, amrex::system::verbose);
+            {x.m_data[zDir].boxArray().ixType()}, b.m_deRham->get_n_ghost(), m_infra.geometry(),
+            m_infra.m_grid, m_infra.m_distriMap, marker, filler2Dz, amrex::system::verbose);
 
         hypreSolver2Dz.solve(amrex::Vector<amrex::MultiFab*>{&(x.m_data[zDir])},
                              amrex::Vector<amrex::MultiFab const*>{&(b.m_data[zDir])}, m_relTol,

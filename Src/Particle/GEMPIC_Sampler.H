@@ -498,9 +498,10 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
     {
         auto precomputedRand{Impl::calculate_random_values<vDim>(unif, gen, unifv, genv)};
         // internalPosition in model cell [0,dx]x[0,dy]x[0,dz] (uniform in [0, dx]):
-        AMREX_D_TERM(internalPosition[xDir] = precomputedRand[xDir] * infra.m_dx[xDir];
-                     , internalPosition[yDir] = precomputedRand[yDir] * infra.m_dx[yDir];
-                     , internalPosition[zDir] = precomputedRand[zDir] * infra.m_dx[zDir];)
+        AMREX_D_TERM(
+            internalPosition[xDir] = precomputedRand[xDir] * infra.geometry().CellSize(xDir);
+            , internalPosition[yDir] = precomputedRand[yDir] * infra.geometry().CellSize(yDir);
+            , internalPosition[zDir] = precomputedRand[zDir] * infra.geometry().CellSize(zDir);)
 
         // Adding particle from the model cell to all cells
         for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
@@ -515,14 +516,16 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
                                 for (int j = lo[yDir]; j <= hi[yDir]; j++),
                                 for (int k = lo[zDir]; k <= hi[zDir]; k++))
                 cellCorner =
-                    get_cell_corner(infra.m_geom.ProbLoArray(), infra.m_dx, AMREX_D_DECL(l, j, k));
+                    get_cell_corner(infra.geometry().ProbLoArray(),
+                                    infra.geometry().CellSizeArray(), AMREX_D_DECL(l, j, k));
                 position = internalPosition + cellCorner;
 
                 amrex::Real result =
                     densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), 0.);
-                get_velocities(vInit, velocity, precomputedRand,
-                               cell_center_from_corner(cellCorner, infra.m_dx));
-                weight = result / nPartPerCell * infra.m_dx.product();
+                get_velocities(
+                    vInit, velocity, precomputedRand,
+                    cell_center_from_corner(cellCorner, infra.geometry().CellSizeArray()));
+                weight = result / nPartPerCell * infra.geometry().CellSizeArray().product();
 
                 ppg->add_particle(position, velocity, weight, particles);
             GEMPIC_D_LOOP_END
@@ -558,7 +561,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
     BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
 
     amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{infra.m_geom.ProbLoArray()};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{infra.m_dx};
+    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{infra.geometry().CellSizeArray()};
 
     std::string speciesName{ppg->get_name()};
     std::string specString = "Particle." + speciesName;
@@ -709,21 +712,22 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
         GEMPIC_D_LOOP_BEGIN(for (int l = lo[xDir]; l <= hi[xDir]; l++),
                             for (int j = lo[yDir]; j <= hi[yDir]; j++),
                             for (int k = lo[zDir]; k <= hi[zDir]; k++))
-            auto cellCorner{
-                get_cell_corner(infra.m_geom.ProbLoArray(), infra.m_dx, AMREX_D_DECL(l, j, k))};
-            auto cellCenter{cell_center_from_corner(cellCorner, infra.m_dx)};
+            auto cellCorner{get_cell_corner(infra.m_geom.ProbLoArray(),
+                                            infra.geometry().CellSizeArray(),
+                                            AMREX_D_DECL(l, j, k))};
+            auto cellCenter{cell_center_from_corner(cellCorner, infra.geometry().CellSizeArray())};
             for (int pp = 0; pp < nPartPerCell; pp++)
             {
                 auto randArray{Impl::calculate_random_values<vDim>(unif, gen, unifv, genv)};
                 for (int i = 0; i < GEMPIC_SPACEDIM; i++)
                 {
-                    position[i] = cellCorner[i] + randArray[i] * infra.m_dx[i];
+                    position[i] = cellCorner[i] + randArray[i] * infra.geometry().CellSize(i);
                 }
                 get_velocities(vInit, velocity, randArray, cellCenter);
 
                 const double factor =
                     densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
-                weight = factor / nPartPerCell * infra.m_dx.product();
+                weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
                 ppg->add_particle(position, velocity, weight, particles);
             }
         GEMPIC_D_LOOP_END
@@ -790,9 +794,10 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
         GEMPIC_D_LOOP_BEGIN(for (int l = lo[xDir]; l <= hi[xDir]; l++),
                             for (int j = lo[yDir]; j <= hi[yDir]; j++),
                             for (int k = lo[zDir]; k <= hi[zDir]; k++))
-            auto cellCorner{
-                get_cell_corner(infra.m_geom.ProbLoArray(), infra.m_dx, AMREX_D_DECL(l, j, k))};
-            auto cellCenter{cell_center_from_corner(cellCorner, infra.m_dx)};
+            auto cellCorner{get_cell_corner(infra.m_geom.ProbLoArray(),
+                                            infra.geometry().CellSizeArray(),
+                                            AMREX_D_DECL(l, j, k))};
+            auto cellCenter{cell_center_from_corner(cellCorner, infra.geometry().CellSizeArray())};
             for (int pp = 0; pp < nPartPerCell; pp++)
             {
                 Gempic::Particle::sobol(numDim, &sobolSeed, quasi);
@@ -809,13 +814,13 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
 
                 for (int i = 0; i < GEMPIC_SPACEDIM; i++)
                 {
-                    position[i] = cellCorner[i] + randArray[i] * infra.m_dx[i];
+                    position[i] = cellCorner[i] + randArray[i] * infra.geometry().CellSize(i);
                 }
 
                 get_velocities(vInit, velocity, randArray, cellCenter);
                 const double factor =
                     densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
-                weight = factor / nPartPerCell * infra.m_dx.product();
+                weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
                 ppg->add_particle(position, velocity, weight, particles);
             }
         GEMPIC_D_LOOP_END

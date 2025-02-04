@@ -2,9 +2,9 @@
 simName = "LinVlasovMaxwell"
 
 # Grid parameters
-nCellVector = 32 1 1
-maxGridSizeVector = 16 1 1
-isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+ComputationalDomain.nCell = 32 1 1
+ComputationalDomain.maxGridSize = 16 1 1
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
 Particle.speciesNames = electrons

@@ -2,9 +2,9 @@
 Sim.Type = "VlasovPoisson"
 
 # Grid parameters
-nCellVector = 32 4 4
-maxGridSizeVector = 4 4 4
-isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+ComputationalDomain.nCell = 32 4 4
+ComputationalDomain.maxGridSize = 4 4 4
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Scaling factors
 sV = 1

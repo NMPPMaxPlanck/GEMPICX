@@ -33,8 +33,8 @@ void Gempic::TimeLoop::apply_h_j (
         amrex::Array4<amrex::Real> const& Jy = (J.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real> const& Jz = (J.m_data[zDir])[mfi].array();
 
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& dx = deRham->get_dx();
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1>& dxi = deRham->get_dx_inv();
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = deRham->m_geom.CellSizeArray();
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = deRham->m_geom.InvCellSizeArray();
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = deRham->get_prob_lo();
 
         ParallelFor(

@@ -51,17 +51,17 @@ public:
         amrex::ParmParse pp;  // Used in lieu of input file
 
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("domainLo", domainLo);
+        pp.addarr("ComputationalDomain.domainLo", domainLo);
 
         const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("domainHi", domainHi);
+        pp.addarr("ComputationalDomain.domainHi", domainHi);
 
         // Grid parameters
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("maxGridSizeVector", maxGridSize);
+        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
 
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("isPeriodicVector", isPeriodic);
+        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
 
     // virtual void SetUp() will be called before each test is run.
@@ -103,7 +103,8 @@ public:
         const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
 
         Gempic::Io::Parameters parameters{};
-        parameters.set("nCellVector", nCell);
+        amrex::ParmParse pp;
+        pp.addarr("ComputationalDomain.nCell", nCell);
         ComputationalDomain infra;
 
         // Initialize the De Rham Complex
@@ -113,7 +114,7 @@ public:
         HypreQuasineutralLinearSystem<DeRhamField<Grid::dual, Space::face>,
                                       DeRhamField<Grid::primal, Space::edge>, s_hodgeDegree, s_vdim,
                                       s_degX, s_degY, s_degZ>
-            hypreCurlcurlPlusFieldRho(&infra, deRham);
+            hypreCurlcurlPlusFieldRho(infra, deRham);
 
         DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
         DeRhamField<Grid::dual, Space::face> rhs(deRham, m_funcRHS);
@@ -124,10 +125,12 @@ public:
 
         E -= eAn;
 
-        return (Utils::gempic_norm(E.m_data[xDir], infra, 1) * infra.m_dxi[xDir] +
-                Utils::gempic_norm(E.m_data[yDir], infra, 1) * infra.m_dxi[yDir] +
-                Utils::gempic_norm(E.m_data[zDir], infra, 1) *
-                    ((GEMPIC_SPACEDIM == 3) ? infra.m_dxi[zDir] : 1));
+        amrex::GpuArray<amrex::Real, 3> dxi{GEMPIC_D_PAD_ONE(infra.geometry().InvCellSize(xDir),
+                                                             infra.geometry().InvCellSize(yDir),
+                                                             infra.geometry().InvCellSize(zDir))};
+        return Utils::gempic_norm (E.m_data[xDir], infra, 1) * dxi[xDir] +
+               Utils::gempic_norm(E.m_data[yDir], infra, 1) * dxi[yDir] +
+               Utils::gempic_norm(E.m_data[zDir], infra, 1) * dxi[zDir];
     }
 };
 

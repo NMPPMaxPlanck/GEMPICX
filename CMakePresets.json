@@ -42,7 +42,7 @@
             }
         },
         {
-            "name": "hypre",
+            "name": "hypre-config",
             "displayName": "Hypre settings",
             "hidden": true,
             "cacheVariables": {
@@ -181,7 +181,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "cpu-release-3D",
-                "hypre"
+                "hypre-config"
              ]
         },
         {
@@ -190,7 +190,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "cpu-release-2D",
-                "hypre"
+                "hypre-config"
              ]
         },
         {
@@ -199,7 +199,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "cpu-debug-3D",
-                "hypre"
+                "hypre-config"
              ]
         },
         {
@@ -208,7 +208,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
                 "cpu-debug-2D",
-                "hypre"
+                "hypre-config"
              ]
         }
     ]

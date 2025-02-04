@@ -68,14 +68,11 @@ public:
      *  - dxInverse[Direction::xDir] == 1/dx
      *  - dxInverse[Direction::yDir] == 1/dy
      *  - dxInverse[Direction::zDir] == 1/dz
-     *  - (Potentially dim < 3)
-     *  - dxInverse[GEMPIC_SPACEDIM] == dxInverse[Direction::xDir] * .. *
-     dxInverse[GEMPIC_SPACEDIM-1]
     */
     AMREX_GPU_HOST_DEVICE SplineBase (
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse)
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dxInverse)
     {
         //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::SplineBase()");
         AMREX_D_TERM(
@@ -536,13 +533,11 @@ public:
      *  - dxInverse[Direction::xDir] == 1/dx
      *  - dxInverse[Direction::yDir] == 1/dy
      *  - dxInverse[Direction::zDir] == 1/dz
-     *  - (Potentially dim < 3)
-     *  - dxInverse[dim] == 1/(dx * dy * dz)
      */
     AMREX_GPU_HOST_DEVICE SplineWithPrimitive (
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse) :
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
         m_firstIndexOld = {};
@@ -855,7 +850,7 @@ public:
     AMREX_GPU_HOST_DEVICE SplineWithFirstDerivative (
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> &dxInverse,
+        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dxInverse,
         const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dx) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
