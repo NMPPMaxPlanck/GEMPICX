@@ -1,9 +1,7 @@
 # Give verbose output when tests fail
-list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure --no-tests-error")
 set(CMAKE_CTEST_COMMAND ${CMAKE_CTEST_COMMAND} ${CMAKE_CTEST_ARGUMENTS})
 message("ctest command is: ${CMAKE_CTEST_COMMAND}")
-# Enable ctest and GoogleTest tests
-enable_testing()
 
 # Add gtest
 gempic_FetchContent_Declare(
