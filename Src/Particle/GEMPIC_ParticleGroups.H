@@ -112,7 +112,7 @@ public:
      * velocity and the weight @p weight to the Particle Tile @p particles.
      */
 
-    void add_particle (amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
+    void add_particle (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position,
                        amrex::GpuArray<amrex::Real, vdim> velocity,
                        amrex::Real weight,
                        amrex::ParticleTile<ParticleType, vdim + ndata, 0> &particles)
@@ -125,7 +125,7 @@ public:
         p.id() = ParticleType::NextID();
         p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-        for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
+        for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
         {
             p.pos(cc) = position[cc];
         }
@@ -228,7 +228,7 @@ public:
 //  * velocity and the weight @p weight to the Particle Tile @p particles.
 //  */
 // template <typename T, int vdim>
-// void add_particle(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position,
+// void add_particle(amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position,
 //                   amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight, T& particles)
 // {                                                // Array of Structures
 //     using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
@@ -238,7 +238,7 @@ public:
 //     p.id() = ParticleType::NextID();
 //     p.cpu() = amrex::ParallelDescriptor::MyProc();
 
-//     for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
+//     for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
 //     {
 //         p.pos(cc) = position[cc];
 //     }

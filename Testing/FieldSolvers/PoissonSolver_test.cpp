@@ -41,7 +41,7 @@ public:
 
     ComputationalDomain m_infra{};  // initialized computational domain
 
-    static const int s_nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
@@ -68,13 +68,13 @@ public:
     void SetUp () override
     {
         // Analytical rho and phi such that -Delta phi = rho
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
         const std::string analyticalRho = "cos(x)";
         const std::string analyticalPhi = "cos(x)";
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
         const std::string analyticalRho = "10*cos(x)*cos(3*y)";
         const std::string analyticalPhi = "cos(x)*cos(3*y)";
-#elif GEMPIC_SPACEDIM == 3
+#elif AMREX_SPACEDIM == 3
         const std::string analyticalRho = "3*cos(x)*cos(y)*cos(z)";
         const std::string analyticalPhi = "cos(x)*cos(y)*cos(z)";
 #endif

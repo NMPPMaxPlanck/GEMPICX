@@ -46,21 +46,21 @@ void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegr
                                                     HodgeScheme::FDHodge);
 
     const amrex::Real weight = 3. / 2.;
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> func = {
         "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))",
         "pi = 3.141592653589793; w * (sin(2*pi*x) + cos(2*pi*x - 0.2))",
         "pi = 3.141592653589793; w * (cos(2*2*pi*x) + sin(2*pi*x - 0.2))",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> func = {
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; w * (sin(2*pi*x)*cos(2*pi*y) + cos(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; w * (cos(2*2*pi*x)*cos(2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> func = {
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))",
@@ -72,14 +72,14 @@ void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegr
 #endif
 
     // project f to a dualOneForm and a primalOneForm respectively
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcP;
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcP;
     amrex::Array<amrex::Parser, 3> parser;
     for (int i = 0; i < 3; ++i)
     {
         parser[i].define(func[i]);
         parser[i].setConstant("w", 1.);
         parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
+        funcP[i] = parser[i].compile<AMREX_SPACEDIM + 1>();
     }
 
     DeRhamField<Grid::primal, space> primalForm(deRham);
@@ -98,7 +98,7 @@ void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegr
         parser[i].define(func[i]);
         parser[i].setConstant("w", weight);
         parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
+        funcP[i] = parser[i].compile<AMREX_SPACEDIM + 1>();
     }
 
     auto dr{infra.cell_size_array()};
@@ -129,27 +129,27 @@ void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineD
                                                     HodgeScheme::FDHodge);
 
     const amrex::Real weight = 3. / 2.;
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string func = "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))";
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string func =
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))";
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string func =
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))";
 #endif
 
     // project f to a dualOneForm and a primalOneForm respectively
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> funcP;
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> funcP;
     amrex::Parser parser;
 
     parser.define(func);
     parser.setConstant("w", 1.);
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-    funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
+    funcP = parser.compile<AMREX_SPACEDIM + 1>();
 
     DeRhamField<Grid::primal, space> primalForm(deRham);
     DeRhamField<Grid::dual, space> dualForm(deRham);
@@ -165,7 +165,7 @@ void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineD
     parser.define(func);
     parser.setConstant("w", weight);
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-    funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
+    funcP = parser.compile<AMREX_SPACEDIM + 1>();
 
     auto dr{infra.cell_size_array()};
     auto form{static_cast<int>(space)};

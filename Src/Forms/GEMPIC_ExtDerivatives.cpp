@@ -28,11 +28,11 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
@@ -55,7 +55,7 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
         amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -76,7 +76,7 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -128,11 +128,11 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
@@ -155,7 +155,7 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
         amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -176,7 +176,7 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -226,11 +226,11 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
@@ -254,7 +254,7 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
         amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -276,7 +276,7 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -329,11 +329,11 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
@@ -357,7 +357,7 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
         amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real const> const &oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -379,7 +379,7 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
         const amrex::Box &bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
@@ -720,11 +720,11 @@ void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell> &threeForm,
 
         amrex::Array4<amrex::Real const> const &twoFormMF0 =
             (twoForm.m_data[xDir])[mfi].const_array();
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &twoFormMF1 =
             (twoForm.m_data[yDir])[mfi].const_array();
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &twoFormMF2 =
             (twoForm.m_data[zDir])[mfi].const_array();
 #endif
@@ -769,11 +769,11 @@ void DeRhamComplex::div (DeRhamField<Grid::dual, Space::cell> &threeForm,
 
         amrex::Array4<amrex::Real const> const &twoFormMF0 =
             (twoForm.m_data[xDir])[mfi].const_array();
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
         amrex::Array4<amrex::Real const> const &twoFormMF1 =
             (twoForm.m_data[yDir])[mfi].const_array();
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
         amrex::Array4<amrex::Real const> const &twoFormMF2 =
             (twoForm.m_data[zDir])[mfi].const_array();
 #endif

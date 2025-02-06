@@ -32,9 +32,9 @@ template <int degX, int degY, int degZ>
 class MockSpline : public ParticleMeshCoupling::SplineBase<degX, degY, degZ>
 {
 public:
-    MockSpline(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &position,
-               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &plo,
-               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 1> const &dxInverse) :
+    MockSpline(amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &position,
+               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &plo,
+               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 1> const &dxInverse) :
         ParticleMeshCoupling::SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
     }
@@ -131,7 +131,7 @@ template <>
 AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B<xDir, MockSpline<1, 1, 1>, 4>(
     MockSpline<1, 1, 1> &spline,
     amrex::Real weight,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(4 / 2.5) * 2 + 1> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, 4> const &jArray,
     amrex::GpuArray<amrex::Real, 2> &fields)
@@ -145,7 +145,7 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*infra.geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Test::Utils::addSingleParticles(particleGroup, infra, weights, positions);
@@ -157,7 +157,7 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncE{"0.0", "0.0", "0.0"};
 
-    const int nVar{GEMPIC_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -192,8 +192,8 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
         for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.data[cc])[pti].array();
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d) position[d] = particles[0].pos(d);
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d) position[d] = particles[0].pos(d);
 
         auto particle_attributes = &pti.GetStructOfArrays();
         amrex::ParticleReal *const AMREX_RESTRICT velx = particle_attributes->GetRealData(0).data();

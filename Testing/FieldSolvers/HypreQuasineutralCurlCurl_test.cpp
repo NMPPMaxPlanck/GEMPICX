@@ -35,7 +35,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{hodgeDegreeStruct::value};
 
-    static const int s_nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Parser m_parserRho;
     amrex::ParserExecutor<s_nVar> m_funcRho;
 
@@ -67,13 +67,13 @@ public:
     // virtual void SetUp() will be called before each test is run.
     void SetUp () override
     {
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         const std::string analyticalRho = "10+cos(x)+cos(2*y)";
         const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(2*x)", "cos(x)*cos(y)"};
         const amrex::Array<std::string, 3> analyticalRHS = {"(1+10+cos(x)+cos(2*y))*sin(y)",
                                                             "(4+10+cos(x)+cos(2*y))*sin(2*x)",
                                                             "(2+10+cos(x)+cos(2*y))*cos(x)*cos(y)"};
-#elif GEMPIC_SPACEDIM == 3
+#elif AMREX_SPACEDIM == 3
         const std::string analyticalRho = "10+cos(x)+cos(2*y)+sin(z)";
         const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(2*z)", "sin(3*x)"};
         const amrex::Array<std::string, 3> analyticalRHS = {

@@ -93,7 +93,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 {
     // Adding particle to one cell
     const unsigned int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -122,7 +122,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -166,12 +166,12 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     }
 
     // TEST FOR Y DIRECTION
-#if GEMPIC_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
     amrex::Real xNodeVal = 0;
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -213,11 +213,11 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     }
 
     // TEST FOR Z DIRECTION
-#if GEMPIC_SPACEDIM > 2
+#if AMREX_SPACEDIM > 2
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -262,12 +262,12 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 #endif
 }
 
-#if GEMPIC_SPACEDIM < 3
+#if AMREX_SPACEDIM < 3
 TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -300,7 +300,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -319,19 +319,19 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
         dtv = dt * vel[yDir];
         xNodeVal = spline.m_nodeSplineVals[xDir][0];
 
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_y(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_z(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
         yNodeVal = spline.m_nodeSplineVals[yDir][0];
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_z(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
 #endif
     }
 
-    for (int dir{GEMPIC_SPACEDIM}; dir < 3; ++dir)
+    for (int dir{AMREX_SPACEDIM}; dir < 3; ++dir)
     {
         // check the first non-zero entry of the J field in xDir
         for (amrex::MFIter mfi(J.m_data[dir]); mfi.isValid(); ++mfi)
@@ -351,7 +351,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 {
     // Adding a few particles
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -398,7 +398,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     {
         // set random positions (positions of particles in particle group never used here)
         // Check if this is OK especially when there are several particle tiles
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -457,7 +457,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -486,7 +486,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
     amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
                                          GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
                                          GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
@@ -507,10 +507,10 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random initial positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionOld{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionOld{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         // set position after movement
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosNew, yPosNew, zPosNew)};
 
         for (int cc = 0; cc < 3; cc++)
@@ -520,7 +520,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
             positionOld, m_infra.m_plo, dxi);
 
@@ -532,7 +532,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         EXPECT_NEAR(Bz * (position[xDir] - positionOld[xDir]), bfields[0], 1e-12);
         EXPECT_NEAR(By * (position[xDir] - positionOld[xDir]), bfields[1], 1e-12);
 
-#if GEMPIC_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
         // update the splines in y direction
         spline.template update_1d_splines<yDir>(position[yDir], m_infra.m_plo[yDir], dxi[yDir]);
         ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
@@ -541,7 +541,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         EXPECT_NEAR(Bz * (position[yDir] - positionOld[yDir]), bfields[1], 1e-12);
 
 #endif
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
         // update the splines in z direction
         spline.template update_1d_splines<zDir>(position[zDir], m_infra.m_plo[zDir], dxi[zDir]);
         ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
@@ -553,12 +553,12 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     }
 }
 
-#if GEMPIC_SPACEDIM < 3
+#if AMREX_SPACEDIM < 3
 TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -600,7 +600,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
     amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
                                          GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
                                          GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
@@ -620,10 +620,10 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random initial positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionOld{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionOld{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         // set position after movement
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosNew, yPosNew, zPosNew)};
 
         for (int cc = 0; cc < 3; cc++)
@@ -650,7 +650,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
             }
         }
 
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
         // TEST FOR Y DIRECTION
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_y(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
@@ -670,7 +670,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
         EXPECT_NEAR(cellSumX * dxdy[1] * valBy, bfields[0], 1e-12);
         EXPECT_NEAR(nodeSumX * valBx, bfields[1], 1e-12);
 
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
         for (int j = 0; j <= s_degY; ++j)
         {
             nodeSumY += spline.m_nodeSplineVals[yDir][j];
@@ -699,7 +699,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -729,7 +729,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 
     amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_infra.geometry().CellSizeArray();
     amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
                                          GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
                                          GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
@@ -750,7 +750,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions and velocities
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
 
         for (int cc = 0; cc < 3; cc++)
@@ -771,7 +771,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         EXPECT_NEAR(vy - dt * chargeOverMass * vel[xDir] * Bz, vel[yDir], 1e-12);
         EXPECT_NEAR(vz + dt * chargeOverMass * vel[xDir] * By, vel[zDir], 1e-12);
 
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
         // apply h_p_i in y direction
         // reset random positions
         position[yDir] = yPosOld;
@@ -804,7 +804,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By, vel[xDir], 1e-12);
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx, vel[yDir], 1e-12);
 
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
         amrex::Real cellSumX = 0.0;
         amrex::Real cellSumY = 0.0;
         amrex::Real cellSumXhalf = 0.0;
@@ -862,7 +862,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx * dxdy[0] * nodeSumX * cellSumYhalf,
                     vel[yDir], 1e-12);
 
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
         amrex::Real cellSumX = 0.0;
         amrex::Real cellSumXhalf = 0.0;
         amrex::Real nodeSumX = 0.0;
@@ -913,7 +913,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -961,7 +961,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         // set random positions
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position{
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
 
         auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();

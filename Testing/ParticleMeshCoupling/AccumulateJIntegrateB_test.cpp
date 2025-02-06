@@ -26,7 +26,7 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
                                             DeRhamField<Grid::dual, Space::face>& J,
                                             ComputationalDomain& infra,
                                             amrex::Real weight,
-                                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+                                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
                                             amrex::GpuArray<amrex::Real, 2>& bfields)
 {
     const long np{pti.numParticles()};
@@ -46,8 +46,8 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
     amrex::ParallelFor(np,
                        [=] AMREX_GPU_DEVICE(long pp)
                        {
-                           amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> posStart;
-                           for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+                           amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> posStart;
+                           for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
                            {
                                posStart[d] = partData[pp * 0].pos(d);
                            }
@@ -124,7 +124,7 @@ protected:
 
     void SetUp () override
     {
-        if constexpr (GEMPIC_SPACEDIM != 3)
+        if constexpr (AMREX_SPACEDIM != 3)
         {
             GTEST_SKIP() << "This function barely works in 3D, let alone lower dimensions.";
         }
@@ -148,7 +148,7 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
 {
     // Adding particle to one cell
     const unsigned int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -162,8 +162,8 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
     const amrex::Array<std::string, 3> analyticalFuncJ = {"0.0", "0.0", "0.0"};
 
     const int nVar{4};  // x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
 
     for (int i{0}; i < 3; ++i)
@@ -212,7 +212,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
     // Adding particle to one cell
     const int numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.5 * dx[xDir],
                        m_infra.m_geom.ProbHi(yDir) - 5.5 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 5.5 * dx[zDir])}}};
@@ -228,8 +228,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
     const int nVar{4};  // x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
 
     for (int i{0}; i < 3; ++i)
@@ -287,7 +287,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
     // Adding particle to one cell
     const int numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.25 * dx[xDir],
                        m_infra.m_geom.ProbHi(yDir) - 5.25 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 5.25 * dx[zDir])}}};
@@ -303,8 +303,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
     const int nVar{4};  // x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
 
     for (int i{0}; i < 3; ++i)
@@ -373,7 +373,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
     const int numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
          {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * dx[xDir],
                        m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
@@ -390,8 +390,8 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
     const int nVar{4};  // x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
 
     for (int i{0}; i < 3; ++i)
@@ -440,7 +440,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
     const int numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
          {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir],
                        m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
@@ -457,8 +457,8 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
     const int nVar{4};  // x, y, z, t
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcB;
-    amrex::Array<amrex::ParserExecutor<nVar>, GEMPIC_SPACEDIM> funcJ;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
+    amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
 
     for (int i{0}; i < 3; ++i)

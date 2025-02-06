@@ -44,7 +44,7 @@ void check_field (const char file[],
                     {
                         EXPECT_NEAR(checks[condNum], *fieldArr.ptr(idx, 0), tol)
                             << file << ":" << line << ": Failed condition " << condNum
-                            << ".\nIndices: " << string_array(idx, GEMPIC_SPACEDIM);
+                            << ".\nIndices: " << string_array(idx, AMREX_SPACEDIM);
                         break;
                     }
                     condNum++;
@@ -54,7 +54,7 @@ void check_field (const char file[],
                     EXPECT_NEAR(defCheck.value(), *fieldArr.ptr(idx, 0), tol)
                         << file << ":" << line
                         << ": Failed default value check: " << defCheck.value()
-                        << ".\nIndices: " << string_array(idx, GEMPIC_SPACEDIM);
+                        << ".\nIndices: " << string_array(idx, AMREX_SPACEDIM);
                 }
             }
         }
@@ -81,7 +81,7 @@ void compare_fields (const char file[],
                     const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
                     EXPECT_NEAR(*fieldArr.ptr(idx, comp), *fieldArr2.ptr(idx, comp), tol)
                         << file << ":" << line
-                        << ": Unequal arrays.\nIndices: " << string_array(idx, GEMPIC_SPACEDIM)
+                        << ": Unequal arrays.\nIndices: " << string_array(idx, AMREX_SPACEDIM)
                         << "\tComponent: " << comp;
                     break;
                 }

@@ -34,7 +34,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
         params.get("k", k);
     }
 
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, functionNumber> evalArray;
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, functionNumber> evalArray;
     amrex::Array<amrex::Parser, functionNumber> parseArray;
 
     size_t index{0};
@@ -50,7 +50,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
                          , parseArray[index].setConstant("kvarz", k[zDir]);)
         }
         parseArray[index].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        evalArray[index] = parseArray[index].template compile<GEMPIC_SPACEDIM + 1>();
+        evalArray[index] = parseArray[index].template compile<AMREX_SPACEDIM + 1>();
         ++index;
     }
     return std::make_tuple(parseArray, evalArray);
@@ -95,11 +95,11 @@ auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
 {
     BL_PROFILE("Gempic::Utils::compile_functions(parseArray)");
 
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, functionNumber> evalArray;
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, functionNumber> evalArray;
 
     for (size_t index{0}; index < functionNumber; ++index)
     {
-        evalArray[index] = parseArray[index].template compile<GEMPIC_SPACEDIM + 1>();
+        evalArray[index] = parseArray[index].template compile<AMREX_SPACEDIM + 1>();
     }
     return evalArray;
 }
@@ -157,7 +157,7 @@ inline auto parse_function (const std::string& variableString)
 inline auto compile_function (amrex::Parser parser)
 {
     BL_PROFILE("Gempic::Utils::compile_function(parser)");
-    auto eval = parser.template compile<GEMPIC_SPACEDIM + 1>();
+    auto eval = parser.template compile<AMREX_SPACEDIM + 1>();
     return eval;
 }
 

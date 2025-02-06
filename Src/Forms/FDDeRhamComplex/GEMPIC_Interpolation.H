@@ -221,7 +221,7 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
  */
 template <int degree, Grid grid, Space space>
 void eval_form_component (
-    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> &evalShift,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> &evalShift,
     const amrex::MultiFab &data,
     amrex::MultiFab &values,
     const amrex::RealVect &dr,
@@ -230,7 +230,7 @@ void eval_form_component (
     static_assert(space == Space::cell || space == Space::node,
                   "Tried to call 0-/3-form eval_form_component with a 1-/2-form.\n\tThe 1-/2-form "
                   "eval_form_component function takes a direction template argument.");
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = geom.ProbLoArray();
 
     auto nEvals{static_cast<size_t>(evalShift.size())};
     int nComp{data.nComp()};
@@ -247,7 +247,7 @@ void eval_form_component (
     }
 
     // Copy evalShift to GPU array
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nEvals};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nEvals};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
@@ -268,7 +268,7 @@ void eval_form_component (
                 {
                     // position of point to be evaluated with respect to grid (primal or dual)
                     // evalshift is always given with respect to primal grid
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {
                         AMREX_D_DECL(r0[xDir] + (i + evalShiftGpuPtr[evalInd][xDir]) * dr[xDir],
                                      r0[yDir] + (j + evalShiftGpuPtr[evalInd][yDir]) * dr[yDir],
                                      r0[zDir] + (k + evalShiftGpuPtr[evalInd][zDir]) * dr[zDir])};
@@ -276,7 +276,7 @@ void eval_form_component (
                     // position of the grid point (x_i, y_j, z_k) to the left of evalshift
                     // (different for primal and dual grids)
                     // evalshift is always given with respect to primal grid
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr;
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr;
                     if constexpr (grid == Grid::primal)
                     {
                         rr = {AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir],
@@ -284,7 +284,7 @@ void eval_form_component (
                     }
                     else if constexpr (grid == Grid::dual)
                     {
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> shiftDualGrid = {AMREX_D_DECL(
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> shiftDualGrid = {AMREX_D_DECL(
                             (std::round(evalShiftGpuPtr[evalInd][xDir]) - 0.5) * dr[xDir],
                             (std::round(evalShiftGpuPtr[evalInd][yDir]) - 0.5) * dr[yDir],
                             (std::round(evalShiftGpuPtr[evalInd][zDir]) - 0.5) * dr[zDir])};
@@ -326,7 +326,7 @@ void eval_form_component (
  */
 template <int degree, Grid grid, Space space, Direction dir>
 void eval_form_component (
-    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> &evalShift,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> &evalShift,
     const amrex::MultiFab &data,
     amrex::MultiFab &values,
     const amrex::RealVect &dr,
@@ -344,7 +344,7 @@ void eval_form_component (
                               "Output MultiFab of eval_form must have enough components to hold "
                               "all evaluations for all field components (in one direction).");
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = geom.ProbLoArray();
 
     amrex::GpuArray<int, 3> dirShift = {0, 0, 0};
 
@@ -358,7 +358,7 @@ void eval_form_component (
         dirShift[dir] = 1;
     }
 
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nEvals};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nEvals};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
@@ -379,7 +379,7 @@ void eval_form_component (
                 {
                     // position of point to be evaluated with respect to grid (primal or
                     // dual) evalshift is always given with respect to primal grid
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {
                         AMREX_D_DECL(r0[xDir] + (i + evalShiftGpuPtr[evalInd][xDir]) * dr[xDir],
                                      r0[yDir] + (j + evalShiftGpuPtr[evalInd][yDir]) * dr[yDir],
                                      r0[zDir] + (k + evalShiftGpuPtr[evalInd][zDir]) * dr[zDir])};
@@ -387,7 +387,7 @@ void eval_form_component (
                     // position of the grid point (x_i, y_j, z_k) to the left of evalshift
                     // (different for primal and dual grids)
                     // evalshift is always given with respect to primal grid
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr;
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr;
                     if constexpr (grid == Grid::primal)
                     {
                         rr = {AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir],
@@ -395,7 +395,7 @@ void eval_form_component (
                     }
                     else if constexpr (grid == Grid::dual)
                     {
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> shiftDualGrid = {AMREX_D_DECL(
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> shiftDualGrid = {AMREX_D_DECL(
                             (std::round(evalShiftGpuPtr[evalInd][xDir]) - 0.5) * dr[xDir],
                             (std::round(evalShiftGpuPtr[evalInd][yDir]) - 0.5) * dr[yDir],
                             (std::round(evalShiftGpuPtr[evalInd][zDir]) - 0.5) * dr[zDir])};
@@ -445,7 +445,7 @@ void eval_form_component (
  */
 template <int degree>
 amrex::Real max_error_midpoint (amrex::Geometry geom,
-                                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> &func,
+                                amrex::ParserExecutor<AMREX_SPACEDIM + 1> &func,
                                 amrex::MultiFab &funcH,
                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr,
                                 int form,
@@ -465,9 +465,9 @@ amrex::Real max_error_midpoint (amrex::Geometry geom,
         amrex::Array4<amrex::Real> const &funcMF = funcH[mfi].array();
         amrex::Array4<amrex::Real> const &valuesMF = values[mfi].array();
 
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = geom.ProbLoArray();
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = geom.ProbLoArray();
 
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> drHalf = {
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(
@@ -475,14 +475,14 @@ amrex::Real max_error_midpoint (amrex::Geometry geom,
             [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
                 // Compute the position of the point i, j, k
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = {
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {
                     AMREX_D_DECL(r0[xDir] + i * dr[xDir] - (dual ? drHalf[xDir] : 0),
                                  r0[yDir] + j * dr[yDir] - (dual ? drHalf[yDir] : 0),
                                  r0[zDir] + k * dr[zDir] - (dual ? drHalf[zDir] : 0))};
 
                 amrex::Real error = 0.0;
 
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                     rr[xDir] + drHalf[xDir], rr[yDir] + drHalf[yDir], rr[zDir] + drHalf[zDir])};
 
                 amrex::Real fval = 0;

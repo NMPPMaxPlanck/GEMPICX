@@ -47,7 +47,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcJ;
     amrex::Array<amrex::Parser, 3> m_parserJ;
@@ -109,19 +109,19 @@ public:
     // virtual void SetUp() will be called before each test is run.
     void SetUp () override
     {
-        if constexpr (GEMPIC_SPACEDIM == 1)
+        if constexpr (AMREX_SPACEDIM == 1)
         {
             GTEST_SKIP() << "This function works in 2D and 3D.";
         }
         else
         {
             amrex::Array<std::string, 3> analyticalDelDotS;
-            if constexpr (GEMPIC_SPACEDIM == 2)
+            if constexpr (AMREX_SPACEDIM == 2)
             {
                 analyticalDelDotS = {"sin(x)*(2.0*cos(x) + cos(y))", "sin(y)*(cos(x) + 2.0*cos(y))",
                                      "sin(2.0*x+y) + sin(2.0*y+x)"};
             }
-            else if constexpr (GEMPIC_SPACEDIM == 3)
+            else if constexpr (AMREX_SPACEDIM == 3)
             {
                 analyticalDelDotS = {"sin(x)*(2.0*cos(x) + cos(y) + cos(z))",
                                      "sin(y)*(cos(x) + 2.0*cos(y) + cos(z))",
@@ -194,7 +194,7 @@ public:
                 (i + off) / percelldir, (j + off) / percelldir, (k + off) / percelldir)};
         GEMPIC_D_LOOP_END
 
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions;
+        amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
         amrex::Array<amrex::Real, numParticles> weights;
 
@@ -206,7 +206,7 @@ public:
 
             for (int p = 0; p < percell; p++)
             {
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> loc = {
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {
                     AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + oss[p][0]) * dx[xDir],
                                  infra.geometry().ProbLo(yDir) + (j + oss[p][1]) * dx[yDir],
                                  infra.geometry().ProbLo(zDir) + (k + oss[p][2]) * dx[zDir])};
@@ -214,10 +214,10 @@ public:
                 positions[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
                     AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
 
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
                 velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
                     sin(loc[xDir]), sin(loc[yDir]), sin(loc[xDir] + loc[yDir])};
-#elif GEMPIC_SPACEDIM == 3
+#elif AMREX_SPACEDIM == 3
                 velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
                     sin(loc[xDir]), sin(loc[yDir]), sin(loc[zDir])};
 #endif
@@ -264,8 +264,8 @@ public:
                     np,
                     [=] AMREX_GPU_DEVICE(long pp)
                     {
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                         {
                             positionParticle[d] = particles[pp].pos(d);
                         }

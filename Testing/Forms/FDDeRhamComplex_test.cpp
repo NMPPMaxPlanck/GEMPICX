@@ -67,7 +67,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
 
     const std::string analyticalFunc = "1.0";
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -107,7 +107,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
     constexpr int hodgeDegree{4};
     const std::string analyticalFunc = "1.0";
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -148,7 +148,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
 
     const std::string analyticalFunc = "1.0";
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -219,7 +219,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII)
 
     const std::string analyticalFunc = "1.0";
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -260,7 +260,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII)
 
     const std::string analyticalFunc = "1.0";
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 

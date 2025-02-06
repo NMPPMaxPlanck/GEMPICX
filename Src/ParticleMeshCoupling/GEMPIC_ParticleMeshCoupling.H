@@ -51,7 +51,7 @@ AMREX_GPU_HOST_DEVICE inline void update_j_component (
                                    sCoeff);
 }
 
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
 /**
  * @brief Computes the product for the given integration index of the integral of B
  *
@@ -145,7 +145,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
         }
     }
 }
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
 
 /**
  * @brief computes the integral of B components along the trajectory
@@ -216,7 +216,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
     }
 }
 
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
 
 /**
  * @brief computes the integral of B components along the trajectory
@@ -259,12 +259,12 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
 #endif
 }  //namespace Impl
 
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
 /**
  * @brief Updates J and computes an integrated B on a given particle for the H_p_y update
  * in one spatial dimension
  *
- * Since for GEMPIC_SPACEDIM == 1, there is not primitive Difference available for the y-step.
+ * Since for AMREX_SPACEDIM == 1, there is not primitive Difference available for the y-step.
  * Therefore, v_{p,x} and v_{p,z} are updated using an explicit Euler step.
  *
  * @tparam SplineType : Necessary for mocking so the function can take mock spline types
@@ -309,12 +309,12 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
 }
 #endif
 
-#if GEMPIC_SPACEDIM == 1 || GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 1 || AMREX_SPACEDIM == 2
 /**
  * @brief Updates J and computes an integrated B on a given particle for the H_p_z update
  * in one and two spatial dimension
  *
- * Since for GEMPIC_SPACEDIM == 1 and GEMPIC_SPACEDIM == 2, there is not primitive Difference
+ * Since for AMREX_SPACEDIM == 1 and AMREX_SPACEDIM == 2, there is not primitive Difference
  * available for the z-step.Therefore, v_{p,x} and v_{p,y} are updated using an explicit Euler step.
  *
  * @tparam SplineType : Necessary for mocking so the function can take mock spline types
@@ -342,9 +342,9 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     fields = {0., 0.};
 
     constexpr int degX = splineType::s_splineDegrees[xDir];
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
     constexpr int degY = splineType::s_splineDegrees[yDir];
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
     constexpr int k = 0;
     constexpr int yNodeVal = 1;
     constexpr int yCellVal = 1;
@@ -355,7 +355,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][j];
         amrex::Real xCellVal = spline.m_cellSplineVals[xDir][j];
 
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         for (int k = 0; k <= degY; ++k)
         {
             amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][k];
@@ -366,20 +366,20 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
             amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<zDir>(0, j, k);
             update_j_component<zDir, yDir, xDir>(jArray, spline, cellIndex, k, 0, chargeWeight,
                                                  primitiveDifferenceEuler);
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
             if (j < degX)
             {
 #endif
                 fields[0] +=
                     xCellVal * yNodeVal * (bArray[yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
             }
             if (k < degY)
             {
 #endif
                 fields[1] +=
                     xNodeVal * yCellVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
             }
         }
 #endif
@@ -387,7 +387,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
 }
 #endif
 
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
 /**
  * @brief Updates J and computes an integrated B on a given particle trajectory along one grid
  * direction in 3 spatial dimensions
@@ -453,7 +453,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2> &fields,
     splineType &spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dx,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
@@ -517,7 +517,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     }
 }
 
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
 /**
  * @brief Updates J and computes an integrated B on a given particle trajectory along one grid
  * direction in 2 spatial dimensions (namely the x- and y-direction)
@@ -577,7 +577,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2> &fields,
     splineType &spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dx,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
@@ -693,7 +693,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     }
 }
 
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
 /**
  * @brief Updates J and computes an integrated B on a given particle trajectory along the grid
  * x-direction
@@ -752,7 +752,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2> &fields,
     splineType &spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dx,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {

@@ -94,10 +94,10 @@ struct DeRhamField
      * @brief Construct Space::edge / Space::face fields of one variable from function array
      */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func) :
+                amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func) :
         DeRhamField{drc} {};
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+                amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                 const std::string& diagName) :
         DeRhamField{drc} {};
     /**
@@ -106,11 +106,11 @@ struct DeRhamField
      */
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs) :
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs) :
         DeRhamField{drc} {};
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         const std::string& diagName) :
         DeRhamField{drc} {};
 
@@ -118,10 +118,10 @@ struct DeRhamField
      * @brief Construct Space::node / Space::cell fields of one variable from function
      */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func) :
+                amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func) :
         DeRhamField{drc} {};
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+                amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                 const std::string& diagName) :
         DeRhamField{drc} {};
     /**
@@ -129,10 +129,10 @@ struct DeRhamField
      *        functions
      */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs) :
+                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs) :
         DeRhamField{drc} {};
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                 const std::string& diagName) :
         DeRhamField{drc} {};
 
@@ -213,16 +213,16 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::array<int, 3> ncomponents);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func);
+                amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func);
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs);
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+                amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                 const std::string& diagName);
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         const std::string& diagName);
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
@@ -236,7 +236,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
 
     void post_particle_loop_sync();
     void operator*=(amrex::Real dt);
-    void operator*=(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
+    void operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space>&);
     void operator-=(DeRhamField<grid, space>&);
     DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
@@ -256,14 +256,14 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func);
+                amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs);
+                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+                amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                 const std::string& diagName);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                 const std::string& diagName);
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::MultiFab& mfIn);
@@ -274,7 +274,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 
     void post_particle_loop_sync();
     void operator*=(amrex::Real dt);
-    void operator*=(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func);
+    void operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space>&);
     void operator-=(DeRhamField<grid, space>&);
     DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
@@ -321,7 +321,7 @@ protected:
     // Computational grid
     amrex::BoxArray m_grid;
     amrex::DistributionMapping m_distriMap;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_dx;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> m_dx;
     int m_hodgeDegree;
 
     // Number of ghost cells along each direction
@@ -412,7 +412,7 @@ public:
     const amrex::Periodicity get_periodicity () const { return m_geom.periodicity(); }
 
     /// Getter for prob lo
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> get_prob_lo () const
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> get_prob_lo () const
     {
         return m_geom.ProbLoArray();
     }
@@ -705,7 +705,7 @@ public:
      * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation (n/a for 0-forms)
      */
-    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    virtual void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::cell>& field,
                             int gaussNodes = 6) = 0;
@@ -717,30 +717,30 @@ public:
      * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::cell>& field,
                             int gaussNodes = 6) = 0;
 
-    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    virtual void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::node>& field) = 0;
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::node>& field) = 0;
 
-    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    virtual void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::node>& field) = 0;
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::node>& field) = 0;
 
-    virtual void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    virtual void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::cell>& field,
                             int gaussNodes = 6) = 0;
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::cell>& field,
                             int gaussNodes = 6) = 0;
@@ -754,7 +754,7 @@ public:
      * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
-    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::edge>& field,
                             int gaussNodes = 6) = 0;
@@ -767,37 +767,37 @@ public:
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::edge>& field,
         int gaussNodes = 6) = 0;
 
-    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::face>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::face>& field,
         int gaussNodes = 6) = 0;
 
-    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::edge>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::edge>& field,
         int gaussNodes = 6) = 0;
 
-    virtual void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    virtual void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::face>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::face>& field,
         int gaussNodes = 6) = 0;
@@ -847,19 +847,19 @@ public:
      */
     virtual void eval_form(
         const DeRhamField<Grid::primal, Space::cell>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues) = 0;
     virtual void eval_form(
         const DeRhamField<Grid::dual, Space::cell>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues) = 0;
     virtual void eval_form(
         const DeRhamField<Grid::primal, Space::node>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues) = 0;
     virtual void eval_form(
         const DeRhamField<Grid::dual, Space::node>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues) = 0;
     /**
      * @brief Evaluation of a 1-/2-form DeRhamField of nVar variables (and three components) in one
@@ -880,22 +880,22 @@ public:
      */
     virtual void eval_form(
         const DeRhamField<Grid::primal, Space::face>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
     virtual void eval_form(
         const DeRhamField<Grid::dual, Space::face>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
     virtual void eval_form(
         const DeRhamField<Grid::primal, Space::edge>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
     virtual void eval_form(
         const DeRhamField<Grid::dual, Space::edge>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
 
@@ -916,7 +916,7 @@ public:
      */
     inline void eval_forms (
         const DeRhamField<Grid::primal, Space::face>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
@@ -924,7 +924,7 @@ public:
         eval_form(field, evalShift, *pointValues[zDir], zDir);
     }
     void eval_forms (const DeRhamField<Grid::dual, Space::face>& field,
-                     const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                     const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                      amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
@@ -932,7 +932,7 @@ public:
         eval_form(field, evalShift, *pointValues[zDir], zDir);
     }
     void eval_forms (const DeRhamField<Grid::primal, Space::edge>& field,
-                     const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                     const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                      amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
@@ -940,7 +940,7 @@ public:
         eval_form(field, evalShift, *pointValues[zDir], zDir);
     }
     void eval_forms (const DeRhamField<Grid::dual, Space::edge>& field,
-                     const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                     const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                      amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
@@ -1094,7 +1094,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func) :
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func) :
     DeRhamField{drc, 1}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,func)");
@@ -1104,7 +1104,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs) :
+    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,funcs)");
@@ -1113,7 +1113,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
-    std::shared_ptr<DeRhamComplex> drc, amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func) :
+    std::shared_ptr<DeRhamComplex> drc, amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func) :
     DeRhamField{drc, 1}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func)");
@@ -1123,7 +1123,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs) :
+    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs)");
@@ -1134,7 +1134,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
     const std::string& diagName) :
     DeRhamField{drc, diagName, 1}
 {
@@ -1145,7 +1145,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
     const std::string& diagName) :
     DeRhamField{drc, diagName, static_cast<int>(funcs.size())}
 {
@@ -1169,7 +1169,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
     const std::string& diagName) :
     DeRhamField{drc, diagName, 1}
 {
@@ -1180,7 +1180,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
     const std::string& diagName) :
     DeRhamField{drc, diagName, static_cast<int>(funcs.size())}
 {
@@ -1298,12 +1298,12 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
 // Multiply by parsed function
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator*=(
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> func)
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=(function)");
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_deRham->get_prob_lo();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_deRham->get_prob_lo();
 
     int nComps{m_data[xDir].nComp()};
 
@@ -1318,7 +1318,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
                 bx, nComps,
                 [r0, comp, dx, form, func] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                 {
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r;
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r;
                     if constexpr ((grid == Grid::primal && space == Space::edge) ||
                                   (grid == Grid::dual && space == Space::face))
                     {
@@ -1348,12 +1348,12 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 template <Grid grid, Space space>
 inline void
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::operator*=(
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> func)
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> func)
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=(function)");
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = m_deRham->get_prob_lo();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_deRham->get_prob_lo();
 
     int nComps{m_data.nComp()};
 
@@ -1365,7 +1365,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
         ParallelFor(bx, nComps,
                     [r0, dx, form, func] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                     {
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r;
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r;
                         if constexpr ((grid == Grid::primal && space == Space::node) ||
                                       (grid == Grid::dual && space == Space::cell))
                         {

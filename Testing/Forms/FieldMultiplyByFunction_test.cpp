@@ -61,21 +61,21 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
 {
     constexpr int hodgeDegree{2};
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalWeightFunc = "x";
 #endif
 
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string analyticalWeightFunc = "x * y";
 #endif
 
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string analyticalWeightFunc = "x * y * z";
 #endif
 
     const std::string analyticalOneFunc = "1.0";
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> weightFunc;
     amrex::ParserExecutor<nVar> oneFunc;
     amrex::Parser weightParser;
@@ -125,7 +125,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
 {
     constexpr int hodgeDegree{2};
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalWeightFunc = "x";
     const amrex::Array<std::string, 3> analyticalResultFunc = {
         "x",
@@ -134,7 +134,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
     };
 #endif
 
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string analyticalWeightFunc = "x * y";
     const amrex::Array<std::string, 3> analyticalResultFunc = {
         "x * y",
@@ -143,7 +143,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
     };
 #endif
 
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string analyticalWeightFunc = "x * y * z";
     const amrex::Array<std::string, 3> analyticalResultFunc = {
         "x * y * z",
@@ -158,7 +158,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         "1",
     };
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> weightFunc;
     amrex::Parser weightParser;
 

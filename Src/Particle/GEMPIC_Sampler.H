@@ -40,20 +40,20 @@ template <unsigned int vDim,
           typename randomGenerator,
           typename randomDistribution2,
           typename randomGenerator2>
-inline amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim> calculate_random_values (
+inline amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> calculate_random_values (
     randomDistribution&& rnd,
     randomGenerator& gen,
     randomDistribution2&& rndv,
     randomGenerator2& genv)
 {
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim> randomArray;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> randomArray;
     // position random variables
-    for (int dir{0}; dir < GEMPIC_SPACEDIM; ++dir)
+    for (int dir{0}; dir < AMREX_SPACEDIM; ++dir)
     {
         randomArray[dir] = rnd(gen);
     }
     // velocity random variables
-    for (int dir{GEMPIC_SPACEDIM}; dir < GEMPIC_SPACEDIM + 3 * vDim; ++dir)
+    for (int dir{AMREX_SPACEDIM}; dir < AMREX_SPACEDIM + 3 * vDim; ++dir)
     {
         randomArray[dir] = rndv(genv);
     }
@@ -63,13 +63,13 @@ inline amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim> calculate_random
 template <template <unsigned int> class vInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<int, vDim> get_gauss_ids (
     const vInit<vDim>& vIniter,
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim>& randomArray)
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray)
 {
     amrex::GpuArray<amrex::Real, vDim> gaussChoice;
     amrex::GpuArray<int, vDim> gaussIdx;
     for (int i = 0; i < vDim; i++)
     {
-        gaussChoice[i] = randomArray[GEMPIC_SPACEDIM + 2 * vDim + i];  // uniform in [0, 1]
+        gaussChoice[i] = randomArray[AMREX_SPACEDIM + 2 * vDim + i];  // uniform in [0, 1]
         gaussIdx[i] = 0;
     }
 
@@ -93,7 +93,7 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real get_gaussian_velocity (
     int gaussId,
     amrex::Real z0,
     int cc,
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& location)
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
 {
     amrex::Real vDev;
     if (vIniter.m_vSchemePtr[gaussId] == VelocityInitScheme::constant)
@@ -124,7 +124,7 @@ struct VelocityInitializerGpu
 
     amrex::GpuArray<amrex::Real, vDim>* m_vMeanPtr;
     amrex::GpuArray<amrex::Real, vDim>* m_vDevPtr;
-    amrex::GpuArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, vDim>* m_funcvDevPtr;
+    amrex::GpuArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, vDim>* m_funcvDevPtr;
     VelocityInitScheme* m_vSchemePtr;
     amrex::Real* m_velCumPtr;
     size_t m_numGauss;
@@ -133,7 +133,7 @@ private:
     VelocityInitializerGpu(
         amrex::GpuArray<amrex::Real, vDim>* vMean,
         amrex::GpuArray<amrex::Real, vDim>* vDev,
-        amrex::GpuArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, vDim>* funcvDev,
+        amrex::GpuArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, vDim>* funcvDev,
         VelocityInitScheme* vScheme,
         amrex::Real* velCum,
         size_t numGauss) :
@@ -153,21 +153,21 @@ class VelocityInitializer
 {
 private:
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, vDim>> m_vMeanGpu, m_vDevGpu;
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, vDim>>
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, vDim>>
         m_funcvDevGpu;
     amrex::Gpu::DeviceVector<VelocityInitScheme> m_vSchemeGpu;
     amrex::Gpu::DeviceVector<amrex::Real> m_velCumGpu;
 
     amrex::Vector<amrex::GpuArray<amrex::Real, vDim>> m_vMean, m_vDev;
     amrex::Vector<amrex::GpuArray<amrex::Parser, vDim>> m_funcvDevParser;
-    amrex::Vector<amrex::GpuArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, vDim>> m_funcvDev;
+    amrex::Vector<amrex::GpuArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, vDim>> m_funcvDev;
     amrex::Vector<VelocityInitScheme> m_vScheme;
     amrex::Vector<amrex::Real> m_velCum;
 
 public:
     amrex::GpuArray<amrex::Real, vDim>* m_vMeanPtr;
     amrex::GpuArray<amrex::Real, vDim>* m_vDevPtr;
-    amrex::GpuArray<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, vDim>* m_funcvDevPtr;
+    amrex::GpuArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, vDim>* m_funcvDevPtr;
     VelocityInitScheme* m_vSchemePtr;
     amrex::Real* m_velCumPtr;
 
@@ -270,8 +270,8 @@ template <template <unsigned int> class vInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void get_velocities (
     const vInit<vDim>& vIniter,
     amrex::GpuArray<amrex::Real, vDim>& velocities,
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim>& randomArray,
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& location)
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray,
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
 {
     using namespace Impl;
     auto gaussIdx{get_gauss_ids(vIniter, randomArray)};
@@ -279,8 +279,8 @@ AMREX_GPU_HOST_DEVICE inline void get_velocities (
     auto epsilon{std::numeric_limits<amrex::Real>::epsilon()};
     for (int cc = 0; cc < vDim; cc++)
     {
-        amrex::Real u1 = randomArray[GEMPIC_SPACEDIM + 2 * cc];
-        amrex::Real u2 = randomArray[GEMPIC_SPACEDIM + 2 * cc + 1];
+        amrex::Real u1 = randomArray[AMREX_SPACEDIM + 2 * cc];
+        amrex::Real u2 = randomArray[AMREX_SPACEDIM + 2 * cc + 1];
         // make sure epsilon large enough to take log
         // first value from Box-Muller algorithm
         u1 = u1 < epsilon ? epsilon : u1;
@@ -290,12 +290,12 @@ AMREX_GPU_HOST_DEVICE inline void get_velocities (
 }
 
 // Get global location of a cell corner given the cell indices assuming uniform mesh
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> inline get_cell_corner(
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> lowerCorner,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx,
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inline get_cell_corner(
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> lowerCorner,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx,
     AMREX_D_DECL(int i, int j, int k))
 {
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> cellCorner;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner;
 
     AMREX_D_TERM(cellCorner[xDir] = lowerCorner[xDir] + i * dx[xDir];
                  , cellCorner[yDir] = lowerCorner[yDir] + j * dx[yDir];
@@ -303,11 +303,11 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> inline get_c
     return cellCorner;
 }
 
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> inline cell_center_from_corner(
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> cellCorner,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx)
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inline cell_center_from_corner(
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx)
 {
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> cellCenter;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCenter;
 
     AMREX_D_TERM(cellCenter[xDir] = cellCorner[xDir] + 0.5 * dx[xDir];
                  , cellCenter[yDir] = cellCorner[yDir] + 0.5 * dx[yDir];
@@ -470,9 +470,9 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
                               int rSeed = 925)
 {
     BL_PROFILE("Gempic::Particle::init_particles_cellwise(infra,ppg,rSeed)");
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> internalPosition;  // coordinates within each cell
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;          // global coordinates
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> cellCorner;        // cell-corner coordinates
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> internalPosition;  // coordinates within each cell
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;          // global coordinates
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner;        // cell-corner coordinates
     amrex::GpuArray<amrex::Real, vDim> velocity;
     amrex::Real weight;
 
@@ -560,8 +560,8 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
 {
     BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
 
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> probLo{infra.m_geom.ProbLoArray()};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx{infra.geometry().CellSizeArray()};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> probLo{infra.m_geom.ProbLoArray()};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx{infra.geometry().CellSizeArray()};
 
     std::string speciesName{ppg->get_name()};
     std::string specString = "Particle." + speciesName;
@@ -573,7 +573,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
     // we capture by std::tie instead of by structured binding because of idiosyncracies with lambda
     // expressions. May or may not be resolved in C++20, but not in e.g. Clang.
     amrex::Parser densityParse;
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> densityEval;
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> densityEval;
     std::tie(densityParse, densityEval) = Utils::parse_function("density", params);
 
     Impl::VelocityInitializer<vDim> vInit(params);
@@ -615,10 +615,10 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
                 auto cellCorner{get_cell_corner(probLo, dx, AMREX_D_DECL(i, j, k))};
                 auto cellCenter{cell_center_from_corner(cellCorner, dx)};
 
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
                 amrex::GpuArray<amrex::Real, vDim> velocity;
                 amrex::Real t = 0.0;  // initial time
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim> randArray;
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> randArray;
 
                 for (int pp = 0; pp < nPartPerCell; pp++)
                 {
@@ -626,7 +626,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
                     {
                         randomValue = amrex::Random(gen);
                     }
-                    for (int comp = 0; comp < GEMPIC_SPACEDIM; comp++)
+                    for (int comp = 0; comp < AMREX_SPACEDIM; comp++)
                     {
                         position[comp] = cellCorner[comp] + randArray[comp] * dx[comp];
                     }
@@ -677,7 +677,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
     BL_PROFILE("Gempic::Particle::init_particles_full_domain()");
     amrex::Real t{0.0};
 
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
     amrex::GpuArray<amrex::Real, vDim> velocity;
     amrex::Real weight;
 
@@ -719,7 +719,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
             for (int pp = 0; pp < nPartPerCell; pp++)
             {
                 auto randArray{Impl::calculate_random_values<vDim>(unif, gen, unifv, genv)};
-                for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+                for (int i = 0; i < AMREX_SPACEDIM; i++)
                 {
                     position[i] = cellCorner[i] + randArray[i] * infra.geometry().CellSize(i);
                 }
@@ -756,8 +756,8 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
 {
     BL_PROFILE("Gempic::Particle::init_particles_fulldomain_sobol()");
     amrex::Real t{0.0};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM + 3 * vDim> randArray;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> randArray;
     amrex::GpuArray<amrex::Real, vDim> velocity;
     amrex::Real weight;
 
@@ -780,7 +780,7 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
 
         long long int sobolSeed =
             GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) + species * 1000;
-        constexpr int numDim = GEMPIC_SPACEDIM + 2 * vDim;
+        constexpr int numDim = AMREX_SPACEDIM + 2 * vDim;
         double quasi[numDim];
         // Pseudorandom number generator to switch between multiple Gaussians
         std::mt19937 gen(GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) +
@@ -809,10 +809,10 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
                 // ... one needs to be generated for Gaussian selection.
                 for (int i{0}; i < vDim; ++i)
                 {
-                    randArray[GEMPIC_SPACEDIM + 2 * vDim + i] = unif(gen);
+                    randArray[AMREX_SPACEDIM + 2 * vDim + i] = unif(gen);
                 }
 
-                for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+                for (int i = 0; i < AMREX_SPACEDIM; i++)
                 {
                     position[i] = cellCorner[i] + randArray[i] * infra.geometry().CellSize(i);
                 }
@@ -828,15 +828,15 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
 }
 
 template <unsigned int vDim>
-void init_one_particle_cellwise (amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const& dx,
-                                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const& plo,
+void init_one_particle_cellwise (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
                                  ParticleGroups<vDim>& pg,
-                                 amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> internalPosition,
+                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> internalPosition,
                                  amrex::GpuArray<amrex::Real, vDim> velocity = {1., 1., 1.})
 {
     BL_PROFILE("Gempic::Particle::init_one_particle_cellwise()");
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> cellCorner;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
 
     // MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi = pg.MakeMFIter(0); mfi.isValid(); ++mfi)

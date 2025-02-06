@@ -117,18 +117,18 @@ public:
         switch (hodgeDegree)
         {
             case 2:
-                // This function contributes (<= 6*GEMPIC_SPACEDIM-5) columns to ncols
+                // This function contributes (<= 6*AMREX_SPACEDIM-5) columns to ncols
                 // clang-format off
                 int icol; int gdtmp;
-                int n[GEMPIC_SPACEDIM], in[GEMPIC_SPACEDIM], jn[GEMPIC_SPACEDIM], kn[GEMPIC_SPACEDIM];
-                for (int dir = 0; dir < GEMPIC_SPACEDIM; dir++)
+                int n[AMREX_SPACEDIM], in[AMREX_SPACEDIM], jn[AMREX_SPACEDIM], kn[AMREX_SPACEDIM];
+                for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
                 {
-                    n[dir] = (ndir + dir)%GEMPIC_SPACEDIM;
+                    n[dir] = (ndir + dir)%AMREX_SPACEDIM;
                     in[dir] = (n[dir] == 0)?1:0; jn[dir] = (n[dir] == 1)?1:0; kn[dir] = (n[dir] == 2)?1:0;
                 }
 
                 amrex::Real temp; temp = 0.0;
-                for (int dir = 1; dir < GEMPIC_SPACEDIM; dir++) {
+                for (int dir = 1; dir < AMREX_SPACEDIM; dir++) {
                     temp += 2.0*(fac[n[dir]]);
 }
 
@@ -137,7 +137,7 @@ public:
                 gdtmp = gid[n[0]]((i-in[1]), (j-jn[1]), (k-kn[1]));                   assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[1]]*edgetoface[n[0]];
                 gdtmp = gid[n[0]]((i+in[1]), (j+jn[1]), (k+kn[1]));                   assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[1]]*edgetoface[n[0]];
 
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
                 gdtmp = gid[n[0]]((i-in[2]), (j-jn[2]), (k-kn[2]));                   assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[2]]*edgetoface[n[0]];
                 gdtmp = gid[n[0]]((i+in[2]), (j+jn[2]), (k+kn[2]));                   assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[2]]*edgetoface[n[0]];
 #endif
@@ -146,7 +146,7 @@ public:
                 gdtmp = gid[n[1]](i, j, k);                                           assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[1]]*edgetoface[n[1]];
                 gdtmp = gid[n[1]]((i-in[1]+in[0]), (j-jn[1]+jn[0]), (k-kn[1]+kn[0])); assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[1]]*edgetoface[n[1]];
 
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
                 gdtmp = gid[n[2]]((i+in[0]), (j+jn[0]), (k+kn[0]));                   assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += fac[n[2]]*edgetoface[n[2]];
                 gdtmp = gid[n[2]]((i-in[2]), (j-jn[2]), (k-kn[2]));                   assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += fac[n[2]]*edgetoface[n[2]];
                 gdtmp = gid[n[2]](i, j, k);                                           assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols); mat[icol] += -fac[n[2]]*edgetoface[n[2]];
@@ -178,10 +178,10 @@ public:
             case 2:
                 // This function contributes (<= 1) columns to ncols
                 // clang-format off
-                int n[GEMPIC_SPACEDIM], in[GEMPIC_SPACEDIM], jn[GEMPIC_SPACEDIM], kn[GEMPIC_SPACEDIM];
-                for (int dir = 0; dir < GEMPIC_SPACEDIM; dir++)
+                int n[AMREX_SPACEDIM], in[AMREX_SPACEDIM], jn[AMREX_SPACEDIM], kn[AMREX_SPACEDIM];
+                for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
                 {
-                    n[dir] = (ndir + dir)%GEMPIC_SPACEDIM;
+                    n[dir] = (ndir + dir)%AMREX_SPACEDIM;
                     in[dir] = (n[dir] == 0)?1:0; jn[dir] = (n[dir] == 1)?1:0; kn[dir] = (n[dir] == 2)?1:0;
                 }
 
@@ -437,7 +437,7 @@ public:
             //edgetoface, map_cols);
         };
 
-        constexpr int maxStencilSize = 6 * GEMPIC_SPACEDIM - 5;
+        constexpr int maxStencilSize = 6 * AMREX_SPACEDIM - 5;
 
         amrex::HypreSolver<maxStencilSize> hypreSolver(
             {AMREX_D_DECL(x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
@@ -452,7 +452,7 @@ public:
                           m_relTol, m_absTol, m_maxiter);
 
         // In 2D, the Z E-field is decoupled from the XY E-field and is solved separately
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         auto filler2Dz = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int /*ndir*/,
                                               amrex::Array4<HYPRE_Int const> const* gid,
                                               HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
@@ -520,8 +520,8 @@ public:
                     np,
                     [=] AMREX_GPU_DEVICE(long pp)
                     {
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                         {
                             positionParticle[d] = particles[pp].pos(d);
                         }
@@ -585,7 +585,7 @@ public:
                           m_relTol, m_absTol, m_maxiter);
 
         // In 2D, the Z E-field is decoupled from the XY E-field and is solved separately
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         auto filler2Dz = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int,
                                               amrex::Array4<HYPRE_Int const> const* gid,
                                               HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
@@ -647,8 +647,8 @@ public:
                     np,
                     [=] AMREX_GPU_DEVICE(long pp)
                     {
-                        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                         {
                             positionParticle[d] = particles[pp].pos(d);
                         }
@@ -713,7 +713,7 @@ public:
         };
 
         constexpr int maxStencilSize =
-            6 * GEMPIC_SPACEDIM - 5 +
+            6 * AMREX_SPACEDIM - 5 +
             std::max(std::max(nMmCoeffs[xDir], nMmCoeffs[yDir]), nMmCoeffs[zDir]);
 
         amrex::HypreSolver<maxStencilSize> hypreSolver(
@@ -729,7 +729,7 @@ public:
                           m_relTol, m_absTol, m_maxiter);
 
         // In 2D, the Z E-field is decoupled from the XY E-field and is solved separately
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         auto filler2Dz = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int /*ndir*/,
                                               amrex::Array4<HYPRE_Int const> const* gid,
                                               HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)

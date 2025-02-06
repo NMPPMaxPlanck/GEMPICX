@@ -30,15 +30,15 @@ public:
     amrex::IntVect m_maxGridSize;  // maximum number of cells in tile in each direction. AMReX
                                    // automagically creates grids to cover the domain and not be
                                    // bigger than a certain, maximum grid size.
-    amrex::Array<int, GEMPIC_SPACEDIM> m_isPeriodic;
+    amrex::Array<int, AMREX_SPACEDIM> m_isPeriodic;
     amrex::RealBox m_realBox;  // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
     amrex::RealVect m_length;  // Length of domain in x,y,z directions
     amrex::BoxArray m_grid;
     amrex::Geometry m_geom;
     amrex::Box m_domain;
     amrex::DistributionMapping m_distriMap;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_plo;
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> m_phi;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> m_plo;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> m_phi;
 
     amrex::Geometry const& geometry () const { return m_geom; }
     // @todo amrex::Geometry is not accessible on GPU. Therefore, we provide
@@ -79,7 +79,7 @@ public:
         params.get("nCell", nCellVector);
         amrex::Vector<int> maxGridSizeVector;
         params.get("maxGridSize", maxGridSizeVector);
-        for (int i{0}; i < GEMPIC_SPACEDIM; ++i)
+        for (int i{0}; i < AMREX_SPACEDIM; ++i)
         {
             m_nCell[i] = nCellVector[i];
             m_maxGridSize[i] = maxGridSizeVector[i];
@@ -108,7 +108,7 @@ public:
                     std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
                 }
                 functionParseParams.get("k", k);
-                for (int i = 0; i < GEMPIC_SPACEDIM; i++)
+                for (int i = 0; i < AMREX_SPACEDIM; i++)
                 {
                     if (m_isPeriodic[i] == 1)
                     {
@@ -126,7 +126,7 @@ public:
                                    {AMREX_D_DECL(domainHi[xDir], domainHi[yDir], domainHi[zDir])});
 
         // define the length of the domain
-        for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
+        for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
         {
             m_length[cc] = (m_realBox.hi(cc) - m_realBox.lo(cc));
         }
@@ -147,7 +147,7 @@ public:
         // initialize distribution mapping needed to define MultiFabs
         m_distriMap.define(m_grid);
 
-        for (int cc = 0; cc < GEMPIC_SPACEDIM; cc++)
+        for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
         {
             m_plo[cc] = m_geom.ProbLo(cc);
             m_phi[cc] = m_geom.ProbHi(cc);

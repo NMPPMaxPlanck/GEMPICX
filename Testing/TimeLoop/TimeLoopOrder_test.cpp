@@ -41,7 +41,7 @@ public:
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
     inline static const int s_hodgeDegree{2};
 
-    static const int s_nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
@@ -70,7 +70,7 @@ public:
                               amrex::Real const sV)
     {
         // Analytical solutions in every direction (assuming k=1 in all directions)
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
         const amrex::Array<std::string, 3> analyticalD = {
             "1 / sOmegaSquared * 0.",
             "1 / sOmegaSquared * cos(x - sV * t)",
@@ -83,7 +83,7 @@ public:
             "1 / sV * cos(x - sV * t)",
         };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
         const amrex::Array<std::string, 3> analyticalD = {
             "1 / sOmegaSquared * cos(x + y -sqrt(2.0) * sV * t)",
             "-1 / sOmegaSquared * cos(x + y -sqrt(2.0) * sV * t)",
@@ -96,7 +96,7 @@ public:
             "-1 / sV * sqrt(2) * cos(x + y -sqrt(2.0) * sV * t)",
         };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
         const amrex::Array<std::string, 3> analyticalD = {
             "1 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
             "-2 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",

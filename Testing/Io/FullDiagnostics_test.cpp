@@ -25,7 +25,7 @@ using namespace Particle;
 
 void define_expected (amrex::MFIter& mfi,
                       amrex::MultiFab& mfAllDiagExpected,
-                      const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& dx)
+                      const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dx)
 {
     const amrex::Box& bx = mfi.tilebox();
     amrex::Array4<amrex::Real> const& expected = mfAllDiagExpected[mfi].array();
@@ -113,11 +113,11 @@ protected:
         std::string By = "1.0";
         std::string Bz = "1.0";
         std::string phi = "6 + x + y + z";
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         phi = "6 + x + y";
         Ex = "2 + y";
         Ey = "x";
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
         phi = "6 + x";
         Ex = "2";
         Ey = "x";

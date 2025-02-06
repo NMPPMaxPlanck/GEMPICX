@@ -22,7 +22,7 @@ using condLambda = bool (*)(AMREX_D_DECL(int, int, int));
 bool func_cond_x (AMREX_D_DECL(int i, int j, int k)) { return (i == 0 || i == 3); }
 bool func_cond_y (AMREX_D_DECL(int i, int j, int k))
 {
-#if GEMPIC_SPACEDIM >= 2
+#if AMREX_SPACEDIM >= 2
     return (j == 0 || j == 3);
 #else
     return false;
@@ -30,7 +30,7 @@ bool func_cond_y (AMREX_D_DECL(int i, int j, int k))
 }
 bool func_cond_z (AMREX_D_DECL(int i, int j, int k))
 {
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
     return (k == 0 || k == 3);
 #else
     return false;
@@ -91,7 +91,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
         "1.0",
     };
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
 
     amrex::ParserExecutor<nVar> funcScalar;
     amrex::Parser parserScalar;
@@ -202,7 +202,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
         "1.0",
     };
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
 
     amrex::ParserExecutor<nVar> funcScalar;
     amrex::Parser parserScalar;
@@ -244,7 +244,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
     ASSERT_TRUE(loopRun);
 
     // One and two forms
-    for (int dir = 0; dir < GEMPIC_SPACEDIM; ++dir)
+    for (int dir = 0; dir < AMREX_SPACEDIM; ++dir)
     {
         loopRun = false;
         for (amrex::MFIter mfi(oneForm.m_data[dir]); mfi.isValid(); ++mfi)
