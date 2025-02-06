@@ -73,7 +73,6 @@ public:
     {
         BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
         Io::Parameters params("ComputationalDomain");
-        Io::Parameters functionParseParams;
         // Initialize infrastructure:
         amrex::Vector<int> nCellVector;
         params.get("nCell", nCellVector);
@@ -101,13 +100,13 @@ public:
         if (AMREX_D_TERM(m_isPeriodic[xDir], || m_isPeriodic[yDir], || m_isPeriodic[zDir]))
         {
             // Attempt to use k first
-            if (functionParseParams.exists("k"))
+            if (params.exists("k"))
             {
                 if (params.is_in_input_file("domainHi"))
                 {
                     std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
                 }
-                functionParseParams.get("k", k);
+                params.get("k", k);
                 for (int i = 0; i < AMREX_SPACEDIM; i++)
                 {
                     if (m_isPeriodic[i] == 1)

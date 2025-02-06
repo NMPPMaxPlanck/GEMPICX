@@ -72,6 +72,8 @@ if(GEMPIC_BUILD_DOCUMENTATION)
   add_subdirectory(doc)
 endif()
 if(GEMPIC_BUILD_TESTS)
+  # Enable ctest and GoogleTest tests
+  enable_testing()
   # Add subfolder with tests
   add_subdirectory(Testing)
 endif()
