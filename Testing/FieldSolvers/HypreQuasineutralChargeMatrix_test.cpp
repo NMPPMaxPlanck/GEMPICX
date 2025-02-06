@@ -48,7 +48,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
     amrex::Array<amrex::Parser, 3> m_parserE;
@@ -110,10 +110,10 @@ public:
     // virtual void SetUp() will be called before each test is run.
     void SetUp () override
     {
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x)", "sin(x+y)"};
         const amrex::Array<std::string, 3> analyticalRhoE = {"sin(y)", "sin(x)", "sin(x+y)"};
-#elif GEMPIC_SPACEDIM == 3
+#elif AMREX_SPACEDIM == 3
         const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
         const amrex::Array<std::string, 3> analyticalRhoE = {"sin(y)", "sin(z)", "sin(x)"};
 #endif
@@ -152,34 +152,34 @@ public:
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
-        // Adding GEMPIC_SPACEDIM individual particles starts here
+        // Adding AMREX_SPACEDIM individual particles starts here
         ions.resize(1);
         for (int spec{0}; spec < 1; spec++)
         {
             ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
         }
 
-        const int numParticles{GEMPIC_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
+        const int numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
 
-        amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions;
+        amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
         amrex::Array<amrex::Real, numParticles> weights;
 
         // particles on edges or faces both works, although below implementation is with particles
         // on edges
-        amrex::Vector<amrex::Real> offset[GEMPIC_SPACEDIM] = {
+        amrex::Vector<amrex::Real> offset[AMREX_SPACEDIM] = {
             AMREX_D_DECL({AMREX_D_DECL(0.5, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.5, 0.0)},
                          {AMREX_D_DECL(0.0, 0.0, 0.5)})};
 
         int i{0}, j{0}, k{0};
         const auto dx{infra.cell_size_array()};
 
-        for (int ndir = 0; ndir < GEMPIC_SPACEDIM; ++ndir)
+        for (int ndir = 0; ndir < AMREX_SPACEDIM; ++ndir)
         {
             GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
                                 for (k = 0; k < n; k++))
 
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> loc = {AMREX_D_DECL(
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {AMREX_D_DECL(
                     infra.geometry().ProbLo(xDir) + (i + offset[ndir][xDir]) * dx[xDir],
                     infra.geometry().ProbLo(yDir) + (j + offset[ndir][yDir]) * dx[yDir],
                     infra.geometry().ProbLo(zDir) + (k + offset[ndir][zDir]) * dx[zDir])};
@@ -188,7 +188,7 @@ public:
                     AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
                 velocities[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
                 weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    (1.0 / GEMPIC_SPACEDIM) * infra.cell_volume();
+                    (1.0 / AMREX_SPACEDIM) * infra.cell_volume();
             GEMPIC_D_LOOP_END
         }
 
@@ -196,7 +196,7 @@ public:
                                                   velocities);
 
         ions[0]->Redistribute();
-        // Adding GEMPIC_SPACEDIM individual particles ends here
+        // Adding AMREX_SPACEDIM individual particles ends here
 
         // Computed fields
         DeRhamField<Grid::primal, Space::edge> E(deRham);

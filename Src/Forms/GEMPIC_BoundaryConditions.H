@@ -65,7 +65,7 @@ inline amrex::Vector<amrex::BCRec> load_boundary_condition (amrex::Geometry geom
                                                             std::string diagName)
 {
     int numNonPeriodic = 0;
-    for (int dim = 0; dim < GEMPIC_SPACEDIM; ++dim)
+    for (int dim = 0; dim < AMREX_SPACEDIM; ++dim)
     {
         numNonPeriodic += geom.isPeriodic(dim) ? 0 : 1;
     }
@@ -214,11 +214,11 @@ struct BoundaryConditions
         const int i = iv[xDir];
         const int ilo = domainLo[xDir];
         const int ihi = domainHi[xDir];
-#if GEMPIC_SPACEDIM >= 2
+#if AMREX_SPACEDIM >= 2
         const int j = iv[yDir];
         const int jlo = domainLo[yDir];
         const int jhi = domainHi[yDir];
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
         const int k = iv[zDir];
         const int klo = domainLo[zDir];
         const int khi = domainHi[zDir];
@@ -268,7 +268,7 @@ struct BoundaryConditions
             }
         }
 
-#if GEMPIC_SPACEDIM >= 2
+#if AMREX_SPACEDIM >= 2
         // Sides in y-direction
         if (j < jlo)
         {
@@ -307,7 +307,7 @@ struct BoundaryConditions
             }
         }
 
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
         // Sides in z-direction
         if (k < klo)
         {

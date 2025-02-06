@@ -39,8 +39,8 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
     amrex::ParallelFor(np,
                        [=] AMREX_GPU_DEVICE(long pp)
                        {
-                           amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-                           for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+                           amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+                           for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
                            {
                                position[d] = partData[pp].pos(d);
                            }
@@ -143,7 +143,7 @@ TEST_F(DepositRhoTest, NullTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
 
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -174,8 +174,8 @@ TEST_F(DepositRhoTest, NullTest)
         EXPECT_EQ(1, weight[0]);
 
         amrex::Array4<amrex::Real> const& rhoarr{m_rhoPtr->m_data[pti].array()};
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }
@@ -198,16 +198,15 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
     auto dx = m_infra.geometry().CellSizeArray();
 
     // Add particle in the middle of final cell to check periodic boundary conditions
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 0.5 * dx[xDir],
                        m_infra.m_geom.ProbHi(yDir) - 0.5 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{3};
-    // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be
-    // non-zero and receiving 1/2^GEMPIC_SPACEDIM the weight of the particle (3)
+    // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be
+    // non-zero and receiving 1/2^AMREX_SPACEDIM the weight of the particle (3)
     const auto charge{m_particleGroup[0]->get_charge()};
-    amrex::Real expectedVal{charge * weights[0] / m_infra.cell_volume() *
-                            pow(0.5, GEMPIC_SPACEDIM)};
+    amrex::Real expectedVal{charge * weights[0] / m_infra.cell_volume() * pow(0.5, AMREX_SPACEDIM)};
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -235,7 +234,7 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
     }
     m_rhoPtr->post_particle_loop_sync();
 
-    // Maximum occurs evenly split between 2^GEMPIC_SPACEDIM nodes. The sum is still 1.
+    // Maximum occurs evenly split between 2^AMREX_SPACEDIM nodes. The sum is still 1.
     EXPECT_EQ(expectedVal, m_rhoPtr->m_data.norm0());
     EXPECT_EQ(weights[0], m_rhoPtr->m_data.norm1(0, m_infra.m_geom.periodicity()));
 }
@@ -247,7 +246,7 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
     const int numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
 
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.25 * dx[xDir],
                        m_infra.m_geom.ProbLo(yDir) + 0.25 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 0.25 * dx[zDir])}}};
@@ -265,7 +264,7 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, m_infra, m_rhoPtr->m_data,
                                                                 m_particleGroup[0]->get_charge());
 
-        // Expect the 2^GEMPIC_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
+        // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
         // non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the
         // particle (1)
         check_field(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
@@ -280,15 +279,15 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
                      { return (GEMPIC_D_ADD(a * a, b * b, c * c) == 2); }},
                     // and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the
                     // particle (1)
-                    {pow(0.75, GEMPIC_SPACEDIM), pow(0.25, GEMPIC_SPACEDIM),
-                     0.25 * pow(0.75, GEMPIC_SPACEDIM - 1), pow(0.25, GEMPIC_SPACEDIM - 1) * 0.75},
+                    {pow(0.75, AMREX_SPACEDIM), pow(0.25, AMREX_SPACEDIM),
+                     0.25 * pow(0.75, AMREX_SPACEDIM - 1), pow(0.25, AMREX_SPACEDIM - 1) * 0.75},
                     // with the remaining entries being 0
                     0);
     }
     m_rhoPtr->post_particle_loop_sync();
 
-    // Maximum occurs on node (0, 0, 0) with value (3/4)^GEMPIC_SPACEDIM. The sum is still 1.
-    EXPECT_EQ(pow(0.75, GEMPIC_SPACEDIM), m_rhoPtr->m_data.norm0());
+    // Maximum occurs on node (0, 0, 0) with value (3/4)^AMREX_SPACEDIM. The sum is still 1.
+    EXPECT_EQ(pow(0.75, AMREX_SPACEDIM), m_rhoPtr->m_data.norm0());
     EXPECT_EQ(1, m_rhoPtr->m_data.norm1(0, m_infra.m_geom.periodicity()));
 }
 
@@ -297,14 +296,14 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
 {
     const int numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
          {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 5.5 * dx[xDir],
                        m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 5.5 * dx[zDir])}}};
 
     amrex::Array<amrex::Real, numParticles> weights{1, 3};
-    amrex::Real expectedValA{1}, expectedValB{3 * pow(0.5, GEMPIC_SPACEDIM)};
+    amrex::Real expectedValA{1}, expectedValB{3 * pow(0.5, AMREX_SPACEDIM)};
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -345,15 +344,15 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
 {
     const int numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)},
          {AMREX_D_DECL(m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir],
                        m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 3};
 
-    amrex::Real expectedValA{1 + 3 * pow(0.5, GEMPIC_SPACEDIM)};
-    amrex::Real expectedValB{3 * pow(0.5, GEMPIC_SPACEDIM)};
+    amrex::Real expectedValA{1 + 3 * pow(0.5, AMREX_SPACEDIM)};
+    amrex::Real expectedValB{3 * pow(0.5, AMREX_SPACEDIM)};
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
@@ -387,9 +386,9 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
 {
     const int numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> pPos{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> pPos{
         {{AMREX_D_DECL(0, 0, 0)}}};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> ePos{{{AMREX_D_DECL(
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> ePos{{{AMREX_D_DECL(
         m_infra.m_geom.ProbLo(xDir) + 0.5 * dx[xDir], m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
         m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> pWeights{1};
@@ -404,8 +403,8 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
     const auto pCharge{m_particleGroup[pSpec]->get_charge()};
     const auto eCharge{m_particleGroup[eSpec]->get_charge()};
 
-    amrex::Real expectedValA{pCharge + eCharge * 3 * pow(0.5, GEMPIC_SPACEDIM)};
-    amrex::Real expectedValB{eCharge * 3 * pow(0.5, GEMPIC_SPACEDIM)};
+    amrex::Real expectedValA{pCharge + eCharge * 3 * pow(0.5, AMREX_SPACEDIM)};
+    amrex::Real expectedValB{eCharge * 3 * pow(0.5, AMREX_SPACEDIM)};
 
     for (int spec{0}; spec < s_numSpec; spec++)
     {

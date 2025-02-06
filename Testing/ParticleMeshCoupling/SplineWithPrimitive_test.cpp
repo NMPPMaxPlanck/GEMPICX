@@ -25,9 +25,9 @@ template <int degX, int degY, int degZ>
 class MockSpline : public ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ>
 {
 public:
-    MockSpline(amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const position,
-               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &plo,
-               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const &dxInverse) :
+    MockSpline(amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const position,
+               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &plo,
+               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dxInverse) :
         ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ>(position, plo, dxInverse)
     {
     }
@@ -107,7 +107,7 @@ TEST_F(SplineWithPrimitiveTest, SplineConstructorTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -123,13 +123,13 @@ TEST_F(SplineWithPrimitiveTest, SplineConstructorTest)
         const auto &particles{pti.GetArrayOfStructs()};
         const auto *const partData{particles().data()};
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
             position, m_infra.m_plo, dxi);
 
@@ -159,7 +159,7 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -175,8 +175,8 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
         const auto &particles{pti.GetArrayOfStructs()};
         const auto *const partData{particles().data()};
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }
@@ -190,12 +190,12 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
 
         spline.template update_1d_splines<xDir>(1, 1, 1);
         EXPECT_EQ(1., spline.m_primitiveNew[xDir][0]);
-        if constexpr (GEMPIC_SPACEDIM > 1)
+        if constexpr (AMREX_SPACEDIM > 1)
         {
             spline.template update_1d_splines<yDir>(1, 1, 1);
             EXPECT_EQ(1., spline.m_primitiveNew[yDir][0]);
         }
-        if constexpr (GEMPIC_SPACEDIM == 3)
+        if constexpr (AMREX_SPACEDIM == 3)
         {
             spline.template update_1d_splines<zDir>(1, 1, 1);
             EXPECT_EQ(1., spline.m_primitiveNew[zDir][0]);
@@ -212,7 +212,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
 {
     // Adding one particle at lower left corner of domain
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -228,8 +228,8 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
         const auto &particles{pti.GetArrayOfStructs()};
         const auto *const partData{particles().data()};
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }
@@ -269,12 +269,12 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
  * @brief Test the compute_primitive_difference method for direction yDir and degree one
  * @details Verify values for different dx and indices
  */
-#if GEMPIC_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
 TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -290,8 +290,8 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
         const auto &particles{pti.GetArrayOfStructs()};
         const auto *const partData{particles().data()};
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }
@@ -332,12 +332,12 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
  * @brief Test the compute_primitive_difference method for direction xDir and degree two
  * @details Verify values for different dx and indices
  */
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
 TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
 {
     // Adding particle at lower left corner of computational domain
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -353,8 +353,8 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
         const auto &particles{pti.GetArrayOfStructs()};
         const auto *const partData{particles().data()};
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }
@@ -405,7 +405,7 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
 {
     // Adding particle to one cell
     const int numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles> positions{
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
@@ -421,8 +421,8 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
         const auto &particles{pti.GetArrayOfStructs()};
         const auto *const partData{particles().data()};
 
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> position;
-        for (unsigned int d{0}; d < GEMPIC_SPACEDIM; ++d)
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
+        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
         {
             position[d] = partData[0].pos(d);
         }

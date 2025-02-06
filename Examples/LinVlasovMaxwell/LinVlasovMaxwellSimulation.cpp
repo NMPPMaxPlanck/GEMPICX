@@ -151,10 +151,10 @@ int main (int argc, char *argv[])
                         np,
                         [=] AMREX_GPU_DEVICE(long pp)
                         {
-                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
                             amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
 
-                            for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                             {
                                 pos[d] = particles[pp].pos(d);
                             }
@@ -248,11 +248,11 @@ int main (int argc, char *argv[])
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
                                 // Local arrays for particle position and velocities
-                                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
                                 amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
-                                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                 {
                                     pos[d] = particles[pp].pos(d);
                                 }
@@ -275,7 +275,7 @@ int main (int argc, char *argv[])
                                     chargeMass, sqrtf0[pp] * charge * weight[pp], dt);
 
                                 // Write position and velocities
-                                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                 {
                                     particles[pp].pos(d) = pos[d];
                                 }
@@ -326,11 +326,11 @@ int main (int argc, char *argv[])
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
                                 // Local arrays for particle position and velocities
-                                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
                                 amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
-                                for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                 {
                                     pos[d] = particles[pp].pos(d);
                                 }

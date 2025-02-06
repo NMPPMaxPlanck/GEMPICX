@@ -24,7 +24,7 @@ namespace Impl
 using parmParseParameterType =
     std::variant<bool, int, long, long long, float, double, std::string, amrex::Box>;
 using parmParseVectorType = std::vector<parmParseParameterType>;
-using parmParseArrayType = std::array<parmParseParameterType, GEMPIC_SPACEDIM>;
+using parmParseArrayType = std::array<parmParseParameterType, AMREX_SPACEDIM>;
 using parmParseType = std::variant<parmParseParameterType, parmParseVectorType, parmParseArrayType>;
 
 /**
@@ -90,7 +90,7 @@ void set_shared_param (parmParseType& sharedParam, const amrex::Vector<T>& value
  * @param value : Values of the parameter
  */
 template <typename T>
-void set_shared_param (parmParseType& sharedParam, const std::array<T, GEMPIC_SPACEDIM>& value)
+void set_shared_param (parmParseType& sharedParam, const std::array<T, AMREX_SPACEDIM>& value)
 {
     BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::array)");
     parmParseArrayType tmp;
@@ -99,7 +99,7 @@ void set_shared_param (parmParseType& sharedParam, const std::array<T, GEMPIC_SP
 #else
     auto* tmpIt{tmp.begin()};
 #endif
-    for (size_t i{0}; i < GEMPIC_SPACEDIM; ++i)
+    for (size_t i{0}; i < AMREX_SPACEDIM; ++i)
     {
         *tmpIt = value[i];
         ++tmpIt;
@@ -164,11 +164,11 @@ void get_shared_param (amrex::Vector<T>& variable, const parmParseType& sharedPa
  * @param sharedParam : Shared parameter to load
  */
 template <typename T>
-void get_shared_param (std::array<T, GEMPIC_SPACEDIM>& variable, const parmParseType& sharedParam)
+void get_shared_param (std::array<T, AMREX_SPACEDIM>& variable, const parmParseType& sharedParam)
 {
     BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::array)");
     auto tmp = std::get<parmParseArrayType>(sharedParam);
-    for (size_t i{0}; i < GEMPIC_SPACEDIM; i++)
+    for (size_t i{0}; i < AMREX_SPACEDIM; i++)
     {
         variable[i] = std::get<T>(tmp[i]);
     }

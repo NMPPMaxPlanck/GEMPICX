@@ -118,8 +118,8 @@ int main (int argc, char *argv[])
                         np,
                         [=] AMREX_GPU_DEVICE(long pp)
                         {
-                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                            for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                             {
                                 positionParticle[d] = particles[pp].pos(d);
                             }
@@ -191,8 +191,8 @@ int main (int argc, char *argv[])
                                            {
                                                // Read out particle position and compute according
                                                // splines
-                                               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                               for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                                               for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                                {
                                                    pos[d] = particles[pp].pos(d);
                                                }
@@ -212,7 +212,7 @@ int main (int argc, char *argv[])
                                                    pos, vel, infra, spline, infra.cell_size_array(),
                                                    jA, bA, chargeOverMass, chargeWeight, dt);
 
-                                               for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
+                                               for (int xd = 0; xd < AMREX_SPACEDIM; xd++)
                                                {
                                                    particles[pp].pos(xd) = pos[xd];
                                                }
@@ -262,8 +262,8 @@ int main (int argc, char *argv[])
                         amrex::ParallelFor(np,
                                            [=] AMREX_GPU_DEVICE(long pp)
                                            {
-                                               amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                                               for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                                               for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                                {
                                                    pos[d] = particles[pp].pos(d);
                                                }

@@ -44,8 +44,8 @@ void update_rho (ComputationalDomain& infra,
             amrex::ParallelFor(np,
                                [=] AMREX_GPU_DEVICE(long pp)
                                {
-                                   amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> positionParticle;
-                                   for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                    {
                                        positionParticle[d] = particles[pp].pos(d);
                                    }
@@ -106,7 +106,7 @@ protected:
         amrex::Real mass{1.0};
         pp.add("Particle.ions.mass", mass);
         int nPartPerCell{100};
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
         nPartPerCell = 1000;
 #endif
         pp.add("Particle.ions.nPartPerCell", nPartPerCell);
@@ -128,11 +128,11 @@ protected:
         std::string Bx = "2 * cos(kvarx * x)";
         std::string By = "1.0";
         std::string Bz = "1.0";
-#if GEMPIC_SPACEDIM == 2
+#if AMREX_SPACEDIM == 2
         Ex = "cos(kvarx * x)";
         Ey = "cos(kvary * y)";
         Ez = "cos(kvarx * x) * cos(kvary * y)";
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
         Ex = "cos(kvarx * x)";
         Ey = "0.7071";
         Ez = "0.5";

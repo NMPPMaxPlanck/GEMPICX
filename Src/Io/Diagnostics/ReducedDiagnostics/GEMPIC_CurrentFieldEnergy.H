@@ -128,7 +128,7 @@ public:
 private:
     ComputeMethod m_computeMethod;
     amrex::Parser m_weightParser;
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> m_weightFunc;
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> m_weightFunc;
     /**
      * Selects computation method based on missing fields and the input file switch
      * compute_missing_fields

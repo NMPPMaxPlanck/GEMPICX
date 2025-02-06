@@ -67,25 +67,25 @@ namespace
 void compute_analytical_scalar_function_parallel_for (
     amrex::MFIter &mfi,
     ComputationalDomain &mInfra,
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> &func,
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> &func,
     amrex::MultiFab &analyticalPointValues,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> *const evalShiftGpuPtr,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> *const evalShiftGpuPtr,
     size_t nValues)
 {
     const amrex::Box &bx = mfi.validbox();
     amrex::Array4<amrex::Real> const &analyticalPointValuesMF = analyticalPointValues[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     ParallelFor(bx, nValues,
                 [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
                 {
                     // Compute the position of the point i, j, k
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = {AMREX_D_DECL(
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {AMREX_D_DECL(
                         r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
-                    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {
                         AMREX_D_DECL(rr[xDir] + evalShiftGpuPtr[n][xDir] * dr[xDir],
                                      rr[yDir] + evalShiftGpuPtr[n][yDir] * dr[yDir],
                                      rr[zDir] + evalShiftGpuPtr[n][zDir] * dr[zDir])};
@@ -99,17 +99,17 @@ void compute_analytical_scalar_function_parallel_for (
 void compute_analytical_vector_function_parallel_for (
     amrex::MFIter &mfi,
     ComputationalDomain &mInfra,
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> *const funcPtr,
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> *const funcPtr,
     amrex::MultiFab &analyticalPointValues,
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> *const evalShiftGpuPtr,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> *const evalShiftGpuPtr,
     size_t nEvals,
     int nComp)
 {
     const amrex::Box &bx = mfi.validbox();
     amrex::Array4<amrex::Real> const &analyticalPointValuesMF = analyticalPointValues[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     ParallelFor(
         bx, nComp,
@@ -118,10 +118,10 @@ void compute_analytical_vector_function_parallel_for (
             for (int evalInd = 0; evalInd < nEvals; ++evalInd)
             {
                 // Compute the position of the point i, j, k
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> rr = {AMREX_D_DECL(
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {AMREX_D_DECL(
                     r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {
                     AMREX_D_DECL(rr[xDir] + evalShiftGpuPtr[evalInd][xDir] * dr[xDir],
                                  rr[yDir] + evalShiftGpuPtr[evalInd][yDir] * dr[yDir],
                                  rr[zDir] + evalShiftGpuPtr[evalInd][zDir] * dr[zDir])};
@@ -194,15 +194,15 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
 
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalForm = "x";
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const std::string analyticalForm = "x + y";
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const std::string analyticalForm = "x + y + z";
 #endif
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -231,15 +231,15 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     amrex::MultiFab analyticalPointValues(ba, dm, nValues, nghost);
 
     // Compute the interpolations
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
-    amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShift = {evalShiftArray1,
-                                                                              evalShiftArray2};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShift = {evalShiftArray1,
+                                                                             evalShiftArray2};
 
     deRham->eval_form(form, evalShift, pointValues);
 
     // Copy evalShift to GPU array
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nValues};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
@@ -275,24 +275,24 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     int nComp{2};
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham, nComp);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Vector<std::string> analyticalform = {
         "x",
         "-x",
     };
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const amrex::Vector<std::string> analyticalform = {
         "x + y",
         "-x - y",
     };
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const amrex::Vector<std::string> analyticalform = {
         "x + y + z",
         "-x - y - z",
     };
 #endif
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Vector<amrex::ParserExecutor<nVar>> funcs(nComp);
     amrex::Vector<amrex::Parser> parser(nComp);
 
@@ -324,15 +324,15 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     amrex::MultiFab analyticalPointValues(ba, dm, nValues * nComp, nghost);
 
     // Compute the interpolations
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
-    amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShift = {evalShiftArray1,
-                                                                              evalShiftArray2};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShift = {evalShiftArray1,
+                                                                             evalShiftArray2};
 
     deRham->eval_form(form, evalShift, pointValues);
 
     // Copy evalShift to GPU array
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nValues};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
@@ -381,19 +381,19 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
 
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalform = {
         "x",
         "x",
         "x",
     };
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalform = {
         "x + y",
         "x + y",
         "x + y",
     };
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalform = {
         "x + y + z",
         "x + y + z",
@@ -401,7 +401,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     };
 #endif
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> func;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -436,13 +436,13 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     };
 
     // Compute the interpolations
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
-    amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShift = {evalShiftArray1,
-                                                                              evalShiftArray2};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShift = {evalShiftArray1,
+                                                                             evalShiftArray2};
 
     // Copy evalShift to GPU array
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nValues};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
@@ -505,24 +505,24 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     int nComp{2};
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham, nComp);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Vector<amrex::Array<std::string, 3>> analyticalform{{
         {"x", "x", "x"},
         {"-x", "-x", "-x"},
     }};
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const amrex::Vector<amrex::Array<std::string, 3>> analyticalform{{
         {"x + y", "x + y", "x + y"},
         {"-x  - y", "-x  - y", "-x  - y"},
     }};
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const amrex::Vector<amrex::Array<std::string, 3>> analyticalform{{
         {"x + y + z", "x + y + z", "x + y + z"},
         {"-x  - y - z", "-x  - y - z", "-x  - y - z"},
     }};
 #endif
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Vector<amrex::Array<amrex::ParserExecutor<nVar>, 3>> funcs(nComp);
     amrex::Vector<amrex::Array<amrex::Parser, 3>> parser(nComp);
 
@@ -560,13 +560,13 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     };
 
     // Compute the interpolations
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
-    amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
-    amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShift = {evalShiftArray1,
-                                                                              evalShiftArray2};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray1{{AMREX_D_DECL(0.25, 0.25, 0.25)}};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> evalShiftArray2{{AMREX_D_DECL(0.75, 0.75, 0.75)}};
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShift = {evalShiftArray1,
+                                                                             evalShiftArray2};
 
     // Copy evalShift to GPU array
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>> evalShiftGpu{nValues};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();

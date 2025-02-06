@@ -17,7 +17,7 @@ void Gempic::TimeLoop::apply_h_j (
     DeRhamField<Grid::dual, Space::face>& J,
     DeRhamField<Grid::dual, Space::face>& D,
     std::shared_ptr<FDDeRhamComplex> deRham,
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBEquilibrium,
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcBEquilibrium,
     amrex::Real dt)
 {
     for (amrex::MFIter mfi(J.m_data[xDir], true); mfi.isValid(); ++mfi)
@@ -33,21 +33,21 @@ void Gempic::TimeLoop::apply_h_j (
         amrex::Array4<amrex::Real> const& Jy = (J.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real> const& Jz = (J.m_data[zDir])[mfi].array();
 
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = deRham->m_geom.CellSizeArray();
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dxi = deRham->m_geom.InvCellSizeArray();
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = deRham->get_prob_lo();
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = deRham->m_geom.CellSizeArray();
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = deRham->m_geom.InvCellSizeArray();
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = deRham->get_prob_lo();
 
         ParallelFor(
             bx,
             [=] AMREX_GPU_DEVICE(int i, int j, int k)
             {
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
                 amrex::GpuArray<amrex::Real, 3> jVec = {Jx(i, j, k) * dx[xDir], Jy(i, j, k),
                                                         Jz(i, j, k)};
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
                 amrex::GpuArray<amrex::Real, 3> jVec = {Jx(i, j, k) * dx[xDir],
                                                         Jy(i, j, k) * dx[yDir], Jz(i, j, k)};
-#elif GEMPIC_SPACEDIM == 3
+#elif AMREX_SPACEDIM == 3
                 amrex::GpuArray<amrex::Real, 3> jVec = {
                     Jx(i, j, k) * dx[xDir], Jy(i, j, k) * dx[yDir], Jz(i, j, k) * dx[zDir]};
 #endif
@@ -57,7 +57,7 @@ void Gempic::TimeLoop::apply_h_j (
                 amrex::GpuArray<amrex::Real, 3> dVecHat = {0., 0., 0.};
 
                 // Compute position of dual cell center/ primal node for evaluating magnetic field
-                amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                     r0[xDir] + i * dx[xDir], r0[yDir] + j * dx[yDir], r0[zDir] + k * dx[zDir])};
                 amrex::GpuArray<amrex::Real, 3> bZero;
                 bZero[xDir] = funcBEquilibrium[xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), 0.);
@@ -143,7 +143,7 @@ void Gempic::TimeLoop::apply_h_j (
                         }
                     }
 
-#if GEMPIC_SPACEDIM == 1
+#if AMREX_SPACEDIM == 1
                     Jx(i, j, k) = jVec[xDir] * dxi[xDir];
                     Jy(i, j, k) = jVec[yDir];
                     Jz(i, j, k) = jVec[zDir];
@@ -151,7 +151,7 @@ void Gempic::TimeLoop::apply_h_j (
                     Dx(i, j, k) -= dVec[xDir] * dxi[xDir];
                     Dy(i, j, k) -= dVec[yDir];
                     Dz(i, j, k) -= dVec[zDir];
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
                     Jx(i, j, k) = jVec[xDir] * dxi[xDir];
                     Jy(i, j, k) = jVec[yDir] * dxi[yDir];
                     Jz(i, j, k) = jVec[zDir];
@@ -159,7 +159,7 @@ void Gempic::TimeLoop::apply_h_j (
                     Dx(i, j, k) -= dVec[xDir] * dxi[xDir];
                     Dy(i, j, k) -= dVec[yDir] * dxi[yDir];
                     Dz(i, j, k) -= dVec[zDir];
-#elif GEMPIC_SPACEDIM == 3
+#elif AMREX_SPACEDIM == 3
                     Jx(i, j, k) = jVec[xDir] * dxi[xDir];
                     Jy(i, j, k) = jVec[yDir] * dxi[yDir];
                     Jz(i, j, k) = jVec[zDir] * dxi[zDir];

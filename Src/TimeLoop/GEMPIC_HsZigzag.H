@@ -93,7 +93,7 @@ public:
 
             // start treat particles
             // Deposit particles in J and push particles: H_p = H_p1 + H_p2 + H_p3
-            for (int comp = 0; comp < GEMPIC_SPACEDIM; ++comp)
+            for (int comp = 0; comp < AMREX_SPACEDIM; ++comp)
             {
                 (J.m_data[comp]).setVal(0.0, 0);
             }
@@ -149,8 +149,8 @@ public:
                             amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
                             // Read out particle position
-                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                            for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                             {
                                 pos[d] = particles[pp].pos(d);
                             }
@@ -174,7 +174,7 @@ public:
                                 pos, vel, infra, spline, bfields, infra.geometry().CellSizeArray(),
                                 jA, bA, chargemass, chargeWeight, 0.5 * dt);
 
-#if GEMPIC_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
                             if constexpr (vdim > 1)
                             {
                                 // push x2
@@ -184,7 +184,7 @@ public:
                                     chargeWeight, 0.5 * dt);
                             }
 #endif
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
                             if constexpr (vdim > 2)
                             {
                                 // push x3
@@ -195,7 +195,7 @@ public:
                             }
 #endif
 
-#if GEMPIC_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
                             if constexpr (vdim > 1)
                             {
                                 // push x2
@@ -211,11 +211,11 @@ public:
                                 pos, vel, infra, spline, bfields, infra.geometry().CellSizeArray(),
                                 jA, bA, chargemass, chargeWeight, 0.5 * dt);
 
-                            for (int xd = 0; xd < GEMPIC_SPACEDIM; xd++)
+                            for (int xd = 0; xd < AMREX_SPACEDIM; xd++)
                             {
                                 particles[pp].pos(xd) = pos[xd];
                             }
-                            // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(GEMPIC_SPACEDIM+vdim+2)]);
+                            // std::copy(pos.begin(),pos.end(),&particles.data()[pp*(AMREX_SPACEDIM+vdim+2)]);
                             // for (int vd=0;vd<vdim; vd++)
                             //    particle_attributes->GetRealData(vd)[pp] = vel[vd];
                             velx[pp] = vel[xDir];
@@ -266,8 +266,8 @@ public:
                         np,
                         [=] AMREX_GPU_DEVICE(long pp)
                         {
-                            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> pos;
-                            for (unsigned int d = 0; d < GEMPIC_SPACEDIM; ++d)
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                             {
                                 pos[d] = particles[pp].pos(d);
                             }

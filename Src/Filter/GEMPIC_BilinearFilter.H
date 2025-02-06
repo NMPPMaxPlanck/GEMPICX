@@ -53,7 +53,7 @@ public:
     // Do a compensation step?
     bool m_compensate{false};
 
-    amrex::Array<int, GEMPIC_SPACEDIM> m_nPass{AMREX_D_DECL(1, 1, 1)};
+    amrex::Array<int, AMREX_SPACEDIM> m_nPass{AMREX_D_DECL(1, 1, 1)};
 };
 }  // namespace Gempic::Filter
 #endif  // #ifndef GEMPIC_BILIN_FILTER_H_

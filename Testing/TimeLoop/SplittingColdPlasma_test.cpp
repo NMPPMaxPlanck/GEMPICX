@@ -69,7 +69,7 @@ TEST_F(SplittingColdPlasmaTest, RotationZAxis)
         "0",
         "0",
     };
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcJ;
     amrex::Array<amrex::Parser, 3> parserB;
@@ -132,7 +132,7 @@ TEST_F(SplittingColdPlasmaTest, RotationGeneralAxis)
         "-1",
         "0",
     };
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcJ;
     amrex::Array<amrex::Parser, 3> parserB;

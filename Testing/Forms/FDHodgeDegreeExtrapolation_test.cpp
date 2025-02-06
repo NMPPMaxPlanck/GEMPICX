@@ -44,21 +44,21 @@ double hodge_one_two_error (const int n, int maxSplineDegree = 3)
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> func = {
         "pi = 3.141592653589793; (cos(2*pi*x) + sin(2*pi*x - 0.2))",
         "pi = 3.141592653589793; (sin(2*pi*x) + cos(2*pi*x - 0.2))",
         "pi = 3.141592653589793; (cos(2*2*pi*x) + sin(2*pi*x - 0.2))",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> func = {
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; (sin(2*pi*x)*cos(2*pi*y) + cos(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; (cos(2*2*pi*x)*cos(2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> func = {
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))",
@@ -70,13 +70,13 @@ double hodge_one_two_error (const int n, int maxSplineDegree = 3)
 #endif
 
     // project f to a primalOneForm or a primalTwoForm
-    amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcP;
+    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcP;
     amrex::Array<amrex::Parser, 3> parser;
     for (int i = 0; i < 3; ++i)
     {
         parser[i].define(func[i]);
         parser[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        funcP[i] = parser[i].compile<GEMPIC_SPACEDIM + 1>();
+        funcP[i] = parser[i].compile<AMREX_SPACEDIM + 1>();
     }
 
     double e = 0;
@@ -115,26 +115,26 @@ double hodge_zero_three_error (const int n, int maxSplineDegree = 3)
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string func = "pi = 3.141592653589793; (cos(2*pi*x) + sin(2*pi*x - 0.2))";
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string func =
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))";
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string func =
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))";
 #endif
 
     // project f to a primalZeroForm or a primalThreeForm
-    amrex::ParserExecutor<GEMPIC_SPACEDIM + 1> funcP;
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> funcP;
     amrex::Parser parser;
 
     parser.define(func);
     parser.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-    funcP = parser.compile<GEMPIC_SPACEDIM + 1>();
+    funcP = parser.compile<AMREX_SPACEDIM + 1>();
 
     DeRhamField<Grid::primal, space> primalForm(deRham);
     DeRhamField<Grid::dual, oppositeSpace<space>> dualForm(deRham);
@@ -236,7 +236,7 @@ TYPED_TEST_SUITE(FDHodgeDegreeExtrapolationTest2, OneTwoForms, NameGenerator);
 TYPED_TEST(FDHodgeDegreeExtrapolationTest, ZeroThreeFormTest)
 {
     int coarse = 64, fine = 128;
-    if (GEMPIC_SPACEDIM == 3)
+    if (AMREX_SPACEDIM == 3)
     {
         coarse /= 4;
         fine /= 4;
@@ -257,7 +257,7 @@ TYPED_TEST(FDHodgeDegreeExtrapolationTest, ZeroThreeFormTest)
 TYPED_TEST(FDHodgeDegreeExtrapolationTest2, OneTwoFormTest)
 {
     int coarse = 64, fine = 128;
-    if (GEMPIC_SPACEDIM == 3)
+    if (AMREX_SPACEDIM == 3)
     {
         coarse /= 4;
         fine /= 4;

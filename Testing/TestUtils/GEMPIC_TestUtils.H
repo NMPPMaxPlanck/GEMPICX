@@ -14,7 +14,7 @@ namespace Gempic::Test::Utils
 // Nghost helper function
 inline int init_n_ghost (int degX, int degY, int degZ)
 {
-    amrex::Array<int, GEMPIC_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
+    amrex::Array<int, AMREX_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
     const int maxDeg{*(std::max_element(degs.begin(), degs.end()))};
     return maxDeg;
 }
@@ -40,7 +40,7 @@ void add_single_particles (
     Gempic::Particle::ParticleGroups<vdim>* particleGroup,
     const Gempic::ComputationalDomain& infra,
     const amrex::Array<amrex::Real, numParticles>& weights,
-    const amrex::Array<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>, numParticles>& positions,
+    const amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles>& positions,
     const amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>& velocities = {})
 {
     amrex::Array<bool, numParticles> checklist{false};
@@ -56,7 +56,7 @@ void add_single_particles (
         for (int i{0}; i < numParticles; i++)
         {
             // make sure particle is within box (and not previously added? Why?)
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx = infra.geometry().CellSizeArray();
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = infra.geometry().CellSizeArray();
             if (!checklist[i] AMREX_D_TERM(&&(lo[xDir] * dx[xDir] <= positions[i][xDir]) &&
                                                (positions[i][xDir] < (hi[xDir] + 1) * dx[xDir]),
                                            &&(lo[yDir] * dx[yDir] <= positions[i][yDir]) &&
@@ -81,10 +81,10 @@ void add_single_particles (
     if (result1 != std::end(checklist))
     {
         std::cerr << "Invalid position given to add_particle function:\n"
-                  << string_array(positions[idx], GEMPIC_SPACEDIM)
+                  << string_array(positions[idx], AMREX_SPACEDIM)
                   << " is out of simulation bounds.\nLower: "
-                  << string_array(infra.m_geom.ProbLo(), GEMPIC_SPACEDIM)
-                  << "\nUpper: " << string_array(infra.m_geom.ProbHi(), GEMPIC_SPACEDIM);
+                  << string_array(infra.m_geom.ProbLo(), AMREX_SPACEDIM)
+                  << "\nUpper: " << string_array(infra.m_geom.ProbHi(), AMREX_SPACEDIM);
     }
 }
 

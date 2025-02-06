@@ -43,10 +43,10 @@ inline amrex::Real gempic_norm (const amrex::MultiFab& multiF,
     if (p > 0)
     {
         result *= ((p == 2) ? (1.0 / sqrt(ifr.m_nCell[xDir])) : (1.0 / ifr.m_nCell[xDir]))
-#if (GEMPIC_SPACEDIM > 1)
+#if (AMREX_SPACEDIM > 1)
                   * ((p == 2) ? (1.0 / sqrt(ifr.m_nCell[yDir])) : (1.0 / ifr.m_nCell[yDir]))
 #endif
-#if (GEMPIC_SPACEDIM > 2)
+#if (AMREX_SPACEDIM > 2)
                   * ((p == 2) ? (1.0 / sqrt(ifr.m_nCell[zDir])) : (1.0 / ifr.m_nCell[zDir]))
 #endif
             ;

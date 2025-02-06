@@ -206,7 +206,7 @@ TYPED_TEST(SamplerTest, CompareMoments)
     amrex::Real mom2 = 0;
 
     // assuming constant vThermal functions (if they even exist);
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> location{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> location{AMREX_D_DECL(0.0, 0.0, 0.0)};
     amrex::Real vWeigth;
     for (int i = 0; i < vDim; i++)
     {

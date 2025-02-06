@@ -36,21 +36,21 @@ protected:
     ComputationalDomain m_infra;
 
 // Define analytical fields as string
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string m_analyticalScalarField = "sin(x)";
     const amrex::Array<std::string, 3> m_analyticalField = {
         "-cos(x)",
         "sin(x)",
         "-sin(x)",
     };
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const std::string m_analyticalScalarField = "sin(x + 2*y)";
     const amrex::Array<std::string, 3> m_analyticalField = {
         "-cos(x)*cos(y)",
         "sin(x)*cos(y)",
         "-sin(x)*sin(y)",
     };
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const std::string m_analyticalScalarField = "sin(x + 2*y - z)";
     const amrex::Array<std::string, 3> m_analyticalField = {
         "-cos(x)*cos(y)*sin(z)",
@@ -60,19 +60,19 @@ protected:
 #endif
 
     // Analytical grad Field
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> m_analyticalGradField = {
         "cos(x)",
         "0.",
         "0.",
     };
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> m_analyticalGradField = {
         "cos(x + 2*y)",
         "2*cos(x + 2*y)",
         "0.",
     };
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> m_analyticalGradField = {
         "cos(x + 2*y - z)",
         "2*cos(x + 2*y - z)",
@@ -81,19 +81,19 @@ protected:
 #endif
 
 // Analytical curlField
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> m_analyticalCurlField = {
         "0.",
         "cos(x)",
         "cos(x)",
     };
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> m_analyticalCurlField = {
         "-sin(x)*cos(y)",
         "cos(x)*sin(y)",
         "cos(x)*cos(y) - cos(x)*sin(y)",
     };
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> m_analyticalCurlField = {
         "-2*sin(x)*cos(y)*cos(z)",
         "-cos(x)*cos(y)*cos(z) + cos(x)*sin(y)*cos(z)",
@@ -102,11 +102,11 @@ protected:
 #endif
 
     // Analytical divField
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string m_analyticalDivField = "sin(x)";
-#elif (GEMPIC_SPACEDIM == 2)
+#elif (AMREX_SPACEDIM == 2)
     const std::string m_analyticalDivField = "sin(x)*cos(y) - sin(x)*sin(y)";
-#elif (GEMPIC_SPACEDIM == 3)
+#elif (AMREX_SPACEDIM == 3)
     const std::string m_analyticalDivField =
         "sin(x)*cos(y)*sin(z) - sin(x)*sin(y)*sin(z) + sin(x)*sin(y)*sin(z)";
 #endif
@@ -137,7 +137,7 @@ TEST_F(ExtDerivativesTest, Grad)
 
     // Test grad of field on primal complex
     //-------------------------------------
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> funcField;
     amrex::Parser parserField;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcGrad;
@@ -232,7 +232,7 @@ TEST_F(ExtDerivativesTest, Curl)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcField, funcCurl;
     amrex::Array<amrex::Parser, 3> parserField, parserCurl;
     for (int i = 0; i < 3; ++i)
@@ -312,7 +312,7 @@ TEST_F(ExtDerivativesTest, Div)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcField;
     amrex::ParserExecutor<nVar> funcDiv;
     amrex::Array<amrex::Parser, 3> parserField;

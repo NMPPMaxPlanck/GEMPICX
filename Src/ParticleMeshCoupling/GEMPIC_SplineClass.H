@@ -69,10 +69,9 @@ public:
      *  - dxInverse[Direction::yDir] == 1/dy
      *  - dxInverse[Direction::zDir] == 1/dz
     */
-    AMREX_GPU_HOST_DEVICE SplineBase (
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dxInverse)
+    AMREX_GPU_HOST_DEVICE SplineBase (const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
+                                      const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
+                                      const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse)
     {
         //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::SplineBase()");
         AMREX_D_TERM(
@@ -105,7 +104,7 @@ public:
      *
      *   \f$ S_i(x) > 0 \f$ for i = firstIndex[Direction] .. firstIndex[Direction] + deg - 1
      */
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> m_firstIndex;
+    amrex::GpuArray<int, AMREX_SPACEDIM> m_firstIndex;
 
     /**
      * @brief Values of a cell spline at the degrees of freedom to a particle position \f$ x_p \f$
@@ -119,7 +118,7 @@ public:
      *  s[i] = \f$ \mathrm{S}^{degX}\f$(firstIndex[dir] - (\f$ x_p \f$ - plo)/dx + i) = \f$
      * \mathrm{S}^{\mathrm{node}}_i(x_p) \f$
      */
-    amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg>, GEMPIC_SPACEDIM> m_cellSplineVals;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg>, AMREX_SPACEDIM> m_cellSplineVals;
 
     /**
      * @brief Values of a node spline at the degrees of freedom to a particle position \f$ x_p \f$
@@ -133,7 +132,7 @@ public:
      *  s[i] = \f$ S^{degX-1}\f$(firstIndex[dir] + 1/2 - (\f$ x_p \f$ - plo)/dx + i)
      * = dx * \f$ \mathrm{S}^{\mathrm{cell}}_{i}(x_p) \f$
      */
-    amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg + 1>, GEMPIC_SPACEDIM> m_nodeSplineVals;
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg + 1>, AMREX_SPACEDIM> m_nodeSplineVals;
 
     /**
      * //ToDo either change members and do not return anything or return something and be const.
@@ -535,16 +534,16 @@ public:
      *  - dxInverse[Direction::zDir] == 1/dz
      */
     AMREX_GPU_HOST_DEVICE SplineWithPrimitive (
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dxInverse) :
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
         m_firstIndexOld = {};
 
         m_primitiveNew = {};
 
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> refOffsets = {
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> refOffsets = {
             AMREX_D_DECL(this->template init_b_splines_at_positions<xDir>(position[xDir], plo[xDir],
                                                                           dxInverse[xDir]),
                          this->template init_b_splines_at_positions<yDir>(position[yDir], plo[yDir],
@@ -562,13 +561,13 @@ public:
      * @details At the end of the function initBSplinesAtPositions, firstIndex is the index of the
      * first field-coefficient corresponding to a non-zero spline at the particle location.
      */
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> m_firstIndexOld;
+    amrex::GpuArray<int, AMREX_SPACEDIM> m_firstIndexOld;
     // The actually first index of the two primitives
-    amrex::GpuArray<int, GEMPIC_SPACEDIM> m_firstIndexStart;
+    amrex::GpuArray<int, AMREX_SPACEDIM> m_firstIndexStart;
 
     using primitiveType =
         amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<degX, degY, degZ>::s_maxDeg>,
-                        GEMPIC_SPACEDIM>;
+                        AMREX_SPACEDIM>;
     /**
      * @brief primitive of the new spline
      */
@@ -587,7 +586,7 @@ public:
         oldFirst,
         newFirst,
     };
-    amrex::GpuArray<PrimitiveOrder, GEMPIC_SPACEDIM> m_primitiveOrders;
+    amrex::GpuArray<PrimitiveOrder, AMREX_SPACEDIM> m_primitiveOrders;
 
     /**
      * @brief sets the values of the contributing cell- and node-splines at the given particle
@@ -701,7 +700,7 @@ public:
      */
     template <Direction dir, Impl::PrimitiveDifferenceRegion region>
     AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx, const int index) const
     {
         //BL_PROFILE(
         //    "Gempic::ParticleMeshCoupling::SplineWithPrimitive::compute_primitive_difference()");
@@ -767,7 +766,7 @@ public:
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE inline amrex::Real compute_primitive_difference (
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dx, const int index) const
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx, const int index) const
     {
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
@@ -848,10 +847,10 @@ public:
      *  - dxInverse[dim] == 1/(dx * dy * dz)
      */
     AMREX_GPU_HOST_DEVICE SplineWithFirstDerivative (
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &position,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dxInverse,
-        const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> &dx) :
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse,
+        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dx) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
         m_cellSplineFirstDerivs = {};
@@ -870,14 +869,14 @@ public:
      * @brief first derivative of the cell spline
      */
     amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<degX, degY, degZ>::s_maxDeg>,
-                    GEMPIC_SPACEDIM>
+                    AMREX_SPACEDIM>
         m_cellSplineFirstDerivs;
 
     /**
      * @brief first derivative of the node spline
      */
     amrex::GpuArray<amrex::GpuArray<amrex::Real, SplineBase<degX, degY, degZ>::s_maxDeg + 1>,
-                    GEMPIC_SPACEDIM>
+                    AMREX_SPACEDIM>
         m_nodeSplineFirstDerivs;
 
     /**

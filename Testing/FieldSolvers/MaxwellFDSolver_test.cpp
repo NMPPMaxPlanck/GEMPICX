@@ -79,7 +79,7 @@ template <int hodgeDegree, int maxSplineDegree>
 void maxwellstrang_error (double &bError, double &dError, const int n)
 {
     // Analytical solutions in every direction
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalD = {
         "0.",
         "cos(x-t)",
@@ -92,7 +92,7 @@ void maxwellstrang_error (double &bError, double &dError, const int n)
         "cos(x-t)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalD = {
         "cos(x+y-sqrt(2.0)*t)",
         "-cos(x+y-sqrt(2.0)*t)",
@@ -105,7 +105,7 @@ void maxwellstrang_error (double &bError, double &dError, const int n)
         "-sqrt(2)*cos(x+y-sqrt(2.0)*t)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalD = {
         "cos(x+y+z-sqrt(3.0)*t)",
         "-2*cos(x+y+z-sqrt(3.0)*t)",
@@ -127,7 +127,7 @@ void maxwellstrang_error (double &bError, double &dError, const int n)
     ComputationalDomain infra;
 
     // Project B and D to a primal and dual two form respectively
-    constexpr int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    constexpr int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcD;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parserD;

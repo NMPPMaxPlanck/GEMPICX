@@ -32,14 +32,14 @@ void update_one_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (lineIntegral.m_data[comp])[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
             if (comp == xDir)
@@ -88,14 +88,14 @@ void update_two_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (faceIntegral.m_data[comp])[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
             if (comp == xDir)
@@ -146,14 +146,14 @@ void update_one_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (lineIntegralDual.m_data[comp])[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + 0.5 * dr[xDir] + i * dr[xDir], r0[yDir] + 0.5 * dr[yDir] + j * dr[yDir],
                 r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
@@ -204,14 +204,14 @@ void update_two_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& oneForm = (faceIntegralDual.m_data[comp])[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + 0.5 * dr[xDir] + i * dr[xDir], r0[yDir] + 0.5 * dr[yDir] + j * dr[yDir],
                 r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
@@ -263,14 +263,14 @@ void update_zero_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& zeroForm = (pointVals.m_data)[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
             zeroForm(i, j, k) =
@@ -301,14 +301,14 @@ void update_zero_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& zeroForm = (pointValsDual.m_data)[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + 0.5 * dr[xDir] + i * dr[xDir], r0[yDir] + 0.5 * dr[yDir] + j * dr[yDir],
                 r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
@@ -340,14 +340,14 @@ void update_three_form_primal_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& threeForm = (rhoAn.m_data)[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
             threeForm(i, j, k) = GEMPIC_D_MULT((std::sin(r[xDir] + dr[xDir]) - std::sin(r[xDir])),
@@ -379,14 +379,14 @@ void update_three_form_dual_parallel_for (amrex::MFIter& mfi,
     const amrex::Box& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& threeForm = (rhoAnDual.m_data)[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
 
     amrex::ParallelFor(
         bx,
         [=] AMREX_GPU_DEVICE(int i, int j, int k)
         {
-            amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> r = {AMREX_D_DECL(
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {AMREX_D_DECL(
                 r0[xDir] + 0.5 * dr[xDir] + i * dr[xDir], r0[yDir] + 0.5 * dr[yDir] + j * dr[yDir],
                 r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
@@ -454,7 +454,7 @@ protected:
 TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
 {
     // Parse analytical fields and and initialize parserEval
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalE = {
         "cos(x)",
         "cos(x)",
@@ -462,7 +462,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     };
 #endif
 
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalE = {
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
@@ -470,7 +470,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     };
 #endif
 
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalE = {
         "cos(x) * cos(y) * cos(z)",
         "cos(x) * cos(y) * cos(z)",
@@ -478,7 +478,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     };
 #endif
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> func;
     amrex::Array<amrex::Parser, 3> parser;
     for (int i = 0; i < 3; ++i)
@@ -534,21 +534,21 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     DeRhamField<Grid::primal, Space::face> faceIntegral(deRham);
 
     // Parse analytical fields and and initialize parserEval
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalB = {
         "cos(x)",
         "cos(x)",
         "cos(x)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalB = {
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalB = {
         "cos(x) * cos(y) * cos(z)",
         "cos(x) * cos(y) * cos(z)",
@@ -596,21 +596,21 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     // same test on dual grid
     DeRhamField<Grid::dual, Space::edge> H(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalH = {
         "cos(x)",
         "cos(x)",
         "cos(x)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalH = {
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalH = {
         "cos(x) * cos(y) * cos(z)",
         "cos(x) * cos(y) * cos(z)",
@@ -660,21 +660,21 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     // Declare the fields
     DeRhamField<Grid::dual, Space::face> D(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const amrex::Array<std::string, 3> analyticalD = {
         "cos(x)",
         "cos(x)",
         "cos(x)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const amrex::Array<std::string, 3> analyticalD = {
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
         "cos(x) * cos(y)",
     };
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const amrex::Array<std::string, 3> analyticalD = {
         "cos(x) * cos(y) * cos(z)",
         "cos(x) * cos(y) * cos(z)",
@@ -731,17 +731,17 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     // Declare the fields
     DeRhamField<Grid::primal, Space::node> Q(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalQ = "cos(x)";
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string analyticalQ = "cos(x) * cos(y)";
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string analyticalQ = "cos(x) * cos(y) * cos(z)";
 #endif
 
-    const int nVar = GEMPIC_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -777,13 +777,13 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     // Same test for dual, node
     DeRhamField<Grid::dual, Space::node> qDual(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalQDual = "cos(x)";
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string analyticalQDual = "cos(x) * cos(y)";
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string analyticalQDual = "cos(x) * cos(y) * cos(z)";
 #endif
 
@@ -819,13 +819,13 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     // Test projection for primal three form
     DeRhamField<Grid::primal, Space::cell> rho(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalRho = "cos(x)";
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string analyticalRho = "cos(x) * cos(y)";
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string analyticalRho = "cos(x) * cos(y) * cos(z)";
 #endif
 
@@ -860,13 +860,13 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     // Test three form projection dual
     DeRhamField<Grid::dual, Space::cell> rhoDual(deRham);
 
-#if (GEMPIC_SPACEDIM == 1)
+#if (AMREX_SPACEDIM == 1)
     const std::string analyticalRhoDual = "cos(x)";
 #endif
-#if (GEMPIC_SPACEDIM == 2)
+#if (AMREX_SPACEDIM == 2)
     const std::string analyticalRhoDual = "cos(x) * cos(y)";
 #endif
-#if (GEMPIC_SPACEDIM == 3)
+#if (AMREX_SPACEDIM == 3)
     const std::string analyticalRhoDual = "cos(x) * cos(y) * cos(z)";
 #endif
 

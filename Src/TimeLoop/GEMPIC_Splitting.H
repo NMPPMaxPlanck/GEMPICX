@@ -157,12 +157,12 @@ public:
      */
     template <Direction dir, class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i (
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& pos,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
         splineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -187,7 +187,7 @@ public:
      * @brief computes different fields in order to solve the ODE system (H_kin_i) for one given
      * particle and direction i for lower spatial dimensions.
      *
-     * If GEMPIC_SPACEDIM < 3, there are spatial directions, where the primitive of the univariate
+     * If AMREX_SPACEDIM < 3, there are spatial directions, where the primitive of the univariate
      * spline S^{d_x-1} can not be computed. This happens, if the spatial dimension in this
      * direction does not exist. The current and velocities therefore have to be updated via an
      * explicit Euler step.
@@ -225,7 +225,7 @@ public:
         ComputationalDomain const& infra,
         splineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -267,11 +267,11 @@ public:
      */
     template <class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p (
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>& pos,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
         splineType& spline,
-        amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM> const dx,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -283,7 +283,7 @@ public:
 
         apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
         apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
         apply_h_p_i<zDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
@@ -291,7 +291,7 @@ public:
         apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
 
-#elif GEMPIC_SPACEDIM == 2
+#elif AMREX_SPACEDIM == 2
         apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
         apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
@@ -299,7 +299,7 @@ public:
         apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                           chargeWeight, 0.5 * dt);
 
-#elif GEMPIC_SPACEDIM == 1
+#elif AMREX_SPACEDIM == 1
         apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
                                 chargeWeight, 0.5 * dt);
         apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
@@ -390,7 +390,7 @@ public:
 void apply_h_j(DeRhamField<Grid::dual, Space::face>& J,
                DeRhamField<Grid::dual, Space::face>& D,
                std::shared_ptr<FDDeRhamComplex> deRham,
-               amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3> funcBEquilibrium,
+               amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcBEquilibrium,
                amrex::Real dt);
 
 }  // namespace Gempic::TimeLoop

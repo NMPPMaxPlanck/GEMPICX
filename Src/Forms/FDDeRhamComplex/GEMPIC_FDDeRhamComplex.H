@@ -148,7 +148,7 @@ inline void apply_1d_hodge (amrex::Geometry geom,
 
         // Grow box to include sufficient number of ghost cells for stencil application in following
         // non-periodic dimensions. In the periodic case, this is handled by FillBoundary.
-#if GEMPIC_SPACEDIM >= 2
+#if AMREX_SPACEDIM >= 2
         constexpr int nGrow = hodgeDegree / 2 - 1;
         if constexpr (direction == xDir)
         {
@@ -158,7 +158,7 @@ inline void apply_1d_hodge (amrex::Geometry geom,
             }
         }
 #endif
-#if GEMPIC_SPACEDIM == 3
+#if AMREX_SPACEDIM == 3
         if constexpr (direction == xDir || direction == yDir)
         {
             if (!geom.isPeriodic(zDir))
@@ -251,75 +251,75 @@ public:
     ~FDDeRhamComplex() override;
 
     // 0-/3-forms
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::node>& field) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::node>& field) override;
 
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::cell>& field,
                     int gaussNodes = 6) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::cell>& field,
                     int gaussNodes = 6) override;
 
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::node>& field) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::node>& field) override;
 
-    void projection(amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>& func,
+    void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::cell>& field,
                     int gaussNodes = 6) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>>& funcs,
+    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::cell>& field,
                     int gaussNodes = 6) override;
 
     // 1-/2-forms
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::edge>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::edge>& field,
         int gaussNodes = 6) override;
 
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::face>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::face>& field,
         int gaussNodes = 6) override;
 
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::edge>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::edge>& field,
         int gaussNodes = 6) override;
 
-    void projection(amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>& func,
+    void projection(amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::face>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<GEMPIC_SPACEDIM + 1>, 3>>& funcs,
+        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::face>& field,
         int gaussNodes = 6) override;
@@ -357,38 +357,38 @@ public:
      * Interpolates nodes of the primal grid using Lagrange polynomials of degree (dim - 1)
      *
      * @param field : DeRhamField<dual, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
-     * @param evalShift : amrex::GpuArray<amrex::Real,GEMPIC_SPACEDIM>, point to be interpolated
+     * @param evalShift : amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>, point to be interpolated
      * @param pointValues : MultiFab in which to store the interpolated values
      *
      * @return void
      */
     void eval_form(const DeRhamField<Grid::primal, Space::cell>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues) override;
     void eval_form(const DeRhamField<Grid::dual, Space::cell>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues) override;
     void eval_form(const DeRhamField<Grid::primal, Space::face>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
     void eval_form(const DeRhamField<Grid::dual, Space::face>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
     void eval_form(const DeRhamField<Grid::primal, Space::edge>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
     void eval_form(const DeRhamField<Grid::dual, Space::edge>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
     void eval_form(const DeRhamField<Grid::primal, Space::node>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues) override;
     void eval_form(const DeRhamField<Grid::dual, Space::node>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
                    amrex::MultiFab& pointValues) override;
 
     /**
@@ -437,7 +437,7 @@ private:
      */
     inline void eval_form_direction_selector (
         anyFieldConstRef field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir)
     {
@@ -477,7 +477,7 @@ private:
     template <Direction dir = xDir, int hodgeDegreeIdx = 0>
     void eval_form_degree_selector(
         anyFieldConstRef field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
         amrex::MultiFab& pointValues);
 
     template <int hodgeDegree, HodgeScheme hodgeScheme>
@@ -1028,7 +1028,7 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
 template <Direction dir, int testDegInd>
 void FDDeRhamComplex::eval_form_degree_selector (
     anyFieldConstRef field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, GEMPIC_SPACEDIM>>& evalShift,
+    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
     amrex::MultiFab& pointValues)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::eval_form_degree_selector()")

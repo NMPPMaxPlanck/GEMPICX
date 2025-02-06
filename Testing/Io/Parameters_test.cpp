@@ -48,7 +48,7 @@ TEST_F(ParametersTest, InitMainInstanceAndGetSet)
 {
     Parameters params{};
 
-    amrex::Array<int, GEMPIC_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
     params.get("ComputationalDomain.isPeriodic", isPeriodic);
     EXPECT_THAT(isPeriodic, ::testing::ElementsAreArray(file_is_periodic_vector()));
 
@@ -59,11 +59,11 @@ TEST_F(ParametersTest, InitMainInstanceAndGetSet)
     params.get_or_set("ComputationalDomain.nCell", something);
     EXPECT_THAT(something, ::testing::ElementsAreArray(file_n_cell_vector()));
 
-    amrex::Array<double, GEMPIC_SPACEDIM> k{AMREX_D_DECL(1.25, 1.25, 1.25)};
+    amrex::Array<double, AMREX_SPACEDIM> k{AMREX_D_DECL(1.25, 1.25, 1.25)};
     params.set("k", k);
     EXPECT_THAT(k, ::testing::ElementsAreArray({AMREX_D_DECL(1.25, 1.25, 1.25)}));
 
-    amrex::Array<double, GEMPIC_SPACEDIM> laterK{AMREX_D_DECL(0, 0, 0)};
+    amrex::Array<double, AMREX_SPACEDIM> laterK{AMREX_D_DECL(0, 0, 0)};
     params.get("k", laterK);
     EXPECT_THAT(laterK, ::testing::ElementsAreArray({AMREX_D_DECL(1.25, 1.25, 1.25)}));
 }
