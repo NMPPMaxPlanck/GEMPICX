@@ -1,15 +1,5 @@
 # CMake Ignores
 CMakeUserPresets.json
-# ToDo: Can the patterns below be removed?
-**/CMakeCache.txt
-**/cmake_install.cmake
-**/install_manifest.txt
-**/CMakeFiles/
-**/CTestTestfile.cmake
-**/Makefile
-**/*.cbp
-**/CMakeScripts
-**/compile_commands.json
 
 # IDE Specific Excludes
 .vscode/

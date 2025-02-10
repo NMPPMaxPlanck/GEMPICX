@@ -1,5 +1,13 @@
-# Minimum version of CMake required to build this project
 cmake_minimum_required(VERSION 3.14.0)
+
+file(REAL_PATH ${CMAKE_BINARY_DIR} REAL_CMAKE_BINARY_DIR)
+file(REAL_PATH ${CMAKE_SOURCE_DIR} REAL_CMAKE_SOURCE_DIR)
+if(${REAL_CMAKE_BINARY_DIR} STREQUAL ${REAL_CMAKE_SOURCE_DIR})
+  message(FATAL_ERROR "GEMPIC: Building in source tree is not allowed.\n"
+                      "        Delete CMakeCache.txt and CMakeFiles.\n"
+                      "        Use `cmake -B /PATH/TO/BUILD/DIR ...` to set a different binary directory.")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
