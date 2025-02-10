@@ -1,6 +1,10 @@
 #ifndef COMPUTATIONAL_DOMAIN_H_
 #define COMPUTATIONAL_DOMAIN_H_
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #include <AMReX.H>
 #include <AMReX_Array.H>
 #include <AMReX_BLProfiler.H>
