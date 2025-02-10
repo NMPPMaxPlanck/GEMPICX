@@ -147,7 +147,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
 
     amrex::Vector<amrex::Real> k;
     m_parameters.get("k", k);
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
 
     amrex::Parser parserInit;
     parserInit.define(analyticalInit);
@@ -204,4 +204,4 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
         compare_fields(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
     }
 }
-}  // namespace
+} // namespace

@@ -103,7 +103,7 @@ private:
     amrex::Real m_scaling{1.0};
     amrex::Real m_ishift{0}, m_jshift{0}, m_kshift{0};
 };
-}  //namespace Impl
-}  //namespace Gempic::Io
+} //namespace Impl
+} //namespace Gempic::Io
 
-#endif  // DIAGNOSTICSTRATEGIES_H_
+#endif // DIAGNOSTICSTRATEGIES_H_

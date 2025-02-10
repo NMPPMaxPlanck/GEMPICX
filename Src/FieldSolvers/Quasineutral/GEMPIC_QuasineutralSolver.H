@@ -52,22 +52,19 @@ private:
     amrex::Real m_maxiter{1000};
     int m_verbose;
 
-    static constexpr int s_offx[3] = {(degx - 1), degx,
-                                      degx};  // x,y,z-field offsets in x-direction
-    static constexpr int s_offy[3] = {degy, (degy - 1),
-                                      degy};  // x,y,z-field offsets in y-direction
-    static constexpr int s_offz[3] = {degz, degz,
-                                      (degz - 1)};  // x,y,z-field offsets in z-direction
+    static constexpr int s_offx[3] = {(degx - 1), degx, degx}; // x,y,z-field offsets in x-direction
+    static constexpr int s_offy[3] = {degy, (degy - 1), degy}; // x,y,z-field offsets in y-direction
+    static constexpr int s_offz[3] = {degz, degz, (degz - 1)}; // x,y,z-field offsets in z-direction
 
     static constexpr int s_BWx[3] = {
         (2 * s_offx[xDir] + 1), (2 * s_offx[yDir] + 1),
-        (2 * s_offx[zDir] + 1)};  // x,y,z-field bandwidths in x-direction
+        (2 * s_offx[zDir] + 1)}; // x,y,z-field bandwidths in x-direction
     static constexpr int s_BWy[3] = {
         (2 * s_offy[xDir] + 1), (2 * s_offy[yDir] + 1),
-        (2 * s_offy[zDir] + 1)};  // x,y,z-field bandwidths in y-direction
+        (2 * s_offy[zDir] + 1)}; // x,y,z-field bandwidths in y-direction
     static constexpr int s_BWz[3] = {
         (2 * s_offz[xDir] + 1), (2 * s_offz[yDir] + 1),
-        (2 * s_offz[zDir] + 1)};  // x,y,z-field bandwidths in z-direction
+        (2 * s_offz[zDir] + 1)}; // x,y,z-field bandwidths in z-direction
 
 public:
     HypreQuasineutralLinearSystem(ComputationalDomain infr,
@@ -87,17 +84,17 @@ public:
                             HYPRE_Real* mat,
                             std::map<int, int>& mapColsGeneral)
     {
-        if (mapColsGeneral.find(gdtmp) != mapColsGeneral.end())  // element exists already
+        if (mapColsGeneral.find(gdtmp) != mapColsGeneral.end()) // element exists already
         {
             icol = mapColsGeneral[gdtmp];
         }
-        else  // element does not exist, and is newly added
+        else // element does not exist, and is newly added
         {
             icol = ncols++;
             cols[icol] = gdtmp;
             mapColsGeneral.insert(std::make_pair(cols[icol], icol));
-            mat[icol] = 0.0;  // matrix element is initialized to 0, and then incremented by filler
-                              // functions
+            mat[icol] = 0.0; // matrix element is initialized to 0, and then incremented by filler
+                             // functions
         }
     }
 
@@ -332,16 +329,16 @@ public:
         amrex::Real chargeWeight)
     {
         constexpr int nWtsX[3] = {degx, (degx + 1),
-                                  (degx + 1)};  // number of x,y,z-field weights in X-direction
+                                  (degx + 1)}; // number of x,y,z-field weights in X-direction
         constexpr int nWtsY[3] = {(degy + 1), degy,
-                                  (degy + 1)};  // number of x,y,z-field weights in Y-direction
+                                  (degy + 1)}; // number of x,y,z-field weights in Y-direction
         constexpr int nWtsZ[3] = {(degz + 1), (degz + 1),
-                                  degz};  // number of x,y,z-field weights in Z-direction
+                                  degz}; // number of x,y,z-field weights in Z-direction
 
         constexpr int nWts[3] = {
-            GEMPIC_D_MULT(nWtsX[xDir], nWtsY[xDir], nWtsZ[xDir]),   // number of x-field weights
-            GEMPIC_D_MULT(nWtsX[yDir], nWtsY[yDir], nWtsZ[yDir]),   // number of y-field weights
-            GEMPIC_D_MULT(nWtsX[zDir], nWtsY[zDir], nWtsZ[zDir])};  // number of z-field weights
+            GEMPIC_D_MULT(nWtsX[xDir], nWtsY[xDir], nWtsZ[xDir]),  // number of x-field weights
+            GEMPIC_D_MULT(nWtsX[yDir], nWtsY[yDir], nWtsZ[yDir]),  // number of y-field weights
+            GEMPIC_D_MULT(nWtsX[zDir], nWtsY[zDir], nWtsZ[zDir])}; // number of z-field weights
         constexpr int nWtsStart[3] = {0, nWts[xDir], (nWts[xDir] + nWts[yDir])};
 
         amrex::GpuArray<amrex::Real, (nWts[xDir] + nWts[yDir] + nWts[zDir])> eWts;
@@ -426,7 +423,7 @@ public:
                                            HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
-            ncols = 0;  // initialize to 0 and then increment it through filler functions
+            ncols = 0; // initialize to 0 and then increment it through filler functions
 
             // The two filler functions called below can be called in any order
             filler_field_charge_matrix(boxno, i, j, k, ndir, gid, ncols, cols, mat, rhoarrs,
@@ -458,7 +455,7 @@ public:
                                               HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> map_cols_2dz;
-            ncols = 0;  // initialize to 0 and then increment it through filler functions
+            ncols = 0; // initialize to 0 and then increment it through filler functions
 
             // The two filler functions called below can be called in any order
             filler_field_charge_matrix_2dz(boxno, i, j, k, gid, ncols, cols, mat, rhoarrs,
@@ -490,11 +487,11 @@ public:
     {
         constexpr int nMmCoeffs[3] = {
             GEMPIC_D_MULT(s_BWx[xDir], s_BWy[xDir],
-                          s_BWz[xDir]),  // total number of x-field coefficients
+                          s_BWz[xDir]), // total number of x-field coefficients
             GEMPIC_D_MULT(s_BWx[yDir], s_BWy[yDir],
-                          s_BWz[yDir]),  // total number of y-field coefficients
+                          s_BWz[yDir]), // total number of y-field coefficients
             GEMPIC_D_MULT(s_BWx[zDir], s_BWy[zDir],
-                          s_BWz[zDir])};  // total number of z-field coefficients
+                          s_BWz[zDir])}; // total number of z-field coefficients
 
         std::array<int, 3> nMmCoeffsArray{nMmCoeffs[xDir], nMmCoeffs[yDir], nMmCoeffs[zDir]};
         DeRhamField<Grid::dual, Space::face> eCoeffs(b.m_deRham, nMmCoeffsArray);
@@ -563,7 +560,7 @@ public:
                                            HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
-            ncols = 0;  // initialize to 0 and then increment it through filler functions
+            ncols = 0; // initialize to 0 and then increment it through filler functions
 
             filler_particle_charge_matrix(boxno, i, j, k, ndir, gid, ncols, cols, mat, eCoeffsArrs,
                                           mapCols);
@@ -591,7 +588,7 @@ public:
                                               HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> map_cols_2dz;
-            ncols = 0;  // initialize to 0 and then increment it through filler functions
+            ncols = 0; // initialize to 0 and then increment it through filler functions
 
             filler_particle_charge_matrix_2dz(boxno, i, j, k, gid, ncols, cols, mat, eCoeffsArrs,
                                               map_cols_2dz);
@@ -617,11 +614,11 @@ public:
     {
         constexpr int nMmCoeffs[3] = {
             GEMPIC_D_MULT(s_BWx[xDir], s_BWy[xDir],
-                          s_BWz[xDir]),  // total number of x-field coefficients
+                          s_BWz[xDir]), // total number of x-field coefficients
             GEMPIC_D_MULT(s_BWx[yDir], s_BWy[yDir],
-                          s_BWz[yDir]),  // total number of y-field coefficients
+                          s_BWz[yDir]), // total number of y-field coefficients
             GEMPIC_D_MULT(s_BWx[zDir], s_BWy[zDir],
-                          s_BWz[zDir])};  // total number of z-field coefficients
+                          s_BWz[zDir])}; // total number of z-field coefficients
 
         std::array<int, 3> nMmCoeffsArray{nMmCoeffs[xDir], nMmCoeffs[yDir], nMmCoeffs[zDir]};
         DeRhamField<Grid::dual, Space::face> eCoeffs(b.m_deRham, nMmCoeffsArray);
@@ -703,7 +700,7 @@ public:
                                            HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
-            ncols = 0;  // initialize to 0 and then increment it through filler functions
+            ncols = 0; // initialize to 0 and then increment it through filler functions
 
             // The two filler functions called below can be called in any order
             filler_curlcurl_matrix(boxno, i, j, k, ndir, gid, ncols, cols, mat, fac, edgetoface,
@@ -735,7 +732,7 @@ public:
                                               HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> map_cols_2dz;
-            ncols = 0;  // initialize to 0 and then increment it through filler functions
+            ncols = 0; // initialize to 0 and then increment it through filler functions
 
             // The two filler functions called below can be called in any order
             filler_curlcurl_matrix_2dz(boxno, i, j, k, gid, ncols, cols, mat, fac, edgetoface,
@@ -760,6 +757,6 @@ public:
     }
 };
 #endif
-}  // namespace Gempic::FieldSolvers
+} // namespace Gempic::FieldSolvers
 
 #endif

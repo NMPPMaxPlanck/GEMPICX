@@ -289,6 +289,6 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

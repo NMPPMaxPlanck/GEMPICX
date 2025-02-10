@@ -5,7 +5,7 @@
 #include <type_traits>
 
 #include <AMReX.H>
-#include <AMReX_FFT.H>  // Include FFT header for FFT Poisson Solver, but linker has some issues
+#include <AMReX_FFT.H> // Include FFT header for FFT Poisson Solver, but linker has some issues
 #include <AMReX_MFIter.H>
 #include <AMReX_MLEBNodeFDLaplacian.H>
 #include <AMReX_MLMG.H>
@@ -41,14 +41,14 @@ enum class Operator
 
 class PoissonSolver;
 
-template <class rhs, class sol, Operator op>
+template <class Rhs, class Sol, Operator op>
 class ConjugateGradient
 {
 private:
     std::shared_ptr<DeRhamComplex> m_deRham;
     std::shared_ptr<PoissonSolver> m_poissonSolver;
-    rhs m_residual, m_ap;
-    sol m_p, m_z;
+    Rhs m_residual, m_ap;
+    Sol m_p, m_z;
     amrex::Real m_relTol, m_absTol;
     amrex::Real m_maxiter;
     int m_verbose;
@@ -91,7 +91,7 @@ public:
      *
      * @throws None
      */
-    void solve (sol& x, rhs& b)
+    void solve (Sol& x, Rhs& b)
     {
         amrex::Real pAp{0}, normResSquareOld{0}, normResSquareNew{0};
         amrex::Real alpha{0}, beta{0};
@@ -111,7 +111,7 @@ public:
         {
             return;
         }
-        copy(m_p, m_residual);  // copy residual into p
+        copy(m_p, m_residual); // copy residual into p
 
         if (m_verbose > 0)
         {
@@ -171,7 +171,7 @@ public:
      *
      * @throws None
      */
-    void precond_solve (sol& x, rhs& b)
+    void precond_solve (Sol& x, Rhs& b)
     {
         amrex::Real pAp{0}, rdotzNew{0};
         amrex::Real alpha{0}, beta{0};
@@ -194,7 +194,7 @@ public:
         // possibly precondition system
         precond(m_z, m_residual);
         amrex::Real rdotzOld = dot_product(m_residual, m_z);
-        copy(m_p, m_z);  // copy z into p
+        copy(m_p, m_z); // copy z into p
 
         if (m_verbose > 0)
         {
@@ -244,9 +244,9 @@ public:
         x.fill_boundary();
     }
 
-    inline void cg_mat_mul(sol& x, rhs& mResidual);
-    inline void precond(sol& z, rhs& r);
-    inline void average_b_zero(rhs& b);
+    inline void cg_mat_mul(Sol& x, Rhs& mResidual);
+    inline void precond(Sol& z, Rhs& r);
+    inline void average_b_zero(Rhs& b);
 };
 
 #ifdef AMREX_USE_HYPRE
@@ -292,7 +292,7 @@ public:
      */
     void solve (sol& x, rhs& b)
     {
-        average_b_zero(b);  // average rhs to zero in periodic case
+        average_b_zero(b); // average rhs to zero in periodic case
 
         auto const& nddom = amrex::surroundingNodes(m_infra->m_geom.Domain());
         const auto dxi = m_infra->m_geom.InvCellSizeArray();
@@ -703,8 +703,8 @@ public:
     void subtract_constant_part(DeRhamField<Grid::dual, Space::cell>& rho);
 };
 
-template <class rhs, class sol, Operator op>
-inline void ConjugateGradient<rhs, sol, op>::cg_mat_mul(sol& x, rhs& Ax)
+template <class Rhs, class Sol, Operator op>
+inline void ConjugateGradient<Rhs, Sol, op>::cg_mat_mul(Sol& x, Rhs& Ax)
 {
     if constexpr (op == Operator::hodge)
     {
@@ -726,21 +726,21 @@ inline void ConjugateGradient<rhs, sol, op>::cg_mat_mul(sol& x, rhs& Ax)
     }
 }
 
-template <class rhs, class sol, Operator op>
-inline void ConjugateGradient<rhs, sol, op>::precond(sol& z, rhs& r)
+template <class Rhs, class Sol, Operator op>
+inline void ConjugateGradient<Rhs, Sol, op>::precond(Sol& z, Rhs& r)
 {
     if constexpr (op == Operator::hodge)
     {
-        copy(z, r);  // not preconditioned
+        copy(z, r); // not preconditioned
     }
     else if constexpr (op == Operator::poisson)
     {
         m_poissonSolver->solve_amrex(r, z);
     }
-    else if constexpr (op == Operator::poissonInverseHodge)  // not preconditioned
+    else if constexpr (op == Operator::poissonInverseHodge) // not preconditioned
     {
         //m_poissonSolver->solve_amrex(r, z);
-        copy(z, r);  // not preconditioned
+        copy(z, r); // not preconditioned
     }
     else
     {
@@ -751,8 +751,8 @@ inline void ConjugateGradient<rhs, sol, op>::precond(sol& z, rhs& r)
 }
 
 /// average rhs to zero in periodic case
-template <class rhs, class sol, Operator op>
-inline void ConjugateGradient<rhs, sol, op>::average_b_zero(rhs& b)
+template <class Rhs, class Sol, Operator op>
+inline void ConjugateGradient<Rhs, Sol, op>::average_b_zero(Rhs& b)
 {
     if constexpr (op == Operator::poisson || op == Operator::poissonInverseHodge)
     {
@@ -771,6 +771,6 @@ inline void HypreLinearSystem<rhs, sol, op, hodgeDegree>::average_b_zero(rhs& b)
     }
 }
 #endif
-}  // namespace Gempic::FieldSolvers
+} // namespace Gempic::FieldSolvers
 
 #endif

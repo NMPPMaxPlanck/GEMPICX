@@ -34,20 +34,20 @@ using namespace FieldSolvers;
 /**
  * @brief Tests the deposit_deldotS function using analytical function fields
  */
-template <typename splineDegreeStruct>
+template <typename SplineDegreeStruct>
 class DepositDelDotSTest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
     static constexpr int s_ndata{1};
 
-    static constexpr int s_degX{splineDegreeStruct::value};
-    static constexpr int s_degY{splineDegreeStruct::value};
-    static constexpr int s_degZ{splineDegreeStruct::value};
+    static constexpr int s_degX{SplineDegreeStruct::value};
+    static constexpr int s_degY{SplineDegreeStruct::value};
+    static constexpr int s_degZ{SplineDegreeStruct::value};
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcJ;
     amrex::Array<amrex::Parser, 3> m_parserJ;
@@ -58,7 +58,7 @@ public:
     static void SetUpTestSuite ()
     {
         /* Initialize the infrastructure */
-        amrex::ParmParse pp;  // Used instead of input file
+        amrex::ParmParse pp; // Used instead of input file
 
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
         pp.addarr("ComputationalDomain.domainLo", domainLo);
@@ -152,8 +152,8 @@ public:
 
         // Initialize particle groups
         std::vector<std::shared_ptr<ParticleGroups<s_vdim>>>
-            ions;  // Use 'init_particles(infra, ions);' if adding large number of particles
-                   // randomly
+            ions; // Use 'init_particles(infra, ions);' if adding large number of particles
+                  // randomly
 
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
@@ -310,4 +310,4 @@ TYPED_TEST(DepositDelDotSTest, SingleParticlePerCellDelDotS)
     rateOfConvergence = std::log2(errorCoarse / errorFine);
     EXPECT_NEAR(rateOfConvergence, 2.0, tol);
 }
-}  // namespace
+} // namespace

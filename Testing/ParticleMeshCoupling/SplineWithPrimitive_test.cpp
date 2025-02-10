@@ -52,7 +52,7 @@ protected:
     static const int s_numSpec{1};
     static const int s_spec{0};
 
-    ComputationalDomain m_infra{false};  // "unitialized" computational domain
+    ComputationalDomain m_infra{false}; // "unitialized" computational domain
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
 
     static void SetUpTestSuite ()
@@ -113,7 +113,7 @@ TEST_F(SplineWithPrimitiveTest, SplineConstructorTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
@@ -165,7 +165,7 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
@@ -218,7 +218,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
@@ -280,7 +280,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
@@ -343,7 +343,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
@@ -411,7 +411,7 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
@@ -476,4 +476,4 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
     }
     ASSERT_TRUE(particleLoopRun);
 }
-}  // namespace
+} // namespace

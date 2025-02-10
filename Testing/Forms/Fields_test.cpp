@@ -68,7 +68,7 @@ TEST_F(FieldsTest, OperatorsHodge2)
     DeRhamField<Grid::dual, Space::cell> dualCellOther(deRham);
 
     primalNode.m_data.setVal(1);
-    primalNode *= 2;  // result = 2
+    primalNode *= 2; // result = 2
     dualCellOther.m_data.setVal(3);
 
     amrex::Real dotProd = dot_product(primalNode, dualCellOther);
@@ -136,4 +136,4 @@ TEST_F(FieldsTest, LinearCombination)
     }
 }
 
-}  // namespace
+} // namespace

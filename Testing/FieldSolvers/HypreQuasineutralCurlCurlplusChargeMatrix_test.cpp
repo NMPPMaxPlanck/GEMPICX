@@ -49,7 +49,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
     amrex::Array<amrex::Parser, 3> m_parserE;
@@ -60,7 +60,7 @@ public:
     static void SetUpTestSuite ()
     {
         /* Initialize the infrastructure */
-        amrex::ParmParse pp;  // Used instead of input file
+        amrex::ParmParse pp; // Used instead of input file
 
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
         pp.addarr("ComputationalDomain.domainLo", domainLo);
@@ -157,8 +157,8 @@ public:
 
         // Initialize particle groups
         std::vector<std::shared_ptr<ParticleGroups<s_vdim>>>
-            ions;  // Use 'init_particles(infra, ions);' if adding large number of particles
-                   // randomly
+            ions; // Use 'init_particles(infra, ions);' if adding large number of particles
+                  // randomly
 
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
@@ -277,4 +277,4 @@ TYPED_TEST(HypreQuasineutralCurlCurlPlusChargeMatrixTest, HypreQuasineutralCurlC
                    << splineDegreeZ << ">:" << rateOfConvergence << "\n";
     EXPECT_NEAR(rateOfConvergence, 2, tol);
 }
-}  // namespace
+} // namespace

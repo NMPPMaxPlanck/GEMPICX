@@ -36,15 +36,15 @@ enum class VelocityInitScheme
 };
 
 template <unsigned int vDim,
-          typename randomDistribution,
-          typename randomGenerator,
-          typename randomDistribution2,
-          typename randomGenerator2>
+          typename RandomDistribution,
+          typename RandomGenerator,
+          typename RandomDistribution2,
+          typename RandomGenerator2>
 inline amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> calculate_random_values (
-    randomDistribution&& rnd,
-    randomGenerator& gen,
-    randomDistribution2&& rndv,
-    randomGenerator2& genv)
+    RandomDistribution&& rnd,
+    RandomGenerator& gen,
+    RandomDistribution2&& rndv,
+    RandomGenerator2& genv)
 {
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> randomArray;
     // position random variables
@@ -60,16 +60,16 @@ inline amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> calculate_random_
     return randomArray;
 }
 
-template <template <unsigned int> class vInit, unsigned int vDim>
+template <template <unsigned int> class VInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<int, vDim> get_gauss_ids (
-    const vInit<vDim>& vIniter,
+    const VInit<vDim>& vIniter,
     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray)
 {
     amrex::GpuArray<amrex::Real, vDim> gaussChoice;
     amrex::GpuArray<int, vDim> gaussIdx;
     for (int i = 0; i < vDim; i++)
     {
-        gaussChoice[i] = randomArray[AMREX_SPACEDIM + 2 * vDim + i];  // uniform in [0, 1]
+        gaussChoice[i] = randomArray[AMREX_SPACEDIM + 2 * vDim + i]; // uniform in [0, 1]
         gaussIdx[i] = 0;
     }
 
@@ -87,9 +87,9 @@ AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<int, vDim> get_gauss_ids (
     return gaussIdx;
 }
 
-template <template <unsigned int> class vInit, unsigned int vDim>
+template <template <unsigned int> class VInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real get_gaussian_velocity (
-    const vInit<vDim>& vIniter,
+    const VInit<vDim>& vIniter,
     int gaussId,
     amrex::Real z0,
     int cc,
@@ -108,7 +108,7 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real get_gaussian_velocity (
     else
     {
         amrex::Abort("Unknown vThermal input format. Must be either constants or functions.");
-        return std::numeric_limits<amrex::Real>::signaling_NaN();  // won't be reached.
+        return std::numeric_limits<amrex::Real>::signaling_NaN(); // won't be reached.
     }
     return vDev * z0 + vIniter.m_vMeanPtr[gaussId][cc];
 }
@@ -264,11 +264,11 @@ public:
     }
 };
 
-}  //namespace Impl
+} //namespace Impl
 
-template <template <unsigned int> class vInit, unsigned int vDim>
+template <template <unsigned int> class VInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void get_velocities (
-    const vInit<vDim>& vIniter,
+    const VInit<vDim>& vIniter,
     amrex::GpuArray<amrex::Real, vDim>& velocities,
     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray,
     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
@@ -315,11 +315,11 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inline cell_c
     return cellCenter;
 }
 
-template <typename type, unsigned int length>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<type, length> inline operator+(
-    amrex::GpuArray<type, length> a, amrex::GpuArray<type, length> b)
+template <typename Type, unsigned int length>
+AMREX_GPU_HOST_DEVICE amrex::GpuArray<Type, length> inline operator+(
+    amrex::GpuArray<Type, length> a, amrex::GpuArray<Type, length> b)
 {
-    amrex::GpuArray<type, length> c;
+    amrex::GpuArray<Type, length> c;
     for (int i{0}; i < length; ++i)
     {
         c[i] = a[i] + b[i];
@@ -463,16 +463,16 @@ inline void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr
  * @param rSeed :
  *
  */
-using ParticleType = amrex::Particle<0, 0>;  // For SoA attributes
+using ParticleType = amrex::Particle<0, 0>; // For SoA attributes
 template <unsigned int vDim, unsigned int nData>
 void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
                               ComputationalDomain infra,
                               int rSeed = 925)
 {
     BL_PROFILE("Gempic::Particle::init_particles_cellwise(infra,ppg,rSeed)");
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> internalPosition;  // coordinates within each cell
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;          // global coordinates
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner;        // cell-corner coordinates
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> internalPosition; // coordinates within each cell
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;         // global coordinates
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner;       // cell-corner coordinates
     amrex::GpuArray<amrex::Real, vDim> velocity;
     amrex::Real weight;
 
@@ -617,7 +617,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
 
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
                 amrex::GpuArray<amrex::Real, vDim> velocity;
-                amrex::Real t = 0.0;  // initial time
+                amrex::Real t = 0.0; // initial time
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> randArray;
 
                 for (int pp = 0; pp < nPartPerCell; pp++)
@@ -840,7 +840,7 @@ void init_one_particle_cellwise (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> co
 
     // MFI that adds particle from the model cell to all cells
     for (amrex::MFIter mfi = pg.MakeMFIter(0); mfi.isValid(); ++mfi)
-    {  // 0 is level
+    { // 0 is level
         const amrex::Box& bx = mfi.validbox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
@@ -874,13 +874,13 @@ void init_one_particle_cellwise (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> co
             }
 
             // p.rdata(vDim) = 1.0/64.0; //weight
-            particles.push_back_real(vDim, 1.0 / 64.0);  // weight
+            particles.push_back_real(vDim, 1.0 / 64.0); // weight
 
             particles.push_back(p);
         GEMPIC_D_LOOP_END
     }
 }
 
-}  // namespace Gempic::Particle
+} // namespace Gempic::Particle
 
 #endif

@@ -90,4 +90,4 @@ void CustomOperatorOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dc
         m_f(bx, dst, src, nComps, m_scaling, m_ishift, m_jshift, m_kshift);
     }
 }
-}  //namespace Gempic::Io
+} //namespace Gempic::Io

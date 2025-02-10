@@ -352,6 +352,6 @@ struct BoundaryConditions
         // order of indices (faces -> edges -> corners).
     }
 };
-}  // namespace Gempic::Forms
+} // namespace Gempic::Forms
 
 #endif

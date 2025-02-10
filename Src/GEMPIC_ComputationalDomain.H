@@ -1,10 +1,6 @@
 #ifndef COMPUTATIONAL_DOMAIN_H_
 #define COMPUTATIONAL_DOMAIN_H_
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 #include <AMReX.H>
 #include <AMReX_Array.H>
 #include <AMReX_BLProfiler.H>
@@ -30,13 +26,13 @@ namespace Gempic
 class ComputationalDomain
 {
 public:
-    amrex::IntVect m_nCell;  // number of cells of the domain. A domain consists of several grids.
-    amrex::IntVect m_maxGridSize;  // maximum number of cells in tile in each direction. AMReX
-                                   // automagically creates grids to cover the domain and not be
-                                   // bigger than a certain, maximum grid size.
+    amrex::IntVect m_nCell; // number of cells of the domain. A domain consists of several grids.
+    amrex::IntVect m_maxGridSize; // maximum number of cells in tile in each direction. AMReX
+                                  // automagically creates grids to cover the domain and not be
+                                  // bigger than a certain, maximum grid size.
     amrex::Array<int, AMREX_SPACEDIM> m_isPeriodic;
-    amrex::RealBox m_realBox;  // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
-    amrex::RealVect m_length;  // Length of domain in x,y,z directions
+    amrex::RealBox m_realBox; // domain like {min_x,min_y,min_z}{max_x,max_y,max_z}
+    amrex::RealVect m_length; // Length of domain in x,y,z directions
     amrex::BoxArray m_grid;
     amrex::Geometry m_geom;
     amrex::Box m_domain;
@@ -72,7 +68,7 @@ public:
                               1.0 / m_geomData.CellSize(zDir))}};
     }
 
-    ComputationalDomain(bool){};  // bool constructor for deferred specification of domain
+    ComputationalDomain(bool){}; // bool constructor for deferred specification of domain
     ComputationalDomain()
     {
         BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
@@ -161,6 +157,6 @@ public:
 private:
     amrex::GeometryData m_geomData;
 };
-}  // namespace Gempic
+} // namespace Gempic
 
 #endif

@@ -36,12 +36,12 @@ void define_expected (amrex::MFIter& mfi,
         {
             AMREX_D_TERM(amrex::Real x{(i + 0.5) * dx[xDir]};, amrex::Real y{(j + 0.5) * dx[yDir]};
                          , amrex::Real z{(k + 0.5) * dx[zDir]};)
-            expected(i, j, k, 0) = 1;                          // rho 3-form needs to be constant
-            expected(i, j, k, 1) = GEMPIC_D_ADD(2, y, z);      // Ex 1-form constant in x direction
-            expected(i, j, k, 2) = GEMPIC_D_ADD(x, 0, 2 * z);  // Ey 1-form constant in y direction
-            expected(i, j, k, 3) = GEMPIC_D_ADD(2 * x, y, 0);  // Ez 1-form constant in z direction
-            expected(i, j, k, 4) = 5 + x;  // Bz 2-form constant in y and z directions
-            expected(i, j, k, 5) = GEMPIC_D_ADD(6 + x, y, z);  // phi linear
+            expected(i, j, k, 0) = 1;                         // rho 3-form needs to be constant
+            expected(i, j, k, 1) = GEMPIC_D_ADD(2, y, z);     // Ex 1-form constant in x direction
+            expected(i, j, k, 2) = GEMPIC_D_ADD(x, 0, 2 * z); // Ey 1-form constant in y direction
+            expected(i, j, k, 3) = GEMPIC_D_ADD(2 * x, y, 0); // Ez 1-form constant in z direction
+            expected(i, j, k, 4) = 5 + x; // Bz 2-form constant in y and z directions
+            expected(i, j, k, 5) = GEMPIC_D_ADD(6 + x, y, z); // phi linear
         });
 }
 
@@ -59,7 +59,7 @@ protected:
     static const int s_ndata{1};
 
     //
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
     // std::unique_ptr<amrex::MultiFab>  mf_all_diag;
     //
@@ -134,7 +134,7 @@ protected:
         pp.add("Function.phi", phi);
 
         // Full diagnostics
-        pp.add("FullDiagnostics.enable", true);  // 1 for true, 0 for false
+        pp.add("FullDiagnostics.enable", true); // 1 for true, 0 for false
         amrex::Vector<std::string> diagsNames = {"part", "field"};
         pp.addarr("FullDiagnostics.groupNames", diagsNames);
         std::string particle = "ions";
@@ -182,7 +182,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     fullDiagn.filter_compute_pack_flush(0, 0.0);
 
     // Create multifab containing expected values of cell centered fields
-    int ncomp = fullDiagn.get_num_group_members(1);  // nb of field diagnostics
+    int ncomp = fullDiagn.get_num_group_members(1); // nb of field diagnostics
     amrex::IntVect nghost = amrex::IntVect{AMREX_D_DECL(0, 0, 0)};
     amrex::MultiFab mfAllDiagExpected(m_infra.m_grid, m_infra.m_distriMap, ncomp, nghost);
     // Compare read and expected values. Low order interpolation of forms is used
@@ -373,4 +373,4 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOutputProcessor)
         compare_fields(resultMf[mfi].array(), phi.m_data[mfi].array(), bx, ncomp);
     }
 }
-}  // namespace
+} // namespace

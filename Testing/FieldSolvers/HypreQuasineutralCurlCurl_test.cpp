@@ -35,7 +35,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{hodgeDegreeStruct::value};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho;
     amrex::ParserExecutor<s_nVar> m_funcRho;
 
@@ -48,7 +48,7 @@ public:
     static void SetUpTestSuite ()
     {
         /* Initialize the infrastructure */
-        amrex::ParmParse pp;  // Used in lieu of input file
+        amrex::ParmParse pp; // Used in lieu of input file
 
         const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
         pp.addarr("ComputationalDomain.domainLo", domainLo);
@@ -153,4 +153,4 @@ TYPED_TEST(HypreCurlCurlOperatorTest, HypreCurlCurlOperatorConvergence)
     amrex::Print() << "rate_of_convergence_" << hodgeDegree << ':' << rateOfConvergence << "\n";
     EXPECT_NEAR(rateOfConvergence, hodgeDegree, tol);
 }
-}  // namespace
+} // namespace

@@ -32,8 +32,8 @@ int main (int argc, char *argv[])
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     constexpr int vdim{3};
-    constexpr int ndata{1};  // Needs to be 1 so that the correct ParIter type is defined. Putting 4
-                             // gets a non-defined type
+    constexpr int ndata{1}; // Needs to be 1 so that the correct ParIter type is defined. Putting 4
+                            // gets a non-defined type
     // Node spline degrees (smoothing spline degree is one less in each direction)
     constexpr int degx{3};
     constexpr int degy{3};
@@ -69,7 +69,7 @@ int main (int argc, char *argv[])
                           DeRhamField<Grid::primal, Space::node>, Operator::poisson>
             cgPoisson(deRham, poisson);
 #endif
-        amrex::Real te{1.0};  // electron temperature (default 1.0)
+        amrex::Real te{1.0}; // electron temperature (default 1.0)
 
         if (simType == "QuasiNeutral")
         {
@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
         // For the moment we consider only a constant background field.
         amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
 
-        {  // "Time Loop" scope. Should be a separate function
+        { // "Time Loop" scope. Should be a separate function
 
             // Initialize full diagnostics and write initial time step
             Io::Parameters params("TimeLoop");
@@ -347,7 +347,7 @@ int main (int argc, char *argv[])
                     amrex::Print() << "Time Step: " << tStep + 1 << '\n';
                 }
             }
-        }  // end of "time loop" scope
+        } // end of "time loop" scope
     }
     amrex::Finalize();
 }

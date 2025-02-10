@@ -33,4 +33,4 @@ public:
     virtual ~FlushFormat() {}
 };
 
-#endif  // GEMPICX_FLUSHFORMAT_H_
+#endif // GEMPICX_FLUSHFORMAT_H_

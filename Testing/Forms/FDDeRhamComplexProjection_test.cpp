@@ -424,7 +424,7 @@ protected:
     inline static const int s_hodgeDegree{2};
 
     Gempic::Io::Parameters m_parameters{};
-    Gempic::ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    Gempic::ComputationalDomain m_infra{false}; // "uninitialized" computational domain
 
     int m_gaussNodes = 6;
     const amrex::Real m_tol = 1e-15;
@@ -478,7 +478,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     };
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> func;
     amrex::Array<amrex::Parser, 3> parser;
     for (int i = 0; i < 3; ++i)
@@ -741,7 +741,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     const std::string analyticalQ = "cos(x) * cos(y) * cos(z)";
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -899,4 +899,4 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
 
     EXPECT_NEAR(0, errorRhoDualNorm0, m_tol);
 }
-}  // namespace
+} // namespace

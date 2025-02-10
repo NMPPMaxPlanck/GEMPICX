@@ -92,6 +92,6 @@ AMREX_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_sqrt_maxwellian (
     return std::sqrt(eval_maxwellian(vel, density, vThermal));
 }
 
-}  // namespace Gempic::Utils
+} // namespace Gempic::Utils
 
 #endif

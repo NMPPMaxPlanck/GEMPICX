@@ -1,7 +1,7 @@
 #ifndef TEST_UTILS_H_
 #define TEST_UTILS_H_
 
-#include <algorithm>  // std::all_of, for add_particles function
+#include <algorithm> // std::all_of, for add_particles function
 #include <optional>
 
 #include <AMReX.H>
@@ -138,5 +138,5 @@ double l_inf_error(amrex::Array4<const amrex::Real> const& a,
                    amrex::Array4<const amrex::Real> const& b,
                    amrex::Box const& bx,
                    int ncomp = 1);
-}  // namespace Gempic::Test::Utils
+} // namespace Gempic::Test::Utils
 #endif

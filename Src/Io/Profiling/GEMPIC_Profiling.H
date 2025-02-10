@@ -44,7 +44,7 @@ public:
         m_counterAll = 0.;
     }
 };
-}  // namespace Profiling
-}  // namespace Gempic
+} // namespace Profiling
+} // namespace Gempic
 
 #endif

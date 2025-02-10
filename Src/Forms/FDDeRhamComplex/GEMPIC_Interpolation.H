@@ -201,7 +201,7 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
     {
         return eval_lagrange_primal_dual<degree, grid>(polyIndex, xk, dx, y);
     }
-    else  // if constexpr (space == Space::edge)
+    else // if constexpr (space == Space::edge)
     {
         return eval_edge<degree>(polyIndex, xk, dx, y);
     }
@@ -353,7 +353,7 @@ void eval_form_component (
         dirShift = {1, 1, 1};
         dirShift[dir] = 0;
     }
-    else  // if constexpr (space == Space::face)
+    else // if constexpr (space == Space::face)
     {
         dirShift[dir] = 1;
     }
@@ -598,6 +598,6 @@ amrex::Real max_error_midpoint (amrex::Geometry geom,
     return values.norm0();
 }
 
-}  // namespace Gempic::Forms
+} // namespace Gempic::Forms
 
 #endif

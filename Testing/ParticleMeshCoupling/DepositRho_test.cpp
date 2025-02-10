@@ -76,7 +76,7 @@ protected:
     amrex::Array<amrex::Real, s_numSpec> m_charge{1, -1};
     amrex::Array<amrex::Real, s_numSpec> m_mass{1, 0.1};
 
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
     // amrex::MultiFab rho;
@@ -156,7 +156,7 @@ TEST_F(DepositRhoTest, NullTest)
     // rho_ptr->data unchanged by Gempic::Test::Utils::addSingleParticles
     EXPECT_EQ(0, m_rhoPtr->m_data.norm2(0, m_infra.m_geom.periodicity()));
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle.
     bool particleLoopRun{false};
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
@@ -165,7 +165,7 @@ TEST_F(DepositRhoTest, NullTest)
 
         const long np{pti.numParticles()};
         EXPECT_EQ(numParticles,
-                  np);  // Only one particle added by Gempic::Test::Utils::addSingleParticles
+                  np); // Only one particle added by Gempic::Test::Utils::addSingleParticles
 
         const auto& particles{pti.GetArrayOfStructs()};
         const auto* const partData{particles().data()};
@@ -210,12 +210,12 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle.
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(numParticles, np);  // Only one particle added
+        EXPECT_EQ(numParticles, np); // Only one particle added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, m_infra, m_rhoPtr->m_data,
                                                                 m_particleGroup[0]->get_charge());
@@ -254,12 +254,12 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle.
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(numParticles, np);  // Only one particle added
+        EXPECT_EQ(numParticles, np); // Only one particle added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, m_infra, m_rhoPtr->m_data,
                                                                 m_particleGroup[0]->get_charge());
@@ -308,12 +308,12 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over two distant particles.
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(numParticles, np);  // Two particles added
+        EXPECT_EQ(numParticles, np); // Two particles added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, m_infra, m_rhoPtr->m_data,
                                                                 m_particleGroup[0]->get_charge());
@@ -357,12 +357,12 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over two close particles.
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(numParticles, np);  // Two particles added
+        EXPECT_EQ(numParticles, np); // Two particles added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, m_infra, m_rhoPtr->m_data,
                                                                 m_particleGroup[0]->get_charge());
@@ -408,14 +408,14 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
 
     for (int spec{0}; spec < s_numSpec; spec++)
     {
-        m_particleGroup[spec]->Redistribute();  // assign particles to the tile they are in
+        m_particleGroup[spec]->Redistribute(); // assign particles to the tile they are in
         const auto charge{m_particleGroup[spec]->get_charge()};
         // Particle iteration
         for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[spec], 0); pti.isValid();
              ++pti)
         {
             const long np{pti.numParticles()};
-            EXPECT_EQ(numParticles, np);  // Two particles added
+            EXPECT_EQ(numParticles, np); // Two particles added
 
             update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, m_infra, m_rhoPtr->m_data,
                                                                     charge);
@@ -442,4 +442,4 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
     EXPECT_EQ(pCharge * pWeights[0] + eCharge * eWeights[0],
               m_rhoPtr->m_data.sum_unique(0, 0, m_infra.m_geom.periodicity()));
 }
-}  // namespace
+} // namespace

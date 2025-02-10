@@ -28,7 +28,7 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
     amrex::Real m_tol{1e-11};
 
     static void SetUpTestSuite ()
@@ -69,7 +69,7 @@ TEST_F(SplittingColdPlasmaTest, RotationZAxis)
         "0",
         "0",
     };
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcJ;
     amrex::Array<amrex::Parser, 3> parserB;
@@ -132,7 +132,7 @@ TEST_F(SplittingColdPlasmaTest, RotationGeneralAxis)
         "-1",
         "0",
     };
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcJ;
     amrex::Array<amrex::Parser, 3> parserB;
@@ -180,4 +180,4 @@ TEST_F(SplittingColdPlasmaTest, RotationGeneralAxis)
     }
     ASSERT_TRUE(loopRun);
 }
-}  // namespace
+} // namespace

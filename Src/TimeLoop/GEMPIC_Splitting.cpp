@@ -68,7 +68,7 @@ void Gempic::TimeLoop::apply_h_j (
                 const amrex::Real bNorm =
                     sqrt(bZero[xDir] * bZero[xDir] + bZero[yDir] * bZero[yDir] +
                          bZero[zDir] * bZero[zDir]);
-                amrex::Array2D<amrex::Real, 0, 2, 0, 2> R;  //rotation matrix
+                amrex::Array2D<amrex::Real, 0, 2, 0, 2> R; //rotation matrix
                 bool noBZero = false;
 
                 if (bZero[xDir] == 0 && bZero[yDir] == 0 && bZero[zDir] == 0)

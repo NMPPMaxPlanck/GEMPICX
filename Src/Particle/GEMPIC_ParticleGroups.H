@@ -22,7 +22,7 @@
 
 namespace Gempic::Particle
 {
-using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
+using ParticleType = amrex::Particle<0, 0>; // SoA particle type
 /**
  * Class containing all particle information. The array of particle containers has @p n_species
  * number of particles containers, that is each responsible for one species of particles. For each
@@ -258,6 +258,6 @@ public:
 
 //     particles.push_back(p);
 // }
-}  // namespace Gempic::Particle
+} // namespace Gempic::Particle
 
 #endif

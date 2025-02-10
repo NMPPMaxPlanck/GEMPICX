@@ -20,9 +20,9 @@ inline void overwrite_amrex_parser_defaults ()
     // It's more useful to abort and tell the user to request more GPUs or scale
     // down the simulation.
     // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
-    bool abortOnOutOfGpuMemory = true;  // AMReX' default: false
+    bool abortOnOutOfGpuMemory = true; // AMReX' default: false
     ppAmrex.queryAdd("abort_on_out_of_gpu_memory", abortOnOutOfGpuMemory);
 }
-}  // namespace Gempic
+} // namespace Gempic
 
-#endif  // GEMPIC_AMREX_INIT_H_
+#endif // GEMPIC_AMREX_INIT_H_

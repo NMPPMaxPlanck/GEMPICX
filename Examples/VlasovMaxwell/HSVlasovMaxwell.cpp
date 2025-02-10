@@ -81,7 +81,7 @@ int main (int argc, char *argv[])
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
 
-        {  //"Time Loop" scope
+        { //"Time Loop" scope
 
             Io::Parameters params("TimeLoop");
             amrex::Real dt;

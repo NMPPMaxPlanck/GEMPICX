@@ -194,7 +194,7 @@ private:
                 "is not set";
             amrex::Assert("rho or divD not found", "GaussError.H", __LINE__, str.c_str());
         }
-        return ComputeMethod::missingNone;  // never reached
+        return ComputeMethod::missingNone; // never reached
     }
 
     /**
@@ -241,6 +241,6 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

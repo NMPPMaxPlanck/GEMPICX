@@ -109,7 +109,7 @@ public:
 
 private:
     /** Read user-requested parameters for full diagnostics */
-    void read_parameters ()  // computational_domain infra)
+    void read_parameters () // computational_domain infra)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::read_parameters()");
         // Read list of full diagnostics fields requested by the user.
@@ -117,7 +117,7 @@ private:
 
         // prefix
         ppDiagName.get_or_set("saveFolder", m_saveFolder);
-        m_filePrefix = "plt_" + m_diagName;  // default for paraview
+        m_filePrefix = "plt_" + m_diagName; // default for paraview
         ppDiagName.get_or_set("filePrefix", m_filePrefix);
         m_filePrefix = m_saveFolder + "/" + m_filePrefix;
 
@@ -150,11 +150,11 @@ private:
         ppDiagName.get_or_set("saveInterval", m_saveInterval);
 
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-            m_format == "plotfile"  //|| m_format == "openpmd" ||
+            m_format == "plotfile" //|| m_format == "openpmd" ||
             // m_format == "checkpoint" || m_format == "ascent" ||
             // m_format == "sensei"
             ,
-            "<diag>.format must be plotfile");  //or openpmd or checkpoint or ascent or sensei");
+            "<diag>.format must be plotfile"); //or openpmd or checkpoint or ascent or sensei");
     }
 
     void init_base_data ()
@@ -197,7 +197,7 @@ private:
     // map of component names for multicomponent field multifabs
     std::map<std::string, amrex::Vector<std::string>> m_fieldComponentNames;
     /** Type of outputProcessor: runtime parameter given in the input file. */
-    std::string m_diagOutputProcessor = "Raw";  // raw outputProcessor as default
+    std::string m_diagOutputProcessor = "Raw"; // raw outputProcessor as default
     /** custom ID when m_diagOutputProcessor is custom: parameter given in input file. */
     std::string m_customId;
     /** Prefix for output directories */
@@ -212,7 +212,7 @@ private:
     /** format for output files, "plotfile" or "openpmd" or "sensei" or "ascent"
      * The checkpoint format is applicable for FullDiagnostics only.
      */
-    std::string m_format = "plotfile";  // AMReX format
+    std::string m_format = "plotfile"; // AMReX format
     /** Whether this iteration has already been dumped, to avoid writing data twice */
     int m_alreadyDone = false;
     /** This class is responsible for flushing the data to file */
@@ -250,7 +250,7 @@ private:
     inline void flush (int step, amrex::Real simTime)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::flush()");
-        int nlev{1};  // number of levels. 1 for now.
+        int nlev{1}; // number of levels. 1 for now.
         for (int i{0}; i < m_mfOutputs.size(); ++i)
         {
             std::string filePrefix = m_filePrefix;
@@ -368,12 +368,12 @@ private:
             {
                 amrex::Warning("outputProcessor argument has no effect for particle diagnostics\n");
             }
-            if (!m_plotParticles)  // needs only to be performed once for all particle groups
+            if (!m_plotParticles) // needs only to be performed once for all particle groups
             {
                 m_plotParticles = true;
                 m_particles = particles;
                 // Multifab output needs to be defined but not filled when using particles
-                auto ngrow{amrex::IntVect::TheZeroVector()};  // no ghost cells needed
+                auto ngrow{amrex::IntVect::TheZeroVector()}; // no ghost cells needed
                 m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
                     compDom.m_grid, compDom.m_distriMap, m_nGroupMembers, ngrow));
 
@@ -469,5 +469,5 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
-#endif  // GEMPICX_FULLDIAGNOSTICS_H_
+} // namespace Gempic::Io
+#endif // GEMPICX_FULLDIAGNOSTICS_H_

@@ -91,7 +91,7 @@ void PoissonSolver::apply_poisson_operator (DeRhamField<Grid::dual, Space::cell>
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonSolver::apply_poisson_operator()");
     m_deRham->grad(m_primalEdge, phi);
-    m_primalEdge *= -1;  // E = -grad phi
+    m_primalEdge *= -1; // E = -grad phi
     m_deRham->hodge(m_dualFace, m_primalEdge);
     m_deRham->div(rho, m_dualFace);
     // add penalty term to avoid nullspace
@@ -125,7 +125,7 @@ void PoissonSolver::apply_poisson_operator_inverse_hodge (
     }
 
     m_deRham->grad(m_primalEdge, phi);
-    m_primalEdge *= -1;  // E = -grad phi
+    m_primalEdge *= -1; // E = -grad phi
     m_cgHodge->solve(m_dualFace, m_primalEdge);
     m_deRham->div(rho, m_dualFace);
 

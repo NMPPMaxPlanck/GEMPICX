@@ -64,6 +64,6 @@ protected:
 private:
 };
 
-}  // namespace Gempic::Filter
+} // namespace Gempic::Filter
 
-#endif  // #ifndef GEMPIC_FILTER_H_
+#endif // #ifndef GEMPIC_FILTER_H_

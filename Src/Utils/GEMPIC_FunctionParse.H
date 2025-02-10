@@ -161,5 +161,5 @@ inline auto compile_function (amrex::Parser parser)
     return eval;
 }
 
-}  // namespace Gempic::Utils
+} // namespace Gempic::Utils
 #endif

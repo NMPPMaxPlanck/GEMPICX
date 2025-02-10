@@ -239,6 +239,6 @@ public:
     // end void Particle::ComputeDiags
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

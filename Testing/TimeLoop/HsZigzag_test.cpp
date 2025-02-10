@@ -71,7 +71,7 @@ protected:
     double charge{1};
     double mass{1};
 
-    computational_domain infra{false};  // "uninitialized" computational domain
+    computational_domain infra{false}; // "uninitialized" computational domain
     std::vector<std::unique_ptr<particle_groups<vDim>>> particleGroup(numSpec);
 
     MockHSZigZagC2<vDim, degX, degY, degZ, degmw, nData> mockHSZigZagC2;
@@ -121,7 +121,7 @@ protected:
         }
     }
 };
-}  // namespace
+} // namespace
 
 namespace Gempic::Particle
 {
@@ -137,7 +137,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_J_integrate_B<xDir, MockSpline<1, 1, 1>, 4
     amrex::GpuArray<amrex::Real, 2> &fields)
 {
 }
-}  // namespace Gempic::Particle
+} // namespace Gempic::Particle
 
 namespace
 {
@@ -157,7 +157,7 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncE{"0.0", "0.0", "0.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -173,7 +173,7 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
 
     DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
-    particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     bool particleLoopRun{false};
@@ -185,7 +185,7 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
             {AMREX_D_DECL(1., 1., 1.)}, {AMREX_D_DECL(1., 1., 1.)}, {AMREX_D_DECL(1., 1., 1.), 1.});
 
         const long np{pti.numParticles()};
-        EXPECT_EQ(1, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::Particle<0, 0> *AMREX_RESTRICT particles = &(pti.GetArrayOfStructs()[0]);
 
@@ -208,4 +208,4 @@ TEST_F(HSZigZagC2Test, ApplyHEParticleTest)
     }
     ASSERT_TRUE(particleLoopRun);
 }
-}  // namespace
+} // namespace

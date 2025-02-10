@@ -84,7 +84,7 @@ protected:
     amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> m_jA;
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(s_vDim / 2.5) * 2 + 1> m_bA;
 
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
@@ -161,7 +161,7 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
 
     const amrex::Array<std::string, 3> analyticalFuncJ = {"0.0", "0.0", "0.0"};
 
-    const int nVar{4};  // x, y, z, t
+    const int nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -184,13 +184,13 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(1, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -227,7 +227,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
 
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4};  // x, y, z, t
+    const int nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -250,13 +250,13 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(1, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -302,7 +302,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
 
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4};  // x, y, z, t
+    const int nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -325,13 +325,13 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(1, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -389,7 +389,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
 
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4};  // x, y, z, t
+    const int nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -412,13 +412,13 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(2, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -456,7 +456,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
 
     const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4};  // x, y, z, t
+    const int nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -479,13 +479,13 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
     {
         const long np{pti.numParticles()};
-        EXPECT_EQ(2, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
@@ -502,4 +502,4 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
     }
 }
 
-}  // namespace
+} // namespace

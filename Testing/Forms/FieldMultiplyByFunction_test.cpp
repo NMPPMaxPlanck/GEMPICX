@@ -28,7 +28,7 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
     amrex::Real m_tol{1e-11};
 
     static void SetUpTestSuite ()
@@ -75,7 +75,7 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
 
     const std::string analyticalOneFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> weightFunc;
     amrex::ParserExecutor<nVar> oneFunc;
     amrex::Parser weightParser;
@@ -158,7 +158,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         "1",
     };
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> weightFunc;
     amrex::Parser weightParser;
 
@@ -220,4 +220,4 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         ASSERT_TRUE(loopRun);
     }
 }
-}  // namespace
+} // namespace

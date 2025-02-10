@@ -29,7 +29,6 @@ enable_language(CXX)
 if(GEMPIC_USE_CUDA)
   enable_language(CUDA)
   set(CUDA_SEPARABLE_COMPILATION ON)
-  find_package(CUDA QUIET REQUIRED)
 endif()
 
 # Set compiler flags

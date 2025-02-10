@@ -14,7 +14,7 @@ enum class PrimitiveDifferenceRegion
     bothSplines,
     lastSpline,
 };
-}  //namespace Impl
+} //namespace Impl
 
 /**
  * @brief Implementation of the B-Splines based on the description given
@@ -440,16 +440,16 @@ public:
         amrex::GpuArray<amrex::IntVect, nWtsSum> &eCells) const
     {
         constexpr int nWtsX[3] = {degX, (degX + 1),
-                                  (degX + 1)};  // number of x,y,z-field weights in X-direction
+                                  (degX + 1)}; // number of x,y,z-field weights in X-direction
         constexpr int nWtsY[3] = {(degY + 1), degY,
-                                  (degY + 1)};  // number of x,y,z-field weights in Y-direction
+                                  (degY + 1)}; // number of x,y,z-field weights in Y-direction
         constexpr int nWtsZ[3] = {(degZ + 1), (degZ + 1),
-                                  degZ};  // number of x,y,z-field weights in Z-direction
+                                  degZ}; // number of x,y,z-field weights in Z-direction
 
         constexpr int nWts[3] = {
-            GEMPIC_D_MULT(nWtsX[xDir], nWtsY[xDir], nWtsZ[xDir]),   // number of x-field weights
-            GEMPIC_D_MULT(nWtsX[yDir], nWtsY[yDir], nWtsZ[yDir]),   // number of y-field weights
-            GEMPIC_D_MULT(nWtsX[zDir], nWtsY[zDir], nWtsZ[zDir])};  // number of z-field weights
+            GEMPIC_D_MULT(nWtsX[xDir], nWtsY[xDir], nWtsZ[xDir]),  // number of x-field weights
+            GEMPIC_D_MULT(nWtsX[yDir], nWtsY[yDir], nWtsZ[yDir]),  // number of y-field weights
+            GEMPIC_D_MULT(nWtsX[zDir], nWtsY[zDir], nWtsZ[zDir])}; // number of z-field weights
 
         constexpr int nWtsStart[3] = {0, nWts[xDir], (nWts[xDir] + nWts[yDir])};
 
@@ -704,7 +704,7 @@ public:
     {
         //BL_PROFILE(
         //    "Gempic::ParticleMeshCoupling::SplineWithPrimitive::compute_primitive_difference()");
-        using namespace Impl;  // utility functions for this function
+        using namespace Impl; // utility functions for this function
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
         const int localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
@@ -724,13 +724,13 @@ public:
                 return (this->m_primitiveOld[dir][index] -
                         this->m_primitiveNew[dir][index + deg - localSize]);
             }
-            else  //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
+            else //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
             {
                 return (1 - this->m_primitiveNew[dir][index + deg - localSize]);
             }
         }
         // switching all primitives and all signs
-        else  //if (this->m_primitiveOrders[dir] == newFirst)
+        else //if (this->m_primitiveOrders[dir] == newFirst)
         {
             if constexpr (region == PrimitiveDifferenceRegion::firstSpline)
             {
@@ -745,7 +745,7 @@ public:
                 return -(this->m_primitiveNew[dir][index] -
                          this->m_primitiveOld[dir][index + deg - localSize]);
             }
-            else  //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
+            else //if constexpr (region == PrimitiveDifferenceRegion::lastSpline)
             {
                 return -(1 - this->m_primitiveOld[dir][index + deg - localSize]);
             }
@@ -790,7 +790,7 @@ public:
             constexpr auto region{Impl::PrimitiveDifferenceRegion::noSplines};
             return this->compute_primitive_difference<dir, region>(dx, index);
         }
-        else  // (index < deg && index >= localSize - deg)
+        else // (index < deg && index >= localSize - deg)
         {
             constexpr auto region{Impl::PrimitiveDifferenceRegion::bothSplines};
             return this->compute_primitive_difference<dir, region>(dx, index);
@@ -1059,5 +1059,5 @@ public:
     }
 };
 
-}  // namespace Gempic::ParticleMeshCoupling
+} // namespace Gempic::ParticleMeshCoupling
 #endif

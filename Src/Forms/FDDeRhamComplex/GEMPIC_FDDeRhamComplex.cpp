@@ -179,7 +179,7 @@ void FDDeRhamComplex::projection (
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();  //mfi.tilebox();
+        const amrex::Box& bx = mfi.growntilebox(); //mfi.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
         amrex::AsyncArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
@@ -255,7 +255,7 @@ void FDDeRhamComplex::projection (
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();  // tilebox();
+        const amrex::Box& bx = mfi.growntilebox(); // tilebox();
         amrex::Array4<amrex::Real> const& threeForm = (field.m_data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -348,7 +348,7 @@ void FDDeRhamComplex::projection (
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();  //.tilebox();
+        const amrex::Box& bx = mfi.growntilebox(); //.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -430,7 +430,7 @@ void FDDeRhamComplex::projection (
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();  //projections are done also on ghost cells
+        const amrex::Box& bx = mfi.growntilebox(); //projections are done also on ghost cells
         amrex::Array4<amrex::Real> const& threeForm = (field.m_data)[mfi].array();
 
         const amrex::RealVect dr = m_dr;
@@ -543,7 +543,7 @@ void FDDeRhamComplex::projection (
     {
         for (amrex::MFIter mfi(field.m_data[comp], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox();  //.tilebox();
+            const amrex::Box& bx = mfi.growntilebox(); //.tilebox();
             amrex::Array4<amrex::Real> const& oneForm = (field.m_data[comp])[mfi].array();
 
             const amrex::RealVect dr = m_dr;
@@ -559,8 +559,8 @@ void FDDeRhamComplex::projection (
                                              r0[zDir] + 0.5 * dr[zDir] + k * dr[zDir])};
 
 #if (AMREX_SPACEDIM < 3)
-                            if (comp < AMREX_SPACEDIM)  // 1-forms in 1D, 2D are node centered in
-                                                        // the last 1, 2 components respectively
+                            if (comp < AMREX_SPACEDIM) // 1-forms in 1D, 2D are node centered in
+                                                       // the last 1, 2 components respectively
 #endif
                             {
                                 const amrex::Real drHalf = dr[comp] / 2;
@@ -691,7 +691,7 @@ void FDDeRhamComplex::projection (
 
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) *
                                 funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]),
-                                                     t);  // in 1D this is just evalutation
+                                                     t); // in 1D this is just evalutation
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom
@@ -862,8 +862,8 @@ void FDDeRhamComplex::projection (
                         r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
 
 #if (AMREX_SPACEDIM < 3)
-                    if (comp < AMREX_SPACEDIM)  // 1-forms in 1D, 2D are node centered in the last
-                                                // 1, 2 components respectively
+                    if (comp < AMREX_SPACEDIM) // 1-forms in 1D, 2D are node centered in the last
+                                               // 1, 2 components respectively
 #endif
                     {
                         const amrex::Real drHalf = dr[comp] / 2;
@@ -997,7 +997,7 @@ void FDDeRhamComplex::projection (
 
                     integral += GEMPIC_D_MULT(1., quadWeights[qy], quadWeights[qz]) *
                                 funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]),
-                                                     t);  // in 1D this is just evalutation
+                                                     t); // in 1D this is just evalutation
                 GEMPIC_D_LOOP_END
 
                 // Rescale the integral and assign it to array of degrees of freedom

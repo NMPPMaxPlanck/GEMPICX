@@ -102,11 +102,11 @@ public:
      * @param dt : time step
      *
      */
-    template <class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
+    template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_e_particle (
         amrex::GpuArray<amrex::Real, vdim>& vel,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eA,
-        splineType const& spline,
+        SplineType const& spline,
         amrex::Real const chargeOverMass,
         amrex::Real const dt) const
     {
@@ -155,12 +155,12 @@ public:
      * @param dt : time step
      *
      */
-    template <Direction dir, class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
+    template <Direction dir, class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i (
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
-        splineType& spline,
+        SplineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
@@ -219,11 +219,11 @@ public:
      * @param dt : time step
      *
      */
-    template <Direction pDir, class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
+    template <Direction pDir, class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i_euler (
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
-        splineType& spline,
+        SplineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
@@ -265,12 +265,12 @@ public:
      * @param dt : time step
      *
      */
-    template <class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
+    template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p (
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
-        splineType& spline,
+        SplineType& spline,
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
@@ -393,6 +393,6 @@ void apply_h_j(DeRhamField<Grid::dual, Space::face>& J,
                amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcBEquilibrium,
                amrex::Real dt);
 
-}  // namespace Gempic::TimeLoop
+} // namespace Gempic::TimeLoop
 
 #endif
