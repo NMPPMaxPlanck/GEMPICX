@@ -51,7 +51,7 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
 
     static void SetUpTestSuite ()
     {
@@ -91,7 +91,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
         "1.0",
     };
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::ParserExecutor<nVar> funcScalar;
     amrex::Parser parserScalar;
@@ -202,7 +202,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
         "1.0",
     };
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::ParserExecutor<nVar> funcScalar;
     amrex::Parser parserScalar;
@@ -271,4 +271,4 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
     }
     ASSERT_TRUE(loopRun);
 }
-}  // namespace
+} // namespace

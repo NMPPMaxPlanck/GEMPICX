@@ -133,7 +133,7 @@ public:
             //{ CreateDirectoryFailed(m_path); }
 
             // replace / create output file
-            if (m_isNotRestart)  // not a restart
+            if (m_isNotRestart) // not a restart
             {
                 std::ofstream ofs{m_path, std::ios::trunc};
                 ofs.close();
@@ -221,6 +221,6 @@ public:
     }
     // end ReducedDiagnostics::WriteToFile
 };
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

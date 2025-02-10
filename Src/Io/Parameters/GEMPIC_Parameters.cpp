@@ -59,7 +59,7 @@ std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray)
     }
     return os;
 }
-}  //namespace Impl
+} //namespace Impl
 
 void Parameters::set_print_output (bool printOrNot)
 {
@@ -79,7 +79,7 @@ Parameters::Parameters(const std::string& classPrefix, std::string printName) :
     m_classPrefix{classPrefix}
 {
     BL_PROFILE("Gempic::Io::Parameters(class)");
-    using namespace Impl;  // utility functions for this class
+    using namespace Impl; // utility functions for this class
     if (s_numParameterInstances == 0)
     {
         std::cerr << "Error: Parameters class not previously initialized!";
@@ -154,7 +154,7 @@ void Parameters::print_class_parameters ()
         m_classOutput << "\n";
         // open file
         std::ofstream ofs{s_outputFile, std::ofstream::out | std::ofstream::app};
-        ofs << m_classOutput.rdbuf();  // moves binary data from m_classOutput to file
+        ofs << m_classOutput.rdbuf(); // moves binary data from m_classOutput to file
         ofs.close();
     }
 }
@@ -163,7 +163,7 @@ void Parameters::print_class_parameters ()
 void Parameters::print_shared_parameters ()
 {
     BL_PROFILE("Gempic::Io::print_shared_parameters()");
-    using namespace Impl;  // utility functions for this class
+    using namespace Impl; // utility functions for this class
     if (s_printOutput && m_isIOProcess)
     {
         std::ofstream ofs{s_outputFile, std::ofstream::out | std::ofstream::app};
@@ -236,4 +236,4 @@ std::string Parameters::has_been_set_by (const std::string& variableName)
     }
 }
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io

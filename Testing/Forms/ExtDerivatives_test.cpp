@@ -137,7 +137,7 @@ TEST_F(ExtDerivativesTest, Grad)
 
     // Test grad of field on primal complex
     //-------------------------------------
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> funcField;
     amrex::Parser parserField;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcGrad;
@@ -232,7 +232,7 @@ TEST_F(ExtDerivativesTest, Curl)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcField, funcCurl;
     amrex::Array<amrex::Parser, 3> parserField, parserCurl;
     for (int i = 0; i < 3; ++i)
@@ -266,7 +266,7 @@ TEST_F(ExtDerivativesTest, Curl)
     }
 
     // Calculate curlField from Field with add_dt_curl
-    double dt{0.3};  // arbitrary dt factor
+    double dt{0.3}; // arbitrary dt factor
     analyticalCurlField *= dt;
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -312,7 +312,7 @@ TEST_F(ExtDerivativesTest, Div)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcField;
     amrex::ParserExecutor<nVar> funcDiv;
     amrex::Array<amrex::Parser, 3> parserField;
@@ -361,4 +361,4 @@ TEST_F(ExtDerivativesTest, Div)
     }
 }
 
-}  // namespace
+} // namespace

@@ -35,5 +35,5 @@ private:
     inline static int s_verbosityLevel{0};
     inline static bool s_settable{true};
 };
-}  // namespace Gempic::Utils
+} // namespace Gempic::Utils
 #endif

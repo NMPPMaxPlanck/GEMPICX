@@ -80,5 +80,5 @@ void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) c
             });
     }
 }
-}  //namespace Impl
-}  //namespace Gempic::Io
+} //namespace Impl
+} //namespace Gempic::Io

@@ -34,10 +34,10 @@ namespace Impl
  * @param chargeWeight : Particle weight * charge
  * @param primitiveDifference: The difference of the primitves at the current and previous time step
  */
-template <Direction pDir, int pDir1, int pDir2, typename splineType, unsigned int vDim>
+template <Direction pDir, int pDir1, int pDir2, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void update_j_component (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
-    splineType const &spline,
+    SplineType const &spline,
     amrex::Dim3 const &cellIndex,
     int const j,
     int const k,
@@ -67,10 +67,10 @@ AMREX_GPU_HOST_DEVICE inline void update_j_component (
  * @param k : sum index for direction pDir2
  * @param primitiveDifference: The difference of the primitves at the current and previous time step
  */
-template <int pDir1, int pDir2, typename splineType, unsigned int bDim>
+template <int pDir1, int pDir2, typename SplineType, unsigned int bDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real update_integrated_b_component (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    splineType const &spline,
+    SplineType const &spline,
     amrex::Dim3 const &cellIndex,
     int const j,
     int const k,
@@ -110,12 +110,12 @@ template <Direction pDir,
           int pDir2,
           int degP1,
           int degP2,
-          typename splineType,
+          typename SplineType,
           unsigned int bDim,
           unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -257,7 +257,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
 }
 
 #endif
-}  //namespace Impl
+} //namespace Impl
 
 #if AMREX_SPACEDIM == 1
 /**
@@ -288,7 +288,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
-    using namespace Impl;  // utility functions for this function
+    using namespace Impl; // utility functions for this function
     fields = {0., 0.};
     constexpr int degX = splineType::s_splineDegrees[xDir];
 
@@ -338,7 +338,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
-    using namespace Impl;  // utility functions for this function
+    using namespace Impl; // utility functions for this function
     fields = {0., 0.};
 
     constexpr int degX = splineType::s_splineDegrees[xDir];
@@ -448,23 +448,23 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
  * @todo Rewrite to avoid excessive branching
  */
 
-template <Direction pDir, typename splineType, unsigned int bDim, unsigned int vDim>
+template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
-    using namespace Impl;  // utility functions for this function
+    using namespace Impl; // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
 
-    constexpr int degP = splineType::s_splineDegrees[pDir];
-    constexpr int degP1 = splineType::s_splineDegrees[pDir1];
-    constexpr int degP2 = splineType::s_splineDegrees[pDir2];
+    constexpr int degP = SplineType::s_splineDegrees[pDir];
+    constexpr int degP1 = SplineType::s_splineDegrees[pDir1];
+    constexpr int degP2 = SplineType::s_splineDegrees[pDir2];
 
     fields = {0., 0.};
     // Size of support of difference of primitives
@@ -582,7 +582,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
-    using namespace Impl;  // utility functions for this function
+    using namespace Impl; // utility functions for this function
     constexpr int degX = splineType::s_splineDegrees[xDir];
     constexpr int degY = splineType::s_splineDegrees[yDir];
 
@@ -757,7 +757,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
-    using namespace Impl;  // utility functions for this function
+    using namespace Impl; // utility functions for this function
 
     constexpr int degPx = splineType::s_splineDegrees[xDir];
     fields = {0., 0.};
@@ -1036,6 +1036,6 @@ AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
     GEMPIC_D_LOOP_END
 }
 
-}  // namespace Gempic::ParticleMeshCoupling
+} // namespace Gempic::ParticleMeshCoupling
 
 #endif

@@ -307,7 +307,6 @@ def exclude_subproject_clang_tools(subProjectFolders) -> tuple:
     
     return oldNames, newNames
     
-
 def undo_exclude_subproject_clang_tools(changedFileList, originalNameList):
     """
     Undoes the changes made by exclude_subproject_clang_tools
@@ -323,7 +322,7 @@ def undo_exclude_subproject_clang_tools(changedFileList, originalNameList):
         changedFileList.pop()
         originalNameList.pop()
 
-def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=17) -> tuple[bool, str]:
+def clang_version_is_ok(tidyOrFormat: str, minVersion=14, maxVersion=18) -> tuple[bool, str]:
     """
     Checks if Clang-Tidy or Clang-Format is
     A) Available
@@ -391,7 +390,7 @@ def curate_compile_commands(buildDir: pathlib.Path, folders):
         folderPath = pathlib.Path(folder).resolve()
         compileCommandsNoThirdParty += [command for command in compileCommands if pathlib.Path(command['file']).resolve().is_relative_to(folderPath)]
 
-    nvccFlags = re.compile(' --[^ ]*')
+    nvccFlags = re.compile(r' (\")?--[^ ]*')
     nonClangFlags = re.compile(r' -(Xcudafe|ccbin|forward-unknown-to-host|maxrregcount|rdc)[^ ]*')
     googleIncludes = re.compile('(-isystem)=([^ ]*?google)')
     for command in compileCommandsNoThirdParty:
@@ -405,6 +404,16 @@ def curate_compile_commands(buildDir: pathlib.Path, folders):
 
     with open(compileCommandsFile, 'w', encoding='utf-8') as file:
         json.dump(compileCommandsNoThirdParty, file, indent=2)
+
+def get_header_filter(folders) -> str:
+    """
+    Regex filter for clang-tidy to exclude third party headers
+    """
+    if isinstance(folders, str):
+        folders = [folders]
+    # Only fix headers from given folders
+    filters = [str(pathlib.Path(folder).resolve()) for folder in folders]
+    return "'(" + r"/.*|".join(filters) + r"/.*)\.H$'"
 
 def parse_git_word_diff(gitDiffOut, word='', change=''):
     """
@@ -441,7 +450,6 @@ def parse_git_word_diff(gitDiffOut, word='', change=''):
     if lineNumbersToCorrect: # yield changes (if any) for last file
         yield file, lineNumbersToCorrect
 
-
 def fix_destroyed_lambda_captures():
     """
     Fix the destroyed lambda captures
@@ -475,18 +483,21 @@ def gempic_run_clang_tidy(folders):
     
     curate_compile_commands(buildDir, folders)
 
+    headerFilter = get_header_filter(folders)
+    commandStr = f'run-clang-tidy{versionString} -quiet {includeLibs} -fix -p {str(buildDir)} -header-filter {headerFilter}'
+
     print("Running Clang-Tidy ...")
     try:
         # Run Clang-Tidy on all files in folders
         # Start separate process because run-clang-tidy kills the entire process tree
         try: # Windows?
-            clangTidyOut = subprocess.run(f'run-clang-tidy{versionString} -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+            clangTidyOut = subprocess.run(commandStr, shell=True, capture_output=True, text=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         except AttributeError: # Unrecognised command, meaning we're most likely on a POSIX system
             try: # POSIX
-                clangTidyOut = subprocess.run(f'run-clang-tidy -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, start_new_session=True, capture_output=True, text=True)
+                clangTidyOut = subprocess.run(commandStr, shell=True, start_new_session=True, capture_output=True, text=True)
             except TypeError:
                 warnings.warn("Interruptible Clang-tidy execution not possible -- don't try to interrupt ... ")
-                clangTidyOut = subprocess.run(f'run-clang-tidy -quiet {includeLibs} -fix -p {str(buildDir)}', shell=True, capture_output=True, text=True)
+                clangTidyOut = subprocess.run(commandStr, shell=True, capture_output=True, text=True)
         outfile = buildDir / 'tidyOutput.out'
         with open(outfile, 'w') as file:
             file.write(clangTidyOut.stdout)
@@ -595,6 +606,8 @@ def main():
 
         gempic_run_clang_tidy(args.folders)
         gempic_run_clang_format(args.folders)
+    except KeyboardInterrupt:
+        print(" -- Script interrupted. Cleaning up ... ", end='')
     finally:
         # Interrupt signals to fool proof against several CTRL+C from impatient users
         try: # Interrupt signal in Windows

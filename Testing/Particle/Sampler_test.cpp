@@ -27,7 +27,7 @@ amrex::Real compute_v_moment_0 (const ParticleGroups<vDim>* partGr)
         *partGr,
         [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vDim + 1, 0>& p) -> amrex::Real
         {
-            auto w = p.rdata(vDim);  // particle weight
+            auto w = p.rdata(vDim); // particle weight
             return (w);
         });
     // reduce sum over MPI ranks
@@ -48,8 +48,8 @@ void compute_v_moments_1 (const ParticleGroups<vDim>* partGr,
             *partGr,
             [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vDim + 1, 0>& p) -> amrex::Real
             {
-                auto w = p.rdata(vDim);   // particle weight
-                auto vel = p.rdata(cmp);  // velocity component
+                auto w = p.rdata(vDim);  // particle weight
+                auto vel = p.rdata(cmp); // velocity component
                 return (w * vel);
             });
         // reduced sum over MPI ranks
@@ -68,7 +68,7 @@ amrex::Real compute_v_moment_2 (const ParticleGroups<vDim>* partGr)
         *partGr,
         [=] AMREX_GPU_HOST_DEVICE(const amrex::Particle<vDim + 1, 0>& p) -> amrex::Real
         {
-            auto w = p.rdata(vDim);  // particle weight
+            auto w = p.rdata(vDim); // particle weight
             amrex::Real v2{0};
             for (int cmp{0}; cmp < vDim; ++cmp)
             {
@@ -135,7 +135,7 @@ struct ParticleInputGpu
     inline constexpr static std::string_view s_sampler{"FullDomainGpu"};
 };
 
-template <typename particleInput>
+template <typename ParticleInput>
 class SamplerTest : public testing::Test
 {
 protected:
@@ -158,13 +158,13 @@ protected:
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
         // Special case by case parameters
-        add_particle_parameters(std::string(particleInput::s_sampler));
+        add_particle_parameters(std::string(ParticleInput::s_sampler));
     }
 
     void SetUp () override
     {
         // This method is not as accurate
-        if (particleInput::s_sampler == "Cellwise")
+        if (ParticleInput::s_sampler == "Cellwise")
         {
             m_tol = 3e-1;
         }
@@ -238,4 +238,4 @@ TYPED_TEST(SamplerTest, CompareMoments)
     EXPECT_NEAR(compute_v_moment_2(partGr[0].get()), mom2, tol)
         << "2nd order velocity moment false!";
 }
-}  // namespace
+} // namespace

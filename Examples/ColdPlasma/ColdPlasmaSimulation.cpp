@@ -88,7 +88,7 @@ int main (int argc, char* argv[])
             std::uniform_real_distribution<> unif(-1.0, 1.0);
             std::normal_distribution<> norm01(0, 1);
 
-            int comp = 2;  //noise only in z-component
+            int comp = 2; //noise only in z-component
             for (amrex::MFIter mfi(E.m_data[comp], true); mfi.isValid(); ++mfi)
             {
                 const amrex::Box& bx = mfi.tilebox();
@@ -119,7 +119,7 @@ int main (int argc, char* argv[])
 
                 // He,field (also computes E from D, needed in He,particle)
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
-                deRham->hodge(auxDualF2, E);  // Copy?? -> diagonal, same cost?
+                deRham->hodge(auxDualF2, E); // Copy?? -> diagonal, same cost?
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;
                 jFieldT -= auxDualF2;
@@ -150,7 +150,7 @@ int main (int argc, char* argv[])
                     std::cout << "Time Step: " << tStep + 1 << std::endl;
                 }
             }
-        }  // end of "time loop" scope
+        } // end of "time loop" scope
     }
     amrex::Finalize();
 }

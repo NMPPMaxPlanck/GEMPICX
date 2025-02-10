@@ -145,7 +145,7 @@ private:
     CalcOperation* m_calc{nullptr};
     CloneOperation* m_clone{nullptr};
 };
-}  //namespace Gempic::Io::Impl
+} //namespace Gempic::Io::Impl
 
 namespace Gempic::Io
 {
@@ -285,6 +285,6 @@ private:
     friend void add_output_processor(const std::string& key, const CustomOperatorType& f);
     friend Impl::ConstructorType Impl::match_custom_id(const std::string&);
 };
-}  //namespace Gempic::Io
+} //namespace Gempic::Io
 
-#endif  // GEMPIC_CUSTOMDIAGNOSTICSTRATEGIES_H_
+#endif // GEMPIC_CUSTOMDIAGNOSTICSTRATEGIES_H_

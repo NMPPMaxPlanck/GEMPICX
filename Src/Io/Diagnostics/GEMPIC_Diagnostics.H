@@ -72,5 +72,5 @@ Diagnostics<xDeg, yDeg, zDeg, vDim, nData> make_diagnostics (
     redDiagn.compute_and_write_to_file(tStep + 1, dt, infra, ions);
     fullDiagn.filter_compute_pack_flush(tStep + 1);
 */
-}  //namespace Gempic::Io
+} //namespace Gempic::Io
 #endif

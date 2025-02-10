@@ -133,12 +133,12 @@ void compute_analytical_vector_function_parallel_for (
         });
 }
 
-template <typename form>
+template <typename Form>
 class FDDeRhamComplexEvalFormTest : public testing::Test
 {
 protected:
-    static constexpr Grid s_grid{form::s_grid};
-    static constexpr Space s_space{form::s_space};
+    static constexpr Grid s_grid{Form::s_grid};
+    static constexpr Space s_space{Form::s_space};
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
@@ -148,7 +148,7 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
 
     int m_gaussNodes = 6;
     const amrex::Real m_tol = 1e-13;
@@ -162,7 +162,7 @@ protected:
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
         // Not checking particles
-        const int nGhostExtra{1};  //{-s_maxSplineDegree};
+        const int nGhostExtra{1}; //{-s_maxSplineDegree};
 
         amrex::ParmParse pp;
         pp.addarr("ComputationalDomain.domainLo", domainLo);
@@ -202,7 +202,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     const std::string analyticalForm = "x + y + z";
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -213,12 +213,12 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     // Compute the projection of the field
     if constexpr (TestFixture::s_space == Space::node)
     {
-        deRham->projection(func, 0.0, form);  // Projection of func to the discrete 0-form
+        deRham->projection(func, 0.0, form); // Projection of func to the discrete 0-form
     }
     else
     {
         deRham->projection(func, 0.0, form,
-                           this->m_gaussNodes);  // Projection of func to the discrete 3-form
+                           this->m_gaussNodes); // Projection of func to the discrete 3-form
     }
 
     const amrex::BoxArray &ba = form.m_data.boxArray();
@@ -292,7 +292,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     };
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Vector<amrex::ParserExecutor<nVar>> funcs(nComp);
     amrex::Vector<amrex::Parser> parser(nComp);
 
@@ -306,12 +306,12 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     // Compute the projection of the field
     if constexpr (TestFixture::s_space == Space::node)
     {
-        deRham->projection(funcs, 0.0, form);  // Projection of func to the discrete 0-form
+        deRham->projection(funcs, 0.0, form); // Projection of func to the discrete 0-form
     }
     else
     {
         deRham->projection(funcs, 0.0, form,
-                           this->m_gaussNodes);  // Projection of func to the discrete 3-form
+                           this->m_gaussNodes); // Projection of func to the discrete 3-form
     }
 
     const amrex::BoxArray &ba = form.m_data.boxArray();
@@ -360,8 +360,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     ASSERT_TRUE(loopRun);
 }
 
-template <typename form>
-class FDDeRhamComplexEvalFormTest2 : public FDDeRhamComplexEvalFormTest<form>
+template <typename Form>
+class FDDeRhamComplexEvalFormTest2 : public FDDeRhamComplexEvalFormTest<Form>
 {
 };
 
@@ -401,7 +401,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     };
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> func;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -414,7 +414,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
 
     // Compute the projection of the field
     deRham->projection(func, 0.0, form,
-                       this->m_gaussNodes);  // Projection of func to the discrete form
+                       this->m_gaussNodes); // Projection of func to the discrete form
 
     const amrex::BoxArray &ba =
         amrex::convert(form.m_data[xDir].boxArray(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)));
@@ -480,7 +480,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
         pointValues[comp]->setVal(0.0);
     }
 
-    deRham->eval_forms(form, evalShift, pointValues);  // Check that this version conforms as well
+    deRham->eval_forms(form, evalShift, pointValues); // Check that this version conforms as well
 
     for (int comp{0}; comp < 3; ++comp)
     {
@@ -522,7 +522,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     }};
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Vector<amrex::Array<amrex::ParserExecutor<nVar>, 3>> funcs(nComp);
     amrex::Vector<amrex::Array<amrex::Parser, 3>> parser(nComp);
 
@@ -538,7 +538,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
 
     // Compute the projection of the field
     deRham->projection(funcs, 0.0, form,
-                       this->m_gaussNodes);  // Projection of func to the discrete form
+                       this->m_gaussNodes); // Projection of func to the discrete form
 
     const amrex::BoxArray &ba =
         amrex::convert(form.m_data[xDir].boxArray(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)));
@@ -615,7 +615,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
         pointValues[comp]->setVal(0.0);
     }
 
-    deRham->eval_forms(form, evalShift, pointValues);  // Check that this version conforms as well
+    deRham->eval_forms(form, evalShift, pointValues); // Check that this version conforms as well
 
     for (int comp{0}; comp < 3; ++comp)
     {
@@ -629,4 +629,4 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
 }
 /// @todo: Add multiple value multifab fields tests
 ///        (using compute_analytical_vector_function_parallel_for)
-}  // namespace
+} // namespace

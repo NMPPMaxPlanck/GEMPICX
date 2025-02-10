@@ -114,4 +114,4 @@ double l_inf_error (amrex::Array4<const amrex::Real> const& a,
     return lerr;
 }
 
-}  // namespace Gempic::Test::Utils
+} // namespace Gempic::Test::Utils

@@ -329,4 +329,4 @@ cardinal_b_splines_second_derivative (amrex::Real x)
     }
 }
 // NOLINTEND(readability-magic-numbers)
-}  //namespace Gempic::ParticleMeshCoupling
+} //namespace Gempic::ParticleMeshCoupling

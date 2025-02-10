@@ -118,7 +118,7 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
     }
 
     // we use oldS here to make sure the stencil is correct even when npass = 0
-    oldS[0] *= 0.5;  // because we will use it twice
+    oldS[0] *= 0.5; // because we will use it twice
     stencil.resize(oldS.size());
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, oldS.begin(), oldS.end(), stencil.begin());
     /// @todo: Device wide Gpu::synchronize() usually too excessive and might interfere with other
@@ -126,7 +126,7 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
     /// https://amrex-codes.github.io/amrex/docs_html/GPU.html#stream-and-synchronization
     amrex::Gpu::synchronize();
 }
-}  //namespace Gempic::Filter::Impl
+} //namespace Gempic::Filter::Impl
 
 Gempic::Filter::BilinearFilter::BilinearFilter()
 {

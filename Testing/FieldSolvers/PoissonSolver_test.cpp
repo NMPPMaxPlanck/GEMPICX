@@ -39,9 +39,9 @@ public:
 
     Io::Parameters m_parameters{};
 
-    ComputationalDomain m_infra{};  // initialized computational domain
+    ComputationalDomain m_infra{}; // initialized computational domain
 
-    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
@@ -136,15 +136,15 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
         compare_fields(phi.m_data.array(mfi), phiIn.m_data.array(mfi), bx, tol);
     }
 }
-}  // namespace
+} // namespace
 
 namespace
 {
-template <typename degree>
+template <typename Degree>
 class PoissonSolverFFTTypedTest : public PoissonSolverTest
 {
 public:
-    static constexpr int s_hodgeDegree{degree()};
+    static constexpr int s_hodgeDegree{Degree()};
 };
 
 struct NameGeneratorFFT
@@ -189,7 +189,7 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
         compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
-}  //namespace
+} //namespace
 
 template <int degree, Operator op>
 struct HodgeDegreePoissonMethod
@@ -221,12 +221,12 @@ struct NameGenerator
 
 namespace
 {
-template <typename degreeMethod>
+template <typename DegreeMethod>
 class PoissonSolverTypedTest : public PoissonSolverTest
 {
 public:
-    static constexpr int s_hodgeDegree{degreeMethod::s_hodgeDegree};
-    static constexpr Operator s_operator{degreeMethod::s_operator};
+    static constexpr int s_hodgeDegree{DegreeMethod::s_hodgeDegree};
+    static constexpr Operator s_operator{DegreeMethod::s_operator};
 };
 
 using MyTypes = ::testing::Types<HodgeDegreePoissonMethod<2, Operator::poisson>,
@@ -261,4 +261,4 @@ TYPED_TEST(PoissonSolverTypedTest, AnalyticalLowTolerance)
         compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
-}  // namespace
+} // namespace

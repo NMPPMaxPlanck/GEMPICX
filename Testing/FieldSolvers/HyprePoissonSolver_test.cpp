@@ -34,7 +34,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{hodgeDegreeStruct::value};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
@@ -46,7 +46,7 @@ public:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         /* Initialize the infrastructure */
-        amrex::ParmParse pp;  // Used in lieu of input file
+        amrex::ParmParse pp; // Used in lieu of input file
         pp.addarr("ComputationalDomain.domainLo", domainLo);
         pp.addarr("ComputationalDomain.domainHi", domainHi);
 
@@ -133,4 +133,4 @@ TYPED_TEST(HyprePoissonSolverTest, HyprePoissonConvergence)
     amrex::Print() << "rate_of_convergence_" << hodgeDegree << ':' << rateOfConvergence << "\n";
     EXPECT_NEAR(rateOfConvergence, hodgeDegree, tol);
 }
-}  // namespace
+} // namespace

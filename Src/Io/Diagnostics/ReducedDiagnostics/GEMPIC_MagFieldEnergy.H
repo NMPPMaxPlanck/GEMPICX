@@ -183,7 +183,7 @@ private:
                 "computeMissingFields is not set";
             amrex::Assert("B or H not found", "MagFieldEnergy.H", __LINE__, str.c_str());
         }
-        return ComputeMethod::missingNone;  // never reached
+        return ComputeMethod::missingNone; // never reached
     }
 
     /**
@@ -208,6 +208,6 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

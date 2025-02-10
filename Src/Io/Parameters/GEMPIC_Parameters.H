@@ -190,7 +190,7 @@ parmParseType convert_to_param (T variable)
     set_shared_param(parameterVariable, variable);
     return parameterVariable;
 }
-}  //namespace Impl
+} //namespace Impl
 
 /**
  * @brief Objects of this class will mediate the information on and loading of parameters
@@ -291,7 +291,7 @@ private:
     inline static const auto s_sharedParams = init_shared_parameters({
         "outputFile",
         "simName",
-        "nGhost",  // NB: Cannot be set by user
+        "nGhost", // NB: Cannot be set by user
         "nGhostExtra",
         "k",
         "sV",
@@ -327,10 +327,10 @@ public:
     ~Parameters();
 
     // Delete other default methods
-    Parameters(Parameters const& rhs) = delete;             // copy constructor
-    Parameters(Parameters&& rhs) = delete;                  // move constructor
-    Parameters& operator=(const Parameters& rhs) = delete;  // copy assignment
-    Parameters& operator=(Parameters&& rhs) = delete;       // move assignment
+    Parameters(Parameters const& rhs) = delete;            // copy constructor
+    Parameters(Parameters&& rhs) = delete;                 // move constructor
+    Parameters& operator=(const Parameters& rhs) = delete; // copy assignment
+    Parameters& operator=(Parameters&& rhs) = delete;      // move assignment
 
     /**
      * @brief Get variable if it was previously set or exists in input file. Otherwise, set it.
@@ -390,7 +390,7 @@ public:
     void get (const std::string& variableName, T& variable)
     {
         BL_PROFILE("Gempic::Io::Parameters::get()");
-        using namespace Impl;  // utility functions for this class
+        using namespace Impl; // utility functions for this class
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -402,7 +402,7 @@ public:
             else if (query_shared(variableName, variable))
             {
                 set_shared_param(search->second.get()->m_ref,
-                                 variable);  // Trouble w/ uncopyable parameters?
+                                 variable); // Trouble w/ uncopyable parameters?
                 search->second.get()->m_isSet = true;
                 search->second.get()->m_setBy = "read from file";
             }
@@ -447,7 +447,7 @@ public:
     void set (const std::string& variableName, T& variable)
     {
         BL_PROFILE("Gempic::Io::Parameters::set()");
-        using namespace Impl;  // utility functions for this class
+        using namespace Impl; // utility functions for this class
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -629,7 +629,7 @@ private:
     void print_shared_parameter (std::ofstream& ofs, std::string variableName, T& variable)
     {
         BL_PROFILE("Gempic::Io::Parameters::print_shared_parameter()");
-        using namespace Impl;  // utility functions for this class
+        using namespace Impl; // utility functions for this class
         if (s_sharedParams.at(variableName).get()->m_isSet)
         {
             ofs << variableName << " " << convertToParam(variable) << " # "
@@ -642,6 +642,6 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

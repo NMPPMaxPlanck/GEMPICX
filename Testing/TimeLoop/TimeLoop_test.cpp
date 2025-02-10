@@ -30,7 +30,7 @@ class HamiltonianSplittingTest : public testing::Test
 {
 protected:
     // Degree of splines in each direction
-    static const int s_degX{2};  // to match degree 2 in script
+    static const int s_degX{2}; // to match degree 2 in script
     static const int s_degY{2};
     static const int s_degZ{2};
 
@@ -44,7 +44,7 @@ protected:
 
     Gempic::Io::Parameters m_parameters{};
 
-    ComputationalDomain m_infra{false};  // "unitialized" computational domain
+    ComputationalDomain m_infra{false}; // "unitialized" computational domain
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
 
     static void SetUpTestSuite ()
@@ -99,7 +99,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
@@ -273,7 +273,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
@@ -357,7 +357,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 1.0;
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
@@ -463,7 +463,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
 
@@ -564,7 +564,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.001;
@@ -705,10 +705,10 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
-    amrex::Real dt = 0.1;  // set time step to 1.0 for testing purposes
+    amrex::Real dt = 0.1; // set time step to 1.0 for testing purposes
     amrex::Real chargeOverMass = 0.6;
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.2;, amrex::Real zPosOld = 2.2;)
 
@@ -919,9 +919,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
-    amrex::Real dt = 0.1;  // set time step to 0.1 for testing purposes
+    amrex::Real dt = 0.1; // set time step to 0.1 for testing purposes
     amrex::Real chargeOverMass = 0.6;
 
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
@@ -990,4 +990,4 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     }
 }
 
-}  // namespace
+} // namespace

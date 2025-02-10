@@ -124,8 +124,8 @@ TEST(ParametersDeathTests, NoOutputFile)
     EXPECT_EXIT(Parameters{}, testing::ExitedWithCode(Error::InvalidInput),
                 "Error: Parameter outputFile not in input file!");
     Parameters::set_print_output(
-        false);  // special circumstances because Parameters was technically not created and
-                 // therefore not destroyed, so m_printOutput was not reset automatically.
+        false); // special circumstances because Parameters was technically not created and
+                // therefore not destroyed, so m_printOutput was not reset automatically.
 }
 
 // Death tests should be named as such in the testing suite
@@ -172,4 +172,4 @@ TEST(ParametersDeathTests, TwoGeneralInstances)
                 testing::ExitedWithCode(Error::ParametersAlreadyInitialized),
                 "Error: Parameters class already previously initialized!");
 }
-}  // namespace
+} // namespace

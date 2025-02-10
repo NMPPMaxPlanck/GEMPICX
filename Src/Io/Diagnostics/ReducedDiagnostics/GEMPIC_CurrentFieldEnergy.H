@@ -207,7 +207,7 @@ private:
             amrex::Assert("JField or JFieldT not found", "CurrentFieldEnergy.H", __LINE__,
                           str.c_str());
         }
-        return ComputeMethod::missingNone;  // never reached
+        return ComputeMethod::missingNone; // never reached
     }
 
     /**
@@ -231,6 +231,6 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

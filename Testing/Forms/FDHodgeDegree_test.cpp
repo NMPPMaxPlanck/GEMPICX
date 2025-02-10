@@ -176,7 +176,7 @@ void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineD
 /**
  * @brief Test fixture. Sets up clean environment before each test of the SplineWithPrimitive class
  */
-template <typename degreeSpace>
+template <typename DegreeSpace>
 class FDHodgeDegreeTest : public testing::Test
 {
 public:
@@ -187,8 +187,8 @@ public:
     inline static const int s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
 
-    static constexpr int s_hodgeDegree{degreeSpace::s_hodgeDegree};
-    static constexpr Space s_space{degreeSpace::s_space};
+    static constexpr int s_hodgeDegree{DegreeSpace::s_hodgeDegree};
+    static constexpr Space s_space{DegreeSpace::s_space};
 
     static void SetUpTestSuite ()
     {
@@ -247,8 +247,8 @@ using ZeroThreeForms = ::testing::Types<DegreeSpace<2, Space::node>,
 TYPED_TEST_SUITE(FDHodgeDegreeTest, ZeroThreeForms, NameGenerator);
 
 // Sillily we have to define a new class for a new typed test suite
-template <typename degreeSpace>
-class FDHodgeDegreeTest2 : public FDHodgeDegreeTest<degreeSpace>
+template <typename DegreeSpace>
+class FDHodgeDegreeTest2 : public FDHodgeDegreeTest<DegreeSpace>
 {
 };
 
@@ -273,7 +273,7 @@ TYPED_TEST(FDHodgeDegreeTest, PrimalDualZeroThreeTest)
 
     amrex::Real rateOfConvergencePrimalForm{0};
     if (errorPrimalFormCoarse < 1e-15 || errorPrimalFormFine < 1e-15)
-    {  // this happens..
+    { // this happens..
         rateOfConvergencePrimalForm = hodgeDegree;
     }
     else
@@ -283,7 +283,7 @@ TYPED_TEST(FDHodgeDegreeTest, PrimalDualZeroThreeTest)
 
     amrex::Real rateOfConvergenceDualForm{0};
     if (errorDualFormCoarse < 1e-15 || errorDualFormFine < 1e-15)
-    {  // this happens..
+    { // this happens..
         rateOfConvergenceDualForm = hodgeDegree;
     }
     else
@@ -314,4 +314,4 @@ TYPED_TEST(FDHodgeDegreeTest2, PrimalDualOneTwoTest)
     EXPECT_NEAR(rateOfConvergencePrimalForm, hodgeDegree, tol);
     EXPECT_NEAR(rateOfConvergenceDualForm, hodgeDegree, tol);
 }
-}  // namespace
+} // namespace

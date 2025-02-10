@@ -154,7 +154,7 @@ double hodge_zero_three_error (const int n, int maxSplineDegree = 3)
 /**
  * @brief Test fixture. Sets up clean environment before each test of the SplineWithPrimitive class
  */
-template <typename degreeSpace>
+template <typename DegreeSpace>
 class FDHodgeDegreeExtrapolationTest : public testing::Test
 {
 public:
@@ -164,8 +164,8 @@ public:
 
     inline static const int s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
-    static constexpr int s_hodgeDegree{degreeSpace::s_hodgeDegree};
-    static constexpr Space s_space{degreeSpace::s_space};
+    static constexpr int s_hodgeDegree{DegreeSpace::s_hodgeDegree};
+    static constexpr Space s_space{DegreeSpace::s_space};
 
     static void SetUpTestSuite ()
     {
@@ -222,8 +222,8 @@ using ZeroThreeForms = ::testing::Types<DegreeSpace<4, Space::node>,
 TYPED_TEST_SUITE(FDHodgeDegreeExtrapolationTest, ZeroThreeForms, NameGenerator);
 
 // Sillily we have to define a new class for a new typed test suite
-template <typename degreeSpace>
-class FDHodgeDegreeExtrapolationTest2 : public FDHodgeDegreeExtrapolationTest<degreeSpace>
+template <typename DegreeSpace>
+class FDHodgeDegreeExtrapolationTest2 : public FDHodgeDegreeExtrapolationTest<DegreeSpace>
 {
 };
 
@@ -274,4 +274,4 @@ TYPED_TEST(FDHodgeDegreeExtrapolationTest2, OneTwoFormTest)
 
     EXPECT_NEAR(rateOfConvergence, hodgeDegree, tol);
 }
-}  // namespace
+} // namespace

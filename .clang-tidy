@@ -5,7 +5,6 @@ Checks: '-*,readability-identifier-naming,bugprone-macro-parentheses,cppcoreguid
 #,cppcoreguidelines-macro-usage,readability-magic-numbers
 # These checks are (very!) bug prone:
 #,misc-const-correctness
-#HeaderFilterRegex: '^\./(src/.*|Testing/.*|[^/]*)\.H$' # regex to exclude third_party folder, but include header files in src/,  Testing/ and the root folder (where GEMPIC_Config.H is).
 HeaderFilterRegex: 'gempic/(Src/.*|Testing/.*|Examples/.*|[^/]*)\.H$' # regex to exclude third_party folder, but include header files in src/,  testing/ and the root folder (where GEMPIC_Config.H is).
 FormatStyle: none
 # ExportFixes: 'clangTidyFixes.yaml'
@@ -13,23 +12,17 @@ FormatStyle: none
 # If they're changed, remember to update them in doc/sphinx/latex/CodeStyle.tex
 CheckOptions:
   - { key: readability-identifier-naming.NamespaceCase,          value: CamelCase }
-  - { key: readability-identifier-naming.NamespaceIgnoredRegexp, value: "^GEMPIC_[A-Z][a-zA-Z]*$" }
   - { key: readability-identifier-naming.ClassCase,              value: CamelCase }
-  - { key: readability-identifier-naming.ClassIgnoredRegexp,   value: "^[Gg]empic_[A-Z][a-zA-Z]*$" }
   - { key: readability-identifier-naming.StructCase,             value: CamelCase }
   - { key: readability-identifier-naming.ClassMemberCase,        value: camelBack }
-#  - { key: readability-identifier-naming.ClassMemberIgnoredRegexp, value: "^m_[a-zA-Z]{1}[xyz]?$" }
+  - { key: readability-identifier-naming.ClassMemberIgnoredRegexp, value: "^m_[a-zA-Z]{1}[xyz]?$" }
   - { key: readability-identifier-naming.ClassMemberPrefix,      value: 's_' } # = static members
   - { key: readability-identifier-naming.ClassConstantPrefix,    value: 's_' } # = static members
   - { key: readability-identifier-naming.MemberCase,             value: camelBack }
-#  - { key: readability-identifier-naming.PublicMemberCase,       value: camelBack } # Doesn't differ from MemberCase
-#  - { key: readability-identifier-naming.PrivateParameterCase,   value: camelBack } # I don't think that's a thing
   - { key: readability-identifier-naming.MemberPrefix,           value: 'm_' }
   - { key: readability-identifier-naming.MemberIgnoredRegexp, value: "^m_[a-zA-Z]{1}[xyz]?$" }
   - { key: readability-identifier-naming.MethodCase,             value: lower_case }
-#  MethodCase used to be "camelBase". Does that mean camelBack or CamelCase??
   - { key: readability-identifier-naming.FunctionCase,           value: lower_case }
-#  - { key: readability-identifier-naming.FunctionIgnoredRegexp, value: "^gempic_[a-z][a-zA-Z]*$" }
   - { key: readability-identifier-naming.ParameterCase,          value: camelBack }
   - { key: readability-identifier-naming.ParameterIgnoredRegexp, value: "^[a-zA-Z]{1}[xyz]?$" }
   - { key: readability-identifier-naming.VariableCase,           value: camelBack }
@@ -40,7 +33,7 @@ CheckOptions:
   - { key: readability-identifier-naming.LocalConstantIgnoredRegexp, value: "^[a-zA-Z]{1}[xyz]?$" }
   - { key: readability-identifier-naming.GlobalConstantCase,  	 value: camelBack }
   - { key: readability-identifier-naming.GlobalConstantIgnoredRegexp, value: "^[a-zA-Z]{1}[xyz]?$" }
-  - { key: readability-identifier-naming.TemplateParameterCase,  value: camelBack }
+  - { key: readability-identifier-naming.TemplateParameterCase,  value: CamelCase }
   - { key: readability-identifier-naming.TemplateParameterIgnoredRegexp, value: "^[a-zA-Z]{1}[xyz]?$" }
+  - { key: readability-identifier-naming.ValueTemplateParameterCase,  value: camelBack }
   - { key: readability-braces-around-statements.ShortStatementLines,  value: '1' }
-#  - { key: readability-magic-numbers.IgnoredFloatingPointValues,  value: '0.5' }

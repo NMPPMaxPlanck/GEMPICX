@@ -32,4 +32,4 @@ int Verbosity::level ()
     s_settable = false;
     return s_verbosityLevel;
 }
-}  // namespace Gempic::Utils
+} // namespace Gempic::Utils

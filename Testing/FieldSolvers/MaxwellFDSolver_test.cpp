@@ -47,14 +47,14 @@ namespace
 /**
  * @brief Test fixture. Sets up clean environment before each test of the SplineWithPrimitive class
  */
-template <typename degree>
+template <typename Degree>
 class MaxwellFDSolverTest : public testing::Test
 {
 public:
     static constexpr int s_degX{3};
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
-    static constexpr int s_hodgeDegree{degree()};
+    static constexpr int s_hodgeDegree{Degree()};
 
     inline static const int s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
@@ -127,7 +127,7 @@ void maxwellstrang_error (double &bError, double &dError, const int n)
     ComputationalDomain infra;
 
     // Project B and D to a primal and dual two form respectively
-    constexpr int nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    constexpr int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcD;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parserD;
@@ -158,7 +158,7 @@ void maxwellstrang_error (double &bError, double &dError, const int n)
     DeRhamField<Grid::dual, Space::face> curlH(deRham);
 
     // Advance Maxwell's equations using second-order Hamiltonian Strang splitting
-    const int nt = 10;  // number of time steps
+    const int nt = 10; // number of time steps
     const amrex::Real dt = 0.0001;
     for (int i = 0; i < nt; ++i)
     {
@@ -217,4 +217,4 @@ TYPED_TEST(MaxwellFDSolverTest, ConvergenceTest)
     EXPECT_NEAR(rateOfConvergenceB, hodgeDegree, tol);
     EXPECT_NEAR(rateOfConvergenceD, hodgeDegree, tol);
 }
-}  // namespace
+} // namespace

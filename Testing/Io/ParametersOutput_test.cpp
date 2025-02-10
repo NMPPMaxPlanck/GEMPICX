@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
         std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
         init_particles(ions, infra);
 
-        {  // "Time Loop" scope. Should be a separate function
+        { // "Time Loop" scope. Should be a separate function
             Io::Parameters params("TimeLoop");
 
             amrex::Real dt;

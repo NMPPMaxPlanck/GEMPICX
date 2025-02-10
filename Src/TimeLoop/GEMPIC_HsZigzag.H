@@ -109,7 +109,7 @@ public:
                      ++pti)
                 {
                     amrex::Particle<0, 0>* AMREX_RESTRICT particles =
-                        &(pti.GetArrayOfStructs()[0]);  // get particles
+                        &(pti.GetArrayOfStructs()[0]); // get particles
                     const long np = pti.numParticles();
 
                     auto particleAttributes = &pti.GetStructOfArrays();
@@ -310,6 +310,6 @@ public:
     }
 };
 
-}  // namespace Gempic::TimeLoop
+} // namespace Gempic::TimeLoop
 
 #endif

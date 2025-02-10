@@ -41,7 +41,7 @@ public:
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
     inline static const int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1;  // x, y, z, t
+    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
@@ -151,7 +151,7 @@ public:
 
         // Advance Maxwell's equations using second-order Hamiltonian Strang splitting
         Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
-        int nt = 2;  // number of time steps
+        int nt = 2; // number of time steps
         amrex::Real dt = 0.001;
         for (int i = 0; i < nt; ++i)
         {
@@ -217,4 +217,4 @@ TEST_F(HamiltonianSplittingOrderTest, MaxwellTest)
     EXPECT_NEAR(rateOfConvergenceD, 2, tol);
 }
 
-}  // namespace
+} // namespace

@@ -1,7 +1,12 @@
 #ifndef GEMPIC_CONFIG_H_
 #define GEMPIC_CONFIG_H_
+#include <math.h>
 
-#define MAXGAUSS 2  // maximum number of velocity gaussians
+#ifndef M_PI /// M_PI is gnu @todo: switch to c++20 and std::numbers::pi_v<amrex::Real>
+#define M_PI 3.14159265358979323846
+#endif
+
+#define MAXGAUSS 2 // maximum number of velocity gaussians
 
 #define GEMPIC_CTEST_TOL 1e-4
 #define GEMPIC_CTEST_RELTOL 1e-4

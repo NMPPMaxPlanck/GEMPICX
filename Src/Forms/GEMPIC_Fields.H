@@ -70,7 +70,7 @@ class DeRhamComplex;
  * For node and cell only scalarData will be allocated, for edge and face only vector data
  */
 // General instance. Will never be called. Here for documentation
-template <Grid grid, Space space, typename enable = void>
+template <Grid grid, Space space, typename Enable = void>
 struct DeRhamField
 {
     std::shared_ptr<DeRhamComplex> m_deRham;
@@ -1020,14 +1020,14 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     m_deRham->m_fieldsDiagnostics.emplace(
         diagName + "z", amrex::MultiFab(this->m_data[zDir], amrex::make_alias, 0, nVar));
 
-    if constexpr (space == Space::edge)  // edge field
+    if constexpr (space == Space::edge) // edge field
     {
         auto dxInv{m_deRham->m_geom.InvCellSizeArray()};
         m_deRham->m_fieldsScaling.emplace(diagName + "x", dxInv[xDir]);
         m_deRham->m_fieldsScaling.emplace(diagName + "y", GEMPIC_D_MULT(1.0, dxInv[yDir], 1.0));
         m_deRham->m_fieldsScaling.emplace(diagName + "z", GEMPIC_D_MULT(1.0, 1.0, dxInv[zDir]));
     }
-    if constexpr (space == Space::face)  // face field
+    if constexpr (space == Space::face) // face field
     {
         auto dxInv{m_deRham->m_geom.InvCellSizeArray()};
         m_deRham->m_fieldsScaling.emplace(diagName + "x",
@@ -1068,11 +1068,11 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     m_deRham->m_fieldsDiagnostics.emplace(
         diagName, amrex::MultiFab(this->m_data, amrex::make_alias, 0, nVar));
 
-    if constexpr (space == Space::node)  // node field
+    if constexpr (space == Space::node) // node field
     {
         m_deRham->m_fieldsScaling.emplace(diagName, 1.0);
     }
-    if constexpr (space == Space::cell)  // cell field
+    if constexpr (space == Space::cell) // cell field
     {
         double invCellVol =
             GEMPIC_D_MULT(m_deRham->m_geom.InvCellSize(xDir), m_deRham->m_geom.InvCellSize(yDir),
@@ -1687,13 +1687,13 @@ inline amrex::Real dot_product (
     const DeRhamField<grid, space>& field2)
 {
     // Compute the dot product by summing the dot product of each component.
-    amrex::Real dotProd{0};               // Initialize the dot product to 0.
-    for (int comp = 0; comp < 3; ++comp)  // Loop over each component.
+    amrex::Real dotProd{0};              // Initialize the dot product to 0.
+    for (int comp = 0; comp < 3; ++comp) // Loop over each component.
     {
         dotProd += amrex::MultiFab::Dot(field1.m_data[comp], 0, field2.m_data[comp], 0,
                                         field1.m_data[comp].nComp(), 0);
     }
-    return dotProd;  // Return the computed dot product.
+    return dotProd; // Return the computed dot product.
 }
 
 /**
@@ -1761,7 +1761,7 @@ inline amrex::Real dot_product (
     return dotProd;
 }
 
-}  // namespace Gempic::Forms
+} // namespace Gempic::Forms
 
 namespace Gempic::Forms::Impl
 {
@@ -1787,6 +1787,6 @@ using unwrap_reference_t = typename UnwrapReference<T>::type;
 
 template <class T>
 using unwrap_ref_decay_t = typename UnwrapRefDecay<T>::type;
-}  // namespace Gempic::Forms::Impl
+} // namespace Gempic::Forms::Impl
 
 #endif

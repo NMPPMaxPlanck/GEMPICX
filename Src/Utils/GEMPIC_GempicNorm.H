@@ -53,6 +53,6 @@ inline amrex::Real gempic_norm (const amrex::MultiFab& multiF,
     }
     return (result);
 }
-}  // namespace Gempic::Utils
+} // namespace Gempic::Utils
 
 #endif

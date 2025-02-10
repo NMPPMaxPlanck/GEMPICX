@@ -104,10 +104,10 @@ private:
     amrex::Vector<std::unique_ptr<FullDiagnostics<vDim, nData>>> m_alldiags;
     int m_ndiags = 0; /**< number of different diagnostics */
     std::vector<std::string> m_diagsNames;
-    int m_defaultSaveInterval{100};  // default save interval for all full diagnostics
+    int m_defaultSaveInterval{100}; // default save interval for all full diagnostics
     std::string m_defaultSaveFolder{"FullDiagnostics"};
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
-#endif  // GEMPICX_MULTIDIAGNOSTICS_H_
+#endif // GEMPICX_MULTIDIAGNOSTICS_H_

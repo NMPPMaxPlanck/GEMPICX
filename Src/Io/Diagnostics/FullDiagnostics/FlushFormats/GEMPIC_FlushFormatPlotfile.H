@@ -173,24 +173,15 @@ public:
             */
             jobInfoFile << " Boundary conditions\n";
 
-            AMREX_D_TERM(jobInfoFile << "   -x: "
-                                     << "interior"
-                                     << "\n";
-                         jobInfoFile << "   +x: "
-                                     << "interior"
-                                     << "\n";
-                         , jobInfoFile << "   -y: "
-                                       << "interior"
-                                       << "\n";
-                         jobInfoFile << "   +y: "
-                                     << "interior"
-                                     << "\n";
-                         , jobInfoFile << "   -z: "
-                                       << "interior"
-                                       << "\n";
-                         jobInfoFile << "   +z: "
-                                     << "interior"
-                                     << "\n";)
+            // versions <18 and 18 of clang-format disagree on the formatting here
+            // clang-format off
+            AMREX_D_TERM(jobInfoFile << "   -x: " << "interior" << "\n";
+                         jobInfoFile << "   +x: " << "interior" << "\n";
+                       , jobInfoFile << "   -y: " << "interior" << "\n";
+                         jobInfoFile << "   +y: " << "interior" << "\n";
+                       , jobInfoFile << "   -z: " << "interior" << "\n";
+                         jobInfoFile << "   +z: " << "interior" << "\n";)
+            // clang-format on
 
             jobInfoFile << "\n\n";
 
@@ -286,4 +277,4 @@ public:
     ~FlushFormatPlotfile() override {}
 };
 
-#endif  // GEMPICX_FLUSHFORMATPLOTFILE_H_
+#endif // GEMPICX_FLUSHFORMATPLOTFILE_H_

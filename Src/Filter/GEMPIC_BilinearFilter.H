@@ -38,7 +38,7 @@ void compute_stencil(amrex::Gpu::DeviceVector<amrex::Real> &stencil,
                      const unsigned int npass,
                      const amrex::Real alpha,
                      const bool doCompensation);
-}  // namespace Impl
+} // namespace Impl
 
 class BilinearFilter : public Filter
 {
@@ -55,5 +55,5 @@ public:
 
     amrex::Array<int, AMREX_SPACEDIM> m_nPass{AMREX_D_DECL(1, 1, 1)};
 };
-}  // namespace Gempic::Filter
-#endif  // #ifndef GEMPIC_BILIN_FILTER_H_
+} // namespace Gempic::Filter
+#endif // #ifndef GEMPIC_BILIN_FILTER_H_

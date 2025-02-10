@@ -72,7 +72,7 @@ protected:
     static const int s_spec{0};
     Io::Parameters m_parameters{};
 
-    ComputationalDomain m_infra{false};  // "uninitialized" computational domain
+    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
@@ -138,7 +138,7 @@ TEST_F(EvaluateBFieldTest, NullTest)
     // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz
     const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", "0.0", "0.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -151,7 +151,7 @@ TEST_F(EvaluateBFieldTest, NullTest)
 
     DeRhamField<Grid::primal, Space::edge> B(m_deRham, funcB);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     bool particleLoopRun{false};
@@ -160,7 +160,7 @@ TEST_F(EvaluateBFieldTest, NullTest)
         particleLoopRun = true;
 
         const long np{pti.numParticles()};
-        EXPECT_EQ(1, np);  // Only one particle added by addSingleParticles
+        EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         const auto& particles{pti.GetArrayOfStructs()};
         const auto* const partData{particles().data()};
@@ -197,13 +197,13 @@ TEST_F(EvaluateBFieldTest, SingleParticleNode)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -244,13 +244,13 @@ TEST_F(EvaluateBFieldTest, SingleParticleMiddle)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -291,13 +291,13 @@ TEST_F(EvaluateBFieldTest, SingleParticleUnevenNodeSplit)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -338,13 +338,13 @@ TEST_F(EvaluateBFieldTest, DoubleParticleSeparate)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -389,13 +389,13 @@ TEST_F(EvaluateBFieldTest, DoubleParticleOverlap)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute();  // assign particles to the tile they are in
+    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
     const amrex::Array<std::string, 3> analyticalFuncB{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1};  // x, y, z, t
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -434,4 +434,4 @@ TEST_F(EvaluateBFieldTest, TestingForLiterallyAnythingOtherThanUnity)
 {
     GTEST_SKIP() << "Such advanced tests have not yet been implemented!";
 }
-}  // namespace
+} // namespace

@@ -1077,6 +1077,6 @@ void FDDeRhamComplex::eval_form_degree_selector (
                       __LINE__, str.c_str());
     }
 }
-}  // namespace Gempic::Forms
+} // namespace Gempic::Forms
 
 #endif

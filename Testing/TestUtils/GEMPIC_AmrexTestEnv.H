@@ -6,7 +6,7 @@
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
-namespace GEMPIC_Tests
+namespace GempicTests
 {
 
 /** Global setup/teardown test enviroment configuration for unit tests
@@ -49,7 +49,7 @@ public:
                               // slow. It's more useful to abort and tell the user to request more
                               // GPUs or scale down the simulation.
                               // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
-                              bool abortOnOutOfGpuMemory = true;  // AMReX' default: false
+                              bool abortOnOutOfGpuMemory = true; // AMReX' default: false
                               pp.queryAdd("abort_on_out_of_gpu_memory", abortOnOutOfGpuMemory);
                               // Synchronizes CPU (host) memory with GPU (device) memory, which is
                               // useful for testing
@@ -113,6 +113,6 @@ protected:
     bool m_keepParameters{false};
 };
 
-}  // namespace GEMPIC_Tests
+} //namespace GempicTests
 
 #endif /* AMREXTESTENV_H */

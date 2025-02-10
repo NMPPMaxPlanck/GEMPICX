@@ -185,7 +185,7 @@ private:
                 "computeMissingFields is not set";
             amrex::Assert("E or D not found", "ElecFieldEnergy.H", __LINE__, str.c_str());
         }
-        return ComputeMethod::missingNone;  // never reached
+        return ComputeMethod::missingNone; // never reached
     }
 
     /**
@@ -211,6 +211,6 @@ private:
     }
 };
 
-}  // namespace Gempic::Io
+} // namespace Gempic::Io
 
 #endif

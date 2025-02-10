@@ -374,7 +374,7 @@ int main (int argc, char *argv[])
                     std::cout << "Time Step: " << tStep + 1 << std::endl;
                 }
             }
-        }  // end of "time loop" scope
+        } // end of "time loop" scope
     }
     amrex::Finalize();
 }

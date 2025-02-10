@@ -105,7 +105,7 @@ This note describes some style conventions that should be followed in writing th
 
 \section{Conventions}
 GEMPIC uses a set of style conventions expanded from \href{https://warpx.readthedocs.io/en/latest/developers/contributing.html#style-and-conventions}{the WarpX project}. The rationale behind some of the conventions are explained there.
-These conventions only apply to source and header files. Checks that cannot be automatically enforced are marked with (*). Everything else could be fixed by running \verb|scripts/sanitize_code.sh|.
+These conventions only apply to source and header files. Checks that cannot be automatically enforced are marked with (*). Everything else could be fixed by running \verb|scripts/sanitize_with_python.py|.
 
 \subsection{General conventions}
 \begin{itemize}
@@ -132,7 +132,7 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item File names are prefixed with \verb|GEMPIC_| and then in \verb|CamelCase|, \emph{e.g.} \verb|GEMPIC_SomeModule.H|
     \item Test file names are \verb|CamelCase| and then postfixed with \verb|_test|, \emph{e.g.} \verb|SomeModule_test.cpp|
     \item (*) Namespaces follow the outer folder structure, such that code in \verb|Src/Io/Parameters| would be in the scope \lstinline{Gempic::Io}
-    \item (*) Implementation details internal to a module can be "hidden" in an \verb|Impl| namespace, \emph{e.g.} \verb|{Gempic::Io::Impl}|
+    \item (*) Implementation details internal to a module can be "hidden" in an \verb|Impl| namespace, \emph{e.g.} \verb|Gempic::Io::Impl|
 \end{itemize}
 Exceptions to these conventions are unavoidable when inheriting from or calling third party libraries, but otherwise they should be followed and will be enforced with automatic tools.
 
@@ -144,14 +144,15 @@ To help enforce the above conventions we use two clang extra tools: \verb|clang-
 \verb|clang-tidy| is responsible for semantic style choices: parentheses around macro arguments, no cstyle casting, correct case for variables, functions and classes, etc. It takes minutes to run, with recent versions taking longer.
 
 \begin{warning}
-    Unfortunately, these tools still have some bugs. It is therefore recommended not to run them on their own, but instead run the script \verb|scripts/sanitize_code.sh| which speeds up the runtime of \verb|clang-tidy| and attempts to correct mistakes incurred by both tools.
-    To format and lint your code before committing run:
-
-    \verb|source scripts/sanitize_code.sh|\\
-    The formatting should be done with clang-format and clang-tidy version 14 or 17, and preferably after configuring compilation for 3D.
+    Unfortunately, these tools still have some bugs. It is therefore recommended not to run them on their own, but instead run the script \verb|scripts/sanitize_with_python| which speeds up the runtime of \verb|clang-tidy| and attempts to correct mistakes incurred by both tools.
+    To format and lint your code before committing run:\\
+    \verb|python scripts/sanitize_with_python.py|\\
+    The formatting should be done with clang-format and clang-tidy version 14-18.
 \end{warning}
-If you wish to do only linting or only formatting, uncomment the corresponding line at the end of \verb|script/sanitize_code.sh|. It is, however, not recommended to do only linting, and \verb|clang-format| takes seconds to run, so there should be no need.
-    
+\begin{tip}
+    It's highly recommended to run the sanitize script \emph{after} configuring compilation for 3D and \emph{after} staging your changes.
+\end{tip}
+
 \subsection*{Frequently Asked Questions: Automatic Linting and Formatting}
 \begin{itemize}
     \item \emph{\ldots why?}
@@ -160,7 +161,7 @@ If you wish to do only linting or only formatting, uncomment the corresponding l
 
     \item \emph{Your style conventions are too restrictive. Can I not just focus on programming?}
     
-    Sure you can! Just remember to run \verb|scripts/sanitize_code.sh| when you're done (and check that it still compiles and runs).
+    Sure you can! Just remember to run \verb|scripts/sanitize_with_python.py| when you're done (and check that it still compiles and runs).
 
 \end{itemize}
 
