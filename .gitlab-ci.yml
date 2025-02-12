@@ -1,3 +1,8 @@
+# Interruptible jobs even after stages with non-interruptible jobs
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+
 stages:
   - test
   - deploy
@@ -5,8 +10,7 @@ stages:
 .mpcdf-modules:
   before_script:
     - module purge
-    - module load numdiff/5.9
-    - module load cmake/3.28
+    - module load cmake
     - module load git
     - module load anaconda/3/2023
 
@@ -21,34 +25,44 @@ stages:
     - popd
     - HYPRE_DIR=/third_party/hypre/src/hypre
 
-# Avoids splitting commit and merge pipelines
+# Avoids splitting commit and merge pipelines, and make jobs interruptible
 # Without this, every push to a branch with a merge request creates two pipelines: One for the 
 # branch itself, having all build-tests and another for the ones specific to merge requests.
-# With this, when a branch is part of a merge request, build-tests are cancelled on the branch but
-# run in the merge request pipeline.
-.combine-merge-branch-pipelines:
+.remove-duplicate-pipelines:
   rules:
+    # When part of a merge request, build-tests are run in the merge request pipeline ...
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # ... but are cancelled on the branch
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
+    # When not part of a merge request, check for changes in all files compared to the previous
+    # commit, and only run if there are changes. This should even avoid duplicate pipelines on
+    # master after merges, running if the code after the merge differs from the feature branch.
     - if: $CI_COMMIT_BRANCH
+      changes:
+        paths:
+          - "**/*"
+        compare_to: $CI_COMMIT_BEFORE_SHA
+  # If another commit is made while the pipeline is running, the current one will be canceled.
+  interruptible: true
 
 .mpcdf-gcc-env:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc_12-openmpi_4_1:latest
+  extends:
+    - .remove-duplicate-pipelines
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
     - cloud
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/12
-    - module load openmpi/4.1
+    - module load gcc
+    - module load openmpi
     - module load fftw-mpi
     - module list
 
 build-test_gcc_3D:
   extends:
     - .mpcdf-gcc-env
-    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-3D
     - cmake --build ./build -j $(($(nproc)-2))
@@ -58,32 +72,34 @@ build-test_gcc_3D:
 build-test_gcc_2D:
   extends:
     - .mpcdf-gcc-env
-    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-2D
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 build-test_gcc_1D:
   extends:
     - .mpcdf-gcc-env
-    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-1D
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 .mpcdf-gcc-env-hypre:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc_12-openmpi_4_1:latest
+  extends:
+    - .remove-duplicate-pipelines
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
     - cloud
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/12
-    - module load openmpi/4.1
+    - module load gcc
+    - module load openmpi
     - module load fftw-mpi
     - module list
     - !reference [.hypre-installation,before_script]
@@ -91,40 +107,41 @@ build-test_gcc_1D:
 build-test_gcc_3D_hypre:
   extends:
     - .mpcdf-gcc-env-hypre
-    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-3D-hypre
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 build-test_gcc_2D_hypre:
   extends:
     - .mpcdf-gcc-env-hypre
-    - .combine-merge-branch-pipelines
   script:
     - cmake -S . -B ./build --preset cpu-release-2D-hypre
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 .mpcdf-gpu-env:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc_12-openmpi_4_1:latest
+  extends:
+    - .remove-duplicate-pipelines
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-cuda:latest
   tags:
     - cloud-gpu
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/12
-    - module load openmpi/4.1
-    - module load cuda/12.2
+    - module load gcc
+    - module load openmpi
+    - module load cuda
     - module load fftw-mpi
     - module list
 
 build-test_gpu_3D:
   extends:
     - .mpcdf-gpu-env
-    - .combine-merge-branch-pipelines
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
@@ -133,11 +150,11 @@ build-test_gpu_3D:
     - cd build
     - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
+  needs: ["build-test_gcc_3D"]
 
 build-test_gpu_2D:
   extends:
     - .mpcdf-gpu-env
-    - .combine-merge-branch-pipelines
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
@@ -146,11 +163,11 @@ build-test_gpu_2D:
     - cd build
     - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
+  needs: ["build-test_gpu_3D"]
 
 build-test_gpu_1D:
   extends:
     - .mpcdf-gpu-env
-    - .combine-merge-branch-pipelines
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
@@ -159,49 +176,53 @@ build-test_gpu_1D:
     - cd build
     - ctest --output-on-failure
     - echo quit | nvidia-cuda-mps-control
+  needs: ["build-test_gpu_2D"]
 
 .mpcdf-clang-env:
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc_13-openmpi_4_1:latest
+  extends:
+    - .remove-duplicate-pipelines
+  # N.B. clang/17+ needs gcc/13 libraries to run
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
     - cloud
   stage: test
   before_script:
     - !reference [.mpcdf-modules,before_script]
-    - module load gcc/13 # clang/17+ needs gcc/13 libraries to run
-    - module load openmpi/4.1
-    - module load clang/17 
+    - module load gcc
+    - module load openmpi
+    - module load clang 
     - module load fftw-mpi
     - module list
 
 build-test_clang_cpu_3D:
   extends:
     - .mpcdf-clang-env
-    - .combine-merge-branch-pipelines
   script:
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
   extends:
     - .mpcdf-clang-env
-    - .combine-merge-branch-pipelines
   script:
     - cmake --preset cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
   extends:
     - .mpcdf-clang-env
-    - .combine-merge-branch-pipelines
   script:
     - cmake --preset cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure
+  needs: ["build-test_gcc_3D"]
 
 
 
@@ -249,7 +270,7 @@ style-test_gpu_3D:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
   before_script:
     - !reference [.mpcdf-gpu-env,before_script]
-    - module load clang/17 
+    - module load clang/18 
     - module list
   script:
     - cmake -S . -B ./build --preset mpcdf-gpu-3D

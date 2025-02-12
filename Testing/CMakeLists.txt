@@ -37,6 +37,9 @@ add_custom_command(
           ${CMAKE_CURRENT_BINARY_DIR}/InputFiles
 )
 
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 include(GoogleTest)
 # Setup target to be compiled with CUDA and be linked against CUDA-enabled AMReX
 # MUST be done AFTER all sources have been assigned to target
