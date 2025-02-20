@@ -13,7 +13,6 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_FunctionParse.H"
-#include "GEMPIC_HsZigzag.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
