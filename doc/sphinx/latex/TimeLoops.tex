@@ -24,30 +24,17 @@
 \usepackage{comment}
 \usepackage{showlabels}
 \usepackage{soul}
+\usepackage{mathbbol}
 %\usepackage[dvipsnames]{xcolor}
 
 %%%%%%%% MACROS
-\include{gempic_latex_macros}
+\include{GempicLatexMacros}
 
 \newcommand{\hi}{\hat{i}}
 \newcommand{\hj}{\hat{j}}
 \newcommand{\hk}{\hat{k}}
 
 % \newcommand{\arr}[1]{{\bs{\mathsf{#1}}}}
-
-% matrices
-\newcommand{\hodgeZero}{\mathbb{H}_0}
-\newcommand{\hodgeOne}{\mathbb{H}_1}
-\newcommand{\hodgeTwo}{\mathbb{H}_2}
-\newcommand{\hodgeThree}{\mathbb{H}_3}
-\newcommand{\hodgeDualZero}{\tilde{\mathbb{H}}_0}
-\newcommand{\hodgeDualOne}{\tilde{\mathbb{H}}_1}
-\newcommand{\hodgeDualTwo}{\tilde{\mathbb{H}}_2}
-\newcommand{\hodgeDualThree}{\tilde{\mathbb{H}}_3}
-\newcommand{\hodgeDualZeroB}{\mathbb{H}^*_0}
-\newcommand{\hodgeDualOneB}{\mathbb{H}^*_1}
-\newcommand{\hodgeDualTwoB}{\mathbb{H}^*_2}
-\newcommand{\hodgeDualThreeB}{\mathbb{H}^*_3}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -57,163 +44,304 @@
 
 \begin{document}
 
-\section{Time Loops}
+%\section{Time Loops}
 
-\subsection{Hamiltonian Splitting for Vlasov-Maxwell}
+\subsection{Splitting for Vlasov-Maxwell}
+\label{sec:splitting_vlasovmaxwell}
 
 The semi-discrete Vlasov-Maxwell equations on staggered grids form a noncanonical Hamiltonian sytem of the form $\fract{\arrU}{t}=\mathcal{J}(\arrU)\nabla\cH$, where $\arrU$ stacks all
-the particle positions $\arrX$, velocities $\arrV$ as well as the electric field $\arrD$ and magnetic field $\arrB$.
-The Hamiltonian is 
+the particle positions $\arrX$, velocities $\arrV$ as well as the electric field $\tilde\arrD$ and magnetic field $\arrB$.
+
+The discretized system of equations reads
+
 \begin{equation}
-    \cH =   \tfrac 12 \arrV^\top \matW_m \arrV + \tfrac 12 \arrD^\top  \hodgeDualTwo \arrD + \tfrac 12 \arrB^\top \hodgeTwo \arrB,
+    \begin{aligned}
+        \fract{\arrX}{t}       & = \arrV,                                                                                                   \\
+        \fract{\arrV}{t}       & = \matW_{\frac{q}{m}} \left( \matS^2(\arrX)\hodgeDualTwo \tilde\arrD + \matR^1(\arrX, \arrB) \arrV\right), \\
+        \fract{\tilde\arrD}{t} & = \matC^\top \hodgeTwo \arrB - \matW_q \matS^2(\arrX)^\top \arrV,                                          \\
+        \fract{\arrB}{t}       & = -\matC \hodgeDualTwo \tilde\arrD,
+    \end{aligned}
 \end{equation}
-where $\matW_m$ is a diagonal matrix with the mass of the corresponding particle on the diagonal. We also denote by $\arrE =  \hodgeDualTwo \arrD$ and $\tilde{\arrH}=\hodgeTwo \arrB$.
-The hamiltonian consists of three parts, the kinetic energy $\cH_p = \tfrac 12 \arrV^\top \matW_m \arrV$, the electric energy $\cH_e = \tfrac 12 \arrD^\top  \hodgeDualTwo \arrD$
+
+where $\matR^1(\arrX, \arrB) \arrV$ represents the discrete $\bf{v} \times \arrB$, and $\matS^2(\arrX)$ is the particle-mesh coupling matrix whose entries are grid spline functions evaluated at the particle positions. $\matW$ matrices are diagonal and contain the masses $m$ or charges $q$ of all the particles.
+
+The Hamiltonian is
+\begin{equation}
+    \cH =   \tfrac 12 \arrV^\top \matW_m \arrV + \tfrac 12 \tilde\arrD^\top  \hodgeDualTwo \tilde\arrD + \tfrac 12 \arrB^\top \hodgeTwo \arrB,
+\end{equation}
+where $\matW_m$ is a diagonal matrix with the mass of the corresponding particle on the diagonal. We also denote by $\arrE =  \hodgeDualTwo \tilde\arrD$ and $\tilde{\arrH}=\hodgeTwo \arrB$.
+The Hamiltonian consists of three parts, the kinetic energy $\cH_p = \tfrac 12 \arrV^\top \matW_m \arrV$, the electric energy $\cH_e = \tfrac 12 \tilde\arrD^\top  \hodgeDualTwo \tilde\arrD$
 and the magnetic energy $\cH_b= \tfrac 12 \arrB^\top \hodgeTwo \arrB$.
 
-We solve the equations using a hamiltonian splitting procedure, which yields three subsystems. We denote by $\bE$, $\bB$ the smoothed electric and magnetic fields used for particle mesh interactions.
+We solve the equations using a Hamiltonian splitting procedure, which yields three subsystems. We denote by $\bE$, $\bB$ the smoothed electric and magnetic fields used for particle mesh interactions.
 \begin{enumerate}
     \item Keeping only $\cH_b$:
-    $$
-    \begin{aligned}
-        \fract{\bx_p}{t} &= 0, \\
-        \fract{\bv_p }{t} &= 0 \\
- 	    \fract{\tilde{\arrD}}{t} &=  \tilde{\mathbb{C}}\tilde{\arrH}, \\
- 	    \fract{\arrB }{t}&= 0.
-    \end{aligned}
-    $$
-    Since $\arrB$ (and hence $\tilde{\arrH}$) are constant in this step, the exact solution of the system is straightforward.
+          $$
+              \begin{aligned}
+                  \fract{\bx_p}{t}         & = 0,                                \\
+                  \fract{\bv_p }{t}        & = 0                                 \\
+                  \fract{\tilde{\arrD}}{t} & =  \tilde{\mathbb{C}}\tilde{\arrH}, \\
+                  \fract{\arrB }{t}        & = 0.
+              \end{aligned}
+          $$
+          Since $\arrB$ (and hence $\tilde{\arrH}$) are constant in this step, the exact solution of the system is straightforward.
     \item Keeping only $\cH_e$:
-    $$
-    \begin{aligned}
-        \fract{\bx_p}{t} &= 0, \\
-        \fract{\bv_p }{t} &= \frac {q_p}{m_p} \bE(\bx_p) \\
- 	    \fract{\arrD}{t} &=  0, \\
- 	    \fract{\arrB }{t}&= - \mathbb{C}\arrE.
-    \end{aligned}
-    $$
-    Since $\bx_p$ and $\arrD$ (and hence $\arrE$) are constant in this step, the exact solution of the system is straightforward.
+          $$
+              \begin{aligned}
+                  \fract{\bx_p}{t}       & = 0,                          \\
+                  \fract{\bv_p }{t}      & = \frac {q_p}{m_p} \bE(\bx_p) \\
+                  \fract{\tilde\arrD}{t} & =  0,                         \\
+                  \fract{\arrB }{t}      & = - \mathbb{C}\arrE.
+              \end{aligned}
+          $$
+          Since $\bx_p$ and $\arrD$ (and hence $\arrE$) are constant in this step, the exact solution of the system is straightforward.
     \item Keeping only $\cH_p$:
-    $$
-    \begin{aligned}
-        \fract{\bx_p}{t} &= \bv_p, \\
-        \fract{\bv_p }{t} &= \frac {q_p}{m_p} \bv_p\times\bB(\bx_p) \\
- 	    \fract{\tilde{\arrD}}{t} &=  -\tilde{\arrJ}, \\
- 	    \fract{\arrB }{t}&= 0.
-    \end{aligned}
-    $$
-    where $\tilde{\arrJ}$ depends on all the particles positions and velocities.
-    This system cannot be solved explicitly in general, but we can further split the kinetic energy into its three components
-    $\cH_p = \cH_{p,x} + \cH_{p,y} + \cH_{p,z}$. We write $\bx_p=(x_p,y_p,z_p)$, $\bv_p=(v_{p,x},v_{p,y},v_{p,z})$ 
-    \begin{enumerate}
-        \item Keeping only $\cH_{p,x}$, and writing only the terms with non vanishing right-hand side
-        $$
-    \begin{aligned}
-        \fract{x}{t} &= v_{p,x}, \\
-        \fract{v_{p,y} }{t} &= - \frac {q_p}{m_p} v_{p,x} B_z(x(t),y,z) \\
-        \fract{v_{p,z} }{t} &=  \frac {q_p}{m_p} v_{p,x} B_y(x(t),y,z) \\
- 	    \fract{\tilde{\arrD}_x}{t} &=  -\tilde{\arrJ}_x.
-    \end{aligned}
-    $$
-    Using that $v_{p,x}=\fract{x}{t}$, this can be integrated exactly by using the primitive in $x$ of $\bB$ and $\bJ_x$
-    \item Keeping only $\cH_{p,y}$, and writing only the terms with non vanishing right-hand side
-        $$
-    \begin{aligned}
-        \fract{y}{t} &= v_{p,y}, \\
-        \fract{v_{p,x} }{t} &= \frac {q_p}{m_p} v_{p,y} B_z(x,y(t),z) \\
-        \fract{v_{p,z} }{t} &= - \frac {q_p}{m_p} v_{p,y} B_x(x,y(t),z) \\
- 	    \fract{\tilde{\arrD}_y}{t} &=  -\tilde{\arrJ}_y.
-    \end{aligned}
-    $$
-    Using that $v_{p,y}=\fract{y}{t}$, this can be integrated exactly by using the primitive in $y$ of $\bB$ and $\bJ_y$.
-    \item Keeping only $\cH_{p,z}$, and writing only the terms with non vanishing right-hand side
-    $$
-\begin{aligned}
-    \fract{z}{t} &= v_{p,z}, \\
-    \fract{v_{p,x} }{t} &= - \frac {q_p}{m_p} v_{p,z} B_y(x,y,z(t)) \\
-    \fract{v_{p,y} }{t} &=  \frac {q_p}{m_p} v_{p,z} B_x(x,y,z(t)) \\
-     \fract{\tilde{\arrD}_z}{t} &=  -\tilde{\arrJ}_z.
-\end{aligned}
-$$
-Using that $v_{p,z}=\fract{z}{t}$, this can be integrated exactly by using the primitive in $z$ of $\bB$ and $\bJ_z$.
-    \end{enumerate}
+          $$
+              \begin{aligned}
+                  \fract{\bx_p}{t}         & = \bv_p,                                 \\
+                  \fract{\bv_p }{t}        & = \frac {q_p}{m_p} \bv_p\times\bB(\bx_p) \\
+                  \fract{\tilde{\arrD}}{t} & =  -\tilde{\arrJ},                       \\
+                  \fract{\arrB }{t}        & = 0.
+              \end{aligned}
+          $$
+          where $\tilde{\arrJ}$ depends on all the particles positions and velocities.
+          This system cannot be solved explicitly in general, but we can further split the kinetic energy into its three components
+          $\cH_p = \cH_{p,x} + \cH_{p,y} + \cH_{p,z}$. We write $\bx_p=(x_p,y_p,z_p)$, $\bv_p=(v_{p,x},v_{p,y},v_{p,z})$
+          \begin{enumerate}
+              \item Keeping only $\cH_{p,x}$, and writing only the terms with non vanishing right-hand side
+                    $$
+                        \begin{aligned}
+                            \fract{x}{t}               & = v_{p,x},                                 \\
+                            \fract{v_{p,y} }{t}        & = - \frac {q_p}{m_p} v_{p,x} B_z(x(t),y,z) \\
+                            \fract{v_{p,z} }{t}        & =  \frac {q_p}{m_p} v_{p,x} B_y(x(t),y,z)  \\
+                            \fract{\tilde{\arrD}_x}{t} & =  -\tilde{\arrJ}_x.
+                        \end{aligned}
+                    $$
+                    Using that $v_{p,x}=\fract{x}{t}$, this can be integrated exactly by using the primitive in $x$ of $\bB$ and $\bJ_x$
+              \item Keeping only $\cH_{p,y}$, and writing only the terms with non vanishing right-hand side
+                    $$
+                        \begin{aligned}
+                            \fract{y}{t}               & = v_{p,y},                                 \\
+                            \fract{v_{p,x} }{t}        & = \frac {q_p}{m_p} v_{p,y} B_z(x,y(t),z)   \\
+                            \fract{v_{p,z} }{t}        & = - \frac {q_p}{m_p} v_{p,y} B_x(x,y(t),z) \\
+                            \fract{\tilde{\arrD}_y}{t} & =  -\tilde{\arrJ}_y.
+                        \end{aligned}
+                    $$
+                    Using that $v_{p,y}=\fract{y}{t}$, this can be integrated exactly by using the primitive in $y$ of $\bB$ and $\bJ_y$.
+              \item Keeping only $\cH_{p,z}$, and writing only the terms with non vanishing right-hand side
+                    $$
+                        \begin{aligned}
+                            \fract{z}{t}               & = v_{p,z},                                 \\
+                            \fract{v_{p,x} }{t}        & = - \frac {q_p}{m_p} v_{p,z} B_y(x,y,z(t)) \\
+                            \fract{v_{p,y} }{t}        & =  \frac {q_p}{m_p} v_{p,z} B_x(x,y,z(t))  \\
+                            \fract{\tilde{\arrD}_z}{t} & =  -\tilde{\arrJ}_z.
+                        \end{aligned}
+                    $$
+                    Using that $v_{p,z}=\fract{z}{t}$, this can be integrated exactly by using the primitive in $z$ of $\bB$ and $\bJ_z$.
+          \end{enumerate}
 
 \end{enumerate}
 
-\textbf{Remark:} In two space dimensions keeping all velocity components and all components of the fields, $v_{p,z}$ is constant in this step and $\bB$ does not depend on $z$, so that 
+\textbf{Remark:} In two space dimensions keeping all velocity components and all components of the fields, $v_{p,z}$ is constant in this step and $\bB$ does not depend on $z$, so that
 all equations can be integrated exactly in a straightforward manner without using the primitive,
 including the last equation using the definition of $\tilde{\arrJ}_z$.
 
 In one space dimension, the same also applies to the previous step.
 
-\subsection{Algorithm for the $\cH_p$ Part}
+\subsubsection{Algorithm for the $\cH_p$ Part}
+\label{sec:splitting_vlasovmaxwell_algo}
 
-As we just saw, the  $\cH_p$ part of the hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting. 
+As we just saw, the  $\cH_p$ part of the Hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting.
 
 In our algorithm, described in the Particle-Mesh coupling section, we need the primitives
 of $\bB$  and $\bJ$ in each of the directions. We shall denote them by
 $\check{B}^x(x,y,z) = \int^x B(x',y,z) \dd x'$ and in the same way the primitives in the other directions  by $\check{B}^y$, $\check{B}^z$. Similarly, the primitives of $\bJ$ in the three directions are denoted by $\check{J}^x$, $\check{J}^y$, $\check{J}^z$.
 We observe that $\bB$ does not vary in this split step. We express only the quantities that vary during each step, giving them a new upper index when they are modified.
 
- \begin{itemize}
-     \item $\cH_{p,x}$ over $\Delta t/2$
-     $$
-     \begin{aligned}
-        x^{(1)} &= x^n + \frac{\Delta t}{2} v_{p,x}^n, \\
-        v_{p,y}^{(1)} &= v_{p,y}^{n} - \frac {q_p}{m_p} (\check{B}^x_z(x^{(1)},y^n,z^n) - \check{B}^x_z(x^n,y^n,z^n) \\
-        v_{p,z}^{(1)} &= v_{p,z}^{n} + \frac {q_p}{m_p} (\check{B}^x_y(x^{(1)},y^n,z^n) - \check{B}^x_y(x^n,y^n,z^n) \\
- 	    \tilde{\arrD}_x^{(1)} &= \tilde{\arrD}_x^n -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n).
-    \end{aligned}
-    $$
-    \item $\cH_{p,y}$ over $\Delta t/2$
-     $$
-     \begin{aligned}
-        y^{(1)} &= y^n + \frac{\Delta t}{2} v_{p,y}^{(1)}, \\
-        v_{p,x}^{(1)} &= v_{p,x}^{n} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{(1)},z^n) - \check{B}^y_z(x^{(1)},y^n,z^n) \\
-        v_{p,z}^{(2)} &= v_{p,z}^{(1)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{(1)},z^n) - \check{B}^y_x(x^{(1)},y^n,z^n) \\
- 	    \tilde{\arrD}_y^{(1)} &= \tilde{\arrD}_y^n -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n).
-    \end{aligned}
-    $$
-    \item $\cH_{p,z}$ over $\Delta t$
-     $$
-     \begin{aligned}
-        z^{n+1} &= z^n + \Delta t \, v_{p,z}^{(2)}, \\
-        v_{p,x}^{(2)} &= v_{p,x}^{(1)} - \frac {q_p}{m_p} (\check{B}^z_y(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_y(x^{(1)},y^{(1)},z^n) \\
-        v_{p,y}^{(2)} &= v_{p,y}^{(1)} + \frac {q_p}{m_p} (\check{B}^z_x(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_x(x^{(1)},y^{(1)},z^n) \\
- 	    \tilde{\arrD}_z^{n+1} &= \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
-    \end{aligned}
-    $$
-    \item $\cH_{p,y}$ over $\Delta t/2$
-     $$
-     \begin{aligned}
-        y^{n+1} &= y^{(1)} + \frac{\Delta t}{2} v_{p,y}^{(2)}, \\
-        v_{p,x}^{n+1} &= v_{p,x}^{(2)} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_z(x^{(1)},y^{(1)},z^{n+1})) \\
-        v_{p,z}^{(3)} &= v_{p,z}^{(2)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_x(x^{(1)},y^{(1)},z^{n+1}) \\
- 	    \tilde{\arrD}_y^{n+1} &= \tilde{\arrD}_y^{(1)} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)}).
-    \end{aligned}
-    $$
+\begin{itemize}
     \item $\cH_{p,x}$ over $\Delta t/2$
-     $$
-     \begin{aligned}
-        x^{n+1} &= x^{(1)} + \frac{\Delta t}{2} v_{p,x}^{n+1}, \\
-        v_{p,y}^{n+1} &= v_{p,y}^{(2)} - \frac {q_p}{m_p} (\check{B}^x_z(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_z(x^{(1)},y^{n+1},z^{n+1}) \\
-        v_{p,z}^{n+1} &= v_{p,z}^{(3)} + \frac {q_p}{m_p} (\check{B}^x_y(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_y(x^{n+1},y^{n+1},z^{(1)}) \\
- 	    \tilde{\arrD}_x^{n+1} &= \tilde{\arrD}_x^{(1)} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)}).
-    \end{aligned}
-    $$
- \end{itemize}
+          $$
+              \begin{aligned}
+                  x^{(1)}               & = x^n + \frac{\Delta t}{2} v_{p,x}^n,                                                         \\
+                  v_{p,y}^{(1)}         & = v_{p,y}^{n} - \frac {q_p}{m_p} (\check{B}^x_z(x^{(1)},y^n,z^n) - \check{B}^x_z(x^n,y^n,z^n) \\
+                  v_{p,z}^{(1)}         & = v_{p,z}^{n} + \frac {q_p}{m_p} (\check{B}^x_y(x^{(1)},y^n,z^n) - \check{B}^x_y(x^n,y^n,z^n) \\
+                  \tilde{\arrD}_x^{(1)} & = \tilde{\arrD}_x^n -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n).
+              \end{aligned}
+          $$
+    \item $\cH_{p,y}$ over $\Delta t/2$
+          $$
+              \begin{aligned}
+                  y^{(1)}               & = y^n + \frac{\Delta t}{2} v_{p,y}^{(1)},                                                               \\
+                  v_{p,x}^{(1)}         & = v_{p,x}^{n} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{(1)},z^n) - \check{B}^y_z(x^{(1)},y^n,z^n)   \\
+                  v_{p,z}^{(2)}         & = v_{p,z}^{(1)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{(1)},z^n) - \check{B}^y_x(x^{(1)},y^n,z^n) \\
+                  \tilde{\arrD}_y^{(1)} & = \tilde{\arrD}_y^n -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n).
+              \end{aligned}
+          $$
+    \item $\cH_{p,z}$ over $\Delta t$
+          $$
+              \begin{aligned}
+                  z^{n+1}               & = z^n + \Delta t \, v_{p,z}^{(2)},                                                                              \\
+                  v_{p,x}^{(2)}         & = v_{p,x}^{(1)} - \frac {q_p}{m_p} (\check{B}^z_y(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_y(x^{(1)},y^{(1)},z^n) \\
+                  v_{p,y}^{(2)}         & = v_{p,y}^{(1)} + \frac {q_p}{m_p} (\check{B}^z_x(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_x(x^{(1)},y^{(1)},z^n) \\
+                  \tilde{\arrD}_z^{n+1} & = \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
+              \end{aligned}
+          $$
+    \item $\cH_{p,y}$ over $\Delta t/2$
+          $$
+              \begin{aligned}
+                  y^{n+1}               & = y^{(1)} + \frac{\Delta t}{2} v_{p,y}^{(2)},                                                                        \\
+                  v_{p,x}^{n+1}         & = v_{p,x}^{(2)} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_z(x^{(1)},y^{(1)},z^{n+1})) \\
+                  v_{p,z}^{(3)}         & = v_{p,z}^{(2)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_x(x^{(1)},y^{(1)},z^{n+1})  \\
+                  \tilde{\arrD}_y^{n+1} & = \tilde{\arrD}_y^{(1)} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)}).
+              \end{aligned}
+          $$
+    \item $\cH_{p,x}$ over $\Delta t/2$
+          $$
+              \begin{aligned}
+                  x^{n+1}               & = x^{(1)} + \frac{\Delta t}{2} v_{p,x}^{n+1},                                                                       \\
+                  v_{p,y}^{n+1}         & = v_{p,y}^{(2)} - \frac {q_p}{m_p} (\check{B}^x_z(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_z(x^{(1)},y^{n+1},z^{n+1}) \\
+                  v_{p,z}^{n+1}         & = v_{p,z}^{(3)} + \frac {q_p}{m_p} (\check{B}^x_y(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_y(x^{n+1},y^{n+1},z^{(1)}) \\
+                  \tilde{\arrD}_x^{n+1} & = \tilde{\arrD}_x^{(1)} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)}).
+              \end{aligned}
+          $$
+\end{itemize}
 Note that the primitives $\check{\arrJ}_x$ are evaluated at different points in the two steps in which they appear. For this reason $\check{\arrJ}_x^{(2)}\neq \check{\arrJ}_x^{(1)}$. The same is true for the $y$ components. Nonetheless, as the new values of $\arrD$ are not used in any of these steps, we can postpone their calculation to the end of the full step.
 This means that only the right-hand sides involving the primitives of $\bJ$ are computed in the particle loop in this algorithm. And after the particle loop, a loop on the grid is used to compute
 $$
-     \begin{aligned}
- 	    \tilde{\arrD}_x^{n+1} &= \tilde{\arrD}_x^{n} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)})
-         -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n), \\
-         \tilde{\arrD}_y^{n+1} &= \tilde{\arrD}_y^{n} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)})
-         -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n) \\
-         \tilde{\arrD}_z^{n+1} &= \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
+    \begin{aligned}
+        \tilde{\arrD}_x^{n+1} & = \tilde{\arrD}_x^{n} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)})
+        -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n),                                                  \\
+        \tilde{\arrD}_y^{n+1} & = \tilde{\arrD}_y^{n} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)})
+        -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n)                                                   \\
+        \tilde{\arrD}_z^{n+1} & = \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
     \end{aligned}
-    $$
+$$
 
+\subsection{Splitting for Electrostatic}
 
+\subsection{Splitting for Cold Plasma}
+\label{sec:splitting_coldplasma}
+
+The discretized system of equations reads
+\begin{align}
+    \fract{\tilde{\arrD}}{t}   & = \tilde{\mat{C}} \hodgeTwo \arrB - \tilde{\arrJ}_e,  \\
+    \fract{\arrB}{t}           & = - \mat{C} \hodgeDualTwo \tilde{\arrD},              \\
+    \fract{\tilde{\arrJ}_e}{t} & = \hodgeTwo(n_e)\arrE + \mat{R}_{B_0} \tilde{\arrJ}_e
+\end{align}
+where $\hodgeTwo(n_e)$ denotes a weighted diagonal Hodge and $\mat{R}_{B_0}$ is a block-diagonal rotation matrix in the background magnetic field $\bs B_0 = (B_x, B_y, B_z)^\top$ consisting of blocks
+\begin{align}
+    \begin{pmatrix}
+        0                              & \frac{\Delta y}{\Delta x} B_z  & -\frac{\Delta z}{\Delta x} B_y \\
+        -\frac{\Delta x}{\Delta y} B_z & 0                              & \frac{\Delta z}{\Delta y} B_x  \\
+        \frac{\Delta x}{\Delta z} B_y  & -\frac{\Delta y}{\Delta z} B_x & 0
+    \end{pmatrix}.
+\end{align}
+
+Together with the discretized Hamiltonian
+\begin{equation}
+    \cH_h = \underbrace{\frac{1}{2} \tilde{\arrD}^\top \hodgeDualTwo \tilde{\arrD}}_{=: \cH_\tilde{\arrD}} + \underbrace{\frac{1}{2} \arrB^\top \hodgeTwo \arrB}_{=: \cH_\arrB} + \underbrace{\frac{1}{2} \tilde{\arrJ}_e^\top \hodgeTwo(n_e)^{-1} \tilde{\arrJ}_e}_{=: \cH_{\tilde{\arrJ}_e}}
+\end{equation}
+the system can be written as a discrete Hamiltonian system. For time integration, we apply a Hamiltonian splitting and split into the three energy contributions.
+
+\begin{enumerate}
+    \item Keeping only $\cH_\tilde{\arrD}$:
+          $$
+              \begin{aligned}
+                  \fract{\tilde{\arrD}}{t}   & = 0,                                        \\
+                  \fract{\arrB}{t}           & = - {\mathbb{C}}\hodgeDualTwo\tilde{\arrD}, \\
+                  \fract{\tilde{\arrJ}_e}{t} & = \hodgeTwo(n_e)\arrE.
+              \end{aligned}
+          $$
+          Since $\tilde{\arrD}$ is constant in this step, the exact solution of the system is straightforward.
+
+    \item Keeping only $\cH_\arrB$:
+          $$
+              \begin{aligned}
+                  \fract{\tilde{\arrD}}{t}   & = \tilde{\mathbb{C}}\hodgeTwo\arrB, \\
+                  \fract{\arrB}{t}           & = 0,                                \\
+                  \fract{\tilde{\arrJ}_e}{t} & = 0.
+              \end{aligned}
+          $$
+          Since $\arrB$ is constant in this step, the exact solution of the system is straightforward.
+
+    \item Keeping only $\cH_{\tilde{\arrJ}_e}$:
+          $$
+              \begin{aligned}
+                  \fract{\tilde{\arrD}}{t}   & = - \tilde{\arrJ}_e,             \\
+                  \fract{\arrB}{t}           & = 0,                             \\
+                  \fract{\tilde{\arrJ}_e}{t} & = \mat{R}_{B_0} \tilde{\arrJ}_e.
+              \end{aligned}
+          $$
+          This step is nontrivial to solve, since $\tilde{\arrJ}_e$ changes. We solve this system in a rotated reference frame where the background magnetic field aligns with the z-axis. The motion reduces to a two-dimensional rotation in the xy-plane that can be solved analytically. The electric field equation is transformed to the same coordinate system and the sine and cosine terms of the rotation can be integrated exactly. The obtained results are finally transformed back to the roiginal coordinate system.
+
+\end{enumerate}
+
+\subsection{Splitting for Linearized Vlasov-Maxwell}
+\label{sec:splitting_linvlasovmaxwell}
+
+\newcommand{\Smat}{\mathbb{S}^2(\arrX)}
+\newcommand{\Vmat}{\mathbb{V}(\arrV)}
+\newcommand{\Wvth}{\mathbb{W}_{v^2_\textup{th}}}
+\newcommand{\Wfz}{\mathbb{W}_{\sqrt{f_0}}(\arrX,\arrV)}
+\newcommand{\Wq}{\mathbb{W}_q}
+\newcommand{\Wm}{\mathbb{W}_m}
+\def\Wmh{\widehat{\mathbb{W}}_m}
+\newcommand{\Wqm}{\mathbb{W}_{q/m}}
+\newcommand{\Wqmh}{\widehat{\mathbb{W}}_{q/m}}
+\def\Rmat{\mathbb{R}_{B_0}(\arrX)}
+
+The discretized system of equations reads
+\begin{align}
+    \fract{\tilde{\arrD}}{t} & = \tilde{\mat{C}} \hodgeTwo \arrB - \Smat^\top \Vmat^\top \Wq \Wfz \arrW, \\
+    \fract{\arrB}{t}         & = - \mat{C} \hodgeDualTwo \tilde{\arrD},                                  \\
+    \fract{\arrW}{t}         & = \Wvth^{-1} \Wfz \Wqm \Vmat \Smat \hodgeDualTwo \arrD,                   \\
+    \fract{\arrX}{t}         & = \arrV,                                                                  \\
+    \fract{\arrV}{t}         & = \Wqmh \Rmat \arrV.
+\end{align}
+$\Smat$ denotes the particle-mesh coupling operator and $\Vmat$ applies an inner product with the particle velocities. The other weight matrices are all diagonal and $\Rmat$ is a skew-symmetric rotation matrix with the background magnetic field.
+
+One can directly notice that the motion of the particles only depends on the background magnetic field and is completely decoupled from the other quantities. Only the weights interact with the fields. The discretized Hamiltonian is
+\begin{equation}
+    \cH_h = \frac{1}{2} \arrD^\top \hodgeDualTwo \arrD + \frac{1}{2} \arrB^\top \hodgeTwo \arrB + \frac{1}{2} \arrW^\top \Wm \Wvth \arrW + \frac{1}{2} \arrV^\top \Wmh \arrV
+\end{equation}
+where we added the kinetic particle energy term $\frac{1}{2} \arrV^\top \Wmh \arrV$ that is always constant. For time integration, we apply a Hamiltonian splitting and split into the three parts. For conservation reasons, it is important to keep the two particle terms together.
+
+\begin{enumerate}
+    \item Keeping only $\cH_\tilde{\arrD}$:
+          $$
+              \begin{aligned}
+                  \fract{\tilde{\arrD}}{t} & = 0,                                                    \\
+                  \fract{\arrB}{t}         & = - {\mathbb{C}}\hodgeDualTwo\tilde{\arrD},             \\
+                  \fract{\arrW}{t}         & = \Wvth^{-1} \Wfz \Wqm \Vmat \Smat \hodgeDualTwo \arrD, \\
+                  \fract{\arrX}{t}         & = 0,                                                    \\
+                  \fract{\arrV}{t}         & = 0.
+              \end{aligned}
+          $$
+          Since $\tilde{\arrD}$ is constant in this step, the exact solution of the system is straightforward.
+
+    \item Keeping only $\cH_\arrB$:
+          $$
+              \begin{aligned}
+                  \fract{\tilde{\arrD}}{t} & = \tilde{\mathbb{C}}\hodgeTwo\arrB, \\
+                  \fract{\arrB}{t}         & = 0,                                \\
+                  \fract{\arrW}{t}         & = 0,                                \\
+                  \fract{\arrX}{t}         & = 0,                                \\
+                  \fract{\arrV}{t}         & = 0.
+              \end{aligned}
+          $$
+          Since $\arrB$ is constant in this step, the exact solution of the system is straightforward.
+
+    \item Keeping only $\cH_p$
+          $$
+              \begin{aligned}
+                  \fract{\tilde{\arrD}}{t} & = - \Smat^\top \Vmat^\top \Wq \Wfz \arrW, \\
+                  \fract{\arrB}{t}         & = 0,                                      \\
+                  \fract{\arrW}{t}         & = 0,                                      \\
+                  \fract{\arrX}{t}         & = \arrV,                                  \\
+                  \fract{\arrV}{t}         & = \Wqmh \Rmat \arrV.
+              \end{aligned}
+          $$
+          Since the particle weights $\arrW$ are constant in this step, this reduces to the case of the non-linear Vlasov-Maxwell model with the magnetic field replaced by the constant background. Again, we have to further split this step into spatial components and the details are given in \ref{sec:splitting_vlasovmaxwell} and \ref{sec:splitting_vlasovmaxwell_algo}.
+\end{enumerate}
 
 \end{document}

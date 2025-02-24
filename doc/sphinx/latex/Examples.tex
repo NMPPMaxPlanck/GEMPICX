@@ -1,0 +1,250 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\renewcommand{\Affilfont}{\footnotesize}
+%\renewcommand{\Authfont}{\normalsize}
+
+\usepackage{listings}
+%\usepackage{stmaryrd}
+\usepackage{comment}
+%\usepackage{showlabels}
+\usepackage{soul}
+%\usepackage[dvipsnames]{xcolor}
+
+%%%%%%%% MACROS
+\include{GempicLatexMacros}
+
+\begin{document}
+
+\section{Examples}
+
+This page contains a list of models implemented in GEMPICX. The source code together with sample input and diagnostic files can be found in the \verb|Examples| folder.
+The provided Python files to analyze the simulation results can either be used directly or translated into Jupyter notebooks using jupytext via
+\begin{lstlisting}
+    jupytext --to ipynb Weibel.py 
+\end{lstlisting}
+
+\subsection{Vlasov-Maxwell}
+
+The Vlasov-Maxwell system describes plasma particles in their self-consistent electromagnetic fields. The non-relativistic Vlasov equation for a particle species $s$ of charge $q_s$ and mass $m_s$ governs the evolution of a distribution function $f_s$ on phase space $(\bx, \bv) \in \Omega \times \mathbb{R}^3$ and is given by
+\begin{equation}
+    \label{eq:vlasov}
+    \dt f_s(t,\bx,\bv) + \bv \cdot \nabla_\bx f_s(t,\bx,\bv) + \frac{q_s}{m_s} \left(\bs E(t,\bx) + \bv \times \bs B(t,\bx)\right) \cdot \nabla_\bv f_s(t,\bx,\bv) = 0.
+\end{equation}
+
+It is coupled to Maxwell's equations
+\begin{equation}
+    \label{eq:maxwell_example}
+    \begin{aligned}
+        \dt \bs D  & = \curl \bs H - \bs J, \\
+        \dt \bs B  & = - \curl \bs E,       \\
+        \Div \bs D & = \rho,                \\
+        \Div \bs B & = 0,
+    \end{aligned}
+\end{equation}
+written in four-field formulation. The two descriptions of each field are related through the constitutive relations, i.e., $\bs D = \varepsilon_0 \bs E$ and $\bs H = \frac{1}{\mu_0} \bs B$ with vacuum permittivity and permeability $\varepsilon_0$ and $\mu_0$, respectively.
+The charge and current sources for Maxwell's equations are given by moments of the distribution function
+\begin{equation}
+    \label{eq:vlasov_moments}
+    \rho(t,\bx) = \sum_s q_s \int f_s(t,\bx,\bv)\dd \bv, \qquad \bs J(t,\bx) = \sum_s q_s \int \bv f_s(t,\bx,\bv) \dd \bv.
+\end{equation}
+Under suitable boundary conditions, the Vlasov-Maxwell system conserves the energy
+\begin{equation}
+    \cH = \frac{1}{2} \int \bs E \cdot \bs D \dd\bx + \frac{1}{2} \int \bs B \cdot \bs H \dd\bx + \sum_s \frac{1}{2} m_s \int |\bv|^2 f_s \dd\bx \dd\bv.
+\end{equation}
+
+We apply a structure-preserving mimetic finite difference PIC discretization and obtain a discrete noncanonical Hamiltonian system. The resulting numerical scheme and details on the implementation are given in \ref{sec:splitting_vlasovmaxwell}.
+
+As a simulation example, we demonstrate the Weibel instability, which includes a genuine magnetic effect driven by a temperature anisotropy. \ref{fig:vmaxweibelfourier} and \ref{fig:vmaxweibelenergy} are created by running the 3D simulation of the Vlasov-Maxwell example using the input file \verb|Examples/VlasovMaxwell/weibel.input|.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelFourierComp.png}
+    \caption{Real and imaginary parts for the fundamental mode of the Weibel instability.}
+    \label{fig:vmaxweibelfourier}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelEnergy.png}
+    \caption{Energy composition and conserved quantities for the Weibel instability simulation.}
+    \label{fig:vmaxweibelenergy}
+\end{figure}
+
+
+\subsection{Electrostatic}
+
+\subsubsection{The Vlasov-Poisson model}
+The Vlasov-Poisson system describes plasma particles in their self-consistent electrostatic fields. The non-relativistic Vlasov equation for a particle species $s$ of charge $q_s$ and mass $m_s$ governs the evolution of a distribution function $f_s$ on phase space $(\bx, \bv) \in \Omega \times \mathbb{R}^3$ and is given by
+\begin{equation}
+    \label{eq:vlasov_VP}
+    \dt f_s(t,\bx,\bv) + \bv \cdot \nabla_\bx f_s(t,\bx,\bv) + \frac{q_s}{m_s} \left(\bs E(t,\bx) + \bv \times \bs B(t,\bx)\right) \cdot \nabla_\bv f_s(t,\bx,\bv) = 0.
+\end{equation}
+It is coupled to the Poisson equation
+\begin{equation}
+    \label{eq:Poisson_example}
+    - \Delta \phi =\rho(t,\bx)
+\end{equation}
+with $\bs E = -\nabla\phi$.
+The charge density is obtained from the distribution function by
+\begin{equation}
+    \rho(t,\bx) = \sum_s q_s \int f_s(t,\bx,\bv)\dd \bv, \qquad \bs J(t,\bx) = \sum_s q_s \int \bv f_s(t,\bx,\bv) \dd \bv.
+\end{equation}
+Under suitable boundary conditions, the Vlasov-Maxwell system conserves the energy
+\begin{equation}
+    \cH = \frac{1}{2} \int |\bs E|^2 \dd\bx + \sum_s \frac{1}{2} m_s \int |\bv|^2 f_s \dd\bx \dd\bv.
+\end{equation}
+
+As simulation examples, we have three classical electrostatic problems: Landau damping for Vlasov-Poisson (VP), the two-stream instability and the bump-on-tail instability. The corresponding input files are
+\verb|Examples/Electrostatic/landauVP.input|, \verb|Examples/Electrostatic/twoStream.input| and \verb|Examples/Electrostatic/bumpOnTail.input|.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../_static/graphics/Examples/ElectrostaticVP_Landau.png}
+    \caption{Landau damping: Evolution of Fourier modes of the electric field (left) and the energy (right).}
+    \label{fig:landauVP}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../_static/graphics/Examples/ElectrostaticVP_TSI.png}
+    \caption{Two stream instability $v_0=2.4$: Evolution of Fourier modes of electric field and time history.}
+    \label{fig:TwoStreamVP}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../_static/graphics/Examples/ElectrostaticVP_TSIstable.png}
+    \caption{Two stream instability (stable case) $v_0=1.3$: Evolution of Fourier modes of the electric field (left) and energy and momentum over time (right).}
+    \label{fig:TwoStreamStableVP}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../_static/graphics/Examples/ElectrostaticVP_BOT.png}
+    \caption{Bump on Tail instability: Evolution of Fourier modes of the electric field (left) and energy and momentum over time (right).}
+    \label{fig:BOTVP}
+\end{figure}
+
+\subsubsection{The quasineutral electrostatic Vlasov model}
+
+The quasineutral electrostatic Vlasov model describes the evolution of plasma particles in a quasineutral plasma, \textit{i.e.} such that the total charge density is 0.  The non-relativistic Vlasov equation for an ion species of charge $q$ and mass $m$ governs the evolution of the ion distribution function $f$ on phase space $(\bx, \bv) \in \Omega \times \mathbb{R}^3$ and is given by
+\begin{equation}
+    \label{eq:vlasov_QNE}
+    \dt f(t,\bx,\bv) + \bv \cdot \nabla_\bx f(t,\bx,\bv) + \frac{q}{m} \left(\bs E(t,\bx) + \bv \times \bs B_0(\bx)\right) \cdot \nabla_\bv f(t,\bx,\bv) = 0,
+\end{equation}
+where $ \mathbf{B}_0$ is a given external magnetic field.
+On the other hand, the electrons are considered adiabatic and follow the Maxwell-Boltzmann distribution, which yields
+$n_e = n_0 \exp(q_e \phi/(k_B T_e))$, where $k_B$ is the Boltzmann constant. Assuming $q_e=-q_i$, the quasineutrality condition becomes
+$$n_e=n =\int f(t,\bx,\bv)\dd\bv = n_0 e^{\frac{q_e \phi}{k_B T_e}}.$$
+Linearizing this expression around $\phi=0$, we obtain
+$$ n = n_0 \left(1 + \frac{q_e \phi}{k_B T_e}\right).$$
+This allows us to express the electric field with respect to the ion distribution function as
+\begin{equation}
+    \label{eq:electric_field_QN}
+    \mathbf{E} = -\nabla\phi = -\frac{k_B T_e}{n_0 q_e} \nabla n = -\frac{k_B T_e}{n_0 q_e} \nabla \int f \dd\bv.
+\end{equation}
+
+This model is tested by checking the Laudau damping for ion acoustic waves. The input file for this example is \texttt{landauIAW.input}. The analytical dispersion relation is solved in the notebook \texttt{landauIAWdisp.py} in the dispersion relations directory and the diagnostics for this example are computed in the notebook \texttt{landauIAW.py} and shown in figure \ref{fig:landauIAW}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{../_static/graphics/Examples/ElectrostaticQN_LandauIAW.png}
+    \caption{Landau damping of ion acoustic waves: Evolution of Fourier modes of the electric field (left) and energy and momentum over time (right).}
+    \label{fig:landauIAW}
+\end{figure}
+
+
+\subsection{Cold Plasma}
+
+The cold plasma model consists of Maxwell's equations coupled to a linearized fluid description for the electrons. The continuous system in four-field formulation is given by
+\begin{align}
+    \dt \bs D   & = \curl \bs H - \bs J_e,                               \\
+    \dt \bs B   & = - \curl \bs E,                                       \\
+    \dt \bs J_e & = \omega_{pe}^2 \bs E + \bs J_e \times \bs \omega_{ce}
+\end{align}
+where $\omega_{pe} = \sqrt{\frac{e^2 n}{\varepsilon_0 m_e}}$, $\bs \omega_{ce} = \frac{e \bs B_0}{m_e}$ denote the electron plasma and cyclotron frequency, respectively. $\bs B_0$ is a given stationary background magnetic field. The constitutive relations for the electric and magnetic field are given by
+\begin{align}
+    \bs D = \varepsilon_0 \bs E, \quad \bs H = \frac{1}{\mu_0} \bs B.
+\end{align}
+With appropriate boundary conditions, the system conserves the energy
+\begin{align}
+    \cH = \frac{1}{2} \int \bs E \cdot \bs D \dd \bx + \frac{1}{2} \int \bs B \cdot \bs H \dd \bx + \frac{1}{2} \int \frac{\bs J_e}{\omega_{pe}^2} \cdot \bs J_e \dd \bx
+\end{align}
+
+We apply a structure-preserving mimetic finite difference discretization and obtain a discrete Hamiltonian system. The system and resulting splitting time integration scheme is given in \ref{sec:splitting_coldplasma}.
+
+\ref{fig:coldplasma_dispersion} shows the 1D dispersion relation of our implementation. The simulation uses the input file \verb|Examples/ColdPlasma/coldPlasmaDispersion.input|.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/ColdPlasma_Dispersion.png}
+    \caption{1D cold plasma dispersion relation for othogonal magnetic field orientations. Analytical solutions are shown as dashed lines.}
+    \label{fig:coldplasma_dispersion}
+\end{figure}
+
+
+\subsection{Linearized Vlasov-Maxwell}
+The Vlasov-Maxwell equations \ref*{eq:vlasov}, \ref*{eq:maxwell_example} can be linearized around a stationary solution $f_0$, $\bs E_0$, $\bs B_0$. Assuming that $\bs E_0 \equiv 0$ and $f_0 = \frac{n_0(\bx)}{\left(\sqrt{2\pi} v_\text{th}\right)^3} e^{-\frac{\abs{\bv}^2}{2 v_\text{th}^2}}$ is a Maxwellian, plugging the expansions $f = f_0 + \epsilon f_1$, $\bs E = \bs E_1$, $\bs B = \bs B_0 + \epsilon \bs B_1$ into the Vlasov equation and eliminating all non-linear terms yields
+\begin{equation}
+    \dt f_0 + \bv \cdot \nabla_\bx f_0 + \frac{q}{m} \left(\bv \times \bs B_0\right) \cdot \nabla_\bv f_0 = \frac{q}{m v_\text{th}^2} f_0~ \bs E_1 \cdot \bv.
+\end{equation}
+We introduce the rescaled distribution function $g := f_1 / \sqrt{f_0}$. Maxwell's equations are linear by nature and remain unchanged. Dropping the 1 subscripts, the entire system writes
+\begin{equation}
+    \dt g_s + \bv \cdot \nabla_\bx g_s + \frac{q_s}{m_s} \left(\bv \times \bs B_0\right) \cdot \nabla_\bv g_s = \frac{q_s}{m_s v_\text{th,s}^2} \sqrt{f_{0,s}}~\bs E \cdot \bv
+\end{equation}
+\begin{align}
+    \dt \bs D & = \curl \bs H - \bs J, \\
+    \dt \bs B & = - \curl \bs E,
+\end{align}
+\begin{equation}
+    \rho(t, \bx) = \sum_s q_s \int \sqrt{f_{0,s}}~ g_s(t, \bx, \bv) \dd\bv, \qquad \bs J(t,\bx) = \sum_s q_s \int \bv \sqrt{f_{0,s}}~ g_s(t, \bx, \bv) \dd\bv.
+\end{equation}
+With appropriate boundary conditions, the system conserves the energy
+\begin{align}
+    \cH & = \frac{1}{2} \int \bs E \cdot \bs D \dd\bx + \frac{1}{2} \int \bs B \cdot \bs H \dd\bx + \sum_s \frac{1}{2} m_s v_\text{th,s}^2 \int g_s^2 \dd\bx \dd\bv.
+\end{align}
+We apply a structure-preserving mimetic finite difference PIC discretization and obtain a discrete Hamiltonian system. In contrast to the non-linear case, the particle motion only depends on the background magnetic field but the particle weights are not constant anymore and interact with the electric field.
+The discrete system and resulting splitting time integration scheme is given in \ref{sec:splitting_linvlasovmaxwell}.
+
+Linearizing the equation has the advantage that only the perturbation of the distribution function has to be resolved. As a consequence, there is less PIC noise in the simulations and fewer particles are needed.
+
+A standard test case is weak/linear Landau damping. The collisionless particle wave interaction phenomenon is started by a spatial variation in the particle density
+\begin{equation}
+    f(t=0,\bx,\bv) = (1 + \alpha \cos (\bk \cdot \bx)) f_0(\bx,\bv).
+\end{equation}
+The initial condition for the rescaled distribution function is
+\begin{equation}
+    g(t = 0, \bx, \bv) = \alpha \cos(\bk\cdot\bx) \sqrt{f_0 (\bx, \bv)}.
+\end{equation}
+The input file \verb|Examples/LinVlasovMaxwell/landauLVM.input| uses the parameters $k=0.4$ and $\alpha=0.04$. The resulting total energy composition and electric energy decay are shown in figures \ref*{fig:linvlasovmaxwell_energy} and \ref*{fig:linvlasovmaxwell_landau}, respectively.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/LinVlasovMaxwell_LandauTotalEnergy.png}
+    \caption{Total energy composition during a Landau damping simulation.}
+    \label{fig:linvlasovmaxwell_energy}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/LinVlasovMaxwell_Landau.png}
+    \caption{Landau damping: Exponential decay of the electric energy due to particle-wave interaction.}
+    \label{fig:linvlasovmaxwell_landau}
+\end{figure}
+
+\end{document}
