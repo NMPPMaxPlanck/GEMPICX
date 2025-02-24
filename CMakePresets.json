@@ -42,17 +42,6 @@
             }
         },
         {
-            "name": "hypre-config",
-            "displayName": "Hypre settings",
-            "hidden": true,
-            "cacheVariables": {
-                "AMReX_HYPRE": "On",
-                "HYPRE_LIBRARIES": "${sourceDir}/third_party/hypre/src/hypre/lib/libHYPRE.a",
-                "HYPRE_INCLUDE_DIRS": "${sourceDir}/third_party/hypre/src/hypre/include",
-                "AMReX_LINEAR_SOLVERS": "On"
-            }
-         },  
-        {
             "name": "mpcdf-gpu-3D",
             "displayName": "GPU settings for Raven 3D",
             "binaryDir": "${sourceDir}/build/${presetName}",
@@ -174,42 +163,6 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "1"
             }
-        },
-        {
-            "name": "cpu-release-3D-hypre",
-            "displayName": "CPU release 3D hypre settings",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "inherits": [
-                "cpu-release-3D",
-                "hypre-config"
-             ]
-        },
-        {
-            "name": "cpu-release-2D-hypre",
-            "displayName": "CPU release 2D hypre settings",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "inherits": [
-                "cpu-release-2D",
-                "hypre-config"
-             ]
-        },
-        {
-            "name": "cpu-debug-3D-hypre",
-            "displayName": "CPU debug 3D hypre settings",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "inherits": [
-                "cpu-debug-3D",
-                "hypre-config"
-             ]
-        },
-        {
-            "name": "cpu-debug-2D-hypre",
-            "displayName": "CPU debug 2D hypre settings",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "inherits": [
-                "cpu-debug-2D",
-                "hypre-config"
-             ]
         }
     ]
 }

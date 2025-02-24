@@ -24,7 +24,7 @@ using namespace FieldSolvers;
  * The rho field is added to avoid singularity and as a cheaper
  * alternative for the consistent rho*E deposited from particles.
  */
-template <typename hodgeDegreeStruct>
+template <typename HodgeDegreeStruct>
 class HypreCurlCurlOperatorTest : public testing::Test
 {
 public:
@@ -33,7 +33,7 @@ public:
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
-    static constexpr int s_hodgeDegree{hodgeDegreeStruct::value};
+    static constexpr int s_hodgeDegree{HodgeDegreeStruct::value};
 
     static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho;

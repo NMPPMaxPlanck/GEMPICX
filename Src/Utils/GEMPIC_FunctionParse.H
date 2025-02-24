@@ -74,7 +74,7 @@ template <size_t functionNumber>
 auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings)
 {
     BL_PROFILE("Gempic::Utils::parse_functions(variableStrings)");
-    Io::Parameters params{"Function", "function parseFunctions"};
+    Io::Parameters params{"Function", "function parse_functions"};
     return parse_functions(variableStrings, params);
 }
 

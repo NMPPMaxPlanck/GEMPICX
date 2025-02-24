@@ -274,6 +274,9 @@ protected:
         amrex::ParmParse pp;
         pp.add("Function.DensityField", std::to_string(s_m_densityFieldFactor));
         pp.add("Function.DensityFieldInv", std::to_string(s_m_densityFieldFactor));
+        // For verification
+        std::string solverStr{"ConjugateGradientInverseHodge"};
+        pp.add("PoissonSolver.solver", solverStr);
 
         amrex::ParmParse ppRedDiag("ReducedDiagnostics");
         ppRedDiag.add("computeMissingFields", 1);
@@ -378,12 +381,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
     rho += m_backgroundDensity * m_infra.cell_volume();
 
-    auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
-    FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
-                                    DeRhamField<Grid::primal, Space::node>,
-                                    FieldSolvers::Operator::poissonInverseHodge>
-        cgPoisson(deRham, poisson);
-    cgPoisson.solve(phi, rho);
+    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
+    poisson->solve(phi, rho);
     deRham->grad(E, phi);
     E *= -1.0;
     deRham->hodge(D, E);
@@ -484,12 +483,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
     rho += m_backgroundDensity * m_infra.cell_volume();
 
-    auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, m_infra);
-    FieldSolvers::ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
-                                    DeRhamField<Grid::primal, Space::node>,
-                                    FieldSolvers::Operator::poissonInverseHodge>
-        cgPoisson(deRham, poisson);
-    cgPoisson.solve(phi, rho);
+    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
+    poisson->solve(phi, rho);
     deRham->grad(E, phi);
     E *= -1.0;
 

@@ -7,6 +7,7 @@
 
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
+#include "GEMPIC_Hypre.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
@@ -24,7 +25,7 @@ using namespace FieldSolvers;
  *
  * @todo: Use our Hodge and compare to exact analytical function
  */
-template <typename hodgeDegreeStruct>
+template <typename HodgeDegreeStruct>
 class HyprePoissonSolverTest : public testing::Test
 {
 public:
@@ -32,7 +33,7 @@ public:
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
-    static constexpr int s_hodgeDegree{hodgeDegreeStruct::value};
+    static constexpr int s_hodgeDegree{HodgeDegreeStruct::value};
 
     static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
@@ -44,6 +45,7 @@ public:
         const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
         const amrex::Vector<int> maxGridSize{AMREX_D_DECL(16, 16, 16)};
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        std::string solverStr{"Hypre"};
 
         /* Initialize the infrastructure */
         amrex::ParmParse pp; // Used in lieu of input file
@@ -52,6 +54,7 @@ public:
 
         pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
+        pp.add("PoissonSolver.solver", solverStr);
     }
 
     // virtual void SetUp() will be called before each test is run.
@@ -90,10 +93,7 @@ public:
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
-        auto poisson = std::make_shared<PoissonSolver>(deRham, infra);
-        HypreLinearSystem<DeRhamField<Grid::dual, Space::cell>,
-                          DeRhamField<Grid::primal, Space::node>, Operator::poisson, s_hodgeDegree>
-            hyprePoisson(&infra, deRham, poisson);
+        auto poisson{make_poisson_solver(deRham, infra)};
 
         DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
         DeRhamField<Grid::primal, Space::node> phi(deRham);
@@ -104,7 +104,7 @@ public:
         barr(0, 0, 0, 0) = 0.0;
 
         phi.m_data.setVal(0.0);
-        hyprePoisson.solve(phi, rho);
+        poisson->solve(phi, rho);
 
         barr(0, 0, 0, 0) = temp;
 

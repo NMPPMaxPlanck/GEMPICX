@@ -36,6 +36,8 @@ Function.BBackgroundX = "0"
 Function.BBackgroundY = "0"
 Function.BBackgroundZ = "0"
 
+PoissonSolver.solver = "Amrex"
+
 # Diagnostics
 # Full Diagnostics
 FullDiagnostics.enable = 0 # 1 for true, 0 for false

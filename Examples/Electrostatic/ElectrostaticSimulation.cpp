@@ -59,16 +59,8 @@ int main (int argc, char *argv[])
         std::string simType{"UNDEFINED"};
         paramsSim.get_or_set("Type", simType);
 
-        auto poisson = std::make_shared<PoissonSolver>(deRham, infra);
-#ifdef AMREX_USE_HYPRE
-        HypreLinearSystem<DeRhamField<Grid::dual, Space::cell>,
-                          DeRhamField<Grid::primal, Space::node>, Operator::poisson, hodgeDegree>
-            hyprePoisson(&infra, deRham, poisson);
-#else
-        ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
-                          DeRhamField<Grid::primal, Space::node>, Operator::poisson>
-            cgPoisson(deRham, poisson);
-#endif
+        auto poisson{make_poisson_solver(deRham, infra)};
+
         amrex::Real te{1.0}; // electron temperature (default 1.0)
 
         if (simType == "QuasiNeutral")
@@ -173,11 +165,7 @@ int main (int argc, char *argv[])
             else if (simType == "VlasovPoisson")
             {
                 //poisson->solve_amrex(rhoFiltered, phi);
-#ifdef AMREX_USE_HYPRE
-                hyprePoisson.solve(phi, rhoFiltered);
-#else
-                cgPoisson.solve(phi, rhoFiltered);
-#endif
+                poisson->solve(phi, rhoFiltered);
                 deRham->grad(E, phi);
                 E *= -1.0;
             }
@@ -250,11 +238,7 @@ int main (int argc, char *argv[])
                     {
                         // set initial guess phi to 0
                         phi.m_data.setVal(0.0);
-#ifdef AMREX_USE_HYPRE
-                        hyprePoisson.solve(phi, rhoFiltered);
-#else
-                        cgPoisson.solve(phi, rhoFiltered);
-#endif
+                        poisson->solve(phi, rhoFiltered);
                         deRham->grad(E, phi);
                         E *= -1.0;
                     }
