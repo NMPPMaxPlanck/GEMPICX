@@ -37,6 +37,7 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
     for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.m_data[cc])[pti].array();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
     amrex::ParallelFor(np,
                        [=] AMREX_GPU_DEVICE(long pp)
@@ -47,7 +48,7 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                position[d] = partData[0].pos(d);
                            }
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
-                               position, infra.m_plo, infra.inv_cell_size_array());
+                               position, plo, infra.inv_cell_size_array());
 
                            efields[pp] =
                                spline.template eval_spline_field<Field::PrimalOneForm>(eArray);
@@ -190,7 +191,7 @@ TEST_F(EvaluateEFieldTest, NullTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.inv_cell_size_array());
+            position, m_infra.geometry().ProbLoArray(), m_infra.inv_cell_size_array());
 
         amrex::GpuArray<amrex::Real, s_vDim> efield =
             spline.template eval_spline_field<Field::PrimalOneForm>(eArray);

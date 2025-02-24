@@ -512,6 +512,7 @@ public:
                 {
                     eCoeffsA[cc] = (eCoeffs.m_data[cc])[pti].array();
                 }
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
                 amrex::ParallelFor(
                     np,
@@ -523,7 +524,7 @@ public:
                             positionParticle[d] = particles[pp].pos(d);
                         }
                         Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                            positionParticle, m_infra.m_plo, m_infra.inv_cell_size_array());
+                            positionParticle, plo, m_infra.inv_cell_size_array());
 
                         get_e_weights_at_particle_positions_and_deposit_to_face(
                             eCoeffsA, spline, charge * weight[pp]);
@@ -639,6 +640,7 @@ public:
                 {
                     eCoeffsA[cc] = (eCoeffs.m_data[cc])[pti].array();
                 }
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
                 amrex::ParallelFor(
                     np,
@@ -650,7 +652,7 @@ public:
                             positionParticle[d] = particles[pp].pos(d);
                         }
                         Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                            positionParticle, m_infra.m_plo, m_infra.inv_cell_size_array());
+                            positionParticle, plo, m_infra.inv_cell_size_array());
 
                         get_e_weights_at_particle_positions_and_deposit_to_face(
                             eCoeffsA, spline, charge * weight[pp]);

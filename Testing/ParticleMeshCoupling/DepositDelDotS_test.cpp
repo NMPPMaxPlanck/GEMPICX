@@ -259,6 +259,7 @@ public:
                 {
                     deldotsA[cc] = (delDotS.m_data[cc])[pti].array();
                 }
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
                 amrex::ParallelFor(
                     np,
@@ -271,7 +272,7 @@ public:
                         }
 
                         SplineWithFirstDerivative<s_degX, s_degY, s_degZ> splineDeriv(
-                            positionParticle, infra.m_plo, infra.inv_cell_size_array(), dx);
+                            positionParticle, plo, infra.inv_cell_size_array(), dx);
 
                         amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
                         deposit_deldot_s(deldotsA, splineDeriv, vel, mass * weight[pp]);

@@ -214,6 +214,7 @@ public:
                     bA[cc] = (B.m_data[cc])[pti].array();
                     jcrossbA[cc] = (jcrossB.m_data[cc])[pti].array();
                 }
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
                 amrex::ParallelFor(
                     np,
@@ -225,7 +226,7 @@ public:
                             positionParticle[d] = particles[pp].pos(d);
                         }
 
-                        SplineBase<s_degX, s_degY, s_degZ> spline(positionParticle, infra.m_plo,
+                        SplineBase<s_degX, s_degY, s_degZ> spline(positionParticle, plo,
                                                                   infra.inv_cell_size_array());
 
                         amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};

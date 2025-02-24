@@ -42,6 +42,7 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bA;
     for (int cc = 0; cc < (int(vDim / 2.5) * 2 + 1); cc++) bA[cc] = (B.m_data[cc])[pti].array();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
     amrex::ParallelFor(np,
                        [=] AMREX_GPU_DEVICE(long pp)
@@ -55,10 +56,11 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
                            amrex::Real xEnd = 0;
 
                            ParticleMeshCoupling::SplineWithPrimitive<degX, degY, degZ> spline{
-                               posStart, infra.m_plo, infra.inv_cell_size_array()};
+                               posStart, plo, infra.inv_cell_size_array()};
 
                            spline.template update_1d_splines<pDir>(
-                               xEnd, infra.m_plo[xDir], 1.0 / infra.geometry_data().CellSize(xDir));
+                               xEnd, infra.geometry_data().ProbLo(xDir),
+                               1.0 / infra.geometry_data().CellSize(xDir));
 
                            ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(*bfieldsGPU, spline,
                                                                                 weight, dx, bA, jA);

@@ -137,7 +137,7 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
         AMREX_D_TERM(EXPECT_EQ(1., spline.m_cellSplineVals[xDir][0]);
                      , EXPECT_EQ(1., spline.m_cellSplineVals[yDir][0]);
                      , EXPECT_EQ(1., spline.m_cellSplineVals[zDir][0]);)
@@ -196,7 +196,8 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
         }
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = infra.geometry().InvCellSizeArray();
-        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(position, infra.m_plo, dxi);
+        ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
+            position, infra.geometry().ProbLoArray(), dxi);
 
         AMREX_D_TERM(EXPECT_EQ(dxi[xDir], spline.m_cellSplineVals[xDir][0]);
                      , EXPECT_EQ(dxi[yDir], spline.m_cellSplineVals[yDir][0]);
@@ -241,14 +242,14 @@ TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         amrex::Real xintOne = spline.init_b_splines_at_positions<xDir>(0, 0, 1);
         EXPECT_EQ(1., xintOne);
         EXPECT_EQ(0., spline.m_firstIndex[xDir]);
 
         ParticleMeshCoupling::SplineBase<2, s_degY, s_degZ> splineDeg2(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
         amrex::Real xintTwo = splineDeg2.init_b_splines_at_positions<xDir>(0, 0, 1);
         EXPECT_EQ(0.5, xintTwo);
         EXPECT_EQ(-1., splineDeg2.m_firstIndex[xDir]);
@@ -289,7 +290,7 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
         {
             position[d] = partData[0].pos(d);
         }
-        MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.m_plo,
+        MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.geometry().ProbLoArray(),
                                                   m_infra.geometry().InvCellSizeArray());
 
         EXPECT_CALL(spline, initBSplinesAtPositions(1, 1, 1)).WillOnce(::testing::Return(1));
@@ -335,7 +336,7 @@ TEST_F(SplineBaseTest, SplineEvalBSplineTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         amrex::Real sCoeff;
 
@@ -386,7 +387,7 @@ TEST_F(SplineBaseTest, SplineSplineEvalTest)
             position[d] = partData[0].pos(d);
         }
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         amrex::GpuArray<amrex::Real, 1> sZero;
         spline.spline_eval<0, 1>(0, sZero);

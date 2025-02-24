@@ -34,10 +34,6 @@ void convolve_filter(amrex::Vector<amrex::Real> &oldS,
                      const amrex::Real alpha,
                      const int ipass);
 
-void compute_stencil(amrex::Gpu::DeviceVector<amrex::Real> &stencil,
-                     const unsigned int npass,
-                     const amrex::Real alpha,
-                     const bool doCompensation);
 } // namespace Impl
 
 class BilinearFilter : public Filter

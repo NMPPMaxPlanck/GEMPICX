@@ -142,6 +142,8 @@ int main (int argc, char *argv[])
                     auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
 
                     amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                        infra.geometry().ProbLoArray()};
 
                     //compile functions on device
                     auto funcDensityBackground =
@@ -168,7 +170,7 @@ int main (int argc, char *argv[])
                             // Rescale weights to remove f0 from energy computation
                             weight[pp] /= sqrtf0[pp];
 
-                            SplineBase<degx, degy, degz> spline(pos, infra.m_plo,
+                            SplineBase<degx, degy, degz> spline(pos, plo,
                                                                 infra.inv_cell_size_array());
 
                             deposit_rho(rhoarr, spline, sqrtf0[pp] * charge * weight[pp]);
@@ -242,6 +244,8 @@ int main (int argc, char *argv[])
                         {
                             jA[cc] = (J.m_data[cc])[pti].array();
                         }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                            infra.geometry().ProbLoArray()};
 
                         amrex::ParallelFor(
                             np,
@@ -258,7 +262,7 @@ int main (int argc, char *argv[])
                                 }
 
                                 ParticleMeshCoupling::SplineWithPrimitive<degx, degy, degz> spline(
-                                    pos, infra.m_plo, infra.inv_cell_size_array());
+                                    pos, plo, infra.inv_cell_size_array());
 
                                 // He,particle
                                 amrex::GpuArray<amrex::Real, 3> efield =
@@ -316,6 +320,8 @@ int main (int argc, char *argv[])
                         {
                             eA[cc] = (E.m_data[cc])[pti].array();
                         }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                            infra.geometry().ProbLoArray()};
 
                         //compile functions on device
                         auto funcDensityBackground =
@@ -342,7 +348,7 @@ int main (int argc, char *argv[])
                                     vThermalBackground);
 
                                 ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                                    pos, infra.m_plo, infra.inv_cell_size_array());
+                                    pos, plo, infra.inv_cell_size_array());
 
                                 amrex::GpuArray<amrex::Real, 3> efield =
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);
