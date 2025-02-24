@@ -771,6 +771,9 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
 
     Impl::VelocityInitializer<vDim> vInit(params);
 
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> probLo = infra.geometry().ProbLoArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellSize = infra.geometry().CellSizeArray();
+
     //#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
@@ -778,52 +781,57 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
-        long long int sobolSeed =
-            GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) + species * 1000;
-        constexpr int numDim = AMREX_SPACEDIM + 2 * vDim;
-        double quasi[numDim];
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> boxLo;
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> boxLength;
+
+        for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+        {
+            boxLo[dir] = probLo[dir] + cellSize[dir] * lo[dir];
+            boxLength[dir] = cellSize[dir] * bx.length(dir);
+        }
+
         // Pseudorandom number generator to switch between multiple Gaussians
         std::mt19937 gen(GEMPIC_D_ADD(rSeed + lo[xDir], lo[yDir] * 10, lo[zDir] * 100) +
                          species * 1000);
         std::uniform_real_distribution<> unif(0.0, 1.0);
 
+        long long int sobolSeed = gen();
+        constexpr int numDim = AMREX_SPACEDIM + 2 * vDim;
+        double quasi[numDim];
+
         using myParticleTile = amrex::ParticleTile<ParticleType, vDim + nData, 0>;
         myParticleTile& particles =
             ppg->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
-        GEMPIC_D_LOOP_BEGIN(for (int l = lo[xDir]; l <= hi[xDir]; l++),
-                            for (int j = lo[yDir]; j <= hi[yDir]; j++),
-                            for (int k = lo[zDir]; k <= hi[zDir]; k++))
-            auto cellCorner{get_cell_corner(infra.m_geom.ProbLoArray(),
-                                            infra.geometry().CellSizeArray(),
-                                            AMREX_D_DECL(l, j, k))};
-            auto cellCenter{cell_center_from_corner(cellCorner, infra.geometry().CellSizeArray())};
-            for (int pp = 0; pp < nPartPerCell; pp++)
+        // sample on box and not cell to get a low-discrepancy sequence on each box
+        // and prevent correlations between neighboring cells
+        int nPartBox = nPartPerCell * bx.numPts();
+
+        for (int pp = 0; pp < nPartBox; pp++)
+        {
+            Gempic::Particle::sobol(numDim, &sobolSeed, quasi);
+            // two random variables per vDim are calculated for the velocity distribution...
+            for (int i{0}; i < numDim; ++i)
             {
-                Gempic::Particle::sobol(numDim, &sobolSeed, quasi);
-                // two random variables per vDim are calculated for the velocity distribution...
-                for (int i{0}; i < numDim; ++i)
-                {
-                    randArray[i] = quasi[i];
-                }
-                // ... one needs to be generated for Gaussian selection.
-                for (int i{0}; i < vDim; ++i)
-                {
-                    randArray[AMREX_SPACEDIM + 2 * vDim + i] = unif(gen);
-                }
-
-                for (int i = 0; i < AMREX_SPACEDIM; i++)
-                {
-                    position[i] = cellCorner[i] + randArray[i] * infra.geometry().CellSize(i);
-                }
-
-                get_velocities(vInit, velocity, randArray, cellCenter);
-                const double factor =
-                    densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
-                weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
-                ppg->add_particle(position, velocity, weight, particles);
+                randArray[i] = quasi[i];
             }
-        GEMPIC_D_LOOP_END
+            // ... one needs to be generated for Gaussian selection.
+            for (int i{0}; i < vDim; ++i)
+            {
+                randArray[AMREX_SPACEDIM + 2 * vDim + i] = unif(gen);
+            }
+
+            for (int i = 0; i < AMREX_SPACEDIM; i++)
+            {
+                position[i] = boxLo[i] + randArray[i] * boxLength[i];
+            }
+
+            get_velocities(vInit, velocity, randArray, position);
+            const double factor =
+                densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
+            weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
+            ppg->add_particle(position, velocity, weight, particles);
+        }
     }
 }
 
