@@ -1,9 +1,3 @@
-function(append_testconfig FILE)
-  file(APPEND ${FILE} "\n\n")
-  file(APPEND ${FILE} "# The following lines overwrite existing values to reduce runtime of example scripts for testing purposes\n")
-  file(APPEND ${FILE} "TimeLoop.nSteps = 1\n")
-endfunction()
-
 function(select_executable NAME)
   if(NAME STREQUAL "Electrostatic")
     set(EXECUTABLE "electrostatic" PARENT_SCOPE)
@@ -25,12 +19,10 @@ foreach(MODEL ${MODELS})
   file(GLOB INPUT_FILES RELATIVE ${CMAKE_SOURCE_DIR}/Examples/${MODEL}
     "${CMAKE_SOURCE_DIR}/Examples/${MODEL}/*.input"
     )
+  select_executable(${MODEL})
   foreach(INPUT_FILE ${INPUT_FILES})
-    file(COPY ${CMAKE_SOURCE_DIR}/Examples/${MODEL}/${INPUT_FILE} DESTINATION ${RUN_DIR})
-    append_testconfig(${RUN_DIR}/${INPUT_FILE})
-    select_executable(${MODEL})
     add_test(NAME RunTest.Example.${MODEL}.${INPUT_FILE}
-      COMMAND mpirun -np 2 --oversubscribe -wdir ${RUN_DIR} ${RUN_DIR}/${EXECUTABLE} ${RUN_DIR}/${INPUT_FILE}
+      COMMAND mpirun -np 2 --oversubscribe -wdir ${RUN_DIR} ${RUN_DIR}/${EXECUTABLE} ${CMAKE_SOURCE_DIR}/Examples/${MODEL}/${INPUT_FILE} TimeLoop.nSteps=1
       )
   endforeach()
 endforeach()
