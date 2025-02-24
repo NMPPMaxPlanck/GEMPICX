@@ -10,7 +10,7 @@ used to represent the potentials, fields and densities in Gempic.
 .. toctree::
    :maxdepth: 2
 
-   ../latex/forms_and_operators
+   ../latex/FormsAndOperators
    FormsDoxygen
    
 

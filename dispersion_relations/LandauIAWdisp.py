@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.1
+#       jupytext_version: 1.16.7
 #   kernelspec:
-#     display_name: Python 3.10.6 64-bit
+#     display_name: .venv
 #     language: python
 #     name: python3
 # ---
@@ -24,7 +24,7 @@ n0=1   # density of equilibrium
 vth=1  # Thermal velocity  beam
 omegap=1 # Plasma frequency
 eps0 = 1
-e = 1  # charge
+e = -1  # charge
 alpha=1  # Normalization
 Te = 10
 
@@ -32,6 +32,8 @@ Te = 10
 def D(omega,k):
     return 1+ alpha*Te*(omegap/vth)**2*(1+ (omega/(k*vth*sp.sqrt(2)))*
     Z(omega/(k*vth*sp.sqrt(2))))
+def N(omega,k):
+    return (1/2)*(n0*e*Te)/(vth*sp.sqrt(2))*Z(omega/(k*vth*sp.sqrt(2)))
 
 
 # %% [markdown]
@@ -41,7 +43,7 @@ def D(omega,k):
 
 # %%
 kmode = 1.
-zaf=zafpy(D,kmode)
+zaf=zafpy(D,kmode,N)
 xmin= -6
 xmax= 6
 ymin = -4
@@ -54,6 +56,12 @@ ax.grid()
 ax.set_xticks(np.linspace(xmin,xmax,10))
 ax.set_yticks(np.linspace(ymin,ymax,9))
 print("Dispersion function for k = ", kmode )
+
+# %%
+
+mp.plot(lambda x: mp.im(zaf.N_over_D_s(x)), [3,4])
+mp.plot(lambda x: mp.re(zaf.N_over_D(x)), [-10,10])
+
 
 # %%
 # Choose box where zeros are searched for (need to be positively oriented)
@@ -87,11 +95,45 @@ zero_max=zeros[np.argmax(np.imag(zeros))]
 print('------------------------')
 print('k=',kmode)
 print('zero with largest imaginary part (omega_j):', zero_max)
+# compute polar expression of complex number (need to add pi to phase for our def)
+print ('N_over_Dprime', np.array(cmath.polar(zaf.N_over_Dprime(zero_max)))-[0,np.pi])
+#print ('N_over_Dprime', np.array(cmath.polar(zaf.N_over_Dprime(zero_max))))
+
+# %% [markdown]
+# ## Exact solution of the linearized problem with inverse Laplace transform
+# Computing numerically the inverse Laplace transform is difficult as N/D decays slowly
+# However it can be observed that due to the properties of the Z function. 
+# The inverse transform is equal to this of the symmetrized function, which decays very fast and hence can be computed numerically at low cost
 
 # %%
-# modulus and phase of complex 0
-r = np.abs(3.7288348014877957-0.05833742132118025j)
-theta = np.arctan(-0.05833742132118025/3.7288348014877957)
-print(r,theta)
+# compute numerically integral for inverse Laplace transform
+nt = 100
+times = np.linspace(0,6,nt)
+field = np.zeros(nt,dtype=complex)
+fields = np.zeros(nt,dtype=complex)
+omega = sp.symbols('omega')
+mp.dps = 15
+epsilon = 0.04 #* 159
+
+for i in range(nt):
+    t = times[i]
+    invLap = lambda omega : zaf.N_over_D(omega) * mp.expj(omega*t)
+    #field[i] = mp.quad(invLap, np.linspace(-100, 100, 1000)) # does not converge properly
+    invLaps = lambda omega : -epsilon * zaf.N_over_D_s(omega) * mp.cos(omega*t) /(2*np.pi)
+    fields[i] = 2*mp.quad(invLaps, np.linspace(0, 6, 30)) 
+#plt.plot(times,np.imag(field))
+plt.plot(times,np.real(fields))
+plt.plot(times,np.imag(fields))
+plt.legend(['real part','imaginary part','real part anti','imaginary part anti'])
+
+
+# plot least damped mode obtained previously for comparison
+r = 1.87505365
+phase = 0.14886984
+coef = 2 * epsilon * r
+omegar = 3.728834801487808
+gamma = -0.0583374213211787
+plt.plot(times,(coef*np.cos(omegar*times-phase)*np.exp(gamma*times)))
+
 
 # %%

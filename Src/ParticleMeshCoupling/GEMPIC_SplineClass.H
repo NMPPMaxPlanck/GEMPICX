@@ -839,6 +839,7 @@ public:
      * @param position Current position of the particle
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
+     * @param dx Cell size in all three directions x, y and z (It's an array)
      * @details Additional details about xInverse
      *  - dxInverse[Direction::xDir] == 1/dx
      *  - dxInverse[Direction::yDir] == 1/dy
@@ -892,6 +893,7 @@ public:
      * @param position Current position of the particle
      * @param plo : low end of the problem domain
      * @param dxInverseDir : inverse of the cell size in the given direction
+     * @param dxDir : cell size in the given direction
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (const amrex::Real position,

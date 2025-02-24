@@ -1,5 +1,5 @@
 if(GEMPIC_DOCUMENTATION AND DOXYGEN_FOUND)
-  list(APPEND RST_FILES Maxwell_with_discrete_forms.rst multiDdeRhamComplex.rst tests.rst code_units.rst forms_and_operators.rst particleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst)
+  list(APPEND RST_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst Tests.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst)
 
   # Search for Python executables, starting with local environments first
   cmake_policy(SET CMP0094 NEW)
@@ -21,12 +21,19 @@ if(GEMPIC_DOCUMENTATION AND DOXYGEN_FOUND)
     set(SPHINX_BUILD ${CMAKE_BINARY_DIR}/documentation)
     set(LATEX_INPUT ${SPHINX_SOURCE}/latex)
     set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
+    set(SPHINX_GRAPHICS ${SPHINX_SOURCE}/_static/graphics)
+
+    # Download graphics from MPCDF Datashare
+    add_custom_command(OUTPUT ${SPHINX_GRAPHICS}.zip ${SPHINX_GRAPHICS}
+      COMMAND ${Python3_EXECUTABLE} ${SPHINX_SOURCE}/downloadAndExtractGraphics.py
+      DEPENDS ${SPHINX_SOURCE}/downloadAndExtractGraphics.py
+      )
 
     foreach(RSTF ${RST_FILES})
       string(REGEX REPLACE "[.]rst$" ".tex" LATEXF ${RSTF})
       add_custom_command(OUTPUT ${LATEX_INPUT}/${RSTF}
-        DEPENDS ${LATEX_INPUT}/${LATEXF}
-        COMMAND pandoc ${LATEXF} --mathjax --columns=120 --wrap=preserve --bibliography gempic_references.bib --citeproc -o ${RSTF}
+        DEPENDS ${LATEX_INPUT}/${LATEXF} ${SPHINX_GRAPHICS}
+        COMMAND pandoc ${LATEXF} --mathjax --columns=120 --wrap=preserve --bibliography GempicReferences.bib --citeproc -o ${RSTF}
         COMMAND ${Python3_EXECUTABLE} convertEq.py ${RSTF}
         VERBATIM
 

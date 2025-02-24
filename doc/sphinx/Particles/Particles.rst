@@ -4,5 +4,5 @@ Particle-Mesh Coupling
 .. toctree::
    :maxdepth: 2
 
-   ../latex/particleMesh
+   ../latex/ParticleMesh
    ParticleMeshDoxygen

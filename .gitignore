@@ -29,6 +29,7 @@ gempic.includes
 doc/doxygen/xml/**
 doc/doxygen/html/**
 doc/sphinx/_build/
+doc/sphinx/_static/graphics*
 doc/sphinx/latex/*.rst
 **/Plotfiles/**/*
 scripts/build_dir.txt

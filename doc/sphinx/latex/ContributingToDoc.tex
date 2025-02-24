@@ -103,7 +103,7 @@
 \usetikzlibrary{decorations.text,decorations.shapes}
 
 %%%%%%%% MACROS
-\input{gempic_latex_macros}
+\input{GempicLatexMacros}
 
 \title{Coding Style and Conventions}
 
@@ -119,14 +119,14 @@
 \tableofcontents
 
 \section{Contributing to the Documentation}
-The documentation is constructed using Doxygen, Sphinx and Breathe, and its source code can be found in the \verb|gempic/doc| folder.
+The documentation is constructed using Doxygen, Pandoc, Sphinx and Breathe, and its source code can be found in the \verb|gempic/doc| folder.
 
 Documentation sections may be added using rst or LaTeX files (which are converted to rst).
 
 \subsection{Building the Documentation}
 If a developer needs to extend the existing documentation and check their changes, the documentation can be built locally on the computer following the steps below. 
 \begin{enumerate}
-   \item Install the required packages: \verb|sphinx|, \verb|breathe|, \verb|sphinx_rtd_theme|, \verb|pandoc|, \verb|doxygen|
+   \item Install the required packages: \verb|sphinx|, \verb|breathe|, \verb|sphinx_rtd_theme|, \verb|pandoc|, \verb|doxygen|, \verb|curl|
    \item Configure with cmake if you haven't done so already\footnote{If you use a virtual environment or a conda environment for Python, remember to activate it \emph{before} configuring.} -- \emph{e.g.} using one of the presets
    \item In your build directory, use the command \verb|cmake --build . --target doc| to build the documentation (or simply \verb|make doc|/\verb|ninja doc| if you're using GNU Makefiles/Ninja)
    \item The generated HTML files can be found in the \verb|/PATH/TO/GEMPIC/BUILD/DIR/documentation/| folder. Open \verb|index.html| in your browser to view the documentation
@@ -156,7 +156,7 @@ LaTeX files need to be converted to the .rst format and then referred to from th
    \item Add the .rst file (\emph{e.g.} \verb|someLatexFile.rst|) to the list in the top of \verb|doc/sphinx/CMakeLists.txt|
    \item Add the .rst file (\emph{e.g.} \verb|latex/someLatexFile.rst|) either to \verb|doc/sphinx/index.rst| or to any of the other non-LaTeX rst files referred to there.
 \end{enumerate}
-The LaTeX files themselves can be most forms of valid LaTeX, with a few caveats mentioned in \ref{sec:labels_in_latex}. The bibliography file \verb|doc/sphinx/latex/gempic_references.bib| is automatically included.
+The LaTeX files themselves can be most forms of valid LaTeX, with a few caveats mentioned in \ref{sec:labels_in_latex}. The bibliography file \verb|doc/sphinx/latex/GempicReferences.bib| is automatically included.
 
 \subsection{Using References in LaTeX Documentation Files}
 \label{sec:refs_in_latex}
@@ -202,88 +202,6 @@ References to equations and sections can done as follows:
 
 \end{itemize}
 
-\subsection{Musical Interlude}
-
-This section is just here to have a longer file, so that references can be properly tested.
-
-Prisencolinensinainciusol
-
-In de col men seivuan
-
-Prisencolinensinainciusol ol rait
-
-Uis de seim cius nau op de seim
-
-Ol uait men in de colobos dai
-
-Trrr ciak is e maind beghin de col
-
-Bebi stei ye push yo oh
-
-Uis de seim cius nau op de seim
-
-Ol uoit men in de colobos dai
-
-Not s de seim laikiu de promisdin
-
-Iu nau in trabol lovgiai ciu gen
-
-In do camo not cius no bai for lov so
-
-Op op giast cam lau ue cam lov ai
-
-Oping tu stei laik cius go mo men
-
-Iu bicos tue men cold dobrei goris
-
-Oh sandei
-
-Ai ai smai sesler
-
-Eni els so co uil piso ai
-
-In de col men seivuan
-
-Prisencolinensinainciusol ol rait
-
-Ai ai smai senflecs
-
-Eni go for doing peso ai
-
-Prisencolinensinainciusol ol rait
-
-Uel ai sint no ai giv de sint
-
-Laik de cius nobodi oh gud taim lev feis go
-
-Uis de seim et seim cius go no ben
-
-Let de cius end kai for not de gai giast stei
-
-Ai ai smai senflecs
-
-Eni go for doing peso ai
-
-In de col mein seivuan
-
-Prisencolinensinainciusol ol rait
-
-Lu nei si not sicidor
-
-Ah es la bebi la dai big iour
-
-Ai aismai senflecs
-
-Eni go for doing peso ai
-
-In de col mein seivuan
-
-Prisencolinensinainciusol ol rait
-
-Lu nei si not sicodor
-
-Ah es la bebi la dai big iour
-
 
 \subsection{Using Labels in LaTeX Documentation Files}
 \label{sec:labels_in_latex}
@@ -328,19 +246,52 @@ Sections, equations, tables and figures can have labels in LaTeX files.
 \end{itemize}
 
 
-\subsection{Using Box Environments in LaTeX Documentation Files}
-\label{sec:boxes_in_latex}
+\subsection{Using Admonitions in LaTeX Documentation Files}
+\label{sec:admonitions_in_latex}
 
-The following box environments can be used to highlight sections:
+The following admonitions can be used to highlight additional or important information:
 \begin{note}
    \verb|\begin{note} \end{note}|
 \end{note}
+\begin{tip}
+   \verb|\begin{tip} \end{tip}|
+\end{tip}
+\begin{hint}
+   \verb|\begin{hint} \end{hint}|
+\end{hint}
+\begin{attention}
+   \verb|\begin{attention} \end{attention}|
+\end{attention}
+\begin{caution}
+   \verb|\begin{caution} \end{caution}|
+\end{caution}
 \begin{warning}
    \verb|\begin{warning} \end{warning}|
 \end{warning}
+\begin{danger}
+   \verb|\begin{danger} \end{danger}|
+\end{danger}
 \begin{error}
    \verb|\begin{error} \end{error}|
 \end{error}
 
+
+\subsection{Using Images in LaTeX Documentation Files}
+\label{sec:images_in_latex}
+
+Images and other binary files are not supposed to be added to the repository directly. They are instead hosted on the MPCDF Datashare and automatically downloaded to the \textbf{source directory} \verb|doc/sphinx/_static/graphics| when the documentation is built.
+
+From the LaTeX files, images can be included via their relative path, e.g.,
+\verb|\includegraphics[width=\linewidth]{../_static/graphics/Examples/ColdPlasma_Dispersion.png}|
+results in
+
+\begin{figure}
+   \centering
+   \includegraphics[width=\linewidth]{../_static/graphics/Examples/ColdPlasma_Dispersion.png}
+\end{figure}
+
+\begin{caution}
+   The graphics folder is only downloaded if it does not exist locally. If you added new images to the Datashare you have to delete the \textbf{source directory} \verb|doc/sphinx/_static/graphics| or run \verb|make -B| in \verb|$CMAKE_BINARY_DIR/doc| to force the download. Deleting all the build files is not sufficient!
+\end{caution}
 
 \end{document}

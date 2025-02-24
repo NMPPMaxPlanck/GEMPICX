@@ -16,32 +16,26 @@
 # - Convert to jupyter notebook with 'jupytext --to ipynb LandauVP.py'
 # - and back to python percent format with 'jupytext --to py:percent LandauVP.ipynb'
 
-# %% [markdown]
-#
-
 # %%
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib import colors
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import pandas as pd
 import yt
-#from yt.frontends.boxlib.data_structures import AMReXDataset 
-#yt.enable_parallelism()
 yt.set_log_level(0) # do not show log output
 
 # %%
 pathname = '.' # Notebook should be in directory where code is run
-print('run directory: ', os.getcwd())
 pathname_out = pathname + '/processed'
 try:
     os.mkdir(pathname_out)
 except(FileExistsError):
     pass
 os.chdir(pathname)
+print('run directory: ', os.getcwd())
 # read times series
 ts = yt.load('./FullDiagnostics/plt_field??????')
 ntz = ts.__len__() # number of items in time series
@@ -64,7 +58,6 @@ for store, ds in ts.piter(storage=storage):
     arr = np.array(data['boxlib',field])
     store.result = np.sum(np.sum(arr,2),1); # we sum over the y and z components
     time = float(ds.current_time)
-    #print(time)
 
 # %%
 # get space dimensions
@@ -87,15 +80,28 @@ for i in range(ntz):
 np.fft.fftshift(arrfft)
 arrfft = arrfft / nx
 
-# plots 
+# %% [markdown]
+# ### Plots
+# - plot first three Fourier modes. 
+#    - Only first mode is excited. 
+#    - The other give an idea of the noise and the nonlinear saturation 
+# - The exact solution is for the 1D problem, but simulation can be run in 1D, 2D and 3D giving the same results  
+# - Exact solution is computed with a Laplace transform in time and a Fourier transform in space. Only dominant first mode is computed and computed in the form
+# $$ \hat{E}(k,t) = \epsilon r \exp(\gamma t) \exp(-i(\omega_r t - \varphi ))$$ 
+# - $\epsilon$ is the initial perturbation of the density given in the input file
+# - $r$, $\gamma$, $\omega_r$ and $\varphi$ are obtained from the dispersion solver 
+
+# %%
+
 # Parameters for exact solution
 # least damped mode
-epsilon = 0.04
-r = 0.424666
-phase = 0.3357725
-coef = 2 * epsilon * r 
-omegar = 1.2850
-gamma = -0.0661
+epsilon = 0.001
+r = 0.24190827
+phase = -5.844418
+coef = 4 * epsilon * r # not clear where factor 4 comes from, but it seems to match with numerical solution
+omegar = 1.0012178936311045
+gamma = 0.1980979758430256
+timesE = times[0:1500] # time for exact solution only needed until saturation
 
 fig, axs = plt.subplots(3, 1,sharex=True,tight_layout=True)
 # Analytical solution of fundamental mode (real part and imaginary part)
@@ -104,49 +110,23 @@ if field == 'rho':
             (coef*np.cos(omegar*times-phase)*np.exp(gamma*times))
             ,label="exact")
     axs[1].plot(times, np.zeros_like(times))
-elif field == 'Ex':
-    coef = 2 * epsilon * r    
-    axs[0].plot(times, np.zeros_like(times))
-    axs[1].plot(times, (coef*np.cos(omegar*times-phase)*np.exp(gamma*times)),label="exact")
+elif field == 'Ex': 
+    axs[0].plot(timesE, -(coef*np.cos(omegar*timesE-phase)*np.exp(gamma*timesE)))
+    axs[1].plot(timesE, (coef*np.sin(omegar*timesE-phase)*np.exp(gamma*timesE)),label="exact")
 # Analytical solution of fundamental mode (mudulus squared)    
-axs[2].plot(times, np.log((coef*np.cos(omegar*times-phase)*np.exp(gamma*times))**2))
-
-# Analytical solution with inverse Laplace transform
-#anaLap=np.fromfile("/Users/sonnen/Codes/gempic_home/gempic/dispersion_relations/solLandauIAW.npy")
-#print(times.shape,anaLap.shape)
-#print(anaLap[16:])
-#axs[0].plot(times, anaLap[16:]/6.28,'k--',label="anaLap")
+axs[2].plot(timesE, np.log((coef*np.exp(gamma*timesE))**2))
 
 # Numerical solution of fundamental mode and harmonics to check noise level
 for i in range(1,4):
     axs[0].plot(times, arrfft[i,:].real,label="k="+str(i))
     axs[1].plot(times, arrfft[i,:].imag)
     axs[2].plot(times, 2*np.log(np.abs(arrfft[i,:])))
-# Plot higher order contributions of exact solution   
-# if field == 'rho': 
-#     axs[0].plot(times, 
-#             (coef1*np.cos(omegar1*times-phase1)*np.exp(gamma1*times))
-#             ,label="exact1")
-#     axs[0].plot(times, 
-#             (coef*np.cos(omegar*times-phase)*np.exp(gamma*times))
-#             + (coef1*np.cos(omegar1*times-phase1)*np.exp(gamma1*times))
-#             ,label="exact01")
+
 axs[0].set_title("Real part")
 axs[1].set_title("Imaginary part")    
 axs[2].set_title("Log plot of modulus squared")
 fig.legend()
-plt.show()
-#plt.savefig("FourierBiFi4Comp")
 
-
-# %%
-# Plot of field at different time steps
-plt.plot(arr1[:,0])
-plt.plot(arr1[:,1])
-plt.plot(arr1[:,15])
-plt.plot(arr1[:,50])
-plt.show()
-print(arr1[:,1])
 
 # %%
 # read electric energy
@@ -157,38 +137,49 @@ ex2 = tabE.values[:,2]
 ey2 = tabE.values[:,3]
 ez2 = tabE.values[:,4]
 etot = ex2+ey2+ez2
-# read magentic energy
-tabB=pd.read_csv("ReducedDiagnostics/MagEnergy.txt",sep=r'\s+')
-tB = tabB.values[:,1]
-bx2 = tabB.values[:,2]
-by2 = tabB.values[:,3]
-bz2 = tabB.values[:,4]
-btot = bx2+by2+bz2
 # read particle kinetic energy
 tabPart=pd.read_csv("ReducedDiagnostics/Part.txt",sep=r'\s+')
 tPart = tabPart.values[:,1]
 ekin = tabPart.values[:,5]
+# read particle kinetic momentum
+px = tabPart.values[:,2]
+py = tabPart.values[:,3]
+pz = tabPart.values[:,4]
 
 # plots
+total_energy0 = ex2[0]+ey2[0]+ez2[0]+ekin[0]
 fig, axs = plt.subplots(2, 2,sharex=True,tight_layout=True)
 axs[0,0].plot(time,ex2+ey2+ez2)
 axs[0,0].set_title('electric energy')
-axs[1,0].plot(time,bx2+by2+bz2)
-axs[1,0].set_title('magnetic energy')
+axs[1,0].plot(time,px)
+#axs[1,0].plot(time,py)
+#axs[1,0].plot(time,pz)
+axs[1,0].set_title('momentum')
 axs[0,1].plot(tPart,ekin)
 axs[0,1].set_title('kinetic energy')
-axs[1,1].plot(time,ex2+ey2+ez2+bx2+by2+bz2+ekin)
-axs[1,1].set_title('total energy');
+axs[1,1].plot(time,(ex2+ey2+ez2+ekin)/total_energy0)
+axs[1,1].set_title('total energy')
+print('Error in energy conservation ',np.abs(1-np.min((ex2+ey2+ez2+ekin)/total_energy0)))
+
+
 
 # %%
-# Log plot of electric energy 0.5 \int Ex**2 to check Landau damping
-itmax=500
-coef = 2 * epsilon * r
+# Log plot of electric energy 0.5 \int Ex**2
+itmax=2000
+coef = 4 * epsilon * r
+#coef = .001
+# Analytical solution and linear growth rate
+plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.exp(gamma*time[:itmax]))**2))
 # Numerical
 plt.plot(time[:itmax],np.log(ex2[:itmax]))
-# Analytical solution and linear damping rate
-plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.cos(omegar*time[:itmax]-phase)*np.exp(gamma*time[:itmax]))**2))
-plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.exp(gamma*time[:itmax]))**2))
-plt.show()
+
+
+# %%
+# Plot of field at dirrent time steps
+plt.plot(arr1[:,0])
+plt.plot(arr1[:,1])
+plt.plot(arr1[:,15])
+plt.plot(arr1[:,50])
+print(arr1[:,50])
 
 # %%

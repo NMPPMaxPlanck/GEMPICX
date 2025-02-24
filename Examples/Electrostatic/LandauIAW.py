@@ -7,7 +7,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.14.1
 #   kernelspec:
-#     display_name: Python 3.11.1 64-bit
+#     display_name: .venv
 #     language: python
 #     name: python3
 # ---
@@ -20,14 +20,11 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-#from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib import colors
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import pandas as pd
 import yt
-#from yt.frontends.boxlib.data_structures import AMReXDataset 
-#yt.enable_parallelism()
 yt.set_log_level(0) # do not show log output
 
 # %%
@@ -84,21 +81,20 @@ for i in range(ntz):
 np.fft.fftshift(arrfft)
 arrfft = arrfft / nx
 
-# plots 
+# %% [markdown]
+# ## Plots
+#
+# The "exact solution" corresponds to the least damped root of the dispersion relation. It is not exactly the solution of the inverse Laplace transform, which can explain that it does not exactly overlap with the numerical solution
+
+# %%
 # Parameters for exact solution
 # least damped mode
 epsilon = 0.04
 r = 0.18750536
-phase = 0.14886984
+phase = -6.13431547
 coef = 2 * epsilon * r 
-omegar = 3.72883480
+omegar = 3.728834801487808
 gamma = -0.05833742
-# second least damped mode
-r1 = 0.03526239
-phase1 = 1.67083067
-coef1 = 2 * epsilon * r1 
-omegar1 = 3.715405277674972
-gamma1 = -2.088517833649
 fig, axs = plt.subplots(3, 1,sharex=True,tight_layout=True)
 # Analytical solution of fundamental mode (real part and imaginary part)
 if field == 'rho':
@@ -119,28 +115,12 @@ for i in range(1,4):
     axs[0].plot(times, arrfft[i,:].real,label="k="+str(i))
     axs[1].plot(times, arrfft[i,:].imag)
     axs[2].plot(times, 2*np.log(np.abs(arrfft[i,:])))
-# Plot higher order contributions of exact solution   
-if field == 'rho': 
-    axs[0].plot(times, 
-            (coef1*np.cos(omegar1*times-phase1)*np.exp(gamma1*times))
-            ,label="exact1")
-    axs[0].plot(times, 
-            (coef*np.cos(omegar*times-phase)*np.exp(gamma*times))
-            + (coef1*np.cos(omegar1*times-phase1)*np.exp(gamma1*times))
-            ,label="exact01")
 axs[0].set_title("Real part")
 axs[1].set_title("Imaginary part")    
 axs[2].set_title("Log plot of modulus squared")
 fig.legend()
 #plt.savefig("FourierBiFi4Comp")
 
-# %%
-# Plot of field at dirrent time steps
-plt.plot(arr1[:,0])
-plt.plot(arr1[:,1])
-plt.plot(arr1[:,15])
-plt.plot(arr1[:,50])
-print(arr1[:,1])
 
 # %%
 # read electric energy
@@ -186,5 +166,13 @@ plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.cos(omegar*time[:itmax]-ph
 plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.exp(gamma*time[:itmax]))**2))
 
 #plt.savefig("LandauIAW3DBiFi4Comp1000ppc.png")
+
+# %%
+# Plot of field at dirrent time steps
+plt.plot(arr1[:,0])
+plt.plot(arr1[:,1])
+plt.plot(arr1[:,15])
+plt.plot(arr1[:,50])
+print(arr1[:,1])
 
 # %%

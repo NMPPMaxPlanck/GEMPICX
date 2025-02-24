@@ -285,8 +285,8 @@ private:
     /**
      * @brief Parameters needed by two or more classes. The names of all shared parameters go here
      *
-     * @todo deprecate according to \link https://gitlab.mpcdf.mpg.de/gempic/gempic/-/issues/157
-     * #157 \endlink
+     * @todo deprecate according to
+     * <a href="https://gitlab.mpcdf.mpg.de/gempic/gempic/-/issues/157">#157</a>
      */
     inline static const auto s_sharedParams = init_shared_parameters({
         "outputFile",
@@ -435,7 +435,7 @@ public:
      * @brief Set shared variable if it was not previously set or loaded from input file. Else,
      * abort simulation. Prefer get_or_set unless it is vital that the variable is set from here.
      * This function can not be used to set non-shared parameters!
-     * Check issue \link https://gitlab.mpcdf.mpg.de/gempic/gempic/-/issues/157 #157 \endlink for
+     * Check issue <a href="https://gitlab.mpcdf.mpg.de/gempic/gempic/-/issues/157">#157</a> for
      * details.
      *
      * @tparam T : type of the variable. Automatically intuited

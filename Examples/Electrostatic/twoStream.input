@@ -15,10 +15,10 @@ Particle.electrons.density = "1.0 + 0.001 * cos(kvarx * x)"
 Particle.electrons.numGaussians = 2
 
 # Gaussian parameters
-Particle.electrons.G0.vMean = 1.3 0.0 0.0
+Particle.electrons.G0.vMean = 2.4 0.0 0.0
 Particle.electrons.G0.vThermal = 1 1 1
 Particle.electrons.G0.vWeight = 0.5
-Particle.electrons.G1.vMean = -1.3 0.0 0.0
+Particle.electrons.G1.vMean = -2.4 0.0 0.0
 Particle.electrons.G1.vThermal = 1 1 1
 Particle.electrons.G1.vWeight = 0.5
 
@@ -27,7 +27,7 @@ k = 0.2 0.2 0.2
 
 # Simulation parameters
 TimeLoop.nSteps = 2000
-TimeLoop.dt = 0.02
+TimeLoop.dt = 0.025
 
 # Filter
 Filter.enable = 1
@@ -53,8 +53,7 @@ FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics 
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
-ReducedDiagnostics.groupNames = Part ElecEnergy GaussError 
+ReducedDiagnostics.groupNames = Part ElecEnergy 
 ReducedDiagnostics.saveInterval = 1 # saveInterva
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
-ReducedDiagnostics.GaussError.types = GaussError
 ReducedDiagnostics.Part.types = Particle

@@ -8,15 +8,16 @@ New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 ## Requirements
 - [AMReX](https://github.com/AMReX-Codes/amrex)
 - [CMake](https://cmake.org/cmake/help/latest/index.html)
-- [numdiff](https://www.nongnu.org/numdiff/) (To be deprecated. See issue #99)
 - Documentation:
-  - [Doxygen](www.doxygen.org) 
+  - [Doxygen](https://doxygen.org)
+  - [Pandoc](https://pandoc.org/) >= 2.19
+  - curl
   - Python 3
-    - [Sphinx](https://www.sphinx-doc.org)
+    - [Sphinx](https://sphinx-doc.org)
     - [Breathe](https://breathe.readthedocs.io/en/latest/)
 - Postprocessing:
   - Python 3
-  - [Graphviz](http://www.graphviz.org/) (for graphical visualization of objects)
+  - [Graphviz](http://graphviz.org/) (for graphical visualization of objects)
 
 
 ## Building with Presets

@@ -23,12 +23,13 @@ Table of Contents
    :maxdepth: 2
    
    self
-   latex/Maxwell_with_discrete_forms
-   latex/multiDdeRhamComplex
-   latex/code_units
-   latex/TimeLoops
+   latex/Examples
+   latex/MaxwellDiscreteForms
+   latex/DeRhamComplexes
    Forms/Forms
    Particles/Particles
+   TimeLoops/TimeLoops
+   latex/CodeUnits
    latex/InputFiles
    latex/Diagnostics
    ForDevelopers/ForDevelopers
