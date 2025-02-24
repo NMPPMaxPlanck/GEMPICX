@@ -35,6 +35,7 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
     const auto partData{particles().data()};
     const auto weight{pti.GetStructOfArrays().GetRealData(vDim).data()};
     amrex::Array4<amrex::Real> const& rhoarr{rho[pti].array()};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
     amrex::ParallelFor(np,
                        [=] AMREX_GPU_DEVICE(long pp)
@@ -45,7 +46,7 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                                position[d] = partData[pp].pos(d);
                            }
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
-                               position, infra.m_plo, infra.inv_cell_size_array());
+                               position, plo, infra.inv_cell_size_array());
                            // Needs at least max(degX, degY, degZ) ghost cells
                            ParticleMeshCoupling::deposit_rho(rhoarr, spline, charge * weight[pp]);
                        });
@@ -181,7 +182,7 @@ TEST_F(DepositRhoTest, NullTest)
         }
 
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         ParticleMeshCoupling::deposit_rho(rhoarr, spline, 0);
     }

@@ -40,6 +40,7 @@ void update_rho (ComputationalDomain& infra,
             auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
             amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[pti].array();
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
             amrex::ParallelFor(np,
                                [=] AMREX_GPU_DEVICE(long pp)
@@ -50,7 +51,7 @@ void update_rho (ComputationalDomain& infra,
                                        positionParticle[d] = particles[pp].pos(d);
                                    }
                                    ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                                       positionParticle, infra.m_plo, infra.inv_cell_size_array());
+                                       positionParticle, plo, infra.inv_cell_size_array());
                                    ParticleMeshCoupling::deposit_rho(rhoarr, spline,
                                                                      charge * weight[pp]);
                                });

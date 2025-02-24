@@ -152,8 +152,8 @@ struct FieldTypes
 {
     static constexpr Grid s_gridType{grid};
     static constexpr Space s_spaceType{space};
-    FieldTypes(const DeRhamField<grid, space>&){};
-    FieldTypes(std::reference_wrapper<const DeRhamField<grid, space>>){};
+    FieldTypes(const DeRhamField<grid, space>&) {};
+    FieldTypes(std::reference_wrapper<const DeRhamField<grid, space>>) {};
 };
 
 template <Grid grid>

@@ -136,6 +136,8 @@ int main (int argc, char *argv[])
                     auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
                     amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                        infra.geometry().ProbLoArray()};
 
                     amrex::ParallelFor(
                         np,
@@ -146,7 +148,7 @@ int main (int argc, char *argv[])
                             {
                                 positionParticle[d] = particles[pp].pos(d);
                             }
-                            SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                            SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                 infra.inv_cell_size_array());
                             // Needs at least max(degx, degy, degz) ghost cells
                             deposit_rho(rhoarr, spline, charge * weight[pp]);
@@ -207,6 +209,8 @@ int main (int argc, char *argv[])
                         auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
                         amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                            infra.geometry().ProbLoArray()};
 
                         amrex::ParallelFor(
                             np,
@@ -223,7 +227,7 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                     infra.inv_cell_size_array());
 
                                 deposit_rho(rhoarr, spline, charge * weight[pp]);
@@ -277,6 +281,8 @@ int main (int argc, char *argv[])
                         {
                             eA[cc] = (E.m_data[cc])[pti].array();
                         }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                            infra.geometry().ProbLoArray()};
 
                         amrex::ParallelFor(
                             np,
@@ -292,7 +298,7 @@ int main (int argc, char *argv[])
                                 amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
                                                                        velz[pp]};
 
-                                SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                                SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                     infra.inv_cell_size_array());
 
                                 // evaluate the electric field
@@ -329,8 +335,8 @@ int main (int argc, char *argv[])
                                     particles[pp].pos(d) = positionParticle[d];
                                 }
 
-                                SplineBase<degx, degy, degz> splineNew(
-                                    positionParticle, infra.m_plo, infra.inv_cell_size_array());
+                                SplineBase<degx, degy, degz> splineNew(positionParticle, plo,
+                                                                       infra.inv_cell_size_array());
 
                                 deposit_rho(rhoarr, splineNew, charge * weight[pp]);
                             });

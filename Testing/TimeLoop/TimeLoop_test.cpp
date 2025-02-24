@@ -136,12 +136,12 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in x-direction
         position = {AMREX_D_DECL(xPosNew, yPosOld, zPosOld)};
 
-        spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
+        spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 m_infra.geometry().InvCellSize(xDir));
         ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
@@ -185,12 +185,12 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in y-direction
         position = {AMREX_D_DECL(xPosOld, yPosNew, zPosOld)};
 
-        spline.template update_1d_splines<yDir>(position[yDir], m_infra.m_plo[yDir],
+        spline.template update_1d_splines<yDir>(position[yDir], m_infra.geometry().ProbLo(yDir),
                                                 m_infra.geometry().InvCellSize(yDir));
         ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
@@ -231,12 +231,12 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in y-direction
         position = {AMREX_D_DECL(xPosOld, yPosOld, zPosNew)};
 
-        spline.template update_1d_splines<zDir>(position[zDir], m_infra.m_plo[zDir],
+        spline.template update_1d_splines<zDir>(position[zDir], m_infra.geometry().ProbLo(zDir),
                                                 m_infra.geometry().InvCellSize(zDir));
         ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
@@ -314,7 +314,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         dtv = dt * vel[yDir];
         xNodeVal = spline.m_nodeSplineVals[xDir][0];
@@ -416,25 +416,25 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 
         // compute: rho^n
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRhoOld(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         ParticleMeshCoupling::deposit_rho(rhoOldarr, splineRhoOld, chargeWeight);
 
         // compute: integratedJ
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // set position after movement in x-direction
         position = {AMREX_D_DECL(xPosNew, yPosOld, zPosOld)};
 
-        spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
+        spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 m_infra.geometry().InvCellSize(xDir));
         ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
 
         // compute: rho^n+1
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRho(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
         deposit_rho(rhoarr, splineRho, chargeWeight);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -522,10 +522,11 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = m_infra.geometry().InvCellSizeArray();
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            positionOld, m_infra.m_plo, dxi);
+            positionOld, m_infra.geometry().ProbLoArray(), dxi);
 
         // update the splines in x direction
-        spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir], dxi[xDir]);
+        spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
+                                                dxi[xDir]);
         ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
         // For a constant B, primitive difference is B * (position - positionOld)
@@ -534,7 +535,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 
 #if AMREX_SPACEDIM > 1
         // update the splines in y direction
-        spline.template update_1d_splines<yDir>(position[yDir], m_infra.m_plo[yDir], dxi[yDir]);
+        spline.template update_1d_splines<yDir>(position[yDir], m_infra.geometry().ProbLo(yDir),
+                                                dxi[yDir]);
         ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
         EXPECT_NEAR(Bx * (position[yDir] - positionOld[yDir]), bfields[0], 1e-12);
@@ -543,7 +545,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 #endif
 #if AMREX_SPACEDIM == 3
         // update the splines in z direction
-        spline.template update_1d_splines<zDir>(position[zDir], m_infra.m_plo[zDir], dxi[zDir]);
+        spline.template update_1d_splines<zDir>(position[zDir], m_infra.geometry().ProbLo(zDir),
+                                                dxi[zDir]);
         ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
             bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
         EXPECT_NEAR(By * (position[zDir] - positionOld[zDir]), bfields[0], 1e-12);
@@ -634,10 +637,10 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            positionOld, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            positionOld, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // update the splines in x direction
-        spline.template update_1d_splines<xDir>(position[xDir], m_infra.m_plo[xDir],
+        spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 m_infra.geometry().InvCellSize(xDir));
 
         for (int i = 0; i <= s_degX; ++i)
@@ -760,7 +763,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         }
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // apply h_p_i in x direction
         operatorHamilton.template apply_h_p_i<xDir>(position, vel, m_infra, spline, bfields,
@@ -976,7 +979,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
         amrex::GpuArray<amrex::Real, s_vDim> vel{velx[pp], vely[pp], velz[pp]};
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
-            position, m_infra.m_plo, m_infra.geometry().InvCellSizeArray());
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         for (int cc = 0; cc < 3; cc++)
         {

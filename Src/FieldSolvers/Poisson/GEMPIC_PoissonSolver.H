@@ -648,7 +648,7 @@ public:
                          , auto* const eigenvalues0yGpuPtr = eigenvalues0yGpu.dataPtr();
                          , auto* const eigenvalues0zGpuPtr = eigenvalues0zGpu.dataPtr();)
 
-            amrex::FFT::R2C r2c(m_infra.m_domain);
+            amrex::FFT::R2C r2c(m_infra.box());
             // Amrex FFT only fourier transforms the first component, so we need to do hacks
             for (int comp{0}; comp < rho.m_data.nComp(); ++comp)
             {

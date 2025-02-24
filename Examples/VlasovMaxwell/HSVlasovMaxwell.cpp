@@ -97,14 +97,7 @@ int main (int argc, char *argv[])
             for (int spec = 0; spec < numspec; spec++)
             {
                 amrex::Real charge = partGr[spec]->get_charge();
-                // reset total weight of species to domain volume to correct for inaccuracy of
-                // sampling
-                amrex::Print() << "total weight "
-                               << GEMPIC_D_MULT(infra.m_length[0], infra.m_length[1],
-                                                infra.m_length[2])
-                               << std::endl;
-                partGr[spec]->reset_total_weight(
-                    GEMPIC_D_MULT(infra.m_length[0], infra.m_length[1], infra.m_length[2]));
+                partGr[spec]->reset_total_weight(infra.geometry().ProbSize());
                 for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid();
                      ++pti)
                 {
@@ -113,6 +106,8 @@ int main (int argc, char *argv[])
                     auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
                     amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                        infra.geometry().ProbLoArray()};
 
                     amrex::ParallelFor(
                         np,
@@ -123,7 +118,7 @@ int main (int argc, char *argv[])
                             {
                                 positionParticle[d] = particles[pp].pos(d);
                             }
-                            SplineBase<degx, degy, degz> spline(positionParticle, infra.m_plo,
+                            SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                 infra.inv_cell_size_array());
                             // Needs at least max(degx, degy, degz) ghost cells
                             deposit_rho(rhoarr, spline, charge * weight[pp]);
@@ -185,6 +180,8 @@ int main (int argc, char *argv[])
                             eA[cc] = (E.m_data[cc])[pti].array();
                             bA[cc] = (B.m_data[cc])[pti].array();
                         }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                            infra.geometry().ProbLoArray()};
 
                         amrex::ParallelFor(np,
                                            [=] AMREX_GPU_DEVICE(long pp)
@@ -197,7 +194,7 @@ int main (int argc, char *argv[])
                                                    pos[d] = particles[pp].pos(d);
                                                }
                                                SplineWithPrimitive<degx, degy, degz> spline(
-                                                   pos, infra.m_plo, infra.inv_cell_size_array());
+                                                   pos, plo, infra.inv_cell_size_array());
 
                                                // Read out particle velocity
                                                amrex::GpuArray<amrex::Real, vdim> vel{
@@ -256,6 +253,8 @@ int main (int argc, char *argv[])
                         {
                             eA[cc] = (E.m_data[cc])[pti].array();
                         }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                            infra.geometry().ProbLoArray()};
 
                         // loop over particles: add contribution of old particle position to J and
                         // push
@@ -272,7 +271,7 @@ int main (int argc, char *argv[])
                                                    velx[pp], vely[pp], velz[pp]};
 
                                                SplineBase<degx, degy, degz> spline(
-                                                   pos, infra.m_plo, infra.inv_cell_size_array());
+                                                   pos, plo, infra.inv_cell_size_array());
 
                                                operatorHamilton.apply_h_e_particle(
                                                    vel, eA, spline, chargeOverMass, 0.5 * dt);
