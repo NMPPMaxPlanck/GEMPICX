@@ -443,35 +443,21 @@ void Gempic::Particle::sobol (int dimNum, long long int *seed, double quasi[])
     {
         l = sobol_bit_lo0(*seed);
     }
-    else if (*seed <= seedSave)
+    // modification to compute the first value directly before switching to the efficient recursion
+    else
     {
-        seedSave = 0;
-        l = 1;
+        long long int graycode = *seed ^ (*seed >> 1);
         for (i = 0; i < dimNum; i++)
         {
             lastq[i] = 0;
-        }
-
-        for (seedTemp = seedSave; seedTemp <= (*seed) - 1; seedTemp++)
-        {
-            l = sobol_bit_lo0(seedTemp);
-
-            for (i = 0; i < dimNum; i++)
+            long long int g = graycode;
+            for (j = 0; j < LOG_MAX; j++)
             {
-                lastq[i] = (lastq[i] ^ v[i][l - 1]);
-            }
-        }
-        l = sobol_bit_lo0(*seed);
-    }
-    else if (seedSave + 1 < *seed)
-    {
-        for (seedTemp = seedSave + 1; seedTemp <= (*seed) - 1; seedTemp++)
-        {
-            l = sobol_bit_lo0(seedTemp);
-
-            for (i = 0; i < dimNum; i++)
-            {
-                lastq[i] = (lastq[i] ^ v[i][l - 1]);
+                if (g & 1)
+                {
+                    lastq[i] = lastq[i] ^ v[i][j];
+                }
+                g >>= 1;
             }
         }
         l = sobol_bit_lo0(*seed);
