@@ -99,8 +99,11 @@ TEST_F(PoissonSolverTest, PoissonAMReX)
     DeRhamField<Grid::primal, Space::node> anPhi(deRham, m_funcPhi);
 
     // solve Poisson using AMReX solver
-    Gempic::FieldSolvers::PoissonSolver poisson(deRham, m_infra);
-    poisson.solve_amrex(phi, rho);
+    amrex::ParmParse pp;
+    std::string solverStr{"Amrex"};
+    pp.add("PoissonSolver.solver", solverStr);
+    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
+    poisson->solve(phi, rho);
 
     // Check error
     amrex::Real tol = 1e-1;
@@ -121,12 +124,13 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     DeRhamField<Grid::primal, Space::node> phiIn(deRham, m_funcPhi);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
+    using CGRhs = DeRhamField<Grid::dual, Space::cell>;
+    using CGSol = DeRhamField<Grid::primal, Space::node>;
+
     deRham->hodge(rho, phiIn);
 
-    ConjugateGradient<DeRhamField<Grid::dual, Space::cell>, DeRhamField<Grid::primal, Space::node>,
-                      Operator::hodge>
-        cgHodge(deRham);
-
+    auto cgHodge{make_conjugate_gradient<CGRhs, CGSol>(
+        deRham, [=] (CGRhs &rhs, CGSol &sol) { deRham->hodge(rhs, sol); })};
     cgHodge.solve(phi, rho);
 
     amrex::Real tol = 1e-12;
@@ -140,11 +144,18 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
 
 namespace
 {
+#ifdef AMREX_USE_FFT
 template <typename Degree>
 class PoissonSolverFFTTypedTest : public PoissonSolverTest
 {
 public:
     static constexpr int s_hodgeDegree{Degree()};
+    PoissonSolverFFTTypedTest()
+    {
+        amrex::ParmParse pp;
+        std::string solverStr{"FFT"};
+        pp.add("PoissonSolver.solver", solverStr);
+    }
 };
 
 struct NameGeneratorFFT
@@ -173,8 +184,8 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
     DeRhamField<Grid::primal, Space::node> anPhi(deRham, this->m_funcPhi);
 
     // Use FFT-based solver
-    Gempic::FieldSolvers::PoissonSolver poisson(deRham, this->m_infra);
-    poisson.solve_fft(phi, rho);
+    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, this->m_infra)};
+    poisson->solve(phi, rho);
 
     // Check error
     // Degree 2 -- general size 16 for 1,2,3: error 4.203e-2
@@ -189,7 +200,14 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
         compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
+#endif
 } //namespace
+
+enum class Operator
+{
+    poisson,
+    poissonInverseHodge
+};
 
 template <int degree, Operator op>
 struct HodgeDegreePoissonMethod
@@ -208,11 +226,9 @@ struct NameGenerator
         switch (T::s_operator)
         {
             case Operator::poisson:
-                return tmp + "PoissonOperator";
+                return tmp + "ConjugateGradient";
             case Operator::poissonInverseHodge:
-                return tmp + "PoissonInverseHodgeOperator";
-            case Operator::hodge:
-                return tmp + "HodgeOperator";
+                return tmp + "ConjugateGradientInverseHodge";
             default:
                 return tmp + "UnknownConjugateGradientOperator";
         }
@@ -227,6 +243,21 @@ class PoissonSolverTypedTest : public PoissonSolverTest
 public:
     static constexpr int s_hodgeDegree{DegreeMethod::s_hodgeDegree};
     static constexpr Operator s_operator{DegreeMethod::s_operator};
+
+    PoissonSolverTypedTest()
+    {
+        amrex::ParmParse pp;
+        if constexpr (s_operator == Operator::poisson)
+        {
+            std::string solverStr{"ConjugateGradient"};
+            pp.add("PoissonSolver.solver", solverStr);
+        }
+        else //if constexpr (s_operator == Operator::poissonInverseHodge)
+        {
+            std::string solverStr{"ConjugateGradientInverseHodge"};
+            pp.add("PoissonSolver.solver", solverStr);
+        }
+    }
 };
 
 using MyTypes = ::testing::Types<HodgeDegreePoissonMethod<2, Operator::poisson>,
@@ -241,17 +272,13 @@ TYPED_TEST(PoissonSolverTypedTest, AnalyticalLowTolerance)
 {
     auto deRham = std::make_shared<FDDeRhamComplex>(this->m_infra, this->s_hodgeDegree,
                                                     this->s_maxSplineDegree, HodgeScheme::FDHodge);
-    auto poisson = std::make_shared<Gempic::FieldSolvers::PoissonSolver>(deRham, this->m_infra);
+    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, this->m_infra)};
 
     DeRhamField<Grid::dual, Space::cell> rho(deRham, this->m_funcRho);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     DeRhamField<Grid::primal, Space::node> anPhi(deRham, this->m_funcPhi);
 
-    ConjugateGradient<DeRhamField<Grid::dual, Space::cell>, DeRhamField<Grid::primal, Space::node>,
-                      TestFixture::s_operator>
-        cgPoisson(deRham, poisson);
-
-    cgPoisson.solve(phi, rho);
+    poisson->solve(phi, rho);
 
     // Check error
     amrex::Real tol = 1e-1;

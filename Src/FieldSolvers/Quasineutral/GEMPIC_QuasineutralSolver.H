@@ -1,6 +1,7 @@
 #ifndef GEMPIC_QUASINEUTRALSOLVER_H_
 #define GEMPIC_QUASINEUTRALSOLVER_H_
 
+#include <map>
 #include <type_traits>
 
 #include <AMReX.H>
@@ -11,19 +12,17 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_MultiFabUtil.H>
 #include <AMReX_ParmParse.H>
+#include <AMReX_Particles.H>
+#include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 #include <AMReX_VisMF.H>
+
 #ifdef AMREX_USE_HYPRE
 #include <_hypre_IJ_mv.h>
 #include <_hypre_sstruct_mv.h>
 
 #include <AMReX_HypreSolver.H>
 #endif
-
-#include <map>
-
-#include <AMReX_Particles.H>
-#include <AMReX_PlotFileUtil.H>
 
 #include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_ComputationalDomain.H"
@@ -41,13 +40,13 @@ using namespace Forms;
 using namespace Particle;
 
 #ifdef AMREX_USE_HYPRE
-template <class rhs, class sol, int hodgeDegree, unsigned int vdim, int degx, int degy, int degz>
+template <class Rhs, class Sol, int hodgeDegree, unsigned int vdim, int degx, int degy, int degz>
 class HypreQuasineutralLinearSystem
 {
 private:
     ComputationalDomain m_infra;
-    rhs m_residual, m_ap;
-    sol m_p, m_z;
+    Rhs m_residual, m_ap;
+    Sol m_p, m_z;
     amrex::Real m_relTol, m_absTol{1.e-15};
     amrex::Real m_maxiter{1000};
     int m_verbose;
@@ -322,10 +321,10 @@ public:
         }
     }
 
-    template <class splineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
+    template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     void get_e_weights_at_particle_positions_and_deposit_to_face (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eCoeffsA,
-        splineType const& spline,
+        SplineType const& spline,
         amrex::Real chargeWeight)
     {
         constexpr int nWtsX[3] = {degx, (degx + 1),
@@ -386,8 +385,8 @@ public:
         }
     }
 
-    void solve_curlcurl_plus_fieldcharge_e (rhs& b,
-                                            sol& x,
+    void solve_curlcurl_plus_fieldcharge_e (Rhs& b,
+                                            Sol& x,
                                             const DeRhamField<Grid::dual, Space::cell>& rho)
     {
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
@@ -481,8 +480,8 @@ public:
         x.fill_boundary();
     }
 
-    void solve_particle_charge_e (rhs& b,
-                                  sol& x,
+    void solve_particle_charge_e (Rhs& b,
+                                  Sol& x,
                                   std::vector<std::shared_ptr<ParticleGroups<vdim>>>& partGr)
     {
         constexpr int nMmCoeffs[3] = {
@@ -611,7 +610,7 @@ public:
     }
 
     void solve_curlcurl_plus_particle_charge_e (
-        rhs& b, sol& x, std::vector<std::shared_ptr<ParticleGroups<vdim>>>& partGr)
+        Rhs& b, Sol& x, std::vector<std::shared_ptr<ParticleGroups<vdim>>>& partGr)
     {
         constexpr int nMmCoeffs[3] = {
             GEMPIC_D_MULT(s_BWx[xDir], s_BWy[xDir],

@@ -72,10 +72,7 @@ int main (int argc, char *argv[])
         amrex::Real rhoBackground{1.0};
         parameters.get_or_set("rhoBackground", rhoBackground);
 
-        auto poisson = std::make_shared<PoissonSolver>(deRham, infra);
-        ConjugateGradient<DeRhamField<Grid::dual, Space::cell>,
-                          DeRhamField<Grid::primal, Space::node>, Operator::poisson>
-            cgPoisson(deRham, poisson);
+        auto poisson{make_poisson_solver(deRham, infra)};
         Gempic::TimeLoop::OperatorHamilton<vdim, degx, degy, degz> operatorHamilton;
 
         // Initializing filter
@@ -132,7 +129,7 @@ int main (int argc, char *argv[])
             rho += rhoBackground * infra.cell_volume();
 
             // solve Poisson
-            cgPoisson.solve(phi, rho);
+            poisson->solve(phi, rho);
             deRham->a_times_grad(ephi, phi, -1);
             E += ephi;
             deRham->hodge(D, E, deRham->scaling_eto_d());

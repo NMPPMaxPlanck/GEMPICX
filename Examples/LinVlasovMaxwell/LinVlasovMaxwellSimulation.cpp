@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
 
         // Initialize needed propagators/solvers
-        Gempic::FieldSolvers::PoissonSolver poisson(deRham, infra);
+        auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, infra)};
         TimeLoop::OperatorHamilton<vDim, degx, degy, degz> operatorHamilton;
 
         // Initialize particle groups
@@ -185,7 +185,7 @@ int main (int argc, char *argv[])
 
             rho.post_particle_loop_sync();
 
-            poisson.solve_amrex(phi, rho);
+            poisson->solve(phi, rho);
             deRham->grad(E, phi);
             E *= -1.0;
             deRham->hodge(D, E);

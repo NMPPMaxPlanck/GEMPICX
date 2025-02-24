@@ -35,16 +35,16 @@ using namespace FieldSolvers;
  * @brief Tests the CurlCurl operator and Charge matrix of the
  * quasineutral solver. The rho*E is deposited from particles.
  */
-template <typename splineDegreeStruct>
+template <typename SplineDegreeStruct>
 class HypreQuasineutralCurlCurlPlusChargeMatrixTest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
     static constexpr int s_ndata{1};
 
-    static constexpr int s_degX{std::tuple_element_t<0, splineDegreeStruct>::value};
-    static constexpr int s_degY{std::tuple_element_t<1, splineDegreeStruct>::value};
-    static constexpr int s_degZ{std::tuple_element_t<2, splineDegreeStruct>::value};
+    static constexpr int s_degX{std::tuple_element_t<0, SplineDegreeStruct>::value};
+    static constexpr int s_degY{std::tuple_element_t<1, SplineDegreeStruct>::value};
+    static constexpr int s_degZ{std::tuple_element_t<2, SplineDegreeStruct>::value};
 
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};

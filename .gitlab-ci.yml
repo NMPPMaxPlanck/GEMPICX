@@ -14,17 +14,6 @@ stages:
     - module load git
     - module load anaconda/3/2023
 
-
-.hypre-installation:
-  before_script:
-    - mkdir -p third_party;pushd third_party
-    - git clone https://github.com/hypre-space/hypre.git
-    - cd hypre/src
-    - ./configure
-    - make install
-    - popd
-    - HYPRE_DIR=/third_party/hypre/src/hypre
-
 # Avoids splitting commit and merge pipelines, and make jobs interruptible
 # Without this, every push to a branch with a merge request creates two pipelines: One for the 
 # branch itself, having all build-tests and another for the ones specific to merge requests.
@@ -84,41 +73,6 @@ build-test_gcc_1D:
     - .mpcdf-gcc-env
   script:
     - cmake -S . -B ./build --preset cpu-release-1D
-    - cmake --build ./build -j $(($(nproc)-2))
-    - cd build
-    - ctest --output-on-failure
-  needs: ["build-test_gcc_3D"]
-
-.mpcdf-gcc-env-hypre:
-  extends:
-    - .remove-duplicate-pipelines
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
-  tags:
-    - cloud
-  stage: test
-  before_script:
-    - !reference [.mpcdf-modules,before_script]
-    - module load gcc
-    - module load openmpi
-    - module load fftw-mpi
-    - module list
-    - !reference [.hypre-installation,before_script]
-
-build-test_gcc_3D_hypre:
-  extends:
-    - .mpcdf-gcc-env-hypre
-  script:
-    - cmake -S . -B ./build --preset cpu-release-3D-hypre
-    - cmake --build ./build -j $(($(nproc)-2))
-    - cd build
-    - ctest --output-on-failure
-  needs: ["build-test_gcc_3D"]
-
-build-test_gcc_2D_hypre:
-  extends:
-    - .mpcdf-gcc-env-hypre
-  script:
-    - cmake -S . -B ./build --preset cpu-release-2D-hypre
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
     - ctest --output-on-failure

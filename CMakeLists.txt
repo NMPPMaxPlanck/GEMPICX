@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14.0)
+cmake_minimum_required(VERSION 3.18.0)
 
 file(REAL_PATH ${CMAKE_BINARY_DIR} REAL_CMAKE_BINARY_DIR)
 file(REAL_PATH ${CMAKE_SOURCE_DIR} REAL_CMAKE_SOURCE_DIR)
@@ -19,6 +19,14 @@ include(cmake/gempic_version.cmake)
 
 option(GEMPIC_USE_CUDA "Use CUDA Backend of AMReX" OFF)
 option(GEMPIC_USE_OMP "Use OpenMP Backend of AMReX (Not recommended due to reduced performance)" OFF)
+if(GEMPIC_USE_CUDA OR AMReX_SPACEDIM EQUAL 1)
+  option(GEMPIC_USE_HYPRE "Use Hypre solver for AMReX" OFF)
+  if(GEMPIC_USE_HYPRE)
+    message(FATAL_ERROR "The current HYPRE interface of GEMPIC is neither GPU nor 1D compatible. Set -D GEMPIC_USE_HYPRE=OFF in CMake.")
+  endif()
+else()
+  option(GEMPIC_USE_HYPRE "Use Hypre solver for AMReX" ON)
+endif()
 option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance" OFF)
 option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." ON)
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
@@ -97,7 +105,7 @@ target_link_libraries(GEMPICX PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flag
 
 # Config summary
 message(STATUS "GEMPIC configuration summary: ")
-message(STATUS "   AMReX version            = ${AMREX_PKG_VERSION}")
+message(STATUS "   AMReX version            = ${AMReX_VERSION_USED}")
 message(STATUS "   GEMPIC version           = ${GEMPIC_VERSION}")
 message(STATUS "   Build type               = ${CMAKE_BUILD_TYPE}")
 message(STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
