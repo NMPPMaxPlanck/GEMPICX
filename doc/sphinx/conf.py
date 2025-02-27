@@ -16,8 +16,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(-1, os.path.abspath('..'))
-from sphinx.builders.html import StandaloneHTMLBuilder
-import subprocess, os
+import subprocess
 
 def configureDoxyfile(input_dir, output_dir):
     with open('Doxyfile.in', 'r') as file :
@@ -220,7 +219,6 @@ epub_exclude_files = ['search.html']
 # And here: https://medium.com/practical-coding/c-documentation-with-doxygen-cmake-sphinx-breathe-for-those-of-use-who-are-totally-lost-part-2-21f4fb1abd9f
 #sys.path.append( "home/bdealbuq/.local/lib/python3.8/site-packages/breathe/" )
 breathe_projects = { "gempic": "../doxygen/xml/"}
-#breathe_projects = {}
 breathe_default_project = "gempic"
 breathe_default_members = ('members', 'undoc-members')
 breathe_implementation_filename_extensions = ['.cpp']

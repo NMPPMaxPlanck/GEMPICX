@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18.0)
+cmake_minimum_required(VERSION 3.24.0)
 
 file(REAL_PATH ${CMAKE_BINARY_DIR} REAL_CMAKE_BINARY_DIR)
 file(REAL_PATH ${CMAKE_SOURCE_DIR} REAL_CMAKE_SOURCE_DIR)

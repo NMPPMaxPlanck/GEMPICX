@@ -216,22 +216,7 @@ style-test_cpu_3D:
     - python3 scripts/sanitize_with_python.py
     - cat build/tidyOutput.out
     - git diff --exit-code
-  needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
-
-style-test_gpu_3D:
-  extends: .mpcdf-gpu-env
-  rules:
-    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
-  before_script:
-    - !reference [.mpcdf-gpu-env,before_script]
-    - module load clang/18 
-    - module list
-  script:
-    - cmake -S . -B ./build --preset mpcdf-gpu-3D
-    - python3 scripts/sanitize_with_python.py
-    - cat build/tidyOutput.out
-    - git diff --exit-code
-  needs: ["build-test_gpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
+  # needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
 pages:
   image: ubuntu

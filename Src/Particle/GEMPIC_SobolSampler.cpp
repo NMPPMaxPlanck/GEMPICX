@@ -267,7 +267,6 @@ void Gempic::Particle::sobol (int dimNum, long long int *seed, double quasi[])
     static long long int poly[DIM_MAX] = {1, 3, 7, 11, 13, 19, 25, 37, 59, 47};
     static double recipd;
     static long long int seedSave = -1;
-    long long int seedTemp;
     static long long int v[DIM_MAX][LOG_MAX];
 
     if (!initialized || dimNum != dimNumSave)
