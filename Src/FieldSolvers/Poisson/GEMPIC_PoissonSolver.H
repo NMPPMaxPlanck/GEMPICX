@@ -43,7 +43,6 @@ class AmrexSolver : public PoissonSolverMethod
     ComputationalDomain m_compDom;
     amrex::Real m_relTol;
     amrex::Real m_absTol;
-    amrex::Real m_cellVolume;
 
 public:
     AmrexSolver(const ComputationalDomain& compDom,

@@ -59,37 +59,40 @@ FFTSolver::FFTSolver(const ComputationalDomain& compDom,
         case 4:
             for (int iter = 0; iter < Nx; iter++)
             {
-                eigenH0x[iter] =
-                    (13.0 - cos(2 * M_PI * iter / Nx)) * dx.product() / (12 * dx[xDir] * dx[xDir]);
+                eigenH0x[iter] = (13.0 - cos(2 * M_PI * iter / static_cast<amrex::Real>(Nx))) *
+                                 dx.product() / (12 * dx[xDir] * dx[xDir]);
             }
             for (int iter = 0; iter < Ny; iter++)
             {
-                eigenH0y[iter] =
-                    (13.0 - cos(2 * M_PI * iter / Ny)) * dx.product() / (12 * dx[yDir] * dx[yDir]);
+                eigenH0y[iter] = (13.0 - cos(2 * M_PI * iter / static_cast<amrex::Real>(Ny))) *
+                                 dx.product() / (12 * dx[yDir] * dx[yDir]);
             }
             for (int iter = 0; iter < Nz; iter++)
             {
-                eigenH0z[iter] =
-                    (13.0 - cos(2 * M_PI * iter / Nz)) * dx.product() / (12 * dx[zDir] * dx[zDir]);
+                eigenH0z[iter] = (13.0 - cos(2 * M_PI * iter / static_cast<amrex::Real>(Nz))) *
+                                 dx.product() / (12 * dx[zDir] * dx[zDir]);
             }
             break;
         case 6:
             for (int iter = 0; iter < Nx; iter++)
             {
                 eigenH0x[iter] =
-                    (1067.0 - 116.0 * cos(2 * M_PI * iter / Nx) + 9.0 * cos(4 * M_PI * iter / Nx)) *
+                    (1067.0 - 116.0 * cos(2 * M_PI * iter / static_cast<amrex::Real>(Nx)) +
+                     9.0 * cos(4 * M_PI * iter / static_cast<amrex::Real>(Nx))) *
                     dx.product() / (960 * dx[xDir] * dx[xDir]);
             }
             for (int iter = 0; iter < Ny; iter++)
             {
                 eigenH0y[iter] =
-                    (1067.0 - 116.0 * cos(2 * M_PI * iter / Ny) + 9.0 * cos(4 * M_PI * iter / Ny)) *
+                    (1067.0 - 116.0 * cos(2 * M_PI * iter / static_cast<amrex::Real>(Ny)) +
+                     9.0 * cos(4 * M_PI * iter / static_cast<amrex::Real>(Ny))) *
                     dx.product() / (960 * dx[yDir] * dx[yDir]);
             }
             for (int iter = 0; iter < Nz; iter++)
             {
                 eigenH0z[iter] =
-                    (1067.0 - 116.0 * cos(2 * M_PI * iter / Nz) + 9.0 * cos(4 * M_PI * iter / Nz)) *
+                    (1067.0 - 116.0 * cos(2 * M_PI * iter / static_cast<amrex::Real>(Nz)) +
+                     9.0 * cos(4 * M_PI * iter / static_cast<amrex::Real>(Nz))) *
                     dx.product() / (960 * dx[zDir] * dx[zDir]);
             }
             break;
@@ -105,31 +108,35 @@ FFTSolver::FFTSolver(const ComputationalDomain& compDom,
 
     for (int iter = 0; iter < Nx; iter++)
     {
-        eigenvalues0x[iter] = (2 - 2 * cos(2 * M_PI * iter / Nx)) * eigenH0x[iter];
+        eigenvalues0x[iter] =
+            (2 - 2 * cos(2 * M_PI * iter / static_cast<amrex::Real>(Nx))) * eigenH0x[iter];
     }
     for (int iter = 0; iter < Ny; iter++)
     {
-        eigenvalues0y[iter] = (2 - 2 * cos(2 * M_PI * iter / Ny)) * eigenH0y[iter];
+        eigenvalues0y[iter] =
+            (2 - 2 * cos(2 * M_PI * iter / static_cast<amrex::Real>(Ny))) * eigenH0y[iter];
     }
     for (int iter = 0; iter < Nz; iter++)
     {
-        eigenvalues0z[iter] = (2 - 2 * cos(2 * M_PI * iter / Nz)) * eigenH0z[iter];
+        eigenvalues0z[iter] =
+            (2 - 2 * cos(2 * M_PI * iter / static_cast<amrex::Real>(Nz))) * eigenH0z[iter];
     }
 
     // Handle the gpu parallel for for gpu running
-    AMREX_D_TERM(m_eigenvalues0xGpu.resize(Nx);, m_eigenvalues0yGpu.resize(Ny);
-                 , m_eigenvalues0zGpu.resize(Nz);)
+    m_eigenvalues0xGpu.resize(Nx);
+    m_eigenvalues0yGpu.resize(Ny);
+    m_eigenvalues0zGpu.resize(Nz);
 
-    AMREX_D_TERM(amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0x.begin(),
-                                       eigenvalues0x.end(), m_eigenvalues0xGpu.begin());
-                 , amrex::Gpu::copyAsync (amrex::Gpu::hostToDevice, eigenvalues0y.begin(),
-                                         eigenvalues0y.end(), m_eigenvalues0yGpu.begin());
-                 , amrex::Gpu::copyAsync (amrex::Gpu::hostToDevice, eigenvalues0z.begin(),
-                                         eigenvalues0z.end(), m_eigenvalues0zGpu.begin());)
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0x.begin(), eigenvalues0x.end(),
+                          m_eigenvalues0xGpu.begin());
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0y.begin(), eigenvalues0y.end(),
+                          m_eigenvalues0yGpu.begin());
+    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0z.begin(), eigenvalues0z.end(),
+                          m_eigenvalues0zGpu.begin());
 
-    AMREX_D_TERM(m_eigenvalues0x = m_eigenvalues0xGpu.dataPtr();
-                 , m_eigenvalues0y = m_eigenvalues0yGpu.dataPtr();
-                 , m_eigenvalues0z = m_eigenvalues0zGpu.dataPtr();)
+    m_eigenvalues0x = m_eigenvalues0xGpu.dataPtr();
+    m_eigenvalues0y = m_eigenvalues0yGpu.dataPtr();
+    m_eigenvalues0z = m_eigenvalues0zGpu.dataPtr();
 }
 
 void FFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,

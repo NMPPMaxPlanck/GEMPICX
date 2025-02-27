@@ -97,7 +97,7 @@ int main (int argc, char* argv[])
 
                 amrex::Array4<amrex::Real> const& form = (E.m_data[comp])[mfi].array();
 
-                amrex::InitRandom(123 + lo[xDir] + lo[yDir] * 10 + lo[zDir] * 100);
+                amrex::InitRandom(123 + GEMPIC_D_ADD(lo[xDir], lo[yDir] * 10, lo[zDir] * 100));
 
                 ParallelForRNG(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k,
                                                         amrex::RandomEngine const& gen) noexcept

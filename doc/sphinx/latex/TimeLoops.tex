@@ -163,8 +163,8 @@ We observe that $\bB$ does not vary in this split step. We express only the quan
           $$
               \begin{aligned}
                   x^{(1)}               & = x^n + \frac{\Delta t}{2} v_{p,x}^n,                                                         \\
-                  v_{p,y}^{(1)}         & = v_{p,y}^{n} - \frac {q_p}{m_p} (\check{B}^x_z(x^{(1)},y^n,z^n) - \check{B}^x_z(x^n,y^n,z^n) \\
-                  v_{p,z}^{(1)}         & = v_{p,z}^{n} + \frac {q_p}{m_p} (\check{B}^x_y(x^{(1)},y^n,z^n) - \check{B}^x_y(x^n,y^n,z^n) \\
+                  v_{p,y}^{(1)}         & = v_{p,y}^{n} - \frac {q_p}{m_p} \left(\check{B}^x_z(x^{(1)},y^n,z^n) - \check{B}^x_z(x^n,y^n,z^n)\right) \\
+                  v_{p,z}^{(1)}         & = v_{p,z}^{n} + \frac {q_p}{m_p} \left(\check{B}^x_y(x^{(1)},y^n,z^n) - \check{B}^x_y(x^n,y^n,z^n)\right) \\
                   \tilde{\arrD}_x^{(1)} & = \tilde{\arrD}_x^n -(\check{\arrJ}_x^{(1)}-\check{\arrJ}_x^n).
               \end{aligned}
           $$
@@ -172,8 +172,8 @@ We observe that $\bB$ does not vary in this split step. We express only the quan
           $$
               \begin{aligned}
                   y^{(1)}               & = y^n + \frac{\Delta t}{2} v_{p,y}^{(1)},                                                               \\
-                  v_{p,x}^{(1)}         & = v_{p,x}^{n} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{(1)},z^n) - \check{B}^y_z(x^{(1)},y^n,z^n)   \\
-                  v_{p,z}^{(2)}         & = v_{p,z}^{(1)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{(1)},z^n) - \check{B}^y_x(x^{(1)},y^n,z^n) \\
+                  v_{p,x}^{(1)}         & = v_{p,x}^{n} + \frac {q_p}{m_p} \left(\check{B}^y_z(x^{(1)},y^{(1)},z^n) - \check{B}^y_z(x^{(1)},y^n,z^n)\right) \\
+                  v_{p,z}^{(2)}         & = v_{p,z}^{(1)} - \frac {q_p}{m_p} \left(\check{B}^y_x(x^{(1)},y^{(1)},z^n) - \check{B}^y_x(x^{(1)},y^n,z^n)\right) \\
                   \tilde{\arrD}_y^{(1)} & = \tilde{\arrD}_y^n -(\check{\arrJ}_y^{(1)}-\check{\arrJ}_y^n).
               \end{aligned}
           $$
@@ -181,8 +181,8 @@ We observe that $\bB$ does not vary in this split step. We express only the quan
           $$
               \begin{aligned}
                   z^{n+1}               & = z^n + \Delta t \, v_{p,z}^{(2)},                                                                              \\
-                  v_{p,x}^{(2)}         & = v_{p,x}^{(1)} - \frac {q_p}{m_p} (\check{B}^z_y(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_y(x^{(1)},y^{(1)},z^n) \\
-                  v_{p,y}^{(2)}         & = v_{p,y}^{(1)} + \frac {q_p}{m_p} (\check{B}^z_x(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_x(x^{(1)},y^{(1)},z^n) \\
+                  v_{p,x}^{(2)}         & = v_{p,x}^{(1)} - \frac {q_p}{m_p} \left(\check{B}^z_y(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_y(x^{(1)},y^{(1)},z^n)\right) \\
+                  v_{p,y}^{(2)}         & = v_{p,y}^{(1)} + \frac {q_p}{m_p} \left(\check{B}^z_x(x^{(1)},y^{(1)},z^{(1)}) - \check{B}^z_x(x^{(1)},y^{(1)},z^n)\right) \\
                   \tilde{\arrD}_z^{n+1} & = \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
               \end{aligned}
           $$
@@ -190,8 +190,8 @@ We observe that $\bB$ does not vary in this split step. We express only the quan
           $$
               \begin{aligned}
                   y^{n+1}               & = y^{(1)} + \frac{\Delta t}{2} v_{p,y}^{(2)},                                                                        \\
-                  v_{p,x}^{n+1}         & = v_{p,x}^{(2)} + \frac {q_p}{m_p} (\check{B}^y_z(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_z(x^{(1)},y^{(1)},z^{n+1})) \\
-                  v_{p,z}^{(3)}         & = v_{p,z}^{(2)} - \frac {q_p}{m_p} (\check{B}^y_x(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_x(x^{(1)},y^{(1)},z^{n+1})  \\
+                  v_{p,x}^{n+1}         & = v_{p,x}^{(2)} + \frac {q_p}{m_p} \left(\check{B}^y_z(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_z(x^{(1)},y^{(1)},z^{n+1})\right) \\
+                  v_{p,z}^{(3)}         & = v_{p,z}^{(2)} - \frac {q_p}{m_p} \left(\check{B}^y_x(x^{(1)},y^{n+1},z^{n+1}) - \check{B}^y_x(x^{(1)},y^{(1)},z^{n+1})\right) \\
                   \tilde{\arrD}_y^{n+1} & = \tilde{\arrD}_y^{(1)} -(\check{\arrJ}_y^{n+1}-\check{\arrJ}_y^{(2)}).
               \end{aligned}
           $$
@@ -199,8 +199,8 @@ We observe that $\bB$ does not vary in this split step. We express only the quan
           $$
               \begin{aligned}
                   x^{n+1}               & = x^{(1)} + \frac{\Delta t}{2} v_{p,x}^{n+1},                                                                       \\
-                  v_{p,y}^{n+1}         & = v_{p,y}^{(2)} - \frac {q_p}{m_p} (\check{B}^x_z(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_z(x^{(1)},y^{n+1},z^{n+1}) \\
-                  v_{p,z}^{n+1}         & = v_{p,z}^{(3)} + \frac {q_p}{m_p} (\check{B}^x_y(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_y(x^{n+1},y^{n+1},z^{(1)}) \\
+                  v_{p,y}^{n+1}         & = v_{p,y}^{(2)} - \frac {q_p}{m_p} \left(\check{B}^x_z(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_z(x^{(1)},y^{n+1},z^{n+1})\right) \\
+                  v_{p,z}^{n+1}         & = v_{p,z}^{(3)} + \frac {q_p}{m_p} \left(\check{B}^x_y(x^{n+1},y^{n+1},z^{n+1}) - \check{B}^x_y(x^{n+1},y^{n+1},z^{(1)})\right) \\
                   \tilde{\arrD}_x^{n+1} & = \tilde{\arrD}_x^{(1)} -(\check{\arrJ}_x^{n+1}-\check{\arrJ}_x^{(2)}).
               \end{aligned}
           $$

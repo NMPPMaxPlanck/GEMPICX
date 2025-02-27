@@ -270,7 +270,7 @@ public:
         std::map<int, int>& mapCols)
     {
         // This function contributes (<= nMmCoeffs[ndir]) columns to ncols
-        int iiTemp{0}, jjTemp{0}, kkTemp{0};
+        int AMREX_D_DECL(iiTemp{0}, jjTemp{0}, kkTemp{0});
         int icol, gdtmp;
 
         int ii{0}, jj{0}, kk{0};
@@ -301,7 +301,7 @@ public:
         std::map<int, int>& mapCols2dz)
     {
         // This function contributes (<= nMmCoeffs[zdir]) columns to ncols
-        int iiTemp{0}, jjTemp{0}, kkTemp{0};
+        int AMREX_D_DECL(iiTemp{0}, jjTemp{0}, kkTemp{0});
         int icol, gdtmp;
 
         int ii{0}, jj{0}, kk{0};
@@ -327,17 +327,18 @@ public:
         SplineType const& spline,
         amrex::Real chargeWeight)
     {
-        constexpr int nWtsX[3] = {degx, (degx + 1),
-                                  (degx + 1)}; // number of x,y,z-field weights in X-direction
-        constexpr int nWtsY[3] = {(degy + 1), degy,
-                                  (degy + 1)}; // number of x,y,z-field weights in Y-direction
-        constexpr int nWtsZ[3] = {(degz + 1), (degz + 1),
-                                  degz}; // number of x,y,z-field weights in Z-direction
+        constexpr int nWtsXYZ[3][3] = {
+            {degx, degx + 1, degx + 1},  // number of x,y,z-field weights in X-direction
+            {degy + 1, degy, degy + 1},  // number of x,y,z-field weights in Y-direction
+            {degz + 1, degz + 1, degz}}; // number of x,y,z-field weights in Z-direction
 
         constexpr int nWts[3] = {
-            GEMPIC_D_MULT(nWtsX[xDir], nWtsY[xDir], nWtsZ[xDir]),  // number of x-field weights
-            GEMPIC_D_MULT(nWtsX[yDir], nWtsY[yDir], nWtsZ[yDir]),  // number of y-field weights
-            GEMPIC_D_MULT(nWtsX[zDir], nWtsY[zDir], nWtsZ[zDir])}; // number of z-field weights
+            // number of x-field weights
+            GEMPIC_D_MULT(nWtsXYZ[xDir][xDir], nWtsXYZ[yDir][xDir], nWtsXYZ[zDir][xDir]),
+            // number of y-field weights
+            GEMPIC_D_MULT(nWtsXYZ[xDir][yDir], nWtsXYZ[yDir][yDir], nWtsXYZ[zDir][yDir]),
+            // number of z-field weights
+            GEMPIC_D_MULT(nWtsXYZ[xDir][zDir], nWtsXYZ[yDir][zDir], nWtsXYZ[zDir][zDir])};
         constexpr int nWtsStart[3] = {0, nWts[xDir], (nWts[xDir] + nWts[yDir])};
 
         amrex::GpuArray<amrex::Real, (nWts[xDir] + nWts[yDir] + nWts[zDir])> eWts;
@@ -347,14 +348,14 @@ public:
 
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
 
-        int iiTemp, jjTemp, kkTemp;
+        int AMREX_D_DECL(iiTemp, jjTemp, kkTemp);
         int component;
 
         for (int ndir = 0; ndir < 3; ++ndir)
         {
-            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsX[ndir]; ++ii),
-                                for (int jj = 0; jj < nWtsY[ndir]; ++jj),
-                                for (int kk = 0; kk < nWtsZ[ndir]; ++kk))
+            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ[xDir][ndir]; ++ii),
+                                for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
+                                for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
                 const amrex::Real sCoeff =
                     ((ndir == 0)
                          ? (spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk))

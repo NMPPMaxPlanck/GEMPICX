@@ -18,6 +18,7 @@ class SolverMethod
 {
 public:
     virtual void solve(Sol& out, Rhs& in) = 0;
+    virtual ~SolverMethod() {};
 };
 
 template <class Rhs,

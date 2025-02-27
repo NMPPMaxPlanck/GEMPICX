@@ -87,9 +87,18 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::make_poisson_solver (
 
     if (solver == "Amrex")
     {
-        return std::make_unique<AmrexSolver> (AmrexSolver(infra, maxCoarseningLevel, maxIter,
-                                                         maxFmgIter, mgBottomMaxIter, 1e-10, 1e-12,
-                                                         verbose, bottomVerbose));
+        if (infra.geometry().isAllPeriodic())
+        {
+            return std::make_unique<AmrexSolver> (infra, maxCoarseningLevel, maxIter, maxFmgIter,
+                                                 mgBottomMaxIter, 1e-10, 1e-12, verbose,
+                                                 bottomVerbose);
+        }
+        else
+        {
+            amrex::Assert(
+                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver",
+                __FILE__, __LINE__);
+        }
     }
     else if (solver == "ConjugateGradient")
     {
@@ -182,9 +191,14 @@ AmrexSolver::AmrexSolver(const ComputationalDomain& compDom,
                          amrex::Real absTol,
                          int verbose,
                          int bottomVerbose) :
-    m_compDom{compDom}, m_relTol{relTol}, m_absTol{absTol}, m_cellVolume{compDom.cell_volume()}
+    m_compDom{compDom}, m_relTol{relTol}, m_absTol{absTol}
 {
     BL_PROFILE("Gempic::FieldSolvers::AmrexSolver::AmrexSolver()");
+    // Check for periodic boundaries, required for this solver
+    if (!compDom.geometry().periodicity().isAllPeriodic())
+    {
+        amrex::Abort("Amrex Poisson solver requires periodic boundary conditions");
+    }
     amrex::LPInfo lpInfo;
     lpInfo.setMaxCoarseningLevel(maxCoarseningLevel);
 
@@ -233,7 +247,7 @@ void AmrexSolver::solve (Forms::DeRhamField<Grid::primal, Space::node>& phi,
     // Solve Poisson equation
     m_mlmg->solve({&phi.m_data}, {&rho.m_data}, m_relTol, m_absTol);
     // AMReX Poisson solver does not use Hodge. Need to rescale phi
-    phi *= 1.0 / m_cellVolume;
+    phi *= 1.0 / m_compDom.cell_volume();
 
     phi.average_sync();
     phi.fill_boundary();

@@ -38,12 +38,13 @@ private:
     std::unique_ptr<amrex::FFT::R2C<amrex::Real>> m_r2c;
 
     ComputationalDomain m_compDom;
-    AMREX_D_TERM(amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0xGpu;
-                 , amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0yGpu;
-                 , amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0zGpu;)
+    amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0xGpu;
+    amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0yGpu;
+    amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0zGpu;
 
-    AMREX_D_TERM(amrex::Real* m_eigenvalues0x;, amrex::Real* m_eigenvalues0y;
-                 , amrex::Real* m_eigenvalues0z;)
+    amrex::Real* m_eigenvalues0x; // Pointers to GPU-compatible adresses
+    amrex::Real* m_eigenvalues0y; // (or CPU adresses if no GPU present)
+    amrex::Real* m_eigenvalues0z;
 
 public:
     FFTSolver(const ComputationalDomain& compDom,

@@ -85,6 +85,12 @@ struct DeRhamField
     {
         static_assert(space != space, "This class should not be callable.");
     };
+
+    /**
+     * @brief Construct Space::edge / Space::face fields with a 3D array of number of components
+     */
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::array<int, 3> ncomponents) :
+        DeRhamField{drc} {};
     /**
      * @brief Construct Space::edge / Space::face fields and add name to fieldsDiagnostics map
      */

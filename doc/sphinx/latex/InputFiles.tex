@@ -358,6 +358,20 @@ BoundaryCondition.E = PerfectlyConducting PerfectlyConducting # String vector. 2
 BoundaryCondition.Default = Natural Natural # String vector. Default "Natural" * 2 * dim_non_periodic
 \end{lstlisting}
 
+\subsection{PoissonSolver}
+Selects which solver to use for the poisson equation (\ref{eq:Poisson_example}), provided the PoissonSolver is used in the simulation.
+There are several choices built in:
+\begin{itemize}
+   \item \lstinline[language=pkgconfig]{FFT}: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation.
+   \item \lstinline[language=pkgconfig]{Hypre}: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
+   \item \lstinline[language=pkgconfig]{ConjugateGradient}: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
+   \item \lstinline[language=pkgconfig]{ConjugateGradientInverseHodge}: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
+   \item "Amrex": Using the AMReX MLMG solver. Boundary conditions must be periodic.
+\begin{lstlisting}[language=pkgconfig]
+# PoissonSolver
+PoissonSolver.solver = ConjugateGradient # String. Default: See above.
+\end{lstlisting}
+
 \subsection{HYPRE}
 These parameters are for the \verb|HYPRE| library used to parallely solve large sparse linear systems. These can be found in the \verb|AMReX_HypreIJIface.cpp| file.
 

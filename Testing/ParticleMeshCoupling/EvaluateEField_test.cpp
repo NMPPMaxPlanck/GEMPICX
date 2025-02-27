@@ -441,12 +441,12 @@ TEST_F(EvaluateEFieldTestCustomInfrastructure, Scaling)
 
     // Adding particle to one cell
     const int numParticles{1};
-    auto dx = m_infra.geometry().CellSizeArray();
+    auto dx = infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{AMREX_D_DECL(infra.m_geom.ProbHi(xDir) - 1.25 * dx[xDir],
-                       infra.m_geom.ProbHi(yDir) - 1.25 * dx[yDir],
-                       infra.m_geom.ProbHi(zDir) - 1.25 * dx[zDir])}}};
+        {{AMREX_D_DECL(infra.geometry().ProbHi(xDir) - 1.25 * dx[xDir],
+                       infra.geometry().ProbHi(yDir) - 1.25 * dx[yDir],
+                       infra.geometry().ProbHi(zDir) - 1.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), infra, weights, positions);
 
