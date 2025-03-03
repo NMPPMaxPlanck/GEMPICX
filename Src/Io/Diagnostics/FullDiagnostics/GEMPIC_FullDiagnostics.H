@@ -166,7 +166,7 @@ private:
         if (m_format == "plotfile")
         {
             m_flushFormat = std::make_unique<FlushFormatPlotfile<vdim, ndata>>();
-            //} else if (m_format == "checkpoint"){
+            //} else if (m_format == "checkpoint") {
             // creating checkpoint format
             // m_flush_format = std::make_unique<FlushFormatCheckpoint>() ;
         }

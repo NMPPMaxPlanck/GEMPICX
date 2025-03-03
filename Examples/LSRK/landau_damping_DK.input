@@ -1,0 +1,67 @@
+# The name of the output file to print all the parameters.
+outputFile = "inputParametersForRun.out" #
+
+# General setting
+Sim.Type = "DriftKinetic"
+#
+RungeKutta.stages = 5
+
+# Grid parameters
+ComputationalDomain.nCell = 8 8 32
+ComputationalDomain.maxGridSize = 4 4 4
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+#nGhostExtra=10 10 10
+
+# Particle parameters
+Particle.speciesNames = electrons
+Particle.sampler = Sobol
+Particle.electrons.nPartPerCell = 1000 # number of particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+#Note for the DK model, the Langmuir wave is in z direction
+Particle.electrons.density = "1.0 + 0.04 * cos(kvarz * z)"
+Particle.electrons.numGaussians = 1
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0
+Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vWeight = 1.0
+
+# wave vector
+k = 0.4 0.4 0.4
+
+# Simulation parameters
+TimeLoop.nSteps = 500
+TimeLoop.dt = 0.02
+
+# Filter
+Filter.enable = 1
+Filter.nPass = 3 3 3
+
+# Function parameters
+Function.Ex = "0.0 "
+Function.Ey = "0.0"
+Function.Ez = "0.0"
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "1.0"
+
+# Diagnostics
+#Full Diagnostics 
+FullDiagnostics.enable = 1 # 1 for true, 0 for false
+FullDiagnostics.groupNames = part field 
+FullDiagnostics.part.varNames = electrons
+FullDiagnostics.part.saveInterval = 1000
+FullDiagnostics.part.outputProcessor = raw
+FullDiagnostics.field.varNames = rho Ex Ez Bx Jz
+FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.saveInterval = 1
+
+# Reduced Diagnostics 
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
+ReducedDiagnostics.saveInterval = 1 # saveInterva
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.Part.types = Particle
+

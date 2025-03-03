@@ -837,12 +837,114 @@ public:
                        amrex::Real weight = 1.) = 0;
 
     /**
-     * @brief Evaluation of a 0-/3-form DeRhamField of nVar variables at points in each cell given
-     *        by a positive normalized shift from the lower corner of the cell
+     * @brief Computes the \f$formOut=\mathbb{H}_{\boldsymbol M} formIn\f$.
+     *
+     * Description:
+     * Computes \f$formOut={\boldsymbol M}*weight*formIn\f$
+     * tensor matrix M is the same de Rham field as formOut
+     * M is 3 by 3 matrix saved as a DeRhamField with 3 components for each of the three variables
+     *
+     * @tparam grid: primal or dual
+     * @tparam space: edge or node, corresponding to 1- or 2-forms
+     * @param formOut: DeRhamField<grid, space>
+     * @param formIn : DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>
+     * @param matrix : DeRhamField<grid, space>
+     * @param weight : weighting factor
+     * @return void
+     */
+    template <Grid grid, Space space, std::enable_if_t<isOneOrTwoForm<space>, int> enable = 0>
+    inline void hodge_dk (DeRhamField<grid, space>& formOut,
+                          DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& formIn,
+                          DeRhamField<grid, space>& matrix,
+                          amrex::Real weight = 1.)
+    {
+        BL_PROFILE("Gempic::Forms::HodgeDK");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(formOut.m_data[xDir].nComp() == 1,
+                                         "hodge_dk not implemented for multi-component fields");
+        // Start by applying the standard Hodge operator. Needs to be stored in temporary multifab
+        DeRhamField<grid, space> tempFormOut(formOut.m_deRham);
+        this->hodge(tempFormOut, formIn, weight); //get tempFormOut from formIn
+
+        // Update x component assume corresponding multifab has only 1 component
+        // y and z components need to be averaged to midpoint of x edge
+        for (amrex::MFIter mfi(formOut.m_data[xDir], true); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const& formx = (tempFormOut.m_data[xDir])[mfi].array();
+            amrex::Array4<amrex::Real> const& formy = (tempFormOut.m_data[yDir])[mfi].array();
+            amrex::Array4<amrex::Real> const& formz = (tempFormOut.m_data[zDir])[mfi].array();
+            amrex::Array4<amrex::Real> const& matrixX = matrix.m_data[xDir][mfi].array();
+            amrex::Array4<amrex::Real> const& formOutX = (formOut.m_data[xDir])[mfi].array();
+
+            ParallelFor(bx,
+                        [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                        {
+                            formOutX(i, j, k) = matrixX(i, j, k, xDir) * formx(i, j, k) +
+                                                matrixX(i, j, k, yDir) * 0.25 *
+                                                    (formy(i - 1, j, k) + formy(i, j, k) +
+                                                     formy(i - 1, j + 1, k) + formy(i, j + 1, k)) +
+                                                matrixX(i, j, k, zDir) * 0.25 *
+                                                    (formz(i - 1, j, k) + formz(i, j, k) +
+                                                     formz(i - 1, j, k) + formz(i, j, k + 1));
+                        });
+        }
+        // Update y component assume corresponding multifab has only 1 component
+        // x and z components need to be averaged to midpoint of y edge
+        for (amrex::MFIter mfi(formOut.m_data[yDir], true); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const& formx = tempFormOut.m_data[xDir][mfi].array();
+            amrex::Array4<amrex::Real> const& formy = tempFormOut.m_data[yDir][mfi].array();
+            amrex::Array4<amrex::Real> const& formz = tempFormOut.m_data[zDir][mfi].array();
+            amrex::Array4<amrex::Real> const& matrixY = matrix.m_data[yDir][mfi].array();
+            amrex::Array4<amrex::Real> const& formOutY = formOut.m_data[yDir][mfi].array();
+
+            ParallelFor(bx,
+                        [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                        {
+                            formOutY(i, j, k) = matrixY(i, j, k, xDir) * 0.25 *
+                                                    (formx(i, j - 1, k) + formx(i, j, k) +
+                                                     formx(i + 1, j - 1, k) + formx(i + 1, j, k)) +
+                                                matrixY(i, j, k, yDir) * formy(i, j, k) +
+                                                matrixY(i, j, k, zDir) * 0.25 *
+                                                    (formz(i, j, k) + formz(i, j - 1, k) +
+                                                     formz(i, j, k + 1) + formz(i, j - 1, k + 1));
+                        });
+        }
+        // Update z component assume corresponding multifab has only 1 component
+        // x and y components need to be averaged to midpoint of z edge
+        for (amrex::MFIter mfi(formOut.m_data[zDir], true); mfi.isValid(); ++mfi)
+        {
+            const amrex::Box& bx = mfi.tilebox();
+            amrex::Array4<amrex::Real> const& formx = (tempFormOut.m_data[xDir])[mfi].array();
+            amrex::Array4<amrex::Real> const& formy = (tempFormOut.m_data[yDir])[mfi].array();
+            amrex::Array4<amrex::Real> const& formz = (tempFormOut.m_data[zDir])[mfi].array();
+            amrex::Array4<amrex::Real> const& matrixZ = matrix.m_data[zDir][mfi].array();
+            amrex::Array4<amrex::Real> const& formOutZ = (formOut.m_data[zDir])[mfi].array();
+
+            ParallelFor(bx,
+                        [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                        {
+                            formOutZ(i, j, k) = matrixZ(i, j, k, xDir) * 0.25 *
+                                                    (formx(i, j, k - 1) + formx(i, j, k) +
+                                                     formx(i + 1, j, k - 1) + formx(i + 1, j, k)) +
+                                                matrixZ(i, j, k, yDir) * 0.25 *
+                                                    (formy(i, j, k) + formy(i, j, k - 1) +
+                                                     formy(i, j + 1, k) + formy(i, j + 1, k - 1)) +
+                                                matrixZ(i, j, k, zDir) * formz(i, j, k);
+                        });
+        }
+        formOut.fill_boundary();
+        formOut.average_sync();
+    }
+
+    /**
+     * @brief Evaluation of a 0-/3-form DeRhamField of nVar variables at points in each cell
+     * given by a positive normalized shift from the lower corner of the cell
      * @param field       The field to evaluate
      * @param evalShift   The time step at which to evaluate the functions
-     * @param pointValues Output cell-centered MultiFab containing nVar * nEvals components in the
-     *                    order
+     * @param pointValues Output cell-centered MultiFab containing nVar * nEvals components in
+     * the order
      *                    var=0 eval=0,
      *                    var=0 eval=1,
      *                    ...,

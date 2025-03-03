@@ -1,1 +1,1 @@
-target_sources(GEMPICX PRIVATE GEMPIC_Splitting.cpp)
+target_sources(GEMPICX PRIVATE GEMPIC_Splitting.cpp GEMPIC_RungeKutta.cpp)

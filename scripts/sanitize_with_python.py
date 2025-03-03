@@ -249,7 +249,9 @@ def fix_files_syntax(folders, forceMove=False):
         testCase = re.compile('^[A-Z][a-zA-Z]*_test$')
         outdatedTestCase = re.compile(r'^test\w*$')
         for file in folderName.rglob('*.cpp'):
-            if gempicCamelCase.fullmatch(file.stem) or testCase.fullmatch(file.stem):
+            if gempicCamelCase.fullmatch(file.stem):
+                continue
+            elif testCase.fullmatch(file.stem):
                 continue
             elif outdatedTestCase.fullmatch(file.stem):
                 warnings.warn(f"The naming (and probably type) of the test file '{str(file)}' is deprecated.")
@@ -553,6 +555,13 @@ def fix_scoped_definition_spacing(file):
     # Template specification declarations:
     #                                  void className<tVar1, tVar2>::fnc(...
     correct_in_files(r'^(\s*[^ =\(\)/]{1,} \w*(<(\w|[, :])*>{1,})?(::\w*(<(\w|[, :])*>{1,})?){1,})(\([^;]*)$', r'\1 \7', file)
+        
+def fix_empty_definition_spacing(file):
+    """
+    Yet another hotfix to the bug that Clang-Format <18 removes the space betwen ) and {}.
+    """
+    # adds a space between all '){' pairs
+    correct_in_files(r'\){', r') {', file)
 
 def gempic_run_clang_format(folders):
     """
@@ -570,6 +579,7 @@ def gempic_run_clang_format(folders):
         if clangFormatOut.returncode == 0:
             fix_lambda_brackets(file)
             fix_scoped_definition_spacing(file)
+            fix_empty_definition_spacing(file)
         else:
             warnings.warn(clangFormatOut.stderr)
     print("done.")

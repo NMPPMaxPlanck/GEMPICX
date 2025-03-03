@@ -86,16 +86,15 @@ if(GEMPIC_BUILD_DOCUMENTATION)
   # Add doxygen documentation
   add_subdirectory(doc)
 endif()
+if(GEMPIC_BUILD_EXAMPLES)
+# Add subfolder with examples
+add_subdirectory(Examples)
+endif()
 if(GEMPIC_BUILD_TESTS)
   # Enable ctest and GoogleTest tests
   enable_testing()
   # Add subfolder with tests
   add_subdirectory(Testing)
-endif()
-if(GEMPIC_BUILD_EXAMPLES)
-  include_directories("${CMAKE_SOURCE_DIR}/Examples")
-  # Add subfolder with examples
-  add_subdirectory(Examples)
 endif()
 
 if(GEMPIC_USE_CUDA)

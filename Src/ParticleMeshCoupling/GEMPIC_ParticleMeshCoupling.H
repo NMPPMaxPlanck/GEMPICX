@@ -145,6 +145,33 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
         }
     }
 }
+
+template <Direction pDir,
+          int pDir1,
+          int pDir2,
+          int degP1,
+          int degP2,
+          typename SplineType,
+          unsigned int vDim>
+AMREX_GPU_HOST_DEVICE void accumulate_j_loop (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    SplineType &spline,
+    amrex::Real const chargeWeight,
+    amrex::Real const primitiveDifference,
+    int const i)
+{
+    for (int j = 0; j <= degP1; ++j)
+    {
+        for (int k = 0; k <= degP2; ++k)
+        {
+            amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(i, j, k);
+
+            update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, j, k, chargeWeight,
+                                                   primitiveDifference);
+        }
+    }
+}
+
 #elif AMREX_SPACEDIM == 2
 
 /**
@@ -237,10 +264,10 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
  * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
  * should be fixed
  */
-template <Direction pDir, typename splineType, unsigned int bDim, unsigned int vDim>
+template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -279,10 +306,10 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
  * @param bArray : Degrees of freedom of B as primal 2-form
  * @param jArray : Degrees of freedom of J as dual 2-form
  */
-template <typename splineType, unsigned int bDim, unsigned int vDim>
+template <typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const &dtv,
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -290,7 +317,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
 {
     using namespace Impl; // utility functions for this function
     fields = {0., 0.};
-    constexpr int degX = splineType::s_splineDegrees[xDir];
+    constexpr int degX = SplineType::s_splineDegrees[xDir];
 
     for (int k = 0; k <= degX; ++k)
     {
@@ -329,10 +356,10 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
  * @param bArray : Degrees of freedom of B as primal 2-form
  * @param jArray : Degrees of freedom of J as dual 2-form
  */
-template <typename splineType, unsigned int bDim, unsigned int vDim>
+template <typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const &dtv,
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -341,9 +368,9 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     using namespace Impl; // utility functions for this function
     fields = {0., 0.};
 
-    constexpr int degX = splineType::s_splineDegrees[xDir];
+    constexpr int degX = SplineType::s_splineDegrees[xDir];
 #if AMREX_SPACEDIM == 2
-    constexpr int degY = splineType::s_splineDegrees[yDir];
+    constexpr int degY = SplineType::s_splineDegrees[yDir];
 #elif AMREX_SPACEDIM == 1
     constexpr int k = 0;
     constexpr int yNodeVal = 1;
@@ -514,6 +541,73 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
 
         accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
             fields, spline, chargeWeight, primitiveDifference, bArray, jArray, ii);
+    }
+}
+
+//time_integrated_j
+template <Direction pDir, typename SplineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE void time_integrated_j (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    SplineType &spline,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx)
+{
+    BL_PROFILE("Gempic::ParticleMeshCoupling::time_integrated_j()");
+    using namespace Impl; // utility functions for this function
+    constexpr int pDir1 = (pDir + 1) % 3;
+    constexpr int pDir2 = (pDir + 2) % 3;
+
+    constexpr int degP = SplineType::s_splineDegrees[pDir];
+    constexpr int degP1 = SplineType::s_splineDegrees[pDir1];
+    constexpr int degP2 = SplineType::s_splineDegrees[pDir2];
+
+    // Size of support of difference of primitives
+    // check for ghost cells
+    int localSize = std::abs(spline.m_firstIndex[pDir] - spline.m_firstIndexOld[pDir]) +
+                    spline.s_splineDegrees[pDir];
+
+    // Region of only first spline
+    for (int ii = 0; ii < std::min(degP, localSize - degP); ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
+                                                            primitiveDifference, ii);
+    }
+
+    // Region of no splines (may not exist)
+    for (int ii = degP; ii < localSize - degP; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
+                                                            primitiveDifference, ii);
+    }
+
+    // Region of both splines (may not exist)
+    for (int ii = localSize - degP; ii < degP; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
+                                                            primitiveDifference, ii);
+    }
+
+    // Region of only last spline
+    for (int ii = std::max(degP, localSize - degP); ii < localSize; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
+                                                            primitiveDifference, ii);
     }
 }
 
@@ -747,10 +841,10 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * @param jArray : Degrees of freedom of J as dual 2-form
  */
 
-template <Direction pDir, typename splineType, unsigned int bDim, unsigned int vDim>
+template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -759,7 +853,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
 
-    constexpr int degPx = splineType::s_splineDegrees[xDir];
+    constexpr int degPx = SplineType::s_splineDegrees[xDir];
     fields = {0., 0.};
 
     int localSize = std::abs(spline.m_firstIndex[xDir] - spline.m_firstIndexOld[xDir]) +

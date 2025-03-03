@@ -250,6 +250,10 @@ public:
 
     ~FDDeRhamComplex() override;
 
+    // Getter function to access m_sV
+    inline amrex::Real get_s_v () const { return m_sV; }
+    inline amrex::Real get_s_omega () const { return m_sOmega; }
+
     // 0-/3-forms
     void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
