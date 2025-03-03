@@ -11,8 +11,6 @@
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 using namespace Gempic;
@@ -110,7 +108,7 @@ TEST_F(PoissonSolverTest, PoissonAMReX)
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
+        COMPARE_FIELDS(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
 
@@ -137,7 +135,7 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(phi.m_data.array(mfi), phiIn.m_data.array(mfi), bx, tol);
+        COMPARE_FIELDS(phi.m_data.array(mfi), phiIn.m_data.array(mfi), bx, tol);
     }
 }
 } // namespace
@@ -197,7 +195,7 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
+        COMPARE_FIELDS(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
 #endif
@@ -285,7 +283,7 @@ TYPED_TEST(PoissonSolverTypedTest, AnalyticalLowTolerance)
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
+        COMPARE_FIELDS(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
 } // namespace

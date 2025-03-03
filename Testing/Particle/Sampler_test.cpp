@@ -12,8 +12,6 @@
 // rho = three form
 // phi = zero form
 
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Particle;
 

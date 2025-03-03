@@ -139,4 +139,7 @@ double l_inf_error(amrex::Array4<const amrex::Real> const& a,
                    amrex::Box const& bx,
                    int ncomp = 1);
 } // namespace Gempic::Test::Utils
+
+#define CHECK_FIELD(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
+#define COMPARE_FIELDS(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
 #endif

@@ -14,8 +14,6 @@
 // rho = three form
 // phi = zero form
 
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Forms;
 
@@ -258,7 +256,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
         loopRun = true;
 
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(pointValues[mfi].array(), analyticalPointValues[mfi].array(), bx);
+        COMPARE_FIELDS(pointValues[mfi].array(), analyticalPointValues[mfi].array(), bx);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -355,7 +353,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
         loopRun = true;
 
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(pointValues[mfi].array(), analyticalPointValues[mfi].array(), bx);
+        COMPARE_FIELDS(pointValues[mfi].array(), analyticalPointValues[mfi].array(), bx);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -471,7 +469,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
             loopRun = true;
 
             const amrex::Box &bx = mfi.tilebox();
-            compare_fields((*pointValues[comp])[mfi].array(),
+            COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
         ASSERT_TRUE(loopRun);
@@ -487,7 +485,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
         for (amrex::MFIter mfi(*analyticalPointValues[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.tilebox();
-            compare_fields((*pointValues[comp])[mfi].array(),
+            COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
     }
@@ -606,7 +604,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
             loopRun = true;
 
             const amrex::Box &bx = mfi.tilebox();
-            compare_fields((*pointValues[comp])[mfi].array(),
+            COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
         ASSERT_TRUE(loopRun);
@@ -622,7 +620,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
         for (amrex::MFIter mfi(*analyticalPointValues[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.tilebox();
-            compare_fields((*pointValues[comp])[mfi].array(),
+            COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
     }

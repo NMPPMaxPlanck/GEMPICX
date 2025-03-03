@@ -1,10 +1,12 @@
 # CMake Ignores
 CMakeUserPresets.json
 
-# IDE Specific Excludes
-.vscode/
-.idea/
-.venv
+# Dot files/folders
+**/.*
+!.clang-format
+!.clang-tidy
+!.gitignore
+!.gitlab-ci.yml
 
 # Non Source Directories
 **/*build*/**
@@ -18,22 +20,19 @@ runs*/**
 # Third Party Downloaded with CMake FetchContent
 third_party
 
-# ToDo: Can the patterns below be removed?(Seems like absolute nonsense and repo structure problems. Should not be necessary to mention in .gitignore)
-gempic.config
-gempic.creator
-gempic.creator.user
-gempic.files
-gempic.includes
-**/dispersion_relations/__pycache__
-**/dispersion_relations/.ipynb_checkpoints
+# Jupyter
+*.ipynb
+__pycache__/
+
+# Documentation static and temporary data
 doc/doxygen/xml/**
 doc/doxygen/html/**
 doc/sphinx/_build/
 doc/sphinx/_static/graphics*
-# Everything except .tex, .py and .png files
 doc/sphinx/latex/*
 !doc/sphinx/latex/*.tex
 !doc/sphinx/latex/*.png
 !doc/sphinx/latex/*.py
-**/Plotfiles/**/*
+
+# Sanitize with clang-tidy
 scripts/build_dir.txt

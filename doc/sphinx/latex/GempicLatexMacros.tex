@@ -537,3 +537,45 @@
 \newcommand{\hodgeDualOneB}{\mathbb{H}^*_1}
 \newcommand{\hodgeDualTwoB}{\mathbb{H}^*_2}
 \newcommand{\hodgeDualThreeB}{\mathbb{H}^*_3}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{lightergray}{gray}{0.95}
+\definecolor{macrocolor}{RGB}{255,145,0}
+\usepackage{expl3}
+
+\ExplSyntaxOn
+
+% compile the expression
+\regex_new:N \l_CPP_uppercase_regex
+%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
+\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
+
+\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
+\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
+
+% a variant that expands the input fully
+\cs_generate_variant:Nn \regex_match:NnTF {NV}
+
+\NewDocumentCommand \ifuppercase { m m }
+{
+    % expand to actual underscore
+    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
+    \tl_set:cn { lst@um_ } { _ }
+    % match the current token
+    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
+    % reset
+    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
+}
+
+\ExplSyntaxOff
+
+\lstdefinestyle{Cpp}{language=C++,
+        morekeywords={constexpr},
+        keywordstyle=\color{blue}\bfseries,
+        alsoletter={_},
+        basicstyle=\ttfamily,
+        columns=fullflexible,
+        identifierstyle=\ifuppercase{\color{macrocolor}\bfseries}{},
+        backgroundcolor=\color{lightergray}}
+\lstset{style=Cpp}

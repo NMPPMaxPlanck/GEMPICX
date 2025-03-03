@@ -10,7 +10,7 @@ New gempic code based on [AMReX](https://github.com/AMReX-Codes/amrex)
 - [CMake](https://cmake.org/cmake/help/latest/index.html)
 - Documentation:
   - [Doxygen](https://doxygen.org)
-  - [Pandoc](https://pandoc.org/) >= 2.19
+  - [Pandoc](https://pandoc.org/)
   - curl
   - Python 3
     - [Sphinx](https://sphinx-doc.org)
@@ -106,23 +106,3 @@ Just do (still in the `gempic_quickstart` run folder)
 cp ../../Examples/Electrostatic/LandauVP.py .
 python3 LandauVP.py
 ```
-
-# Settings for vscode
-
-- Install extensions: C/C++, C/C++ Extension Pack, Clang-Format, CMake, CMake Tools
-- setup the environment: 
-  - Open folder where the cloned gempic is. This will be $(workspaceFolder). Create a folder gempic_obj in the parent directory
-  - Open settings from the menu 
-    - In Extensions/CMake Tools: 
-      - set build directory to ${workspaceFolder}/../gempic_obj 
-      - set Cmake: Source Directory to ${workspaceFolder}
-- formatting: set C_Cpp.clang_format_style to .clang-format (the .clang-format file is in the home of the gempic repository)
-- Debugging: Two configuration examples are in scripts/launch.json
-  - vlasov-maxwell: simulation example with input file
-  - (lldb) Cmake: debugs the target that is set in vscode (without input file). Can be used to debug ctests
-
-# Using QT-creator with gempic
-Steps to set up gempic in QT-creator:  
-1.) In QT-creator: File -> Open file or project -> click on CMakeLists.txt file  
-2.) On Sidebar, click Projects and set correct build directory  
-3.) If project doesn't compile automatically: close qccreator and reopen it, load project  

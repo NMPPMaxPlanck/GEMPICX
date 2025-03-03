@@ -9,8 +9,6 @@
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
@@ -203,9 +201,9 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 0
-        check_field((J.m_data[xDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
-        check_field((J.m_data[yDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
-        check_field((J.m_data[zDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[xDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[yDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[zDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
     }
 }
 
@@ -268,7 +266,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
         EXPECT_NEAR(bfields[0], -4.5, 1e-15);
         EXPECT_NEAR(bfields[1], -4.5, 1e-15);
 
-        check_field(
+        CHECK_FIELD(
             (J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(),
             // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
@@ -279,8 +277,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
             {1 - 1. / 8, 1 - 0.25},
             // with the remaining entries being 1
             1);
-        check_field((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        check_field((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
 }
 
@@ -343,7 +341,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
         EXPECT_NEAR(bfields[0], -4.75, 1e-15);
         EXPECT_NEAR(bfields[1], -4.75, 1e-15);
 
-        check_field(
+        CHECK_FIELD(
             (J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(),
             // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
@@ -365,8 +363,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
             //{},{},
             // with the remaining entries being 1
             1);
-        check_field((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        check_field((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
 }
 
@@ -431,9 +429,9 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 1
-        check_field((J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        check_field((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        check_field((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
 }
 
@@ -498,9 +496,9 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 1
-        check_field((J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        check_field((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        check_field((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
 }
 

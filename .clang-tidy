@@ -5,7 +5,6 @@ Checks: '-*,readability-identifier-naming,bugprone-macro-parentheses,cppcoreguid
 #,cppcoreguidelines-macro-usage,readability-magic-numbers
 # These checks are (very!) bug prone:
 #,misc-const-correctness
-HeaderFilterRegex: 'gempic/(Src/.*|Testing/.*|Examples/.*|[^/]*)\.H$' # regex to exclude third_party folder, but include header files in src/,  testing/ and the root folder (where GEMPIC_Config.H is).
 FormatStyle: none
 # ExportFixes: 'clangTidyFixes.yaml'
 # Current naming conventions

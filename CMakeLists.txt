@@ -58,27 +58,23 @@ add_library(GEMPICX STATIC)
 set_target_properties(GEMPICX PROPERTIES VERSION ${GEMPIC_VERSION})
 
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Utils")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers/Poisson")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers/Quasineutral")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Filter")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Forms")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Forms/FDDeRhamComplex")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/ParticleMeshCoupling")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/ReducedDiagnostics")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/FullDiagnostics")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/FullDiagnostics/FlushFormats")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/ParticleDiag")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/FullDiagnostics/DiagnosticOutputProcessors")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Checkpointing")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Profiling")
+target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/FullDiagnostics/FlushFormats")
+target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Diagnostics/ReducedDiagnostics")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Parameters")
+target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Io/Profiling")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Particle")
+target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/ParticleMeshCoupling")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/TimeLoop")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/TimeLoop/HamiltonianSplitting")
-target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}")
+target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Utils")
 
 # Add subfolder with source files of the library
 add_subdirectory(Src)
@@ -87,8 +83,8 @@ if(GEMPIC_BUILD_DOCUMENTATION)
   add_subdirectory(doc)
 endif()
 if(GEMPIC_BUILD_EXAMPLES)
-# Add subfolder with examples
-add_subdirectory(Examples)
+  # Add subfolder with examples
+  add_subdirectory(Examples)
 endif()
 if(GEMPIC_BUILD_TESTS)
   # Enable ctest and GoogleTest tests
@@ -101,6 +97,18 @@ if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(GEMPICX)
 endif()
 target_link_libraries(GEMPICX PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flags_CXX)
+
+# Add cmake-git-version-tracking
+gempic_FetchContent_Declare(
+  cmake_git_version_tracking
+  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
+  GIT_TAG 6c0cb87edd029ddfb403a8e24577c144a03605a6
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/cmake_git_version_tracking-src
+  )
+  FetchContent_MakeAvailable(cmake_git_version_tracking)
+  
+# Preparations necessary for clang-tidy
+include(cmake/clang_tidy.cmake)
 
 # Config summary
 message(STATUS "GEMPIC configuration summary: ")
@@ -117,15 +125,3 @@ if(GEMPIC_USE_CUDA)
 message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
 message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
 endif()
-
-# Add cmake-git-version-tracking
-gempic_FetchContent_Declare(
-  cmake_git_version_tracking
-  GIT_REPOSITORY https://github.com/andrew-hardin/cmake-git-version-tracking.git
-  GIT_TAG 6c0cb87edd029ddfb403a8e24577c144a03605a6
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/cmake_git_version_tracking-src
-)
-FetchContent_MakeAvailable(cmake_git_version_tracking)
-
-# Preparations necessary for clang-tidy
-include(cmake/clang_tidy.cmake)

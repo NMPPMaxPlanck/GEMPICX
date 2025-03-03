@@ -10,8 +10,6 @@
 #include "GEMPIC_Parameters.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Forms;
 
@@ -106,7 +104,7 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
     {
         loopRun = true;
         const amrex::Box& bx = mfi.validbox();
-        compare_fields(A.m_data[mfi].array(), aResult.m_data[mfi].array(), bx, m_tol);
+        COMPARE_FIELDS(A.m_data[mfi].array(), aResult.m_data[mfi].array(), bx, m_tol);
     }
     ASSERT_TRUE(loopRun);
 
@@ -116,7 +114,7 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
     {
         loopRun = true;
         const amrex::Box& bx = mfi.validbox();
-        compare_fields(D.m_data[mfi].array(), dResult.m_data[mfi].array(), bx, m_tol);
+        COMPARE_FIELDS(D.m_data[mfi].array(), dResult.m_data[mfi].array(), bx, m_tol);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -201,7 +199,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         {
             loopRun = true;
             const amrex::Box& bx = mfi.validbox();
-            compare_fields((B.m_data[comp])[mfi].array(), (bResult.m_data[comp])[mfi].array(), bx,
+            COMPARE_FIELDS((B.m_data[comp])[mfi].array(), (bResult.m_data[comp])[mfi].array(), bx,
                            m_tol);
         }
         ASSERT_TRUE(loopRun);
@@ -214,7 +212,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         {
             loopRun = true;
             const amrex::Box& bx = mfi.validbox();
-            compare_fields((C.m_data[comp])[mfi].array(), (cResult.m_data[comp])[mfi].array(), bx,
+            COMPARE_FIELDS((C.m_data[comp])[mfi].array(), (cResult.m_data[comp])[mfi].array(), bx,
                            m_tol);
         }
         ASSERT_TRUE(loopRun);
