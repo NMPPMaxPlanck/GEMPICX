@@ -35,9 +35,9 @@ std::string string_array (const T& valArray, int length)
 
 // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
 // of all particles to be added.
-template <unsigned int vdim, size_t numParticles>
+template <unsigned int vdim, unsigned ndata, size_t numParticles>
 void add_single_particles (
-    Gempic::Particle::ParticleGroups<vdim>* particleGroup,
+    Gempic::Particle::ParticleGroups<vdim, ndata>* particleGroup,
     const Gempic::ComputationalDomain& infra,
     const amrex::Array<amrex::Real, numParticles>& weights,
     const amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles>& positions,
@@ -51,7 +51,7 @@ void add_single_particles (
         amrex::IntVect lo{bx.smallEnd()};
         amrex::IntVect hi{bx.bigEnd()};
 
-        amrex::ParticleTile<Gempic::Particle::ParticleType, vdim + 1, 0>& particles{
+        amrex::ParticleTile<Gempic::Particle::ParticleType, vdim + ndata, 0>& particles{
             particleGroup->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
         for (int i{0}; i < numParticles; i++)
         {

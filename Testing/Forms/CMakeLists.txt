@@ -5,6 +5,7 @@ target_sources(GtestTests PRIVATE
     EvalForm_test.cpp
     Fields_test.cpp
     FieldMultiplyByFunction_test.cpp
+    FieldMultiplyByMatrix_test.cpp
     ExtDerivatives_test.cpp
     FDHodgeDegree_test.cpp
     FDHodgeDegreeExtrapolation_test.cpp

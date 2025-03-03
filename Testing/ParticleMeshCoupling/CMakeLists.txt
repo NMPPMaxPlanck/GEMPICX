@@ -8,6 +8,7 @@ set(TMP_TEST_SOURCES
     SplineBase_test.cpp
     SplineWithPrimitive_test.cpp
     BSpline_test.cpp
+    DepositJ_test.cpp
     )
 if("${AMReX_SPACEDIM}" STREQUAL "3") # accumulate_J_integrate_B_test is not ready
   LIST(APPEND TMP_TEST_SOURCES AccumulateJIntegrateB_test.cpp)

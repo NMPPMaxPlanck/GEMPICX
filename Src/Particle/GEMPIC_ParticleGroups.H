@@ -53,13 +53,10 @@ public:
                    const amrex::BoxArray &grid) :
         amrex::ParticleContainer<0, 0, vdim + ndata, 0>(geom, distriMap, grid)
     {
-        if constexpr (vdim < 3)
+        m_compNames.resize(vdim + ndata);
+        if constexpr (vdim + ndata > 0 && vdim + ndata < 4)
         {
-            m_compNames.resize(vdim + ndata);
-            if constexpr (vdim + ndata > 0)
-            {
-                m_compNames[vdim + ndata - 1] = "weight";
-            }
+            m_compNames[vdim + ndata - 1] = "weight";
         }
     }
     // Explicit const

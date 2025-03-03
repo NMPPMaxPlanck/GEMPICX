@@ -78,8 +78,7 @@ int main (int argc, char *argv[])
         }
         else
         {
-            amrex::AllPrint() << "Simulation type " << simType << " is not implemented"
-                              << std::endl;
+            amrex::AllPrint() << "Simulation type " << simType << " is not implemented\n";
             amrex::Abort();
         }
 
@@ -334,7 +333,7 @@ int main (int argc, char *argv[])
 
                 if (tStep % 10 == 0)
                 {
-                    amrex::Print() << "Time Step: " << tStep + 1 << '\n';
+                    amrex::Print() << "Time Step: " << tStep + 1 << std::endl;
                 }
             }
         } // end of "time loop" scope
