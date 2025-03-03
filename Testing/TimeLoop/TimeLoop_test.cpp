@@ -18,9 +18,6 @@ using namespace Forms;
 using namespace Particle;
 using ::testing::Mock;
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 /**
@@ -159,7 +156,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     {
         // Checking only the first index !=0, not the full field. Indices according to the current
         // setup!
-        check_field(J.m_data[0].array(mfi), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(J.m_data[0].array(mfi), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 6); }},
                     {chargeWeight * GEMPIC_D_MULT(primDiffRef, yNodeVal, zNodeVal)}, {}, 1e-12);
@@ -206,7 +203,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     }
     for (amrex::MFIter mfi(J.m_data[1]); mfi.isValid(); ++mfi)
     {
-        check_field(J.m_data[1].array(mfi), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(J.m_data[1].array(mfi), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 12, &&k == 6); }},
                     {chargeWeight * GEMPIC_D_MULT(xNodeVal, primDiffRef, zNodeVal)}, {}, 1e-12);
@@ -253,7 +250,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
     for (amrex::MFIter mfi(J.m_data[2]); mfi.isValid(); ++mfi)
     {
-        check_field(J.m_data[2].array(mfi), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(J.m_data[2].array(mfi), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 5); }},
                     {chargeWeight * xNodeVal * yNodeVal * primDiffRef}, {}, 1e-12);
@@ -336,7 +333,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
         // check the first non-zero entry of the J field in xDir
         for (amrex::MFIter mfi(J.m_data[dir]); mfi.isValid(); ++mfi)
         {
-            check_field(J.m_data[dir].array(mfi), m_infra.m_nCell.dim3(),
+            CHECK_FIELD(J.m_data[dir].array(mfi), m_infra.m_nCell.dim3(),
                         {[] (AMREX_D_DECL(int i, int j, int k))
                          { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
                         {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);
@@ -449,7 +446,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     for (amrex::MFIter mfi(rhoMinJ.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
-        compare_fields(rhoMinJ.m_data.array(mfi), rho.m_data.array(mfi), bx, tol);
+        COMPARE_FIELDS(rhoMinJ.m_data.array(mfi), rho.m_data.array(mfi), bx, tol);
     }
 }
 

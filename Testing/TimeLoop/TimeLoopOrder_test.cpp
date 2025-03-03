@@ -18,9 +18,6 @@ using namespace Forms;
 using namespace Particle;
 using ::testing::Mock;
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 /**

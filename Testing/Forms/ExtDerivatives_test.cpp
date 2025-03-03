@@ -12,9 +12,6 @@
 #include "GEMPIC_Parameters.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 using namespace Gempic;
@@ -167,7 +164,7 @@ TEST_F(ExtDerivativesTest, Grad)
         for (amrex::MFIter mfi(gradField.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(gradField.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(gradField.m_data[comp][mfi].array(),
                            analyticalGradField.m_data[comp][mfi].array(), bx);
         }
     }
@@ -184,7 +181,7 @@ TEST_F(ExtDerivativesTest, Grad)
         for (amrex::MFIter mfi(gradField.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(gradField.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(gradField.m_data[comp][mfi].array(),
                            analyticalGradField.m_data[comp][mfi].array(), bx);
         }
     }
@@ -204,7 +201,7 @@ TEST_F(ExtDerivativesTest, Grad)
         for (amrex::MFIter mfi(gradField.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(gradFieldDual.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(gradFieldDual.m_data[comp][mfi].array(),
                            analyticalGradFieldDual.m_data[comp][mfi].array(), bx);
         }
     }
@@ -221,7 +218,7 @@ TEST_F(ExtDerivativesTest, Grad)
         for (amrex::MFIter mfi(gradFieldDual.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(gradFieldDual.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(gradFieldDual.m_data[comp][mfi].array(),
                            analyticalGradFieldDual.m_data[comp][mfi].array(), bx);
         }
     }
@@ -260,7 +257,7 @@ TEST_F(ExtDerivativesTest, Curl)
         for (amrex::MFIter mfi(curlField.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(curlField.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(curlField.m_data[comp][mfi].array(),
                            analyticalCurlField.m_data[comp][mfi].array(), bx);
         }
     }
@@ -281,7 +278,7 @@ TEST_F(ExtDerivativesTest, Curl)
         for (amrex::MFIter mfi(curlField.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(curlField.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(curlField.m_data[comp][mfi].array(),
                            analyticalCurlField.m_data[comp][mfi].array(), bx);
         }
     }
@@ -301,7 +298,7 @@ TEST_F(ExtDerivativesTest, Curl)
         for (amrex::MFIter mfi(curlField.m_data[comp]); mfi.isValid(); ++mfi)
         {
             const amrex::Box &bx = mfi.validbox();
-            compare_fields(curlFieldDual.m_data[comp][mfi].array(),
+            COMPARE_FIELDS(curlFieldDual.m_data[comp][mfi].array(),
                            analyticalCurlFieldDual.m_data[comp][mfi].array(), bx);
         }
     }
@@ -340,7 +337,7 @@ TEST_F(ExtDerivativesTest, Div)
     for (amrex::MFIter mfi(divField.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
-        compare_fields(divField.m_data[mfi].array(), analyticalDivField.m_data[mfi].array(), bx);
+        COMPARE_FIELDS(divField.m_data[mfi].array(), analyticalDivField.m_data[mfi].array(), bx);
     }
 
     // Test div of field on dual complex
@@ -356,7 +353,7 @@ TEST_F(ExtDerivativesTest, Div)
     for (amrex::MFIter mfi(divField.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.validbox();
-        compare_fields(divFieldDual.m_data[mfi].array(), analyticalDivFieldDual.m_data[mfi].array(),
+        COMPARE_FIELDS(divFieldDual.m_data[mfi].array(), analyticalDivFieldDual.m_data[mfi].array(),
                        bx);
     }
 }

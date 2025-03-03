@@ -6,11 +6,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define MAXGAUSS 2 // maximum number of velocity gaussians
-
-#define GEMPIC_CTEST_TOL 1e-4
-#define GEMPIC_CTEST_RELTOL 1e-4
-
 #if AMREX_SPACEDIM == 1
 /**
  * The GEMPIC_D_MULT(a,b,c) macro multiplies the elements of a

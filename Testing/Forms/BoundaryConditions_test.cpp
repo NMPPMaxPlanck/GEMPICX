@@ -10,8 +10,6 @@
 #include "GEMPIC_Parameters.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Forms;
 
@@ -127,7 +125,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(zeroForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((zeroForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {condX, condY, condZ},
+        CHECK_FIELD((zeroForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {condX, condY, condZ},
                     {0, 0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
@@ -137,7 +135,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(oneForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((oneForm.m_data[xDir][mfi]).array(), m_infra.m_nCell.dim3(), {condY, condZ},
+        CHECK_FIELD((oneForm.m_data[xDir][mfi]).array(), m_infra.m_nCell.dim3(), {condY, condZ},
                     {0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
@@ -145,7 +143,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(oneForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((oneForm.m_data[yDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX, condZ},
+        CHECK_FIELD((oneForm.m_data[yDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX, condZ},
                     {0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
@@ -153,7 +151,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(oneForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((oneForm.m_data[zDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX, condY},
+        CHECK_FIELD((oneForm.m_data[zDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX, condY},
                     {0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
@@ -163,21 +161,21 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((twoForm.m_data[xDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX}, {0}, 1);
+        CHECK_FIELD((twoForm.m_data[xDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX}, {0}, 1);
     }
     ASSERT_TRUE(loopRun);
     loopRun = false;
     for (amrex::MFIter mfi(twoForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((twoForm.m_data[yDir][mfi]).array(), m_infra.m_nCell.dim3(), {condY}, {0}, 1);
+        CHECK_FIELD((twoForm.m_data[yDir][mfi]).array(), m_infra.m_nCell.dim3(), {condY}, {0}, 1);
     }
     ASSERT_TRUE(loopRun);
     loopRun = false;
     for (amrex::MFIter mfi(twoForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((twoForm.m_data[zDir][mfi]).array(), m_infra.m_nCell.dim3(), {condZ}, {0}, 1);
+        CHECK_FIELD((twoForm.m_data[zDir][mfi]).array(), m_infra.m_nCell.dim3(), {condZ}, {0}, 1);
     }
     ASSERT_TRUE(loopRun);
 
@@ -186,7 +184,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((threeForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((threeForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -239,7 +237,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
     for (amrex::MFIter mfi(zeroForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((zeroForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((zeroForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 
@@ -250,14 +248,14 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
         for (amrex::MFIter mfi(oneForm.m_data[dir]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            check_field((oneForm.m_data[dir][mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+            CHECK_FIELD((oneForm.m_data[dir][mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
         loopRun = false;
         for (amrex::MFIter mfi(twoForm.m_data[dir]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            check_field((twoForm.m_data[dir][mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+            CHECK_FIELD((twoForm.m_data[dir][mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
     }
@@ -267,7 +265,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        check_field((threeForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((threeForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }

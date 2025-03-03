@@ -14,9 +14,6 @@
 #include "GEMPIC_Sampler.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 using namespace Gempic;
@@ -201,7 +198,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     for (amrex::MFIter mfi(mfAllDiag); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
-        compare_fields(mfAllDiag[mfi].array(), mfAllDiagExpected[mfi].array(), bx, ncomp);
+        COMPARE_FIELDS(mfAllDiag[mfi].array(), mfAllDiagExpected[mfi].array(), bx, ncomp);
     }
 }
 
@@ -284,7 +281,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOperatorOutputProcessor)
     for (amrex::MFIter mfi(resultMf); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
-        compare_fields(resultMf[mfi].array(), multipliedBy5Expected[mfi].array(), bx, ncomp);
+        COMPARE_FIELDS(resultMf[mfi].array(), multipliedBy5Expected[mfi].array(), bx, ncomp);
     }
 }
 
@@ -370,7 +367,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOutputProcessor)
     for (amrex::MFIter mfi(resultMf); mfi.isValid(); ++mfi)
     {
         const amrex::Box& bx = mfi.tilebox();
-        compare_fields(resultMf[mfi].array(), phi.m_data[mfi].array(), bx, ncomp);
+        COMPARE_FIELDS(resultMf[mfi].array(), phi.m_data[mfi].array(), bx, ncomp);
     }
 }
 } // namespace

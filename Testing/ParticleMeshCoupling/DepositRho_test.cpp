@@ -17,8 +17,6 @@ using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 // When using amrex::ParallelFor you have to create a standalone helper function that does the
@@ -223,7 +221,7 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
 
         // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and
         // receiving 1/8 the weight of the particle (3)
-        check_field(
+        CHECK_FIELD(
             m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
             // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
@@ -268,7 +266,7 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
         // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
         // non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the
         // particle (1)
-        check_field(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
                     // Expect the 2^SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
                     // non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c))
@@ -320,7 +318,7 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
                                                                 m_particleGroup[0]->get_charge());
 
         // See SingleParticle test for explanation of expectations
-        check_field(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int a, int b, int c))
                      { return AMREX_D_TERM(a == 0, &&b == 0, &&c == 0); },
                      [] (AMREX_D_DECL(int a, int b, int c))
@@ -369,7 +367,7 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
                                                                 m_particleGroup[0]->get_charge());
 
         // See SingleParticle test for explanation of expectations
-        check_field(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
                     {[] (AMREX_D_DECL(int a, int b, int c))
                      { return AMREX_D_TERM(a == 0, &&b == 0, &&c == 0); },
                      [] (AMREX_D_DECL(int a, int b, int c))
@@ -424,7 +422,7 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
             if (spec == s_numSpec - 1)
             {
                 // See SingleParticle test for explanation of expectations
-                check_field(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+                CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
                             {[] (AMREX_D_DECL(int a, int b, int c))
                              { return AMREX_D_TERM(a == 0, &&b == 0, &&c == 0); },
                              [] (AMREX_D_DECL(int a, int b, int c))

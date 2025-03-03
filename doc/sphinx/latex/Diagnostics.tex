@@ -25,77 +25,10 @@
 \usepackage{xparse}
 \usepackage{comment}
 \renewcommand{\Affilfont}{\footnotesize}
-
-%\renewcommand{\Authfont}{\normalsize}
-\usepackage{mdframed}
-\newenvironment{important}[1][]{%
-   \begin{mdframed}[%
-      backgroundcolor={red!15}, hidealllines=true,
-      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
-      splitbottomskip=2pt, splittopskip=4pt, #1]%
-   \makebox[0pt]{% ignore the withd of !
-      \smash{% ignor the height of !
-         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
-         \hspace*{-19pt}% move ! to the left
-         \raisebox{-2pt}{% move ! up a little
-            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
-         }%
-      }%
-   }%
-}{\end{mdframed}}
-%\usepackage{algpseudocode}
-
-\usepackage{listings}
-\usepackage{xcolor}
-\usepackage[most]{tcolorbox}
-\definecolor{lightergray}{gray}{0.95}
-\definecolor{macrocolor}{RGB}{255,145,0}
-\definecolor{warningred}{RGB}{255,145,145}
-\newtcolorbox{customWarning}{colback=warningred,grow to right by=-10mm,grow to left by=-10mm, boxrule=0pt,boxsep=0pt,breakable}
-\usepackage{expl3}
-
-\ExplSyntaxOn
-
-% compile the expression
-\regex_new:N \l_CPP_uppercase_regex
-%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
-\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
-
-\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
-\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
-
-% a variant that expands the input fully
-\cs_generate_variant:Nn \regex_match:NnTF {NV}
-
-\NewDocumentCommand \ifuppercase { m m }
-{
-    % expand to actual underscore
-    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
-    \tl_set:cn { lst@um_ } { _ }
-    % match the current token
-    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
-    % reset
-    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
-}
-
-\ExplSyntaxOff
-
-
-
-\lstset{language=C++,
-        morekeywords={constexpr},
-        keywordstyle=\color{blue}\bfseries,
-        alsoletter={_},
-        basicstyle=\ttfamily,
-        columns=fullflexible,
-        identifierstyle=\ifuppercase{\color{macrocolor}\bfseries}{},
-        backgroundcolor=\color{lightergray}}
-
 \usepackage{stmaryrd}
 \usepackage{comment}
 \usepackage{showlabels}
 \usepackage{soul}
-%\usepackage[dvipsnames]{xcolor}
 
 \usetikzlibrary{calc,patterns,shapes.geometric}
 \usetikzlibrary{arrows,shapes,positioning}

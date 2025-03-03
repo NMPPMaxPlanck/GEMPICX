@@ -14,8 +14,6 @@
 // rho = three form
 // phi = zero form
 
-#define check_field(...) GEMPIC_Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Forms;
 

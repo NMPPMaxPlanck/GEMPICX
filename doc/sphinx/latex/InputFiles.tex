@@ -27,76 +27,11 @@
 \renewcommand{\Affilfont}{\footnotesize}
 
 \newcommand{\amrex}{\texttt{AMReX}}
-%\renewcommand{\Authfont}{\normalsize}
-\usepackage{mdframed}
-\newenvironment{important}[1][]{%
-   \begin{mdframed}[%
-      backgroundcolor={red!15}, hidealllines=true,
-      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
-      splitbottomskip=2pt, splittopskip=4pt, #1]%
-   \makebox[0pt]{% ignore the withd of !
-      \smash{% ignor the height of !
-         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
-         \hspace*{-19pt}% move ! to the left
-         \raisebox{-2pt}{% move ! up a little
-            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
-         }%
-      }%
-   }%
-}{\end{mdframed}}
-%\usepackage{algpseudocode}
-
-\usepackage{listings}
-\usepackage{xcolor}
-\definecolor{lightergray}{gray}{0.95}
-\definecolor{macrocolor}{RGB}{255,145,0}
-\usepackage{expl3}
-
-\ExplSyntaxOn
-
-% compile the expression
-\regex_new:N \l_CPP_uppercase_regex
-%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
-\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
-
-\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
-\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
-
-% a variant that expands the input fully
-\cs_generate_variant:Nn \regex_match:NnTF {NV}
-
-\NewDocumentCommand \ifuppercase { m m }
-{
-    % expand to actual underscore
-    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
-    \tl_set:cn { lst@um_ } { _ }
-    % match the current token
-    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
-    % reset
-    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
-}
-
-\ExplSyntaxOff
-
-\lstdefinelanguage{pkgconfig}{
-    morecomment=[l]{\#}
-}
-
-\lstset{language={pkgconfig},
-%        basicstyle=\sffamily,
-        columns=fullflexible,
-        backgroundcolor=\color{lightergray}}
-%\lstset{language=C++,
-%        alsoletter={_},
-%        basicstyle=\ttfamily,
-%        columns=fullflexible,
-%        backgroundcolor=\color{lightergray}}
 
 \usepackage{stmaryrd}
 \usepackage{comment}
 \usepackage{showlabels}
 \usepackage{soul}
-%\usepackage[dvipsnames]{xcolor}
 
 \usetikzlibrary{calc,patterns,shapes.geometric}
 \usetikzlibrary{arrows,shapes,positioning}
@@ -105,6 +40,10 @@
 
 %%%%%%%% MACROS
 \input{GempicLatexMacros}
+
+\lstdefinelanguage{pkgconfig}{
+	 morecomment=[l]{\#}
+}
 
 \title{Input Files}
 
@@ -126,7 +65,7 @@ This note describes the input file semantics and their meaning
 \section{Input Files}
 The \amrex{} framework provides a simple way to give input parameters to a simulation: The input file. This is a file in ordinary \verb|.txt| encoding (typically named \verb|.input|) that can be read as an argument to an executable compiled with \amrex:
 \begin{lstlisting}[language=sh]
-   $ ./executable inputFile.input 
+	$ ./executable inputFile.input 
 \end{lstlisting}
 
 \subsection{The Broad Strokes of Input Files}
@@ -143,8 +82,8 @@ Filter.nPass = 3 3 3 # pass the filter three times in each direction
 %
 Notice that, like the class and variable counterparts:
 \begin{itemize}
-    \item Scope names are \verb|CamelCase|
-    \item Variable names are \verb|camelBack|
+	 \item Scope names are \verb|CamelCase|
+	 \item Variable names are \verb|camelBack|
 \end{itemize}
 %
 In the following, the possible options are discussed for each category of input variables. Most of these will have default options that are used if the values are not provided by the user.
@@ -362,11 +301,12 @@ BoundaryCondition.Default = Natural Natural # String vector. Default "Natural" *
 Selects which solver to use for the poisson equation (\ref{eq:Poisson_example}), provided the PoissonSolver is used in the simulation.
 There are several choices built in:
 \begin{itemize}
-   \item \lstinline[language=pkgconfig]{FFT}: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation.
-   \item \lstinline[language=pkgconfig]{Hypre}: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
-   \item \lstinline[language=pkgconfig]{ConjugateGradient}: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
-   \item \lstinline[language=pkgconfig]{ConjugateGradientInverseHodge}: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
-   \item "Amrex": Using the AMReX MLMG solver. Boundary conditions must be periodic.
+	\item \lstinline[language=pkgconfig]{FFT}: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation.
+	\item \lstinline[language=pkgconfig]{Hypre}: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
+	\item \lstinline[language=pkgconfig]{ConjugateGradient}: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
+	\item \lstinline[language=pkgconfig]{ConjugateGradientInverseHodge}: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
+	\item "Amrex": Using the AMReX MLMG solver. Boundary conditions must be periodic.
+\end{itemize}
 \begin{lstlisting}[language=pkgconfig]
 # PoissonSolver
 PoissonSolver.solver = ConjugateGradient # String. Default: See above.

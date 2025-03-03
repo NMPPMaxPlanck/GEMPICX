@@ -14,8 +14,6 @@
 #include "GEMPIC_Sampler.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 using namespace Gempic;

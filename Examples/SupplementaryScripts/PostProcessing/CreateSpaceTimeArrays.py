@@ -1,5 +1,5 @@
 # run this script in parallel (e.g. for 4 cores) with 
-# mpirun -n 4 ../../gempic/post_processing/create_space_time_arrays.py rho 
+# mpirun -n 4 ../Examples/SupplementaryScripts/PostProcessing/CreateSpaceTimeArrays.py rho 
 # assuming that your run directory is in gempic/runs and that you want to do a FFT or rho
 # you can replace rho by any field name from the FullDiagnostics
 

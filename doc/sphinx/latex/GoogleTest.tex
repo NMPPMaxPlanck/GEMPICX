@@ -5,7 +5,6 @@
 \addtolength{\evensidemargin}{-11.5mm}
 \addtolength{\topmargin}{-19.0mm}
 
-%\usepackage{amsmath}
 \usepackage[T1]{fontenc}
 \usepackage[ansinew]{inputenc}
 \usepackage[bbgreekl]{mathbbol}
@@ -39,73 +38,10 @@
 %    }[{in the #1 folder}]}
 \newcommand\loc[1]{in the #1 folder}
 
-%\renewcommand{\Authfont}{\normalsize}
-\usepackage{mdframed}
-\newenvironment{important}[1][]{%
-   \begin{mdframed}[%
-      backgroundcolor={red!15}, hidealllines=true,
-      skipabove=0.7\baselineskip, skipbelow=0.7\baselineskip,
-      splitbottomskip=2pt, splittopskip=4pt, #1]%
-   \makebox[0pt]{% ignore the withd of !
-      \smash{% ignor the height of !
-         \fontsize{32pt}{32pt}\selectfont% make the ! bigger
-         \hspace*{-19pt}% move ! to the left
-         \raisebox{-2pt}{% move ! up a little
-            {\color{red!70!black}\sffamily\bfseries !}% type the bold red !
-         }%
-      }%
-   }%
-}{\end{mdframed}}
-%\usepackage{algpseudocode}
-
-\usepackage{listings}
-\usepackage{xcolor}
-\definecolor{lightergray}{gray}{0.95}
-\definecolor{macrocolor}{RGB}{255,145,0}
-\usepackage{expl3}
-
-\ExplSyntaxOn
-
-% compile the expression
-\regex_new:N \l_CPP_uppercase_regex
-%\regex_set:Nn \l_CPP_uppercase_regex { ^ [A-Z\_]+ $ } % somehow, "_" char cannot be escaped
-\regex_set:Nn \l_CPP_uppercase_regex { ^ [^\w\s]?([A-Z]+[^\w\s]?)+ $ } % Replacement hack.
-
-\regex_new:N \l_completely_unused_regex       % Editor thinks the entire rest of the doc is
-\regex_set:Nn \l_completely_unused_regex {^$} % in math mode unless we provide a second $.
-
-% a variant that expands the input fully
-\cs_generate_variant:Nn \regex_match:NnTF {NV}
-
-\NewDocumentCommand \ifuppercase { m m }
-{
-    % expand to actual underscore
-    \cs_set_eq:Nc \__CPP_uppercase_um { lst@um_ }
-    \tl_set:cn { lst@um_ } { _ }
-    % match the current token
-    \regex_match:NVTF \l_CPP_uppercase_regex {\the\use:c{lst@token}} {#1} {#2}
-    % reset
-    \cs_set_eq:cN { lst@um_ } \__CPP_uppercase_um
-}
-
-\ExplSyntaxOff
-
-
-
-\lstset{language=C++,
-        morekeywords={constexpr},
-        keywordstyle=\color{blue}\bfseries,
-        alsoletter={_},
-        basicstyle=\ttfamily,
-        columns=fullflexible,
-        identifierstyle=\ifuppercase{\color{macrocolor}\bfseries}{},
-        backgroundcolor=\color{lightergray}}
-
 \usepackage{stmaryrd}
 \usepackage{comment}
 \usepackage{showlabels}
 \usepackage{soul}
-%\usepackage[dvipsnames]{xcolor}
 
 \usetikzlibrary{calc,patterns,shapes.geometric}
 \usetikzlibrary{arrows,shapes,positioning}
@@ -139,9 +75,9 @@ All \gt{} unit tests are located \loc{\main}, in a structure mirroring the that 
 \subsection{Compiling with CMake}
 In order for the tests located in a file to compile and run, it is necessary to include the commands
 \begin{itemize}
-    \item \verb|add_subdirectory( DirectoryContainingYourTestFile )| along with the other\\
+    \item \verb|add_subdirectory(DirectoryContainingYourTestFile)| along with the other\\
     \verb|add_subdirectory| commands in the \verb|CMakeLists.txt| file \loc{\main{}}
-    \item \verb|target_sources(GtestTests PRIVATE YourTestFile_test.cpp )| in the \verb|CMakeLists.txt| file of the folder containing your test file
+    \item \verb|target_sources(GtestTests PRIVATE YourTestFile_test.cpp)| in the \verb|CMakeLists.txt| file of the folder containing your test file
     \item \lstinline{#include <gtest/gtest.h>} in your test file
     \item \lstinline{#include <gmock/gmock.h>} in your test file if you use mocking (\url{https://google.github.io/googletest/gmock_for_dummies.html})
 \end{itemize}
@@ -151,9 +87,9 @@ Additionally, if you need to include any of testing helper modules not part of G
 
 \subsection{Running Tests}
 Running tests is very easy, and can be done through the usual \ctest{} command in the build folder. The \gt{} tests are automatically included in the tests that are run.
-To select specific tests, use the \verb|-r| flag along with part of the specific test name.
+To select specific tests, use the \verb|-R| flag along with part of the specific test name.
 
-\gt{} on its own can sometimes provide more useful output than the standard \ctest{} framework. If you are only interested in \gt{} tests, you can run the \verb|GtestTests| executable in the \verb|Testing| subfolder of your build folder. In this case, specific tests are run with the flag \verb|--gtest_filter=PartOfTestName*|.
+\gt{} on its own can sometimes provide more useful output than the standard \ctest{} framework. This comprises all of the unit tests, but excludes the runtest examples. If you are only interested in \gt{} tests, you can run the \verb|GtestTests| executable in the \verb|Testing| subfolder of your build folder. In this case, specific tests are run with the flag \verb|--gtest_filter=PartOfTestName*|.
 
 \subsection{Creating Tests}
 Those new to \gt{} are suggested to read the primer found on the website\\\url{https://google.github.io/googletest/primer.html}\\
@@ -164,7 +100,7 @@ Tests are done inside the \lstinline{TEST}\footnote{or its derivatives, \lstinli
  It is recommended to wrap the tests in a namespace, so as not to accidentally pollute global namespace and mix testing environments.
 
  A very basic test file for testing the function \lstinline{always_returns_true} in \verb|GEMPIC_SomeFile.H| would then be
-\begin{lstlisting}[emph={TEST,EXPECT_TRUE},emphstyle={\color{macrocolor}\bfseries}]
+\begin{lstlisting}
 #include <gtest/gtest.h> // GoogleTest library
 
 #include "GEMPIC_SomeFile.H" // file containing the function to test
@@ -187,7 +123,7 @@ namespace
 
 \subsection{AMReX Setup}
 AMReX is set up automatically, initiating the environment in each test based on the main GEMPIC build. This is done through the \verb|GEMPIC_UnitTests.cpp| file \loc{\main}.
-AMReX should accept any arguments given, but it is probably better to feign this functionality using either \lstinline{amrex::ParmParse} or the \lstinline{Parameters} class to set variables (to keep options contained), and change runtime variables in \verb|TestUtils/AmrexTestEnv.H| if needed. \todo{Move golden file ctests to \gt{}?}.
+AMReX should accept any arguments given, but it is probably better to feign this functionality using either \lstinline{amrex::ParmParse} or the \lstinline{Parameters} class to set variables (to keep options contained), and change runtime variables in \verb|TestUtils/AmrexTestEnv.H| if needed.
 
 \subsection{Testing GPU Code}\label{sec:testing-gpu-code}
 If there is one obvious flaw in choosing \gt, it's that it doesn't play well with CUDA. What this means is that any GPU code (such as \lstinline{amrex::ParallelFor}) must be put outside the test macros (\lstinline{TEST}, \lstinline{TEST_F} and \lstinline{TEST_P}) and into functions called from said macros instead. For examples, see the functions

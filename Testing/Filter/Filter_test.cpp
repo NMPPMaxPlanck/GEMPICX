@@ -10,9 +10,6 @@
 #include "GEMPIC_Parameters.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
-
 namespace
 {
 using namespace Gempic;
@@ -94,7 +91,7 @@ TEST_P(BilinearFilterTestParameter, ConstantTest)
     for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi)
     {
         // Expect all indices to be constVal
-        check_field(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, constVal);
+        CHECK_FIELD(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, constVal);
     }
 }
 
@@ -127,7 +124,7 @@ TEST_F(BilinearFilterTest, NoFilter)
     for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi)
     {
         // Expect the all indices to be constVal
-        check_field(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, tmpVal);
+        CHECK_FIELD(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, tmpVal);
     }
 }
 
@@ -189,7 +186,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
+        COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
     }
 
     // Test compensated filter
@@ -201,7 +198,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
-        compare_fields(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
+        COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
     }
 }
 } // namespace

@@ -14,8 +14,6 @@
 // rho = three form
 // phi = zero form
 
-#define check_field(...) Gempic::Test::Utils::check_field(__FILE__, __LINE__, __VA_ARGS__)
-
 using namespace Gempic;
 using namespace Forms;
 
@@ -97,7 +95,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
         loopRun = true;
 
         // expect all nodes to be 1
-        check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -137,7 +135,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
         loopRun = true;
 
         // Expect all entries to be 1
-        check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -177,7 +175,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
         loopRun = true;
 
         // Expect all nodes to be 1
-        check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -208,7 +206,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTest)
         loopRun = true;
 
         // Expect all entires to be 0
-        check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 0);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -249,7 +247,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII)
         loopRun = true;
 
         // Expect all entires to be 1
-        check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -297,7 +295,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII)
         loopRun = true;
 
         // Expect all entires to be 0
-        check_field((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 0);
     }
     ASSERT_TRUE(loopRun);
 }

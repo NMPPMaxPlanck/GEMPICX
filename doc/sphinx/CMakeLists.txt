@@ -1,5 +1,5 @@
 if(GEMPIC_DOCUMENTATION AND DOXYGEN_FOUND)
-  list(APPEND RST_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst Tests.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst)
+  list(APPEND RST_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst CodeEditorVSCode.rst)
 
   # Search for Python executables, starting with local environments first
   cmake_policy(SET CMP0094 NEW)
