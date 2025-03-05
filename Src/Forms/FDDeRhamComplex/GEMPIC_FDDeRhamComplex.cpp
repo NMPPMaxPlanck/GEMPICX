@@ -199,7 +199,6 @@ void FDDeRhamComplex::projection (
     }
 
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
@@ -373,7 +372,6 @@ void FDDeRhamComplex::projection (
     }
 
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
@@ -479,7 +477,6 @@ void FDDeRhamComplex::projection (
     }
 
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
@@ -596,7 +593,6 @@ void FDDeRhamComplex::projection (
     }
 
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(
@@ -783,7 +779,6 @@ void FDDeRhamComplex::projection (
     }
 
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(
@@ -899,7 +894,6 @@ void FDDeRhamComplex::projection (
     }
 
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(
@@ -1092,7 +1086,6 @@ void FDDeRhamComplex::projection (
             });
     }
     field.fill_boundary();
-    field.average_sync();
 }
 
 inline void FDDeRhamComplex::projection(

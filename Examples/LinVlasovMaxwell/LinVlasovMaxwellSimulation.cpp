@@ -204,9 +204,8 @@ int main (int argc, char *argv[])
                 // Deposit particles in J and push particles: H_p = H_p1 + H_p2 + H_p3
                 for (int comp = 0; comp < 3; ++comp)
                 {
-                    (J.m_data[comp]).setVal(0.0, 0);
+                    (J.m_data[comp]).setVal(0.0, J.m_data[comp].nGrow());
                 }
-                J.fill_boundary();
 
                 for (auto &particleSpecies : partGrLinVlasov)
                 {

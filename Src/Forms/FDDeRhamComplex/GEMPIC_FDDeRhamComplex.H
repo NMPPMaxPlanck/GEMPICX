@@ -561,7 +561,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
 
     zeroForm.m_data.mult(weight / GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]));
 
-    zeroForm.average_sync();
     zeroForm.fill_boundary();
 }
 
@@ -608,7 +607,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
 
     zeroForm.m_data.mult(weight / GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]));
 
-    zeroForm.average_sync();
     zeroForm.fill_boundary();
 }
 
@@ -674,7 +672,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
         }
     }
 
-    oneForm.average_sync();
     oneForm.fill_boundary();
 }
 
@@ -741,7 +738,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
         }
     }
 
-    oneForm.average_sync();
     oneForm.fill_boundary();
 }
 
@@ -808,7 +804,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
         }
     }
 
-    twoForm.average_sync();
     twoForm.fill_boundary();
 }
 
@@ -876,7 +871,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
         }
     }
 
-    twoForm.average_sync();
     twoForm.fill_boundary();
 }
 
@@ -924,7 +918,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
 
     threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight);
 
-    threeForm.average_sync();
     threeForm.fill_boundary();
 }
 
@@ -972,7 +965,6 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::nod
 
     threeForm.m_data.mult(GEMPIC_D_MULT(dr[xDir], dr[yDir], dr[zDir]) * weight);
 
-    threeForm.average_sync();
     threeForm.fill_boundary();
 }
 

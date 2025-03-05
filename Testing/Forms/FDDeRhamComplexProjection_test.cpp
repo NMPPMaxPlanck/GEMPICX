@@ -503,7 +503,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
         }
     }
 
-    lineIntegral.average_sync();
     lineIntegral.fill_boundary();
 
     // Compute the projection of the field
@@ -570,7 +569,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
         }
     }
 
-    faceIntegral.average_sync();
     faceIntegral.fill_boundary();
 
     // Compute the projection of B
@@ -637,7 +635,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
         }
     }
 
-    lineIntegralDual.average_sync();
     lineIntegralDual.fill_boundary();
 
     DeRhamField<Grid::dual, Space::edge> errorH(deRham);
@@ -701,7 +698,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
         }
     }
 
-    faceIntegralDual.average_sync();
     faceIntegralDual.fill_boundary();
 
     DeRhamField<Grid::dual, Space::face> errorD(deRham);
@@ -758,7 +754,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
         update_zero_form_primal_parallel_for(mfi, pointVals, m_infra);
     }
 
-    pointVals.average_sync();
     pointVals.fill_boundary();
 
     // Calculate error
@@ -800,7 +795,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
         update_zero_form_dual_parallel_for(mfi, pointValsDual, m_infra);
     }
 
-    pointValsDual.average_sync();
     pointValsDual.fill_boundary();
 
     // Calculate error
@@ -883,7 +877,6 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
         update_three_form_dual_parallel_for(mfi, rhoAnDual, m_infra);
     }
 
-    rhoAnDual.average_sync();
     rhoAnDual.fill_boundary();
 
     // Calculate error

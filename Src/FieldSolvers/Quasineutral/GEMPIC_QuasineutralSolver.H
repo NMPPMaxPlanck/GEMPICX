@@ -477,7 +477,6 @@ public:
                              m_absTol, m_maxiter);
 #endif
 
-        x.average_sync();
         x.fill_boundary();
     }
 
@@ -606,7 +605,6 @@ public:
                              m_absTol, m_maxiter);
 #endif
 
-        x.average_sync();
         x.fill_boundary();
     }
 
@@ -754,7 +752,6 @@ public:
                              m_absTol, m_maxiter);
 #endif
 
-        x.average_sync();
         x.fill_boundary();
     }
 };
