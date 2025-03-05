@@ -142,7 +142,6 @@ public:
                 << "WARNING: CG has not converged after " << m_maxiter << " iterations "
                 << sqrt(normResSquareOld / normbSquare) << std::endl;
         }
-        x.average_sync();
         x.fill_boundary();
     }
 
@@ -227,7 +226,6 @@ public:
                 << "WARNING: CG has not converged after " << m_maxiter << " iterations "
                 << sqrt(normResSquare / normbSquare) << std::endl;
         }
-        x.average_sync();
         x.fill_boundary();
     }
 

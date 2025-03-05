@@ -249,7 +249,6 @@ void AmrexSolver::solve (Forms::DeRhamField<Grid::primal, Space::node>& phi,
     // AMReX Poisson solver does not use Hodge. Need to rescale phi
     phi *= 1.0 / m_compDom.cell_volume();
 
-    phi.average_sync();
     phi.fill_boundary();
 }
 

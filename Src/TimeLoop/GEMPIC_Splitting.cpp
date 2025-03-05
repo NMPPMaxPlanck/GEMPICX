@@ -178,7 +178,5 @@ void Gempic::TimeLoop::apply_h_j (
             });
     }
     J.fill_boundary();
-    J.average_sync();
     D.fill_boundary();
-    D.average_sync();
 }

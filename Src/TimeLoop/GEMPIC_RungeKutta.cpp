@@ -90,9 +90,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
                         dxArray(i, j, k) += coeffsBStageIndex * mS2DxArray(i, j, k);
                     });
     }
-    D.m_data[xDir].AverageSync(m_infra.geometry().periodicity());
     D.m_data[xDir].FillBoundary_nowait(m_infra.geometry().periodicity());
-    m_s2D.m_data[xDir].AverageSync(m_infra.geometry().periodicity());
     m_s2D.m_data[xDir].FillBoundary_nowait(m_infra.geometry().periodicity());
 
     // Component-1 of Ampere's equation
@@ -119,9 +117,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
                         dyArray(i, j, k) += coeffsBStageIndex * mS2DyArray(i, j, k);
                     });
     }
-    D.m_data[yDir].AverageSync(m_infra.geometry().periodicity());
     D.m_data[yDir].FillBoundary_nowait(m_infra.geometry().periodicity());
-    m_s2D.m_data[yDir].AverageSync(m_infra.geometry().periodicity());
     m_s2D.m_data[yDir].FillBoundary_nowait(m_infra.geometry().periodicity());
 
     // Component-2 of Ampere's equation
@@ -147,9 +143,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
                         dzArray(i, j, k) += coeffsBStageIndex * mS2DzArray(i, j, k);
                     });
     }
-    D.m_data[zDir].AverageSync(m_infra.geometry().periodicity());
     D.m_data[zDir].FillBoundary_nowait(m_infra.geometry().periodicity());
-    m_s2D.m_data[zDir].AverageSync(m_infra.geometry().periodicity());
     m_s2D.m_data[zDir].FillBoundary_nowait(m_infra.geometry().periodicity());
 
     // Wait for completed communication of guard data
@@ -190,9 +184,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
                         bxArray(i, j, k) += coeffsBStageIndex * s2BxArray(i, j, k);
                     });
     }
-    B.m_data[xDir].AverageSync(m_infra.geometry().periodicity());
     B.m_data[xDir].FillBoundary_nowait(m_infra.geometry().periodicity());
-    m_s2B.m_data[xDir].AverageSync(m_infra.geometry().periodicity());
     m_s2B.m_data[xDir].FillBoundary_nowait(m_infra.geometry().periodicity());
 
     // Component-1 of Faraday's equation
@@ -216,9 +208,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
                         byArray(i, j, k) += coeffsBStageIndex * s2ByArray(i, j, k);
                     });
     }
-    B.m_data[yDir].AverageSync(m_infra.geometry().periodicity());
     B.m_data[yDir].FillBoundary_nowait(m_infra.geometry().periodicity());
-    m_s2B.m_data[yDir].AverageSync(m_infra.geometry().periodicity());
     m_s2B.m_data[yDir].FillBoundary_nowait(m_infra.geometry().periodicity());
 
     // Component-2 of Faraday's equation
@@ -243,9 +233,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
                         bzArray(i, j, k) += coeffsBStageIndex * s2BzArray(i, j, k);
                     });
     }
-    B.m_data[zDir].AverageSync(m_infra.geometry().periodicity());
     B.m_data[zDir].FillBoundary_nowait(m_infra.geometry().periodicity());
-    m_s2B.m_data[zDir].AverageSync(m_infra.geometry().periodicity());
     m_s2B.m_data[zDir].FillBoundary_nowait(m_infra.geometry().periodicity());
 
     // Wait for completed communication of guard data

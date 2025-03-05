@@ -105,7 +105,6 @@ int main (int argc, char* argv[])
             }
 
             E.fill_boundary();
-            E.average_sync();
             deRham->hodge(D, E);
 
             // Write initial time step

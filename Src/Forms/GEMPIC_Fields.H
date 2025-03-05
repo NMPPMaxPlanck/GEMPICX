@@ -143,12 +143,11 @@ struct DeRhamField
         DeRhamField{drc} {};
 
     void fill_boundary();
-    void average_sync();
     void apply_bc();
 
     /**
      * @brief Perform all of the synchronization operations necessary after cpu and gpu particle
-     * loops: Sum boundary and overwrite overlap with averageSync, then Fill Boundary
+     * loops: Sum boundary, then Fill Boundary
      */
     void post_particle_loop_sync();
 };
@@ -237,7 +236,6 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
                 const amrex::MultiFab& mfIn3);
 
     void fill_boundary();
-    void average_sync();
     void apply_bc();
 
     void post_particle_loop_sync();
@@ -275,7 +273,6 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::MultiFab& mfIn);
 
     void fill_boundary();
-    void average_sync();
     void apply_bc();
 
     void post_particle_loop_sync();
@@ -605,27 +602,6 @@ public:
         BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary(field)");
         field.m_data.FillBoundary(m_geom.periodicity());
     }
-    // @endcond
-
-    /// Function overloads for AverageSync. Exists for 1-/2-forms and 0-/3-forms
-    // averageSync for One- or Two-forms
-    template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
-    void average_sync (DeRhamField<grid, space>& field)
-    {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::average_sync(field)");
-        field.m_data[xDir].AverageSync(m_geom.periodicity());
-        field.m_data[yDir].AverageSync(m_geom.periodicity());
-        field.m_data[zDir].AverageSync(m_geom.periodicity());
-    }
-
-    // @cond DOXYGEN_IGNORE
-    // averageSync for Zero- or Three-forms
-    template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
-    void average_sync (DeRhamField<grid, space>& field)
-    {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::average_sync(field)");
-        field.m_data.AverageSync(m_geom.periodicity());
-    }
     /// @endcond
 
     /**
@@ -653,7 +629,6 @@ public:
             field.m_bcFuncY->operator()(field.m_data[yDir], 0, 1, m_nGhostRequired, 0., 0);
             field.m_bcFuncZ->operator()(field.m_data[zDir], 0, 1, m_nGhostRequired, 0., 0);
 
-            field.average_sync();
             field.fill_boundary();
         }
     }
@@ -668,7 +643,6 @@ public:
         {
             field.m_bcFunc->operator()(field.m_data, 0, 1, m_nGhostRequired, 0., 0);
 
-            field.average_sync();
             field.fill_boundary();
         }
     }
@@ -935,7 +909,6 @@ public:
                         });
         }
         formOut.fill_boundary();
-        formOut.average_sync();
     }
 
     /**
@@ -1315,7 +1288,6 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
         m_data[comp].SumBoundary(0, m_data[comp].nComp(), m_deRham->get_n_ghost(),
                                  amrex::IntVect::Zero, m_deRham->get_periodicity());
     }
-    average_sync();
     fill_boundary();
 }
 
@@ -1326,7 +1298,6 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
     m_data.SumBoundary(0, m_data.nComp(), m_deRham->get_n_ghost(), amrex::IntVect::Zero,
                        m_deRham->get_periodicity());
-    average_sync();
     fill_boundary();
 }
 
@@ -1345,23 +1316,6 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::f
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
-}
-
-// AverageSync of DeRhamFields
-template <Grid grid, Space space>
-inline void
-DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::average_sync()
-{
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::average_sync()");
-    m_deRham->average_sync(*this);
-}
-
-template <Grid grid, Space space>
-inline void
-DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::average_sync()
-{
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::average_sync()");
-    m_deRham->average_sync(*this);
 }
 
 // ApplyBC of DeRhamFields
@@ -1450,7 +1404,6 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
         }
     }
     this->fill_boundary();
-    this->average_sync();
 }
 
 template <Grid grid, Space space>
@@ -1493,7 +1446,6 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
                     });
     }
     this->fill_boundary();
-    this->average_sync();
 }
 
 // plusEqual

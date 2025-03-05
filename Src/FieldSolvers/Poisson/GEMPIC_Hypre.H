@@ -172,7 +172,6 @@ public:
 
         phi *= 1.0 / m_cellVolume;
 
-        phi.average_sync();
         phi.fill_boundary();
     }
 };
