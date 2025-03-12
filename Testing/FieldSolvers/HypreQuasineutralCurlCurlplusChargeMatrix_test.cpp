@@ -7,8 +7,6 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
 
-//#include "GEMPIC_AmrexInit.H"
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Fields.H"
@@ -104,13 +102,6 @@ public:
 
         amrex::Real vWeightG0{1.0};
         pp.add("Particle.ions.G0.vWeight", vWeightG0);
-
-        // Filter
-        int filter{1};
-        pp.add("Filter.enable", filter);
-
-        amrex::Vector<int> nPass{{3, 3, 3}};
-        pp.addarr("Filter.nPass", nPass);
     }
 
     // virtual void SetUp() will be called before each test is run.

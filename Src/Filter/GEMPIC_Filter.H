@@ -7,28 +7,21 @@
 #ifndef GEMPIC_FILTER_H_
 #define GEMPIC_FILTER_H_
 
-#include <algorithm>
 #include <limits>
 
 #include <AMReX_Array4.H>
 #include <AMReX_BaseFwd.H>
 #include <AMReX_Box.H>
 #include <AMReX_Config.H>
-#include <AMReX_Dim3.H>
-#include <AMReX_Extension.H>
-#include <AMReX_FArrayBox.H>
-#include <AMReX_FabArray.H>
 #include <AMReX_GpuContainers.H>
-#include <AMReX_IntVect.H>
 #include <AMReX_MFIter.H>
-#include <AMReX_MultiFab.H>
 #include <AMReX_REAL.H>
 
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Fields.H"
 
 namespace Gempic::Filter
 {
-
 class Filter
 {
 public:
@@ -41,18 +34,61 @@ public:
                    int dcomp,
                    int ncomp);
 
-    /* \brief Apply stencil on MultiFab (CPU/GPU version, 1D/2D/3D).
-     * \param dstmf Destination MultiFab
-     * \param srcmf source MultiFab
-     * \param scomp first component of srcmf on which the filter is applied
-     * \param dcomp first component of dstmf on which the filter is applied
-     * \param ncomp Number of components on which the filter is applied.
-     */
-    void apply_stencil(const amrex::MultiFab& srcmf,
-                       amrex::MultiFab& dstmf,
-                       int scomp = 0,
-                       int dcomp = 0,
-                       int ncomp = std::numeric_limits<int>::max());
+    template <Grid grid, Space space, std::enable_if_t<Forms::isZeroOrThreeForm<space>, int> = 0>
+    void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
+                        const Gempic::Forms::DeRhamField<grid, space>& srcField,
+                        int scomp = 0,
+                        int dcomp = 0,
+                        int ncomp = std::numeric_limits<int>::max())
+    {
+        BL_PROFILE("Gempic::Filter::Filter::apply_stencil()");
+
+        ncomp = std::min(ncomp, srcField.m_data.nComp());
+        if (!m_useFilter)
+        {
+            // just copy
+            copy(dstField, srcField);
+            return;
+        }
+
+        for (amrex::MFIter mfi(dstField.m_data); mfi.isValid(); ++mfi)
+        {
+            const auto& srcfab = srcField.m_data.array(mfi);
+            const auto& dstfab = dstField.m_data.array(mfi);
+
+            do_filter(mfi.validbox(), srcfab, dstfab, 0, dcomp, ncomp);
+        }
+    }
+
+    template <Grid grid, Space space, std::enable_if_t<Forms::isOneOrTwoForm<space>, int> = 0>
+    void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
+                        const Gempic::Forms::DeRhamField<grid, space>& srcField,
+                        int scomp = 0,
+                        int dcomp = 0,
+                        int ncomp = std::numeric_limits<int>::max())
+    {
+        BL_PROFILE("Gempic::Filter::Filter::apply_stencil()");
+
+        // loop over the 3 directions
+        for (int d{0}; d < 3; ++d)
+        {
+            ncomp = std::min(ncomp, srcField.m_data[d].nComp());
+            if (!m_useFilter)
+            {
+                // just copy
+                copy(dstField, srcField);
+                continue;
+            }
+
+            for (amrex::MFIter mfi(dstField.m_data[d]); mfi.isValid(); ++mfi)
+            {
+                const auto& srcfab = srcField.m_data[d].array(mfi);
+                const auto& dstfab = dstField.m_data[d].array(mfi);
+
+                do_filter(mfi.validbox(), srcfab, dstfab, 0, dcomp, ncomp);
+            }
+        }
+    }
 
 protected:
     // If true, a filter is used to smooth charge and currents
@@ -60,8 +96,6 @@ protected:
     // Stencil along each direction.
     // in 2D, stencilZ is not initialized.
     amrex::Gpu::DeviceVector<amrex::Real> AMREX_D_DECL(m_stencilX, m_stencilY, m_stencilZ);
-
-private:
 };
 
 } // namespace Gempic::Filter

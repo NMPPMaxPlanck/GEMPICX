@@ -8,15 +8,9 @@
 #ifndef GEMPIC_BILIN_FILTER_H_
 #define GEMPIC_BILIN_FILTER_H_
 
-#include <array>
-#include <vector>
-
 #include <AMReX_Array.H>
 #include <AMReX_Config.H>
-#include <AMReX_Dim3.H>
-#include <AMReX_GpuContainers.H>
 #include <AMReX_GpuDevice.H>
-#include <AMReX_IntVect.H>
 #include <AMReX_REAL.H>
 #include <AMReX_Vector.H>
 

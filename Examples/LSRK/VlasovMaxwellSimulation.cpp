@@ -355,8 +355,7 @@ int main (int argc, char *argv[])
             J.post_particle_loop_sync();
 
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
-            //poisson->solve_amrex(rhoFiltered, phi);
+            biFilter->apply_stencil(rhoFiltered, rho);
             poisson->solve(phi, rhoFiltered);
             deRham->grad(E, phi);
             E *= -1.0;
