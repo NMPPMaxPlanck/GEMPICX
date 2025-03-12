@@ -1,6 +1,5 @@
 #include <vector>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "GEMPIC_BilinearFilter.H"
@@ -15,6 +14,26 @@ namespace
 using namespace Gempic;
 using namespace Forms;
 
+void set_rho_parallel_for (amrex::Array4<amrex::Real> const &rhoInArr,
+                           amrex::Array4<amrex::Real> const &rhoOutArr,
+                           const amrex::Box &bx)
+{
+    ParallelFor(
+        bx,
+        [=] AMREX_GPU_DEVICE(int i, int j, int k)
+        {
+            // Set value of rhoIn to 1 at given point and result for one pass
+            double constVal{1.0};
+            if (i == bx.smallEnd(0) + 2 && j == bx.smallEnd(1) + 2 && k == bx.smallEnd(2) + 2)
+            {
+                rhoInArr(i, j, k) = constVal;
+                rhoOutArr(i, j, k) = 0.5 * constVal;
+                rhoOutArr(i + 1, j, k) = 0.25 * constVal;
+                rhoOutArr(i - 1, j, k) = 0.25 * constVal;
+            }
+        });
+}
+
 // Test fixture. Sets up clean environment before each test.
 class BilinearFilterTest : public testing::Test
 {
@@ -25,6 +44,8 @@ public:
     ComputationalDomain m_infra;
 
     int m_nComps{1};
+
+    static constexpr int s_maxSplineDegree{1};
 
     static void SetUpTestSuite ()
     {
@@ -52,7 +73,6 @@ class BilinearFilterTestParameter : public BilinearFilterTest,
 {
 public:
     std::vector<int> m_filterNpass;
-    amrex::IntVect m_nGhost;
 
     BilinearFilterTestParameter()
     {
@@ -61,37 +81,30 @@ public:
         int filterPass{GetParam()};
         m_filterNpass = std::vector<int>{AMREX_D_DECL(filterPass, filterPass, filterPass)};
         pp.addarr("Filter.nPass", m_filterNpass);
-
-        std::vector<int> nGhostVec{m_filterNpass};
-        m_parameters.set("nGhost", nGhostVec);
-        m_nGhost = amrex::IntVect{AMREX_D_DECL(nGhostVec[xDir], nGhostVec[yDir], nGhostVec[zDir])};
     }
 };
 
 TEST_P(BilinearFilterTestParameter, ConstantTest)
 {
-    amrex::MultiFab mf;
-    mf.define(amrex::convert(m_infra.m_grid, amrex::IntVect{1}), m_infra.m_distriMap, m_nComps,
-              m_nGhost);
-    double constVal{5.0};
-    mf.setVal(constVal);
+    const int hodgeDegree{2};
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
+    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
 
-    amrex::MultiFab mfTmp;
-    mfTmp.define(amrex::convert(m_infra.m_grid, amrex::IntVect{1}), m_infra.m_distriMap, m_nComps,
-                 m_nGhost);
-    double tmpVal{0.5};
-    mfTmp.setVal(tmpVal);
+    double constVal{5.0};
+    rhoIn.m_data.setVal(constVal);
 
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(mf, mfTmp, srcCompBegIn, dstCompBegIn, m_nComps);
-    // probably fails due to filter expanding box (which then has 0s)
+    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
 
-    for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
         // Expect all indices to be constVal
-        CHECK_FIELD(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, constVal);
+        CHECK_FIELD(rhoOut.m_data.array(mfi), m_infra.m_nCell.dim3(), {}, {}, constVal);
     }
 }
 
@@ -102,29 +115,59 @@ TEST_F(BilinearFilterTest, NoFilter)
     amrex::ParmParse pp;
     pp.add("Filter.enable", false);
 
-    amrex::IntVect nGhost{AMREX_D_DECL(0, 0, 0)};
+    const int hodgeDegree{2};
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
+    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
 
-    amrex::MultiFab mf;
-    mf.define(amrex::convert(m_infra.m_grid, amrex::IntVect{1}), m_infra.m_distriMap, m_nComps,
-              nGhost);
     double constVal{5.0};
-    mf.setVal(constVal);
-
-    amrex::MultiFab mfTmp;
-    mfTmp.define(amrex::convert(m_infra.m_grid, amrex::IntVect{1}), m_infra.m_distriMap, m_nComps,
-                 nGhost);
-    double tmpVal{0.5};
-    mfTmp.setVal(tmpVal);
+    rhoIn.m_data.setVal(constVal);
 
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(mf, mfTmp, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
 
-    for (amrex::MFIter mfi(mfTmp); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
-        // Expect the all indices to be constVal
-        CHECK_FIELD(mfTmp.array(mfi), m_infra.m_nCell.dim3(), {}, {}, tmpVal);
+        // Expect all indices to be constVal
+        CHECK_FIELD(rhoOut.m_data.array(mfi), m_infra.m_nCell.dim3(), {}, {}, constVal);
+    }
+}
+
+TEST_F(BilinearFilterTest, OneNonZeroValueTest)
+{
+    const int hodgeDegree{2};
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
+    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
+
+    rhoIn.m_data.setVal(0.0);
+    rhoOut.m_data.setVal(0.0);
+
+    amrex::ParmParse pp;
+    pp.add("Filter.enable", true);
+    std::vector<int> filterNpass{AMREX_D_DECL(1, 0, 0)};
+    pp.addarr("Filter.nPass", filterNpass);
+
+    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
+    int srcCompBegIn{0};
+    int dstCompBegIn{0};
+    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+
+    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.tilebox();
+        amrex::Array4<amrex::Real> const &rhoInArr = rhoIn.m_data.array(mfi);
+        amrex::Array4<amrex::Real> const &rhoOutArr = rhoOut.m_data.array(mfi);
+
+        set_rho_parallel_for(rhoInArr, rhoOutArr, bx);
+
+        COMPARE_FIELDS(rhoInArr, rhoOutArr, bx);
     }
 }
 
@@ -137,7 +180,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     //  with dx = 1 and f(x) = sin(k*x), this is
     //  f(x) + 0.5*(cos(k) - 1)*f(x) = 0.5*f(x)(1 + cos(k))
     const std::string analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
-    //  One pass bilinear filter is with compensation is
+    //  One pass bilinear filter with compensation is
     //  (alpha+(1-alpha)cos(kvarx))*g(x)
     //  where g(x) is the analytical solution without filter
     const std::string analyticalSolComp{"(0.5 + 0.5*cos(kvarx))*" + analyticalSol};
@@ -181,7 +224,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(rho.m_data, rhoTemp.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilter->apply_stencil(rhoTemp, rho, srcCompBegIn, dstCompBegIn, m_nComps);
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
@@ -193,7 +236,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     pp.add("Filter.compensate", true);
 
     std::unique_ptr<Filter::Filter> biFilterComp = std::make_unique<Filter::BilinearFilter>();
-    biFilterComp->apply_stencil(rho.m_data, rhoTemp.m_data, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilterComp->apply_stencil(rhoTemp, rho, srcCompBegIn, dstCompBegIn, m_nComps);
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {

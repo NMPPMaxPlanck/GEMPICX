@@ -154,7 +154,7 @@ int main (int argc, char *argv[])
             rho += rhoBackground * infra.cell_volume();
 
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
+            biFilter->apply_stencil(rhoFiltered, rho);
             if (simType == "QuasiNeutral")
             {
                 deRham->hodge(phi, rhoFiltered);
@@ -226,7 +226,7 @@ int main (int argc, char *argv[])
                     rho.post_particle_loop_sync();
 
                     // Apply filter and compute phi with filtered rho
-                    biFilter->apply_stencil(rho.m_data, rhoFiltered.m_data);
+                    biFilter->apply_stencil(rhoFiltered, rho);
                     if (simType == "QuasiNeutral")
                     {
                         deRham->hodge(phi, rhoFiltered);

@@ -1,8 +1,11 @@
 #include <memory>
 
+#include <AMReX.H>
+
 #include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Fields.H"
 #include "GEMPIC_Filter.H"
 
 void Gempic::Filter::Filter::do_filter (const amrex::Box& tbx,
@@ -47,25 +50,6 @@ void Gempic::Filter::Filter::do_filter (const amrex::Box& tbx,
 
                            dst(i, j, k, dcomp + n) = d;
                        });
-}
-
-void Gempic::Filter::Filter::apply_stencil (
-    const amrex::MultiFab& srcmf, amrex::MultiFab& dstmf, int scomp, int dcomp, int ncomp)
-{
-    BL_PROFILE("Gempic::Filter::Filter::apply_stencil()");
-    if (!m_useFilter)
-    {
-        return;
-    }
-    ncomp = std::min(ncomp, srcmf.nComp());
-    // amrex::FArrayBox tmpfab;
-    for (amrex::MFIter mfi(dstmf); mfi.isValid(); ++mfi)
-    {
-        const auto& srcfab = srcmf.array(mfi);
-        const auto& dstfab = dstmf.array(mfi);
-
-        do_filter(mfi.validbox(), srcfab, dstfab, 0, dcomp, ncomp);
-    }
 }
 
 namespace Gempic::Filter::Impl

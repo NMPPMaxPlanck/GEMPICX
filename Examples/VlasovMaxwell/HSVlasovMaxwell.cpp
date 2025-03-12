@@ -58,11 +58,14 @@ int main (int argc, char *argv[])
         auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
+        DeRhamField<Grid::primal, Space::edge> eFiltered(deRham, funcE);
         DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
         DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
         DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
         DeRhamField<Grid::dual, Space::face> J(deRham, "J");
+        DeRhamField<Grid::dual, Space::face> jFiltered(deRham);
         DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
+        DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
         DeRhamField<Grid::primal, Space::edge> ephi(deRham);
         DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
@@ -127,11 +130,15 @@ int main (int argc, char *argv[])
 
             // Add background charge (needs to be done after post_particle_loop_sync)
             rho += rhoBackground * infra.cell_volume();
+            // Apply filter and compute phi with filtered rho
+            biFilter->apply_stencil(rhoFiltered, rho);
 
             // solve Poisson
             poisson->solve(phi, rho);
             deRham->a_times_grad(ephi, phi, -1);
             E += ephi;
+            // Filtered E needed for pushing the particles (for symmetry with J filtering)
+            biFilter->apply_stencil(eFiltered, E);
             deRham->hodge(D, E, deRham->scaling_eto_d());
             // compute div D for diagnostics
             deRham->div(divD, D);
@@ -174,7 +181,7 @@ int main (int argc, char *argv[])
                         for (int cc = 0; cc < vdim; cc++)
                         {
                             jA[cc] = (J.m_data[cc])[pti].array();
-                            eA[cc] = (E.m_data[cc])[pti].array();
+                            eA[cc] = (eFiltered.m_data[cc])[pti].array();
                             bA[cc] = (B.m_data[cc])[pti].array();
                         }
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
@@ -220,11 +227,14 @@ int main (int argc, char *argv[])
                 }
                 J.post_particle_loop_sync();
 
+                // Apply filter and compute phi with filtered rho
+                biFilter->apply_stencil(jFiltered, J);
                 // Update D (field part of H_p_i)
-                D -= J;
+                D -= jFiltered;
 
-                // E needed for pushing the particles
+                // Filtered E needed for pushing the particles (for symmetry with J filtering)
                 deRham->hodge(E, D, deRham->scaling_dto_e());
+                biFilter->apply_stencil(eFiltered, E);
 
                 // Second particle loop for particle part from H_E
                 for (int spec = 0; spec < numspec; spec++)
@@ -248,7 +258,7 @@ int main (int argc, char *argv[])
                         rhoarr = rho.m_data[pti].array();
                         for (int cc = 0; cc < vdim; cc++)
                         {
-                            eA[cc] = (E.m_data[cc])[pti].array();
+                            eA[cc] = (eFiltered.m_data[cc])[pti].array();
                         }
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
                             infra.geometry().ProbLoArray()};
