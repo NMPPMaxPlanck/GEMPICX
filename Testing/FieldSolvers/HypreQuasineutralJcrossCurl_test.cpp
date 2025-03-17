@@ -1,11 +1,10 @@
+#include <tuple>
 #include <type_traits>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
-#include <AMReX_Particles.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
@@ -13,10 +12,7 @@
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
-#include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_QuasineutralSolver.H"
-#include "GEMPIC_Sampler.H"
-#include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
 namespace
@@ -28,11 +24,12 @@ using namespace ParticleMeshCoupling;
 using namespace FieldSolvers;
 
 /**
- * @brief Tests the CurlCurl operator and Charge matrix of the
- * quasineutral solver. The rho*E is deposited from particles.
+ * @brief Tests the J x curl matrix of the quasineutral solver.
+ * The J x curl(E) is deposited from particles.
+ * The rho field is added to avoid singularity.
  */
 template <typename SplineDegreeStruct>
-class HypreQuasineutralCurlCurlPlusChargeMatrixTest : public testing::Test
+class HypreQuasineutralJcrossCurlTest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
@@ -49,6 +46,9 @@ public:
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
     amrex::Array<amrex::Parser, 3> m_parserE;
+
+    amrex::ParserExecutor<s_nVar> m_funcRho;
+    amrex::Parser m_parserRho;
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcRHS;
     amrex::Array<amrex::Parser, 3> m_parserRHS;
@@ -71,10 +71,10 @@ public:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
-        amrex::Real charge{sqrt(3.0)};
+        amrex::Real charge{-1.5};
         pp.add("Particle.species0.charge", charge);
 
-        amrex::Real mass{3.0};
+        amrex::Real mass{2.25};
         pp.add("Particle.species0.mass", mass);
     }
 
@@ -82,15 +82,16 @@ public:
     void SetUp () override
     {
 #if AMREX_SPACEDIM == 2
-        const std::string analyticalRho = "2";
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x)", "cos(x)*cos(y)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {"(1+2)*sin(y)", "(1+2)*sin(x)",
-                                                            "(2+2)*cos(x)*cos(y)"};
-#elif AMREX_SPACEDIM == 3
+        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x+y)", "sin(x)"};
         const std::string analyticalRho = "4";
+        const amrex::Array<std::string, 3> analyticalRHS = {
+            "sin(x)*cos(x+y) + sin(y-x) + 4*sin(y)", "sin(x+y)*(cos(y) - cos(x+y)) + 4*sin(x+y)",
+            "-sin(x+y)*cos(x) + 4*sin(x)"};
+#elif AMREX_SPACEDIM == 3
         const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {"(1+4)*sin(y)", "(1+4)*sin(z)",
-                                                            "(1+4)*sin(x)"};
+        const std::string analyticalRho = "3";
+        const amrex::Array<std::string, 3> analyticalRHS = {
+            "sin(y-x) + 3*sin(y)", "sin(z-y) + 3*sin(z)", "sin(x-z) + 3*sin(x)"};
 #endif
 
         for (int i = 0; i < 3; ++i)
@@ -98,7 +99,14 @@ public:
             m_parserE[i].define(analyticalE[i]);
             m_parserE[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             m_funcE[i] = m_parserE[i].compile<s_nVar>();
+        }
 
+        m_parserRho.define(analyticalRho);
+        m_parserRho.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        m_funcRho = m_parserRho.compile<s_nVar>();
+
+        for (int i = 0; i < 3; ++i)
+        {
             m_parserRHS[i].define(analyticalRHS[i]);
             m_parserRHS[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
             m_funcRHS[i] = m_parserRHS[i].compile<s_nVar>();
@@ -106,7 +114,7 @@ public:
     }
 
     template <int n>
-    amrex::Real curlcurl_plus_chargematrix_solve ()
+    amrex::Real jcrosscurl_solve ()
     {
         // For studies other than convergence, this should be in SetUpTestSuite under Grid
         // parameters
@@ -129,48 +137,34 @@ public:
 
         // Adding AMREX_SPACEDIM individual particles starts here
         ions.resize(1);
-        for (int spec{0}; spec < 1; spec++)
-        {
-            ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
-        }
+        ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
 
-        const int numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
+        const int numParticles{GEMPIC_D_MULT(n, n, n)};
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
         amrex::Array<amrex::Real, numParticles> weights;
 
-        // particles on edges or faces both works, although below implementation is with particles
-        // on edges
-        amrex::Vector<amrex::Real> offset[AMREX_SPACEDIM] = {
-            AMREX_D_DECL({AMREX_D_DECL(0.5, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.5, 0.0)},
-                         {AMREX_D_DECL(0.0, 0.0, 0.5)})};
-
         int i{0}, j{0}, k{0};
         const auto dx{infra.cell_size_array()};
 
-        for (int ndir = 0; ndir < AMREX_SPACEDIM; ++ndir)
-        {
-            GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
-                                for (k = 0; k < n; k++))
+        GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
+                            for (k = 0; k < n; k++))
 
-                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {AMREX_D_DECL(
-                    infra.geometry().ProbLo(xDir) + (i + offset[ndir][xDir]) * dx[xDir],
-                    infra.geometry().ProbLo(yDir) + (j + offset[ndir][yDir]) * dx[yDir],
-                    infra.geometry().ProbLo(zDir) + (k + offset[ndir][zDir]) * dx[zDir])};
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {
+                AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + 0.5) * dx[xDir],
+                             infra.geometry().ProbLo(yDir) + (j + 0.5) * dx[yDir],
+                             infra.geometry().ProbLo(zDir) + (k + 0.5) * dx[zDir])};
 
-                positions[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
-                    AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
-                velocities[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
+            positions[i + j * n + k * n * n] = {AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
 #if AMREX_SPACEDIM == 2
-                weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    ((2.0) / AMREX_SPACEDIM) * infra.cell_volume();
+            velocities[i + j * n + k * n * n] = {sin(loc[xDir] + loc[yDir]), sin(loc[xDir]),
+                                                 sin(loc[yDir])};
 #elif AMREX_SPACEDIM == 3
-                weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    ((4.0) / AMREX_SPACEDIM) * infra.cell_volume();
+            velocities[i + j * n + k * n * n] = {sin(loc[zDir]), sin(loc[xDir]), sin(loc[yDir])};
 #endif
-            GEMPIC_D_LOOP_END
-        }
+            weights[i + j * n + k * n * n] = GEMPIC_D_MULT(dx[xDir], dx[yDir], dx[zDir]);
+        GEMPIC_D_LOOP_END
 
         Gempic::Test::Utils::add_single_particles(ions[0].get(), infra, weights, positions,
                                                   velocities);
@@ -179,17 +173,17 @@ public:
         // Adding AMREX_SPACEDIM individual particles ends here
 
         // Computed fields
-        DeRhamField<Grid::dual, Space::cell> rho(deRham);
         DeRhamField<Grid::primal, Space::edge> E(deRham);
 
         // Analytical fields
-        DeRhamField<Grid::dual, Space::face> rhs(deRham, m_funcRHS);
         DeRhamField<Grid::primal, Space::edge> eAn(deRham, m_funcE);
+        DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
+        DeRhamField<Grid::dual, Space::face> rhs(deRham, m_funcRHS);
 
         HypreQuasineutralLinearSystem<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
-            hypreCurlcurlPlusFieldRho(infra, deRham);
+            hypreParticleJcrossCurl(infra, deRham);
 
-        hypreCurlcurlPlusFieldRho.solve_curlcurl_plus_particle_charge_e(rhs, E, ions);
+        hypreParticleJcrossCurl.solve_jcrosscurl_plus_field_charge_e(rhs, E, ions, rho);
 
         E -= eAn;
 
@@ -216,26 +210,32 @@ using MyTypes = ::testing::Types<std::tuple<std::integral_constant<int, 1>,
                                             std::integral_constant<int, 2>,
                                             std::integral_constant<int, 3>>>;
 
-TYPED_TEST_SUITE(HypreQuasineutralCurlCurlPlusChargeMatrixTest, MyTypes);
+TYPED_TEST_SUITE(HypreQuasineutralJcrossCurlTest, MyTypes);
 
-TYPED_TEST(HypreQuasineutralCurlCurlPlusChargeMatrixTest, HypreQuasineutralCurlCurlPlusChargeMatrix)
+TYPED_TEST(HypreQuasineutralJcrossCurlTest, HypreQuasineutralJcrossCurl)
 {
-    constexpr int coarse = 6;
-    constexpr int fine = 12;
+#if AMREX_SPACEDIM == 2
+    constexpr int coarse = 12;
+    constexpr int fine = 24;
+#elif AMREX_SPACEDIM == 3
+    constexpr int coarse = 8;
+    constexpr int fine = 16;
+#endif
     amrex::Real errorCoarse, errorFine;
-    amrex::Real tol = 0.2;
+    amrex::Real tol = 0.15;
 
     amrex::Real rateOfConvergence;
     constexpr int splineDegreeX = TestFixture::s_degX;
     constexpr int splineDegreeY = TestFixture::s_degY;
     constexpr int splineDegreeZ = TestFixture::s_degZ;
-    errorCoarse = this->template curlcurl_plus_chargematrix_solve<coarse>();
+    errorCoarse = this->template jcrosscurl_solve<coarse>();
     amrex::Print() << "errorCoarse: " << errorCoarse << "\n";
-    errorFine = this->template curlcurl_plus_chargematrix_solve<fine>();
+    errorFine = this->template jcrosscurl_solve<fine>();
     amrex::Print() << "errorFine: " << errorFine << "\n";
     rateOfConvergence = std::log2(errorCoarse / errorFine);
     amrex::Print() << "rate_of_convergence_<" << splineDegreeX << "," << splineDegreeY << ","
                    << splineDegreeZ << ">:" << rateOfConvergence << "\n";
     EXPECT_NEAR(rateOfConvergence, 2, tol);
 }
+
 } // namespace

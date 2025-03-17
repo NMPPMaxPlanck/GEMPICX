@@ -7,6 +7,8 @@ if(AMReX_HYPRE)
        HyprePoissonSolver_test.cpp
        HypreQuasineutralCurlCurl_test.cpp
        HypreQuasineutralChargeMatrix_test.cpp
-       HypreQuasineutralCurlCurlplusChargeMatrix_test.cpp)
+       HypreQuasineutralCurlCurlplusChargeMatrix_test.cpp
+       HypreQuasineutralJcrossCurl_test.cpp
+       HypreQuasineutralFullQNMatrix_test.cpp)
 endif()
 target_sources(GtestTests PRIVATE ${TMP_TEST_SOURCES})

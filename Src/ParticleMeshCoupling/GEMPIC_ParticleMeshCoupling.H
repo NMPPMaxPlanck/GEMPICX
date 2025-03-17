@@ -194,10 +194,10 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_loop (
  * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
  * should be fixed
  */
-template <Direction pDir, int degP, typename splineType, unsigned int bDim, unsigned int vDim>
+template <Direction pDir, int degP, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -666,10 +666,10 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
  * @param bArray : Degrees of freedom of B as primal 2-form
  * @param jArray : Degrees of freedom of J as dual 2-form
  */
-template <Direction pDir, typename splineType, unsigned int bDim, unsigned int vDim>
+template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2> &fields,
-    splineType &spline,
+    SplineType &spline,
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
@@ -677,8 +677,8 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
-    constexpr int degX = splineType::s_splineDegrees[xDir];
-    constexpr int degY = splineType::s_splineDegrees[yDir];
+    constexpr int degX = SplineType::s_splineDegrees[xDir];
+    constexpr int degY = SplineType::s_splineDegrees[yDir];
 
     fields = {0., 0.};
 

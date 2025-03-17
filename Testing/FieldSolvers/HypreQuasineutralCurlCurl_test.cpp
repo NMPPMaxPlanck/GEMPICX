@@ -23,10 +23,11 @@ using namespace FieldSolvers;
  * alternative for the consistent rho*E deposited from particles.
  */
 template <typename HodgeDegreeStruct>
-class HypreCurlCurlOperatorTest : public testing::Test
+class HypreQuasineutralCurlCurlTest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
+    static constexpr int s_ndata{1};
     static constexpr int s_degX{3};
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
@@ -109,9 +110,7 @@ public:
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
-        HypreQuasineutralLinearSystem<DeRhamField<Grid::dual, Space::face>,
-                                      DeRhamField<Grid::primal, Space::edge>, s_hodgeDegree, s_vdim,
-                                      s_degX, s_degY, s_degZ>
+        HypreQuasineutralLinearSystem<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
             hypreCurlcurlPlusFieldRho(infra, deRham);
 
         DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
@@ -119,7 +118,7 @@ public:
         DeRhamField<Grid::primal, Space::edge> E(deRham, m_funcE);
         DeRhamField<Grid::primal, Space::edge> eAn(deRham, m_funcE);
 
-        hypreCurlcurlPlusFieldRho.solve_curlcurl_plus_fieldcharge_e(rhs, E, rho);
+        hypreCurlcurlPlusFieldRho.solve_curlcurl_plus_field_charge_e(rhs, E, rho);
 
         E -= eAn;
 
@@ -133,9 +132,9 @@ public:
 };
 
 using MyTypes = ::testing::Types<std::integral_constant<int, 2>>;
-TYPED_TEST_SUITE(HypreCurlCurlOperatorTest, MyTypes);
+TYPED_TEST_SUITE(HypreQuasineutralCurlCurlTest, MyTypes);
 
-TYPED_TEST(HypreCurlCurlOperatorTest, HypreCurlCurlOperatorConvergence)
+TYPED_TEST(HypreQuasineutralCurlCurlTest, HypreQuasineutralCurlCurlConvergence)
 {
     const int coarse = 12, fine = 24;
     amrex::Real errorCoarse, errorFine;

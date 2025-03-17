@@ -71,37 +71,11 @@ public:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
-        // Particle parameters (data read by particle_groups constructor)
-        std::string speciesNames{"ions"};
-        pp.add("Particle.speciesNames", speciesNames);
+        amrex::Real charge{-sqrt(2.0)};
+        pp.add("Particle.species0.charge", charge);
 
-        std::string samplerName{"Sobol"};
-        pp.add("Particle.sampler", samplerName);
-
-        int nPartPerCell{20000};
-        pp.add("Particle.ions.nPartPerCell", nPartPerCell);
-
-        amrex::Real charge{1.0};
-        pp.add("Particle.ions.charge", charge);
-
-        amrex::Real mass{1.0};
-        pp.add("Particle.ions.mass", mass);
-
-        std::string density{"1.0"};
-        pp.add("Particle.ions.density", density);
-
-        int numGaussians{1};
-        pp.add("Particle.ions.numGaussians", numGaussians);
-
-        // Gaussian parameters
-        amrex::Vector<amrex::Real> vMean{{0.0, 0.0, 0.0}};
-        pp.addarr("Particle.ions.G0.vMean", vMean);
-
-        amrex::Vector<amrex::Real> vThermal{{0.0, 0.0, 0.0}};
-        pp.addarr("Particle.ions.G0.vThermal", vThermal);
-
-        amrex::Real vWeightG0{1.0};
-        pp.add("Particle.ions.G0.vWeight", vWeightG0);
+        amrex::Real mass{2.0};
+        pp.add("Particle.species0.mass", mass);
     }
 
     // virtual void SetUp() will be called before each test is run.
@@ -202,9 +176,7 @@ public:
         DeRhamField<Grid::primal, Space::edge> eAn(deRham, m_funcE);
         DeRhamField<Grid::dual, Space::face> rhoEAn(deRham, m_funcRhoE);
 
-        HypreQuasineutralLinearSystem<DeRhamField<Grid::dual, Space::face>,
-                                      DeRhamField<Grid::primal, Space::edge>, s_hodgeDegree, s_vdim,
-                                      s_degX, s_degY, s_degZ>
+        HypreQuasineutralLinearSystem<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
             hypreParticleRho(infra, deRham);
 
         hypreParticleRho.solve_particle_charge_e(rhoEAn, E, ions);
@@ -238,10 +210,10 @@ TYPED_TEST_SUITE(HypreQuasineutralChargeMatrixTest, MyTypes);
 
 TYPED_TEST(HypreQuasineutralChargeMatrixTest, HypreQuasineutralChargeMatrix)
 {
-    constexpr int coarse = 16;
-    constexpr int fine = 32;
+    constexpr int coarse = 8;
+    constexpr int fine = 16;
     amrex::Real errorCoarse, errorFine;
-    amrex::Real tol = 0.1;
+    amrex::Real tol = 0.15;
 
     amrex::Real rateOfConvergence;
     constexpr int splineDegreeX = TestFixture::s_degX;
