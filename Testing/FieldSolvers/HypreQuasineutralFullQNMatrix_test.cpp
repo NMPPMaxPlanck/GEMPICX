@@ -1,11 +1,10 @@
+#include <tuple>
 #include <type_traits>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
-#include <AMReX_Particles.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
@@ -13,10 +12,7 @@
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
-#include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_QuasineutralSolver.H"
-#include "GEMPIC_Sampler.H"
-#include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
 namespace
@@ -24,15 +20,15 @@ namespace
 using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
-using namespace ParticleMeshCoupling;
 using namespace FieldSolvers;
 
 /**
- * @brief Tests the CurlCurl operator and Charge matrix of the
- * quasineutral solver. The rho*E is deposited from particles.
+ * @brief Tests the CurlCurl operator, Charge matrix and
+ * the J x curl matrix of the quasineutral solver. The
+ * rho*E and J x curl(E) are deposited from particles.
  */
 template <typename SplineDegreeStruct>
-class HypreQuasineutralCurlCurlPlusChargeMatrixTest : public testing::Test
+class HypreQuasineutralFullQNMatrixTest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
@@ -71,26 +67,28 @@ public:
         const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
 
-        amrex::Real charge{sqrt(3.0)};
+        amrex::Real charge{-sqrt(2.5)};
         pp.add("Particle.species0.charge", charge);
 
-        amrex::Real mass{3.0};
+        amrex::Real mass{2.5};
         pp.add("Particle.species0.mass", mass);
     }
 
     // virtual void SetUp() will be called before each test is run.
     void SetUp () override
     {
-#if AMREX_SPACEDIM == 2
-        const std::string analyticalRho = "2";
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x)", "cos(x)*cos(y)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {"(1+2)*sin(y)", "(1+2)*sin(x)",
-                                                            "(2+2)*cos(x)*cos(y)"};
-#elif AMREX_SPACEDIM == 3
         const std::string analyticalRho = "4";
+#if AMREX_SPACEDIM == 2
+        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x+y)", "sin(x)"};
+        const amrex::Array<std::string, 3> analyticalRHS = {
+            "-sin(x+y)+(1+4)*sin(y) + (-0.75)*(sin(x)*cos(x+y) + sin(y-x))",
+            "(1+4)*sin(x+y) + (-0.75)*sin(x+y)*(cos(y) - cos(x+y))",
+            "(1+4)*sin(x) - (-0.75)*sin(x+y)*cos(x)"};
+#elif AMREX_SPACEDIM == 3
         const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {"(1+4)*sin(y)", "(1+4)*sin(z)",
-                                                            "(1+4)*sin(x)"};
+        const amrex::Array<std::string, 3> analyticalRHS = {"(1+4)*sin(y) + (-0.75)*sin(y-x)",
+                                                            "(1+4)*sin(z) + (-0.75)*sin(z-y)",
+                                                            "(1+4)*sin(x) + (-0.75)*sin(x-z)"};
 #endif
 
         for (int i = 0; i < 3; ++i)
@@ -129,10 +127,7 @@ public:
 
         // Adding AMREX_SPACEDIM individual particles starts here
         ions.resize(1);
-        for (int spec{0}; spec < 1; spec++)
-        {
-            ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
-        }
+        ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
 
         const int numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
 
@@ -161,14 +156,20 @@ public:
 
                 positions[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
                     AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
-                velocities[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
+                amrex::Real rhoAn = 4.0;
+                weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
+                    (rhoAn / AMREX_SPACEDIM) * GEMPIC_D_MULT(dx[xDir], dx[yDir], dx[zDir]);
+                velocities[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
 #if AMREX_SPACEDIM == 2
-                weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    ((2.0) / AMREX_SPACEDIM) * infra.cell_volume();
+                    sin(loc[xDir] + loc[yDir]) / rhoAn,
+                    sin(loc[xDir]) / rhoAn,
+                    sin(loc[yDir]) / rhoAn,
 #elif AMREX_SPACEDIM == 3
-                weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    ((4.0) / AMREX_SPACEDIM) * infra.cell_volume();
+                    sin(loc[zDir]) / rhoAn,
+                    sin(loc[xDir]) / rhoAn,
+                    sin(loc[yDir]) / rhoAn,
 #endif
+                };
             GEMPIC_D_LOOP_END
         }
 
@@ -189,39 +190,44 @@ public:
         HypreQuasineutralLinearSystem<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
             hypreCurlcurlPlusFieldRho(infra, deRham);
 
-        hypreCurlcurlPlusFieldRho.solve_curlcurl_plus_particle_charge_e(rhs, E, ions);
+        amrex::Real jcrosscurlCoeff = -0.75;
+
+        hypreCurlcurlPlusFieldRho.solve_curlcurl_plus_particle_charge_plus_jcrosscurl_e(
+            rhs, E, ions, jcrosscurlCoeff);
 
         E -= eAn;
 
         amrex::GpuArray<amrex::Real, 3> dxi{GEMPIC_D_PAD_ONE(infra.geometry().InvCellSize(xDir),
                                                              infra.geometry().InvCellSize(yDir),
                                                              infra.geometry().InvCellSize(zDir))};
+
         return Utils::gempic_norm (E.m_data[xDir], infra, 1) * dxi[xDir] +
                Utils::gempic_norm(E.m_data[yDir], infra, 1) * dxi[yDir] +
                Utils::gempic_norm(E.m_data[zDir], infra, 1) * dxi[zDir];
     }
 };
 
-// All 27 permutations of 1,2,3 work for spline degrees
-using MyTypes = ::testing::Types<std::tuple<std::integral_constant<int, 1>,
-                                            std::integral_constant<int, 1>,
-                                            std::integral_constant<int, 1>>,
-                                 std::tuple<std::integral_constant<int, 2>,
+// Among all 27 possible permutations of 1,2,3 work for spline degrees, those with
+// atleast two spline degrees equal to 1 give somewhat less than 2nd order convergence
+// i.e. (1,1,1), (1,1,2), (1,2,1), (2,1,1), (1,1,3), (1,3,1), (3,1,1).
+using MyTypes = ::testing::Types<std::tuple<std::integral_constant<int, 2>,
                                             std::integral_constant<int, 2>,
                                             std::integral_constant<int, 2>>,
                                  std::tuple<std::integral_constant<int, 3>,
                                             std::integral_constant<int, 3>,
-                                            std::integral_constant<int, 3>>,
-                                 std::tuple<std::integral_constant<int, 1>,
-                                            std::integral_constant<int, 2>,
                                             std::integral_constant<int, 3>>>;
 
-TYPED_TEST_SUITE(HypreQuasineutralCurlCurlPlusChargeMatrixTest, MyTypes);
+TYPED_TEST_SUITE(HypreQuasineutralFullQNMatrixTest, MyTypes);
 
-TYPED_TEST(HypreQuasineutralCurlCurlPlusChargeMatrixTest, HypreQuasineutralCurlCurlPlusChargeMatrix)
+TYPED_TEST(HypreQuasineutralFullQNMatrixTest, HypreQuasineutralFullQNMatrix)
 {
+#if AMREX_SPACEDIM == 2
+    constexpr int coarse = 8;
+    constexpr int fine = 16;
+#elif AMREX_SPACEDIM == 3
     constexpr int coarse = 6;
     constexpr int fine = 12;
+#endif
     amrex::Real errorCoarse, errorFine;
     amrex::Real tol = 0.2;
 

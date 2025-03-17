@@ -201,7 +201,7 @@ public:
             m_deRham->hodge(E, D, m_deRham->scaling_dto_e());
 
         } // end of loop over m_stages
-    } //lsrk_vlasov_maxwell
+    } // lsrk_vlasov_maxwell
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_dk_vlasov_maxwell (

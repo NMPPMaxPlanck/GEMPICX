@@ -9,12 +9,12 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
-#include "GEMPIC_QuasineutralSolver.H"
 #include "GEMPIC_Sampler.H"
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
@@ -25,7 +25,6 @@ using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
 using namespace ParticleMeshCoupling;
-using namespace FieldSolvers;
 
 /**
  * @brief Tests the deposit_deldotS function using analytical function fields

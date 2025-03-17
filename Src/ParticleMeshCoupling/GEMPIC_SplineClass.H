@@ -440,9 +440,9 @@ public:
         amrex::GpuArray<amrex::IntVect, nWtsSum> &eCells) const
     {
         constexpr int nWtsXYZ[3][3] = {
-            {degX, degX + 1, degX + 1},  // number of x,y,z-field weights in X-direction
-            {degY + 1, degY, degY + 1},  // number of x,y,z-field weights in Y-direction
-            {degZ + 1, degZ + 1, degZ}}; // number of x,y,z-field weights in Z-direction
+            {degX, degX + 1, degX + 1},  // number of 1-form x,y,z-field weights in X-direction
+            {degY + 1, degY, degY + 1},  // number of 1-form x,y,z-field weights in Y-direction
+            {degZ + 1, degZ + 1, degZ}}; // number of 1-form x,y,z-field weights in Z-direction
 
         constexpr int nWts[3] = {
             // number of x-field weights
@@ -474,6 +474,55 @@ public:
                 eWts[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
                      jj * nWtsXYZ[xDir][ndir] + ii] = sCoeff;
                 eCells[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
+                       jj * nWtsXYZ[xDir][ndir] + ii] =
+                    amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
+                                                this->m_firstIndex[Direction::yDir] + jj,
+                                                this->m_firstIndex[Direction::zDir] + kk)};
+            GEMPIC_D_LOOP_END
+        }
+    }
+
+    template <unsigned int nWtsSum>
+    AMREX_GPU_HOST_DEVICE void eval_b_field_spline_weights (
+        amrex::GpuArray<amrex::Real, nWtsSum> &bWts,
+        amrex::GpuArray<amrex::IntVect, nWtsSum> &bCells) const
+    {
+        constexpr int nWtsXYZ[3][3] = {
+            {(degX + 1), degX, degX},  // number of 2-form x,y,z-field weights in X-direction
+            {degY, (degY + 1), degY},  // number of 2-form x,y,z-field weights in Y-direction
+            {degZ, degZ, (degZ + 1)}}; // number of 2-form x,y,z-field weights in Z-direction
+
+        constexpr int nWts[3] = {
+            // number of x-field weights
+            GEMPIC_D_MULT(nWtsXYZ[xDir][xDir], nWtsXYZ[yDir][xDir], nWtsXYZ[zDir][xDir]),
+            // number of y-field weights
+            GEMPIC_D_MULT(nWtsXYZ[xDir][yDir], nWtsXYZ[yDir][yDir], nWtsXYZ[zDir][yDir]),
+            // number of z-field weights
+            GEMPIC_D_MULT(nWtsXYZ[xDir][zDir], nWtsXYZ[yDir][zDir], nWtsXYZ[zDir][zDir])};
+
+        constexpr int nWtsStart[3] = {0, nWts[xDir], (nWts[xDir] + nWts[yDir])};
+
+        GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
+
+        // Weights for E at particle location
+        for (int ndir = 0; ndir < 3; ++ndir)
+        {
+            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ[xDir][ndir]; ++ii),
+                                for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
+                                for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
+
+                const amrex::Real sCoeff =
+                    ((ndir == 0)
+                         ? eval_b_spline<complement_form<Field::PrimalTwoForm>(), Direction::xDir>(
+                               ii, jj, kk)
+                         : ((ndir == 1) ? eval_b_spline<complement_form<Field::PrimalTwoForm>(),
+                                                        Direction::yDir>(ii, jj, kk)
+                                        : eval_b_spline<complement_form<Field::PrimalTwoForm>(),
+                                                        Direction::zDir>(ii, jj, kk)));
+
+                bWts[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
+                     jj * nWtsXYZ[xDir][ndir] + ii] = sCoeff;
+                bCells[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
                        jj * nWtsXYZ[xDir][ndir] + ii] =
                     amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
                                                 this->m_firstIndex[Direction::yDir] + jj,
