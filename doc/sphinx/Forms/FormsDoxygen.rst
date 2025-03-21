@@ -7,6 +7,7 @@ In Gempic, the discrete de Rham complexes described in Section :ref:`sec:Maxwell
 are of Finite Difference type, which means that the discrete forms are primarily characterized 
 by their degrees of freedom on a (primal or dual) cartesian grid.
 
+.. doxygenclass:: Gempic::DiscreteGrid
 .. doxygenfile:: GEMPIC_FDDeRhamComplex.H
 .. doxygenfile:: GEMPIC_ExtDerivatives.cpp
    

@@ -28,6 +28,9 @@ if(GEMPIC_BUILD_EXAMPLES)
   add_subdirectory(Examples)
 endif()
 
+target_sources(GtestTests PRIVATE
+                ComputationalDomain_test.cpp)
+
 add_custom_command(
   TARGET GtestTests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory

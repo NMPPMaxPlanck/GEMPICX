@@ -19,6 +19,91 @@
 
 namespace Gempic
 {
+
+/**
+ * @class DiscreteGrid
+ * @brief Represents a tensor grid axis for equidistant finite difference
+ * grids
+ *
+ * @details A single axis manages data for a 1-D finite difference grid.
+ *          The axis is defined by its length, the minimum value, the number of
+ *          cells (degrees of freedom) and the type of the axis.
+ *
+ *          The computational domain of the axis is given by \f$L = min - max\f$
+ *
+ * Two independent definitions for axes are available depending on where in
+ * the cell a degree of freedom is positioned.
+ *
+ * @ref DiscreteGrid::Position Cell:
+ * The degree of freedom is located in the center of a cell. The interval of
+ * the cell is a closed interval at the lower boundary and an open interval on
+ * the upper boundary.
+ *
+ * @image html GEMPIC_DiscreteGridAxisCell.png
+ *
+ * @ref DiscreteGrid::Position Node:
+ * The degree of freedom is located on the cell nodes or on the boundareis of
+ * the cell. Therefore N-2 cells in an axis have N-1 degrees of freedom.
+ *
+ * @image html GEMPIC_DiscreteGridAxisNode.png
+ *
+ */
+class DiscreteGrid
+{
+public:
+    enum Position //! Defines the location of the degree of freedom within a cell
+    {
+        Cell,
+        Node
+    };
+    DiscreteGrid(amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo,
+                 amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi,
+                 amrex::Array<int, AMREX_SPACEDIM> nCells,
+                 amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
+                 amrex::Array<bool, AMREX_SPACEDIM> periodic = {AMREX_D_DECL(true, true, true)});
+    DiscreteGrid(Io::Parameters& params,
+                 amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition);
+    /**
+     * @brief Calculate the location of the given index in the interval
+     *        [@ref DiscreteGrid::min, @ref DiscreteGrid::max] of the physical domain
+     *
+     * @param idx : idx\f$\in[0,\f$ @ref DiscreteGrid::N - 1\f$]\f$
+     */
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real location (Direction dir, int idx)
+    {
+        return min(dir) + (m_offset[dir] + static_cast<amrex::Real>(idx)) * dx(dir);
+    }
+    //! Lower domain boundary
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real min (Direction dir) { return m_domainLo[dir]; }
+    //! Upper domain boundary
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real max (Direction dir) { return m_domainHi[dir]; }
+    //! Length of the domain
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real length (Direction dir) { return max(dir) - min(dir); }
+    //! Width of a single cell
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real dx (Direction dir) { return m_dx[dir]; }
+    //! Position of the degrees of freedom within a cell
+    AMREX_GPU_HOST_DEVICE
+    DiscreteGrid::Position position (Direction dir) { return m_idxPosition[dir]; }
+    //! Number of degrees of freedom in the domain
+    AMREX_GPU_HOST_DEVICE
+    int size (Direction dir) { return m_degreesOfFreedom[dir]; }
+    AMREX_GPU_HOST_DEVICE
+    bool is_periodic (Direction dir) { return m_periodicity[dir]; }
+
+private:
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_dx{};
+    amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> m_idxPosition{};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_offset{};
+    amrex::Array<int, AMREX_SPACEDIM> m_degreesOfFreedom{};
+    amrex::Array<bool, AMREX_SPACEDIM> m_periodicity{};
+};
 /**
  * Class containing all the necessary structures (such as the @p domain and the @p distriMap) and
  * information (such as @p dx and @p n_cell).
@@ -60,78 +145,7 @@ public:
     }
 
     ComputationalDomain(bool) {}; // bool constructor for deferred specification of domain
-    ComputationalDomain()
-    {
-        BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
-        Io::Parameters params("ComputationalDomain");
-        // Initialize infrastructure:
-        amrex::Vector<int> nCellVector;
-        params.get("nCell", nCellVector);
-        amrex::Vector<int> maxGridSizeTmp;
-        amrex::IntVect maxGridSize;
-        params.get("maxGridSize", maxGridSizeTmp);
-        for (int i{0}; i < AMREX_SPACEDIM; ++i)
-        {
-            m_nCell[i] = nCellVector[i];
-            maxGridSize[i] = maxGridSizeTmp[i];
-        }
-
-        amrex::Array<int, AMREX_SPACEDIM> isPeriodic;
-        params.get("isPeriodic", isPeriodic);
-        // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
-        // Probably needs to check that both are not provided for the same direction?
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        params.get_or_set("domainLo", domainLo);
-        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-        amrex::Vector<amrex::Real> k;
-        // Non-periodic directions exist
-        if (!(AMREX_D_TERM(isPeriodic[xDir], &&isPeriodic[yDir], &&isPeriodic[zDir])))
-        {
-            params.get_or_set("domainHi", domainHi);
-        }
-        // Periodic directions exist
-        if (AMREX_D_TERM(isPeriodic[xDir], || isPeriodic[yDir], || isPeriodic[zDir]))
-        {
-            // Attempt to use k first
-            if (params.exists("k"))
-            {
-                if (params.is_in_input_file("domainHi"))
-                {
-                    std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
-                }
-                params.get("k", k);
-                for (int i = 0; i < AMREX_SPACEDIM; i++)
-                {
-                    if (isPeriodic[i] == 1)
-                    {
-                        domainHi[i] = 2 * M_PI / k[i] + domainLo[i];
-                    }
-                }
-            }
-            // settle for domain_hi
-            else
-            {
-                params.get_or_set("domainHi", domainHi);
-            }
-        }
-        amrex::RealBox realBox =
-            amrex::RealBox({AMREX_D_DECL(domainLo[xDir], domainLo[yDir], domainLo[zDir])},
-                           {AMREX_D_DECL(domainHi[xDir], domainHi[yDir], domainHi[zDir])});
-
-        amrex::Box domain;
-        amrex::IntVect domLo(AMREX_D_DECL(0, 0, 0));
-        domain.setSmall(domLo);
-        amrex::IntVect domHi(AMREX_D_DECL(m_nCell[xDir] - 1, m_nCell[yDir] - 1, m_nCell[zDir] - 1));
-        domain.setBig(domHi);
-
-        m_grid.define(domain);
-        m_grid.maxSize(maxGridSize);
-
-        m_geom.define(domain, realBox, amrex::CoordSys::cartesian, isPeriodic);
-        m_distriMap.define(m_grid);
-
-        m_geomData = m_geom.data();
-    }
+    ComputationalDomain();
 
 private:
     amrex::GeometryData m_geomData;
