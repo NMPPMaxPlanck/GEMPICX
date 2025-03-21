@@ -5,3 +5,6 @@ add_subdirectory(Forms)
 add_subdirectory(Particle)
 add_subdirectory(TimeLoop)
 add_subdirectory(Utils)
+
+target_sources(GEMPICX PRIVATE
+                GEMPIC_ComputationalDomain.cpp)
