@@ -44,7 +44,7 @@ PROJECT_NAME           = "gempic"
 # entered, it will be relative to the location where Doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY = $(DOXYGEN_INTERNAL_OUTPUT_DIR)
+OUTPUT_DIRECTORY = $(DOXYGEN_OUTPUT_DIR)
 
 # This tag implements a quasi-intelligent brief description abbreviator that is
 # used to form the text in various listings. Each string in this list, if found
@@ -109,7 +109,7 @@ QUIET                  = YES
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../Src
+INPUT                  = ../Src
 
 # If the value of the INPUT tag contains directories, you can use the
 # FILE_PATTERNS tag to specify one or more wildcard patterns (like *.cpp and
@@ -149,7 +149,7 @@ EXAMPLE_PATTERNS       =
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = ../sphinx/_static/graphics/API
+IMAGE_PATH             = ./_static/graphics/API
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
@@ -227,6 +227,14 @@ LATEX_CMD_NAME         = latex
 # The default value is: NO.
 
 GENERATE_XML           = YES
+
+# The XML_OUTPUT tag is used to specify where the XML pages will be put. If a
+# relative path is entered the value of OUTPUT_DIRECTORY will be put in front of
+# it.
+# The default directory is: xml.
+# This tag requires that the tag GENERATE_XML is set to YES.
+
+XML_OUTPUT             = ./
 
 #---------------------------------------------------------------------------
 # Configuration options related to the preprocessor

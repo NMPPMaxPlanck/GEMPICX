@@ -163,6 +163,14 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "AMReX_SPACEDIM": "1"
             }
+        },
+        {
+            "name": "documentation",
+            "displayName": "Build only GEMPIC documentation",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+              "GEMPIC_BUILD_ONLY_DOCUMENTATION": "ON"
+            }
         }
     ]
 }

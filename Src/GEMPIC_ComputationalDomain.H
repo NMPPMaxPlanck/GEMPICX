@@ -43,7 +43,7 @@ namespace Gempic
  *
  * @ref DiscreteGrid::Position Node:
  * The degree of freedom is located on the cell nodes or on the boundareis of
- * the cell. Therefore N-2 cells in an axis have N-1 degrees of freedom.
+ * the cell. Therefore size-2 cells in an axis have size-1 degrees of freedom.
  *
  * @image html GEMPIC_DiscreteGridAxisNode.png
  *
@@ -67,7 +67,7 @@ public:
      * @brief Calculate the location of the given index in the interval
      *        [@ref DiscreteGrid::min, @ref DiscreteGrid::max] of the physical domain
      *
-     * @param idx : idx\f$\in[0,\f$ @ref DiscreteGrid::N - 1\f$]\f$
+     * @param idx : idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
      */
     AMREX_GPU_HOST_DEVICE
     amrex::Real location (Direction dir, int idx)

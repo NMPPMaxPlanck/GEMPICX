@@ -8,12 +8,14 @@ if(${REAL_CMAKE_BINARY_DIR} STREQUAL ${REAL_CMAKE_SOURCE_DIR})
                       "        Use `cmake -B /PATH/TO/BUILD/DIR ...` to set a different binary directory.")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(GEMPIC_BUILD_ONLY_DOCUMENTATION "Build only documentation." OFF)
 
-include(FetchContent)
-include(cmake/gempic_FetchContent_Declare.cmake)
-# Name of the project
+if(GEMPIC_BUILD_ONLY_DOCUMENTATION)
+  project("gempic-doc" LANGUAGES)
+  include(cmake/gempic_version.cmake)
+  add_subdirectory(doc)
+else()
+
 project("gempic")
 include(cmake/gempic_version.cmake)
 
@@ -30,8 +32,12 @@ endif()
 option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance" OFF)
 option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." ON)
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
-option(GEMPIC_BUILD_DOCUMENTATION "Build the documentation. Only builds if depencies are met." ON)
+option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build." OFF)
 
+include(FetchContent)
+include(cmake/gempic_FetchContent_Declare.cmake)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable Languages
 enable_language(CXX)
 if(GEMPIC_USE_CUDA)
@@ -79,7 +85,6 @@ target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/Utils")
 # Add subfolder with source files of the library
 add_subdirectory(Src)
 if(GEMPIC_BUILD_DOCUMENTATION)
-  # Add doxygen documentation
   add_subdirectory(doc)
 endif()
 if(GEMPIC_BUILD_EXAMPLES)
@@ -122,6 +127,8 @@ elseif(${CMAKE_BUILD_TYPE} MATCHES "Debug")
   message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS_DEBUG}")
 endif()
 if(GEMPIC_USE_CUDA)
-message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
-message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
+  message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
+  message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
 endif()
+
+endif() #CMAKE_BUILD_ONLY_DOCUMENTATION OFF
