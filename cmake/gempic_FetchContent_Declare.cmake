@@ -114,7 +114,7 @@ macro(gempic_FetchContent_Declare _name)
 
   if (${${_name}_FOUND})
     message(STATUS "Found ${_name} install: ${${_name}_DIR}")
-    message(NOTICE "No version check possible for installed packages. Proceed at your own risk.")
+    message(WARNING "No version compatibility check is executed for installed packages. Proceed at your own risk.")
   else()
     message(STATUS "Searching for ${_name} source folders ...")
     if(NOT DEFINED ${_name}_SOURCE_DIR)

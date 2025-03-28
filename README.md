@@ -54,16 +54,17 @@ Do not use a number larger than the number of cores of the systems processor.
 The following options can be added to the personal build configuration of CMake
 using `-D GEMPIC_OPTION Argument`
 
-| CMake Option                 | Description                                                                                      | Default Value |
-|------------------------------|--------------------------------------------------------------------------------------------------|---------------|
-| `AMReX_SPACEDIM`             | The dimension of the simulation (`1`, `2` or `3`)                                                | `3`           |
-| `GEMPIC_USE_CUDA`            | Use CUDA Backend of AMReX                                                                        | `OFF`         |
-| `GEMPIC_USE_OMP`             | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)                   | `OFF`         |
-| `GEMPIC_USE_CUDA`            | Use CUDA Backend of AMReX                                                                        | `OFF`         |
-| `GEMPIC_USE_LTO`             | Use Link-Time Optimization <br> (Turning it off reduces compile time, but may reduce performance)| `ON`          |
-| `GEMPIC_BUILD_TESTS`         | Build the tests. Currently only toggles unit tests.                                              | `ON`          |
-| `GEMPIC_BUILD_EXAMPLES`      | Build the examples. Currently only toggles all or none.                                          | `ON`          |
-| `GEMPIC_BUILD_DOCUMENTATION` | Build the documentation. Only builds if depencies are met.                                       | `ON`          |
+| CMake Option                      | Description                                                                                      | Default Value |
+|-----------------------------------|--------------------------------------------------------------------------------------------------|---------------|
+| `AMReX_SPACEDIM`                  | The dimension of the simulation (`1`, `2` or `3`)                                                | `3`           |
+| `GEMPIC_USE_CUDA`                 | Use CUDA Backend of AMReX                                                                        | `OFF`         |
+| `GEMPIC_USE_OMP`                  | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)                   | `OFF`         |
+| `GEMPIC_USE_CUDA`                 | Use CUDA Backend of AMReX                                                                        | `OFF`         |
+| `GEMPIC_USE_LTO`                  | Use Link-Time Optimization <br> (Turning it off reduces compile time, but may reduce performance)| `ON`          |
+| `GEMPIC_BUILD_TESTS`              | Build the tests. Currently only toggles unit tests.                                              | `ON`          |
+| `GEMPIC_BUILD_EXAMPLES`           | Build the examples. Currently only toggles all or none.                                          | `ON`          |
+| `GEMPIC_BUILD_DOCUMENTATION`      | Build the documentation.                                                                         | `OFF`         |
+| `GEMPIC_BUILD_ONLY_DOCUMENTATION` | Build only the documentation of GEMPIC                                                           | `OFF`         |
 
 
 # Quickstart Example

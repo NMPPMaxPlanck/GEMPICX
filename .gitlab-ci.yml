@@ -56,7 +56,7 @@ build-test_gcc_3D:
     - cmake -S . -B ./build --preset cpu-release-3D
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
 
 build-test_gcc_2D:
   extends:
@@ -65,7 +65,7 @@ build-test_gcc_2D:
     - cmake -S . -B ./build --preset cpu-release-2D
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
   needs: ["build-test_gcc_3D"]
 
 build-test_gcc_1D:
@@ -75,7 +75,7 @@ build-test_gcc_1D:
     - cmake -S . -B ./build --preset cpu-release-1D
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
   needs: ["build-test_gcc_3D"]
 
 .mpcdf-gpu-env:
@@ -102,7 +102,7 @@ build-test_gpu_3D:
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-3D
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gcc_3D"]
 
@@ -115,7 +115,7 @@ build-test_gpu_2D:
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-2D
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gpu_3D"]
 
@@ -128,7 +128,7 @@ build-test_gpu_1D:
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-1D
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gpu_2D"]
 
@@ -155,7 +155,7 @@ build-test_clang_cpu_3D:
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
@@ -165,7 +165,7 @@ build-test_clang_cpu_2D:
     - cmake --preset cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
@@ -175,7 +175,7 @@ build-test_clang_cpu_1D:
     - cmake --preset cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
     - cmake --build ./build -j $(($(nproc)-2))
     - cd build
-    - ctest --output-on-failure
+    - ctest --output-on-failure --no-tests=error
   needs: ["build-test_gcc_3D"]
 
 # Test that merge requests are "clean", i.e. with the proper style
@@ -212,9 +212,9 @@ pages:
     - pip3 install sphinx breathe sphinx_rtd_theme
   script:
     - source ./venv/bin/activate
-    - cmake -S doc -B ./build
-    - cmake --build ./build --target doc
-    - mv build/documentation/ public/
+    - cmake --preset documentation
+    - cmake --build ./build/documentation
+    - mv build/documentation/sphinx/ public/
   needs: []
   artifacts:
     paths:
