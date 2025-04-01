@@ -1287,6 +1287,12 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
     {
         m_data[comp].SumBoundary(0, m_data[comp].nComp(), m_deRham->get_n_ghost(),
                                  amrex::IntVect::Zero, m_deRham->get_periodicity());
+        // IMPORTANT: SumBoundary does not guarantee the same order of summation for overlapping
+        // degrees of freedom on all contributing boxes. The resulting differences in J are on the
+        // order of machine precision but can accumulate in the electric field D. OverrideSync
+        // ensures that the fields are consistent on all boxes. For the same reason, a fill_boundary
+        // is used instead of directly filling ghost cells in SumBoundary.
+        m_data[comp].OverrideSync(m_deRham->get_periodicity());
     }
     fill_boundary();
 }
@@ -1298,6 +1304,8 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
     m_data.SumBoundary(0, m_data.nComp(), m_deRham->get_n_ghost(), amrex::IntVect::Zero,
                        m_deRham->get_periodicity());
+    // See comment on OverrideSync in function for OneOrTwoForm above
+    m_data.OverrideSync(m_deRham->get_periodicity());
     fill_boundary();
 }
 
