@@ -58,14 +58,15 @@ int main (int argc, char *argv[])
         auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
         DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
-        DeRhamField<Grid::primal, Space::edge> eFiltered(deRham, funcE);
+        DeRhamField<Grid::primal, Space::edge> eFiltered(deRham);
         DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
         DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
         DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
-        DeRhamField<Grid::dual, Space::face> J(deRham, "J");
-        DeRhamField<Grid::dual, Space::face> jFiltered(deRham);
-        DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
-        DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham);
+        DeRhamField<Grid::dual, Space::face> J(deRham);
+        DeRhamField<Grid::dual, Space::face> jFiltered(deRham, "J"); // Filtered J for diagnostics
+        DeRhamField<Grid::dual, Space::cell> rho(deRham);
+        DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham,
+                                                         "rho"); // Filtered rho for diagnostics
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
         DeRhamField<Grid::primal, Space::edge> ephi(deRham);
         DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
@@ -134,11 +135,9 @@ int main (int argc, char *argv[])
             biFilter->apply_stencil(rhoFiltered, rho);
 
             // solve Poisson
-            poisson->solve(phi, rho);
+            poisson->solve(phi, rhoFiltered);
             deRham->a_times_grad(ephi, phi, -1);
             E += ephi;
-            // Filtered E needed for pushing the particles (for symmetry with J filtering)
-            biFilter->apply_stencil(eFiltered, E);
             deRham->hodge(D, E, deRham->scaling_eto_d());
             // compute div D for diagnostics
             deRham->div(divD, D);
@@ -151,6 +150,10 @@ int main (int argc, char *argv[])
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+
+                // Filtered E needed for pushing the particles (for symmetry with J filtering
+                // needed for energy conservation)
+                biFilter->apply_stencil(eFiltered, E);
 
                 // initialize rho and J to 0 for particle loop
                 rho.m_data.setVal(0.0);
@@ -181,7 +184,7 @@ int main (int argc, char *argv[])
                         for (int cc = 0; cc < vdim; cc++)
                         {
                             jA[cc] = (J.m_data[cc])[pti].array();
-                            eA[cc] = (eFiltered.m_data[cc])[pti].array();
+                            eA[cc] = (eFiltered.m_data[cc])[pti].array(); // Filtered E for pushing
                             bA[cc] = (B.m_data[cc])[pti].array();
                         }
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
@@ -227,12 +230,12 @@ int main (int argc, char *argv[])
                 }
                 J.post_particle_loop_sync();
 
-                // Apply filter and compute phi with filtered rho
+                // Apply filter and compute D with filtered J
                 biFilter->apply_stencil(jFiltered, J);
                 // Update D (field part of H_p_i)
                 D -= jFiltered;
 
-                // Filtered E needed for pushing the particles (for symmetry with J filtering)
+                // Filtered E needed for pushing the particles
                 deRham->hodge(E, D, deRham->scaling_dto_e());
                 biFilter->apply_stencil(eFiltered, E);
 
@@ -297,6 +300,8 @@ int main (int argc, char *argv[])
                 rho.post_particle_loop_sync();
                 // Add background charge (needs to be done after post_particle_loop_sync)
                 rho += rhoBackground * infra.cell_volume();
+                // Filtered rho used for diagnostics
+                biFilter->apply_stencil(rhoFiltered, rho);
 
                 operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
 

@@ -110,6 +110,41 @@ TEST_P(BilinearFilterTestParameter, ConstantTest)
 
 INSTANTIATE_TEST_SUITE_P(FilterPasses, BilinearFilterTestParameter, testing::Range(0, 4));
 
+TEST_F(BilinearFilterTest, LinearTest)
+{
+    amrex::ParmParse pp;
+    pp.add("Filter.enable", true);
+    std::vector<int> filterNpass{AMREX_D_DECL(1, 1, 1)};
+    pp.addarr("Filter.nPass", filterNpass);
+
+    const std::string linearRho{AMREX_D_PICK("x", "1 + x + 2 * y + x * y", "x + y + z")};
+    amrex::Parser parserRho;
+    parserRho.define(linearRho);
+    parserRho.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    auto funcRho = parserRho.compile<nVar>();
+
+    const int hodgeDegree{4}; // need 1 ghost cell per pass
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+    // Define fields
+    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham, funcRho);
+    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham, funcRho);
+
+    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
+    int srcCompBegIn{0};
+    int dstCompBegIn{0};
+    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+
+    for (amrex::MFIter mfi(rhoIn.m_data); mfi.isValid(); ++mfi)
+    {
+        // Expect filter not to change linear function
+        const amrex::Box &bx = mfi.tilebox();
+        const amrex::Box &interiorBox = amrex::grow(bx, -1); // remove boundary terms
+        COMPARE_FIELDS(rhoIn.m_data.array(mfi), rhoOut.m_data.array(mfi), interiorBox);
+    }
+}
+
 TEST_F(BilinearFilterTest, NoFilter)
 {
     amrex::ParmParse pp;
@@ -145,6 +180,7 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
     // Define fields
     DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
     DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
+    DeRhamField<Grid::dual, Space::cell> rhoOutExpected(deRham);
 
     rhoIn.m_data.setVal(0.0);
     rhoOut.m_data.setVal(0.0);
@@ -157,17 +193,25 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
     std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
     int srcCompBegIn{0};
     int dstCompBegIn{0};
-    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
         const amrex::Box &bx = mfi.tilebox();
         amrex::Array4<amrex::Real> const &rhoInArr = rhoIn.m_data.array(mfi);
+        amrex::Array4<amrex::Real> const &rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
+
+        set_rho_parallel_for(rhoInArr, rhoOutExpArr, bx);
+    }
+
+    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+
+    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
+    {
+        const amrex::Box &bx = mfi.tilebox();
         amrex::Array4<amrex::Real> const &rhoOutArr = rhoOut.m_data.array(mfi);
+        amrex::Array4<amrex::Real> const &rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
 
-        set_rho_parallel_for(rhoInArr, rhoOutArr, bx);
-
-        COMPARE_FIELDS(rhoInArr, rhoOutArr, bx);
+        COMPARE_FIELDS(rhoOutArr, rhoOutExpArr, bx);
     }
 }
 

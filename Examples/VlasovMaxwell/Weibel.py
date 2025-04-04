@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.14.1
+#       jupytext_version: 1.16.7
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
@@ -132,7 +132,7 @@ fig.legend()
 
 # %%
 # read electric energy
-tabE=pd.read_csv("ReducedDiagnostics/ElecEnergy.txt",delim_whitespace=True)
+tabE=pd.read_csv("ReducedDiagnostics/ElecEnergy.txt",sep=r'\s+')
 #tab.plot(1,2)
 time = tabE.values[:,1]
 ex2 = tabE.values[:,2]
@@ -141,7 +141,7 @@ ez2 = tabE.values[:,4]
 etot = ex2+ey2+ez2
 # read magnetic energy
 try:
-    tabB=pd.read_csv("ReducedDiagnostics/MagEnergy.txt",delim_whitespace=True)
+    tabB=pd.read_csv("ReducedDiagnostics/MagEnergy.txt",sep=r'\s+')
     tB = tabB.values[:,1]
     bx2 = tabB.values[:,2]
     by2 = tabB.values[:,3]
@@ -154,7 +154,7 @@ except:
 btot = bx2+by2+bz2
 # read particle diagnostics
 try:
-    tabPart=pd.read_csv("ReducedDiagnostics/Part.txt",delim_whitespace=True)
+    tabPart=pd.read_csv("ReducedDiagnostics/Part.txt",sep=r'\s+')
     tPart = tabPart.values[:,1]
     px = tabPart.values[:,2]
     py = tabPart.values[:,3]
@@ -166,7 +166,7 @@ except:
 
 # read error on Gauss law
 try:
-    tabGauss=pd.read_csv("ReducedDiagnostics/GaussError.txt",delim_whitespace=True)
+    tabGauss=pd.read_csv("ReducedDiagnostics/GaussError.txt",sep=r'\s+')
     tGauss = tabGauss.values[:,1]
     gaussError = tabGauss.values[:,2]
 except:
@@ -198,7 +198,7 @@ ax.semilogy(time, bz2)
 ax.semilogy(time, ex2)
 ax.semilogy(time, ey2)
 ax.semilogy(time, by2)
-ax.semilogy(time,2e-8*np.exp(2*0.02784*time))
+ax.semilogy(time,8e-10*np.exp(2*0.02784*time))
 ax.set_xlabel('time')
 ax.set_ylabel('$Bz^2$')
 ax.set_ylim([1e-7,1e-1])
@@ -228,7 +228,7 @@ print("frequency", freq_av)
 print(slope[:-1]/2)
 print(2*freq[:-1])
 #print(imax)
-print(by2[0],bz2[0])
+#print(by2[0],bz2[0])
 
 # %%
 # Plot |E2|**2, |B3|**2 actual and theoretical growth rate

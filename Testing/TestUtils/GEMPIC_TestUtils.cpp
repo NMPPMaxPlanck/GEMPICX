@@ -83,7 +83,6 @@ void compare_fields (const char file[],
                         << file << ":" << line
                         << ": Unequal arrays.\nIndices: " << string_array(idx, AMREX_SPACEDIM)
                         << "\tComponent: " << comp;
-                    break;
                 }
             }
         }

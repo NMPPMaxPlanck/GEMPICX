@@ -69,16 +69,16 @@ public:
     {
         BL_PROFILE("Gempic::Filter::Filter::apply_stencil()");
 
+        if (!m_useFilter)
+        {
+            // just copy
+            copy(dstField, srcField);
+            return;
+        }
         // loop over the 3 directions
         for (int d{0}; d < 3; ++d)
         {
             ncomp = std::min(ncomp, srcField.m_data[d].nComp());
-            if (!m_useFilter)
-            {
-                // just copy
-                copy(dstField, srcField);
-                continue;
-            }
 
             for (amrex::MFIter mfi(dstField.m_data[d]); mfi.isValid(); ++mfi)
             {
