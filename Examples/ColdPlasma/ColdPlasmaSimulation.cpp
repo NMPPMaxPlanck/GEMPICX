@@ -117,7 +117,7 @@ int main (int argc, char* argv[])
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 
                 // He,field (also computes E from D, needed in He,particle)
-                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, E, deRham, D, 0.5 * dt);
                 deRham->hodge(auxDualF2, E); // Copy?? -> diagonal, same cost?
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;
@@ -127,7 +127,7 @@ int main (int argc, char* argv[])
                 apply_h_j(jFieldT, D, deRham, funcBBackground, dt);
 
                 //He,field
-                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, E, deRham, D, 0.5 * dt);
                 deRham->hodge(auxDualF2, E);
                 auxDualF2 *= -0.5 * dt;
                 auxDualF2 *= funcDensityField;

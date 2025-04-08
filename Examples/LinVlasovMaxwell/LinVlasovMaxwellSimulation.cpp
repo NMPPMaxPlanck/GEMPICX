@@ -199,7 +199,7 @@ int main (int argc, char *argv[])
                 // Hb
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
                 // He,field (also computes E from D, needed in He,particle)
-                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, E, deRham, D, 0.5 * dt);
 
                 // Deposit particles in J and push particles: H_p = H_p1 + H_p2 + H_p3
                 for (int comp = 0; comp < 3; ++comp)
@@ -363,7 +363,7 @@ int main (int argc, char *argv[])
                 }
 
                 //He,field
-                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+                operatorHamilton.apply_h_e_field(B, E, deRham, D, 0.5 * dt);
                 //Hb
                 operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
 

@@ -153,13 +153,13 @@ public:
         for (int i = 0; i < nt; ++i)
         {
             // solve Faraday equation for a half step
-            operatorHamilton.apply_h_e_field(B, deRham, E, D, dt / 2);
+            operatorHamilton.apply_h_e_field(B, E, deRham, D, dt / 2);
 
             // solve Ampère equation for a full step
             operatorHamilton.apply_h_b(D, deRham, B, H, dt);
 
             // solve Faraday equation for a half step
-            operatorHamilton.apply_h_e_field(B, deRham, E, D, dt / 2);
+            operatorHamilton.apply_h_e_field(B, E, deRham, D, dt / 2);
         }
 
         dError = 0;

@@ -319,15 +319,15 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
     fields = {0., 0.};
     constexpr int degX = SplineType::s_splineDegrees[xDir];
 
-    for (int k = 0; k <= degX; ++k)
+    for (int ii = 0; ii <= degX; ++ii)
     {
-        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][k];
-        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][k];
-        amrex::Real primitiveDifferenceEuler = dtv * xNodeVal;
+        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
+        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
 
-        amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<yDir>(0, 0, k);
-        update_j_component<yDir, zDir, xDir>(jArray, spline, cellIndex, 0, 0, chargeWeight,
-                                             primitiveDifferenceEuler);
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+
+        amrex::HostDevice::Atomic::Add(jArray[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                                       chargeWeight * dtv * xNodeVal);
 
         fields[0] += xNodeVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
 
@@ -369,48 +369,62 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     fields = {0., 0.};
 
     constexpr int degX = SplineType::s_splineDegrees[xDir];
-#if AMREX_SPACEDIM == 2
-    constexpr int degY = SplineType::s_splineDegrees[yDir];
-#elif AMREX_SPACEDIM == 1
-    constexpr int k = 0;
-    constexpr int yNodeVal = 1;
-    constexpr int yCellVal = 1;
-#endif
 
-    for (int j = 0; j <= degX; ++j)
+#if AMREX_SPACEDIM == 1
+    constexpr int jj = 0;
+
+    for (int ii = 0; ii <= degX; ++ii)
     {
-        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][j];
-        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][j];
+        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
+        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
 
-#if AMREX_SPACEDIM == 2
-        for (int k = 0; k <= degY; ++k)
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+
+        double sCoeff = chargeWeight * dtv * xNodeVal;
+
+        amrex::HostDevice::Atomic::Add(jArray[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                                       sCoeff);
+
+        if (ii < degX)
         {
-            amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][k];
-            amrex::Real yCellVal = spline.m_cellSplineVals[yDir][k];
-#endif
-            amrex::Real primitiveDifferenceEuler = dtv * xNodeVal;
+            fields[0] += xCellVal * (bArray[yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+        }
+        fields[1] += xNodeVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+    }
 
-            amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<zDir>(0, j, k);
-            update_j_component<zDir, yDir, xDir>(jArray, spline, cellIndex, k, 0, chargeWeight,
-                                                 primitiveDifferenceEuler);
-#if AMREX_SPACEDIM == 2
-            if (j < degX)
+#elif AMREX_SPACEDIM == 2
+    constexpr int degY = SplineType::s_splineDegrees[yDir];
+    for (int ii = 0; ii <= degX; ++ii)
+    {
+        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
+        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
+
+        for (int jj = 0; jj <= degY; ++jj)
+        {
+            amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][jj];
+            amrex::Real yCellVal = spline.m_cellSplineVals[yDir][jj];
+            amrex::Dim3 cellIndex = {
+
+                GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj, 0)};
+
+            double sCoeff = chargeWeight * dtv * xNodeVal * yNodeVal;
+
+            amrex::HostDevice::Atomic::Add(
+                jArray[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0), sCoeff);
+
+            if (ii < degX)
             {
-#endif
                 fields[0] +=
                     xCellVal * yNodeVal * (bArray[yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-#if AMREX_SPACEDIM == 2
             }
-            if (k < degY)
+            if (jj < degY)
             {
-#endif
                 fields[1] +=
                     xNodeVal * yCellVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-#if AMREX_SPACEDIM == 2
             }
         }
-#endif
     }
+#endif
 }
 #endif
 

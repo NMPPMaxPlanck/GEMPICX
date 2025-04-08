@@ -148,9 +148,17 @@ int main (int argc, char *argv[])
 
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
-                operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
+                // Solve Ampere-Maxwell with no current
+                // This step is equivalent to the apply_h_B step
+                // in the Hamiltonian Splitting scheme
+                deRham->hodge(H, B, deRham->scaling_bto_h());
+                deRham->add_dt_curl(D, H, 0.5 * dt);
 
-                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+                // Solve the Faraday equation
+                // This step is equivalent to the apply_h_e_field step
+                // in the Hamiltonian Splitting scheme
+                deRham->hodge(E, D, deRham->scaling_dto_e());
+                deRham->add_dt_curl(B, E, -0.5 * dt);
 
                 // initialize rho and J to 0 for particle loop
                 rho.m_data.setVal(0.0);
@@ -298,9 +306,19 @@ int main (int argc, char *argv[])
                 // Add background charge (needs to be done after post_particle_loop_sync)
                 rho += rhoBackground * infra.cell_volume();
 
-                operatorHamilton.apply_h_e_field(B, deRham, E, D, 0.5 * dt);
+                // Solve the Faraday equation
+                // This step is equivalent to the apply_h_e_field step
+                // in the Hamiltonian Splitting scheme
+                // The hodge does not have to be computed again
+                // since it does not change from the last function
+                // call
+                deRham->add_dt_curl(B, E, -0.5 * dt);
 
-                operatorHamilton.apply_h_b(D, deRham, B, H, 0.5 * dt);
+                // Solve Ampere-Maxwell with no current
+                // This step is equivalent to the apply_h_B step
+                // in the Hamiltonian Splitting scheme
+                deRham->hodge(H, B, deRham->scaling_bto_h());
+                deRham->add_dt_curl(D, H, 0.5 * dt);
 
                 // compute div D for diagnostics
                 deRham->div(divD, D);
