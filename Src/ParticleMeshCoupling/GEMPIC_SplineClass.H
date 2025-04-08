@@ -964,7 +964,7 @@ public:
         }
         first_derivative_eval<deg, SplineBase<degX, degY, degZ>::s_maxDeg + 1>(
             refOffset, m_nodeSplineFirstDerivs[dir]);
-        for (size_t i{0}; i < deg; i++)
+        for (size_t i{0}; i < deg + 1; i++)
         {
             m_nodeSplineFirstDerivs[dir][i] *= dxInverseDir;
         }

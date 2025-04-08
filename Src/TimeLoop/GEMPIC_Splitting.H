@@ -339,15 +339,15 @@ public:
      * @brief solves equation (He_field), ie the Faraday equation
      *
      * @param[out] B : magnetic field as primal 2-form (modified by the function)
+     * @param[out] E : electric field as primal 1-form (temporary field)
      * @param deRham : object describing the discrete de Rham sequence
-     * @param E : electric field as primal 1-form (temporary field)
      * @param D : electric field as dual 2-form (input of the function)
      * @param dt : time step
      *
      */
     inline void apply_h_e_field (DeRhamField<Grid::primal, Space::face>& B,
-                                 std::shared_ptr<FDDeRhamComplex> deRham,
                                  DeRhamField<Grid::primal, Space::edge>& E,
+                                 std::shared_ptr<FDDeRhamComplex> deRham,
                                  DeRhamField<Grid::dual, Space::face>& D,
                                  const amrex::Real dt)
     {

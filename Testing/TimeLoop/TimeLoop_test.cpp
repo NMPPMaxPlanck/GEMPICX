@@ -667,7 +667,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
                                                                bA, jA);
 
         // B field is constant
-        EXPECT_NEAR(cellSumX * dxdy[1] * valBy, bfields[0], 1e-12);
+        EXPECT_NEAR(cellSumXhalf * dxdy[1] * valBy, bfields[0], 1e-12);
         EXPECT_NEAR(nodeSumX * valBx, bfields[1], 1e-12);
 
 #elif AMREX_SPACEDIM == 2
@@ -898,7 +898,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields,
                                                           m_infra.geometry().CellSizeArray(), jA,
                                                           bA, chargeOverMass, chargeWeight, dt);
-        EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By * dxdy[1] * cellSumX, vel[xDir],
+        EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By * dxdy[1] * cellSumXhalf, vel[xDir],
                     1e-12);
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx * nodeSumX, vel[yDir], 1e-12);
 
