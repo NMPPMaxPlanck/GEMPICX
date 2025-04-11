@@ -587,7 +587,9 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     amrex::Real errorByNorm0 = errorB.m_data[yDir].norm0();
     amrex::Real errorBzNorm0 = errorB.m_data[zDir].norm0();
 
-    EXPECT_NEAR(0, std::max({errorBxNorm0, errorByNorm0, errorBzNorm0}), m_tol);
+    EXPECT_NEAR(0, errorBxNorm0, m_tol);
+    EXPECT_NEAR(0, errorByNorm0, m_tol);
+    EXPECT_NEAR(0, errorBzNorm0, m_tol);
 
     // same test on dual grid
     DeRhamField<Grid::dual, Space::edge> H(deRham);
@@ -713,7 +715,9 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     amrex::Real errorDyNorm0 = errorD.m_data[yDir].norm0();
     amrex::Real errorDzNorm0 = errorD.m_data[zDir].norm0();
 
-    EXPECT_NEAR(0, std::max({errorDxNorm0, errorDyNorm0, errorDzNorm0}), m_tol);
+    EXPECT_NEAR(0, errorDxNorm0, m_tol);
+    EXPECT_NEAR(0, errorDyNorm0, m_tol);
+    EXPECT_NEAR(0, errorDzNorm0, m_tol);
 }
 
 TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)

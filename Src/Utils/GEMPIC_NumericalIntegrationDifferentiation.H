@@ -1,0 +1,154 @@
+#include <array>
+#include <type_traits>
+
+#include <AMReX_GpuQualifiers.H>
+#include <AMReX_REAL.H>
+
+#include "GEMPIC_Config.H"
+
+namespace Gempic
+{
+// clang-format off
+/**
+ * @brief Gauss-Legendre quadrature for integration of finite intervals
+ *
+ * @details Implements integration stencils with points in {@ref s_minPoints,...,@ref s_maxPoints}
+ * 
+ * @todo Add concepts with C++20 for template parameter `Function`
+ */
+// clang-format on
+class GaussQuadrature
+{
+public:
+    GaussQuadrature(int points);
+    // clang-format off
+    /**
+     * @brief Approximates
+     * \f[
+     *      \int_{m - hw}^{m + hw} f(x) \mathrm{d}x
+     * \f]
+     * with Gauss quadrature
+     * 
+     * @details Example on how to integrate a 1D subset of a 2D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} f(x_0,y) \mathrm{d}y \f$
+     * @code{cpp}
+     * GaussQuadrature integrate{3};
+     * auto fy = [&](amrex::Real y) {
+     *             return f(x0,y);
+     *           };
+     * integrate.line(y0, dy/2, fy);
+     * @endcode
+     */
+    // clang-format on
+    template <typename Function1D>
+    inline AMREX_GPU_HOST_DEVICE amrex::Real line (amrex::Real const &midpoint,
+                                                   amrex::Real const &halfWidth,
+                                                   Function1D const &f) const
+    {
+        static_assert(
+            std::is_invocable_r_v<amrex::Real, Function1D, amrex::Real>,
+            "'Function1D const &f' has no callable interface matching amrex::Real(amrex::Real)");
+        amrex::Real integral{};
+        for (int ix{0}; ix < m_points; ix++)
+        {
+            amrex::Real x{midpoint + halfWidth * m_location[ix]};
+            integral += m_weights[ix] * f(x);
+        }
+        return integral * halfWidth;
+    }
+    // clang-format off
+    /**
+     * @brief Approximates
+     * \f[
+     *      \int_{m[0] - hw[0]}^{m[0] + hw[0]} \int_{m[1] - hw[1]}^{m[1] + hw[1]} f(x,y) \mathrm{d}y \mathrm{d}x
+     * \f]
+     * with Gauss quadrature
+     * 
+     * @details Example on how to integrate a 2D subset of a 3D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z_0) \mathrm{d}x\mathrm{d}y \f$
+     * @code{cpp}
+     * GaussQuadrature integrate{3};
+     * auto fxy = [&](amrex::Real x, amrex::Real y) {
+     *             return f(x,y,z0);
+     *           };
+     * integrate.surface({x0,y0}, {dx/2,dy/2}, fxy);
+     * @endcode
+     */
+    // clang-format on
+    template <typename Function2D>
+    inline AMREX_GPU_HOST_DEVICE amrex::Real surface (std::array<amrex::Real, 2> const &midpoint,
+                                                      std::array<amrex::Real, 2> const &halfWidth,
+                                                      Function2D const &f) const
+    {
+        static_assert(std::is_invocable_r_v<amrex::Real, Function2D, amrex::Real, amrex::Real>,
+                      "'Function2D const &f' has no callable interface matching "
+                      "amrex::Real(amrex::Real, amrex::Real)");
+        amrex::Real integral{};
+        for (int ix{0}; ix < m_points; ix++)
+        {
+            amrex::Real x{midpoint[0] + halfWidth[0] * m_location[ix]};
+            for (int iy{0}; iy < m_points; iy++)
+            {
+                amrex::Real y{midpoint[1] + halfWidth[1] * m_location[iy]};
+                integral += m_weights[ix] * m_weights[iy] * f(x, y);
+            }
+        }
+        return integral * halfWidth[0] * halfWidth[1];
+    }
+    // clang-format off
+    /**
+     * @brief Approximates
+     * \f[
+     *      \int_{m[0] - hw[0]}^{m[0] + hw[0]} \int_{m[1] - hw[1]}^{m[1] + hw[1]} \int_{m[2] - hw[2]}^{m[2] + hw[2]} f(x,y,z) \mathrm{d}z \mathrm{d}y \mathrm{d}x
+     * \f]
+     * with Gauss quadrature
+     * 
+     * @details Example on how to integrate a 3D subset of a 4D function \f$ \int_{z_0-\Delta z/2}^{z_0+\Delta z/2} \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z, t_0) \mathrm{d}x\mathrm{d}y\mathrm{d}z \f$
+     * @code{cpp}
+     * GaussQuadrature integrate{3};
+     * auto fxyz = [&](amrex::Real x, amrex::Real y, amrex::Real z) {
+     *             return f(x,y,z,t0);
+     *           };
+     * integrate.volume({x0,y0,z0}, {dx/2,dy/2,dz/2}, fxyz);
+     * @endcode
+     */
+    // clang-format on
+    template <typename Function3D>
+    inline AMREX_GPU_HOST_DEVICE amrex::Real volume (std::array<amrex::Real, 3> const &midpoint,
+                                                     std::array<amrex::Real, 3> const &halfWidth,
+                                                     Function3D const &f) const
+    {
+        static_assert(
+            std::is_invocable_r_v<amrex::Real, Function3D, amrex::Real, amrex::Real, amrex::Real>,
+            "'Function3D const &f' has no callable interface matching amrex::Real(amrex::Real, "
+            "amrex::Real, amrex::Real)");
+        amrex::Real integral{};
+        for (int ix{0}; ix < m_points; ix++)
+        {
+            amrex::Real x{midpoint[0] + halfWidth[0] * m_location[ix]};
+            for (int iy{0}; iy < m_points; iy++)
+            {
+                amrex::Real y{midpoint[1] + halfWidth[1] * m_location[iy]};
+                for (int iz{0}; iz < m_points; iz++)
+                {
+                    amrex::Real z{midpoint[2] + halfWidth[2] * m_location[iz]};
+                    integral += m_weights[ix] * m_weights[iy] * m_weights[iz] * f(x, y, z);
+                }
+            }
+        }
+        return integral * halfWidth[0] * halfWidth[1] * halfWidth[2];
+    }
+
+    // NOLINTBEGIN(readability-magic-numbers)
+    //! Smallest Gauss-Legendre integration stencil
+    static constexpr int s_minPoints{1};
+    //! Largest Gauss-Legendre integration stencil
+    static constexpr int s_maxPoints{10};
+    // NOLINTEND(readability-magic-numbers)
+private:
+    int m_points{};
+    static constexpr int s_nGaussFormulas{s_maxPoints - s_minPoints + 1};
+    const std::array<amrex::Real, s_maxPoints> m_location;
+    const std::array<amrex::Real, s_maxPoints> m_weights;
+    static std::array<amrex::Real, s_maxPoints> location(int points);
+    static std::array<amrex::Real, s_maxPoints> weights(int points);
+};
+} // namespace Gempic

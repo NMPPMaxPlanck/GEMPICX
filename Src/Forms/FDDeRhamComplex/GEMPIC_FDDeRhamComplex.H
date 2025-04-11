@@ -227,12 +227,6 @@ private:
     amrex::MultiFab m_tempPrimalThreeForm;
     amrex::MultiFab m_tempDualThreeForm;
 
-    // m_nGaussFormulas Gauss quadrature rules with up to m_maxGaussNodes nodes
-    static const int s_m_nGaussFormulas = 10;
-    static const int s_m_maxGaussNodes = 10;
-    amrex::Array<amrex::GpuArray<amrex::Real, s_m_maxGaussNodes>, s_m_nGaussFormulas> m_quadPoints;
-    amrex::Array<amrex::GpuArray<amrex::Real, s_m_maxGaussNodes>, s_m_nGaussFormulas> m_quadWeights;
-
     // define scaling parameters for the Hodges
     amrex::Real m_sV;
     amrex::Real m_sOmega;

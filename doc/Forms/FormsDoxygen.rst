@@ -17,6 +17,8 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::Forms::DeRhamComplex
    :members:
 
+.. doxygenclass:: Gempic::GaussQuadrature
+
 .. toctree::
     :maxdepth: 2
 
