@@ -9,6 +9,15 @@
 
 namespace Gempic::FieldSolvers
 {
+/** @brief Hypre Poisson solver
+ *
+ *  Solves the equation \f$ -\tilde{D}HG \phi = \rho \f$ for \f$\phi\f$ using the Hypre library.
+ *
+ * @tparam hodgeDegree
+ *
+ * @param[out] phi The solution vector
+ * @param rho The right-hand side vector
+ */
 template <int hodgeDegree>
 class HypreLinearSystem : public PoissonSolverMethod
 {
@@ -154,12 +163,8 @@ public:
 
     /**
      *
-     * @param[out] phi : The solution vector
-     * @param rho : The right-hand side vector
-     *
-     * @return void
-     *
-     * @throws None
+     * @param[out] phi The solution vector
+     * @param rho The right-hand side vector
      */
     void solve (DeRhamField<Grid::primal, Space::node>& phi,
                 DeRhamField<Grid::dual, Space::cell>& rho) override

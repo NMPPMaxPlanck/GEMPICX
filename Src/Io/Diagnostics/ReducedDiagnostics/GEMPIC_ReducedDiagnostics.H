@@ -20,7 +20,6 @@
 
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
-#include <AMReX_ParmParse.H>
 #include <AMReX_REAL.H>
 
 #include "GEMPIC_Fields.H"

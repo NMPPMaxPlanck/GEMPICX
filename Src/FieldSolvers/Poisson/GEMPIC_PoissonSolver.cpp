@@ -52,14 +52,10 @@ public:
                     DeRhamField<Grid::primal, Space::node>& phi);
 };
 
-/**
- * @brief Construct a new Poisson Solver:: Poisson Solver object
- *
- * @param deRham
- * @param infra
- */
-std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::make_poisson_solver (
-    std::shared_ptr<DeRhamComplex> deRham, const Gempic::ComputationalDomain& infra)
+std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_poisson_solver (
+    std::shared_ptr<DeRhamComplex> deRham,
+    const Gempic::ComputationalDomain& infra,
+    const std::string& solver)
 {
     int maxCoarseningLevel = 10;
     int maxIter = 100;
@@ -67,23 +63,6 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::make_poisson_solver (
     int maxFmgIter = 0;
     int verbose = Gempic::Utils::Verbosity::level();
     int bottomVerbose = verbose;
-
-    Gempic::Io::Parameters params("PoissonSolver", "function make_poisson_solver");
-    // Solver defaults:
-    // If periodic and FFT was compiled: FFT
-    // Else if hypre was compiled:       Hypre
-    // Else                              ConjugateGradient
-    std::string solver{"ConjugateGradient"};
-#ifdef AMREX_USE_HYPRE
-    solver = "Hypre";
-#endif
-#ifdef AMREX_USE_FFT
-    if (infra.geometry().isAllPeriodic())
-    {
-        solver = "FFT";
-    }
-#endif
-    params.get_or_set("solver", solver);
 
     if (solver == "Amrex")
     {
@@ -227,15 +206,6 @@ AmrexSolver::AmrexSolver(const ComputationalDomain& compDom,
     m_mlmg->setBottomSolver(amrex::BottomSolver::cg);
 }
 
-/**
- * Solves the Poisson equation for the given dual and primal fields using the second order AMReX
- * nodal Poisson solver
- *
- * @param[out] phi : The primal field to store the solution of the equation.
- * @param rho : The dual field representing the right-hand side of the equation.
- *
- * @throws None
- */
 void AmrexSolver::solve (Forms::DeRhamField<Grid::primal, Space::node>& phi,
                         Forms::DeRhamField<Grid::dual, Space::cell>& rho)
 {
@@ -262,10 +232,8 @@ PoissonApply::PoissonApply(std::shared_ptr<DeRhamComplex> deRham) :
  * The Poisson operator applies successively the grad, the hodge operator and the divergence
  * The order of the solver is hodgedegree
  *
- * @param[out] rho : The dual field to store the result of the operator application.
- * @param phi : The primal field to apply the operator to.
- *
- * @throws None
+ * @param[out] rho The dual field to store the result of the operator application.
+ * @param phi The primal field to apply the operator to.
  */
 void PoissonApply::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
                               DeRhamField<Grid::primal, Space::node>& phi)
@@ -298,11 +266,9 @@ PoissonApplyInverseHodge::PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex
  * fields. The order of the solver is hodgedegree - 2 (for hodgedegree = 4 and 6) and 2 for
  * hodgedegree = 2, for which Hodge is diagonal
  *
- * @param[out] rho : The dual field to store the result of the operator application after inverse
+ * @param[out] rho The dual field to store the result of the operator application after inverse
  * Hodge transformation.
- * @param phi : The primal field to apply the operator to.
- *
- * @return None
+ * @param phi The primal field to apply the operator to.
  */
 void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
                                           DeRhamField<Grid::primal, Space::node>& phi)

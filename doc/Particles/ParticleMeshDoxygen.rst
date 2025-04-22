@@ -1,4 +1,4 @@
-.. _api_Particles:
+.. _api_ParticleMesh:
 
 API: Particle Mesh Coupling
 ===========================

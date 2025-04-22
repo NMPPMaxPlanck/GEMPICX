@@ -92,17 +92,15 @@ FDDeRhamComplex::~FDDeRhamComplex() {}
 /**
  * @brief Computes the Restriction operator \f$R_0\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedeom:
  * Evaluates func at time t on the nodes of the primal grid
  *
  * For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
- *
- * @return void
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
@@ -158,18 +156,16 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
 /**
  * @brief Computes the Restriction operator \f$R_3\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedeom:
  * Integrates func at time t over the cells of the primal grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
- * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
- *
- * @return void
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
+ * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
@@ -241,18 +237,16 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
 /**
 * @brief Computes the Restriction operator \f$\tilde{R}_0\f$
 *
-* Description:
+* @details
 * Using the geometric degrees of freedom:
 * Evaluates func at time t on the nodes of the dual grid
 *
 * For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
 *
 
-* @param funcs : ParserExecutor, functions to be projected
-* @param t : Real, time at which func is to be evaluated
-* @param field : DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
-*
-* @return void
+* @param funcs ParserExecutor, functions to be projected
+* @param t Real, time at which func is to be evaluated
+* @param field DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
 */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
@@ -310,19 +304,17 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
 /**
  * @brief Computes the Restriction operator \f$\tilde{R}_3\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom:
  * Integrates func at time t over the cells of the dual grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$ holding the cell
- *                integrals
- * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
- *
- * @return void
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$ holding the cell
+ * integrals
+ * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
@@ -395,19 +387,17 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
 /**
  * @brief Computes the Restriction operator \f$\tilde{R}_1\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedeom:
  * Integrates func at time t over the edges of the dual grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
- * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
- *
- * @return void
+ * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
@@ -509,18 +499,16 @@ inline void FDDeRhamComplex::projection(
 /**
  * @brief Computes the Restriction operator \f$R_2\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedeom:
  * Integrates func at time t over the faces of the primal grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
- * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
- *
- * @return void
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face integrals
+ * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
@@ -648,18 +636,16 @@ inline void FDDeRhamComplex::projection(
 /**
  * @brief Computes the Restriction operator \f$R_1\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedeom:
  * Integrates func at time t over the edges of the primal grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
- * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
- *
- * @return void
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge integrals
+ * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
@@ -760,19 +746,17 @@ inline void FDDeRhamComplex::projection(
 /**
  * @brief Computes the Restriction operator \f$\tilde{R}_2\f$
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedeom:
  * Integrates func at time t over the faces of the dual grid by using a Gauss quadrature rule
  *
  * For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
  *
- * @param funcs : ParserExecutor, functions to be projected
- * @param t : Real, time at which func is to be evaluated
- * @param field : DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$ holding the face
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param field DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$ holding the face
  * integrals
- * @param gaussNodes: int, number of Gauss nodes to be used for quadratue
- *
- * @return void
+ * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
     const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,

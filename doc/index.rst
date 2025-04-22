@@ -27,7 +27,10 @@ Table of Contents
    Forms/Forms
    Particles/Particles
    TimeLoops/TimeLoops
+   Filter/Filter
    latex/CodeUnits
    latex/InputFiles
    latex/Diagnostics
+   FieldSolvers/FieldSolvers
+   Utils/Utils
    ForDevelopers/ForDevelopers

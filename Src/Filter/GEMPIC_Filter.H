@@ -34,6 +34,7 @@ public:
                    int dcomp,
                    int ncomp);
 
+    /// @cond DOXYGEN_IGNORE
     template <Grid grid, Space space, std::enable_if_t<Forms::isZeroOrThreeForm<space>, int> = 0>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
                         const Gempic::Forms::DeRhamField<grid, space>& srcField,
@@ -59,6 +60,7 @@ public:
             do_filter(mfi.validbox(), srcfab, dstfab, 0, dcomp, ncomp);
         }
     }
+    /// @endcond
 
     template <Grid grid, Space space, std::enable_if_t<Forms::isOneOrTwoForm<space>, int> = 0>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
@@ -91,7 +93,7 @@ public:
     }
 
 protected:
-    // If true, a filter is used to smooth charge and currents
+    // If true, a filter is used to smoothe charge and currents
     bool m_useFilter{false};
     // Stencil along each direction.
     // in 2D, stencilZ is not initialized.

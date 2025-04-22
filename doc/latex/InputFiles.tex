@@ -42,7 +42,7 @@
 \input{GempicLatexMacros}
 
 \lstdefinelanguage{pkgconfig}{
-	 morecomment=[l]{\#}
+     morecomment=[l]{\#}
 }
 
 \title{Input Files}
@@ -65,7 +65,7 @@ This note describes the input file semantics and their meaning
 \section{Input Files}
 The \amrex{} framework provides a simple way to give input parameters to a simulation: The input file. This is a file in ordinary \verb|.txt| encoding (typically named \verb|.input|) that can be read as an argument to an executable compiled with \amrex:
 \begin{lstlisting}[language=sh]
-	$ ./executable inputFile.input 
+    $ ./executable inputFile.input 
 \end{lstlisting}
 
 \subsection{The Broad Strokes of Input Files}
@@ -82,8 +82,8 @@ Filter.nPass = 3 3 3 # pass the filter three times in each direction
 %
 Notice that, like the class and variable counterparts:
 \begin{itemize}
-	 \item Scope names are \verb|CamelCase|
-	 \item Variable names are \verb|camelBack|
+     \item Scope names are \verb|CamelCase|
+     \item Variable names are \verb|camelBack|
 \end{itemize}
 %
 In the following, the possible options are discussed for each category of input variables. Most of these will have default options that are used if the values are not provided by the user.
@@ -102,31 +102,37 @@ simName = "my_simulation" # String. No default.
 # number of ghost cells in addition to this, depending on Hodge- and spline parameters.
 nGhostExtra = 2 # Integer. Default 3.
 
-# Number of cells used in the grid
-nCellVector = 32 8 8 #  Integer vector of AMReX_SPACEDIM entries. No default.
-
-# Maximum grid size for partitioning computations. 
-# The maxGridSizeVector must be less than or equal to nCellVector,
-# and in each direction, nCellVector must be divisible by maxGridSizeVector.
-# Here we would have 4 regions in the x-direction and 1 in the y- and z-directions.
-maxGridSizeVector = 8 8 8 # Integer vector of AMReX_SPACEDIM entries. No default.
-
-# Is this direction periodic?
-isPeriodicVector = 1 1 1 # Boolean (1/0) vector of AMReX_SPACEDIM entries. No default.
-
 # Wave vector. This determines the physical length of the mesh, which is equal to 2pi/k.
-# If this is given, domainHi will therefore be ignored.
+# If this is given, ComputationalDomain.domainHi will therefore be ignored.
 k = 1 1 0.3 # Real vector of AMReX_SPACEDIM entries. No default.
-
-# Lower physical coordinates of the mesh
-domainLo = 0.0 0.0 0.0 # Real vector of AMReX_SPACEDIM entries. Default 0.0 0.0 0.0.
-
-# Higher physical coordinates of the mesh. Will be ignored if the wave vector k is given.
-domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM entries. Default 1.0 1.0 1.0.
 \end{lstlisting}
 
-\subsection{Filter}
+\subsection{ComputationalDomain}
+The computational domain is the region of space in which the simulation is performed. The domain is divided into a number of cells, given by the \verb|nCell| variable. The mesh is then divided into grids, each with a maximum size given by the \verb|maxGridSize| variable.
+
+\begin{lstlisting}[language=pkgconfig]
+# Computational domain
+# Number of cells used in the grid
+ComputationalDomain.nCell = 32 8 8 # Integer vector of AMReX_SPACEDIM entries. No default.
+
+# Maximum grid size for partitioning computations. 
+# The maxGridSize must be less than or equal to nCell,
+# and in each direction, nCell must be divisible by maxGridSize.
+# Here we would have 4 regions in the x-direction and 1 in the y- and z-directions.
+ComputationalDomain.maxGridSize = 8 8 8 # Integer vector of AMReX_SPACEDIM entries. No default.
+
+# Is this direction periodic?
+ComputationalDomain.isPeriodic = 1 1 1 # Boolean (1/0) vector of AMReX_SPACEDIM entries. No default.
+
+# Lower physical coordinates of the mesh
+ComputationalDomain.domainLo = 1.0 0.0 0.0 # Real vector of AMReX_SPACEDIM entries. Default 0.0 0.0 0.0.
+
+# Higher physical coordinates of the mesh. Will be ignored if the wave vector k is given.
+ComputationalDomain.domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM entries. Default 1.0 1.0 1.0.
+
+\subsection{Filter}\label{sec:FilterInput}
 Controls the filtering behaviour of the simulation (assuming your simulation has this option).
+See \ref{sec:BilinearFilter} for details.
 \begin{lstlisting}[language=pkgconfig]
 # Filter class options
 
@@ -245,7 +251,7 @@ For this to have any effect, however, one must call \lstinline|Parameters::set_p
 outputFile = "simulationParameters.input"
 \end{lstlisting}
 
-\subsection{Particle}
+\subsection{Particle}\label{sec:ParticleInput}
 Particle input variables are divided into species with subscopes given by user provided \verb|speciesNames|:
 \begin{lstlisting}[language=pkgconfig]
 # Particle parameters
@@ -253,6 +259,7 @@ Particle input variables are divided into species with subscopes given by user p
 # The name has to match that given to Reduced- and FullDiagnostics.
 Particle.speciesNames = any_names yOU WANT # String vector. No default.
 Particle.sampler = PseudoRandom # String. Default is PseudoRandom.
+                                # Can be Cellwise|PseudoRandom|Sobol|FullDomainGpu
 Particle.seed = 1234 # Integer. Default is 925.
 # Number of particles per cell
 # Parameters for the first species
@@ -260,6 +267,8 @@ Particle.{speciesName}.sampler = Sobol # overrides general sampling scheme for {
 Particle.{speciesName}.nPartPerCell = 10 # Integer. No default.
 Particle.{speciesName}.charge = -1.0 # Real. Default 1.0.
 Particle.{speciesName}.mass = 1.0 # Real. Default 1.0.
+Particle.{speciesName}.compNames =  "vx" "vy" "vz" "weight" # List of strings. Default. Names extra
+                                                            # components in e.g. output files.
 
 # Initial density of the particle species using the Parser class in AMReX. Here, kvarx=k[0].
 Particle.{speciesName}.density = "1.0 + 0.01 * cos(kvarx * x)" # String. No default.
@@ -280,6 +289,7 @@ Particle.{speciesName}.G1.vThermal.y = "1.0" # String. No default.
 Particle.{speciesName}.G1.vThermal.z = "1.0" # String. No default.
 Particle.{speciesName}.G1.vWeight = 0.3 # Real. No default.
 \end{lstlisting}
+See \ref{sec:ParticleStructure} for details.
 
 \subsection{Function}
 Variables read in the simulation by the helper function interpreter \verb|parse_funtions| using the \href{https://amrex-codes.github.io/amrex/docs_html/Basics.html#parser}{Parser class in AMReX}. The variable names can be anything.
@@ -289,7 +299,7 @@ Function.Bz = "1e-3 * cos(kvarx * x)" # String. No default.
 \end{lstlisting}
 
 \subsection{BoundaryCondition}
-Controls the boundary conditions on non-periodic domains (assuming your simulation supports this option). If the simulation domain contains non-periodic boundaries, i.e., \verb|isPeriodicVector| contains one or more 0 entries, boundary conditions can be provided. Specific boundary conditions can only be assigned to named fields. For all other fields the default is used.
+Controls the boundary conditions on non-periodic domains (assuming your simulation supports this option). If the simulation domain contains non-periodic boundaries, i.e., \verb|isPeriodic| contains one or more 0 entries, boundary conditions can be provided. Specific boundary conditions can only be assigned to named fields. For all other fields the default is used.
 Particle boundary conditions must be implemented separately.
 \begin{lstlisting}[language=pkgconfig]
 # Boundary conditions for fields
@@ -297,22 +307,22 @@ BoundaryCondition.E = PerfectlyConducting PerfectlyConducting # String vector. 2
 BoundaryCondition.Default = Natural Natural # String vector. Default "Natural" * 2 * dim_non_periodic
 \end{lstlisting}
 
-\subsection{PoissonSolver}
+\subsection{PoissonSolver}\label{sec:PoissonSolverInput}
 Selects which solver to use for the poisson equation (\ref{eq:Poisson_example}), provided the PoissonSolver is used in the simulation.
 There are several choices built in:
 \begin{itemize}
-	\item \lstinline[language=pkgconfig]{FFT}: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation.
-	\item \lstinline[language=pkgconfig]{Hypre}: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
-	\item \lstinline[language=pkgconfig]{ConjugateGradient}: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
-	\item \lstinline[language=pkgconfig]{ConjugateGradientInverseHodge}: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
-	\item "Amrex": Using the AMReX MLMG solver. Boundary conditions must be periodic.
+    \item \lstinline[language=pkgconfig]{FFT}: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation.
+    \item \lstinline[language=pkgconfig]{Hypre}: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
+    \item \lstinline[language=pkgconfig]{ConjugateGradient}: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
+    \item \lstinline[language=pkgconfig]{ConjugateGradientInverseHodge}: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
+    \item "Amrex": Using the AMReX MLMG solver. Boundary conditions must be periodic.
 \end{itemize}
 \begin{lstlisting}[language=pkgconfig]
 # PoissonSolver
 PoissonSolver.solver = ConjugateGradient # String. Default: See above.
 \end{lstlisting}
 
-\subsection{HYPRE}
+\subsection{HYPRE options}
 These parameters are for the \verb|HYPRE| library used to parallely solve large sparse linear systems. These can be found in the \verb|AMReX_HypreIJIface.cpp| file.
 
 There are 8 solver choices available:
@@ -457,9 +467,9 @@ simName = "test_adiabatic_slab"
 outputFile = "test_adiabatic_slab_parameters.input"
 
 # Grid parameters
-nCellVector = 128 8 8
-maxGridSizeVector = 32 8 8
-isPeriodicVector = 1 1 1 # 1 -> periodic, 0 -> else
+ComputationalDomain.nCell = 128 8 8
+ComputationalDomain.maxGridSize = 32 8 8
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 k = 1 1 0.3
 
 # Particle parameters

@@ -344,6 +344,7 @@ public:
     {
         BL_PROFILE("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
         Io::Parameters params("DeRhamComplex");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(infra.geometry().Ok(), "Uninitialized geometry");
 
         m_grid = infra.m_grid;
         m_distriMap = infra.m_distriMap;
@@ -370,16 +371,14 @@ public:
         int nGhostRequired{std::max(
             std::max(m_hodgeDegree / 2 - 1, static_cast<int>(std::ceil((maxSplineDegree + 1) / 2))),
             1)};
+        m_nGhostRequired =
+            amrex::IntVect{AMREX_D_DECL(nGhostRequired, nGhostRequired, nGhostRequired)};
         int nGhostExtra{3};
         params.get_or_set("nGhostExtra", nGhostExtra);
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nGhostExtra >= 0,
                                          "Number of extra ghost cells cannot be negative.");
         int nGhost{nGhostRequired + nGhostExtra};
-        m_nGhost = amrex::IntVect{AMREX_D_DECL(nGhost, nGhost, nGhost)};
-        m_nGhostRequired =
-            amrex::IntVect{AMREX_D_DECL(nGhostRequired, nGhostRequired, nGhostRequired)};
-        std::vector<int> nGhostVector{AMREX_D_DECL(m_nGhost[xDir], m_nGhost[yDir], m_nGhost[zDir])};
-        params.set("nGhost", nGhostVector);
+        std::vector<int> nGhostVector{AMREX_D_DECL(nGhost, nGhost, nGhost)};
         // Check that user isn't expecting "nGhost" to have an effect
         if (params.is_in_input_file("nGhost"))
         {
@@ -390,10 +389,22 @@ public:
                              || nGhostVector[yDir] != nGhostVectorInputFile[yDir],
                              || nGhostVector[zDir] != nGhostVectorInputFile[zDir]))
             {
-                std::cerr << "Warning: Number of ghost cells can only be influenced by specifying "
-                             "the number of extra ghost cells.\n";
+                amrex::Warning(
+                    "Number of ghost cells should only be influenced by specifying the number of "
+                    "extra ghost cells.\n");
             }
         }
+        params.get_or_set("nGhost", nGhostVector);
+        if (AMREX_D_TERM(nGhostVector[xDir] < m_nGhostRequired[xDir],
+                         || nGhostVector[yDir] < m_nGhostRequired[yDir],
+                         || nGhostVector[zDir] < m_nGhostRequired[zDir]))
+        {
+            std::string msg{"nGhost must be larger than " + std::to_string(nGhostRequired) +
+                            " to accomodate spline and/or Hodge operations"};
+            amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        }
+        m_nGhost = amrex::IntVect{
+            AMREX_D_DECL(nGhostVector[xDir], nGhostVector[yDir], nGhostVector[zDir])};
 
         // set index: // 0 -> cell-centered | 1 -> node-centered
         m_primalNodeIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)});
@@ -608,14 +619,13 @@ public:
      * @brief Apply boundary conditions and extrapolate to ghost cells. Exists for 1-/2-forms and
      * 0-/3-forms.
      *
-     * Description:
+     * @details
      * If at least one dimension is non-periodic, primal degrees of freedom on the corresponding
      * boundaries are set to the condition specified in the input file. A polynomial extrapolation
      * of order (Hodge degree -1) is then performed to fill ghost cells. For dual forms, only the
      * extrapolation is applied.
      *
-     * @param field : Discrete form
-     * @return void
+     * @param field Discrete form
      */
     template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
     void apply_bc (DeRhamField<grid, space>& field)
@@ -813,18 +823,17 @@ public:
     /**
      * @brief Computes the \f$formOut=\mathbb{H}_{\boldsymbol M} formIn\f$.
      *
-     * Description:
+     * @details
      * Computes \f$formOut={\boldsymbol M}*weight*formIn\f$
      * tensor matrix M is the same de Rham field as formOut
      * M is 3 by 3 matrix saved as a DeRhamField with 3 components for each of the three variables
      *
-     * @tparam grid: primal or dual
-     * @tparam space: edge or node, corresponding to 1- or 2-forms
-     * @param formOut: DeRhamField<grid, space>
-     * @param formIn : DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>
-     * @param matrix : DeRhamField<grid, space>
-     * @param weight : weighting factor
-     * @return void
+     * @tparam grid primal or dual
+     * @tparam space edge or node, corresponding to 1- or 2-forms
+     * @param formOut DeRhamField<grid, space>
+     * @param formIn DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>
+     * @param matrix DeRhamField<grid, space>
+     * @param weight weighting factor
      */
     template <Grid grid, Space space, std::enable_if_t<isOneOrTwoForm<space>, int> enable = 0>
     inline void hodge_dk (DeRhamField<grid, space>& formOut,

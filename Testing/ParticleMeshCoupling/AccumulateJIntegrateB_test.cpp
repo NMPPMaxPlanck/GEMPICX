@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
@@ -67,6 +66,17 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
     aaBfields.copyToHost(&bfields, 1);
 }
 
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class AccumulateJUpdateVC2Test : public testing::Test
 {
 protected:
@@ -84,7 +94,7 @@ protected:
     amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> m_jA;
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(s_vDim / 2.5) * 2 + 1> m_bA;
 
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
@@ -95,41 +105,14 @@ protected:
     amrex::GpuArray<amrex::Real, 2> m_bfields{0., 0.};
     amrex::GpuArray<amrex::Real, std::max(s_degX, std::max(s_degY, s_degZ)) + 4> m_primitive;
 
-    static void SetUpTestSuite ()
+    AccumulateJUpdateVC2Test() : m_infra(get_compdom())
     {
-        /* Initialize the infrastructure */
-        // const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-        //                              {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
         // particle settings
         double charge{1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
-    }
-
-    void SetUp () override
-    {
-        if constexpr (AMREX_SPACEDIM != 3)
-        {
-            GTEST_SKIP() << "This function barely works in 3D, let alone lower dimensions.";
-        }
-
-        m_infra = ComputationalDomain{};
+        m_parameters.set("Particle.species0.charge", charge);
+        m_parameters.set("Particle.species0.mass", mass);
 
         // Initialize the De Rham Complex
         m_deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
@@ -140,6 +123,14 @@ protected:
         for (int species{0}; species < s_numSpec; species++)
         {
             m_particleGroup[species] = std::make_unique<ParticleGroups<s_vDim>>(species, m_infra);
+        }
+    }
+
+    void SetUp () override
+    {
+        if constexpr (AMREX_SPACEDIM != 3)
+        {
+            GTEST_SKIP() << "This function barely works in 3D, let alone lower dimensions.";
         }
     }
 };
@@ -201,9 +192,9 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 0
-        CHECK_FIELD((J.m_data[xDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
-        CHECK_FIELD((J.m_data[yDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
-        CHECK_FIELD((J.m_data[zDir]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[xDir]).array(pti), pti.validbox(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[yDir]).array(pti), pti.validbox(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[zDir]).array(pti), pti.validbox(), {}, {}, 0);
     }
 }
 
@@ -267,7 +258,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
         EXPECT_NEAR(bfields[1], -4.5, 1e-15);
 
         CHECK_FIELD(
-            (J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(),
+            (J.m_data[s_pDim]).array(pti), pti.validbox(),
             // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
              { return AMREX_D_TERM((a == 4 || a == 5), &&b == 4, &&(c == 4 || c == 5)); },
@@ -277,8 +268,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
             {1 - 1. / 8, 1 - 0.25},
             // with the remaining entries being 1
             1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
     }
 }
 
@@ -342,7 +333,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
         EXPECT_NEAR(bfields[1], -4.75, 1e-15);
 
         CHECK_FIELD(
-            (J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(),
+            (J.m_data[s_pDim]).array(pti), pti.validbox(),
             // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
              { return AMREX_D_TERM(a == 4, &&b == 4, &&c == 4); },
@@ -363,8 +354,8 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
             //{},{},
             // with the remaining entries being 1
             1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
     }
 }
 
@@ -429,9 +420,9 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 1
-        CHECK_FIELD((J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[s_pDim]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
     }
 }
 
@@ -496,9 +487,9 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 1
-        CHECK_FIELD((J.m_data[s_pDim]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[s_pDim]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
     }
 }
 

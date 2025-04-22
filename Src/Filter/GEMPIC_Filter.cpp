@@ -114,7 +114,7 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
 
 Gempic::Filter::BilinearFilter::BilinearFilter()
 {
-    BL_PROFILE("Gempic::Filter::Impl::BilinearFilter::BilinearFilter()");
+    BL_PROFILE("Gempic::Filter::BilinearFilter::BilinearFilter()");
     Io::Parameters params("Filter", "class BilinearFilter");
     // Filter parameters
     // If true, a bilinear filter is used to smooth charge and currents
@@ -132,10 +132,9 @@ Gempic::Filter::BilinearFilter::BilinearFilter()
                          || (nGhostVector[yDir] < (m_nPass[yDir] + m_compensate)),
                          || (nGhostVector[zDir] < (m_nPass[zDir] + m_compensate))))
         {
-            std::cerr
-                << "Grid is not large enough to contain the filter stencil. Try increasing the "
-                   "amount of extra ghost cells or decreasing the number of filter passes.\n";
-            std::exit(Error::InvalidInput);
+            AMREX_ALWAYS_ASSERT(
+                "Grid is not large enough to contain the filter stencil. Try increasing the "
+                "amount of extra ghost cells or decreasing the number of filter passes.\n");
         }
         compute_stencils();
     }
@@ -143,7 +142,7 @@ Gempic::Filter::BilinearFilter::BilinearFilter()
 
 void Gempic::Filter::BilinearFilter::compute_stencils ()
 {
-    BL_PROFILE("Gempic::Filter::Impl::BilinearFilter::compute_stencils()");
+    BL_PROFILE("Gempic::Filter::BilinearFilter::compute_stencils()");
     AMREX_D_DECL(Impl::compute_stencil(m_stencilX, m_nPass[xDir], m_alpha, m_compensate),
                  Impl::compute_stencil(m_stencilY, m_nPass[yDir], m_alpha, m_compensate),
                  Impl::compute_stencil(m_stencilZ, m_nPass[zDir], m_alpha, m_compensate));

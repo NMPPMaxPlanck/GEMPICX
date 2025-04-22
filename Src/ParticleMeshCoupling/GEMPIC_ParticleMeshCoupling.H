@@ -20,19 +20,19 @@ namespace Impl
 /**
  * @brief Computes the integral of the D update
 
- * @tparam pDir : Direction of integration (trajectory) (x=0, y=1, z=2)
- * @tparam pDir1 : First direction not along the trajectory
- * @tparam pDir2 : Second direction not along the trajectory
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam pDir1 First direction not along the trajectory
+ * @tparam pDir2 Second direction not along the trajectory
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam vDim Number of components of J
  *
- * @param[out] jArray : Degrees of freedom of J as dual 2-form
- * @param spline : Object containing spline values and the particle trajectory
- * @param cellIndex : Primitive cell index from spline
- * @param j : sum index for direction pDir1
- * @param k : sum index for direction pDir2
- * @param chargeWeight : Particle weight * charge
- * @param primitiveDifference: The difference of the primitves at the current and previous time step
+ * @param[out] jArray Degrees of freedom of J as dual 2-form
+ * @param spline Object containing spline values and the particle trajectory
+ * @param cellIndex Primitive cell index from spline
+ * @param j sum index for direction pDir1
+ * @param k sum index for direction pDir2
+ * @param chargeWeight Particle weight * charge
+ * @param primitiveDifference The difference of the primitives at the current and previous time step
  */
 template <Direction pDir, int pDir1, int pDir2, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void update_j_component (
@@ -55,17 +55,17 @@ AMREX_GPU_HOST_DEVICE inline void update_j_component (
 /**
  * @brief Computes the product for the given integration index of the integral of B
  *
- * @tparam pDir1 : First direction not along the trajectory
- * @tparam pDir2 : Second direction not along the trajectory
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
+ * @tparam pDir1 First direction not along the trajectory
+ * @tparam pDir2 Second direction not along the trajectory
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
  *
- * @param[out] bArray : Degrees of freedom of B as primal 2-form
- * @param spline : Object containing spline values and the particle trajectory
- * @param cellIndex : Primitive cell index from spline
- * @param j : sum index for direction pDir1
- * @param k : sum index for direction pDir2
- * @param primitiveDifference: The difference of the primitves at the current and previous time step
+ * @param[out] bArray Degrees of freedom of B as primal 2-form
+ * @param spline Object containing spline values and the particle trajectory
+ * @param cellIndex Primitive cell index from spline
+ * @param j sum index for direction pDir1
+ * @param k sum index for direction pDir2
+ * @param primitiveDifference The difference of the primitives at the current and previous time step
  */
 template <int pDir1, int pDir2, typename SplineType, unsigned int bDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real update_integrated_b_component (
@@ -85,22 +85,22 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real update_integrated_b_component (
 /**
  * @brief computes the integral of B components along the trajectory
  *
- * @tparam pDir : Direction of integration (trajectory) (x=0, y=1, z=2)
- * @tparam pDir1 : First direction not along the trajectory
- * @tparam pDir2 : Second direction not along the trajectory
- * @tparam degP1 : Spline degree of direction pDir1
- * @tparam degp2 : Spline degree of direction pDir2
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam pDir1 First direction not along the trajectory
+ * @tparam pDir2 Second direction not along the trajectory
+ * @tparam degP1 Spline degree of direction pDir1
+ * @tparam degp2 Spline degree of direction pDir2
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param chargeWeight : Particle weight * charge
- * @param primitiveDifference: The difference of the primitves at the current and previous time step
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param primitiveDifference The difference of the primitves at the current and previous time step
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  *
  * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
  * should be fixed
@@ -177,22 +177,19 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_loop (
 /**
  * @brief computes the integral of B components along the trajectory
  *
- * @tparam pDir : Direction of integration (trajectory) (x=0, y=1)
- * @tparam degP : Spline degree of direction (for xDir: degY, for yDir: degX)
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1)
+ * @tparam degP Spline degree of direction (for xDir: degY, for yDir: degX)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param chargeWeight : Particle weight * charge
- * @param primitiveDifference: The difference of the primitves at the current and previous time step
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
- *
- * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
- * should be fixed
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param primitiveDifference The difference of the primitves at the current and previous time step
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 template <Direction pDir, int degP, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
@@ -248,21 +245,18 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
 /**
  * @brief computes the integral of B components along the trajectory
  *
- * @tparam pDir : Direction of integration (trajectory): x=0
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory): x=0
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param chargeWeight : Particle weight * charge
- * @param primitiveDifference: The difference of the primitves at the current and previous time step
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
- *
- * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
- * should be fixed
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param primitiveDifference The difference of the primitves at the current and previous time step
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
@@ -294,17 +288,17 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
  * Since for AMREX_SPACEDIM == 1, there is not primitive Difference available for the y-step.
  * Therefore, v_{p,x} and v_{p,z} are updated using an explicit Euler step.
  *
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param dtv : timestep * v_y
- * @param chargeWeight : Particle weight * charge
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
+ * @param spline Object containing spline values and the particle trajectory
+ * @param dtv timestep * v_y
+ * @param chargeWeight Particle weight * charge
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 template <typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
@@ -344,17 +338,17 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
  * Since for AMREX_SPACEDIM == 1 and AMREX_SPACEDIM == 2, there is not primitive Difference
  * available for the z-step.Therefore, v_{p,x} and v_{p,y} are updated using an explicit Euler step.
  *
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param dtv : timestep * v_z
- * @param chargeWeight : Particle weight * charge
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
+ * @param 5pline Object containing spline values and the particle trajectory
+ * @param dtv timestep * v_z
+ * @param chargeWeight Particle weight * charge
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 template <typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
@@ -371,8 +365,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     constexpr int degX = SplineType::s_splineDegrees[xDir];
 
 #if AMREX_SPACEDIM == 1
-    constexpr int jj = 0;
-
     for (int ii = 0; ii <= degX; ++ii)
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
@@ -433,7 +425,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
  * @brief Updates J and computes an integrated B on a given particle trajectory along one grid
  * direction in 3 spatial dimensions
  *
- * Description:
+ * @details
  * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity
  * \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function
  *
@@ -471,22 +463,18 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
  * for details about the algorithm see the documentation
  * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
  *
- * @tparam pDir : Direction of integration (trajectory) (x=0, y=1, z=2)
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
 
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param chargeWeight : Particle weight * charge
- * @param dx : Spatial grid size
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
- *
- * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
- * should be fixed
- * @todo Rewrite to avoid excessive branching
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param dx Spatial grid size
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
@@ -630,7 +618,7 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
  * @brief Updates J and computes an integrated B on a given particle trajectory along one grid
  * direction in 2 spatial dimensions (namely the x- and y-direction)
  *
- * Description:
+ * @details
  * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity
  * \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function
  *
@@ -667,18 +655,18 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
  * for details about the algorithm see the documentation
  * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
  *
- * @tparam pDir : Direction of integration (trajectory) (x=0, y=1, z=2)
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param chargeWeight : Particle weight * charge
- * @param dx : Spatial grid size
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param dx Spatial grid size
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
@@ -806,7 +794,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * @brief Updates J and computes an integrated B on a given particle trajectory along the grid
  * x-direction
  *
- * Description:
+ * @details
  * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity
  * \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function
  *
@@ -841,18 +829,18 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * for details about the algorithm see the documentation
  * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#exact-computation-of-time-integrated-j-x-v-p-x-b-y-x-p-and-v-p-x-b-z-x-p
  *
- * @tparam pDir : Direction of integration (trajectory) (x=0, y=1, z=2)
- * @tparam SplineType : Necessary for mocking so the function can take mock spline types
- * @tparam bDim : Number of components of B
- * @tparam vDim : Number of components of J
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ * @tparam vDim Number of components of J
  *
- * @param[out] fields : Integral of B components along trajectory (the 2 that are not in integration
+ * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param spline : Object containing spline values and the particle trajectory
- * @param chargeWeight : Particle weight * charge
- * @param dx : Spatial grid size
- * @param bArray : Degrees of freedom of B as primal 2-form
- * @param jArray : Degrees of freedom of J as dual 2-form
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param dx Spatial grid size
+ * @param bArray Degrees of freedom of B as primal 2-form
+ * @param jArray Degrees of freedom of J as dual 2-form
  */
 
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
@@ -927,9 +915,9 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * @tparam degY Spline degree in y
  * @tparam degZ Spline degree in z
  *
- * @param[out] rho : charge density to be computed
- * @param spline : Splines evaluated at given particle position
- * @param chargeWeight : Particle weight * charge
+ * @param[out] rho charge density to be computed
+ * @param spline Splines evaluated at given particle position
+ * @param chargeWeight Particle weight * charge
  */
 template <int degX, int degY, int degZ>
 AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const &rho,
@@ -957,10 +945,10 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const 
  * @tparam degY Spline degree in y
  * @tparam degZ Spline degree in z
  *
- * @param[out] currentDensity : current density to be computed
- * @param spline : Splines evaluated at given particle position
- * @param vel : The velocity vector
- * @param coeff :
+ * @param[out] currentDensity current density to be computed
+ * @param spline Splines evaluated at given particle position
+ * @param vel The velocity vector
+ * @param coeff
  */
 template <int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void deposit_j (

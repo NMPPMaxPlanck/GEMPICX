@@ -6,7 +6,7 @@ namespace Gempic::Utils
 /**
  * @brief Get and set verbosity level for Gempic
  *
- * @param level : Non-negative integer sets the level of verbosity
+ * @param level Non-negative integer sets the level of verbosity
  */
 struct Verbosity
 {
@@ -14,7 +14,7 @@ struct Verbosity
      * @brief Set verbosity level for Gempic. May only be called once before the verbosity is
      * queried.
      *
-     * @param level : Non-negative integer sets the level of verbosity
+     * @param level Non-negative integer sets the level of verbosity
      */
     explicit Verbosity(int level);
 
@@ -22,7 +22,7 @@ struct Verbosity
      * @brief Set verbosity level for Gempic. May only be called once before the verbosity is
      * queried.
      *
-     * @param level : Non-negative integer sets the level of verbosity
+     * @param level Non-negative integer sets the level of verbosity
      */
     static void set_level(int level);
 

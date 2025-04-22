@@ -37,26 +37,7 @@ public:
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
-    static void SetUpTestSuite ()
-    {
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(16, 16, 16)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        std::string solverStr{"Hypre"};
-
-        /* Initialize the infrastructure */
-        amrex::ParmParse pp; // Used in lieu of input file
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("PoissonSolver.solver", solverStr);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
+    HyprePoissonSolverTest()
     {
         // Analytical rho and phi such that -Delta phi = rho
 #if AMREX_SPACEDIM == 2
@@ -73,19 +54,19 @@ public:
         m_parserPhi.define(analyticalPhi);
         m_parserPhi.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         m_funcPhi = m_parserPhi.compile<s_nVar>();
+
+        Gempic::Io::Parameters parameters;
+        std::string solverStr{"Hypre"};
+        parameters.set("PoissonSolver.solver", solverStr);
     }
 
+    /* Initialize the infrastructure */
     amrex::Real poisson_solve (int n)
     {
-        // Initialize computational_domain
-        const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        // Class that should acutally manage parameters instead of amrex::ParamParse
-        // Need an instance of this to use parameters in ComputationalDomain.
         Gempic::Io::Parameters parameters;
-        ComputationalDomain infra;
+        // Initialize computational_domain
+        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,

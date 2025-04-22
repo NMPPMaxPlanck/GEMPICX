@@ -67,7 +67,8 @@ public:
      * @brief Calculate the location of the given index in the interval
      *        [@ref DiscreteGrid::min, @ref DiscreteGrid::max] of the physical domain
      *
-     * @param idx : idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
+     * @param dir
+     * @param idx idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
      */
     AMREX_GPU_HOST_DEVICE
     amrex::Real location (Direction dir, int idx)
@@ -144,7 +145,13 @@ public:
                               1.0 / m_geomData.CellSize(zDir))}};
     }
 
-    ComputationalDomain(bool) {}; // bool constructor for deferred specification of domain
+    ComputationalDomain(const std::array<amrex::Real, AMREX_SPACEDIM>& domainLo,
+                        const std::array<amrex::Real, AMREX_SPACEDIM>& domainHi,
+                        const amrex::IntVect& nCell,
+                        const amrex::IntVect& maxGridSize,
+                        const std::array<int, AMREX_SPACEDIM>& isPeriodic,
+                        amrex::CoordSys::CoordType coordType = amrex::CoordSys::cartesian);
+
     ComputationalDomain();
 
 private:

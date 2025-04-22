@@ -19,6 +19,17 @@ using namespace Particle;
 using namespace TimeLoop;
 constexpr int hodgeDegree = 2;
 
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10, 10, 10)};
+    const amrex::IntVect nCell{AMREX_D_DECL(2, 2, 100)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(2, 2, 50)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class RungeKuttaTest : public testing::Test
 {
 protected:
@@ -41,53 +52,30 @@ protected:
     amrex::Array<amrex::Real, s_numSpec> m_charge{1};
     amrex::Array<amrex::Real, s_numSpec> m_mass{1};
 
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vDim, s_ndata>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
     const amrex::Geometry m_geom = m_infra.m_geom;
 
-    static void SetUpTestSuite ()
+    RungeKuttaTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //!!!!!!important!!!!!!!! should be aware that particle should be in
-        // the domain, otherwise the data will get wrong
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(2, 2, 100)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(2, 2, 50)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
         // particle settings
         double charge{-1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
+        m_params.set("Particle.species0.charge", charge);
+        m_params.set("Particle.species0.mass", mass);
 
         // Full diagnostics
-        pp.add("FullDiagnostics.enable", true); // 1 for true, 0 for false
+        m_params.set("FullDiagnostics.enable", true); // 1 for true, 0 for false
         amrex::Vector<std::string> diagsNames = {"field"};
-        pp.addarr("FullDiagnostics.groupNames", diagsNames);
+        m_params.set("FullDiagnostics.groupNames", diagsNames);
         amrex::Vector<std::string> fieldNames = {"Ex", "Jx", "By"};
-        pp.addarr("FullDiagnostics.field.varNames", fieldNames);
+        m_params.set("FullDiagnostics.field.varNames", fieldNames);
         std::string cellCenterFunctor = "CellCenter";
-        pp.add("FullDiagnostics.field.outputProcessor", cellCenterFunctor);
+        m_params.set("FullDiagnostics.field.outputProcessor", cellCenterFunctor);
         int fieldSave{1};
-        pp.add("FullDiagnostics.field.saveInterval", fieldSave);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        /* Initialize the infrastructure */
-        m_infra = ComputationalDomain{};
+        m_params.set("FullDiagnostics.field.saveInterval", fieldSave);
 
         const int hodgeDegree{2};
         const int maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};

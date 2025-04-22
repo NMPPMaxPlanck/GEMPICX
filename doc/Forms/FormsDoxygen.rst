@@ -17,6 +17,7 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::Forms::DeRhamComplex
    :members:
 
+.. doxygenfile:: GEMPIC_BoundaryConditions.H
 .. doxygenclass:: Gempic::GaussQuadrature
 
 .. toctree::

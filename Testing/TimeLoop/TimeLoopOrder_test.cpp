@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
@@ -42,26 +41,24 @@ public:
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
-    static void SetUpTestSuite ()
+    ComputationalDomain set_params (Gempic::Io::Parameters& parameters, const amrex::IntVect& nCell)
     {
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(16, 16, 16)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        parameters.set("sV", s_sV);
+        parameters.set("sOmega", s_sOmega);
 
         /* Initialize the infrastructure */
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
+        const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{
+            AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
+        const amrex::IntVect maxGridSize{AMREX_D_DECL(16, 16, 16)};
+        const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
-        pp.add("sV", s_sV);
-        pp.add("sOmega", s_sOmega);
+        return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
+                                   amrex::CoordSys::cartesian);
     }
 
-    void maxwellstrang_error (double &bError,
-                              double &dError,
+    void maxwellstrang_error (double& bError,
+                              double& dError,
                               int n,
                               amrex::Real const sOmegaSquared,
                               amrex::Real const sV)
@@ -107,14 +104,9 @@ public:
         };
 #endif
         // Initialize computational_domain
-        const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        // Class that should acutally manage parameters instead of amrex::ParamParse
-        // Need an instance of this to use parameters in ComputationalDomain.
+        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
         Gempic::Io::Parameters parameters;
-        ComputationalDomain infra;
+        ComputationalDomain infra = set_params(parameters, nCell);
 
         // Project B and D to a primal and dual two form respectively
         amrex::Array<amrex::ParserExecutor<s_nVar>, 3> funcD;

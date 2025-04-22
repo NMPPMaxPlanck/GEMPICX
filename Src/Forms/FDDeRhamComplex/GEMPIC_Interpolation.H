@@ -11,17 +11,17 @@ namespace Gempic::Forms
 /**
  * @brief Evaluates a 1D Lagrange polynomial
  *
- * Description:
+ * @details
  * Evaluates a Lagrange polynomial \f$L_i\f$ on the interval \f$[x_k, x_{k+1}]\f$, where \f$L_0\f$
  * is the Lagrange polynomial associated to node \f$x_k\f$, \f$L_{-1}\f$ to \f$x_{k-1}\f$, \f$L_1\f$
  * to \f$x_{k+1}\f$, and so forth. The whole grid is assumed to be uniform, evaluation is done using
  * Neville's algorithm.
  *
- * @tparam degree : int, degree of basis functions used
- * @param polyIndex : int, indicates the polynomial w.r.t. \f$x_k\f$
- * @param xk : Real, node \f$x_k\f$ which defines the interval of evaluation
- * @param dx : (uniform) grid size
- * @param y : Real, point in \f$[x_k, x_{k+1}]\f$, where \f$L_i\f$ is to be evaluated
+ * @tparam degree int, degree of basis functions used
+ * @param polyIndex int, indicates the polynomial w.r.t. \f$x_k\f$
+ * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
+ * @param dx (uniform) grid size
+ * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$L_i\f$ is to be evaluated
  *
  * @return \f$L_{polyIndex} (y)\f$
  */
@@ -59,17 +59,17 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (const int polyIndex,
 /**
  * @brief Evaluates a 1D edge function
  *
- * Description:
+ * @details
  * Evaluates an edge function \f$e_i\f$ on the interval \f$[x_k, x_{k+1}]\f$, where \f$e_0\f$ is
  * the edge function associated to the cell \f$[x_k,  x_{k+1}]\f$, \f$e_{-1}\f$ to \f$[x_{k-1},
  * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
  * uniform, only edge functions of degree 0, 2, 4 can be evaluated.
  *
- * @tparam degree : int, degree of basis functions used
- * @param polyIndex : int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$
- * @param xk : Real, node \f$x_k\f$ which defines the interval of evaluation
- * @param dx : (uniform) grid size
- * @param y : Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
+ * @tparam degree int, degree of basis functions used
+ * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$
+ * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
+ * @param dx (uniform) grid size
+ * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
  *
  * @return \f$e_{polyIndex} (y)\f$
  */
@@ -428,20 +428,18 @@ void eval_form_component (
 /**
  * @brief Computes the maximum norm w.r.t. the values at the cell midpoints
  *
- * Description:
+ * @details
  * Interpolates the field, evaluates it a the cell midpoint and computes the max error
  *
- * @tparam degree : int, degree of basis functions used
- * @param geom : Geometry, needed for physical coordinates
- * @param func : ParserExecutor, provides the exact function to be evaluated
- * @param funcH : MultiFab, contains the DOF values of the numeric approximation
- * @param dr : RealVect, contains the spatial grid sizes
- * @param form : int, specifies k with func_h in C_k
- * @param dual : bual, true if func_h is defined on dual grid
- * @param comp : int, specifies which component func_h belongs to
- * @param t : Real, time point at which func is to be evaluated
- *
- * @return void
+ * @tparam degree int, degree of basis functions used
+ * @param geom Geometry, needed for physical coordinates
+ * @param func ParserExecutor, provides the exact function to be evaluated
+ * @param funcH MultiFab, contains the DOF values of the numeric approximation
+ * @param dr RealVect, contains the spatial grid sizes
+ * @param form int, specifies k with func_h in C_k
+ * @param dual bual, true if func_h is defined on dual grid
+ * @param comp int, specifies which component func_h belongs to
+ * @param t Real, time point at which func is to be evaluated
  */
 template <int degree>
 amrex::Real max_error_midpoint (amrex::Geometry geom,

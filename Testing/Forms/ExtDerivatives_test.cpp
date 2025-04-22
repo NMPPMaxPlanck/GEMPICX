@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -108,23 +107,7 @@ protected:
         "sin(x)*cos(y)*sin(z) - sin(x)*sin(y)*sin(z) + sin(x)*sin(y)*sin(z)";
 #endif
 
-    static void SetUpTestSuite ()
-    {
-        /* Initialize the infrastructure */
-        const amrex::Vector<amrex::Real> domainLo{
-            AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
-        const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(9, 11, 7)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(3, 4, 5)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
+    ExtDerivativesTest() : m_infra{Gempic::Test::Utils::get_default_compdom()} {}
 };
 
 TEST_F(ExtDerivativesTest, Grad)

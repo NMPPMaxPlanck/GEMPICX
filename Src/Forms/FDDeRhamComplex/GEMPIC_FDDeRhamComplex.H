@@ -18,12 +18,12 @@ enum class HodgeScheme
 /**
  * @brief Fills the arrays of Hodge stencils.
  *
- * Description: Computes stencils for periodic boundary conditions for either
+ * @details Computes stencils for periodic boundary conditions for either
  * finite difference of Galerkin Hodge
  *
- * @tparam degree : int, degree of basis functions used
- * @tparam scheme : int, 0 for FDHodge, 1 for Galerkin Hodge
- * @return std::tuple : contains the stencils in the following order:
+ * @tparam degree int, degree of basis functions used
+ * @tparam scheme int, 0 for FDHodge, 1 for Galerkin Hodge
+ * @return std::tuple containing the stencils in the following order:
  *                      stencilNodeToCell, stencilCellToNode
  */
 // NOLINTBEGIN(readability-magic-numbers)
@@ -121,17 +121,16 @@ inline auto get_hodge_stencils ()
 /**
  * @brief Computes a matrix-vector product along 1 spatial direction.
  *
- * Description:
+ * @details
  * Computes M*u for all edges in a given direction, where M is given
  * by a stencil and u are the values of the input along one edge.
  *
- * @tparam stencilLength : int, length of the stencil array defining the matrix
- * @tparam direction : Direction, direction along which matrix vector product is calculated
- * @param geom : Geometry, needed for FillBoundary
- * @param stencil : GpuArray, defining the matrix
- * @param multiInput : MultiFab, containing the values of the vector being multiplied
- * @param multiOutput : MultiFab, containing the result
- * @return void
+ * @tparam stencilLength int, length of the stencil array defining the matrix
+ * @tparam direction Direction, direction along which matrix vector product is calculated
+ * @param geom Geometry, needed for FillBoundary
+ * @param stencil GpuArray, defining the matrix
+ * @param multiInput MultiFab, containing the values of the vector being multiplied
+ * @param multiOutput MultiFab, containing the result
  */
 
 template <Direction direction, int hodgeDegree, unsigned int stencilLength>
@@ -350,15 +349,13 @@ public:
     /**
      * @brief Computes the Interpolation operator \f$I_0\f$
      *
-     * Description:
+     * @details
      * Using the geometric degrees of freedeom:
      * Interpolates nodes of the primal grid using Lagrange polynomials of degree (dim - 1)
      *
-     * @param field : DeRhamField<dual, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
-     * @param evalShift : amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>, point to be interpolated
-     * @param pointValues : MultiFab in which to store the interpolated values
-     *
-     * @return void
+     * @param field DeRhamField<dual, Space::cell>, 3-form \f$u^3\f$ holding the cell integrals
+     * @param evalShift amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>, point to be interpolated
+     * @param pointValues MultiFab in which to store the interpolated values
      */
     void eval_form(const DeRhamField<Grid::primal, Space::cell>& field,
                    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
@@ -515,7 +512,7 @@ private:
 /**
  * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_3\f$.
  *
- * Description:
+ * @details
  * Computes \f$\tilde{\mathbb{H}}_3\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -524,12 +521,11 @@ private:
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param threeForm : DeRhamField<Grid::dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
- * @param zeroForm : DeRhamField<Grid::primal, Space::node>, resulting 0-form \f$u^0\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param threeForm DeRhamField<Grid::dual, Space::cell>, 3-form \f$\tilde{u}^3\f$
+ * @param zeroForm DeRhamField<Grid::primal, Space::node>, resulting 0-form \f$u^0\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>& threeForm,
@@ -561,7 +557,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
 /**
  * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_3\f$.
  *
- * Description:
+ * @details
  * Computes \f$\mathbb{H}_3\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -570,12 +566,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$u^3\f$
- * @param zeroForm : DeRhamField<Grid::dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param threeForm DeRhamField<Grid::primal, Space::cell>, 3-form \f$u^3\f$
+ * @param zeroForm DeRhamField<Grid::dual, Space::node>, resulting 0-form \f$\tilde{u}^0\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cell>& threeForm,
@@ -607,7 +602,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
 /**
  * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_2\f$.
  *
- * Description:
+ * @details
  * Computes \f$\tilde{\mathbb{H}}_2\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -616,12 +611,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{u}^2\f$
- * @param oneForm : DeRhamField<Grid::primal, Space::edge>, resulting 1-form \f$u^1\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param twoForm DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{u}^2\f$
+ * @param oneForm DeRhamField<Grid::primal, Space::edge>, resulting 1-form \f$u^1\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>& twoForm,
@@ -672,7 +666,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
 /**
  * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_2\f$.
  *
- * Description:
+ * @details
  * Computes \f$\mathbb{H}_2\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -682,12 +676,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
  * Parameters:
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$
- * @param oneForm : DeRhamField<Grid::dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param twoForm DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$
+ * @param oneForm DeRhamField<Grid::dual, Space::edge>, resulting 1-form \f$\tilde{u}^1\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::face>& twoForm,
@@ -738,7 +731,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
 /**
  * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_1\f$.
  *
- * Description:
+ * @details
  * Computes \f$\tilde{\mathbb{H}}_1\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -747,12 +740,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
- * @param twoForm : DeRhamField<Grid::primal, Space::face>, resulting 2-form \f$u^2\f$
- * @param weight : Real, constant weight function
- * return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$
+ * @param twoForm DeRhamField<Grid::primal, Space::face>, resulting 2-form \f$u^2\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>& oneForm,
@@ -804,7 +796,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
 /**
  * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_1\f$.
  *
- * Description:
+ * @details
  * Computes \f$\mathbb{H}_1\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -814,12 +806,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
  * Parameters:
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$
- * @param twoForm : DeRhamField<Grid::dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$
+ * @param twoForm DeRhamField<Grid::dual, Space::face>, resulting 2-form \f$\tilde{u}^2\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edge>& oneForm,
@@ -871,7 +862,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
 /**
  * @brief Computes the Finite Difference Hodge \f$\tilde{\mathbb{H}}_0\f$.
  *
- * Description:
+ * @details
  * Computes \f$\tilde{\mathbb{H}}_0\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -881,12 +872,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
  * Parameters:
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$
- * @param threeForm : DeRhamField<Grid::primal, Space::cell>, resulting 3-form \f$u^3\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param zeroForm DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$
+ * @param threeForm DeRhamField<Grid::primal, Space::cell>, resulting 3-form \f$u^3\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>& zeroForm,
@@ -918,7 +908,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
 /**
  * @brief Computes the Finite Difference Hodge \f$\mathbb{H}_0\f$.
  *
- * Description:
+ * @details
  * Computes \f$\mathbb{H}_0\f$ by multiplying the 1D stencils along
  * each direction separately
  * Supports a constant weight function of the form w(x,y,z) = w
@@ -928,12 +918,11 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
  * Parameters:
- * @tparam hodgeDegree : int, degree of basis functions used
- * @tparam hodgeScheme : HodgeScheme, determines the stencils used for the Hodge operator
- * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$
- * @param threeForm : DeRhamField<Grid::dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
- * @param weight : Real, constant weight function
- * @return void
+ * @tparam hodgeDegree int, degree of basis functions used
+ * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
+ * @param zeroForm DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$
+ * @param threeForm DeRhamField<Grid::dual, Space::cell>, resulting 3-form \f$\tilde{u}^3\f$
+ * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
 void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::node>& zeroForm,

@@ -123,17 +123,6 @@ enum Direction : unsigned int
     zDir = 2,
     noDir = 3,
 };
-// Are these error codes anyway consistent with existing error codes in codes?
-// These error codes are really specific to IO.
-// Is it of interest to maintain this set of error codes if the error message is expressive enough?
-enum Error : int
-{
-    InvalidInput = 1,
-    AttemptedParameterChange = 2,
-    ParametersNotInitialized = 3,
-    ParametersAlreadyInitialized = 4,
-    VerbosityAlreadySet = 5,
-};
 
 enum class Grid
 {

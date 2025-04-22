@@ -5,17 +5,15 @@ using namespace Gempic::Forms;
 /**
  * @brief Computes the discrete curl \f$\mathbb{C}\f$ on the primal grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding
+ * @param[out] twoForm DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding
  * the resulting face integrals
- * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
+ * @param oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
  * integrals
- *
- * @return void
  */
 void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
                          const DeRhamField<Grid::primal, Space::edge> &oneForm)
@@ -100,18 +98,16 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
 /**
  * @brief Adds dt times the discrete curl \f$\mathbb{C}\f$ on the primal grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding
+ * @param[out] twoForm DeRhamField<Grid::primal, Space::face>, 2-form \f$\mathbb{C} u^1\f$ holding
  * the resulting face integrals
- * @param oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
+ * @param oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
  * integrals
- * @param dt : time step by which curl is multiplied. Can be negative for subtraction.
- *
- * @return void
+ * @param dt time step by which curl is multiplied. Can be negative for subtraction.
  */
 void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm,
                                 const DeRhamField<Grid::primal, Space::edge> &oneForm,
@@ -197,17 +193,15 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
 /**
  * @brief Computes the discrete curl \f$\mathbb{C}\f$ on the dual grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$
+ * @param[out] twoForm DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$
  * holding the resulting face integrals
- * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
+ * @param oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
- *
- * @return void
  */
 void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
                          const DeRhamField<Grid::dual, Space::edge> &oneForm)
@@ -295,18 +289,16 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
 /**
  * @brief Adds dt times the discrete curl \f$\mathbb{C}\f$ on the dual grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] twoForm : DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$
+ * @param[out] twoForm DeRhamField<Grid::dual, Space::face>, 2-form \f$\tilde{C} \tilde{u}^1\f$
  * holding the resulting face integrals
- * @param oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
+ * @param oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
- * @param dt : time step by which curl is multiplied. Can be negative for subtraction.
- *
- * @return void
+ * @param dt time step by which curl is multiplied. Can be negative for subtraction.
  */
 void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
                                 const DeRhamField<Grid::dual, Space::edge> &oneForm,
@@ -395,17 +387,15 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
 /**
  * @brief Computes the discrete gradient \f$\mathbb{G}\f$ on the primal grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding
+ * @param[out] oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding
  * the resulting edge integrals
- * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
+ * @param zeroForm DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
  * values
- *
- * @return void
  */
 void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
                          const DeRhamField<Grid::primal, Space::node> &zeroForm)
@@ -463,18 +453,16 @@ void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
 /**
  * @brief Computes a * grad phi on the primal grid for some given constant a
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] oneForm : DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding
+ * @param[out] oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$\mathbb{G} u^0\f$ holding
  * the resulting edge integrals
- * @param zeroForm : DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
+ * @param zeroForm DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
  * values
- * @param a : amrex::Real, constant to be multiplied with the gradient
- *
- * @return void
+ * @param a amrex::Real, constant to be multiplied with the gradient
  */
 void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
                                  const DeRhamField<Grid::primal, Space::node> &zeroForm,
@@ -537,17 +525,15 @@ void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge> &oneFor
 /**
  * @brief Computes the discrete gradient \f$\mathbb{G}\f$ on the dual grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$
+ * @param[out] oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$
  * holding the resulting edge integrals
- * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
+ * @param zeroForm DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
  * values
- *
- * @return void
  */
 void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
                          const DeRhamField<Grid::dual, Space::node> &zeroForm)
@@ -606,18 +592,16 @@ void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
 /**
  * @brief Computes a times the discrete gradient \f$a \mathbb{G}\f$ on the dual grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] oneForm : DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$
+ * @param[out] oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{G} \tilde{u}^0\f$
  * holding the resulting edge integrals
- * @param zeroForm : DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
+ * @param zeroForm DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
  * values
- * @param a : Multiplication factor
- *
- * @return void
+ * @param a Multiplication factor
  */
 void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
                                  const DeRhamField<Grid::dual, Space::node> &zeroForm,
@@ -681,17 +665,15 @@ void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
 /**
  * @brief Computes the discrete divergence \f$\mathbb{D}\f$ on the primal grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param[out] threeForm : DeRhamField<Grid::primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$
+ * @param[out] threeForm DeRhamField<Grid::primal, Space::cell>, 3-form \f$\mathbb{D} u^2\f$
  * holding the resulting cell integrals
- * @param twoForm : DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$ holding the face
+ * @param twoForm DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$ holding the face
  * integrals
- *
- * @return void
  */
 void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell> &threeForm,
                         const DeRhamField<Grid::primal, Space::face> &twoForm)
@@ -729,17 +711,15 @@ void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell> &threeForm,
 /**
  * @brief Computes the discrete divergence \f$\mathbb{D}\f$ on the dual grid
  *
- * Description:
+ * @details
  * Using the geometric degrees of freedom. No approximations involved.
  *
  * For directions 1 and 2, the k-forms are taken from the "stacked" de Rham complex
  *
- * @param twoForm : DeRhamField<Grid::primal, Space::dual>, 2-form \f$\tilde{u}^2\f$ holding the
+ * @param twoForm DeRhamField<Grid::primal, Space::dual>, 2-form \f$\tilde{u}^2\f$ holding the
  * face integrals
- * @param[out] threeForm : DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D}
+ * @param[out] threeForm DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D}
  * \tilde{u}^2\f$ holding the resulting cell integrals
- *
- * @return void
  */
 void DeRhamComplex::div (DeRhamField<Grid::dual, Space::cell> &threeForm,
                         const DeRhamField<Grid::dual, Space::face> &twoForm)

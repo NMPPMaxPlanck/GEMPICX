@@ -14,14 +14,15 @@ enum class PrimitiveDifferenceRegion
     bothSplines,
     lastSpline,
 };
-} //namespace Impl
+} // namespace Impl
 
 /**
- * @brief Implementation of the B-Splines based on the description given
- *   in @verbatim embed:rst:inline :ref:`Particle-Mesh Coupling` @endverbatim
+ * @brief Implementation of the B-Splines
  *
+ * @details Based on the description given in
+ *          @verbatim embed:rst:inline :ref:`Particle-Mesh Coupling` @endverbatim.
  *
- * @details Calculate and store "node", "cell" spline values for every
+ *          Calculate and store "node", "cell" spline values for every
  *          degree of freedom which has non vanishing support for a given degree at
  *          \f$(x_p,y_p,z_p)\f$, which is an arbitrary reference position
  *          (e.g. particle coordinate).
@@ -45,13 +46,9 @@ enum class PrimitiveDifferenceRegion
  *         Additionally, this class implements the reduction operators \f$\tilde{\mathcal{R}} \f$
  *         defined in @verbatim embed:rst:inline :ref:`Particle-Mesh Coupling` @endverbatim
  *
- *
- * ToDo: Extract the mappings between different spaces in the
- * deRahm complex. Those are bloating the class.
- *
- * @tparam degX : degree of the node-spline in x-direction
- * @tparam degY : degree of the node-spline in y-direction
- * @tparam degZ : degree of the node-spline in z-direction
+ * @tparam degX degree of the node-spline in x-direction
+ * @tparam degY degree of the node-spline in y-direction
+ * @tparam degZ degree of the node-spline in z-direction
  */
 template <int degX, int degY, int degZ>
 class SplineBase
@@ -60,20 +57,14 @@ public:
     /**
      * @brief Constructor calculates the contribution of spline values at the degrees of freedom
      *
-     * @param position : position of the particle
-     * @param plo : low end of the problem domain
-     * @param dxInverse : inverse of the cell size in all three directions x, y and z
-
-     * @details Additional details about dxInverse
-     *  - dxInverse[Direction::xDir] == 1/dx
-     *  - dxInverse[Direction::yDir] == 1/dy
-     *  - dxInverse[Direction::zDir] == 1/dz
-    */
+     * @param position position of the particle
+     * @param plo low end of the problem domain
+     * @param dxInverse inverse of the cell size in all three directions x, y and z
+     */
     AMREX_GPU_HOST_DEVICE SplineBase (const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
                                       const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
                                       const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse)
     {
-        //BL_PROFILE("Gempic::ParticleMeshCoupling::SplineBase::SplineBase()");
         AMREX_D_TERM(
             (update_1d_splines<Direction::xDir>(position[xDir], plo[xDir], dxInverse[xDir]));
             , (update_1d_splines<Direction::yDir>(position[yDir], plo[yDir], dxInverse[yDir]));
@@ -109,7 +100,7 @@ public:
     /**
      * @brief Values of a cell spline at the degrees of freedom to a particle position \f$ x_p \f$
      *
-     * @details m_cellSplineVals[Direction][i] = \f$
+     * @details @ref m_cellSplineVals[Direction][i] = \f$
      * \mathrm{S}^{\mathrm{cell}}_{\mathrm{firstIndex[Direction]}+i}(x_p) \f$ for  i = 0 .. deg - 1
      * when called with
      *  - degree = degX
@@ -123,11 +114,13 @@ public:
     /**
      * @brief Values of a node spline at the degrees of freedom to a particle position \f$ x_p \f$
      *
-     * @details nodeSplineVals[Direction][i] = \f$
+     * @details @ref m_nodeSplineVals[Direction][i] = \f$
      * \mathrm{S}^{node}_{\mathrm{firstIndex[Direction]}+i}(x_p) \f$ for  i = 0 .. deg
+     *
      * when called with
      *  - degree = degX-1
      *  - xRef = refOffset = firstIndex[dir] + (degX+1)/2 - (\f$ x_p \f$ - plo)/dx
+     *
      * this class computes
      *  s[i] = \f$ S^{degX-1}\f$(firstIndex[dir] + 1/2 - (\f$ x_p \f$ - plo)/dx + i)
      * = dx * \f$ \mathrm{S}^{\mathrm{cell}}_{i}(x_p) \f$
@@ -135,14 +128,15 @@ public:
     amrex::GpuArray<amrex::GpuArray<amrex::Real, s_maxDeg + 1>, AMREX_SPACEDIM> m_nodeSplineVals;
 
     /**
-     * //ToDo either change members and do not return anything or return something and be const.
      * @brief Compute the first spline index and the offset for a given particle position
      *
      * @details
      * Given a particle position \f$ x_p \f$ in the given direction dir, this function computes:
-     *  - firstIndex[dir] : the index of the first contributing spline (see above):
+     *  - @ref m_firstIndex[dir], the index of the first contributing spline (see above):
+     *
      * and
-     *  - refOffset = firstIndex[dir] + (deg+1)/2 - (\f$ x_p \f$ - plo)/dx
+     *
+     *  - refOffset = @ref m_firstIndex[dir] + (deg+1)/2 \f$- (x_p - plo)/dx\f$, \n
      *    where deg is the degree of the node spline in the given direction
      *
      * 0 < refOffset ≤ 1  is the normalized (1/dx) distance between the particle position and the
@@ -150,11 +144,11 @@ public:
      * will be used in the function splineEval to compute the values of the node- and cell-splines
      * at \f$ x_p \f$
      *
-     * @tparam dir : the direction in which to compute
+     * @tparam dir the direction in which to compute
      *
-     * @param position : position of the particle
-     * @param plo : low end of the problem domain
-     * @param dxInverseDir : inverse of the cell size in the given direction
+     * @param position position of the particle
+     * @param plo low end of the problem domain
+     * @param dxInverseDir inverse of the cell size in the given direction
      *
      * @return refOffset
      */
@@ -174,15 +168,14 @@ public:
     /**
      * @brief Set the values of the contributing cell- and node-splines for the position \f$ x_p \f$
      *
-     * @details Set cellSplineVals and nodeSplineVals for the direction according to their
-     * documentation
+     * @details Set @ref m_cellSplineVals and @ref m_nodeSplineVals for the direction according to
+     * their documentation
      *
-     * @tparam dir : the direction in which to compute: Direction::xDir, Direction::yDir,
-     * Direction::zDir
+     * @tparam dir the direction in which to compute
      *
      * @param position Current position of the particle
-     * @param plo : low end of the problem domain
-     * @param dxInverseDir : inverse of the cell size in the given direction
+     * @param plo low end of the problem domain
+     * @param dxInverseDir inverse of the cell size in the given direction
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update_1d_splines (const amrex::Real position,
@@ -202,35 +195,35 @@ public:
     }
 
     /**
-     * @brief Compute a dual dof (defined by the corresponding reduction operator \f$ t_{R\{3-l\}})
-     *\f$ of a vectorized particle spline
+     * @brief Compute a dual dof (defined by the corresponding reduction operator
+     * \f$ t_{R\{3-l\}}) \f$ of a vectorized particle spline
      *
-     * Description:
      * This function computes a dual dof of the tensor-product particle spline
      * centered at the particle position encoded in this spline object, with a vector orientation
-     *for l = 1 or 2 Field::DualOneForm Specifically, it computes
-     *  - \f$ t_{R\{3-l\}_{ijk}}(\mathrm{partS}(xx-xx_p)) \f$ if l = 0 or 3
-     *  - \f$ t_{R\{3-l\}_{ijk}}(e_{dir} * \mathrm{partS}(xx-xx_p)) \f$ if l = 1 or 2
-     * where
-     *   partS is the (tensor-product) particle spline defined above, centered at the particle
-     *position \f$ xx_p \f$
+     * for l = 1 or 2.
+     *
+     * Specifically, it computes
+     *  - \f$ t_{R\{3-l\}_{ijk}}(S^{part}(xx-xx_p)) \f$ if l = 0 or 3
+     *  - \f$ t_{R\{3-l\}_{ijk}}(e_{dir} S^{part}(xx-xx_p)) \f$ if l = 1 or 2
+     *
+     * where \f$S^{part}\f$ is the (tensor-product) particle spline defined above, centered at the
+     * particle position \f$ xx_p \f$
      *
      * According to the univariate formulas above:
-     *   \f$ t_{R0_i}(\mathrm{partS}(x-x_p)) = \mathrm{cellS}_i( x_p ) \f$
+     *   \f$ t_{R0_i}(S^{part}(x-x_p)) = S^{cell}_i( x_p ) \f$
      * and
-     *   \f$ t_{R1_i}(\mathrm{partS}(x-x_p)) = \mathrm{nodeS}_i( x_p ) \f$
+     *   \f$ t_{R1_i}(S^{part}(x-x_p)) = S^{node}_i( x_p ) \f$
      * the multivariate dofs are obtained as products of univariate node- and cell-splines evaluated
      *at the particle position
      *
-     * @tparam form : index l of the associated dual form
-     * @tparam dir : for l = 1 or 2, the vectorized direction of the particle slpine: x = 0, y = 1,
-     *z = 2
+     * @tparam form index l of the associated dual form
+     * @tparam dir for l = 1 or 2, the direction of the particle spline
      *
      * @param i The index of the x-dir basis function
      * @param j The index of the y-dir basis function
      * @param k The index of the z-dir basis function
      *
-     * @return base The value of the calculated coefficient
+     * @return The value of the calculated coefficient
      */
     template <Field form, Direction dir>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
@@ -307,45 +300,44 @@ public:
      * @details Given a primal l-form (l = 1 or 2) field with coefficients (edge or face dofs) \f$
      * F_{ijk} \f$ this function computes the value of the spline-smoothed field at \f$ xx_p: \f$
      *
-     * \f$ F^S(xx_p) = \sum_d (e_d * \sum_{ijk} F_{ijk} * t_{R\{3-l\}_{ijk}}(e_d *
-     * \mathrm{partS}(xx-xx_p))) \f$
+     * \f$ F^S(xx_p) = \sum_d (e_d \sum_{ijk} F_{ijk} t_{R\{3-l\}_{ijk}}(e_d
+       S^{part}(xx-xx_p))) \f$
      *
      * where:
      * - \f$ xx_p \f$ = (\f$ x_p \f$, \f$ y_p \f$, \f$ z_p \f$) is the particle position encoded in
      * the spline object
      * - \f$ e_d \f$ is the canonical basis vector along grid direction d
      * - \f$ t_{R\{3-l\}} \f$ is the dual reduction operator for (3-l)-forms (here in 3D)
-     * - partS is the tensor-product particle spline (approximating the Dirac mass), ie
-     *     \f$ \mathrm{partS}( xx-xx_p ) = \prod_d (1/dx_d) * \mathrm{ref}_{S_{deg_{d-1}}}((xx -
-     * xx_{p})_{d}/dx_{d}) \f$ (see also the class documentation)
+     * - \f$S^{part}\f$ is the tensor-product particle spline (approximating the Dirac mass), ie
+     *     \f$ S^{part}( xx-xx_p ) = \prod_d (1/dx_d) * \mathrm{ref}_{S_{deg_{d-1}}}((xx -
+       xx_{p})_{d}/dx_{d}) \f$
+     *
+     * (see also the class documentation)
      *
      * Examples:
      *
-     * - for a (primal) 1-form electric field with (primal edge) dofs E_i, the function computes
-     *
+     * - for a (primal) 1-form electric field with (primal edge) dofs \f$E_i\f$, the function
+     * computes \n
      *   \f$ E^S(xx_p) = \sum_{d = \mathrm{components}} e_d ( \sum_{i = \mathrm{primal\ edges /
-     * dual\ faces}} E_i t_{R2_i}(e_d * \mathrm{partS}_p(xx)) ) \f$
-     *
+     * dual\ faces}} E_i t_{R2_i}(e_d S^{part}_p(xx)) ) \f$ \n
      *   where \f$ t_{R2_i}(.) \f$ is the reduction corresponding to a flux on the dual face i
      *
      * - for a (primal) 2-form magnetic field with (primal face) dofs \f$ B_i \f$, the function
-     * computes
-     *
+     * computes \n
      *   \f$ B^S(xx_p) = \sum_{d = \mathrm{components}} e_d ( \sum_{i = \mathrm{primal\ faces /
-     * dual\ edges}} B_i t_{R1_i}(e_d * \mathrm{partS}_p(xx)) ) \f$
-     *
+     * dual\ edges}} B_i t_{R1_i}(e_d S^{part}_p(xx)) ) \f$ \n
      *   where \f$ t_{R1_i}(.) \f$ is the reduction corresponding to a circulation on the dual edge
      * i
      *
      * for details about the algorithm see the documentation
-     * https://gempic.pages.mpcdf.de/gempic/latex/particleMesh.html#smoothed-electromagnetic-fields
+     * @verbatim embed:rst:inline :ref:`sec:SmoothedEFields` @endverbatim.
      *
-     * @tparam vDim : number of field components (coincides with the velocity dimension)
-     * @tparam form : index of the l form (1 or 2 for now)
+     * @tparam vDim number of field components (coincides with the velocity dimension)
+     * @tparam form index of the l form (1 or 2 for now)
      *
-     * @param fieldArray : array of field coefficients
+     * @param fieldArray array of field coefficients
      *
-     * @return fields : value of the spline-smoothed field at particle position
+     * @return fields: value of the spline-smoothed field at particle position
      */
     template <Field form, unsigned int vDim>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> eval_spline_field (
@@ -431,7 +423,7 @@ public:
             }
         GEMPIC_D_LOOP_END
 
-        return (fields);
+        return fields;
     }
 
     template <unsigned int nWtsSum>
@@ -534,24 +526,22 @@ public:
     /**
      * @brief Compute and store the values of the cardinal spline at regular values x+i
      *
-     * @details Given 0 <= xRef < 1, compute and store the values \f$ s[i] =
+     * @details Given 0 ≤ xRef < 1, compute and store the values \f$ s[i] =
      * S^{degree}(x+i-(deg+1)/2) \f$ for i = 0 .. degree. Here \f$ S^{degree} \f$ is the centered
      * cardinal B-spline of given degree with support [-(degree+1)/2, (degree+1)/2]
      *
-     * @tparam degree : degree of the cardinal spline
-     * @tparam length : length of the stored array
+     * @tparam degree degree of the cardinal spline
+     * @tparam length length of the stored array
      *
-     * @param xRef : the offset to integer positions at which the spline shall be evaluated
-     * @param s : the array in which the results will be stored
+     * @param xRef the offset to integer positions at which the spline shall be evaluated
+     * @param s the array in which the results will be stored
      */
-    // NOLINTBEGIN(readability-magic-numbers)
     template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE constexpr void spline_eval (const amrex::Real xRef,
                                                       amrex::GpuArray<amrex::Real, length> &s) const
     {
         s = cardinal_b_splines<degree, length>(xRef);
     }
-    // NOLINTEND(readability-magic-numbers)
 };
 
 /**
@@ -572,16 +562,12 @@ public:
     /**
      * @brief Construct a new SplineWithPrimitive object
      *
-     * @details Initialize the primitive by calling the update1DPrimitive method for each direction
-     * x, y and z
+     * @details Initialize the primitive by calling the @ref update_1d_primitive method for each
+     * direction
      *
      * @param position Current position of the particle
-     * @param plo (rename this one)
-     * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
-     * @details Additional details about xInverse
-     *  - dxInverse[Direction::xDir] == 1/dx
-     *  - dxInverse[Direction::yDir] == 1/dy
-     *  - dxInverse[Direction::zDir] == 1/dz
+     * @param plo low end of the problem domain
+     * @param dxInverse Inverse of the cell size in all three directions
      */
     AMREX_GPU_HOST_DEVICE SplineWithPrimitive (
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
@@ -600,9 +586,9 @@ public:
                                                                           dxInverse[yDir]),
                          this->template init_b_splines_at_positions<zDir>(position[zDir], plo[zDir],
                                                                           dxInverse[zDir]))};
-        AMREX_D_TERM((update1_d_primitive<xDir>(refOffsets[xDir]));
-                     , (update1_d_primitive<yDir>(refOffsets[yDir]));
-                     , (update1_d_primitive<zDir>(refOffsets[zDir])););
+        AMREX_D_TERM((update_1d_primitive<xDir>(refOffsets[xDir]));
+                     , (update_1d_primitive<yDir>(refOffsets[yDir]));
+                     , (update_1d_primitive<zDir>(refOffsets[zDir])););
     }
 
     /**
@@ -642,15 +628,14 @@ public:
      * @brief sets the values of the contributing cell- and node-splines at the given particle
      * position
      *
-     * Description:
-     * after this function call, the values of cellSplineVals[dir][i] and nodeSplineVals[dir][i]
-     * are set for i = 0 .. deg, according to their documentation above
+     * After this function call, the values of @ref m_cellSplineVals[dir][i] and
+     * @ref m_nodeSplineVals[dir][i] are set
      *
-     * @tparam dir : the direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir the direction in which to compute
      *
      * @param position Current position of the particle
-     * @param plo : low end of the problem domain
-     * @param dxInverseDir : inverse of the cell size in the given direction
+     * @param plo low end of the problem domain
+     * @param dxInverseDir inverse of the cell size in the given direction
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update_1d_splines (const amrex::Real position,
@@ -672,22 +657,21 @@ public:
         this->template spline_eval<deg, SplineBase<degX, degY, degZ>::s_maxDeg + 1>(
             refOffset, this->m_nodeSplineVals[dir]);
 
-        update1_d_primitive<dir>(refOffset);
+        update_1d_primitive<dir>(refOffset);
     }
 
     /**
      * @brief Update the primitive by evaluating splines at the new particle position
      *
-     * Description:
-     * after this function call, the values of primitiveNew are moved to primitiveOld and new
-     * values of primitiveNew are set for i = 0 .. deg - 1
+     * after this function call, the values of @ref m_primitiveNew are moved to @ref m_primitiveOld
+     * and new values of @ref m_primitiveNew are set
      *
-     * @tparam dir The direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir The direction in which to compute
      *
      * @param refOffset Normalized offset position of the particle
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update1_d_primitive (const amrex::Real refOffset)
+    AMREX_GPU_HOST_DEVICE void update_1d_primitive (const amrex::Real refOffset)
     {
         if (this->m_firstIndex[dir] < this->m_firstIndexOld[dir])
         {
@@ -707,9 +691,11 @@ public:
 
     /**
      * @brief Utility function for selecting a cellIndex corresponding to the primitive difference
-     * calculated in compute_primitive_difference
+     * calculated in @ref compute_primitive_difference
      *
-     * @param i, j, k The indices for the loop, with i the index in compute_primitive_difference
+     * @tparam pDir The Direction in which we compute the primitive difference
+     *
+     * @param i, j, k The loop indices, with i the index in @ref compute_primitive_difference
      */
     template <Direction pDir>
     AMREX_GPU_HOST_DEVICE inline amrex::Dim3 select_primitive_cellindex (const int i,
@@ -737,23 +723,20 @@ public:
      *
      * @tparam dir The direction in which to compute
      * @tparam region The region of the calculation. Can be one of four:
-     *                firstSpline: Only the lowest index spline needs to be taken into account
-     *                lastSpline: Only the highest index spline needs to be taken into account
-     *                noSplines: Region between splines
-     *                bothSplines: Both splines need to be taken into account
+     *                - firstSpline: Only the lowest index spline needs to be taken into account
+     *                - lastSpline: Only the highest index spline needs to be taken into account
+     *                - noSplines: Region between splines
+     *                - bothSplines: Both splines need to be taken into account
      *
      * @param dx Cell size in all three directions x, y and z (It's an array)
      * @param index Index at which to evaluate the primitive difference
      *
-     * @return primitiveDifference The difference between primitives of the old spline and the new
-     * spline
+     * @return The difference between primitives of the old spline and the new spline
      */
     template <Direction dir, Impl::PrimitiveDifferenceRegion region>
     AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx, const int index) const
     {
-        //BL_PROFILE(
-        //    "Gempic::ParticleMeshCoupling::SplineWithPrimitive::compute_primitive_difference()");
         using namespace Impl; // utility functions for this function
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
@@ -803,16 +786,15 @@ public:
     }
 
     /**
-     * @brief Compute the difference between primitives of the old spline and the new spline. Slower
-     * version for when the regime is unknown
+     * @brief Compute the difference between primitives of the old spline and the new spline.
+     * Slower version for when the regime is unknown
      *
-     * @tparam dir The direction in which to compute: x = 0, y = 1, z = 2
+     * @tparam dir The direction in which to compute
      *
      * @param dx Cell size in all three directions x, y and z (It's an array)
      * @param index Index at which to evaluate the primitive difference
      *
-     * @return primitiveDifference The difference between primitives of the old spline and the new
-     * spline
+     * @return The difference between primitives of the old spline and the new spline
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE inline amrex::Real compute_primitive_difference (
@@ -849,20 +831,18 @@ public:
     /**
      * @brief Compute and store the values of the primitive at regular values x+i
      *
-     * @tparam degree : degree of the primitive
-     * @tparam length : length of the stored array
+     * @tparam degree degree of the primitive
+     * @tparam length length of the stored array
      *
-     * @param xRef : the offset to integer positions at which the spline shall be evaluated
-     * @param s : the array in which the results will be stored
+     * @param xRef the offset to integer positions at which the spline shall be evaluated
+     * @param s the array in which the results will be stored
      */
-    // NOLINTBEGIN(readability-magic-numbers)
     template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE inline constexpr void primitive_eval (
         const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
     {
         s = cardinal_b_splines_primitive<degree, length>(xRef);
     }
-    // NOLINTEND(readability-magic-numbers)
 };
 
 /**
@@ -890,12 +870,6 @@ public:
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
      * @param dx Cell size in all three directions x, y and z (It's an array)
-     * @details Additional details about xInverse
-     *  - dxInverse[Direction::xDir] == 1/dx
-     *  - dxInverse[Direction::yDir] == 1/dy
-     *  - dxInverse[Direction::zDir] == 1/dz
-     *  - (Potentially dim < 3)
-     *  - dxInverse[dim] == 1/(dx * dy * dz)
      */
     AMREX_GPU_HOST_DEVICE SplineWithFirstDerivative (
         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
@@ -934,16 +908,15 @@ public:
      * @brief Set the values of the contributing cell- and node-spline derivatives for the position
      * \f$ x_p \f$
      *
-     * @details Set cellSplineVals and nodeSplineVals for the direction according to their
-     * documentation
+     * @details Set @ref m_cellSplineVals and @ref m_nodeSplineVals for the direction according to
+     * their documentation
      *
-     * @tparam dir : the direction in which to compute: Direction::xDir, Direction::yDir,
-     * Direction::zDir
+     * @tparam dir the direction in which to compute
      *
      * @param position Current position of the particle
-     * @param plo : low end of the problem domain
-     * @param dxInverseDir : inverse of the cell size in the given direction
-     * @param dxDir : cell size in the given direction
+     * @param plo low end of the problem domain
+     * @param dxInverseDir inverse of the cell size in the given direction
+     * @param dxDir cell size in the given direction
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (const amrex::Real position,
@@ -973,51 +946,49 @@ public:
     /**
      * @brief Compute and store the values of the derivative at regular values x+i
      *
-     * @tparam degree : degree of the derivative
-     * @tparam length : length of the stored array
+     * @tparam degree degree of the derivative
+     * @tparam length length of the stored array
      *
-     * @param xRef : the offset to integer positions at which the spline shall be evaluated
-     * @param s : the array in which the results will be stored
+     * @param xRef the offset to integer positions at which the spline shall be evaluated
+     * @param s the array in which the results will be stored
      */
-    // NOLINTBEGIN(readability-magic-numbers)
     template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE inline constexpr void first_derivative_eval (
         const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
     {
         s = cardinal_b_splines_first_derivative<degree>(xRef);
     }
-    // NOLINTEND(readability-magic-numbers)
 
     /**
-     * @brief Compute a dual dof derivative (defined by the corresponding reduction operator \f$
-     *t_{R\{3-l\}}) \f$ of a vectorized particle spline
+     * @brief Compute a dual dof derivative (defined by the corresponding reduction operator
+     * \f$ t_{R\{3-l\}}) \f$ of a vectorized particle spline
      *
-     * Description:
      * This function computes a dual dof of the tensor-product particle spline
      * centered at the particle position encoded in this spline object, with a vector orientation
-     *for l = 1 or 2 Field::DualOneForm Specifically, it computes
-     *  - \f$ t_{R\{3-l\}_{ijk}}(\mathrm{partS}(xx-xx_p)) \f$ if l = 0 or 3
-     *  - \f$ t_{R\{3-l\}_{ijk}}(e_{dir} * \mathrm{partS}(xx-xx_p)) \f$ if l = 1 or 2
-     * where
-     *   partS is the (tensor-product) particle spline defined above, centered at the particle
-     *position \f$ xx_p \f$
+     * for l = 1 or 2 Field::DualOneForm.
+     *
+     * Specifically, it computes
+     *  - \f$ t_{R\{3-l\}_{ijk}}(S^{part}(xx-xx_p)) \f$ if l = 0 or 3
+     *  - \f$ t_{R\{3-l\}_{ijk}}(e_{dir} S^{part}(xx-xx_p)) \f$ if l = 1 or 2
+     *
+     * where \f$S^{part}\f$ is the (tensor-product) particle spline defined above, centered at the
+     * particle position \f$ xx_p \f$
      *
      * According to the univariate formulas above:
-     *   \f$ t_{R0_i}(\mathrm{partS}(x-x_p)) = \mathrm{cellS}_i( x_p ) \f$
+     *   \f$ t_{R0_i}(S^{part}(x-x_p)) = S^{cell}_i( x_p ) \f$
      * and
-     *   \f$ t_{R1_i}(\mathrm{partS}(x-x_p)) = \mathrm{nodeS}_i( x_p ) \f$
+     *   \f$ t_{R1_i}(S^{part}(x-x_p)) = S^{node}_i( x_p ) \f$
      * the multivariate dofs are obtained as products of univariate node- and cell-splines evaluated
      *at the particle position
      *
-     * @tparam form : index l of the associated dual form
-     * @tparam dir : for l = 1 or 2, the vectorized direction of the particle slpine: x = 0, y = 1,
-     *z = 2
+     * @tparam form index l of the associated dual form
+     * @tparam dir for l = 1 or 2, the direction of the particle spline
      *
      * @param i The index of the x-dir basis function
      * @param j The index of the y-dir basis function
      * @param k The index of the z-dir basis function
      *
-     * @return base The value of the calculated coefficient
+     * @return The value of the calculated coefficient
      */
     template <Field form, Direction dir, Direction dirDeriv>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline_derivative (int i, int j, int k) const

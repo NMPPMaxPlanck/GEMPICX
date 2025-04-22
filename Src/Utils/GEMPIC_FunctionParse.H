@@ -10,15 +10,15 @@ namespace Gempic::Utils
 /**
  * @brief Parse functions based on string array. Please keep parseArray alive.
  *
- * Description:
+ * @details
  * Convenience function to load and compile functions using AMReX's Parser module.
  * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs
  * to be used.
  *
- * @tparam functionNumber : Number of functions to parse
+ * @tparam functionNumber Number of functions to parse
  *
- * @param variableStrings : List of strings to parse
- * @param params : Optional parameter class object for parsing scoped functions
+ * @param variableStrings List of strings to parse
+ * @param params Optional parameter class object for parsing scoped functions
  *
  * @return [parseArray, functionArray]
  */
@@ -59,14 +59,14 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
 /**
  * @brief Parse functions based on string array. Please keep parseArray alive.
  *
- * Description:
+ * @details
  * Convenience function to load and compile functions using AMReX's Parser module.
  * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs
  * to be used.
  *
- * @tparam functionNumber : Number of functions to parse
+ * @tparam functionNumber Number of functions to parse
  *
- * @param variableStrings : List of strings to parse
+ * @param variableStrings List of strings to parse
  *
  * @return [parseArray, functionArray]
  */
@@ -81,14 +81,14 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
 /**
  * @brief Compiles an array of AMReX parsers into an array of compiled executors.
  *
- * Description:
+ * @details
  * Convenience function to compile functions using AMReX's Parser module from uncompiled parse
  * objects (parseArray).
  *
- * @tparam functionNumber : The number of functions in the parser array.
- * @param parseArray : An array of AMReX parsers to compile.
+ * @tparam functionNumber The number of functions in the parser array.
+ * @param parseArray An array of AMReX parsers to compile.
  *
- * @return functionArray : An array of compiled executors for the given parsers.
+ * @return An array of compiled executors for the given parsers.
  */
 template <size_t functionNumber>
 auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
@@ -107,13 +107,13 @@ auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
 /**
  * @brief Parse function based on string. Please keep parse object (return arg 1) alive.
  *
- * Description:
+ * @details
  * Convenience function to load and compile functions using AMReX's Parser module.
  * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs
  * to be used.
  *
- * @param variableString : String to parse
- * @param params : Optional parameter class object for parsing a scoped function
+ * @param variableString String to parse
+ * @param params Optional parameter class object for parsing a scoped function
  *
  * @return [parser, function]
  */
@@ -127,12 +127,12 @@ inline auto parse_function (const std::string& variableString, Io::Parameters& p
 /**
  * @brief Parse function based on string. Please keep parse object (return arg 1) alive.
  *
- * Description:
+ * @details
  * Convenience function to load and compile functions using AMReX's Parser module.
  * The uncompiled parse object (parseArray) MUST be kept alive as long as the compiled object needs
  * to be used.
  *
- * @param variableString : String to parse
+ * @param variableString String to parse
  *
  * @return [parser, function]
  */
@@ -146,13 +146,13 @@ inline auto parse_function (const std::string& variableString)
 /**
  * @brief Compiles an AMReX parser into a compiled executor.
  *
- * Description:
+ * @details
  * Convenience function to compile a single function using AMReX's Parser module from uncompiled
  * parse object.
  *
- * @param parser : A single AMReX parser to compile.
+ * @param parser A single AMReX parser to compile.
  *
- * @return function : Compiled executors for the given parser.
+ * @return Compiled executor for the given parser.
  */
 inline auto compile_function (amrex::Parser parser)
 {

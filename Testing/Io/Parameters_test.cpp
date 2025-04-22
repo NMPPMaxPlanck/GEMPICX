@@ -15,25 +15,25 @@ using namespace Gempic::Io;
 class ParametersTest : public testing::Test
 {
 protected:
-    static std::vector<int> &file_n_cell_vector ()
+    static std::vector<int>& file_n_cell_vector ()
     {
         static std::vector<int> nCellVec{AMREX_D_DECL(128, 8, 8)};
         return nCellVec;
     }
 
-    static std::vector<int> &file_is_periodic_vector ()
+    static std::vector<int>& file_is_periodic_vector ()
     {
         static std::vector<int> isPeriodicVector{AMREX_D_DECL(1, 1, 1)};
         return isPeriodicVector;
     }
 
-    static std::string &file_particle_species0_density ()
+    static std::string& file_particle_species0_density ()
     {
         static std::string particleSpecies0Density{"1.0 + 0.01 * cos(kvarx * x)"};
         return particleSpecies0Density;
     };
 
-    static void SetUpTestSuite ()
+    ParametersTest()
     {
         amrex::ParmParse pp;
 
@@ -116,60 +116,42 @@ TEST_F(ParametersTest, ClassFunctionality)
     }
 }
 
-// Death tests should be named as such in the testing suite
-TEST(ParametersDeathTests, NoOutputFile)
+// "Death" tests, but we have changed AMReX behaviour to throw an exception first
+TEST(ParametersErrorTests, NoOutputFile)
 {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
     Parameters::set_print_output();
-    EXPECT_EXIT(Parameters{}, testing::ExitedWithCode(Error::InvalidInput),
-                "Error: Parameter outputFile not in input file!");
-    Parameters::set_print_output(
-        false); // special circumstances because Parameters was technically not created and
-                // therefore not destroyed, so m_printOutput was not reset automatically.
+    EXPECT_THROW(Parameters{}, std::runtime_error);
+    // special circumstances because Parameters was technically not created and
+    // therefore not destroyed, so m_printOutput was not reset automatically.
+    Parameters::set_print_output(false);
 }
 
-// Death tests should be named as such in the testing suite
-TEST(ParametersDeathTests, NoSuchParameter)
+TEST(ParametersErrorTests, NoSuchParameter)
 {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
     int a;
     Parameters params{};
-    EXPECT_EXIT(params.get("NonexistentVar", a), testing::ExitedWithCode(Error::InvalidInput),
-                "Error: Parameter NonexistentVar not in input file!");
+    EXPECT_THROW(params.get("NonexistentVar", a), std::runtime_error);
 }
 
-// Death tests should be named as such in the testing suite
-TEST(ParametersDeathTests, AttemptedChange)
+TEST(ParametersErrorTests, AttemptedChange)
 {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
     int ghostCellBuffer{3};
     Parameters params{};
     params.get_or_set("nGhostExtra", ghostCellBuffer);
     int ghostCellInParams;
     params.get("nGhostExtra", ghostCellInParams);
     EXPECT_EQ(ghostCellBuffer, ghostCellInParams);
-
-    EXPECT_EXIT(params.set("nGhostExtra", ghostCellBuffer),
-                testing::ExitedWithCode(Error::AttemptedParameterChange),
-                "Error: Parameters class attempted to set parameter nGhostExtra already set by "
-                "Parameters class");
+    EXPECT_THROW(params.set("nGhostExtra", ghostCellBuffer), std::runtime_error);
 }
 
-// Death tests should be named as such in the testing suite
-TEST(ParametersDeathTests, NoGeneralInstance)
+TEST(ParametersErrorTests, NoGeneralInstance)
 {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    EXPECT_EXIT(Parameters("ClassPrefix"), testing::ExitedWithCode(Error::ParametersNotInitialized),
-                "Error: Parameters class not previously initialized!");
+    EXPECT_THROW(Parameters("ClassPrefix"), std::runtime_error);
 }
 
-// Death tests should be named as such in the testing suite
-TEST(ParametersDeathTests, TwoGeneralInstances)
+TEST(ParametersErrorTests, TwoGeneralInstances)
 {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
     Parameters params{};
-    EXPECT_EXIT(Parameters::set_print_output(),
-                testing::ExitedWithCode(Error::ParametersAlreadyInitialized),
-                "Error: Parameters class already previously initialized!");
+    EXPECT_THROW(Parameters::set_print_output(), std::runtime_error);
 }
 } // namespace

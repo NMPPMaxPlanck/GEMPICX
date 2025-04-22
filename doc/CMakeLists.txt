@@ -7,6 +7,9 @@
 # 4. Build the final documentation using python with sphinx.
 #
 ############################################################################################
+# ToDo: Automatically detect file which are to be converted with pandoc
+# Opt out if a file should not be used.
+list(APPEND GEMPIC_RST_TEX_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst CodeEditorVSCode.rst Particles.rst FieldSolvers.rst Filter.rst)
 cmake_policy(SET CMP0094 NEW)
 set(GEMPIC_DOC_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Python3 REQUIRED)
@@ -47,9 +50,6 @@ if(SPHINX_AND_BREATHE_NOT_FOUND)
 endif()
 
 set(GEMPIC_LATEX_INPUT ${GEMPIC_DOC_SOURCE}/latex)
-# ToDo: Automatically detect file which are to be converted with pandoc
-# Opt out if a file should not be used.
-list(APPEND GEMPIC_RST_TEX_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst CodeEditorVSCode.rst)
 foreach(RSTF ${GEMPIC_RST_TEX_FILES})
   string(REGEX REPLACE "[.]rst$" ".tex" LATEXF ${RSTF})
   add_custom_command(OUTPUT ${GEMPIC_LATEX_INPUT}/${RSTF}

@@ -35,9 +35,9 @@ log_2 (error_16 / error_32)
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "TestUtils/GEMPIC_TestUtils.H"
 
 using namespace Gempic;
 using namespace Forms;
@@ -58,25 +58,10 @@ public:
 
     inline static const int s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
-
-    static void SetUpTestSuite ()
-    {
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(16, 16, 16)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        /* Initialize the infrastructure */
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
 };
 
 template <int hodgeDegree, int maxSplineDegree>
-void maxwellstrang_error (double &bError, double &dError, const int n)
+void maxwellstrang_error (double& bError, double& dError, const int n)
 {
     // Analytical solutions in every direction
 #if (AMREX_SPACEDIM == 1)
@@ -119,12 +104,9 @@ void maxwellstrang_error (double &bError, double &dError, const int n)
     };
 #endif
     // Initialize computational_domain
-    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-
     Gempic::Io::Parameters parameters{};
-    amrex::ParmParse pp;
-    pp.addarr("ComputationalDomain.nCell", nCell);
-    ComputationalDomain infra;
+    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+    auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
     // Project B and D to a primal and dual two form respectively
     constexpr int nVar = AMREX_SPACEDIM + 1; // x, y, z, t

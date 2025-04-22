@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -58,6 +57,17 @@ amrex::GpuArray<amrex::Real, vDim>* update_b_field_parallel_for (
     return bfields;
 }
 
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 // Test fixture
 class EvaluateBFieldTest : public testing::Test
 {
@@ -73,42 +83,18 @@ protected:
     static const int s_spec{0};
     Io::Parameters m_parameters{};
 
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
-    static void SetUpTestSuite ()
+    EvaluateBFieldTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        // const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-        //                              {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
         // particle settings
         double charge{1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        /* Initialize the infrastructure */
-        m_infra = ComputationalDomain{};
+        m_parameters.set("Particle.species0.charge", charge);
+        m_parameters.set("Particle.species0.mass", mass);
 
         // Initialize the De Rham Complex
         m_deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
