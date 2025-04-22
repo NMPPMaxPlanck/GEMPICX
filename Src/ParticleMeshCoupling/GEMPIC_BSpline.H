@@ -31,13 +31,13 @@ namespace Gempic::ParticleMeshCoupling
  *          Third polynomial interval S^2(0.75)=0.28125
  *          @endcode
  * 
- * @param x : \f$x\in[0,1]\f$
- * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
- * @tparam length : For compatibility with @ref SplineBase. 
+ * @param x \f$x\in[0,1]\f$
+ * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$
+ * @tparam length For compatibility with @ref SplineBase. 
  *                  Will be deprecated as soon as possible.
  *                  Every user thinking about using this, DO NOT!
  *
- * @return res : \f$res[i] = S^{degree}(x+i-(degree+1)/2)\f$
+ * @return res \f$res[i] = S^{degree}(x+i-(degree+1)/2)\f$
  */
 // clang-format on
 template <size_t degree, size_t length = degree + 1>
@@ -110,13 +110,13 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines (a
  * @details Implemented \f$\int_{-(degree+1)/2}^x S^{degree}(y) \mathrm{d}y \f$
  *          Otherwise this function executes the same behavior as @ref cardinal_b_splines
  *
- * @param x : \f$x\in[0,1]\f$
- * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
- * @tparam length : For compatibility with @ref SplineBase.
+ * @param x \f$x\in[0,1]\f$
+ * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$
+ * @tparam length For compatibility with @ref SplineBase.
  *                  Will be deprecated as soon as possible.
  *                  Every user thinking about using this, DO NOT!
  *
- * @return res : \f$res[i] = \int_{(degree+1)/2}^{x+i-(degree+1)/2} S^{degree}(y) \mathrm{d}y\f$
+ * @return res \f$res[i] = \int_{(degree+1)/2}^{x+i-(degree+1)/2} S^{degree}(y) \mathrm{d}y\f$
  */
 // clang-format on
 template <size_t degree, size_t length = degree + 1>
@@ -196,10 +196,10 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines_pr
  * 
  * @details Implemented \f$\partial_x S^{degree}(x)\f$
  *          Otherwise this function executes the same behavior as @ref cardinal_b_splines
- * @param x : \f$x\in[0,1]\f$
- * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
+ * @param x \f$x\in[0,1]\f$
+ * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$
  *
- * @return res : \f$res[i] = \partial_x S^{degree}(x+i-(degree+1)/2)\f$
+ * @return res \f$res[i] = \partial_x S^{degree}(x+i-(degree+1)/2)\f$
  * 
  */
 // clang-format on
@@ -271,10 +271,10 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> cardinal_b_spline
  * @details Implemented \f$\partial_x^2 S^{degree}(x)\f$
  *          Otherwise this function executes the same behavior as @ref cardinal_b_splines
  * 
- * @param x : \f$x\in[0,1]\f$
- * @tparam degree : \f$degree\in\{0,1,2,3,4,5\}\f$
+ * @param x \f$x\in[0,1]\f$
+ * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$
  *
- * @return res : \f$res[i] = \partial_x^2 S^{degree}(x+i-(degree+1)/2)\f$
+ * @return res \f$res[i] = \partial_x^2 S^{degree}(x+i-(degree+1)/2)\f$
  * 
  */
 // clang-format on

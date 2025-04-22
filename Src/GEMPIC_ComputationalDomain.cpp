@@ -35,7 +35,7 @@ DiscreteGrid::DiscreteGrid(amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo,
     }
 }
 
-DiscreteGrid::DiscreteGrid(Io::Parameters &params,
+DiscreteGrid::DiscreteGrid(Io::Parameters& params,
                            amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition)
 {
     // Initialize infrastructure:
@@ -94,29 +94,47 @@ DiscreteGrid::DiscreteGrid(Io::Parameters &params,
     *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
 }
 
+ComputationalDomain::ComputationalDomain(const std::array<amrex::Real, AMREX_SPACEDIM>& domainLo,
+                                         const std::array<amrex::Real, AMREX_SPACEDIM>& domainHi,
+                                         const amrex::IntVect& nCell,
+                                         const amrex::IntVect& maxGridSize,
+                                         const std::array<int, AMREX_SPACEDIM>& isPeriodic,
+                                         amrex::CoordSys::CoordType coordType) :
+    m_nCell{nCell}
+{
+    BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain(args)");
+    amrex::Box domain;
+    amrex::IntVect domLo(AMREX_D_DECL(0, 0, 0));
+    domain.setSmall(domLo);
+    amrex::IntVect domHi(AMREX_D_DECL(m_nCell[xDir] - 1, m_nCell[yDir] - 1, m_nCell[zDir] - 1));
+    domain.setBig(domHi);
+
+    amrex::RealBox realBox = amrex::RealBox(domainLo, domainHi);
+    m_geom.define(domain, realBox, coordType, isPeriodic);
+    m_geomData = m_geom.data();
+
+    m_grid.define(domain);
+    m_grid.maxSize(maxGridSize);
+    m_distriMap.define(m_grid);
+}
+
 ComputationalDomain::ComputationalDomain()
 {
     BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
     Io::Parameters params("ComputationalDomain");
     // Initialize infrastructure:
-    amrex::Vector<int> nCellVector;
-    params.get("nCell", nCellVector);
-    amrex::Vector<int> maxGridSizeTmp;
+    amrex::IntVect nCell;
+    params.get("nCell", nCell);
     amrex::IntVect maxGridSize;
-    params.get("maxGridSize", maxGridSizeTmp);
-    for (int i{0}; i < AMREX_SPACEDIM; ++i)
-    {
-        m_nCell[i] = nCellVector[i];
-        maxGridSize[i] = maxGridSizeTmp[i];
-    }
+    params.get("maxGridSize", maxGridSize);
 
     amrex::Array<int, AMREX_SPACEDIM> isPeriodic;
     params.get("isPeriodic", isPeriodic);
     // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
     // Probably needs to check that both are not provided for the same direction?
-    amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
     params.get_or_set("domainLo", domainLo);
-    amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
     amrex::Vector<amrex::Real> k;
     // Non-periodic directions exist
     if (!(AMREX_D_TERM(isPeriodic[xDir], &&isPeriodic[yDir], &&isPeriodic[zDir])))
@@ -148,23 +166,9 @@ ComputationalDomain::ComputationalDomain()
             params.get_or_set("domainHi", domainHi);
         }
     }
-    amrex::RealBox realBox =
-        amrex::RealBox({AMREX_D_DECL(domainLo[xDir], domainLo[yDir], domainLo[zDir])},
-                       {AMREX_D_DECL(domainHi[xDir], domainHi[yDir], domainHi[zDir])});
 
-    amrex::Box domain;
-    amrex::IntVect domLo(AMREX_D_DECL(0, 0, 0));
-    domain.setSmall(domLo);
-    amrex::IntVect domHi(AMREX_D_DECL(m_nCell[xDir] - 1, m_nCell[yDir] - 1, m_nCell[zDir] - 1));
-    domain.setBig(domHi);
+    auto coordsys = amrex::CoordSys::cartesian;
 
-    m_grid.define(domain);
-    m_grid.maxSize(maxGridSize);
-
-    m_geom.define(domain, realBox, amrex::CoordSys::cartesian, isPeriodic);
-    m_distriMap.define(m_grid);
-
-    m_geomData = m_geom.data();
+    *this = ComputationalDomain{domainLo, domainHi, nCell, maxGridSize, isPeriodic, coordsys};
 }
-
 } // namespace Gempic

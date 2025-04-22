@@ -18,7 +18,6 @@
 #include <AMReX_MLNodeLaplacian.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_MultiFabUtil.H>
-#include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
@@ -284,20 +283,20 @@ public:
                     {
                         gdtmp = gid[n[dir]]((i + in[0]), (j + jn[0]), (k + kn[0]));
                         assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
-                        mat[icol] += fac[n[dir]] * edgetoface[n[dir]];
+                        mat[icol] += fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[dir]]((i - in[dir]), (j - jn[dir]), (k - kn[dir]));
                         assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
-                        mat[icol] += fac[n[dir]] * edgetoface[n[dir]];
+                        mat[icol] += fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[dir]](i, j, k);
                         assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
-                        mat[icol] += -fac[n[dir]] * edgetoface[n[dir]];
+                        mat[icol] += -fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[dir]]((i - in[dir] + in[0]), (j - jn[dir] + jn[0]),
                                             (k - kn[dir] + kn[0]));
                         assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
-                        mat[icol] += -fac[n[dir]] * edgetoface[n[dir]];
+                        mat[icol] += -fac[n[dir]] * edgetoface[n[0]];
                     }
                 }
 

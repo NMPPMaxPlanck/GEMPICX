@@ -95,6 +95,9 @@ numfig = True
 pygments_style = None
 
 highlight_language = 'c++'
+cpp_index_common_prefix = [
+    'Gempic::',
+]
 
 # equations numbering
 mathjax3_config = {

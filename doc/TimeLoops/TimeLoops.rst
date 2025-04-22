@@ -1,5 +1,5 @@
 Time Loops
-======================
+==========
 
 .. toctree::
    :maxdepth: 2

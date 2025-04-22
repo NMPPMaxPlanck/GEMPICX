@@ -50,6 +50,17 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
                        });
 }
 
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 // Test fixture. Sets up clean environment before each test.
 class DepositRhoTest : public testing::Test
 {
@@ -75,44 +86,19 @@ protected:
     amrex::Array<amrex::Real, s_numSpec> m_charge{1, -1};
     amrex::Array<amrex::Real, s_numSpec> m_mass{1, 0.1};
 
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
-    // amrex::MultiFab rho;
     std::unique_ptr<DeRhamField<Grid::dual, Space::cell>> m_rhoPtr;
 
-    static void SetUpTestSuite ()
+    DepositRhoTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        // const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-        //                              {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
         // particle settings
         double charge{1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        /* Initialize the infrastructure */
-        m_infra = ComputationalDomain{};
+        m_params.set("Particle.species0.charge", charge);
+        m_params.set("Particle.species0.mass", mass);
 
         const int hodgeDegree{2};
         const int maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
@@ -222,7 +208,7 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
         // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and
         // receiving 1/8 the weight of the particle (3)
         CHECK_FIELD(
-            m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+            m_rhoPtr->m_data[pti].array(), pti.validbox(),
             // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
              { return AMREX_D_TERM(a >= 9, &&b >= 9, &&c >= 9); }},
@@ -266,7 +252,7 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
         // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
         // non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the
         // particle (1)
-        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), pti.validbox(),
                     // Expect the 2^SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
                     // non-zero
                     {[] (AMREX_D_DECL(int a, int b, int c))
@@ -318,7 +304,7 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
                                                                 m_particleGroup[0]->get_charge());
 
         // See SingleParticle test for explanation of expectations
-        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), pti.validbox(),
                     {[] (AMREX_D_DECL(int a, int b, int c))
                      { return AMREX_D_TERM(a == 0, &&b == 0, &&c == 0); },
                      [] (AMREX_D_DECL(int a, int b, int c))
@@ -367,7 +353,7 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
                                                                 m_particleGroup[0]->get_charge());
 
         // See SingleParticle test for explanation of expectations
-        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(m_rhoPtr->m_data[pti].array(), pti.validbox(),
                     {[] (AMREX_D_DECL(int a, int b, int c))
                      { return AMREX_D_TERM(a == 0, &&b == 0, &&c == 0); },
                      [] (AMREX_D_DECL(int a, int b, int c))
@@ -422,7 +408,7 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
             if (spec == s_numSpec - 1)
             {
                 // See SingleParticle test for explanation of expectations
-                CHECK_FIELD(m_rhoPtr->m_data[pti].array(), m_infra.m_nCell.dim3(),
+                CHECK_FIELD(m_rhoPtr->m_data[pti].array(), pti.validbox(),
                             {[] (AMREX_D_DECL(int a, int b, int c))
                              { return AMREX_D_TERM(a == 0, &&b == 0, &&c == 0); },
                              [] (AMREX_D_DECL(int a, int b, int c))

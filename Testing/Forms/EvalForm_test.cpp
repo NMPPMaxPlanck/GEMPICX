@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -131,6 +130,18 @@ void compute_analytical_vector_function_parallel_for (
         });
 }
 
+//@todo: These tests should work with the default ComputationDomain, but don't. Why?
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 template <typename Form>
 class FDDeRhamComplexEvalFormTest : public testing::Test
 {
@@ -146,33 +157,18 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
 
     int m_gaussNodes = 6;
     const amrex::Real m_tol = 1e-13;
 
-    static void SetUpTestSuite ()
+    FDDeRhamComplexEvalFormTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
         // Not checking particles
         const int nGhostExtra{1}; //{-s_maxSplineDegree};
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("nGhostExtra", nGhostExtra);
+        m_parameters.set("nGhostExtra", nGhostExtra);
     }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override { m_infra = ComputationalDomain{}; }
 };
 
 using ZeroOrThreeFormTypes = ::testing::Types<GridSpaceTypes<Grid::primal, Space::node>,

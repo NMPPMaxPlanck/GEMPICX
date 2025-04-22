@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Parameters.H"
@@ -82,35 +81,35 @@ amrex::Real compute_v_moment_2 (const ParticleGroups<vDim>* partGr)
 
 void add_particle_parameters (const std::string& sampler)
 {
-    amrex::ParmParse pp;
-    pp.add("Particle.speciesNames", sampler);
+    Gempic::Io::Parameters parameters{};
+    parameters.set("Particle.speciesNames", sampler);
     const std::string particleInputScope{"Particle." + sampler};
-    amrex::ParmParse ppparticle(particleInputScope);
-    ppparticle.add("sampler", sampler);
+    Gempic::Io::Parameters partparams{particleInputScope};
+    partparams.set("sampler", sampler);
     const int nPartPerCell = 1000;
-    ppparticle.add("nPartPerCell", nPartPerCell);
+    partparams.set("nPartPerCell", nPartPerCell);
     const amrex::Real charge = 1.0;
-    ppparticle.add("charge", charge);
+    partparams.set("charge", charge);
     const amrex::Real mass = 1.0;
-    ppparticle.add("mass", mass);
+    partparams.set("mass", mass);
     const std::string density = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
-    ppparticle.add("density", density);
+    partparams.set("density", density);
     const int numGaussians = 2;
-    ppparticle.add("numGaussians", numGaussians);
+    partparams.set("numGaussians", numGaussians);
     const amrex::Vector<amrex::Real> g0vMean = {0.0, 0.0, 0.0};
-    ppparticle.addarr("G0.vMean", g0vMean);
+    partparams.set("G0.vMean", g0vMean);
     const amrex::GpuArray<std::string, 3> g0vThermal = {"2.0 + 0.0 * sin(kvarx*x)", "2.0", "2.0"};
-    ppparticle.add("G0.vThermal.x", g0vThermal[xDir]);
-    ppparticle.add("G0.vThermal.y", g0vThermal[yDir]);
-    ppparticle.add("G0.vThermal.z", g0vThermal[zDir]);
+    partparams.set("G0.vThermal.x", g0vThermal[xDir]);
+    partparams.set("G0.vThermal.y", g0vThermal[yDir]);
+    partparams.set("G0.vThermal.z", g0vThermal[zDir]);
     const amrex::Real g0vWeight = 0.75;
-    ppparticle.add("G0.vWeight", g0vWeight);
+    partparams.set("G0.vWeight", g0vWeight);
     const amrex::Vector<amrex::Real> g1vMean = {2.0, 2.0, 2.0};
-    ppparticle.addarr("G1.vMean", g1vMean);
+    partparams.set("G1.vMean", g1vMean);
     const amrex::Vector<amrex::Real> g1vThermal = {1.0, 1.0, 1.0};
-    ppparticle.addarr("G1.vThermal", g1vThermal);
+    partparams.set("G1.vThermal", g1vThermal);
     const amrex::Real g1vWeight = 0.25;
-    ppparticle.add("G1.vWeight", g1vWeight);
+    partparams.set("G1.vWeight", g1vWeight);
 }
 
 struct ParticleInputCellwise
@@ -133,6 +132,21 @@ struct ParticleInputGpu
     inline constexpr static std::string_view s_sampler{"FullDomainGpu"};
 };
 
+//@todo: using the default domain causes cellwise to deviate from the other samplers and causes
+//       errors for all three. Why?
+//       for obvious reasons, this limitation occurs in ReducedDiagnostics_test and
+//       FullDiagnostics_test, as well
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1, 1, 1)};
+    const amrex::IntVect nCell{AMREX_D_DECL(4, 4, 4)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(32, 8, 8)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 template <typename ParticleInput>
 class SamplerTest : public testing::Test
 {
@@ -141,26 +155,17 @@ protected:
     ComputationalDomain m_infra;
     amrex::Real m_tol{1e-1};
 
-    static void SetUpTestSuite ()
+    SamplerTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(4, 4, 4)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(32, 8, 8)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
+        // 2pi(domainHi - domainLo) = k
+        std::array<amrex::Real, AMREX_SPACEDIM> domainSize = {
+            AMREX_D_DECL(m_infra.geometry().ProbLength(xDir), m_infra.geometry().ProbLength(yDir),
+                         m_infra.geometry().ProbLength(zDir))};
+        amrex::Vector<amrex::Real> k{AMREX_D_DECL(
+            2 * M_PI * domainSize[xDir], 2 * M_PI * domainSize[yDir], 2 * M_PI * domainSize[zDir])};
+        m_parameters.set("k", k);
         // Special case by case parameters
         add_particle_parameters(std::string(ParticleInput::s_sampler));
-    }
-
-    void SetUp () override
-    {
         // This method is not as accurate
         if (ParticleInput::s_sampler == "Cellwise")
         {
@@ -205,20 +210,20 @@ TYPED_TEST(SamplerTest, CompareMoments)
 
     // assuming constant vThermal functions (if they even exist);
     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> location{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    amrex::Real vWeigth;
+    amrex::Real vWeight;
     for (int i = 0; i < vDim; i++)
     {
         mom1[i] = 0;
         for (int j = 0; j < vInit.m_numGauss; j++)
         {
-            params.get("G" + std::to_string(j) + ".vWeight", vWeigth);
+            params.get("G" + std::to_string(j) + ".vWeight", vWeight);
             amrex::Real vMean = vInit.m_vMeanPtr[j][i];
             // Extracting vDev is not a use case outside testing, so here we creatively run
             // vThermal = (0.5 * vThermal + vMean) - (-0.5 * vThermal + vMean)
             amrex::Real vThermal = get_gaussian_velocity(vInit, j, 0.5, i, location) -
                                    get_gaussian_velocity(vInit, j, -0.5, i, location);
-            mom1[i] += vWeigth * vMean;
-            mom2 += vWeigth * (vThermal * vThermal + vMean * vMean);
+            mom1[i] += vWeight * vMean;
+            mom2 += vWeight * (vThermal * vThermal + vMean * vMean);
         }
     }
 

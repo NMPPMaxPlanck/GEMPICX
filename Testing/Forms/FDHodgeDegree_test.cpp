@@ -18,29 +18,36 @@ error_32)
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
 #include "GEMPIC_Parameters.H"
+#include "TestUtils/GEMPIC_TestUtils.H"
 
 using namespace Gempic;
 using namespace Forms;
 
 namespace
 {
+/* Initialize the infrastructure */
+ComputationalDomain get_compdom (const amrex::IntVect &nCell)
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.3, 1.6, 1.4)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 6, 9)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
 
 template <int hodgeDegree, Space space>
 void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegree = 3)
 {
     // Initialize computational_domain
-    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-
+    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
     Gempic::Io::Parameters parameters{};
-    amrex::ParmParse pp;
-    pp.addarr("ComputationalDomain.nCell", nCell);
-    ComputationalDomain infra;
+    ComputationalDomain infra = get_compdom(nCell);
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                     HodgeScheme::FDHodge);
@@ -118,12 +125,9 @@ template <int hodgeDegree, Space space>
 void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineDegree = 3)
 {
     // Initialize computational_domain
-    const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-
+    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
     Gempic::Io::Parameters parameters{};
-    amrex::ParmParse pp;
-    pp.addarr("ComputationalDomain.nCell", nCell);
-    ComputationalDomain infra;
+    ComputationalDomain infra = get_compdom(nCell);
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                     HodgeScheme::FDHodge);
@@ -189,21 +193,6 @@ public:
 
     static constexpr int s_hodgeDegree{DegreeSpace::s_hodgeDegree};
     static constexpr Space s_space{DegreeSpace::s_space};
-
-    static void SetUpTestSuite ()
-    {
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
-        const amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 6, 9)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        /* Initialize the infrastructure */
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
 };
 
 class NameGenerator

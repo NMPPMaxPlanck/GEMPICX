@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -26,33 +25,16 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     amrex::Real m_tol{1e-11};
 
-    static void SetUpTestSuite ()
+    FieldMultiplyByFunctionTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
     {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        // Domain has to be small enough so x*y*z does not get too large for absolute float
-        // comparison
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         // Not checking particles
         const int nGhostExtra{0};
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("nGhostExtra", nGhostExtra);
+        m_parameters.set("nGhostExtra", nGhostExtra);
     }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override { m_infra = ComputationalDomain{}; }
 };
 
 TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)

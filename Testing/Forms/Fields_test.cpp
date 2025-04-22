@@ -29,26 +29,9 @@ protected:
     ComputationalDomain m_infra;
 
     int m_nComps{1};
+    static const int s_gSize{5};
 
-    static void SetUpTestSuite ()
-    {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        int gSize{5};
-        double k1D{2 * M_PI / gSize};
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(k1D, k1D, k1D)};
-        // int gSize{static_cast<int>(dSize)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(gSize, gSize, gSize)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(gSize, gSize, gSize)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
+    FieldsTest() : m_infra{Gempic::Test::Utils::get_compdom(s_gSize)} {}
 };
 
 TEST_F(FieldsTest, OperatorsHodge2)

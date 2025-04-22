@@ -92,14 +92,14 @@ public:
     /**
      * @brief solves equation (He_vp) for one given particle
      *
-     * @tparam SplineType : spline class, for unit testing purposes
+     * @tparam SplineType spline class, for unit testing purposes
      *
-     * @param[out] vel : velocity of the given particle
-     * @param eA : array of E field coefficients (primal edge dofs)
-     * @param spline : object containing the values of non-zero grid splines at the particle
+     * @param[out] vel velocity of the given particle
+     * @param eA array of E field coefficients (primal edge dofs)
+     * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param chargeOverMass : (q/m)_p ratio
-     * @param dt : time step
+     * @param chargeOverMass (q/m)_p ratio
+     * @param dt time step
      *
      */
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
@@ -139,20 +139,20 @@ public:
      * Also, the new particle position and velocities are not updated in the global particle arrays.
      * This must be done outside this function.
      *
-     * @tparam dir : direction of the splitting (starting at dir = 0)
+     * @tparam dir direction of the splitting (starting at dir = 0)
      *
-     * @param[out] pos : position of the given particle
-     * @param[out] vel : velocity of the given particle
-     * @param infra : computational domain
-     * @param spline : object containing the values of non-zero grid splines at the particle
+     * @param[out] pos position of the given particle
+     * @param[out] vel velocity of the given particle
+     * @param infra computational domain
+     * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param bfields : temporary array to store the values of the integrated B field
-     * @param dx : cell size in every direction
-     * @param jA : array of J density coefficients (dual face dofs)
-     * @param bA : array of B field coefficients (primal face dofs)
-     * @param chargeOverMass : (q/m)_p ratio
-     * @param chargeWeight : weight * charge of the given particle
-     * @param dt : time step
+     * @param bfields temporary array to store the values of the integrated B field
+     * @param dx cell size in every direction
+     * @param jA array of J density coefficients (dual face dofs)
+     * @param bA array of B field coefficients (primal face dofs)
+     * @param chargeOverMass (q/m)_p ratio
+     * @param chargeWeight weight * charge of the given particle
+     * @param dt time step
      *
      */
     template <Direction dir, class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
@@ -204,19 +204,19 @@ public:
      * Also, the new particle position and velocities are not updated in the global particle arrays.
      * This must be done outside this function.
      *
-     * @tparam dir : direction of the splitting (starting at dir = 0)
+     * @tparam dir direction of the splitting (starting at dir = 0)
      *
-     * @param[out] vel : velocity of the given particle
-     * @param infra : computational domain
-     * @param spline : object containing the values of non-zero grid splines at the particle
+     * @param[out] vel velocity of the given particle
+     * @param infra computational domain
+     * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param bfields : temporary array to store the values of the integrated B field
-     * @param dx : cell size in every direction
-     * @param jA : array of J density coefficients (dual face dofs)
-     * @param bA : array of B field coefficients (primal face dofs)
-     * @param chargeOverMass : (q/m)_p ratio
-     * @param chargeWeight : weight * charge of the given particle
-     * @param dt : time step
+     * @param bfields temporary array to store the values of the integrated B field
+     * @param dx cell size in every direction
+     * @param jA array of J density coefficients (dual face dofs)
+     * @param bA array of B field coefficients (primal face dofs)
+     * @param chargeOverMass (q/m)_p ratio
+     * @param chargeWeight weight * charge of the given particle
+     * @param dt time step
      *
      */
     template <Direction pDir, class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
@@ -252,17 +252,17 @@ public:
     /**
      * @brief computes different fields in order to solve the ODE system (H_p) for one particle
      *
-     * @param[out] pos : position of the particle
-     * @param[out] vel : velocity of the article
-     * @param infra : computational domain
-     * @param spline : object containing the values of non-zero grid splines at the particle
+     * @param[out] pos position of the particle
+     * @param[out] vel velocity of the article
+     * @param infra computational domain
+     * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param dx : cell size in every direction
-     * @param jA : array of J density coefficients (dual face dofs)
-     * @param bA : array of B field coefficients (primal face dofs)
-     * @param chargeOverMass : (q/m)_p ratio
-     * @param chargeWeight : weight * charge of the given particle
-     * @param dt : time step
+     * @param dx cell size in every direction
+     * @param jA array of J density coefficients (dual face dofs)
+     * @param bA array of B field coefficients (primal face dofs)
+     * @param chargeOverMass (q/m)_p ratio
+     * @param chargeWeight weight * charge of the given particle
+     * @param dt time step
      *
      */
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
@@ -315,11 +315,11 @@ public:
      * @brief solves the ODE (Hb_D) corresponding to H_b part of the Hamiltonian
      * which is the ampere equation without current
      *
-     * @param[out] D : electric field as dual 2-form (modified by the function)
-     * @param deRham : object describing the discrete de Rham sequence
-     * @param B : magnetic field as primal 2-form
-     * @param H : magnetic field as dual 1-form
-     * @param dt : time step
+     * @param[out] D electric field as dual 2-form (modified by the function)
+     * @param deRham object describing the discrete de Rham sequence
+     * @param B magnetic field as primal 2-form
+     * @param H magnetic field as dual 1-form
+     * @param dt time step
      *
      */
     inline void apply_h_b (DeRhamField<Grid::dual, Space::face>& D,
@@ -338,11 +338,11 @@ public:
     /**
      * @brief solves equation (He_field), ie the Faraday equation
      *
-     * @param[out] B : magnetic field as primal 2-form (modified by the function)
-     * @param[out] E : electric field as primal 1-form (temporary field)
-     * @param deRham : object describing the discrete de Rham sequence
-     * @param D : electric field as dual 2-form (input of the function)
-     * @param dt : time step
+     * @param[out] B magnetic field as primal 2-form (modified by the function)
+     * @param[out] E electric field as primal 1-form (temporary field)
+     * @param deRham object describing the discrete de Rham sequence
+     * @param D electric field as dual 2-form (input of the function)
+     * @param dt time step
      *
      */
     inline void apply_h_e_field (DeRhamField<Grid::primal, Space::face>& B,

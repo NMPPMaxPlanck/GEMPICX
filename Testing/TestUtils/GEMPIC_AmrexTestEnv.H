@@ -109,6 +109,15 @@ private:
         }
     }
 
+    // Called after each test ends
+    void OnTestEnd (const testing::TestInfo& testInfo) override
+    {
+        if (!m_keepParameters)
+        {
+            amrex::ParmParse::Finalize();
+        }
+    }
+
 protected:
     bool m_keepParameters{false};
 };

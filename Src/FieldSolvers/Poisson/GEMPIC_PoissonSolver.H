@@ -23,18 +23,49 @@ using namespace Forms;
 using PoissonSolverMethod =
     SolverMethod<DeRhamField<Grid::dual, Space::cell>, DeRhamField<Grid::primal, Space::node>>;
 
+namespace Impl
+{
 /// @brief The function used to select a specific poisson solver method
-std::unique_ptr<PoissonSolverMethod> make_poisson_solver(std::shared_ptr<DeRhamComplex> deRham,
-                                                         const ComputationalDomain& infra);
+std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver(
+    std::shared_ptr<DeRhamComplex> deRham,
+    const ComputationalDomain& infra,
+    const std::string& solver);
+} // namespace Impl
+
+/**
+ * @brief Construct a new Poisson Solver object
+ *
+ * @param deRham
+ * @param infra
+ */
+inline std::unique_ptr<PoissonSolverMethod> make_poisson_solver (
+    std::shared_ptr<DeRhamComplex> deRham, const Gempic::ComputationalDomain& infra)
+{
+    Gempic::Io::Parameters params("PoissonSolver", "function make_poisson_solver");
+    // Solver defaults:
+    // If periodic and FFT was compiled: FFT
+    // Else if hypre was compiled:       Hypre
+    // Else                              ConjugateGradient
+    std::string solver{"ConjugateGradient"};
+#ifdef AMREX_USE_HYPRE
+    solver = "Hypre";
+#endif
+#ifdef AMREX_USE_FFT
+    if (infra.geometry().isAllPeriodic())
+    {
+        solver = "FFT";
+    }
+#endif
+    params.get_or_set("solver", solver);
+    return Impl::make_specific_poisson_solver(deRham, infra, solver);
+}
 
 /**
  * Solves the Poisson equation for the given dual and primal fields using the second order AMReX
  * nodal Poisson solver
  *
- * @param[out] phi : The primal field to store the solution of the equation.
- * @param rho : The dual field representing the right-hand side of the equation.
- *
- * @throws None
+ * @param[out] phi The primal field to store the solution of the equation.
+ * @param rho The dual field representing the right-hand side of the equation.
  */
 class AmrexSolver : public PoissonSolverMethod
 {

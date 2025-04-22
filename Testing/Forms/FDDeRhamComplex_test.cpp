@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -30,33 +29,15 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
 
-    static void SetUpTestSuite ()
+    FDDeRhamComplexTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
     {
-        /* Initialize the infrastructure */
-        // const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-        //                              {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         // Not checking particles
         const int nGhostExtra{0};
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("nGhostExtra", nGhostExtra);
+        m_parameters.set("nGhostExtra", nGhostExtra);
     }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override { m_infra = ComputationalDomain{}; }
 };
 
 TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
@@ -80,7 +61,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
     DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    EXPECT_NEAR(1, Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
+    EXPECT_NEAR(m_infra.cell_volume(), Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
 
     // Select stencil according to degree
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
@@ -94,8 +75,8 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
     {
         loopRun = true;
 
-        // expect all nodes to be 1
-        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        // expect all nodes to be equal to the cell volume
+        CHECK_FIELD((phi.m_data[mfi]).array(), mfi.validbox(), {}, {}, m_infra.cell_volume());
     }
     ASSERT_TRUE(loopRun);
 }
@@ -120,7 +101,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
     DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    EXPECT_NEAR(1, Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
+    EXPECT_NEAR(m_infra.cell_volume(), Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
 
     // Select stencil according to degree
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
@@ -134,8 +115,8 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
     {
         loopRun = true;
 
-        // Expect all entries to be 1
-        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        // expect all nodes to be equal to the cell volume
+        CHECK_FIELD((phi.m_data[mfi]).array(), mfi.validbox(), {}, {}, m_infra.cell_volume());
     }
     ASSERT_TRUE(loopRun);
 }
@@ -161,7 +142,7 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
     DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    EXPECT_NEAR(1, Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
+    EXPECT_NEAR(m_infra.cell_volume(), Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
 
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
         get_hodge_stencils<hodgeDegree, HodgeScheme::FDHodge>();
@@ -174,8 +155,8 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
     {
         loopRun = true;
 
-        // Expect all nodes to be 1
-        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        // expect all nodes to be equal to the cell volume
+        CHECK_FIELD((phi.m_data[mfi]).array(), mfi.validbox(), {}, {}, m_infra.cell_volume());
     }
     ASSERT_TRUE(loopRun);
 }
@@ -206,7 +187,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTest)
         loopRun = true;
 
         // Expect all entires to be 0
-        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((phi.m_data[mfi]).array(), mfi.validbox(), {}, {}, 0);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -232,7 +213,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII)
     DeRhamField<Grid::dual, Space::cell> rho(deRham, func);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
 
-    EXPECT_NEAR(1, Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
+    EXPECT_NEAR(m_infra.cell_volume(), Utils::gempic_norm(rho.m_data, m_infra, 2), 1e-12);
 
     // Select stencil according to degree
     [[maybe_unused]] auto [stencilNodeToCell, stencilCellToNode] =
@@ -246,8 +227,8 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII)
     {
         loopRun = true;
 
-        // Expect all entires to be 1
-        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        // Expect all entries to be equal to the cell volume
+        CHECK_FIELD((phi.m_data[mfi]).array(), mfi.validbox(), {}, {}, m_infra.cell_volume());
     }
     ASSERT_TRUE(loopRun);
 }
@@ -273,13 +254,6 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII)
     DeRhamField<Grid::dual, Space::cell> rho(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham, func);
 
-    //        const amrex::BoxArray &nba{amrex::convert(infra.grid,
-    //        amrex::IntVect::TheNodeVector())};
-
-    //        rho.data.define(nba, infra.distriMap, Ncomp, Nghost);
-
-    //        phi.data.define(nba, infra.distriMap, Ncomp, Nghost);
-
     ASSERT_EQ(0, Utils::gempic_norm(rho.m_data, m_infra, 2));
 
     // Select stencil according to degree
@@ -295,7 +269,7 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII)
         loopRun = true;
 
         // Expect all entires to be 0
-        CHECK_FIELD((phi.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 0);
+        CHECK_FIELD((phi.m_data[mfi]).array(), mfi.validbox(), {}, {}, 0);
     }
     ASSERT_TRUE(loopRun);
 }

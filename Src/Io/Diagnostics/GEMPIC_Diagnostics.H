@@ -40,9 +40,9 @@ public:
      * whether stepNumber matches the output saveInterval(s) specified in the input file.
      * Can be overwritten with forceWrite = true.
      *
-     * @param stepNumber: Step number in simulation
-     * @param time:       Simulation time
-     * @param forceWrite: Forcibly write to output file, skipping the check
+     * @param stepNumber Step number in simulation
+     * @param time      Simulation time
+     * @param forceWrite Forcibly write to output file, skipping the check
      */
     void compute_and_write_to_file (int stepNumber, amrex::Real time, bool forceWrite = false)
     {
@@ -62,15 +62,5 @@ Diagnostics<xDeg, yDeg, zDeg, vDim, nData> make_diagnostics (
 {
     return Diagnostics<xDeg, yDeg, zDeg, vDim, nData>(compDom, drc, particles);
 }
-/*
-    Io::MultiDiagnostics<vdim, ndata> fullDiagn(dt, infra, deRham->m_fieldsDiagnostics,
-                                                deRham->m_fieldsScaling, ions);
-
-    // Initialize reduced diagnostics and write initial time step
-    Io::MultiReducedDiagnostics<vdim, degx, degy, degz, ndata> redDiagn(deRham);
-
-    redDiagn.compute_and_write_to_file(tStep + 1, dt, infra, ions);
-    fullDiagn.filter_compute_pack_flush(tStep + 1);
-*/
 } //namespace Gempic::Io
 #endif

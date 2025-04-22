@@ -21,6 +21,17 @@ using namespace FieldSolvers;
 //using ::testing::Exactly;
 //using ::testing::Mock;
 
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(M_PI, M_PI, M_PI)};
+    const amrex::IntVect nCell{AMREX_D_DECL(16, 16, 16)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 8, 8)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 /**
  * @brief Tests the Poisson solver for an analytical rho of 1.0 + cos(x)
  *
@@ -37,34 +48,19 @@ public:
 
     Io::Parameters m_parameters{};
 
-    ComputationalDomain m_infra{}; // initialized computational domain
+    ComputationalDomain m_infra;
 
     static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
-    static void SetUpTestSuite ()
+    PoissonSolverTest() : m_infra{get_compdom()}
     {
         /* Initialize the infrastructure */
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
-        const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(16, 16, 16)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 8, 8)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         const int nGhostExtra = 0;
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("nGhostExtra", nGhostExtra);
-    }
+        m_parameters.set("nGhostExtra", nGhostExtra);
 
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
         // Analytical rho and phi such that -Delta phi = rho
 #if AMREX_SPACEDIM == 1
         const std::string analyticalRho = "cos(x)";
@@ -96,11 +92,12 @@ TEST_F(PoissonSolverTest, PoissonAMReX)
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     DeRhamField<Grid::primal, Space::node> anPhi(deRham, m_funcPhi);
 
-    // solve Poisson using AMReX solver
-    amrex::ParmParse pp;
+    // solve Poisson using AMReX solver (normal applications should use
+    // Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)
+    // so the solver can be chosen in the input file)
     std::string solverStr{"Amrex"};
-    pp.add("PoissonSolver.solver", solverStr);
-    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
+    auto poisson{
+        Gempic::FieldSolvers::Impl::make_specific_poisson_solver(deRham, m_infra, solverStr)};
     poisson->solve(phi, rho);
 
     // Check error
@@ -148,12 +145,6 @@ class PoissonSolverFFTTypedTest : public PoissonSolverTest
 {
 public:
     static constexpr int s_hodgeDegree{Degree()};
-    PoissonSolverFFTTypedTest()
-    {
-        amrex::ParmParse pp;
-        std::string solverStr{"FFT"};
-        pp.add("PoissonSolver.solver", solverStr);
-    }
 };
 
 struct NameGeneratorFFT
@@ -181,8 +172,12 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
     DeRhamField<Grid::primal, Space::node> phi(deRham);
     DeRhamField<Grid::primal, Space::node> anPhi(deRham, this->m_funcPhi);
 
-    // Use FFT-based solver
-    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, this->m_infra)};
+    // Use FFT-based solver (normal applications should use
+    // Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)
+    // so the solver can be chosen in the input file)
+    std::string solverStr{"FFT"};
+    auto poisson{
+        Gempic::FieldSolvers::Impl::make_specific_poisson_solver(deRham, this->m_infra, solverStr)};
     poisson->solve(phi, rho);
 
     // Check error
@@ -242,18 +237,17 @@ public:
     static constexpr int s_hodgeDegree{DegreeMethod::s_hodgeDegree};
     static constexpr Operator s_operator{DegreeMethod::s_operator};
 
+    std::string m_solverStr;
+
     PoissonSolverTypedTest()
     {
-        amrex::ParmParse pp;
         if constexpr (s_operator == Operator::poisson)
         {
-            std::string solverStr{"ConjugateGradient"};
-            pp.add("PoissonSolver.solver", solverStr);
+            m_solverStr = "ConjugateGradient";
         }
         else //if constexpr (s_operator == Operator::poissonInverseHodge)
         {
-            std::string solverStr{"ConjugateGradientInverseHodge"};
-            pp.add("PoissonSolver.solver", solverStr);
+            m_solverStr = "ConjugateGradientInverseHodge";
         }
     }
 };
@@ -270,7 +264,9 @@ TYPED_TEST(PoissonSolverTypedTest, AnalyticalLowTolerance)
 {
     auto deRham = std::make_shared<FDDeRhamComplex>(this->m_infra, this->s_hodgeDegree,
                                                     this->s_maxSplineDegree, HodgeScheme::FDHodge);
-    auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, this->m_infra)};
+
+    auto poisson{Gempic::FieldSolvers::Impl::make_specific_poisson_solver(deRham, this->m_infra,
+                                                                          this->m_solverStr)};
 
     DeRhamField<Grid::dual, Space::cell> rho(deRham, this->m_funcRho);
     DeRhamField<Grid::primal, Space::node> phi(deRham);

@@ -264,31 +264,6 @@ public:
     }
 };
 
-} //namespace Impl
-
-template <template <unsigned int> class VInit, unsigned int vDim>
-AMREX_GPU_HOST_DEVICE inline void get_velocities (
-    const VInit<vDim>& vIniter,
-    amrex::GpuArray<amrex::Real, vDim>& velocities,
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray,
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
-{
-    using namespace Impl;
-    auto gaussIdx{get_gauss_ids(vIniter, randomArray)};
-
-    auto epsilon{std::numeric_limits<amrex::Real>::epsilon()};
-    for (int cc = 0; cc < vDim; cc++)
-    {
-        amrex::Real u1 = randomArray[AMREX_SPACEDIM + 2 * cc];
-        amrex::Real u2 = randomArray[AMREX_SPACEDIM + 2 * cc + 1];
-        // make sure epsilon large enough to take log
-        // first value from Box-Muller algorithm
-        u1 = u1 < epsilon ? epsilon : u1;
-        amrex::Real z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
-        velocities[cc] = get_gaussian_velocity(vIniter, gaussIdx[cc], z0, cc, location);
-    }
-}
-
 // Get global location of a cell corner given the cell indices assuming uniform mesh
 AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inline get_cell_corner(
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> lowerCorner,
@@ -315,106 +290,40 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inline cell_c
     return cellCenter;
 }
 
-template <typename Type, unsigned int length>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<Type, length> inline operator+(
-    amrex::GpuArray<Type, length> a, amrex::GpuArray<Type, length> b)
+template <template <unsigned int> class VInit, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void get_velocities (
+    const VInit<vDim>& vIniter,
+    amrex::GpuArray<amrex::Real, vDim>& velocities,
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray,
+    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
 {
-    amrex::GpuArray<Type, length> c;
-    for (int i{0}; i < length; ++i)
+    using namespace Impl;
+    auto gaussIdx{get_gauss_ids(vIniter, randomArray)};
+
+    auto epsilon{std::numeric_limits<amrex::Real>::epsilon()};
+    for (int cc = 0; cc < vDim; cc++)
     {
-        c[i] = a[i] + b[i];
-    }
-    return c;
-}
-
-/**
- * @brief particle initializer
- *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
- *
- * @param[out] particles : particles that are initialised
- * @param infra : Computational Domain
- *
- */
-template <unsigned int vDim, unsigned int nData>
-inline void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
-                            ComputationalDomain infra)
-{
-    BL_PROFILE("Gempic::Particle::init_particles(infra,particles)");
-    Io::Parameters params("Particle");
-    amrex::Vector<std::string> speciesNames;
-    params.get("speciesNames", speciesNames);
-    std::string globalSamplerName{"PseudoRandom"};
-    params.get_or_set("sampler", globalSamplerName);
-    int rSeed{925};
-    params.get_or_set("seed", rSeed);
-    params.print_class_parameters();
-
-    particles.resize(speciesNames.size());
-
-    for (int species{0}; species < speciesNames.size(); ++species)
-    {
-        particles[species] =
-            std::make_shared<ParticleGroups<vDim, nData>>(speciesNames[species], infra);
-
-        sample_species(particles[species], infra, species, globalSamplerName, rSeed);
-    }
-}
-
-/**
- * @brief particle initializer
- *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
- *
- * @param[out] particles : particles that are initialised
- * @param[out] particlesLinVlasov :
- * @param infra : Computational Domain
- *
- */
-template <unsigned int vDim, unsigned int nData>
-inline void init_particles (
-    std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vDim, nData>>>& particlesLinVlasov,
-    std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
-    ComputationalDomain infra)
-{
-    BL_PROFILE("Gempic::Particle::init_particles(infra,particlesLinVlasov,particles)");
-    Io::Parameters params("Particle");
-    amrex::Vector<std::string> speciesNames;
-    params.get("speciesNames", speciesNames);
-    std::string globalSamplerName{"PseudoRandom"};
-    params.get_or_set("sampler", globalSamplerName);
-    int rSeed{925};
-    params.get_or_set("seed", rSeed);
-    params.print_class_parameters();
-
-    particlesLinVlasov.resize(speciesNames.size());
-    particles.resize(speciesNames.size());
-
-    for (int species{0}; species < speciesNames.size(); ++species)
-    {
-        particlesLinVlasov[species] =
-            std::make_shared<ParticleGroupsLinVlasov<vDim, nData>>(speciesNames[species], infra);
-        particles[species] =
-            std::static_pointer_cast<ParticleGroups<vDim, nData>>(particlesLinVlasov[species]);
-
-        sample_species(particles[species], infra, species, globalSamplerName, rSeed);
+        amrex::Real u1 = randomArray[AMREX_SPACEDIM + 2 * cc];
+        amrex::Real u2 = randomArray[AMREX_SPACEDIM + 2 * cc + 1];
+        // make sure epsilon large enough to take log
+        // first value from Box-Muller algorithm
+        u1 = u1 < epsilon ? epsilon : u1;
+        amrex::Real z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
+        velocities[cc] = get_gaussian_velocity(vIniter, gaussIdx[cc], z0, cc, location);
     }
 }
 
 /**
  * @brief
  *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ * @tparam vdim Number of velocity components associated with the particles
+ * @tparam ndata Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] partGr : Particle group
- * @param infra : Computational Domain
- * @param species :
- * @param globalSamplerName :
- * @param rSeed :
- *
+ * @param[out] partGr Particle group
+ * @param infra Computational Domain
+ * @param species Index of species in vector. Only used for the random seed
+ * @param globalSamplerName Default sampler for all species
+ * @param rSeed Seed for the random generator
  */
 template <unsigned int vDim, unsigned int nData>
 inline void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
@@ -452,23 +361,115 @@ inline void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr
     }
 }
 
+} //namespace Impl
+
 /**
- * @brief
+ * @brief particle initializer
  *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ * Reads parameters from input file and initializes particles accordingly
  *
- * @param[out] ppg : Particle group
- * @param infra : Computational Domain
- * @param rSeed :
+ * @tparam vdim Number of velocity components associated with the particles
+ * @tparam ndata Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] particles particles that are initialised
+ * @param infra Computational Domain
  *
  */
-using ParticleType = amrex::Particle<0, 0>; // For SoA attributes
+template <unsigned int vDim, unsigned int nData>
+inline void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
+                            ComputationalDomain infra)
+{
+    BL_PROFILE("Gempic::Particle::init_particles(infra,particles)");
+    Io::Parameters params("Particle");
+    amrex::Vector<std::string> speciesNames;
+    params.get("speciesNames", speciesNames);
+    std::string globalSamplerName{"PseudoRandom"};
+    params.get_or_set("sampler", globalSamplerName);
+    int rSeed{925};
+    params.get_or_set("seed", rSeed);
+    params.print_class_parameters();
+
+    particles.resize(speciesNames.size());
+
+    for (int species{0}; species < speciesNames.size(); ++species)
+    {
+        particles[species] =
+            std::make_shared<ParticleGroups<vDim, nData>>(speciesNames[species], infra);
+
+        Impl::sample_species(particles[species], infra, species, globalSamplerName, rSeed);
+    }
+}
+
+/**
+ * @brief particle initializer for LinVlasov particles
+ *
+ * Reads parameters from input file and initializes particles accordingly. Necessary (for now) for
+ * when you have subclasses of @ref ParticleGroups that you still want to interface with the rest
+ * of the GEMPICX library.
+ *
+ * @tparam vdim Number of velocity components associated with the particles
+ * @tparam ndata Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] particles particles that are initialised
+ * @param[out] particlesLinVlasov
+ * @param infra Computational Domain
+ *
+ */
+template <template <unsigned int, unsigned int> class PGSubclass,
+          unsigned int vDim,
+          unsigned int nData>
+inline void init_particles (
+    std::vector<std::shared_ptr<PGSubclass<vDim, nData>>>& particlesLinVlasov,
+    std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
+    ComputationalDomain infra)
+{
+    BL_PROFILE("Gempic::Particle::init_particles(infra,particlesLinVlasov,particles)");
+    Io::Parameters params("Particle");
+    amrex::Vector<std::string> speciesNames;
+    params.get("speciesNames", speciesNames);
+    std::string globalSamplerName{"PseudoRandom"};
+    params.get_or_set("sampler", globalSamplerName);
+    int rSeed{925};
+    params.get_or_set("seed", rSeed);
+    params.print_class_parameters();
+
+    particlesLinVlasov.resize(speciesNames.size());
+    particles.resize(speciesNames.size());
+
+    for (int species{0}; species < speciesNames.size(); ++species)
+    {
+        particlesLinVlasov[species] =
+            std::make_shared<PGSubclass<vDim, nData>>(speciesNames[species], infra);
+        particles[species] =
+            std::static_pointer_cast<ParticleGroups<vDim, nData>>(particlesLinVlasov[species]);
+
+        Impl::sample_species(particles[species], infra, species, globalSamplerName, rSeed);
+    }
+}
+
+/**
+ * @brief Random particle initializer, same distribution for all cells.
+ *
+ * @details Particle positions are generated using a uniform random
+ * distribution giving position on each cell and then remapped to full domain.
+ * Velocity distribution is generated from uniform distribution using the Box-Muller algorithm
+ * as random_normal is machine dependent. This enables for a given seed to always get the same
+ * random sequence
+ *
+ * @tparam vdim Number of velocity components associated with the particles
+ * @tparam ndata Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] ppg Particle group
+ * @param infra Computational Domain
+ * @param rSeed Seed for the random generator
+ *
+ */
 template <unsigned int vDim, unsigned int nData>
 void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
                               ComputationalDomain infra,
                               int rSeed = 925)
 {
+    using namespace Impl;
     BL_PROFILE("Gempic::Particle::init_particles_cellwise(infra,ppg,rSeed)");
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> internalPosition; // coordinates within each cell
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;         // global coordinates
@@ -484,7 +485,7 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
     params.get("nPartPerCell", nPartPerCell);
     auto [densityParse, densityEval] = Utils::parse_function("density", params);
 
-    Impl::VelocityInitializer<vDim> vInit(params);
+    VelocityInitializer<vDim> vInit(params);
 
     // (0,1)-normally distributed random number generator:
     // srand(rSeed);
@@ -496,7 +497,7 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
 
     for (int pp = 0; pp < nPartPerCell; pp++)
     {
-        auto precomputedRand{Impl::calculate_random_values<vDim>(unif, gen, unifv, genv)};
+        auto precomputedRand{calculate_random_values<vDim>(unif, gen, unifv, genv)};
         // internalPosition in model cell [0,dx]x[0,dy]x[0,dz] (uniform in [0, dx]):
         AMREX_D_TERM(
             internalPosition[xDir] = precomputedRand[xDir] * infra.geometry().CellSize(xDir);
@@ -518,7 +519,10 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
                 cellCorner =
                     get_cell_corner(infra.geometry().ProbLoArray(),
                                     infra.geometry().CellSizeArray(), AMREX_D_DECL(l, j, k));
-                position = internalPosition + cellCorner;
+                for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+                {
+                    position[dir] = cellCorner[dir] + internalPosition[dir];
+                }
 
                 amrex::Real result =
                     densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), 0.);
@@ -541,15 +545,21 @@ AMREX_GPU_HOST_DEVICE inline int get_cellid (
 }
 
 /**
- * @brief
+ * @brief Random particle initializer for gpu.
  *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ * @details Particle positions are generated using a uniform random
+ * distribution giving position on each cell and then remapped to full domain.
+ * Velocity distribution is generated from uniform distribution using the Box-Muller algorithm
+ * as random_normal is machine dependent. This enables for a given seed to always get the same
+ * random sequence
  *
- * @param[out] ppg : Particle group
- * @param infra : Computational Domain
- * @param species :
- * @param rSeed :
+ * @tparam vDim Number of velocity components associated with the particles
+ * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
+ *
+ * @param[out] ppg Particle group
+ * @param infra Computational Domain
+ * @param species Index of species in vector. Only used for the random seed
+ * @param rSeed Seed for the random generator
  *
  */
 template <unsigned int vDim, unsigned int nData = 1>
@@ -558,6 +568,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
                                      int species,
                                      int rSeed = 925)
 {
+    using namespace Impl;
     BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
 
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> probLo{infra.m_geom.ProbLoArray()};
@@ -576,7 +587,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
     amrex::ParserExecutor<AMREX_SPACEDIM + 1> densityEval;
     std::tie(densityParse, densityEval) = Utils::parse_function("density", params);
 
-    Impl::VelocityInitializer<vDim> vInit(params);
+    VelocityInitializer<vDim> vInit(params);
     auto vInitGpu{vInit.get_gpu_initializer()};
 
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
@@ -626,9 +637,9 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
                     {
                         randomValue = amrex::Random(gen);
                     }
-                    for (int comp = 0; comp < AMREX_SPACEDIM; comp++)
+                    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
                     {
-                        position[comp] = cellCorner[comp] + randArray[comp] * dx[comp];
+                        position[dir] = cellCorner[dir] + randArray[dir] * dx[dir];
                     }
                     get_velocities(vInitGpu, velocity, randArray, cellCenter);
 
@@ -654,7 +665,9 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
 }
 
 /**
- * @brief Random number generator. Particle positions are generated using a uniform random
+ * @brief Random particle initializer
+ *
+ * @details Particle positions are generated using a uniform random
  * distribution giving position on each cell and then remapped to full domain.
  * Velocity distribution is generated from uniform distribution using the Box-Muller algorithm
  * as random_normal is machine dependent. This enables for a given seed to always get the same
@@ -663,10 +676,10 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
  * @tparam vDim Number of velocity components associated with the particles
  * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] ppg : Particle group
- * @param infra : Computational Domain
- * @param species :
- * @param rSeed :
+ * @param[out] ppg Particle group
+ * @param infra Computational Domain
+ * @param species Index of species in vector. Only used for the random seed
+ * @param rSeed Seed for the random generator
  */
 template <unsigned int vDim, unsigned int nData>
 void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
@@ -674,6 +687,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
                                  int species,
                                  int rSeed = 925)
 {
+    using namespace Impl;
     BL_PROFILE("Gempic::Particle::init_particles_full_domain()");
     amrex::Real t{0.0};
 
@@ -689,7 +703,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
     params.get("nPartPerCell", nPartPerCell);
     auto [densityParse, densityEval] = Utils::parse_function("density", params);
 
-    Impl::VelocityInitializer<vDim> vInit(params);
+    VelocityInitializer<vDim> vInit(params);
 
     //#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
@@ -718,7 +732,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
             auto cellCenter{cell_center_from_corner(cellCorner, infra.geometry().CellSizeArray())};
             for (int pp = 0; pp < nPartPerCell; pp++)
             {
-                auto randArray{Impl::calculate_random_values<vDim>(unif, gen, unifv, genv)};
+                auto randArray{calculate_random_values<vDim>(unif, gen, unifv, genv)};
                 for (int i = 0; i < AMREX_SPACEDIM; i++)
                 {
                     position[i] = cellCorner[i] + randArray[i] * infra.geometry().CellSize(i);
@@ -735,7 +749,9 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
 }
 
 /**
- * @brief Random number generator. Particle positions are generated using quasirandom
+ * @brief Random particle initializer
+ *
+ * @details Particle positions are generated using quasirandom
  * numbers from the Sobol sequence giving position on each cell and then remapped to full domain.
  * Velocity distribution is generated from quasirandom numbers from the Sobol sequence using the
  * Box-Muller algorithm
@@ -743,10 +759,10 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
  * @tparam vDim Number of velocity components associated with the particles
  * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] ppg : Particle group
- * @param infra : Computational Domain
- * @param species :
- * @param rSeed :
+ * @param[out] ppg Particle group
+ * @param infra Computational Domain
+ * @param species Index of species in vector. Only used for the random seed
+ * @param rSeed Seed for the random generator
  */
 template <unsigned int vDim, unsigned int nData>
 void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
@@ -826,7 +842,7 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
                 position[i] = boxLo[i] + randArray[i] * boxLength[i];
             }
 
-            get_velocities(vInit, velocity, randArray, position);
+            Impl::get_velocities(vInit, velocity, randArray, position);
             const double factor =
                 densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
             weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
@@ -834,61 +850,6 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
         }
     }
 }
-
-template <unsigned int vDim>
-void init_one_particle_cellwise (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
-                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
-                                 ParticleGroups<vDim>& pg,
-                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> internalPosition,
-                                 amrex::GpuArray<amrex::Real, vDim> velocity = {1., 1., 1.})
-{
-    BL_PROFILE("Gempic::Particle::init_one_particle_cellwise()");
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> cellCorner;
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-
-    // MFI that adds particle from the model cell to all cells
-    for (amrex::MFIter mfi = pg.MakeMFIter(0); mfi.isValid(); ++mfi)
-    { // 0 is level
-        const amrex::Box& bx = mfi.validbox();
-        amrex::IntVect lo = {bx.smallEnd()};
-        amrex::IntVect hi = {bx.bigEnd()};
-
-        auto& particles = pg.GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-
-        GEMPIC_D_LOOP_BEGIN(for (int i = lo[xDir]; i <= hi[xDir]; i++),
-                            for (int j = lo[yDir]; j <= hi[yDir]; j++),
-                            for (int k = lo[zDir]; k <= hi[zDir]; k++))
-            cellCorner = get_cell_corner(plo, dx, AMREX_D_DECL(i, j, k));
-            position = internalPosition + cellCorner;
-
-            ParticleType p;
-            p.id() = ParticleType::NextID();
-            p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-            AMREX_D_TERM(p.pos(xDir) = position[xDir];, p.pos(yDir) = position[yDir];
-                         , p.pos(zDir) = position[zDir];)
-
-            // p.rdata(0) = velocity[xDir];
-            particles.push_back_real(0, velocity[xDir]);
-            if (vDim > 1)
-            {
-                // p.rdata(1) = velocity[yDir];
-                particles.push_back_real(1, velocity[yDir]);
-            }
-            if (vDim > 2)
-            {
-                // p.rdata(2) = velocity[zDir];
-                particles.push_back_real(2, velocity[zDir]);
-            }
-
-            // p.rdata(vDim) = 1.0/64.0; //weight
-            particles.push_back_real(vDim, 1.0 / 64.0); // weight
-
-            particles.push_back(p);
-        GEMPIC_D_LOOP_END
-    }
-}
-
 } // namespace Gempic::Particle
 
 #endif

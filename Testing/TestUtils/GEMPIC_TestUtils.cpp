@@ -4,57 +4,49 @@
 
 namespace Gempic::Test::Utils
 {
-/* Helper function to check entries of a field given a series of conditions and a default
- * value. Check order is prioritized, so a set of indices only fulfill the first successful
- * condition.
- *
- * Parameters:
- * ----------
- * @param line: int, the line from which the function was called
- * @param fieldArr: amrex::Array4, array containing field values in an easily reached accessor
- * @param top: Dim3, top boundaries of box for fieldArray
- * @param condVec: vector<condLambda>, Vector of lambdas that check if the {SPACEDIM} indices
- * fulfill a given condition.
- * @param checks: vector<amrex::Real>, Vector of values to compare to if indices fulfill the
- * corresponding condVec condition.
- * @param defCheck: amrex::Real, Default value for all indices not fulfilling any of the given
- * conditions.
- */
 using condLambda = bool (*)(AMREX_D_DECL(int, int, int));
 void check_field (const char file[],
                   int line,
                   amrex::Array4<amrex::Real> const& fieldArr,
-                  amrex::Dim3 const&& top,
+                  amrex::Box const& bx,
                   std::vector<condLambda>&& condVec,
                   std::vector<amrex::Real>&& checks,
                   std::optional<amrex::Real> defCheck,
                   amrex::Real tol)
 {
-    for (int i{0}; i <= top.x; i++)
+    const auto lo = amrex::lbound(bx);
+    const auto hi = amrex::ubound(bx);
+    int ncomp{fieldArr.nComp()};
+    for (int comp{0}; comp < ncomp; comp++)
     {
-        for (int j{0}; j <= top.y; j++)
+        for (int i{lo.x}; i <= hi.x; i++)
         {
-            for (int k{0}; k <= top.z; k++)
+            for (int j{lo.y}; j <= hi.y; j++)
             {
-                int condNum{0};
-                const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
-                for (auto cond : condVec)
+                for (int k{lo.z}; k <= hi.z; k++)
                 {
-                    if (cond(AMREX_D_DECL(i, j, k)))
+                    int condNum{0};
+                    const amrex::IntVect idx{AMREX_D_DECL(i, j, k)};
+                    for (auto cond : condVec)
                     {
-                        EXPECT_NEAR(checks[condNum], *fieldArr.ptr(idx, 0), tol)
-                            << file << ":" << line << ": Failed condition " << condNum
-                            << ".\nIndices: " << string_array(idx, AMREX_SPACEDIM);
-                        break;
+                        if (cond(AMREX_D_DECL(i, j, k)))
+                        {
+                            EXPECT_NEAR(checks[condNum], *fieldArr.ptr(idx, comp), tol)
+                                << file << ":" << line << ": Failed condition " << condNum
+                                << ".\nIndices: " << string_array(idx, AMREX_SPACEDIM)
+                                << "\tComponent: " << comp;
+                            break;
+                        }
+                        condNum++;
                     }
-                    condNum++;
-                }
-                if (condNum == condVec.size() && defCheck)
-                {
-                    EXPECT_NEAR(defCheck.value(), *fieldArr.ptr(idx, 0), tol)
-                        << file << ":" << line
-                        << ": Failed default value check: " << defCheck.value()
-                        << ".\nIndices: " << string_array(idx, AMREX_SPACEDIM);
+                    if (condNum == condVec.size() && defCheck)
+                    {
+                        EXPECT_NEAR(defCheck.value(), *fieldArr.ptr(idx, comp), tol)
+                            << file << ":" << line
+                            << ": Failed default value check: " << defCheck.value()
+                            << ".\nIndices: " << string_array(idx, AMREX_SPACEDIM)
+                            << "\tComponent: " << comp;
+                    }
                 }
             }
         }
@@ -113,4 +105,54 @@ double l_inf_error (amrex::Array4<const amrex::Real> const& a,
     return lerr;
 }
 
+/*
+ComputationalDomain get_default_compdom ()
+{
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{
+        AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
+    const amrex::IntVect nCell{AMREX_D_DECL(16, 16, 16)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 16, 16)};
+    const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
+                               amrex::CoordSys::cartesian);
+}
+*/
+ComputationalDomain get_default_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{
+        AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{
+        AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)};
+    const amrex::IntVect nCell{AMREX_D_DECL(9, 11, 7)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
+ComputationalDomain get_compdom (int gSize)
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Real gLength{static_cast<amrex::Real>(gSize)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(gLength, gLength, gLength)};
+    const amrex::IntVect nCell{AMREX_D_DECL(gSize, gSize, gSize)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(gSize, gSize, gSize)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
+ComputationalDomain get_compdom (const amrex::IntVect& nCell)
+{
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{
+        AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 8, 8)};
+    const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
+                               amrex::CoordSys::cartesian);
+}
 } // namespace Gempic::Test::Utils

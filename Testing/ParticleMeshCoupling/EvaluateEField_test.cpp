@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -66,6 +65,18 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
     }
 }
 
+/* Initialize the infrastructure */
+inline ComputationalDomain get_compdom (const amrex::IntVect& nCell,
+                                        const amrex::IntVect& maxGridSize)
+{
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10, 10, 10)};
+    const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
+                               amrex::CoordSys::cartesian);
+}
+
 // Test fixture
 class EvaluateEFieldTest : public testing::Test
 {
@@ -81,44 +92,22 @@ protected:
     static const int s_vDim{3};
     static const int s_spec{0};
 
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
-    static void SetUpTestSuite ()
+    EvaluateEFieldTest() :
+        m_infra{get_compdom(amrex::IntVect{AMREX_D_DECL(10, 10, 10)},
+                            amrex::IntVect{AMREX_D_DECL(10, 10, 10)})}
     {
-        /* Initialize the infrastructure */
-        // const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-        //                              {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
+        // Parameters initialized here so that different tests can have different parameters
+        Io::Parameters parameters;
         // particle settings
         double charge{1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        // Parameters initialized here so that different tests can have different parameters
-        Io::Parameters parameters;
-        /* Initialize the infrastructure */
-        m_infra = ComputationalDomain{};
+        parameters.set("Particle.species0.charge", charge);
+        parameters.set("Particle.species0.mass", mass);
 
         // Initialize the De Rham Complex
         m_deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
@@ -131,11 +120,6 @@ protected:
             m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);
         }
     }
-};
-
-class EvaluateEFieldTestCustomInfrastructure : public EvaluateEFieldTest
-{
-    void SetUp () override {}
 };
 
 TEST_F(EvaluateEFieldTest, NullTest)
@@ -416,20 +400,16 @@ TEST_F(EvaluateEFieldTest, TestingForLiterallyAnythingOtherThanUnity)
     GTEST_SKIP() << "Such advanced tests have not yet been implemented!";
 }
 
-TEST_F(EvaluateEFieldTestCustomInfrastructure, Scaling)
+TEST_F(EvaluateEFieldTest, Scaling)
 {
     Io::Parameters parameters{};
 
     /* Initialize the infrastructure with cell sizes different from 1*/
-    const amrex::Vector<int> nCell{AMREX_D_DECL(8, 4, 2)};
-    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 4, 2)};
+    const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
     const int hodgeDegree{2};
 
-    amrex::ParmParse pp;
-    pp.addarr("ComputationalDomain.nCell", nCell);
-    pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-
-    ComputationalDomain infra;
+    ComputationalDomain infra = get_compdom(nCell, maxGridSize);
 
     // Initialize the De Rham Complex
     auto deRham{std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, s_maxSplineDegree,

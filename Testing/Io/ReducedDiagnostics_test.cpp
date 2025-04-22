@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -58,6 +57,79 @@ void update_rho (ComputationalDomain& infra,
     rho.post_particle_loop_sync();
 }
 
+void reduced_diagnostics_setup (Io::Parameters& parameters, const ComputationalDomain& compDom)
+{
+    // Variables that could come from the input file and are stored by amrex during the whole
+    // simulation
+    // 2pi(domainHi - domainLo) = k
+    std::array<amrex::Real, AMREX_SPACEDIM> domainSize = {
+        AMREX_D_DECL(compDom.geometry().ProbLength(xDir), compDom.geometry().ProbLength(yDir),
+                     compDom.geometry().ProbLength(zDir))};
+    amrex::Vector<amrex::Real> k{AMREX_D_DECL(
+        2 * M_PI * domainSize[xDir], 2 * M_PI * domainSize[yDir], 2 * M_PI * domainSize[zDir])};
+    parameters.set("k", k);
+    // particles (data read by particle_groups constructor)
+    std::string speciesNames{"ions"};
+    parameters.set("Particle.speciesNames", speciesNames);
+    std::string samplerName{"PseudoRandom"};
+    parameters.set("Particle.sampler", samplerName);
+    amrex::Real charge{1.0};
+    parameters.set("Particle.ions.charge", charge);
+    amrex::Real mass{1.0};
+    parameters.set("Particle.ions.mass", mass);
+    int nPartPerCell{100};
+#if AMREX_SPACEDIM == 1
+    nPartPerCell = 1000;
+#endif
+    parameters.set("Particle.ions.nPartPerCell", nPartPerCell);
+    std::string density{"1.0 + 0.02 * cos(kvarx * x)"};
+    parameters.set("Particle.ions.density", density);
+    int numGaussians{1};
+    parameters.set("Particle.ions.numGaussians", numGaussians);
+    amrex::Real vWeightG0{1.0};
+    parameters.set("Particle.ions.G0.vWeight", vWeightG0);
+    amrex::Vector<amrex::Real> vMean{{-1.0, 1.0, 2.0}};
+    parameters.set("Particle.ions.G0.vMean", vMean);
+    amrex::Vector<amrex::Real> vThermal{{1.0, 2.0, 3.0}};
+    parameters.set("Particle.ions.G0.vThermal", vThermal);
+    // functions defining fields. Variable y, z not available in 1D, variable y not available in
+    // 2D
+    std::string Ex = "cos(kvarx * x)";
+    std::string Ey = "cos(kvary * y)";
+    std::string Ez = "cos(kvarx * x) * cos(kvarz * z)";
+    std::string Bx = "2 * cos(kvarx * x)";
+    std::string By = "1.0";
+    std::string Bz = "1.0";
+#if AMREX_SPACEDIM == 2
+    Ex = "cos(kvarx * x)";
+    Ey = "cos(kvary * y)";
+    Ez = "cos(kvarx * x) * cos(kvary * y)";
+#elif AMREX_SPACEDIM == 1
+    Ex = "cos(kvarx * x)";
+    Ey = "0.7071";
+    Ez = "0.5";
+#endif
+
+    parameters.set("Function.Bx", Bx);
+    parameters.set("Function.By", By);
+    parameters.set("Function.Bz", Bz);
+    parameters.set("Function.Ex", Ex);
+    parameters.set("Function.Ey", Ey);
+    parameters.set("Function.Ez", Ez);
+}
+
+ComputationalDomain get_compdom ()
+{
+    // 2pi(domainHi - domainLo) = k
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class ReducedDiagnosticsTest : public testing::Test
 {
 protected:
@@ -71,7 +143,7 @@ protected:
     static const int s_vdim{3};
 
     //
-    ComputationalDomain m_infra{false}; // "uninitialized" periodic computational domain
+    ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
     //
     Io::Parameters m_parameters{};
@@ -79,73 +151,13 @@ protected:
     const amrex::Real m_backgroundDensity{-1.0}; // so that \int rho dx = 0
 
     // Setup all the tests in the TestSuite
-    static void SetUpTestSuite ()
+    ReducedDiagnosticsTest() : m_infra{get_compdom()}
     {
-        // Variables that could come from the input file and are stored by amrex during the whole
-        // simulation
-        amrex::ParmParse pp;
-        /* computational domain */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("k", k);
-        const amrex::Vector<int> nCell{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(4, 4, 4)};
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        // particles (data read by particle_groups constructor)
-        std::string speciesNames{"ions"};
-        pp.add("Particle.speciesNames", speciesNames);
-        std::string samplerName{"PseudoRandom"};
-        pp.add("Particle.sampler", samplerName);
-        amrex::Real charge{1.0};
-        pp.add("Particle.ions.charge", charge);
-        amrex::Real mass{1.0};
-        pp.add("Particle.ions.mass", mass);
-        int nPartPerCell{100};
-#if AMREX_SPACEDIM == 1
-        nPartPerCell = 1000;
-#endif
-        pp.add("Particle.ions.nPartPerCell", nPartPerCell);
-        std::string density{"1.0 + 0.02 * cos(kvarx * x)"};
-        pp.add("Particle.ions.density", density);
-        int numGaussians{1};
-        pp.add("Particle.ions.numGaussians", numGaussians);
-        amrex::Real vWeightG0{1.0};
-        pp.add("Particle.ions.G0.vWeight", vWeightG0);
-        amrex::Vector<amrex::Real> vMean{{-1.0, 1.0, 2.0}};
-        pp.addarr("Particle.ions.G0.vMean", vMean);
-        amrex::Vector<amrex::Real> vThermal{{1.0, 2.0, 3.0}};
-        pp.addarr("Particle.ions.G0.vThermal", vThermal);
-        // functions defining fields. Variable y, z not available in 1D, variable y not available in
-        // 2D
-        std::string Ex = "cos(kvarx * x)";
-        std::string Ey = "cos(kvary * y)";
-        std::string Ez = "cos(kvarx * x) * cos(kvarz * z)";
-        std::string Bx = "2 * cos(kvarx * x)";
-        std::string By = "1.0";
-        std::string Bz = "1.0";
-#if AMREX_SPACEDIM == 2
-        Ex = "cos(kvarx * x)";
-        Ey = "cos(kvary * y)";
-        Ez = "cos(kvarx * x) * cos(kvary * y)";
-#elif AMREX_SPACEDIM == 1
-        Ex = "cos(kvarx * x)";
-        Ey = "0.7071";
-        Ez = "0.5";
-#endif
-
-        pp.add("Function.Bx", Bx);
-        pp.add("Function.By", By);
-        pp.add("Function.Bz", Bz);
-        pp.add("Function.Ex", Ex);
-        pp.add("Function.Ey", Ey);
-        pp.add("Function.Ez", Ez);
+        reduced_diagnostics_setup(m_parameters, m_infra);
+        init_particles(m_particles, m_infra);
 
         // Parse reduced diagnostics
-        amrex::ParmParse ppRedDiag("ReducedDiagnostics");
+        Io::Parameters ppRedDiag("ReducedDiagnostics");
         amrex::Vector<std::string> reducedDiagsNames{"PartDiag", "FieldElec", "FieldMag",
                                                      "FieldCurrent", "GaussError"};
         int saveReduced{1};
@@ -154,20 +166,13 @@ protected:
         std::string fieldCurrentType{"CurrentFieldEnergy"};
         std::string partDiagType{"Particle"};
         std::string gaussErrorType{"GaussError"};
-        ppRedDiag.addarr("groupNames", reducedDiagsNames);
-        ppRedDiag.add("saveInterval", saveReduced);
-        ppRedDiag.add("FieldElec.types", fieldElecType);
-        ppRedDiag.add("FieldMag.types", fieldMagType);
-        ppRedDiag.add("FieldCurrent.types", fieldCurrentType);
-        ppRedDiag.add("PartDiag.types", partDiagType);
-        ppRedDiag.add("GaussError.types", gaussErrorType);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        m_infra = ComputationalDomain{};
-        init_particles(m_particles, m_infra);
+        ppRedDiag.set("groupNames", reducedDiagsNames);
+        ppRedDiag.set("saveInterval", saveReduced);
+        ppRedDiag.set("FieldElec.types", fieldElecType);
+        ppRedDiag.set("FieldMag.types", fieldMagType);
+        ppRedDiag.set("FieldCurrent.types", fieldCurrentType);
+        ppRedDiag.set("PartDiag.types", partDiagType);
+        ppRedDiag.set("GaussError.types", gaussErrorType);
     }
 };
 
@@ -261,38 +266,51 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     EXPECT_NEAR(error / readRhoNorm, 1.0, 1e-12); // actual error not checked
 }
 
-class ReducedDiagnosticsMissingFieldsTest : public ReducedDiagnosticsTest
+class ReducedDiagnosticsMissingFieldsTest : public testing::Test
 {
 protected:
-    static constexpr amrex::Real s_m_densityFieldFactor{0.5};
-    static void SetUpTestSuite ()
-    {
-        ReducedDiagnosticsTest::SetUpTestSuite();
+    static constexpr amrex::Real s_densityFieldFactor{0.5};
 
-        amrex::ParmParse pp;
-        pp.add("Function.DensityField", std::to_string(s_m_densityFieldFactor));
-        pp.add("Function.DensityFieldInv", std::to_string(s_m_densityFieldFactor));
+    // Spline degreesx
+    static const int s_degX{1};
+    static const int s_degY{1};
+    static const int s_degZ{1};
+    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    // particle data
+    static const int s_vdim{3};
+
+    ComputationalDomain m_infra;
+    std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
+    Io::Parameters m_parameters{};
+    const amrex::Real m_backgroundDensity{-1.0}; // so that \int rho dx = 0
+
+    ReducedDiagnosticsMissingFieldsTest() : m_infra{get_compdom()}
+    {
+        reduced_diagnostics_setup(m_parameters, m_infra);
+        init_particles(m_particles, m_infra);
+
+        m_parameters.set("Function.DensityField", std::to_string(s_densityFieldFactor));
+        m_parameters.set("Function.DensityFieldInv", std::to_string(s_densityFieldFactor));
         // For verification
         std::string solverStr{"ConjugateGradientInverseHodge"};
-        pp.add("PoissonSolver.solver", solverStr);
+        m_parameters.set("PoissonSolver.solver", solverStr);
 
-        amrex::ParmParse ppRedDiag("ReducedDiagnostics");
-        ppRedDiag.add("computeMissingFields", 1);
+        Io::Parameters ppRedDiag("ReducedDiagnostics");
+        ppRedDiag.set("computeMissingFields", 1);
         amrex::Vector<std::string> reducedDiagsNames{"PartDiagMissing", "FieldElecMissing",
                                                      "FieldMagMissing", "FieldCurrentMissing",
                                                      "GaussErrorMissing"};
-        ppRedDiag.addarr("groupNames", reducedDiagsNames);
+        ppRedDiag.set("groupNames", reducedDiagsNames);
         std::string fieldElecType{"ElecFieldEnergy"};
         std::string fieldMagType{"MagFieldEnergy"};
         std::string fieldCurrentType{"CurrentFieldEnergy"};
         std::string partDiagType{"Particle"};
         std::string gaussErrorType{"GaussError"};
-        ppRedDiag.addarr("groupNames", reducedDiagsNames);
-        ppRedDiag.add("FieldElecMissing.types", fieldElecType);
-        ppRedDiag.add("FieldMagMissing.types", fieldMagType);
-        ppRedDiag.add("FieldCurrentMissing.types", fieldCurrentType);
-        ppRedDiag.add("PartDiagMissing.types", partDiagType);
-        ppRedDiag.add("GaussErrorMissing.types", gaussErrorType);
+        ppRedDiag.set("FieldElecMissing.types", fieldElecType);
+        ppRedDiag.set("FieldMagMissing.types", fieldMagType);
+        ppRedDiag.set("FieldCurrentMissing.types", fieldCurrentType);
+        ppRedDiag.set("PartDiagMissing.types", partDiagType);
+        ppRedDiag.set("GaussErrorMissing.types", gaussErrorType);
     }
 };
 
@@ -353,9 +371,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     double jx2, jy2, jz2;
     splitLineJ >> step >> t >> jx2 >> jy2 >> jz2;
     // precision is not high as coarse grid is used as well as not periodic functions
-    EXPECT_NEAR(jx2, 0.25 * s_m_densityFieldFactor, 0.01);
-    EXPECT_NEAR(jy2, 0.25 * s_m_densityFieldFactor, 0.01);
-    EXPECT_NEAR(jz2, 0.125 * s_m_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jx2, 0.25 * s_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jy2, 0.25 * s_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jz2, 0.125 * s_densityFieldFactor, 0.01);
 
     // check particle diagnostics
     // formulas for computing the exact values of the moments that are needed
@@ -456,9 +474,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     double jx2, jy2, jz2;
     splitLineJ >> step >> t >> jx2 >> jy2 >> jz2;
     // precision is not high as coarse grid is used as well as not periodic functions
-    EXPECT_NEAR(jx2, 0.25 * s_m_densityFieldFactor, 0.01);
-    EXPECT_NEAR(jy2, 0.25 * s_m_densityFieldFactor, 0.01);
-    EXPECT_NEAR(jz2, 0.125 * s_m_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jx2, 0.25 * s_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jy2, 0.25 * s_densityFieldFactor, 0.01);
+    EXPECT_NEAR(jz2, 0.125 * s_densityFieldFactor, 0.01);
 
     // check particle diagnostics
     // formulas for computing the exact values of the moments that are needed

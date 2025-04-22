@@ -1,0 +1,37 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+\usepackage[ansinew]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{bbm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\include{GempicLatexMacros}
+
+\renewcommand{\part}{\texttt{part}}
+\newcommand{\cell}{\texttt{cell}}
+\newcommand{\node}{\texttt{node}}
+\newcommand{\prim}{\texttt{prim}}
+
+\begin{document}
+
+
+Currently only a bilinear filter is available (See \ref{sec:FilterInput} for the controls).
+
+\section{Bilinear Filter}\label{sec:BilinearFilter}
+The multi-pass bilinear filter (cf.~\cite{vay2011}) interpolates the input using $N$ one-dimensional stencils, where $N$ is the dimension of the simulation. The stencils themselves can be iteratively calculated by \lstinline{nPass} convolutions with themselves according to the formula:
+\begin{equation}
+    f_{new}[i] = \alpha f_{old}[i] + (1 - \alpha)\frac{f_{old}[i-1] + f_{old}[i+1]}{2},
+\end{equation}
+where $f_{old}[i]$ is the $i$'th index of the old filter, $f_{new}[i]$ the $i$'th index of the new filter, and $\alpha$ is the weighting parameters. For the bilinear filter, $\alpha=0.5$.
+If \lstinline{compensation} was set in the input file, we perform a final iteration with $\alpha=\frac{n_{Pass}}{2}$.
+In 2D, with two stencils $f_x$, $f_y$ the application of the filter is then
+\begin{multline}
+    out[i,j] = \sum_{i_f=0}^{f_{x_{len}}}\sum_{j_f=0}^{f_{y_{len}}} f_x[i_f]f_y[j_f]\big(in[i-i_f,j-j_f] + in[i-i_f,j+j_f]\\ + in[i+i_f,j-j_f] + in[i+i_f,j+j_f]\big)
+\end{multline}
+\end{document}

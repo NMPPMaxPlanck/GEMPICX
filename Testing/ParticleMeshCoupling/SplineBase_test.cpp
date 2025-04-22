@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
@@ -39,6 +38,18 @@ public:
     MOCK_METHOD(amrex::Real, evalBSpline, ((int i), (int j), (int k)));
 };
 
+/* Initialize the infrastructure */
+inline ComputationalDomain get_compdom (const amrex::IntVect &nCell,
+                                        const amrex::IntVect &maxGridSize)
+{
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10, 10, 10)};
+    const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
+                               amrex::CoordSys::cartesian);
+}
+
 /**
  * @brief Test fixture. Sets up clean environment before each test of the SplineBase class
  */
@@ -55,43 +66,27 @@ protected:
     static const int s_spec{0};
     const int m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
 
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
 
-    static void SetUpTestSuite ()
+    SplineBaseTest() :
+        m_infra{get_compdom(amrex::IntVect{AMREX_D_DECL(10, 10, 10)},
+                            amrex::IntVect{AMREX_D_DECL(10, 10, 10)})}
     {
-        /* Initialize the infrastructure */
-        // const amrex::RealBox realBox({AMREX_D_DECL(0.0, 0.0, 0.0)},
-        //                              {AMREX_D_DECL(10.0, 10.0, 10.0)});
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        //
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.2 * M_PI, 0.2 * M_PI, 0.2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        for (int dir{0}; dir < AMREX_SPACEDIM; ++dir)
+        {
+            k[dir] = m_infra.geometry_data().ProbHi(dir);
+        }
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
+        // Parameters initialized here so that different tests can have different parameters
+        Gempic::Io::Parameters parameters;
         // particle settings
         double charge{1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        // Parameters initialized here so that different tests can have different parameters
-        Io::Parameters parameters{};
-        /* Initialize the infrastructure */
-        m_infra = ComputationalDomain{};
+        parameters.set("Particle.species0.charge", charge);
+        parameters.set("Particle.species0.mass", mass);
 
         // particles
         m_particleGroup.resize(s_numSpec);
@@ -102,9 +97,41 @@ protected:
     }
 };
 
-class SplineBaseTestCustomInfrastructure : public SplineBaseTest
+class SplineBaseTestCustomInfrastructure : public testing::Test
 {
-    void SetUp () override {}
+protected:
+    Io::Parameters m_parameters{};
+    // Degree of splines in each direction
+    static const int s_degX{1};
+    static const int s_degY{1};
+    static const int s_degZ{1};
+
+    static const int s_vDim{3};
+    static const int s_numSpec{1};
+    static const int s_spec{0};
+    const int m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
+    ComputationalDomain m_infra;
+    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
+
+    SplineBaseTestCustomInfrastructure() :
+        m_infra{get_compdom(amrex::IntVect{AMREX_D_DECL(10, 10, 10)},
+                            amrex::IntVect{AMREX_D_DECL(10, 10, 10)})}
+    {
+        amrex::Vector<amrex::Real> k{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        for (int dir{0}; dir < AMREX_SPACEDIM; ++dir)
+        {
+            k[dir] = m_infra.geometry_data().ProbHi(dir);
+        }
+
+        m_parameters.set("k", k);
+
+        // particle settings
+        double charge{1};
+        double mass{1};
+
+        m_parameters.set("Particle.species0.charge", charge);
+        m_parameters.set("Particle.species0.mass", mass);
+    }
 };
 
 /**
@@ -159,14 +186,10 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
 TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
 {
     /* Initialize the infrastructure */
-    const amrex::Vector<int> nCell{AMREX_D_DECL(8, 4, 2)};
-    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 4, 2)};
+    const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
 
-    Io::Parameters parameters{};
-    parameters.set("ComputationalDomain.nCell", nCell);
-    parameters.set("ComputationalDomain.maxGridSize", maxGridSize);
-
-    ComputationalDomain infra;
+    ComputationalDomain infra = get_compdom(nCell, maxGridSize);
 
     // particles
     m_particleGroup.resize(s_numSpec);

@@ -61,10 +61,11 @@ public:
     }
     // Explicit const
     /**
-     * Explicit Constructor: By passing an object of class vlasov maxwell and infrastructure one can
-     * set up the empty particle object. The particles themselves need to be added separately. This
-     * can be done one by one (see method add_particle) or with the particle samples in the folder
-     * sampler.
+     * Explicit Constructor: set up the empty particle object.
+     * The particles themselves need to be added separately. This can be done one by one (see
+     * method add_particle) or with the particle samplers
+     * \ref init_particles(std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>&
+       particles, ComputationalDomain infra)
      */
     ParticleGroups(amrex::Real charge,
                    amrex::Real mass,
@@ -105,7 +106,7 @@ public:
     }
 
     /**
-     * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
+     * adds one particle with the space coordinates @p position, the velocity coordinates @p
      * velocity and the weight @p weight to the Particle Tile @p particles.
      */
 
@@ -147,18 +148,19 @@ public:
     void copy (ParticleGroups<vdim, ndata> &source, bool local = false)
     {
         BL_PROFILE("Gempic::Particle::ParticleGroups::copy()");
-        this->charge = source.get_charge();
-        this->mass = source.get_mass();
+        this->m_charge = source.get_charge();
+        this->m_mass = source.get_mass();
+        this->m_name = source.get_name();
+        this->m_compNames = source.get_comp_names();
         this->copyParticles(source, local);
     }
+
     /**
      * Resets the total weight of the particle group to the specified target weight.
-     * This is needed to correct sampling errorsfor low particle counts and non-symmetric velocity
+     * This is needed to correct sampling errors for low particle counts and non-symmetric velocity
      * distributions.
      *
      * @param targetWeight the new total weight of the particle group
-     *
-     * @returns None
      */
     void reset_total_weight (amrex::Real targetWeight)
     {
@@ -184,11 +186,11 @@ public:
 
         // Remove average weight from all particles
         auto totalNumberOfParticles = this->TotalNumberOfParticles();
+        amrex::Real averageDiff = (targetWeight - W) / totalNumberOfParticles;
         for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*this, 0); pti.isValid(); ++pti)
         {
             const long np = pti.numParticles();
             auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-            amrex::Real averageDiff = (targetWeight - W) / totalNumberOfParticles;
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) { weight[pp] += averageDiff; });
         }
     }
@@ -219,42 +221,6 @@ public:
         params.get_or_set("vThermalBackground", m_vThermalBackground);
     }
 };
-
-// /**
-//  * Method adds one particle with the space coordinates @p position, the velocity coordinates @p
-//  * velocity and the weight @p weight to the Particle Tile @p particles.
-//  */
-// template <typename T, int vdim>
-// void add_particle(amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position,
-//                   amrex::GpuArray<amrex::Real, vdim> velocity, amrex::Real weight, T& particles)
-// {                                                // Array of Structures
-//     using ParticleType = amrex::Particle<0, 0>;  // SoA particle type
-
-//     // new particle:
-//     ParticleType p;
-//     p.id() = ParticleType::NextID();
-//     p.cpu() = amrex::ParallelDescriptor::MyProc();
-
-//     for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
-//     {
-//         p.pos(cc) = position[cc];
-//     }
-
-//     // Creating attributes for Structure of Arrays container
-//     // amrex::GpuArray<amrex::Real,vdim+1> particleAttributes{};
-
-//     for (int cc = 0; cc < vdim; cc++)
-//     {
-//         // p.rdata(cc) = velocity[cc];
-//         // particleAttributes[cc] = velocity[cc];
-//         particles.push_back_real(cc, velocity[cc]);
-//     }
-//     // p.rdata(vdim) = weight; //weight
-//     // particleAttributes[vdim] = weight; //weight
-//     particles.push_back_real(vdim, weight);
-
-//     particles.push_back(p);
-// }
 } // namespace Gempic::Particle
 
 #endif

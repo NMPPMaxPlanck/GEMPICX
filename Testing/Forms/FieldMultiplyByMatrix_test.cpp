@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -9,8 +8,6 @@
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
-
-#define compare_fields(...) Gempic::Test::Utils::compare_fields(__FILE__, __LINE__, __VA_ARGS__)
 
 using namespace Gempic;
 using namespace Forms;
@@ -33,6 +30,17 @@ void initialize_tensor (amrex::MFIter& mfi,
                 });
 }
 
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(2, 2, 2)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(2, 2, 2)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class FieldMultiplyByMatrixTest : public testing::Test
 {
 protected:
@@ -44,30 +52,10 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     amrex::Real m_tol{1e-11};
 
-    static void SetUpTestSuite ()
-    {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        // Domain has to be small enough so x*y*z does not get too large for absolute float
-        // comparison
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(2, 2, 2)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(2, 2, 2)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override { m_infra = ComputationalDomain{}; }
+    FieldMultiplyByMatrixTest() : m_infra{get_compdom()} {}
 };
 //Test Eout = M*D
 //input D: constant field
@@ -96,7 +84,7 @@ TEST_F(FieldMultiplyByMatrixTest, ConstField)
     amrex::Real scalingY = GEMPIC_D_MULT(1 / dx[xDir], dx[yDir], 1 / dx[zDir]);
     amrex::Real scalingZ = GEMPIC_D_MULT(1 / dx[xDir], 1 / dx[yDir], dx[zDir]);
     // works only for equal number of cells in each direction
-    assert((scalingX == scalingY) && (scalingX == scalingZ));
+    ASSERT_TRUE((scalingX == scalingY) && (scalingX == scalingZ));
     for (int comp = 0; comp < 3; comp++)
     {
         D.m_data[comp].setVal(1.0 / scalingX);
@@ -114,7 +102,7 @@ TEST_F(FieldMultiplyByMatrixTest, ConstField)
         {
             loopRun = true;
             const amrex::Box& bx = mfi.validbox();
-            compare_fields((eOut.m_data[comp])[mfi].array(), (eResult.m_data[comp])[mfi].array(),
+            COMPARE_FIELDS((eOut.m_data[comp])[mfi].array(), (eResult.m_data[comp])[mfi].array(),
                            bx, m_tol);
         }
         ASSERT_TRUE(loopRun);
@@ -210,7 +198,7 @@ TEST_F(FieldMultiplyByMatrixTest, LinearFieldDiagTensor)
         {
             loopRun = true;
             const amrex::Box& bx = mfi.validbox();
-            compare_fields((cOut.m_data[comp])[mfi].array(), (cResult.m_data[comp])[mfi].array(),
+            COMPARE_FIELDS((cOut.m_data[comp])[mfi].array(), (cResult.m_data[comp])[mfi].array(),
                            bx, m_tol);
         }
         ASSERT_TRUE(loopRun);

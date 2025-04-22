@@ -3,7 +3,6 @@
 #include <random>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
@@ -204,7 +203,7 @@ int main (int argc, char *argv[])
                 // Deposit particles in J and push particles: H_p = H_p1 + H_p2 + H_p3
                 for (int comp = 0; comp < 3; ++comp)
                 {
-                    (J.m_data[comp]).setVal(0.0, J.m_data[comp].nGrow());
+                    J.m_data[comp].setVal(0.0);
                 }
 
                 for (auto &particleSpecies : partGrLinVlasov)

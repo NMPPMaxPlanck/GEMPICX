@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -17,6 +16,17 @@ using namespace TimeLoop;
 
 namespace
 {
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1, 1, 1)};
+    const amrex::IntVect nCell{AMREX_D_DECL(1, 1, 1)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(1, 1, 1)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class SplittingColdPlasmaTest : public testing::Test
 {
 protected:
@@ -28,31 +38,16 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     amrex::Real m_tol{1e-11};
 
-    static void SetUpTestSuite ()
+    SplittingColdPlasmaTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(1, 1, 1)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(1, 1, 1)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
         // Not checking particles
         const int nGhostExtra{1};
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("nGhostExtra", nGhostExtra);
+        m_parameters.set("nGhostExtra", nGhostExtra);
     }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override { m_infra = ComputationalDomain{}; }
 };
 
 TEST_F(SplittingColdPlasmaTest, RotationZAxis)

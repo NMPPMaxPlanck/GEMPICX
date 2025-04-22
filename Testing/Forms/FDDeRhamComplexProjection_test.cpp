@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -61,17 +60,18 @@ void update_one_form_primal_parallel_for (amrex::MFIter& mfi,
         });
 }
 
-void update_one_form_primal_error_parallel_for (
-    amrex::MFIter& mfi,
-    DeRhamField<Grid::primal, Space::edge>& lineIntegral,
-    DeRhamField<Grid::primal, Space::edge>& E,
-    DeRhamField<Grid::primal, Space::edge>& errorE,
-    int comp)
+template <Grid grid, Space space>
+void update_vector_form_error_parallel_for (amrex::MFIter& mfi,
+                                            DeRhamField<grid, space>& lineIntegral,
+                                            DeRhamField<grid, space>& field,
+                                            DeRhamField<grid, space>& error,
+                                            int comp)
 {
+    static_assert(isOneOrTwoForm<space>);
     const amrex::Box& bx = mfi.validbox();
-    amrex::Array4<amrex::Real> const& projectionMF = (E.m_data[comp])[mfi].array();
+    amrex::Array4<amrex::Real> const& projectionMF = (field.m_data[comp])[mfi].array();
     amrex::Array4<amrex::Real> const& analyticalMF = (lineIntegral.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorE.m_data[comp])[mfi].array();
+    amrex::Array4<amrex::Real> const& errorMF = (error.m_data[comp])[mfi].array();
 
     amrex::ParallelFor(
         bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -119,23 +119,6 @@ void update_two_form_primal_parallel_for (amrex::MFIter& mfi,
         });
 }
 
-void update_two_form_primal_error_parallel_for (
-    amrex::MFIter& mfi,
-    DeRhamField<Grid::primal, Space::face>& faceIntegral,
-    DeRhamField<Grid::primal, Space::face>& B,
-    DeRhamField<Grid::primal, Space::face>& errorB,
-    int comp)
-{
-    const amrex::Box& bx = mfi.validbox();
-    amrex::Array4<amrex::Real> const& projectionMF = (B.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (faceIntegral.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorB.m_data[comp])[mfi].array();
-
-    amrex::ParallelFor(
-        bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        { errorMF(i, j, k) = std::abs(projectionMF(i, j, k) - analyticalMF(i, j, k)); });
-}
-
 void update_one_form_dual_parallel_for (amrex::MFIter& mfi,
                                         DeRhamField<Grid::dual, Space::edge>& lineIntegralDual,
                                         ComputationalDomain& mInfra,
@@ -174,24 +157,6 @@ void update_one_form_dual_parallel_for (amrex::MFIter& mfi,
                                                  std::sin(r[zDir]) - std::sin(r[zDir] - dr[zDir]));
             }
         });
-}
-
-void update_one_form_dual_error_parallel_for (
-    amrex::MFIter& mfi,
-    DeRhamField<Grid::dual, Space::edge>& lineIntegralDual,
-    DeRhamField<Grid::dual, Space::edge>& H,
-    DeRhamField<Grid::dual, Space::edge>& errorH,
-    int comp)
-{
-    const amrex::Box& bx = mfi.validbox();
-
-    amrex::Array4<amrex::Real> const& projectionMF = (H.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (lineIntegralDual.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorH.m_data[comp])[mfi].array();
-
-    amrex::ParallelFor(
-        bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        { errorMF(i, j, k) = std::abs(projectionMF(i, j, k) - analyticalMF(i, j, k)); });
 }
 
 void update_two_form_dual_parallel_for (amrex::MFIter& mfi,
@@ -236,24 +201,6 @@ void update_two_form_dual_parallel_for (amrex::MFIter& mfi,
         });
 }
 
-void update_two_form_dual_error_parallel_for (
-    amrex::MFIter& mfi,
-    DeRhamField<Grid::dual, Space::face>& faceIntegralDual,
-    DeRhamField<Grid::dual, Space::face>& D,
-    DeRhamField<Grid::dual, Space::face>& errorD,
-    int comp)
-{
-    const amrex::Box& bx = mfi.validbox();
-
-    amrex::Array4<amrex::Real> const& projectionMF = (D.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (faceIntegralDual.m_data[comp])[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorD.m_data[comp])[mfi].array();
-
-    amrex::ParallelFor(
-        bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        { errorMF(i, j, k) = std::abs(projectionMF(i, j, k) - analyticalMF(i, j, k)); });
-}
-
 void update_zero_form_primal_parallel_for (amrex::MFIter& mfi,
                                            DeRhamField<Grid::primal, Space::node>& pointVals,
                                            ComputationalDomain& mInfra)
@@ -276,16 +223,17 @@ void update_zero_form_primal_parallel_for (amrex::MFIter& mfi,
         });
 }
 
-void update_zero_form_primal_error_parallel_for (amrex::MFIter& mfi,
-                                                 DeRhamField<Grid::primal, Space::node>& pointVals,
-                                                 DeRhamField<Grid::primal, Space::node>& Q,
-                                                 DeRhamField<Grid::primal, Space::node>& errorQ)
+template <Grid grid, Space space>
+void update_scalar_form_error_parallel_for (amrex::MFIter& mfi,
+                                            DeRhamField<grid, space>& lineIntegral,
+                                            DeRhamField<grid, space>& field,
+                                            DeRhamField<grid, space>& error)
 {
+    static_assert(isZeroOrThreeForm<space>);
     const amrex::Box& bx = mfi.validbox();
-
-    amrex::Array4<amrex::Real> const& projectionMF = (Q.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (pointVals.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorQ.m_data)[mfi].array();
+    amrex::Array4<amrex::Real> const& projectionMF = (field.m_data)[mfi].array();
+    amrex::Array4<amrex::Real> const& analyticalMF = (lineIntegral.m_data)[mfi].array();
+    amrex::Array4<amrex::Real> const& errorMF = (error.m_data)[mfi].array();
 
     amrex::ParallelFor(
         bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -315,22 +263,6 @@ void update_zero_form_dual_parallel_for (amrex::MFIter& mfi,
         });
 }
 
-void update_zero_form_dual_error_parallel_for (amrex::MFIter& mfi,
-                                               DeRhamField<Grid::dual, Space::node>& pointValsDual,
-                                               DeRhamField<Grid::dual, Space::node>& qDual,
-                                               DeRhamField<Grid::dual, Space::node>& errorQDual)
-{
-    const amrex::Box& bx = mfi.validbox();
-
-    amrex::Array4<amrex::Real> const& projectionMF = (qDual.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (pointValsDual.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorQDual.m_data)[mfi].array();
-
-    amrex::ParallelFor(
-        bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        { errorMF(i, j, k) = std::abs(projectionMF(i, j, k) - analyticalMF(i, j, k)); });
-}
-
 void update_three_form_primal_parallel_for (amrex::MFIter& mfi,
                                             DeRhamField<Grid::primal, Space::cell>& rhoAn,
                                             ComputationalDomain& mInfra)
@@ -352,22 +284,6 @@ void update_three_form_primal_parallel_for (amrex::MFIter& mfi,
                                                (std::sin(r[yDir] + dr[yDir]) - std::sin(r[yDir])),
                                                (std::sin(r[zDir] + dr[zDir]) - std::sin(r[zDir])));
         });
-}
-
-void update_three_form_primal_error_parallel_for (amrex::MFIter& mfi,
-                                                  DeRhamField<Grid::primal, Space::cell>& rhoAn,
-                                                  DeRhamField<Grid::primal, Space::cell>& rho,
-                                                  DeRhamField<Grid::primal, Space::cell>& errorRho)
-{
-    const amrex::Box& bx = mfi.validbox();
-
-    amrex::Array4<amrex::Real> const& projectionMF = (rho.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (rhoAn.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorRho.m_data)[mfi].array();
-
-    amrex::ParallelFor(
-        bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        { errorMF(i, j, k) = std::abs(projectionMF(i, j, k) - analyticalMF(i, j, k)); });
 }
 
 void update_three_form_dual_parallel_for (amrex::MFIter& mfi,
@@ -394,22 +310,6 @@ void update_three_form_dual_parallel_for (amrex::MFIter& mfi,
         });
 }
 
-void update_three_form_dual_error_parallel_for (amrex::MFIter& mfi,
-                                                DeRhamField<Grid::dual, Space::cell>& rhoAnDual,
-                                                DeRhamField<Grid::dual, Space::cell>& rhoDual,
-                                                DeRhamField<Grid::dual, Space::cell>& errorRhoDual)
-{
-    const amrex::Box& bx = mfi.validbox();
-
-    amrex::Array4<amrex::Real> const& projectionMF = (rhoDual.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& analyticalMF = (rhoAnDual.m_data)[mfi].array();
-    amrex::Array4<amrex::Real> const& errorMF = (errorRhoDual.m_data)[mfi].array();
-
-    amrex::ParallelFor(
-        bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
-        { errorMF(i, j, k) = std::abs(projectionMF(i, j, k) - analyticalMF(i, j, k)); });
-}
-
 class FDDeRhamComplexProjectionTest : public testing::Test
 {
 protected:
@@ -422,31 +322,12 @@ protected:
     inline static const int s_hodgeDegree{2};
 
     Gempic::Io::Parameters m_parameters{};
-    Gempic::ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    Gempic::ComputationalDomain m_infra;
 
     int m_gaussNodes = 6;
     const amrex::Real m_tol = 1e-15;
 
-    static void SetUpTestSuite ()
-    {
-        /* Initialize the infrastructure */
-
-        const amrex::Vector<amrex::Real> domainLo{
-            AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
-        const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(9, 8, 7)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(3, 4, 5)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
-
-    void SetUp () override { m_infra = Gempic::ComputationalDomain{}; }
+    FDDeRhamComplexProjectionTest() : m_infra{Gempic::Test::Utils::get_default_compdom()} {}
 };
 
 TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
@@ -513,7 +394,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     {
         for (amrex::MFIter mfi(E.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_one_form_primal_error_parallel_for(mfi, lineIntegral, E, errorE, comp);
+            update_vector_form_error_parallel_for(mfi, lineIntegral, E, errorE, comp);
         }
     }
 
@@ -579,7 +460,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     {
         for (amrex::MFIter mfi(B.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_two_form_primal_error_parallel_for(mfi, faceIntegral, B, errorB, comp);
+            update_vector_form_error_parallel_for(mfi, faceIntegral, B, errorB, comp);
         }
     }
 
@@ -644,7 +525,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     {
         for (amrex::MFIter mfi(H.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_one_form_dual_error_parallel_for(mfi, lineIntegralDual, H, errorH, comp);
+            update_vector_form_error_parallel_for(mfi, lineIntegralDual, H, errorH, comp);
         }
     }
 
@@ -707,7 +588,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     {
         for (amrex::MFIter mfi(D.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            update_two_form_dual_error_parallel_for(mfi, faceIntegralDual, D, errorD, comp);
+            update_vector_form_error_parallel_for(mfi, faceIntegralDual, D, errorD, comp);
         }
     }
 
@@ -764,7 +645,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     DeRhamField<Grid::primal, Space::node> errorQ(deRham);
     for (amrex::MFIter mfi(Q.m_data); mfi.isValid(); ++mfi)
     {
-        update_zero_form_primal_error_parallel_for(mfi, pointVals, Q, errorQ);
+        update_scalar_form_error_parallel_for(mfi, pointVals, Q, errorQ);
     }
 
     amrex::Real errorQNorm0 = errorQ.m_data.norm0();
@@ -805,7 +686,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     DeRhamField<Grid::dual, Space::node> errorQDual(deRham);
     for (amrex::MFIter mfi(qDual.m_data); mfi.isValid(); ++mfi)
     {
-        update_zero_form_dual_error_parallel_for(mfi, pointValsDual, qDual, errorQDual);
+        update_scalar_form_error_parallel_for(mfi, pointValsDual, qDual, errorQDual);
     }
 
     amrex::Real errorQDualNorm0 = errorQDual.m_data.norm0();
@@ -846,7 +727,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     DeRhamField<Grid::primal, Space::cell> errorRho(deRham);
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
-        update_three_form_primal_error_parallel_for(mfi, rhoAn, rho, errorRho);
+        update_scalar_form_error_parallel_for(mfi, rhoAn, rho, errorRho);
     }
 
     amrex::Real errorRhoNorm0 = errorRho.m_data.norm0();
@@ -887,7 +768,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     DeRhamField<Grid::dual, Space::cell> errorRhoDual(deRham);
     for (amrex::MFIter mfi(rhoDual.m_data); mfi.isValid(); ++mfi)
     {
-        update_three_form_dual_error_parallel_for(mfi, rhoAnDual, rhoDual, errorRhoDual);
+        update_scalar_form_error_parallel_for(mfi, rhoAnDual, rhoDual, errorRhoDual);
     }
 
     amrex::Real errorRhoDualNorm0 = errorRhoDual.m_data.norm0();

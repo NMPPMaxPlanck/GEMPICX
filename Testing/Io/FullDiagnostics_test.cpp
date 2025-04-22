@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -42,6 +41,18 @@ void define_expected (amrex::MFIter& mfi,
         });
 }
 
+ComputationalDomain get_compdom ()
+{
+    // 2pi(domainHi - domainLo) = k
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class FullDiagnosticsTest : public testing::Test
 {
 protected:
@@ -55,51 +66,38 @@ protected:
     static const int s_vdim{3};
     static const int s_ndata{1};
 
-    //
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
-    // std::unique_ptr<amrex::MultiFab>  mf_all_diag;
-    //
     Io::Parameters m_parameters{};
 
     // Setup all the tests in the TestSuite
-    static void SetUpTestSuite ()
+    FullDiagnosticsTest() : m_infra{get_compdom()}
     {
         // Variables that could come from the input file and are stored by amrex during the whole
         // simulation
-        amrex::ParmParse pp;
-        /* computational domain */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
         amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("k", k);
-        const amrex::Vector<int> nCell{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(4, 4, 4)};
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
+        m_parameters.set("k", k);
         // particles (data read by particleGroups constructor)
         std::string speciesNames{"ions"};
-        pp.add("Particle.speciesNames", speciesNames);
+        m_parameters.set("Particle.speciesNames", speciesNames);
         std::string samplerName{"PseudoRandom"};
-        pp.add("Particle.sampler", samplerName);
+        m_parameters.set("Particle.sampler", samplerName);
         amrex::Real charge{1.0};
-        pp.add("Particle.ions.charge", charge);
+        m_parameters.set("Particle.ions.charge", charge);
         amrex::Real mass{1.0};
-        pp.add("Particle.ions.mass", mass);
+        m_parameters.set("Particle.ions.mass", mass);
         int nPartPerCell{2};
-        pp.add("Particle.ions.nPartPerCell", nPartPerCell);
+        m_parameters.set("Particle.ions.nPartPerCell", nPartPerCell);
         std::string density{"1.0 + 0.02 * cos(kvarx * x)"};
-        pp.add("Particle.ions.density", density);
+        m_parameters.set("Particle.ions.density", density);
         int numGaussians{1};
-        pp.add("Particle.ions.numGaussians", numGaussians);
+        m_parameters.set("Particle.ions.numGaussians", numGaussians);
         amrex::Real vWeightG0{1.0};
-        pp.add("Particle.ions.G0.vWeight", vWeightG0);
+        m_parameters.set("Particle.ions.G0.vWeight", vWeightG0);
         amrex::Vector<amrex::Real> vMean{{-1.0, 1.0, 2.0}};
-        pp.addarr("Particle.ions.G0.vMean", vMean);
+        m_parameters.set("Particle.ions.G0.vMean", vMean);
         amrex::Vector<amrex::Real> vThermal{{1.0, 2.0, 3.0}};
-        pp.addarr("Particle.ions.G0.vThermal", vThermal);
+        m_parameters.set("Particle.ions.G0.vThermal", vThermal);
         // functions defining fields. Variable y, z not available in 1D, variable y not available in
         // 2D
         std::string rho = "1";
@@ -121,41 +119,41 @@ protected:
         Ez = "2 * x";
 #endif
 
-        pp.add("Function.Bx", Bx);
-        pp.add("Function.By", By);
-        pp.add("Function.Bz", Bz);
-        pp.add("Function.Ex", Ex);
-        pp.add("Function.Ey", Ey);
-        pp.add("Function.Ez", Ez);
-        pp.add("Function.rho", rho);
-        pp.add("Function.phi", phi);
+        m_parameters.set("Function.Bx", Bx);
+        m_parameters.set("Function.By", By);
+        m_parameters.set("Function.Bz", Bz);
+        m_parameters.set("Function.Ex", Ex);
+        m_parameters.set("Function.Ey", Ey);
+        m_parameters.set("Function.Ez", Ez);
+        m_parameters.set("Function.rho", rho);
+        m_parameters.set("Function.phi", phi);
 
-        // Full diagnostics
-        pp.add("FullDiagnostics.enable", true); // 1 for true, 0 for false
-        amrex::Vector<std::string> diagsNames = {"part", "field"};
-        pp.addarr("FullDiagnostics.groupNames", diagsNames);
-        std::string particle = "ions";
-        pp.add("FullDiagnostics.part.varNames", particle);
-        amrex::Vector<std::string> fieldNames = {"rho", "Ex", "Ey", "Ez", "Bx", "phi"};
-        pp.addarr("FullDiagnostics.field.varNames", fieldNames);
-        std::string cellCenterOutputProcessor = "CellCenter";
-        pp.add("FullDiagnostics.field.outputProcessor", cellCenterOutputProcessor);
-        int fieldSave{1};
-        pp.add("FullDiagnostics.field.saveInterval", fieldSave);
-        int partSave{1};
-        pp.add("FullDiagnostics.part.saveInterval", partSave);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        m_infra = ComputationalDomain{};
+        m_parameters.set("FullDiagnostics.enable", true); // 1 for true, 0 for false
         init_particles(m_particles, m_infra);
     }
 };
 
+void create_input_file_for_cellcenter ()
+{
+    Io::Parameters parameters{"FullDiagnostics"};
+    // Full diagnostics
+    amrex::Vector<std::string> diagsNames = {"part", "field"};
+    parameters.set("groupNames", diagsNames);
+    std::string particle = "ions";
+    parameters.set("part.varNames", particle);
+    amrex::Vector<std::string> fieldNames = {"rho", "Ex", "Ey", "Ez", "Bx", "phi"};
+    parameters.set("field.varNames", fieldNames);
+    std::string cellCenterOutputProcessor = "CellCenter";
+    parameters.set("field.outputProcessor", cellCenterOutputProcessor);
+    int fieldSave{1};
+    parameters.set("field.saveInterval", fieldSave);
+    int partSave{1};
+    parameters.set("part.saveInterval", partSave);
+}
+
 TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
 {
+    create_input_file_for_cellcenter();
     constexpr int hodgeDegree{2};
 
     // Initialize the De Rham Complex with deg 2
@@ -205,18 +203,19 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
 void create_input_file_to_select_operator (const std::string& operatorId)
 {
     // This part belongs in an input file when not doing testing
-    amrex::ParmParse pp;
+    Io::Parameters parameters("FullDiagnostics");
     const std::string groupNames{"field5"};
-    pp.add("FullDiagnostics.groupNames", groupNames);
+
+    parameters.set("groupNames", groupNames);
     const std::string saveFolder = {"FullDiagnostics/scalingTest"};
-    pp.add("FullDiagnostics.saveFolder", saveFolder);
+    parameters.set("saveFolder", saveFolder);
 
     const std::string varNames{"rho"};
-    pp.add("FullDiagnostics.field5.varNames", varNames);
-    pp.add("FullDiagnostics.field5.saveInterval", 1);
+    parameters.set("field5.varNames", varNames);
+    parameters.set("field5.saveInterval", 1);
     const std::string custom{"Custom"};
-    pp.add("FullDiagnostics.field5.outputProcessor", custom);
-    pp.add("FullDiagnostics.field5.customID", operatorId);
+    parameters.set("field5.outputProcessor", custom);
+    parameters.set("field5.customID", operatorId);
 }
 
 // create and add lambda, (this one multiplies by a constant and cell centers)
@@ -308,19 +307,19 @@ public:
 void create_input_file_to_select_custom_strategy (const std::string& customId)
 {
     // This part belongs in an input file when not doing testing
-    amrex::ParmParse pp;
+    Io::Parameters parameters{"FullDiagnostics"};
     const std::string customEmpty{"customEmpty"};
-    pp.add("FullDiagnostics.groupNames", customEmpty);
+    parameters.set("groupNames", customEmpty);
     std::string saveFolder = {"FullDiagnostics/CustomOutputProcessorTest"};
-    pp.add("FullDiagnostics.saveFolder", saveFolder);
+    parameters.set("saveFolder", saveFolder);
 
     const std::string varNames{"phi"};
-    pp.add("FullDiagnostics.customEmpty.varNames", varNames);
-    pp.add("FullDiagnostics.customEmpty.saveInterval", 1);
+    parameters.set("customEmpty.varNames", varNames);
+    parameters.set("customEmpty.saveInterval", 1);
 
     const std::string custom{"Custom"};
-    pp.add("FullDiagnostics.customEmpty.outputProcessor", custom);
-    pp.add("FullDiagnostics.customEmpty.customID", customId);
+    parameters.set("customEmpty.outputProcessor", custom);
+    parameters.set("customEmpty.customID", customId);
 }
 
 TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOutputProcessor)

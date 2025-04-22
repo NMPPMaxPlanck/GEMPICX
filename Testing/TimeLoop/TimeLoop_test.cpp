@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
@@ -20,6 +19,18 @@ using ::testing::Mock;
 
 namespace
 {
+ComputationalDomain get_compdom ()
+{
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{
+        AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
+    const amrex::IntVect nCell{AMREX_D_DECL(20, 20, 20)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(20, 20, 20)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 /**
  * @brief Test fixture. Sets up clean environment before each test of the SplineWithPrimitive class
  */
@@ -41,41 +52,17 @@ protected:
 
     Gempic::Io::Parameters m_parameters{};
 
-    ComputationalDomain m_infra{false}; // "unitialized" computational domain
+    ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
 
-    static void SetUpTestSuite ()
+    HamiltonianSplittingTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
-        // Dimension needs to be big enough to cover the full support of the splines
-        const amrex::Vector<int> nCell{AMREX_D_DECL(20, 20, 20)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(20, 20, 20)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("k", k);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
         // particle settings
         double charge{1};
         double mass{1};
 
-        pp.add("Particle.species0.charge", charge);
-        pp.add("Particle.species0.mass", mass);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        // Parameters initialized here so that different tests can have different parameters
-        Io::Parameters parameters{};
-        /* Initialize the infrastructure */
-        m_infra = ComputationalDomain{};
+        m_parameters.set("Particle.species0.charge", charge);
+        m_parameters.set("Particle.species0.mass", mass);
 
         // particles
         m_particleGroup.resize(s_numSpec);
@@ -156,7 +143,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     {
         // Checking only the first index !=0, not the full field. Indices according to the current
         // setup!
-        CHECK_FIELD(J.m_data[0].array(mfi), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(J.m_data[0].array(mfi), mfi.validbox(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 6); }},
                     {chargeWeight * GEMPIC_D_MULT(primDiffRef, yNodeVal, zNodeVal)}, {}, 1e-12);
@@ -203,7 +190,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     }
     for (amrex::MFIter mfi(J.m_data[1]); mfi.isValid(); ++mfi)
     {
-        CHECK_FIELD(J.m_data[1].array(mfi), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(J.m_data[1].array(mfi), mfi.validbox(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 12, &&k == 6); }},
                     {chargeWeight * GEMPIC_D_MULT(xNodeVal, primDiffRef, zNodeVal)}, {}, 1e-12);
@@ -250,7 +237,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
     for (amrex::MFIter mfi(J.m_data[2]); mfi.isValid(); ++mfi)
     {
-        CHECK_FIELD(J.m_data[2].array(mfi), m_infra.m_nCell.dim3(),
+        CHECK_FIELD(J.m_data[2].array(mfi), mfi.validbox(),
                     {[] (AMREX_D_DECL(int i, int j, int k))
                      { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 5); }},
                     {chargeWeight * xNodeVal * yNodeVal * primDiffRef}, {}, 1e-12);
@@ -333,7 +320,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
         // check the first non-zero entry of the J field in xDir
         for (amrex::MFIter mfi(J.m_data[dir]); mfi.isValid(); ++mfi)
         {
-            CHECK_FIELD(J.m_data[dir].array(mfi), m_infra.m_nCell.dim3(),
+            CHECK_FIELD(J.m_data[dir].array(mfi), mfi.validbox(),
                         {[] (AMREX_D_DECL(int i, int j, int k))
                          { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
                         {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);

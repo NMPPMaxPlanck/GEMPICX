@@ -72,7 +72,7 @@ public:
                                                intCompNames);
             }
         }
-        write_job_info(filename);
+        write_job_info(filename, geom);
 
         write_warp_x_header(filename, geom);
 
@@ -80,7 +80,7 @@ public:
     }
 
     /** Write general info of the run into the plotfile */
-    void write_job_info (const std::string& dir) const
+    void write_job_info (const std::string& dir, const amrex::Geometry& geom) const
     {
         BL_PROFILE("FlushFormatPlotfile::write_job_info()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -98,7 +98,7 @@ public:
 
             // job information
             jobInfoFile << prettyLine;
-            jobInfoFile << " WarpX Job Information\n";
+            jobInfoFile << " GEMPICX Job Information\n";
             jobInfoFile << prettyLine;
 
             jobInfoFile << "number of MPI processes: " << amrex::ParallelDescriptor::NProcs()
@@ -173,24 +173,25 @@ public:
             */
             jobInfoFile << " Boundary conditions\n";
 
+            std::array<std::string, 2> bcString = {"Non-periodic", "Periodic"};
             // versions <18 and 18 of clang-format disagree on the formatting here
             // clang-format off
-            AMREX_D_TERM(jobInfoFile << "   -x: " << "interior" << "\n";
-                         jobInfoFile << "   +x: " << "interior" << "\n";
-                       , jobInfoFile << "   -y: " << "interior" << "\n";
-                         jobInfoFile << "   +y: " << "interior" << "\n";
-                       , jobInfoFile << "   -z: " << "interior" << "\n";
-                         jobInfoFile << "   +z: " << "interior" << "\n";)
+            AMREX_D_TERM(jobInfoFile << "   -x: " << bcString[geom.isPeriodic(xDir)] << "\n";
+                         jobInfoFile << "   +x: " << bcString[geom.isPeriodic(xDir)] << "\n";
+                       , jobInfoFile << "   -y: " << bcString[geom.isPeriodic(yDir)] << "\n";
+                         jobInfoFile << "   +y: " << bcString[geom.isPeriodic(yDir)] << "\n";
+                       , jobInfoFile << "   -z: " << bcString[geom.isPeriodic(zDir)] << "\n";
+                         jobInfoFile << "   +z: " << bcString[geom.isPeriodic(zDir)] << "\n";)
             // clang-format on
 
             jobInfoFile << "\n\n";
 
             // runtime parameters
             jobInfoFile << prettyLine;
-            jobInfoFile << " Inputs File Parameters\n";
+            jobInfoFile << " Input File Parameters\n";
             jobInfoFile << prettyLine;
 
-            // amrex::ParmParse::dumpTable(jobInfoFile, true);
+            amrex::ParmParse::dumpTable(jobInfoFile, true);
 
             jobInfoFile.close();
         }

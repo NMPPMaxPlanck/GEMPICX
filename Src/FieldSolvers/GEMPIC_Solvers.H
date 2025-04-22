@@ -53,7 +53,6 @@ public:
         m_p(drc),
         m_z(drc),
         m_relTol{tol}
-
     {
         m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
         static_assert(
@@ -71,12 +70,8 @@ public:
     /**
      * Solves the linear system using Conjugate Gradient method.
      *
-     * @param[out] x : The solution vector
-     * @param b : The right-hand side vector
-     *
-     * @return void
-     *
-     * @throws None
+     * @param[out] x The solution vector
+     * @param b The right-hand side vector
      */
     void solve (Sol& x, Rhs& b) override
     {
@@ -150,12 +145,8 @@ public:
      * Does not work well with the AMReX solver as a preconditioner (at least in periodic domain).
      * Can be useful later with a better preconditioner (from HYPRE for example)
      *
-     * @param[out] x : The solution vector
-     * @param b : The right-hand side vector
-     *
-     * @return void
-     *
-     * @throws None
+     * @param[out] x The solution vector
+     * @param b The right-hand side vector
      */
     void precond_solve (Sol& x, Rhs& b)
     {

@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -38,6 +37,18 @@ condLambda condX = func_cond_x;
 condLambda condY = func_cond_y;
 condLambda condZ = func_cond_z;
 
+ComputationalDomain get_compdom ()
+{
+    // Cells of size 1x1x1
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(3.0, 3.0, 3.0)};
+    const amrex::IntVect nCell{AMREX_D_DECL(3, 3, 3)};
+    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 class BoundaryConditionTest : public testing::Test
 {
 protected:
@@ -49,33 +60,17 @@ protected:
     inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
-    ComputationalDomain m_infra{false}; // "uninitialized" computational domain
+    ComputationalDomain m_infra;
 
-    static void SetUpTestSuite ()
+    BoundaryConditionTest() : m_infra{get_compdom()}
     {
-        /* Initialize the infrastructure */
-        // Cells of size 1x1x1
-        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(3.0, 3.0, 3.0)};
-        const amrex::Vector<int> nCell{AMREX_D_DECL(3, 3, 3)};
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
         const amrex::Vector<std::string> bcVec(6, "PerfectlyConducting");
         // Not checking particles
         const int nGhostExtra{0};
 
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-        pp.add("nGhostExtra", nGhostExtra);
-        pp.addarr("BoundaryCondition.Default", bcVec);
+        m_parameters.set("nGhostExtra", nGhostExtra);
+        m_parameters.set("BoundaryCondition.Default", bcVec);
     }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override { m_infra = ComputationalDomain{}; }
 };
 
 TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
@@ -125,7 +120,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(zeroForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((zeroForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {condX, condY, condZ},
+        CHECK_FIELD((zeroForm.m_data[mfi]).array(), mfi.validbox(), {condX, condY, condZ},
                     {0, 0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
@@ -135,24 +130,21 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(oneForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((oneForm.m_data[xDir][mfi]).array(), m_infra.m_nCell.dim3(), {condY, condZ},
-                    {0, 0}, 1);
+        CHECK_FIELD((oneForm.m_data[xDir][mfi]).array(), mfi.validbox(), {condY, condZ}, {0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
     loopRun = false;
     for (amrex::MFIter mfi(oneForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((oneForm.m_data[yDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX, condZ},
-                    {0, 0}, 1);
+        CHECK_FIELD((oneForm.m_data[yDir][mfi]).array(), mfi.validbox(), {condX, condZ}, {0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
     loopRun = false;
     for (amrex::MFIter mfi(oneForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((oneForm.m_data[zDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX, condY},
-                    {0, 0}, 1);
+        CHECK_FIELD((oneForm.m_data[zDir][mfi]).array(), mfi.validbox(), {condX, condY}, {0, 0}, 1);
     }
     ASSERT_TRUE(loopRun);
 
@@ -161,21 +153,21 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((twoForm.m_data[xDir][mfi]).array(), m_infra.m_nCell.dim3(), {condX}, {0}, 1);
+        CHECK_FIELD((twoForm.m_data[xDir][mfi]).array(), mfi.validbox(), {condX}, {0}, 1);
     }
     ASSERT_TRUE(loopRun);
     loopRun = false;
     for (amrex::MFIter mfi(twoForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((twoForm.m_data[yDir][mfi]).array(), m_infra.m_nCell.dim3(), {condY}, {0}, 1);
+        CHECK_FIELD((twoForm.m_data[yDir][mfi]).array(), mfi.validbox(), {condY}, {0}, 1);
     }
     ASSERT_TRUE(loopRun);
     loopRun = false;
     for (amrex::MFIter mfi(twoForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((twoForm.m_data[zDir][mfi]).array(), m_infra.m_nCell.dim3(), {condZ}, {0}, 1);
+        CHECK_FIELD((twoForm.m_data[zDir][mfi]).array(), mfi.validbox(), {condZ}, {0}, 1);
     }
     ASSERT_TRUE(loopRun);
 
@@ -184,7 +176,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((threeForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((threeForm.m_data[mfi]).array(), mfi.validbox(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }
@@ -237,7 +229,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
     for (amrex::MFIter mfi(zeroForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((zeroForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((zeroForm.m_data[mfi]).array(), mfi.validbox(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 
@@ -248,14 +240,14 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
         for (amrex::MFIter mfi(oneForm.m_data[dir]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            CHECK_FIELD((oneForm.m_data[dir][mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+            CHECK_FIELD((oneForm.m_data[dir][mfi]).array(), mfi.validbox(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
         loopRun = false;
         for (amrex::MFIter mfi(twoForm.m_data[dir]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            CHECK_FIELD((twoForm.m_data[dir][mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+            CHECK_FIELD((twoForm.m_data[dir][mfi]).array(), mfi.validbox(), {}, {}, 1);
         }
         ASSERT_TRUE(loopRun);
     }
@@ -265,7 +257,7 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        CHECK_FIELD((threeForm.m_data[mfi]).array(), m_infra.m_nCell.dim3(), {}, {}, 1);
+        CHECK_FIELD((threeForm.m_data[mfi]).array(), mfi.validbox(), {}, {}, 1);
     }
     ASSERT_TRUE(loopRun);
 }

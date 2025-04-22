@@ -44,27 +44,7 @@ public:
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcRHS;
     amrex::Array<amrex::Parser, 3> m_parserRHS;
 
-    static void SetUpTestSuite ()
-    {
-        /* Initialize the infrastructure */
-        amrex::ParmParse pp; // Used in lieu of input file
-
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-
-        const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-
-        // Grid parameters
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
+    HypreQuasineutralCurlCurlTest()
     {
 #if AMREX_SPACEDIM == 2
         const std::string analyticalRho = "10+cos(x)+cos(2*y)";
@@ -98,13 +78,10 @@ public:
 
     amrex::Real curlcurloperator_solve (int n)
     {
+        Gempic::Io::Parameters parameters;
         // Initialize computational_domain
-        const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-
-        Gempic::Io::Parameters parameters{};
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.nCell", nCell);
-        ComputationalDomain infra;
+        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,

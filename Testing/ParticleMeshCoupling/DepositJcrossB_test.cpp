@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
-#include <AMReX_ParmParse.H>
 #include <AMReX_Particles.H>
 
 #include "GEMPIC_ComputationalDomain.H"
@@ -50,47 +49,9 @@ public:
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcJcrossB;
     amrex::Array<amrex::Parser, 3> m_parserJcrossB;
 
-    static void SetUpTestSuite ()
+    DepositJcrossBTest()
     {
-        /* Initialize the infrastructure */
-        amrex::ParmParse pp; // Used instead of input file
-
-        const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        pp.addarr("ComputationalDomain.domainLo", domainLo);
-
-        const amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        pp.addarr("ComputationalDomain.domainHi", domainHi);
-
-        // Grid parameters
-        const amrex::Vector<int> maxGridSize{AMREX_D_DECL(8, 8, 8)};
-        pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
-
-        const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-        pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
-
-        // Particle parameters (data read by particle_groups constructor)
-        std::string speciesNames{"ions"};
-        pp.add("Particle.speciesNames", speciesNames);
-
-        amrex::Real charge{1.0};
-        pp.add("Particle.ions.charge", charge);
-
-        amrex::Real mass{1.0};
-        pp.add("Particle.ions.mass", mass);
-
-        // Gaussian parameters
-        amrex::Vector<amrex::Real> vMean{{0.0, 0.0, 0.0}}; // for nodesplinederiv testing
-        pp.addarr("Particle.ions.G0.vMean", vMean);
-    }
-
-    // virtual void SetUp() will be called before each test is run.
-    void SetUp () override
-    {
-        if constexpr (AMREX_SPACEDIM == 1)
-        {
-            GTEST_SKIP() << "This function works in 2D and 3D.";
-        }
-        else
+        if constexpr (AMREX_SPACEDIM != 1)
         {
             amrex::Array<std::string, 3> analyticalB;
             amrex::Array<std::string, 3> analyticalJcrossB;
@@ -116,20 +77,40 @@ public:
                 m_funcJcrossB[i] = m_parserJcrossB[i].compile<s_nVar>();
             }
         }
+
+        Gempic::Io::Parameters parameters;
+        // Particle parameters (data read by particle_groups constructor)
+        std::string speciesNames{"ions"};
+        parameters.set("Particle.speciesNames", speciesNames);
+
+        amrex::Real charge{1.0};
+        parameters.set("Particle.ions.charge", charge);
+
+        amrex::Real mass{1.0};
+        parameters.set("Particle.ions.mass", mass);
+
+        // Gaussian parameters
+        amrex::Vector<amrex::Real> vMean{{0.0, 0.0, 0.0}}; // for nodesplinederiv testing
+        parameters.set("Particle.ions.G0.vMean", vMean);
+    }
+
+    // virtual void SetUp() will be called before each test is run.
+    void SetUp () override
+    {
+        if constexpr (AMREX_SPACEDIM == 1)
+        {
+            GTEST_SKIP() << "This function only works in 2D and 3D.";
+        }
     }
 
     template <int n>
     amrex::Real jcross_b_solve ()
     {
-        // For studies other than convergence, this should be in SetUpTestSuite under Grid
-        // parameters
         Gempic::Io::Parameters parameters{};
-        amrex::ParmParse pp;
-        const amrex::Vector<int> nCell{AMREX_D_DECL(n, n, n)};
-        pp.addarr("ComputationalDomain.nCell", nCell);
 
         // Initialize computational_domain
-        ComputationalDomain infra;
+        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        ComputationalDomain infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize particle groups
         std::vector<std::shared_ptr<ParticleGroups<s_vdim>>>

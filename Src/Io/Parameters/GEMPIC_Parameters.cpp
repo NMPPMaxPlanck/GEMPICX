@@ -31,6 +31,14 @@ std::ostream& operator<<(std::ostream& os, const parmParseParameterType& val)
             {
                 os << '"' << arg << '"';
             }
+            // IntVect special treatment:
+            else if constexpr (std::is_same_v<T, amrex::IntVect>)
+            {
+                for (int i = 0; i < AMREX_SPACEDIM; ++i)
+                {
+                    os << arg[i] << " ";
+                }
+            }
             else
             {
                 os << arg;
@@ -59,20 +67,57 @@ std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray)
     }
     return os;
 }
+
+std::string parm_parse_typename (const parmParseType& val)
+{
+    std::string typeName;
+    std::visit(
+        [&typeName] (auto&& arg)
+        {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, parmParseParameterType>)
+            {
+                if (arg.index() < indexToName.size())
+                {
+                    typeName = indexToName[arg.index()];
+                }
+                else
+                {
+                    typeName = "unknown type (update Gempic::Io::Impl::indexToName array!)";
+                }
+            }
+            else if constexpr (std::is_same_v<T, parmParseVectorType>)
+            {
+                if (arg.size() > 0)
+                {
+                    typeName = "std::vector<" + parm_parse_typename(arg[0]) + ">";
+                }
+                else
+                {
+                    typeName = "empty std::vector";
+                }
+            }
+            else if constexpr (std::is_same_v<T, parmParseArrayType>)
+            {
+                typeName = "std::array<" + parm_parse_typename(arg[0]) + ", " +
+                           std::to_string(AMREX_SPACEDIM) + ">";
+            }
+            else
+            {
+                typeName = "unknown type (update Gempic::Io::Impl::parm_parse_typename!)";
+            }
+        },
+        val);
+    return typeName;
+}
 } //namespace Impl
 
 void Parameters::set_print_output (bool printOrNot)
 {
     BL_PROFILE("Gempic::Io::set_print_output()");
-    if (s_numParameterInstances == 0)
-    {
-        s_printOutput = printOrNot;
-    }
-    else
-    {
-        std::cerr << "Error: Parameters class already previously initialized!";
-        exit(Error::ParametersAlreadyInitialized);
-    }
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
+                                     "Parameters class already previously initialized!");
+    s_printOutput = printOrNot;
 }
 
 Parameters::Parameters(const std::string& classPrefix, std::string printName) :
@@ -80,11 +125,8 @@ Parameters::Parameters(const std::string& classPrefix, std::string printName) :
 {
     BL_PROFILE("Gempic::Io::Parameters(class)");
     using namespace Impl; // utility functions for this class
-    if (s_numParameterInstances == 0)
-    {
-        std::cerr << "Error: Parameters class not previously initialized!";
-        exit(Error::ParametersNotInitialized);
-    }
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances != 0,
+                                     "Parameters class not previously initialized!");
     if (printName == "None")
     {
         printName = "class " + classPrefix;
@@ -140,6 +182,15 @@ Parameters::~Parameters()
         // same program
         s_printOutput = false;
     }
+}
+
+void Parameters::reset ()
+{
+    BL_PROFILE("Gempic::Io::reset()");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
+                                     "Parameters class already exists!");
+    amrex::ParmParse::Finalize();
+    amrex::ParmParse::Initialize(0, nullptr, nullptr);
 }
 
 void Parameters::hide_class_output() { m_hideOutput = true; }

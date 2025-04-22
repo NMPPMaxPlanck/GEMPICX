@@ -6,11 +6,11 @@ using namespace Gempic::TimeLoop;
  * @brief solves the ODEs corresponding to H_J part of the Hamiltonian in the cold plasma model.
  *        Rotates and integrates cold current.
  *
- * @param[out] J : cold current fields as dual 2-form (modified by the function)
- * @param[out] D : electric field as dual 2-form (modified by the function)
- * @param deRham : object describing the discrete deRham sequence
- * @param funcBEquilibrium : background magnetic field function
- * @param dt : time step
+ * @param[out] J cold current fields as dual 2-form (modified by the function)
+ * @param[out] D electric field as dual 2-form (modified by the function)
+ * @param deRham object describing the discrete deRham sequence
+ * @param funcBEquilibrium background magnetic field function
+ * @param dt time step
  *
  */
 void Gempic::TimeLoop::apply_h_j (
