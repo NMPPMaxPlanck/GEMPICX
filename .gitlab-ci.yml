@@ -3,6 +3,10 @@ workflow:
   auto_cancel:
     on_new_commit: interruptible
 
+default:
+  before_script:
+    - source scripts/CI_helpers.sh
+
 stages:
   - test
   - deploy
@@ -43,6 +47,7 @@ stages:
     - cloud
   stage: test
   before_script:
+    - !reference [default,before_script]
     - !reference [.mpcdf-modules,before_script]
     - module load gcc
     - module load openmpi
@@ -53,29 +58,47 @@ build-test_gcc_3D:
   extends:
     - .mpcdf-gcc-env
   script:
+    - start_details configure "CMake Configure Step"
     - cmake -S . -B ./build --preset cpu-release-3D
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
 
 build-test_gcc_2D:
   extends:
     - .mpcdf-gcc-env
   script:
+    - start_details configure "CMake Configure Step"
     - cmake -S . -B ./build --preset cpu-release-2D
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
   needs: ["build-test_gcc_3D"]
 
 build-test_gcc_1D:
   extends:
     - .mpcdf-gcc-env
   script:
+    - start_details configure "CMake Configure Step"
     - cmake -S . -B ./build --preset cpu-release-1D
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
   needs: ["build-test_gcc_3D"]
 
 .mpcdf-gpu-env:
@@ -86,6 +109,7 @@ build-test_gcc_1D:
     - cloud-gpu
   stage: test
   before_script:
+    - !reference [default,before_script]
     - !reference [.mpcdf-modules,before_script]
     - module load gcc
     - module load openmpi
@@ -99,10 +123,16 @@ build-test_gpu_3D:
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
+    - start_details configure "CMake Configure Step"
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-3D
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gcc_3D"]
 
@@ -112,10 +142,16 @@ build-test_gpu_2D:
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
+    - start_details configure "CMake Configure Step"
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-2D
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gpu_3D"]
 
@@ -125,10 +161,16 @@ build-test_gpu_1D:
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
+    - start_details configure "CMake Configure Step"
     - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-1D
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gpu_2D"]
 
@@ -141,6 +183,7 @@ build-test_gpu_1D:
     - cloud
   stage: test
   before_script:
+    - !reference [default,before_script]
     - !reference [.mpcdf-modules,before_script]
     - module load gcc
     - module load openmpi
@@ -152,30 +195,65 @@ build-test_clang_cpu_3D:
   extends:
     - .mpcdf-clang-env
   script:
+    - start_details configure "CMake Configure Step"
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
   extends:
     - .mpcdf-clang-env
   script:
+    - start_details configure "CMake Configure Step"
     - cmake --preset cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
   extends:
     - .mpcdf-clang-env
   script:
+    - start_details configure "CMake Configure Step"
     - cmake --preset cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
     - cd build
     - ctest --output-on-failure --no-tests=error
+    - end_details test
+  needs: ["build-test_gcc_3D"]
+
+build-test_mac_3D:
+  extends:
+    - .remove-duplicate-pipelines
+  script:
+    - start_details configure "CMake Configure Step"
+    - cmake -S . -B ./build --preset cpu-release-3D
+    - end_details configure
+    - start_details build "CMake Build Step"
+    - cmake --build ./build -j $(($(nproc)-2))
+    - end_details build
+    - start_details test "Test Step"
+    - cd build
+    - ctest --output-on-failure --no-tests=error
+    - end_details test
+  tags: [macos]
   needs: ["build-test_gcc_3D"]
 
 # Test that merge requests are "clean", i.e. with the proper style
@@ -183,13 +261,16 @@ style-test_cpu_3D:
   extends: .mpcdf-clang-env
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
-  before_script:
-    - !reference [.mpcdf-clang-env,before_script]
-    - module list
   script:
+    - start_details configure "CMake Configure Step"
     - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
+    - end_details configure
+    - start_details sanitize
     - python3 scripts/sanitize_with_python.py
+    - end_details sanitize
+    - start_details output
     - cat build/tidyOutput.out
+    - end_details output
     - git diff --exit-code
   # needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
@@ -201,6 +282,7 @@ pages:
   only:
     - master
   before_script:
+    - !reference [default,before_script]
     - apt-get update
     - apt-get install -y python3 python3.12-venv git cmake 
     - apt-get install -y doxygen
@@ -211,9 +293,12 @@ pages:
     - source ./venv/bin/activate
     - pip3 install sphinx breathe sphinx_rtd_theme
   script:
-    - source ./venv/bin/activate
+    - start_details configure "CMake Configure Step"
     - cmake --preset documentation
+    - end_details configure
+    - start_details build "CMake Build Step"
     - cmake --build ./build/documentation
+    - end_details build
     - mv build/documentation/sphinx/ public/
   needs: []
   artifacts:
