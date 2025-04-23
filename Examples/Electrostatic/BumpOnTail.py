@@ -1,20 +1,6 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.14.1
-#   kernelspec:
-#     display_name: .venv
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
-# - Convert to jupyter notebook with 'jupytext --to ipynb LandauVP.py'
-# - and back to python percent format with 'jupytext --to py:percent LandauVP.ipynb'
+# - Convert to jupyter notebook with `jupytext --to ipynb BumpOnTail.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all BumpOnTail.ipynb`
 
 # %%
 import os
@@ -38,7 +24,7 @@ os.chdir(pathname)
 print('run directory: ', os.getcwd())
 # read times series
 ts = yt.load('./FullDiagnostics/plt_field??????')
-ntz = ts.__len__() # number of items in time series
+ntz = len(ts) # number of items in time series
 # save times corresponding to each dataset
 times = np.zeros((ntz),dtype=float) 
 for i in range(ntz):
@@ -56,7 +42,7 @@ storage = {}
 for store, ds in ts.piter(storage=storage):
     data = ds.covering_grid( 0, ds.domain_left_edge, ds.domain_dimensions )
     arr = np.array(data['boxlib',field])
-    store.result = np.sum(np.sum(arr,2),1); # we sum over the y and z components
+    store.result = np.sum(np.sum(arr,2),1) # we sum over the y and z components
     time = float(ds.current_time)
 
 # %%
@@ -66,7 +52,7 @@ x_left = np.array(ds.domain_left_edge)
 x_right = np.array(ds.domain_right_edge)
 L = x_right - x_left
 # fill array for FFT
-arr = np.zeros([nx,ntz]);
+arr = np.zeros([nx,ntz])
 print(arr.shape)
 for data in storage.items():
     arr[:,data[0]] = data[1] / (ny*nz)   
@@ -126,6 +112,7 @@ axs[0].set_title("Real part")
 axs[1].set_title("Imaginary part")    
 axs[2].set_title("Log plot of modulus squared")
 fig.legend()
+plt.show()
 
 
 # %%
@@ -160,6 +147,7 @@ axs[0,1].set_title('kinetic energy')
 axs[1,1].plot(time,(ex2+ey2+ez2+ekin)/total_energy0)
 axs[1,1].set_title('total energy')
 print('Error in energy conservation ',np.abs(1-np.min((ex2+ey2+ez2+ekin)/total_energy0)))
+plt.show()
 
 
 
@@ -172,6 +160,7 @@ coef = 4 * epsilon * r
 plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.exp(gamma*time[:itmax]))**2))
 # Numerical
 plt.plot(time[:itmax],np.log(ex2[:itmax]))
+plt.show()
 
 
 # %%
@@ -180,6 +169,6 @@ plt.plot(arr1[:,0])
 plt.plot(arr1[:,1])
 plt.plot(arr1[:,15])
 plt.plot(arr1[:,50])
-print(arr1[:,50])
+plt.show()
 
 # %%

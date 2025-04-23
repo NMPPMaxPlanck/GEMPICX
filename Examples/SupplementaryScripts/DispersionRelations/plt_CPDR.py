@@ -78,6 +78,8 @@ y_tick_labels = [r'$\omega_{LH}$', r'$\omega_{UH}$', r'$\omega_{L}$', r'$\omega_
 # Call the function to annotate y-axis ticks
 annotate_y_ticks(y_values, y_tick_labels)
 
+plt.show()
+
 # Save the data
 if mode == "CPDR":
     data = np.vstack([k, w10, w9, w8, w7, w6]).T

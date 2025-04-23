@@ -1,4 +1,8 @@
-ran# %%
+# %% [markdown]
+# - Convert to jupyter notebook with `jupytext --to ipynb RungeKutta_Maxwell_plot.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all RungeKutta_Maxwell_plot.ipynb`
+
+# %%
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,9 +14,9 @@ from yt.frontends.boxlib.data_structures import AMReXDataset
 
 # %%
 # read times series of fields
-ts = yt.load('../../build/cpu-release-3D/Testing/FullDiagnostics/plt_field??????')
+ts = yt.load('./FullDiagnostics/plt_field??????')
 # Print number of items in time series
-ntz = ts.__len__()
+ntz = len(ts)
 print('number of time slices ', ntz)
 # print field list of first time steps. They are the same for all time steps
 print("yt field list ",ts[0].field_list)
@@ -30,7 +34,8 @@ Ndim = ds.domain_dimensions
 L = x_right - x_left
 volume = L[0]*L[1]*L[2]
 #yt.SlicePlot(ds, 'y', "eSolutionx")
-yt.SlicePlot(ds, 'y', "Ex")
+plot = yt.SlicePlot(ds, 'y', "Ex")
+plot.show()
 
 # %% with numpy
 ds = ts[-1]
@@ -41,6 +46,7 @@ E_err = field_data['boxlib','eErrorx']
 plt.plot(E_err[0,0,:])
 #plt.plot(E_sol[0,0,:])
 #plt.plot(E_x[0,0,:])
+plt.show()
 
 # %%
 for i in [30]:#range(0, len(ts), len(ts)//10):
@@ -53,6 +59,7 @@ for i in [30]:#range(0, len(ts), len(ts)//10):
    # plt.plot(E_x[0,0,:], c="tab:blue")
     plt.plot(E_sol[0,0,:], '--', c="tab:orange")
    # plt.plot(E_sol[0,0,:], c="tab:orange")
+plt.show()
 
 #---------------------------------------------------------
 # %%
@@ -63,7 +70,8 @@ Ndim = ds.domain_dimensions
 L = x_right - x_left
 volume = L[0]*L[1]*L[2]
 #yt.SlicePlot(ds, 'y', "eSolutionx")
-yt.SlicePlot(ds, 'y', "Jx")
+plot = yt.SlicePlot(ds, 'y', "Jx")
+plot.show()
 
 # %% with numpy
 ds = ts[-1]
@@ -74,6 +82,7 @@ J_err = field_data['boxlib','jErrorx']
 plt.plot(J_err[0,0,:])
 #plt.plot(E_sol[0,0,:])
 #plt.plot(E_x[0,0,:])
+plt.show()
 
 # %%
 for i in range(0, len(ts), len(ts)//10):
@@ -86,6 +95,7 @@ for i in range(0, len(ts), len(ts)//10):
    # plt.plot(E_x[0,0,:], c="tab:blue")
     plt.plot(J_sol[0,0,:], '--', c="tab:orange", lw=5-4.5*i/len(ts))
    # plt.plot(E_sol[0,0,:], c="tab:orange")
+plt.show()
 
 #By---------------------------------------------------------
 # %%
@@ -96,7 +106,8 @@ Ndim = ds.domain_dimensions
 L = x_right - x_left
 volume = L[0]*L[1]*L[2]
 #yt.SlicePlot(ds, 'y', "eSolutionx")
-yt.SlicePlot(ds, 'y', "By")
+plot = yt.SlicePlot(ds, 'y', "By")
+plot.show()
 
 # %% with numpy
 ds = ts[-1]
@@ -107,6 +118,7 @@ B_err = field_data['boxlib','bErrory']
 plt.plot(B_err[0,0,:])
 #plt.plot(E_sol[0,0,:])
 #plt.plot(E_x[0,0,:])
+plt.show()
 
 # %%
 for i in  range(0, len(ts), len(ts)//10):
@@ -119,5 +131,6 @@ for i in  range(0, len(ts), len(ts)//10):
    # plt.plot(E_x[0,0,:], c="tab:blue")
     plt.plot(B_sol[0,0,:], '--', c="tab:orange")
    # plt.plot(E_sol[0,0,:], c="tab:orange")
+plt.show()
 
 # %%

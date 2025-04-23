@@ -1,16 +1,6 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.14.1
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+# %% [markdown]
+# - Convert to jupyter notebook with `jupytext --to ipynb DiagnosticsExamples.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all DiagnosticsExamples.ipynb`
 
 # %%
 # Import needed modules (needs yt>=4 version, do pip install 'yt>=4.0' if needed)
@@ -69,7 +59,8 @@ axs[1,0].set_title('magnetic energy')
 axs[0,1].plot(tPart,ekin)
 axs[0,1].set_title('kinetic energy')
 axs[1,1].plot(time,ex2+ey2+ez2+bx2+by2+bz2+ekin)
-axs[1,1].set_title('total energy');
+axs[1,1].set_title('total energy')
+plt.show()
 
 # %% [markdown]
 # ### Full diagnostics: Fields 
@@ -78,7 +69,7 @@ axs[1,1].set_title('total energy');
 # read times series of fields
 ts = yt.load('./FullDiagnostics/plt_field??????')
 # Print number of items in time series
-ntz = ts.__len__()
+ntz = len(ts)
 print('number of time slices ', ntz)
 # print field list of first time steps. They are the same for all time steps
 print("yt field list ",ts[0].field_list)
@@ -104,7 +95,8 @@ volume = L[0]*L[1]*L[2]
 # %%
 # Slice plot of B_z in z direction (with or without saving to a file)
 #yt.SlicePlot(ds, 'z', "Bz").save()
-yt.SlicePlot(ds, 'x', "Ex")
+plot = yt.SlicePlot(ds, 'x', "Ex")
+plot.show()
 
 # %%
 # Create a line plot of the variables 'Ex', 'Ey' and 'Bz' 
@@ -163,6 +155,7 @@ plt.plot(x,Bz[:,0,0]-np.cos(x-time))
 #print("B_energy ", np.sum(Bx**2 + By**2 + Bz**2)/(nx*ny*nz))
 #print("E_energy ", np.sum(Ex**2 + Ey**2 )/(nx*ny*nz))
 #print("Bz_energy ", np.sum(Bz**2)/(nx*ny*nz))
+plt.show()
 
 # %%
 # Power spectrum in x,y - sum over z direction
@@ -180,6 +173,7 @@ plt.colorbar()
 #plt.xlabel('wave number' r'$\ k \Delta x$',fontsize=13)
 plt.xlabel(r'$k_x$',fontsize=13)
 plt.ylabel(r'$k_y$',fontsize=13)
+plt.show()
 
 # %% [markdown]
 # ### Example particle plots
@@ -238,6 +232,7 @@ w = ad[species, 'particle_weight'].v
 
 # Plot
 plt.scatter(x,vx,s=.01,c='k')
+plt.show()
 
 print("nb_part", x.size, 32*16*16)
 print("kinetic energy", 0.5*np.sum(w*(vx**2+vy**2+vz**2))/volume)
