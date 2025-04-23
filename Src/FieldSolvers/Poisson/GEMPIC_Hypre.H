@@ -26,16 +26,17 @@ private:
     std::unique_ptr<amrex::HypreSolver<s_maxStencilSize>> m_hypreSolver;
 
     ComputationalDomain m_compDom;
-    amrex::Real m_relTol, m_absTol{1.e-15};
+    amrex::Real m_relTol, m_absTol;
     amrex::Real m_maxiter{1000};
     amrex::Real m_cellVolume;
 
 public:
     HypreLinearSystem(const ComputationalDomain& compDom,
                       std::shared_ptr<Gempic::Forms::DeRhamComplex> drc,
-                      amrex::Real tol = 1.e-11,
+                      amrex::Real relTol = 1.e-10,
+                      amrex::Real absTol = 1.e-12,
                       int verbose = 0) :
-        m_compDom{compDom}, m_relTol{tol}, m_cellVolume{compDom.cell_volume()}
+        m_compDom{compDom}, m_relTol{relTol}, m_absTol{absTol}, m_cellVolume{compDom.cell_volume()}
     {
         verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
 

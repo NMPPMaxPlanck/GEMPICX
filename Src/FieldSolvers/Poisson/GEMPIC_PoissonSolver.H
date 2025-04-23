@@ -29,7 +29,10 @@ namespace Impl
 std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver(
     std::shared_ptr<DeRhamComplex> deRham,
     const ComputationalDomain& infra,
-    const std::string& solver);
+    const std::string& solver,
+    const amrex::Real relTol = 1e-10,
+    const amrex::Real absTol = 1e-12,
+    const bool tolGiven = false);
 } // namespace Impl
 
 /**
@@ -57,7 +60,15 @@ inline std::unique_ptr<PoissonSolverMethod> make_poisson_solver (
     }
 #endif
     params.get_or_set("solver", solver);
-    return Impl::make_specific_poisson_solver(deRham, infra, solver);
+
+    amrex::Real relTol = 1e-11;
+    amrex::Real absTol = 1e-12;
+
+    // we want to warn if tolerances are supplied to solvers that don't use them
+    bool tolGiven{params.is_in_input_file("relTol") || params.is_in_input_file("absTol")};
+    params.get_or_set("relTol", relTol);
+    params.get_or_set("absTol", absTol);
+    return Impl::make_specific_poisson_solver(deRham, infra, solver, relTol, absTol, tolGiven);
 }
 
 /**

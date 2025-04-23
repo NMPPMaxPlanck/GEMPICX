@@ -311,15 +311,17 @@ BoundaryCondition.Default = Natural Natural # String vector. Default "Natural" *
 Selects which solver to use for the poisson equation (\ref{eq:Poisson_example}), provided the PoissonSolver is used in the simulation.
 There are several choices built in:
 \begin{itemize}
-    \item \lstinline[language=pkgconfig]{FFT}: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation.
-    \item \lstinline[language=pkgconfig]{Hypre}: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
-    \item \lstinline[language=pkgconfig]{ConjugateGradient}: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
-    \item \lstinline[language=pkgconfig]{ConjugateGradientInverseHodge}: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
-    \item "Amrex": Using the AMReX MLMG solver. Boundary conditions must be periodic.
+	\item \verb|FFT|: Using the Fast Fourier Transform to solve the Poisson equation in Fourier space. Default if the boundary conditions are periodic and FFT was found during installation. Does not use \verb|relTol| and \verb|absTol|.
+	\item \verb|Hypre|: Using the sparse solver library Hypre. Default if Hypre is available and FFT is not applicable.
+	\item \verb|ConjugateGradient|: Uses our own conjugate gradient solver. Default if neither FFT nor Hypre apply.
+	\item \verb|ConjugateGradientInverseHodge|: Same as ConjugateGradient, but using another conjugate gradient solver instead of the Hodge operator such that $-\tildemat{D}{\mat{H}}_2\mat{G}\arr{\phi}=\arr{\rho}$ exactly.
+	\item \verb|Amrex|: Using the AMReX MLMG solver. Boundary conditions must be periodic.
 \end{itemize}
 \begin{lstlisting}[language=pkgconfig]
 # PoissonSolver
 PoissonSolver.solver = ConjugateGradient # String. Default: See above.
+PoissonSolver.relTol = 1e-10 # Real. Default 1e-10.
+PoissonSolver.absTol = 1e-12 # Real. Default 1e-12.
 \end{lstlisting}
 
 \subsection{HYPRE options}
