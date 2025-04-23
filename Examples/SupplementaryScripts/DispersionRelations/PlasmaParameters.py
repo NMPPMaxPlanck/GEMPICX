@@ -1,22 +1,15 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.16.7
-#   kernelspec:
-#     display_name: Python 3.11.1 64-bit
-#     language: python
-#     name: python3
-# ---
+# %% [markdown]
+# - Convert to jupyter notebook with `jupytext --to ipynb PlasmaParameters.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all PlasmaParameters.ipynb`
 
+# %%
 import numpy as np
 
+# %% [markdown]
 # ### Physical constants
 # SI units except T in eV
 
+# %%
 c = 2.9979e8
 eps0 = 8.8542e-12
 mu0 = 1/(eps0*c**2)
@@ -24,11 +17,13 @@ me = 9.1094e-31
 mi =  1.6726e-27  # proton mass
 e = 1.6e-19 # electron charge
 
+# %% [markdown]
 # ### Fundamental parameters
 # - density ($n$)
 # - Temperature ($T_e$,$T_i$) ions and ions
 # - magnetic field ($B_0$)
 
+# %%
 #plasma = "ionosphere"
 plasma = "fusion"
 if plasma == "fusion":
@@ -42,6 +37,7 @@ if plasma == "ionosphere":
     Ti = 0.1
     B0 = 0.35e-4
 
+# %% [markdown]
 # ### Derived parameters
 # - Thermal velocity $v_{th}= \sqrt{\frac{k_B T}{m}}$ ($k_B=e$ and $T$ in eV)
 # - Plasma frequency $\omega_p = \frac{q^2 n}{\epsilon_0 m}$
@@ -52,6 +48,7 @@ if plasma == "ionosphere":
 # - Alfven velocity $v_A = \frac{B_0}{\mu_0 m_i n}$
 # - plasma $\beta = \frac{2\mu_0 n k_B T}{B_0^2}$
 
+# %%
 vthe = np.sqrt(e*Te/me)
 omegape = np.sqrt(e**2*n/(me*eps0))
 omegace = e*B0/me
@@ -67,6 +64,7 @@ di = c/omegapi
 betai = 2*mu0*n*e*Ti/B0**2
 vA = B0/np.sqrt(mu0*mi*n)
 
+# %%
 print(f"{lambdaD = :.3e}  (Debye length)")
 print(f"{vthe    = :.3e}  (electron thermal velocity)")
 print(f"{omegape = :.3e}  (electron plasma frequency)")
@@ -83,8 +81,10 @@ print(f"{betai   = :.3e}  (ration ion thermal / magnetic energy)")
 print(f"{vA      = :.3e}  (Alfven velocity)")
 
 
+# %%
 print(omegapi/omegaci,omegape/omegace, omegapi/omegaci*omegace/omegape)
 
+# %%
 np.sqrt(mi/me)
 
-
+# %%

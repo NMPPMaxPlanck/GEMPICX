@@ -1,23 +1,6 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.14.1
-#   kernelspec:
-#     display_name: Python 3.11.1 64-bit
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
-# - Convert to jupyter notebook with 'jupytext --to ipynb LandauVP.py'
-# - and back to python percent format with 'jupytext --to py:percent LandauVP.ipynb'
-
-# %% [markdown]
-#
+# - Convert to jupyter notebook with `jupytext --to ipynb LandauVP_Ez_z.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all LandauVP_Ez_z.ipynb`
 
 # %%
 import os
@@ -44,7 +27,7 @@ except(FileExistsError):
 os.chdir(pathname)
 # read times series
 ts = yt.load('./FullDiagnostics/plt_field??????')
-ntz = ts.__len__() # number of items in time series
+ntz = len(ts) # number of items in time series
 # save times corresponding to each dataset
 times = np.zeros((ntz),dtype=float) 
 for i in range(ntz):
@@ -62,8 +45,8 @@ storage = {}
 for store, ds in ts.piter(storage=storage):
     data = ds.covering_grid( 0, ds.domain_left_edge, ds.domain_dimensions )
     arr = np.array(data['boxlib',field])
-    # store.result = np.sum(np.sum(arr,2),1); # we sum over the y and z components
-    store.result = np.sum(np.sum(arr,0),0); # we sum over the x and y components
+    # store.result = np.sum(np.sum(arr,2),1) # we sum over the y and z components
+    store.result = np.sum(np.sum(arr,0),0) # we sum over the x and y components
     time = float(ds.current_time)
     #print(time)
     
@@ -74,7 +57,7 @@ x_left = np.array(ds.domain_left_edge)
 x_right = np.array(ds.domain_right_edge)
 L = x_right - x_left
 # fill array for FFT
-arr = np.zeros([nz,ntz]);
+arr = np.zeros([nz,ntz])
 print(arr.shape)
 for data in storage.items():
     arr[:,data[0]] = data[1] / (nx*ny)   
@@ -137,9 +120,8 @@ axs[0].set_title("Real part")
 axs[1].set_title("Imaginary part")    
 axs[2].set_title("Log plot of modulus squared")
 fig.legend()
-plt.show()
 plt.savefig("FourierBiFi4Comp.png")
-plt.close()
+plt.show()
 
 
 # %%
@@ -150,12 +132,10 @@ plt.plot(arr1[:,1], label='step1')
 plt.plot(arr1[:,15], label='step15')
 plt.plot(arr1[:,50], label ='step50')
 plt.xlabel('cell Z direction')
-plt.title('Ez sum over x and y ');
+plt.title('Ez sum over x and y ')
 plt.legend()
-plt.show()
-# print(arr1[:,1])
 plt.savefig("fig2.png")
-plt.close()
+plt.show()
 
 # %%
 # read electric energy
@@ -188,10 +168,9 @@ axs[1,0].set_title('magnetic energy')
 axs[0,1].plot(tPart,ekin)
 axs[0,1].set_title('kinetic energy')
 axs[1,1].plot(time,ex2+ey2+ez2+bx2+by2+bz2+ekin)
-axs[1,1].set_title('total energy');
-plt.show()
+axs[1,1].set_title('total energy')
 plt.savefig('fig3.png')
-plt.close()
+plt.show()
 
 plt.figure()
 plt.plot(time,ex2,label='Ex^2')
@@ -199,20 +178,18 @@ plt.plot(time,ey2,label='Ey^2')
 plt.plot(time,ez2,label='Ez^2')
 plt.legend()
 plt.xlabel('t')
-plt.show()
 plt.savefig('ExEyEz.png')
-plt.close
+plt.show()
 # %%
 plt.figure()
 plt.plot(time,ex2+ey2+ez2+bx2+by2+bz2+ekin)
-plt.title('total energy');
-plt.show()
+plt.title('total energy')
 plt.savefig('total_energy')
-plt.close()
+plt.show()
 
 plt.figure()
 # Log plot of electric energy 0.5 \int Ex**2 to check Landau damping
-itmax=500*4;#arr.shape[1];#500
+itmax=500*4#arr.shape[1]#500
 coef = 2 * epsilon * r
 # Numerical
 plt.plot(time[:itmax],np.log(ez2[:itmax]), label='Numerical')
@@ -222,7 +199,6 @@ plt.plot(time[:itmax], np.log(L[0]*L[1]*L[2]*(coef*np.exp(gamma*time[:itmax]))**
 plt.legend(loc='lower right')
 plt.xlabel('t')
 # plt.ylabel('Y axis label')
-plt.show()
 plt.savefig('landau_damping.png')
-plt.close()
-# %%
+plt.show()
+# %%ss

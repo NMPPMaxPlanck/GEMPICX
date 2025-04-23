@@ -1,3 +1,7 @@
+# %% [markdown]
+# - Convert to jupyter notebook with `jupytext --to ipynb ColdPlasmaDispersion.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all ColdPlasmaDispersion.ipynb`
+
 # %%
 import os
 import numpy as np
@@ -18,7 +22,7 @@ os.chdir(pathname)
 
 # read times series
 ts = yt.load('./FullDiagnostics/plt_field??????')
-ntz = ts.__len__() # number of items in time series
+ntz = len(ts) # number of items in time series
 # save times corresponding to each dataset
 times = np.zeros((ntz),dtype=float) 
 for i in range(ntz):
@@ -99,7 +103,7 @@ for n, k2 in enumerate(k2vec):
     tmps[3][n] = sol[3]
 
 # %%
-# mpirun -np X python ../../post_processing/create_space_time_arrays.py Ez
+# mpirun -np X python ../SupplementaryScripts/PostProcessing/CreateSpaceTimeArrays.py Ez
 arr = np.load("t_x_array.npy")    
 
 # apply the hann filter

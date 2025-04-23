@@ -1,16 +1,6 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.7
-#   kernelspec:
-#     display_name: .venv
-#     language: python
-#     name: python3
-# ---
+# %% [markdown]
+# - Convert to jupyter notebook with `jupytext --to ipynb LandauIAW_disp.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all LandauIAW_disp.ipynb`
 
 # %%
 from zafpy import *
@@ -74,8 +64,7 @@ ax.plot([z0.real,z1.real],[z0.imag,z1.imag], 'k')
 ax.plot([z1.real,z2.real],[z1.imag,z2.imag], 'k')
 ax.plot([z2.real,z3.real],[z2.imag,z3.imag], 'k')
 ax.plot([z3.real,z0.real],[z3.imag,z0.imag], 'k')
-display(fig)
-plt.clf()
+plt.show()
 
 # %% [markdown]
 # ### Numerical evaluation of the zeros using contour integrals
@@ -134,6 +123,7 @@ coef = 2 * epsilon * r
 omegar = 3.728834801487808
 gamma = -0.0583374213211787
 plt.plot(times,(coef*np.cos(omegar*times-phase)*np.exp(gamma*times)))
+plt.show()
 
 
 # %%

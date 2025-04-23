@@ -1,22 +1,14 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.16.7
-#   kernelspec:
-#     display_name: Python 3.10.6 64-bit
-#     language: python
-#     name: python3
-# ---
+# %% [markdown]
+# - Convert to jupyter notebook with `jupytext --to ipynb Weibel_disp.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all Weibel_disp.ipynb`
 
+# %%
 from zafpy import *
 import numpy as np
 import matplotlib.pyplot as plt
 import cmath
 
+# %%
 # Define dispersion relation
 n0=1   # density of equilibrium
 vth1 = 0.02/np.sqrt(2)  # Thermal velocity  beam
@@ -30,10 +22,12 @@ def D(omega,k):
     return omega**2 - k**2 - 1 + (vth2/vth1)**2 * ( 1.0 + (omega/(k*vth1*sp.sqrt(2))) * Z(omega/(k*vth1*sp.sqrt(2))))
 
 
+# %% [markdown]
 # - In order to find the roots of the dispersion function for given k, which is a complex function we plot it with mpmath.cplot
 # - the complex argument (phase) is shown as color (hue) and the magnitude is show as brightness.
 # - This means that zeros change quickly around a zero and the white region correspond to very large value, where contours integrals are hard to approximate numerically and so should be avoided
 
+# %%
 kmode = 1.25
 zaf=zafpy(D,kmode)
 xmin= -.12
@@ -49,7 +43,7 @@ ax.set_xticks(np.linspace(xmin,xmax,10))
 ax.set_yticks(np.linspace(ymin,ymax,9))
 print("Dispersion function for k = ", kmode )
 
-# +
+# %%
 # Choose box where zeros are searched for (need to be positively oriented)
 z0 = 0.11 - 0.11j
 z1 = 0.12 - 0.096j
@@ -60,13 +54,14 @@ ax.plot([z0.real,z1.real],[z0.imag,z1.imag], 'k')
 ax.plot([z1.real,z2.real],[z1.imag,z2.imag], 'k')
 ax.plot([z2.real,z3.real],[z2.imag,z3.imag], 'k')
 ax.plot([z3.real,z0.real],[z3.imag,z0.imag], 'k')
-display(fig)
-# -
+plt.show()
 
+# %% [markdown]
 # ### Numerical evaluation of the zeros using contour integrals
 # - we define rectangular boxes $[xmin,xmax]\times [ymin,ymax]$) on which contours integrals are computed
 # - We need to use small boxes around the zeros to avoid going to high brightness zones where contour integrals will be hard to evaluate numerically
 
+# %%
 print('number of zeros in box', zaf.count_zeros(z0, z1, z2, z3))
 zaf.zeros=[]
 zeros=zaf.get_zeros(z0, z1, z2, z3)
@@ -80,4 +75,4 @@ print('------------------------')
 print('k=',kmode)
 print('zero with largest imaginary part (omega_j):', zero_max)
 
-
+# %%

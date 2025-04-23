@@ -1,21 +1,7 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.14.1
-#   kernelspec:
-#     display_name: Python 3.11.1 64-bit
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
-# - Convert to jupyter notebook with 'jupytext --to ipynb LandauVP.py'
-# - and back to python percent format with 'jupytext --to py:percent LandauVP.ipynb'
- 
+# - Convert to jupyter notebook with `jupytext --to ipynb landauLVM.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all landauLVM.ipynb`
+
 #%%
 import os
 import numpy as np

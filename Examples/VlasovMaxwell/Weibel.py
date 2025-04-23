@@ -1,19 +1,6 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.7
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
-#
+# - Convert to jupyter notebook with `jupytext --to ipynb Weibel.py`
+# - back to python percent format with `jupytext --to py:percent --opt notebook_metadata_filter=-all Weibel.ipynb`
 
 # %% [markdown]
 # ## Time history diagnostics
@@ -24,6 +11,7 @@ import numpy as np
 import matplotlib.pylab as plt
 import os
 import pandas as pd
+from scipy.signal import find_peaks
 import yt
 yt.set_log_level(0) # do not show log output
 
@@ -38,7 +26,7 @@ os.chdir(pathname)
 print('run directory: ', os.getcwd())
 # read times series
 ts = yt.load('./FullDiagnostics/plt_field??????')
-ntz = ts.__len__() # number of items in time series
+ntz = len(ts) # number of items in time series
 # save times corresponding to each dataset
 times = np.zeros((ntz),dtype=float) 
 for i in range(ntz):
@@ -55,7 +43,7 @@ storage = {}
 for store, ds in ts.piter(storage=storage):
     data = ds.covering_grid( 0, ds.domain_left_edge, ds.domain_dimensions )
     arr = np.array(data['boxlib',field])
-    store.result = np.sum(np.sum(arr,2),1); # we sum over the y and z components
+    store.result = np.sum(np.sum(arr,2),1) # we sum over the y and z components
     time = float(ds.current_time)
 
 # %%
@@ -65,7 +53,7 @@ x_left = np.array(ds.domain_left_edge)
 x_right = np.array(ds.domain_right_edge)
 L = x_right - x_left
 # fill array for FFT
-arr = np.zeros([nx,ntz]);
+arr = np.zeros([nx,ntz])
 print(arr.shape)
 for data in storage.items():
     arr[:,data[0]] = data[1] / (ny*nz)   
@@ -129,6 +117,7 @@ axs[2].set_title("Log plot of modulus squared")
 axs[2].set_ylim([-30,0])
 fig.legend()
 #plt.savefig("FourierBiFi4Comp")
+plt.show()
 
 # %%
 # read electric energy
@@ -190,6 +179,7 @@ axs[2,0].plot(time,pz)
 axs[2,0].set_title('total particle momentum')
 axs[2,1].plot(time,gaussError)
 axs[2,1].set_title('Error on Gauss Law')
+plt.show()
 
 # %%
 # Plot |Bz|**2 
@@ -203,11 +193,10 @@ ax.set_xlabel('time')
 ax.set_ylabel('$Bz^2$')
 ax.set_ylim([1e-7,1e-1])
 ax.legend([r'$\frac {1}{2}|B_z|^2$',r'$\frac {1}{2}|E_x|^2$',r'$\frac {1}{2}|E_y|^2$',r'$\frac {1}{2}|B_y|^2$'],loc='upper left')
-#plt.savefig(pathname_out + '/B3_squared_vs_t.jpg');
+#plt.savefig(pathname_out + '/B3_squared_vs_t.jpg')
+plt.show()
 
 # %%
-from scipy.signal import find_peaks
-
 i1 = 6000
 i2 = 10000
 plt.semilogy(time[i1:i2],by2[i1:i2])
@@ -242,8 +231,7 @@ ax.plot(time[i1:i2], np.log(by2[i1:i2]+bz2[i1:i2]))
 ax.plot(time[i1:i2], np.log(ex2[i1:i2]))
 #ax.plot(time[i1:i2], 2*0.02784*time[i1:i2] - 18.1)   # theoretical growth rate
 ax.plot(time[i1:i2], 2*0.0245*time[i1:i2] - 16.7)
-ax.set_xlabel('time');
-
-# %%
+ax.set_xlabel('time')
+plt.show()
 
 # %%
