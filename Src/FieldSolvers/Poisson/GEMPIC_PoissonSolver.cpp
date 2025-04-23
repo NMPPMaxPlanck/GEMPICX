@@ -55,7 +55,10 @@ public:
 std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_poisson_solver (
     std::shared_ptr<DeRhamComplex> deRham,
     const Gempic::ComputationalDomain& infra,
-    const std::string& solver)
+    const std::string& solver,
+    const amrex::Real relTol,
+    const amrex::Real absTol,
+    const bool tolerancesGiven)
 {
     int maxCoarseningLevel = 10;
     int maxIter = 100;
@@ -64,55 +67,12 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
     int verbose = Gempic::Utils::Verbosity::level();
     int bottomVerbose = verbose;
 
-    if (solver == "Amrex")
+    if (solver == "FFT")
     {
-        if (infra.geometry().isAllPeriodic())
+        if (tolerancesGiven)
         {
-            return std::make_unique<AmrexSolver> (infra, maxCoarseningLevel, maxIter, maxFmgIter,
-                                                 mgBottomMaxIter, 1e-10, 1e-12, verbose,
-                                                 bottomVerbose);
+            amrex::Warning("FFT Poisson solver does not use relTol and absTol.\n");
         }
-        else
-        {
-            amrex::Assert(
-                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver",
-                __FILE__, __LINE__);
-        }
-    }
-    else if (solver == "ConjugateGradient")
-    {
-        using Rhs = DeRhamField<Grid::dual, Space::cell>;
-        using Sol = DeRhamField<Grid::primal, Space::node>;
-        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
-            deRham, PoissonApply{deRham}, // make the operator the poisson operator
-            [amrexSolver = AmrexSolver{infra, maxCoarseningLevel, maxIter, maxFmgIter,
-                                       mgBottomMaxIter, 1e-10, 1e-12, verbose, bottomVerbose}] (
-                Sol& z, Rhs& r) mutable
-            {
-                amrexSolver.solve(z, r); // precondition using the amrex solver
-            },
-            [=] (Rhs& b)
-            {
-                subtract_constant_part(b, infra); // average b to 0 in the usual way
-            },
-            1.e-11, verbose);
-    }
-    else if (solver == "ConjugateGradientInverseHodge")
-    {
-        using Rhs = DeRhamField<Grid::dual, Space::cell>;
-        using Sol = DeRhamField<Grid::primal, Space::node>;
-        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
-            deRham,
-            // make the operator the poisson inverse hodge operator
-            PoissonApplyInverseHodge{deRham, infra}, nullptr,
-            [=] (Rhs& b)
-            {
-                subtract_constant_part(b, infra); // average b to 0 in the usual way
-            },
-            1.e-11, verbose);
-    }
-    else if (solver == "FFT")
-    {
 #ifdef AMREX_USE_FFT
         if (infra.geometry().isAllPeriodic())
         {
@@ -129,17 +89,67 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
                       __FILE__, __LINE__);
 #endif
     }
+    else if (solver == "Amrex")
+    {
+        if (infra.geometry().isAllPeriodic())
+        {
+            return std::make_unique<AmrexSolver> (infra, maxCoarseningLevel, maxIter, maxFmgIter,
+                                                 mgBottomMaxIter, relTol, absTol, verbose,
+                                                 bottomVerbose);
+        }
+        else
+        {
+            amrex::Assert(
+                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver",
+                __FILE__, __LINE__);
+        }
+    }
+    else if (solver == "ConjugateGradient")
+    {
+        using Rhs = DeRhamField<Grid::dual, Space::cell>;
+        using Sol = DeRhamField<Grid::primal, Space::node>;
+        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
+            deRham, PoissonApply{deRham}, // make the operator the poisson operator
+            [amrexSolver = AmrexSolver{infra, maxCoarseningLevel, maxIter, maxFmgIter,
+                                       mgBottomMaxIter, relTol, absTol, verbose, bottomVerbose}] (
+                Sol& z, Rhs& r) mutable
+            {
+                amrexSolver.solve(z, r); // precondition using the amrex solver
+            },
+            [=] (Rhs& b)
+            {
+                subtract_constant_part(b, infra); // average b to 0 in the usual way
+            },
+            relTol, absTol, verbose);
+    }
+    else if (solver == "ConjugateGradientInverseHodge")
+    {
+        using Rhs = DeRhamField<Grid::dual, Space::cell>;
+        using Sol = DeRhamField<Grid::primal, Space::node>;
+        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
+            deRham,
+            // make the operator the poisson inverse hodge operator
+            PoissonApplyInverseHodge{deRham, infra}, nullptr,
+            [=] (Rhs& b)
+            {
+                subtract_constant_part(b, infra); // average b to 0 in the usual way
+            },
+            relTol, absTol, verbose);
+    }
     else if (solver == "Hypre")
     {
 #ifdef AMREX_USE_HYPRE
         switch (deRham->get_hodge_degree())
         {
             case 2:
-                return std::make_unique<HypreLinearSystem<2>>(infra, deRham, 1.e-11, verbose);
+                return std::make_unique<HypreLinearSystem<2>>(infra, deRham, relTol, absTol,
+                                                              verbose);
             case 4:
-                return std::make_unique<HypreLinearSystem<4>>(infra, deRham, 1.e-11, verbose);
+                return std::make_unique<HypreLinearSystem<4>>(infra, deRham, relTol, absTol,
+                                                              verbose);
             case 6:
-                return std::make_unique<HypreLinearSystem<6>>(infra, deRham, 1.e-11, verbose);
+                return std::make_unique<HypreLinearSystem<6>>(infra, deRham, relTol, absTol,
+                                                              verbose);
             default:
             {
                 std::string msg = "Hodge degree " + std::to_string(deRham->get_hodge_degree()) +

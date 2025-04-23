@@ -34,7 +34,7 @@ private:
     AverageB0Op m_avgB0Op;
     Rhs m_residual, m_ap;
     Sol m_p, m_z;
-    amrex::Real m_relTol, m_absTol{1.e-15};
+    amrex::Real m_relTol, m_absTol;
     amrex::Real m_maxiter{1000};
     int m_verbose;
 
@@ -43,7 +43,8 @@ public:
                       Operation&& matMultOp,
                       PreconditionOp&& precondOp = nullptr,
                       AverageB0Op&& avgB0Op = nullptr,
-                      amrex::Real tol = 1.e-11,
+                      amrex::Real relTol = 1e-10,
+                      amrex::Real absTol = 1e-12,
                       int verbose = 0) :
         m_operator{std::move(matMultOp)},
         m_precondOp{std::move(precondOp)},
@@ -52,7 +53,9 @@ public:
         m_ap(drc),
         m_p(drc),
         m_z(drc),
-        m_relTol{tol}
+        m_relTol{relTol},
+        m_absTol{absTol}
+
     {
         m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
         static_assert(
@@ -254,12 +257,13 @@ inline auto make_conjugate_gradient (std::shared_ptr<Forms::DeRhamComplex> drc,
                                      Operation&& matMultOp,
                                      PreconditionOp&& precondOp = nullptr,
                                      AverageB0Op&& avgB0Op = nullptr,
-                                     amrex::Real tol = 1.e-11,
+                                     amrex::Real relTol = 1e-10,
+                                     amrex::Real absTol = 1e-12,
                                      int verbose = 0)
 {
     return ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, AverageB0Op>(
         drc, std::forward<Operation> (matMultOp), std::forward<PreconditionOp>(precondOp),
-        std::forward<AverageB0Op>(avgB0Op), tol, verbose);
+        std::forward<AverageB0Op>(avgB0Op), absTol, relTol, verbose);
 }
 
 /// Helper function for template deduction. Allows you to specify Rhs and Sol explicitly, but have
@@ -273,12 +277,13 @@ inline auto make_conjugate_gradient_unique_ptr (std::shared_ptr<Forms::DeRhamCom
                                                 Operation&& matMultOp,
                                                 PreconditionOp&& precondOp = nullptr,
                                                 AverageB0Op&& avgB0Op = nullptr,
-                                                amrex::Real tol = 1.e-11,
+                                                amrex::Real relTol = 1e-10,
+                                                amrex::Real absTol = 1e-12,
                                                 int verbose = 0)
 {
     return std::make_unique<ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, AverageB0Op>>(
         drc, std::forward<Operation> (matMultOp), std::forward<PreconditionOp>(precondOp),
-        std::forward<AverageB0Op>(avgB0Op), tol, verbose);
+        std::forward<AverageB0Op>(avgB0Op), relTol, absTol, verbose);
 }
 } //namespace Gempic::FieldSolvers
 #endif
