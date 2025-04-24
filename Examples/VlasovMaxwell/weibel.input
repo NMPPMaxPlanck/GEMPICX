@@ -11,8 +11,8 @@ sV = 1
 sOmega = 1
 
 # Particle parameters
-rhoBackground = 1
 Particle.speciesNames = electrons
+rhoBackground = 1 # one species
 Particle.electrons.nPartPerCell = 1000 # number of particles per cell
 Particle.electrons.charge = -1.0 # vector (one entry per species)
 Particle.electrons.mass = 1.0 # vector (one entry per species)

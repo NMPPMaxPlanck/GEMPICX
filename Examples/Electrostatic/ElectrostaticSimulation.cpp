@@ -149,7 +149,8 @@ int main (int argc, char *argv[])
             rho.post_particle_loop_sync();
 
             // Add background charge (needs to be done after post_particle_loop_sync)
-            amrex::Real rhoBackground = 1.0;
+            amrex::Real rhoBackground{0.0};
+            parameters.get_or_set("rhoBackground", rhoBackground);
             rho += rhoBackground * infra.cell_volume();
 
             // Apply filter and compute phi with filtered rho
