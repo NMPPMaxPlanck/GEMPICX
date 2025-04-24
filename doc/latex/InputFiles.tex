@@ -291,6 +291,47 @@ Particle.{speciesName}.G1.vWeight = 0.3 # Real. No default.
 \end{lstlisting}
 See \ref{sec:ParticleStructure} for details.
 
+In case of a one-species simulation, it is sometimes necessary to add a background to rho to guarantee a neutral plasma. This can be achieved via the input parameter 
+
+\begin{lstlisting}
+rhoBackground = 1
+\end{lstlisting}
+
+If this variable is not set, the background is automatically assumed to be 0. 
+An example for parts of a single-species input file is
+
+\begin{lstlisting}[language=pkgconfig]
+# Particle parameters
+Particle.speciesNames = electrons
+rhoBackground = 1 # one species
+
+Particle.electrons.nPartPerCell = 1000 # number of particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "1.0 + 0.04 * cos(kvarx * x)"
+Particle.electrons.numGaussians = 1
+\end{lstlisting}
+
+while an example for parts of a two-species input file is
+
+\begin{lstlisting}[language=pkgconfig]
+# Particle parameters
+Particle.speciesNames = electrons ions
+rhoBackground = 0 # not necessary, default value in simulation file
+    
+Particle.electrons.nPartPerCell = 1000 # number of electrons per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "1 + 0.04 * cos(kvarx * x)"
+Particle.electrons.numGaussians = 1
+    
+Particle.ions.nPartPerCell = 1000 # number of ions per cell 
+Particle.ions.charge = 1.0 # vector (one entry per species)
+Particle.ions.mass = 100.0 # vector (one entry per species)
+Particle.ions.density = "1.0" 
+Particle.ions.numGaussians = 1
+\end{lstlisting}
+
 \subsection{Function}
 Variables read in the simulation by the helper function interpreter \verb|parse_funtions| using the \href{https://amrex-codes.github.io/amrex/docs_html/Basics.html#parser}{Parser class in AMReX}. The variable names can be anything.
 \begin{lstlisting}[language=pkgconfig]

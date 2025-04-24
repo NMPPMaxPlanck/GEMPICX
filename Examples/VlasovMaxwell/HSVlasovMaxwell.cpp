@@ -72,7 +72,7 @@ int main (int argc, char *argv[])
 
         std::vector<std::shared_ptr<ParticleGroups<vdim>>> partGr;
         init_particles(partGr, infra);
-        amrex::Real rhoBackground{1.0};
+        amrex::Real rhoBackground{0.0};
         parameters.get_or_set("rhoBackground", rhoBackground);
 
         auto poisson{make_poisson_solver(deRham, infra)};
