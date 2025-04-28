@@ -17,19 +17,8 @@ namespace Gempic::ParticleMeshCoupling
  *          All B-Spline degrees which have been implemented can be recreated executing the 
  *          [Mathematica script](https://gitlab.mpcdf.mpg.de/gempic/gempic/-/blob/master/Src/ParticleMeshCoupling/GEMPIC_BSplines.wls?ref_type=heads).
  *
- *          Example usage of \f$S^2(x)\f$:
- *          @code{cpp}
- *          auto res = cardinal_b_splines<2>(0.25);
- *          std::cout << "First polynomial interval S^2(-1.25)=" << res[0] << std::endl;
- *          std::cout << "Second polynomial interval S^2(-0.25)=" << res[1] << std::endl;
- *          std::cout << "Third polynomial interval S^2(0.75)=" << res[1] << std::endl;
- *          @endcode
- *          outputs
- *          @code
- *          First polynomial interval S^2(-1.25)=0.03125
- *          Second polynomial interval S^2(-0.25)=0.6875
- *          Third polynomial interval S^2(0.75)=0.28125
- *          @endcode
+ *          Example using of \f$S^2(x)\f$:
+ *          @snippet ParticleMeshCoupling/BSpline_test.cpp BSplineExample.CardinalBSpline
  * 
  * @param x \f$x\in[0,1]\f$
  * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$

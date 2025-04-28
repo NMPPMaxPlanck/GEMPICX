@@ -29,14 +29,8 @@ public:
      * \f]
      * with Gauss quadrature
      * 
-     * @details Example on how to integrate a 1D subset of a 2D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} f(x_0,y) \mathrm{d}y \f$
-     * @code{cpp}
-     * GaussQuadrature integrate{3};
-     * auto fy = [&](amrex::Real y) {
-     *             return f(x0,y);
-     *           };
-     * integrate.line(y0, dy/2, fy);
-     * @endcode
+     * @details Example on how to integrate a 1D subset of a 4D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} f(x_0,y,z_0,t_0) \mathrm{d}y \f$
+     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussQuadratureExample.LineIntegral
      */
     // clang-format on
     template <typename Function1D>
@@ -63,14 +57,8 @@ public:
      * \f]
      * with Gauss quadrature
      * 
-     * @details Example on how to integrate a 2D subset of a 3D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z_0) \mathrm{d}x\mathrm{d}y \f$
-     * @code{cpp}
-     * GaussQuadrature integrate{3};
-     * auto fxy = [&](amrex::Real x, amrex::Real y) {
-     *             return f(x,y,z0);
-     *           };
-     * integrate.surface({x0,y0}, {dx/2,dy/2}, fxy);
-     * @endcode
+     * @details Example on how to integrate a 2D subset of a 4D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z_0,t_0) \mathrm{d}x\mathrm{d}y \f$
+     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussQuadratureExample.SurfaceIntegral
      */
     // clang-format on
     template <typename Function2D>
@@ -102,13 +90,7 @@ public:
      * with Gauss quadrature
      * 
      * @details Example on how to integrate a 3D subset of a 4D function \f$ \int_{z_0-\Delta z/2}^{z_0+\Delta z/2} \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z, t_0) \mathrm{d}x\mathrm{d}y\mathrm{d}z \f$
-     * @code{cpp}
-     * GaussQuadrature integrate{3};
-     * auto fxyz = [&](amrex::Real x, amrex::Real y, amrex::Real z) {
-     *             return f(x,y,z,t0);
-     *           };
-     * integrate.volume({x0,y0,z0}, {dx/2,dy/2,dz/2}, fxyz);
-     * @endcode
+     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussQuadratureExample.VolumeIntegral
      */
     // clang-format on
     template <typename Function3D>
