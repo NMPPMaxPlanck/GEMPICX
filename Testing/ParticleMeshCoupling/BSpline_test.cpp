@@ -4,6 +4,20 @@
 
 #include "GEMPIC_BSpline.H"
 
+TEST(BSplineExample, CardinalBSpline)
+{
+    std::stringstream ss{};
+    //! [BSplineExample.CardinalBSpline]
+    auto res = Gempic::ParticleMeshCoupling::cardinal_b_splines<2>(0.25);
+    ss << "S^2(-1.25)=0.03125 ==" << res[0];
+    ss << "S^2(-0.25)=0.6875  ==" << res[1];
+    ss << "S^2( 0.75)=0.28125 ==" << res[2];
+    //! [BSplineExample.CardinalBSpline]
+    EXPECT_NEAR(res[0], 0.03125, 1.0e-4);
+    EXPECT_NEAR(res[1], 0.6875, 1.0e-4);
+    EXPECT_NEAR(res[2], 0.28125, 1.0e-4);
+}
+
 template <size_t nIntervals>
 void check_continuity (std::function<amrex::GpuArray<amrex::Real, nIntervals>(amrex::Real)> bSpline,
                        std::pair<amrex::Real, amrex::Real> boundaryValues = {0.0, 0.0})
