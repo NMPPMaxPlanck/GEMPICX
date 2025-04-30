@@ -31,7 +31,7 @@ private:
     amrex::Real m_cellVolume;
 
 public:
-    HypreLinearSystem(const ComputationalDomain& compDom,
+    HypreLinearSystem(ComputationalDomain const& compDom,
                       std::shared_ptr<Gempic::Forms::DeRhamComplex> drc,
                       amrex::Real relTol = 1.e-10,
                       amrex::Real absTol = 1.e-12,
@@ -41,7 +41,7 @@ public:
         verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
 
         auto const& nddom = amrex::surroundingNodes(compDom.box());
-        const auto dxi = compDom.inv_cell_size_array();
+        auto const dxi = compDom.inv_cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{AMREX_D_DECL(
             static_cast<HYPRE_Real>(dxi[0] * dxi[0]), static_cast<HYPRE_Real>(dxi[1] * dxi[1]),

@@ -33,11 +33,11 @@ class GaussError : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
     std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_rho;
-    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::edge>> m_constE;
+    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge> const> m_constE;
     std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
     std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_divD;
-    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constD;
-    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::cell>> m_constDivD;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face> const> m_constD;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell> const> m_constDivD;
 
     // Initialization value needs to be chosen so that it is unlilkely to match computed value
     amrex::Real m_rhoNorm{0.0};
@@ -56,10 +56,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    GaussError(const std::string& rdName,
+    GaussError(std::string const& rdName,
                int& indexNum,
                bool isLastType,
-               const std::string& fileName) :
+               std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::GaussError::GaussError()");
@@ -108,8 +108,8 @@ public:
      * This function computes the Gauss Error
      */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) final
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& partGr) final
     {
         BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
 
@@ -136,7 +136,7 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * computeMissingFields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
+    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::GaussError::choose_computation_method()");
         using namespace Forms;
@@ -156,7 +156,7 @@ private:
                 int nComps{fieldMap["Dx"].nComp()};
                 this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
                     this->m_deRham, fieldMap["rho"]);
-                this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                this->m_constD = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
                     this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
 
                 this->m_divD =
@@ -169,7 +169,7 @@ private:
                 int nComps{fieldMap["Ex"].nComp()};
                 this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
                     this->m_deRham, fieldMap["rho"]);
-                this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                this->m_constE = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
                     this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
 
                 this->m_D =
@@ -201,9 +201,9 @@ private:
      * This function computes the Gauss error by comparing rho computed from particles with
      * div D coming from Maxwell
      */
-    void update_data (const Forms::DeRhamField<Grid::dual, Space::cell>& rho,
-                      const Forms::DeRhamField<Grid::dual, Space::cell>& divD,
-                      const ComputationalDomain& infra)
+    void update_data (Forms::DeRhamField<Grid::dual, Space::cell> const& rho,
+                      Forms::DeRhamField<Grid::dual, Space::cell> const& divD,
+                      ComputationalDomain const& infra)
     {
         BL_PROFILE("Gempic::Io::GaussError::update_data()");
         constexpr int noutputs = 3;

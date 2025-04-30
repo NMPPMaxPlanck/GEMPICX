@@ -15,23 +15,23 @@ using namespace Gempic::Forms;
  * @param oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
  * integrals
  */
-void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
-                         const DeRhamField<Grid::primal, Space::edge> &oneForm)
+void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face>& twoForm,
+                         DeRhamField<Grid::primal, Space::edge> const& oneForm)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm0 = (twoForm.m_data[xDir])[mfi].array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -47,13 +47,13 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
     // Component-1 of curl
     for (amrex::MFIter mfi(twoForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real> const& twoForm1 = (twoForm.m_data[yDir])[mfi].array();
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -69,14 +69,14 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
     // Component-2 of curl
     for (amrex::MFIter mfi(twoForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm2 = (twoForm.m_data[zDir])[mfi].array();
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
         ParallelFor(bx, nComps,
                     [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
@@ -109,8 +109,8 @@ void DeRhamComplex::curl (DeRhamField<Grid::primal, Space::face> &twoForm,
  * integrals
  * @param dt time step by which curl is multiplied. Can be negative for subtraction.
  */
-void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm,
-                                const DeRhamField<Grid::primal, Space::edge> &oneForm,
+void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face>& twoForm,
+                                DeRhamField<Grid::primal, Space::edge> const& oneForm,
                                 amrex::Real dt)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::add_dt_curl(primal,face,primal,edge)");
@@ -118,15 +118,15 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm0 = (twoForm.m_data[xDir])[mfi].array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -142,13 +142,13 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
     // Component-1 of curl
     for (amrex::MFIter mfi(twoForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real> const& twoForm1 = (twoForm.m_data[yDir])[mfi].array();
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -164,14 +164,14 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
     // Component-2 of curl
     for (amrex::MFIter mfi(twoForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm2 = (twoForm.m_data[zDir])[mfi].array();
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
         ParallelFor(bx, nComps,
                     [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
@@ -203,23 +203,23 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::primal, Space::face> &twoForm
  * @param oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
  */
-void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
-                         const DeRhamField<Grid::dual, Space::edge> &oneForm)
+void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face>& twoForm,
+                         DeRhamField<Grid::dual, Space::edge> const& oneForm)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm0 = (twoForm.m_data[xDir])[mfi].array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -236,13 +236,13 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
     // Component-1 of curl
     for (amrex::MFIter mfi(twoForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real> const& twoForm1 = (twoForm.m_data[yDir])[mfi].array();
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -259,14 +259,14 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
     // Component-2 of curl
     for (amrex::MFIter mfi(twoForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm2 = (twoForm.m_data[zDir])[mfi].array();
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 
         ParallelFor(bx, nComps,
@@ -300,8 +300,8 @@ void DeRhamComplex::curl (DeRhamField<Grid::dual, Space::face> &twoForm,
  * integrals
  * @param dt time step by which curl is multiplied. Can be negative for subtraction.
  */
-void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
-                                const DeRhamField<Grid::dual, Space::edge> &oneForm,
+void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face>& twoForm,
+                                DeRhamField<Grid::dual, Space::edge> const& oneForm,
                                 amrex::Real dt)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::add_dt_curl(dual,face,dual,edge)");
@@ -309,15 +309,15 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm0 = (twoForm.m_data[xDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm0 = (twoForm.m_data[xDir])[mfi].array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 #endif
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -334,13 +334,13 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
     // Component-1 of curl
     for (amrex::MFIter mfi(twoForm.m_data[yDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm1 = (twoForm.m_data[yDir])[mfi].array();
-        amrex::Array4<amrex::Real const> const &oneForm2 =
+        amrex::Array4<amrex::Real> const& twoForm1 = (twoForm.m_data[yDir])[mfi].array();
+        amrex::Array4<amrex::Real const> const& oneForm2 =
             (oneForm.m_data[zDir])[mfi].const_array();
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
         ParallelFor(bx, nComps,
@@ -357,14 +357,14 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
     // Component-2 of curl
     for (amrex::MFIter mfi(twoForm.m_data[zDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real> const &twoForm2 = (twoForm.m_data[zDir])[mfi].array();
+        amrex::Array4<amrex::Real> const& twoForm2 = (twoForm.m_data[zDir])[mfi].array();
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &oneForm0 =
+        amrex::Array4<amrex::Real const> const& oneForm0 =
             (oneForm.m_data[xDir])[mfi].const_array();
 #endif
-        amrex::Array4<amrex::Real const> const &oneForm1 =
+        amrex::Array4<amrex::Real const> const& oneForm1 =
             (oneForm.m_data[yDir])[mfi].const_array();
 
         ParallelFor(bx, nComps,
@@ -397,8 +397,8 @@ void DeRhamComplex::add_dt_curl (DeRhamField<Grid::dual, Space::face> &twoForm,
  * @param zeroForm DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
  * values
  */
-void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
-                         const DeRhamField<Grid::primal, Space::node> &zeroForm)
+void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge>& oneForm,
+                         DeRhamField<Grid::primal, Space::node> const& zeroForm)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
@@ -406,11 +406,11 @@ void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
     {
         for (amrex::MFIter mfi(oneForm.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real const> const &zeroFormMF =
+            amrex::Array4<amrex::Real const> const& zeroFormMF =
                 (zeroForm.m_data)[mfi].const_array();
-            amrex::Array4<amrex::Real> const &oneFormMF = (oneForm.m_data[comp])[mfi].array();
+            amrex::Array4<amrex::Real> const& oneFormMF = (oneForm.m_data[comp])[mfi].array();
 
             // Calculate gradient component by component
             if (comp == xDir)
@@ -464,8 +464,8 @@ void DeRhamComplex::grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
  * values
  * @param a amrex::Real, constant to be multiplied with the gradient
  */
-void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge> &oneForm,
-                                 const DeRhamField<Grid::primal, Space::node> &zeroForm,
+void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge>& oneForm,
+                                 DeRhamField<Grid::primal, Space::node> const& zeroForm,
                                  amrex::Real a)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::a_times_grad(primal,edge,primal,node)");
@@ -474,11 +474,11 @@ void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge> &oneFor
     {
         for (amrex::MFIter mfi(oneForm.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real const> const &zeroFormMF =
+            amrex::Array4<amrex::Real const> const& zeroFormMF =
                 (zeroForm.m_data)[mfi].const_array();
-            amrex::Array4<amrex::Real> const &oneFormMF = (oneForm.m_data[comp])[mfi].array();
+            amrex::Array4<amrex::Real> const& oneFormMF = (oneForm.m_data[comp])[mfi].array();
 
             // Calculate gradient component by component
             if (comp == xDir)
@@ -535,8 +535,8 @@ void DeRhamComplex::a_times_grad (DeRhamField<Grid::primal, Space::edge> &oneFor
  * @param zeroForm DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
  * values
  */
-void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
-                         const DeRhamField<Grid::dual, Space::node> &zeroForm)
+void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge>& oneForm,
+                         DeRhamField<Grid::dual, Space::node> const& zeroForm)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
@@ -544,11 +544,11 @@ void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
     {
         for (amrex::MFIter mfi(oneForm.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real const> const &zeroFormMF =
+            amrex::Array4<amrex::Real const> const& zeroFormMF =
                 (zeroForm.m_data)[mfi].const_array();
-            amrex::Array4<amrex::Real> const &oneFormMF = (oneForm.m_data[comp])[mfi].array();
+            amrex::Array4<amrex::Real> const& oneFormMF = (oneForm.m_data[comp])[mfi].array();
 
             // Calculate gradient component by component
             if (comp == xDir)
@@ -603,8 +603,8 @@ void DeRhamComplex::grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
  * values
  * @param a Multiplication factor
  */
-void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
-                                 const DeRhamField<Grid::dual, Space::node> &zeroForm,
+void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge>& oneForm,
+                                 DeRhamField<Grid::dual, Space::node> const& zeroForm,
                                  amrex::Real a)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::a_times_grad(dual,edge,dual,node)");
@@ -613,11 +613,11 @@ void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
     {
         for (amrex::MFIter mfi(oneForm.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real const> const &zeroFormMF =
+            amrex::Array4<amrex::Real const> const& zeroFormMF =
                 (zeroForm.m_data)[mfi].const_array();
-            amrex::Array4<amrex::Real> const &oneFormMF = (oneForm.m_data[comp])[mfi].array();
+            amrex::Array4<amrex::Real> const& oneFormMF = (oneForm.m_data[comp])[mfi].array();
 
             // Calculate gradient component by component
             if (comp == xDir)
@@ -675,26 +675,26 @@ void DeRhamComplex::a_times_grad (DeRhamField<Grid::dual, Space::edge> &oneForm,
  * @param twoForm DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$ holding the face
  * integrals
  */
-void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell> &threeForm,
-                        const DeRhamField<Grid::primal, Space::face> &twoForm)
+void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell>& threeForm,
+                        DeRhamField<Grid::primal, Space::face> const& twoForm)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::div(primal,cell,primal,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real const> const &twoFormMF0 =
+        amrex::Array4<amrex::Real const> const& twoFormMF0 =
             (twoForm.m_data[xDir])[mfi].const_array();
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &twoFormMF1 =
+        amrex::Array4<amrex::Real const> const& twoFormMF1 =
             (twoForm.m_data[yDir])[mfi].const_array();
 #endif
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &twoFormMF2 =
+        amrex::Array4<amrex::Real const> const& twoFormMF2 =
             (twoForm.m_data[zDir])[mfi].const_array();
 #endif
-        amrex::Array4<amrex::Real> const &threeFormMF = (threeForm.m_data)[mfi].array();
+        amrex::Array4<amrex::Real> const& threeFormMF = (threeForm.m_data)[mfi].array();
 
         ParallelFor(bx, nComps,
                     [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
@@ -721,26 +721,26 @@ void DeRhamComplex::div (DeRhamField<Grid::primal, Space::cell> &threeForm,
  * @param[out] threeForm DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D}
  * \tilde{u}^2\f$ holding the resulting cell integrals
  */
-void DeRhamComplex::div (DeRhamField<Grid::dual, Space::cell> &threeForm,
-                        const DeRhamField<Grid::dual, Space::face> &twoForm)
+void DeRhamComplex::div (DeRhamField<Grid::dual, Space::cell>& threeForm,
+                        DeRhamField<Grid::dual, Space::face> const& twoForm)
 {
     BL_PROFILE("Gempic::Forms::DeRhamComplex::div(dual,cell,dual,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
-        amrex::Array4<amrex::Real const> const &twoFormMF0 =
+        amrex::Array4<amrex::Real const> const& twoFormMF0 =
             (twoForm.m_data[xDir])[mfi].const_array();
 #if (AMREX_SPACEDIM > 1)
-        amrex::Array4<amrex::Real const> const &twoFormMF1 =
+        amrex::Array4<amrex::Real const> const& twoFormMF1 =
             (twoForm.m_data[yDir])[mfi].const_array();
 #endif
 #if (AMREX_SPACEDIM > 2)
-        amrex::Array4<amrex::Real const> const &twoFormMF2 =
+        amrex::Array4<amrex::Real const> const& twoFormMF2 =
             (twoForm.m_data[zDir])[mfi].const_array();
 #endif
-        amrex::Array4<amrex::Real> const &threeFormMF = (threeForm.m_data)[mfi].array();
+        amrex::Array4<amrex::Real> const& threeFormMF = (threeForm.m_data)[mfi].array();
 
         ParallelFor(bx, nComps,
                     [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)

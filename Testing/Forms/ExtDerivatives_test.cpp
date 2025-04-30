@@ -20,12 +20,12 @@ using namespace Forms;
 class ExtDerivativesTest : public testing::Test
 {
 protected:
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
-    inline static const int s_hodgeDegree = 2;
+    inline static int const s_hodgeDegree = 2;
 
     // Initialize computational_domain and parameters
     Io::Parameters m_parameters{};
@@ -33,22 +33,22 @@ protected:
 
 // Define analytical fields as string
 #if (AMREX_SPACEDIM == 1)
-    const std::string m_analyticalScalarField = "sin(x)";
-    const amrex::Array<std::string, 3> m_analyticalField = {
+    std::string const m_analyticalScalarField = "sin(x)";
+    amrex::Array<std::string, 3> const m_analyticalField = {
         "-cos(x)",
         "sin(x)",
         "-sin(x)",
     };
 #elif (AMREX_SPACEDIM == 2)
-    const std::string m_analyticalScalarField = "sin(x + 2*y)";
-    const amrex::Array<std::string, 3> m_analyticalField = {
+    std::string const m_analyticalScalarField = "sin(x + 2*y)";
+    amrex::Array<std::string, 3> const m_analyticalField = {
         "-cos(x)*cos(y)",
         "sin(x)*cos(y)",
         "-sin(x)*sin(y)",
     };
 #elif (AMREX_SPACEDIM == 3)
-    const std::string m_analyticalScalarField = "sin(x + 2*y - z)";
-    const amrex::Array<std::string, 3> m_analyticalField = {
+    std::string const m_analyticalScalarField = "sin(x + 2*y - z)";
+    amrex::Array<std::string, 3> const m_analyticalField = {
         "-cos(x)*cos(y)*sin(z)",
         "sin(x)*cos(y)*sin(z)",
         "-sin(x)*sin(y)*cos(z)",
@@ -57,19 +57,19 @@ protected:
 
     // Analytical grad Field
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> m_analyticalGradField = {
+    amrex::Array<std::string, 3> const m_analyticalGradField = {
         "cos(x)",
         "0.",
         "0.",
     };
 #elif (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> m_analyticalGradField = {
+    amrex::Array<std::string, 3> const m_analyticalGradField = {
         "cos(x + 2*y)",
         "2*cos(x + 2*y)",
         "0.",
     };
 #elif (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> m_analyticalGradField = {
+    amrex::Array<std::string, 3> const m_analyticalGradField = {
         "cos(x + 2*y - z)",
         "2*cos(x + 2*y - z)",
         "-cos(x + 2*y - z)",
@@ -78,19 +78,19 @@ protected:
 
 // Analytical curlField
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> m_analyticalCurlField = {
+    amrex::Array<std::string, 3> const m_analyticalCurlField = {
         "0.",
         "cos(x)",
         "cos(x)",
     };
 #elif (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> m_analyticalCurlField = {
+    amrex::Array<std::string, 3> const m_analyticalCurlField = {
         "-sin(x)*cos(y)",
         "cos(x)*sin(y)",
         "cos(x)*cos(y) - cos(x)*sin(y)",
     };
 #elif (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> m_analyticalCurlField = {
+    amrex::Array<std::string, 3> const m_analyticalCurlField = {
         "-2*sin(x)*cos(y)*cos(z)",
         "-cos(x)*cos(y)*cos(z) + cos(x)*sin(y)*cos(z)",
         "cos(x)*cos(y)*sin(z) - cos(x)*sin(y)*sin(z)",
@@ -99,11 +99,11 @@ protected:
 
     // Analytical divField
 #if (AMREX_SPACEDIM == 1)
-    const std::string m_analyticalDivField = "sin(x)";
+    std::string const m_analyticalDivField = "sin(x)";
 #elif (AMREX_SPACEDIM == 2)
-    const std::string m_analyticalDivField = "sin(x)*cos(y) - sin(x)*sin(y)";
+    std::string const m_analyticalDivField = "sin(x)*cos(y) - sin(x)*sin(y)";
 #elif (AMREX_SPACEDIM == 3)
-    const std::string m_analyticalDivField =
+    std::string const m_analyticalDivField =
         "sin(x)*cos(y)*sin(z) - sin(x)*sin(y)*sin(z) + sin(x)*sin(y)*sin(z)";
 #endif
 
@@ -117,7 +117,7 @@ TEST_F(ExtDerivativesTest, Grad)
 
     // Test grad of field on primal complex
     //-------------------------------------
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> funcField;
     amrex::Parser parserField;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcGrad;
@@ -146,7 +146,7 @@ TEST_F(ExtDerivativesTest, Grad)
     {
         for (amrex::MFIter mfi(gradField.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(gradField.m_data[comp][mfi].array(),
                            analyticalGradField.m_data[comp][mfi].array(), bx);
         }
@@ -163,7 +163,7 @@ TEST_F(ExtDerivativesTest, Grad)
     {
         for (amrex::MFIter mfi(gradField.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(gradField.m_data[comp][mfi].array(),
                            analyticalGradField.m_data[comp][mfi].array(), bx);
         }
@@ -183,7 +183,7 @@ TEST_F(ExtDerivativesTest, Grad)
     {
         for (amrex::MFIter mfi(gradField.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(gradFieldDual.m_data[comp][mfi].array(),
                            analyticalGradFieldDual.m_data[comp][mfi].array(), bx);
         }
@@ -200,7 +200,7 @@ TEST_F(ExtDerivativesTest, Grad)
     {
         for (amrex::MFIter mfi(gradFieldDual.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(gradFieldDual.m_data[comp][mfi].array(),
                            analyticalGradFieldDual.m_data[comp][mfi].array(), bx);
         }
@@ -212,7 +212,7 @@ TEST_F(ExtDerivativesTest, Curl)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcField, funcCurl;
     amrex::Array<amrex::Parser, 3> parserField, parserCurl;
     for (int i = 0; i < 3; ++i)
@@ -239,7 +239,7 @@ TEST_F(ExtDerivativesTest, Curl)
     {
         for (amrex::MFIter mfi(curlField.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(curlField.m_data[comp][mfi].array(),
                            analyticalCurlField.m_data[comp][mfi].array(), bx);
         }
@@ -260,7 +260,7 @@ TEST_F(ExtDerivativesTest, Curl)
     {
         for (amrex::MFIter mfi(curlField.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(curlField.m_data[comp][mfi].array(),
                            analyticalCurlField.m_data[comp][mfi].array(), bx);
         }
@@ -280,7 +280,7 @@ TEST_F(ExtDerivativesTest, Curl)
     {
         for (amrex::MFIter mfi(curlField.m_data[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS(curlFieldDual.m_data[comp][mfi].array(),
                            analyticalCurlFieldDual.m_data[comp][mfi].array(), bx);
         }
@@ -292,7 +292,7 @@ TEST_F(ExtDerivativesTest, Div)
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcField;
     amrex::ParserExecutor<nVar> funcDiv;
     amrex::Array<amrex::Parser, 3> parserField;
@@ -319,7 +319,7 @@ TEST_F(ExtDerivativesTest, Div)
     // Calculate error
     for (amrex::MFIter mfi(divField.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
         COMPARE_FIELDS(divField.m_data[mfi].array(), analyticalDivField.m_data[mfi].array(), bx);
     }
 
@@ -335,7 +335,7 @@ TEST_F(ExtDerivativesTest, Div)
     // Calculate error
     for (amrex::MFIter mfi(divField.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
         COMPARE_FIELDS(divFieldDual.m_data[mfi].array(), analyticalDivFieldDual.m_data[mfi].array(),
                        bx);
     }

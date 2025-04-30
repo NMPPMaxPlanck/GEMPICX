@@ -33,7 +33,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{HodgeDegreeStruct::value};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
@@ -41,11 +41,11 @@ public:
     {
         // Analytical rho and phi such that -Delta phi = rho
 #if AMREX_SPACEDIM == 2
-        const std::string analyticalRho = "4*sin(2*x)";
-        const std::string analyticalPhi = "sin(2*x)";
+        std::string const analyticalRho = "4*sin(2*x)";
+        std::string const analyticalPhi = "sin(2*x)";
 #elif AMREX_SPACEDIM == 3
-        const std::string analyticalRho = "4*sin(2*x)";
-        const std::string analyticalPhi = "sin(2*x)";
+        std::string const analyticalRho = "4*sin(2*x)";
+        std::string const analyticalPhi = "sin(2*x)";
 #endif
 
         m_parserRho.define(analyticalRho);
@@ -65,7 +65,7 @@ public:
     {
         Gempic::Io::Parameters parameters;
         // Initialize computational_domain
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize the De Rham Complex
@@ -100,7 +100,7 @@ TYPED_TEST_SUITE(HyprePoissonSolverTest, MyTypes);
 
 TYPED_TEST(HyprePoissonSolverTest, HyprePoissonConvergence)
 {
-    const int coarse = 32, fine = 64;
+    int const coarse = 32, fine = 64;
     amrex::Real errorCoarse, errorFine;
     amrex::Real tol = 0.1;
 

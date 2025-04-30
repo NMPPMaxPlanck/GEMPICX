@@ -44,7 +44,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
     amrex::Array<amrex::Parser, 3> m_parserE;
@@ -55,11 +55,11 @@ public:
     HypreQuasineutralChargeMatrixTest()
     {
 #if AMREX_SPACEDIM == 2
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x)", "sin(x+y)"};
-        const amrex::Array<std::string, 3> analyticalRhoE = {"sin(y)", "sin(x)", "sin(x+y)"};
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(x)", "sin(x+y)"};
+        amrex::Array<std::string, 3> const analyticalRhoE = {"sin(y)", "sin(x)", "sin(x+y)"};
 #elif AMREX_SPACEDIM == 3
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
-        const amrex::Array<std::string, 3> analyticalRhoE = {"sin(y)", "sin(z)", "sin(x)"};
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
+        amrex::Array<std::string, 3> const analyticalRhoE = {"sin(y)", "sin(z)", "sin(x)"};
 #endif
 
         for (int i = 0; i < 3; ++i)
@@ -86,7 +86,7 @@ public:
     amrex::Real chargematrix_solve ()
     {
         Gempic::Io::Parameters parameters;
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
 
         // Initialize computational_domain
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
@@ -107,7 +107,7 @@ public:
             ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
         }
 
-        const int numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
+        int const numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
@@ -120,7 +120,7 @@ public:
                          {AMREX_D_DECL(0.0, 0.0, 0.5)})};
 
         int i{0}, j{0}, k{0};
-        const auto dx{infra.cell_size_array()};
+        auto const dx{infra.cell_size_array()};
 
         for (int ndir = 0; ndir < AMREX_SPACEDIM; ++ndir)
         {

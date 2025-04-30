@@ -15,13 +15,13 @@ namespace Gempic::Test::Utils
 inline int init_n_ghost (int degX, int degY, int degZ)
 {
     amrex::Array<int, AMREX_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
-    const int maxDeg{*(std::max_element(degs.begin(), degs.end()))};
+    int const maxDeg{*(std::max_element(degs.begin(), degs.end()))};
     return maxDeg;
 }
 
 // Stream arr helper function
 template <typename T>
-std::string string_array (const T& valArray, int length)
+std::string string_array (T const& valArray, int length)
 {
     std::stringstream stream;
     stream << "(" << valArray[0];
@@ -35,34 +35,39 @@ std::string string_array (const T& valArray, int length)
 
 // Add-particle helper function. User must supply coordinates (but not necessarily velocities)
 // of all particles to be added.
-template <unsigned int vdim, unsigned ndata, size_t numParticles>
+template <unsigned int vDim, unsigned nData, size_t numParticles>
 void add_single_particles (
-    Gempic::Particle::ParticleGroups<vdim, ndata>* particleGroup,
-    const Gempic::ComputationalDomain& infra,
-    const amrex::Array<amrex::Real, numParticles>& weights,
-    const amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles>& positions,
-    const amrex::Array<amrex::GpuArray<amrex::Real, vdim>, numParticles>& velocities = {})
+    Gempic::Particle::ParticleGroups<vDim, nData>* particleGroup,
+    Gempic::ComputationalDomain const& compDom,
+    amrex::Array<amrex::Real, numParticles> const& weights,
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> const& positions,
+    amrex::Array<amrex::GpuArray<amrex::Real, vDim>, numParticles> const& velocities = {})
 {
-    amrex::Array<bool, numParticles> checklist{false};
+    std::array<int, numParticles> checklist;
+    checklist.fill(false);
+    amrex::Geometry const& geom{compDom.geometry()};
 
     for (amrex::MFIter mfi{particleGroup->MakeMFIter(0)}; mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx{mfi.validbox()};
-        amrex::IntVect lo{bx.smallEnd()};
-        amrex::IntVect hi{bx.bigEnd()};
+        std::array<amrex::Real, AMREX_SPACEDIM> lower;
+        std::array<amrex::Real, AMREX_SPACEDIM> upper;
 
-        amrex::ParticleTile<Gempic::Particle::ParticleType, vdim + ndata, 0>& particles{
+        amrex::Box const& bx{mfi.validbox()};
+        for (int d{0}; d < AMREX_SPACEDIM; d++)
+        {
+            lower[d] = geom.ProbLo(d) + bx.smallEnd(d) * geom.CellSize(d);
+            upper[d] = geom.ProbLo(d) + (bx.bigEnd(d) + 1) * geom.CellSize(d);
+        }
+
+        amrex::ParticleTile<Gempic::Particle::ParticleType, vDim + nData, 0>& particles{
             particleGroup->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
         for (int i{0}; i < numParticles; i++)
         {
             // make sure particle is within box (and not previously added? Why?)
-            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = infra.geometry().CellSizeArray();
-            if (!checklist[i] AMREX_D_TERM(&&(lo[xDir] * dx[xDir] <= positions[i][xDir]) &&
-                                               (positions[i][xDir] < (hi[xDir] + 1) * dx[xDir]),
-                                           &&(lo[yDir] * dx[yDir] <= positions[i][yDir]) &&
-                                               (positions[i][yDir] < (hi[yDir] + 1) * dx[yDir]),
-                                           &&(lo[zDir] * dx[zDir] <= positions[i][zDir]) &&
-                                               (positions[i][zDir] < (hi[zDir] + 1) * dx[zDir])))
+            if (!checklist[i] AMREX_D_TERM(
+                    &&(lower[xDir] <= positions[i][xDir]) && (positions[i][xDir] < upper[xDir]),
+                    &&(lower[yDir] <= positions[i][yDir]) && (positions[i][yDir] < upper[yDir]),
+                    &&(lower[zDir] <= positions[i][zDir]) && (positions[i][zDir] < upper[zDir])))
             {
                 particleGroup->add_particle(positions[i], velocities[i], weights[i], particles);
                 checklist[i] = true;
@@ -71,20 +76,17 @@ void add_single_particles (
     }
 
     // Check that all particles have been added
-    int idx{-1};
-    auto result1 = std::find_if(std::begin(checklist), std::end(checklist),
-                                [&idx] (bool i)
-                                {
-                                    idx++;
-                                    return !i;
-                                });
-    if (result1 != std::end(checklist))
+    amrex::ParallelDescriptor::ReduceIntSum(checklist.data(), numParticles);
+    for (int i{0}; i < numParticles; i++)
     {
-        std::cerr << "Invalid position given to add_particle function:\n"
-                  << string_array(positions[idx], AMREX_SPACEDIM)
-                  << " is out of simulation bounds.\nLower: "
-                  << string_array(infra.m_geom.ProbLo(), AMREX_SPACEDIM)
-                  << "\nUpper: " << string_array(infra.m_geom.ProbHi(), AMREX_SPACEDIM);
+        if (!checklist[i])
+        {
+            std::cerr << "Invalid position given to add_particle function:\n"
+                      << string_array(positions[i], AMREX_SPACEDIM)
+                      << " is out of simulation bounds.\nLower: "
+                      << string_array(geom.ProbLo(), AMREX_SPACEDIM)
+                      << "\nUpper: " << string_array(geom.ProbHi(), AMREX_SPACEDIM);
+        }
     }
 }
 
@@ -107,7 +109,7 @@ void add_single_particles (
  * @param tol amrex::Real, relative tolerance
  */
 using condLambda = bool (*)(AMREX_D_DECL(int, int, int));
-void check_field(const char file[],
+void check_field(char const file[],
                  int line,
                  amrex::Array4<amrex::Real> const& fieldArr,
                  amrex::Box const& bx,
@@ -128,22 +130,22 @@ void check_field(const char file[],
  * @param tol amrex::Real, relative tolerance
  * @param ncomp number of components of the two multifabs
  */
-void compare_fields(const char file[],
+void compare_fields(char const file[],
                     int line,
-                    amrex::Array4<const amrex::Real> const& fieldArr,
-                    amrex::Array4<const amrex::Real> const& fieldArr2,
+                    amrex::Array4<amrex::Real const> const& fieldArr,
+                    amrex::Array4<amrex::Real const> const& fieldArr2,
                     amrex::Box const& bx,
                     amrex::Real tol = 1e-14,
                     int ncomp = 1);
 
-double l_inf_error(amrex::Array4<const amrex::Real> const& a,
-                   amrex::Array4<const amrex::Real> const& b,
+double l_inf_error(amrex::Array4<amrex::Real const> const& a,
+                   amrex::Array4<amrex::Real const> const& b,
                    amrex::Box const& bx,
                    int ncomp = 1);
 
 ComputationalDomain get_default_compdom();
 ComputationalDomain get_compdom(int gSize);
-ComputationalDomain get_compdom(const amrex::IntVect& nCell);
+ComputationalDomain get_compdom(amrex::IntVect const& nCell);
 } // namespace Gempic::Test::Utils
 
 /** @brief Helper macro for the @ref Gempic::Test::Utils::check_field function */

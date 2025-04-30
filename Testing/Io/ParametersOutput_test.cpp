@@ -26,7 +26,7 @@ using namespace Forms;
 int main (int argc, char* argv[])
 {
     // amrex::Initialize(argc, argv);
-    const bool buildParmParse = true;
+    bool const buildParmParse = true;
     amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD, overwrite_amrex_parser_defaults);
     BL_PROFILE_VAR("main()", pmain);
     // Initialize the main parameters instance and tell it to print output

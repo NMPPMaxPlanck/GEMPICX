@@ -94,11 +94,11 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
     *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
 }
 
-ComputationalDomain::ComputationalDomain(const std::array<amrex::Real, AMREX_SPACEDIM>& domainLo,
-                                         const std::array<amrex::Real, AMREX_SPACEDIM>& domainHi,
-                                         const amrex::IntVect& nCell,
-                                         const amrex::IntVect& maxGridSize,
-                                         const std::array<int, AMREX_SPACEDIM>& isPeriodic,
+ComputationalDomain::ComputationalDomain(std::array<amrex::Real, AMREX_SPACEDIM> const& domainLo,
+                                         std::array<amrex::Real, AMREX_SPACEDIM> const& domainHi,
+                                         amrex::IntVect const& nCell,
+                                         amrex::IntVect const& maxGridSize,
+                                         std::array<int, AMREX_SPACEDIM> const& isPeriodic,
                                          amrex::CoordSys::CoordType coordType) :
     m_nCell{nCell}
 {

@@ -23,14 +23,62 @@
 namespace Gempic::Particle
 {
 using ParticleType = amrex::Particle<0, 0>; // SoA particle type
+
+template <unsigned int vDim, unsigned int nData = 1>
+class ParticleGroups;
+
+namespace Impl
+{
+// Convenience iterators for ParticleGroups. Allows for range-based for loops.
+template <unsigned int vDim, unsigned int nData>
+struct ParticleGroupIterator
+{
+    using ParIterType = amrex::ParIter<0, 0, vDim + nData, 0>;
+    std::unique_ptr<ParIterType> m_particleIter;
+
+    // While references to pointers are normally dangerous, the iterators are only expected to last
+    // for the duration of the loop.
+    ParIterType& operator*() { return *m_particleIter; }
+
+    void operator++() { m_particleIter->operator++(); }
+
+    bool operator==(ParticleGroupIterator const& other) const
+    {
+        if (m_particleIter && m_particleIter->isValid())
+        {
+            // if both iterators are valid, check if they point to the same tile
+            return (other.m_particleIter && other.m_particleIter->isValid() &&
+                    (m_particleIter == other.m_particleIter));
+        }
+        else
+        {
+            // if both iterators are empty/invalid, they are equal
+            return !(other.m_particleIter && other.m_particleIter->isValid());
+        }
+    }
+
+    bool operator!=(ParticleGroupIterator const& other) const { return not(*this == other); }
+
+private:
+    // ParticleGroupIterator should only be constructed by the ParticleGroups class
+    friend class ParticleGroups<vDim, nData>;
+    ParticleGroupIterator(ParticleGroups<vDim, nData>& particles)
+    {
+        m_particleIter = std::make_unique<ParIterType>(particles, 0);
+    }
+
+    ParticleGroupIterator() {}
+};
+} // namespace Impl
+
 /**
  * Class containing all particle information. The array of particle containers has @p n_species
  * number of particles containers, that is each responsible for one species of particles. For each
- * particle the particle position, velocity and weight are stored in a ArrayOfStructs manner. The
- * charge and mass of the particle species are stored in a separate array.
+ * particle position, velocity and weight are stored in a ArrayOfStructs manner. The charge and
+ * mass of the particle species are stored in a separate array.
  */
-template <unsigned int vdim, unsigned int ndata = 1>
-class ParticleGroups : public amrex::ParticleContainer<0, 0, vdim + ndata, 0>
+template <unsigned int vDim, unsigned int nData>
+class ParticleGroups : public amrex::ParticleContainer<0, 0, vDim + nData, 0>
 {
 private:
     amrex::ParticleReal m_charge = 1;
@@ -48,20 +96,19 @@ public:
      * Default Constructor.
      */
     ParticleGroups() {}
-    ParticleGroups(const amrex::Geometry &geom,
-                   const amrex::DistributionMapping &distriMap,
-                   const amrex::BoxArray &grid) :
-        amrex::ParticleContainer<0, 0, vdim + ndata, 0>(geom, distriMap, grid)
+    ParticleGroups(amrex::Geometry const& geom,
+                   amrex::DistributionMapping const& distriMap,
+                   amrex::BoxArray const& grid) :
+        amrex::ParticleContainer<0, 0, vDim + nData, 0>(geom, distriMap, grid)
     {
-        m_compNames.resize(vdim + ndata);
-        if constexpr (vdim + ndata > 0 && vdim + ndata < 4)
+        m_compNames.resize(vDim + nData);
+        if constexpr (vDim + nData > 0 && vDim + nData < 4)
         {
-            m_compNames[vdim + ndata - 1] = "weight";
+            m_compNames[vDim + nData - 1] = "weight";
         }
     }
-    // Explicit const
     /**
-     * Explicit Constructor: set up the empty particle object.
+     * Explicit Constructors: set up the empty particle object.
      * The particles themselves need to be added separately. This can be done one by one (see
      * method add_particle) or with the particle samplers
      * \ref init_particles(std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>&
@@ -69,22 +116,22 @@ public:
      */
     ParticleGroups(amrex::Real charge,
                    amrex::Real mass,
-                   const std::string &name,
-                   const ComputationalDomain &ifr) :
+                   std::string const& name,
+                   ComputationalDomain const& ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_charge = charge;
         m_mass = mass;
         m_name = name;
     }
-    ParticleGroups(amrex::Real charge, amrex::Real mass, const ComputationalDomain &ifr) :
+    ParticleGroups(amrex::Real charge, amrex::Real mass, ComputationalDomain const& ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_charge = charge;
         m_mass = mass;
     }
 
-    ParticleGroups(int species, const ComputationalDomain &ifr) :
+    ParticleGroups(int species, ComputationalDomain const& ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         std::string specString = "Particle.species" + std::to_string(species);
@@ -94,7 +141,7 @@ public:
         params.get_or_set("name", m_name);
     }
 
-    ParticleGroups(const std::string &speciesName, const ComputationalDomain &ifr) :
+    ParticleGroups(std::string const& speciesName, ComputationalDomain const& ifr) :
         ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_name = speciesName;
@@ -111,12 +158,10 @@ public:
      */
 
     void add_particle (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position,
-                       amrex::GpuArray<amrex::Real, vdim> velocity,
+                       amrex::GpuArray<amrex::Real, vDim> velocity,
                        amrex::Real weight,
-                       amrex::ParticleTile<ParticleType, vdim + ndata, 0> &particles)
-    // amrex::ParticleTile<0, 0, vdim + ndata, 0>& particles)
+                       amrex::ParticleTile<ParticleType, vDim + nData, 0>& particles)
     {
-        //BL_PROFILE("Gempic::Particle::ParticleGroups::add_particle()");
         // Array of Structures
         // new particle:
         ParticleType p;
@@ -129,23 +174,21 @@ public:
         }
 
         // Creating attributes for Structure of Arrays container
-        // amrex::GpuArray<amrex::Real,vdim+1> particleAttributes{};
 
-        for (int cc = 0; cc < vdim; cc++)
+        for (int cc = 0; cc < vDim; cc++)
         {
             // p.rdata(cc) = velocity[cc];
             // particleAttributes[cc] = velocity[cc];
             particles.push_back_real(cc, velocity[cc]);
         }
-        // p.rdata(vdim) = weight; //weight
-        // particleAttributes[vdim] = weight; //weight
-        particles.push_back_real(vdim, weight);
-        for (int nd = 1; nd < ndata; nd++) particles.push_back_real(vdim + nd, 0.0);
+        // p.rdata(vDim) = weight; //weight
+        particles.push_back_real(vDim, weight);
+        for (int nd = 1; nd < nData; nd++) particles.push_back_real(vDim + nd, 0.0);
 
         particles.push_back(p);
     }
 
-    void copy (ParticleGroups<vdim, ndata> &source, bool local = false)
+    void copy (ParticleGroups<vDim, nData>& source, bool local = false)
     {
         BL_PROFILE("Gempic::Particle::ParticleGroups::copy()");
         this->m_charge = source.get_charge();
@@ -171,10 +214,10 @@ public:
         auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real>>(
             *this,
             [=] AMREX_GPU_HOST_DEVICE(
-                const amrex::ConstParticleTileData<ParticleType, vdim + ndata, 0> &pt,
-                const int pp) -> amrex::GpuTuple<amrex::Real>
+                amrex::ConstParticleTileData<ParticleType, vDim + nData, 0> const& pt,
+                int const pp) -> amrex::GpuTuple<amrex::Real>
             {
-                auto weight = pt.m_rdata[vdim][pp];
+                auto weight = pt.m_rdata[vDim][pp];
                 return weight;
             },
             reduceOps);
@@ -187,12 +230,22 @@ public:
         // Remove average weight from all particles
         auto totalNumberOfParticles = this->TotalNumberOfParticles();
         amrex::Real averageDiff = (targetWeight - W) / totalNumberOfParticles;
-        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*this, 0); pti.isValid(); ++pti)
+        for (auto& particleGrid : *this)
         {
-            const long np = pti.numParticles();
-            auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+            long const np = particleGrid.numParticles();
+            auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vDim).data();
             amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) { weight[pp] += averageDiff; });
         }
+    }
+
+    Impl::ParticleGroupIterator<vDim, nData> begin ()
+    {
+        return Impl::ParticleGroupIterator<vDim, nData>(*this);
+    }
+
+    Impl::ParticleGroupIterator<vDim, nData> end ()
+    {
+        return Impl::ParticleGroupIterator<vDim, nData>();
     }
 };
 
@@ -200,8 +253,8 @@ public:
  * Subclass for linearized Vlasov simulation. Every species needs density and thermal velocity of
  * the equilibrium distribution function around which linearization was performed.
  */
-template <unsigned int vdim, unsigned int ndata = 1>
-class ParticleGroupsLinVlasov : public ParticleGroups<vdim, ndata>
+template <unsigned int vDim, unsigned int nData = 1>
+class ParticleGroupsLinVlasov : public ParticleGroups<vDim, nData>
 {
 private:
     amrex::Parser m_densityBackground;
@@ -211,8 +264,8 @@ public:
     amrex::Parser get_density_background () { return m_densityBackground; }
     amrex::ParticleReal get_v_thermal_background () { return m_vThermalBackground; }
 
-    ParticleGroupsLinVlasov(const std::string &speciesName, ComputationalDomain ifr) :
-        ParticleGroups<vdim, ndata>(speciesName, ifr)
+    ParticleGroupsLinVlasov(std::string const& speciesName, ComputationalDomain ifr) :
+        ParticleGroups<vDim, nData>(speciesName, ifr)
     {
         std::string specString = "Particle." + speciesName;
         Io::Parameters params(specString, "class ParticleGroups (" + speciesName + ')');

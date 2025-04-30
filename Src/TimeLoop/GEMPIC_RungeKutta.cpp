@@ -58,8 +58,8 @@ RungeKutta::RungeKutta(ComputationalDomain infra,
 }
 
 void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
-                                   const DeRhamField<Grid::dual, Space::edge>& H,
-                                   const DeRhamField<Grid::dual, Space::face>& J,
+                                   DeRhamField<Grid::dual, Space::edge> const& H,
+                                   DeRhamField<Grid::dual, Space::face> const& J,
                                    amrex::Real dt,
                                    int stageIndex)
 {
@@ -69,7 +69,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
     // Component-0 of Ampere's equation
     for (amrex::MFIter mfi(D.m_data[xDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const& dxArray = (D.m_data[xDir])[mfi].array();
         amrex::Array4<amrex::Real> const& mS2DxArray = (m_s2D.m_data[xDir])[mfi].array();
@@ -96,7 +96,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
     // Component-1 of Ampere's equation
     for (amrex::MFIter mfi(D.m_data[yDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const& dyArray = (D.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real> const& mS2DyArray = (m_s2D.m_data[yDir])[mfi].array();
@@ -123,7 +123,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
     // Component-2 of Ampere's equation
     for (amrex::MFIter mfi(D.m_data[zDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const& dzArray = (D.m_data[zDir])[mfi].array();
         amrex::Array4<amrex::Real> const& mS2DzArray = (m_s2D.m_data[zDir])[mfi].array();
@@ -156,7 +156,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
 }
 
 void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
-                                    const DeRhamField<Grid::primal, Space::edge>& E,
+                                    DeRhamField<Grid::primal, Space::edge> const& E,
                                     amrex::Real dt,
                                     int stageIndex)
 {
@@ -166,7 +166,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
     // Component-0 of Faraday's equation
     for (amrex::MFIter mfi(B.m_data[xDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const& s2BxArray = (m_s2B.m_data[xDir])[mfi].array();
         AMREX_D_TERM(
@@ -190,7 +190,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
     // Component-1 of Faraday's equation
     for (amrex::MFIter mfi(B.m_data[yDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const& s2ByArray = (m_s2B.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real> const& byArray = (B.m_data[yDir])[mfi].array();
@@ -214,7 +214,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
     // Component-2 of Faraday's equation
     for (amrex::MFIter mfi(B.m_data[zDir]); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::Array4<amrex::Real> const& s2BzArray = (m_s2B.m_data[zDir])[mfi].array();
         amrex::Array4<amrex::Real> const& bzArray = (B.m_data[zDir])[mfi].array();

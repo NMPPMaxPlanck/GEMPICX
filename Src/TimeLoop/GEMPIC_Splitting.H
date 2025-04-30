@@ -324,9 +324,9 @@ public:
      */
     inline void apply_h_b (DeRhamField<Grid::dual, Space::face>& D,
                            std::shared_ptr<FDDeRhamComplex> deRham,
-                           const DeRhamField<Grid::primal, Space::face>& B,
+                           DeRhamField<Grid::primal, Space::face> const& B,
                            DeRhamField<Grid::dual, Space::edge>& H,
-                           const amrex::Real dt)
+                           amrex::Real const dt)
     {
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
@@ -349,7 +349,7 @@ public:
                                  DeRhamField<Grid::primal, Space::edge>& E,
                                  std::shared_ptr<FDDeRhamComplex> deRham,
                                  DeRhamField<Grid::dual, Space::face>& D,
-                                 const amrex::Real dt)
+                                 amrex::Real const dt)
     {
         BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
         deRham->hodge(E, D, deRham->scaling_dto_e());
@@ -377,9 +377,9 @@ public:
         DeRhamField<Grid::dual, Space::edge>& H,
         DeRhamField<Grid::dual, Space::face>& J,
         ComputationalDomain infra,
-        const amrex::Real dt,
+        amrex::Real const dt,
         std::vector<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
-        const int nSteps,
+        int const nSteps,
         int strangOrder,
         OperatorHamilton<vdim, degx, degy, degz> operatorHamilton) = 0;
 };

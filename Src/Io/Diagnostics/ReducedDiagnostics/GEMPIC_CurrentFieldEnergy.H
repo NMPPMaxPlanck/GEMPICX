@@ -32,8 +32,8 @@ class CurrentFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, nda
 public:
     std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_jField;
     std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_jFieldT;
-    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::edge>> m_constJField;
-    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constJFieldT;
+    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge> const> m_constJField;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face> const> m_constJFieldT;
 
     enum class ComputeMethod
     {
@@ -49,10 +49,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    CurrentFieldEnergy(const std::string& rdName,
+    CurrentFieldEnergy(std::string const& rdName,
                        int& indexNum,
                        bool isLastType,
-                       const std::string& fileName) :
+                       std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy()");
@@ -101,8 +101,8 @@ public:
      * This function computes the current field energy component wise:
      */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>&) final
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const&) final
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy::compute_diags()");
 
@@ -133,7 +133,7 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * compute_missing_fields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
+    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy::choose_computation_method()");
         using namespace Forms;
@@ -141,9 +141,9 @@ private:
             fieldMap.count("JFieldTz") && fieldMap.count("JFieldx") && fieldMap.count("JFieldy") &&
             fieldMap.count("JFieldz"))
         {
-            this->m_constJField = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+            this->m_constJField = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
                 this->m_deRham, fieldMap["JFieldx"], fieldMap["JFieldy"], fieldMap["JFieldz"]);
-            this->m_constJFieldT = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+            this->m_constJFieldT = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
                 this->m_deRham, fieldMap["JFieldTx"], fieldMap["JFieldTy"], fieldMap["JFieldTz"]);
             return ComputeMethod::missingNone;
         }
@@ -160,7 +160,7 @@ private:
 
                 int nComps{fieldMap["JFieldx"].nComp()};
                 this->m_constJField =
-                    std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                    std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
                         this->m_deRham, fieldMap["JFieldx"], fieldMap["JFieldy"],
                         fieldMap["JFieldz"]);
 
@@ -179,7 +179,7 @@ private:
                 m_weightFunc = weightFunc;
 
                 int nComps{fieldMap["JFieldTx"].nComp()};
-                this->m_constJFieldT = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                this->m_constJFieldT = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
                     this->m_deRham, fieldMap["JFieldTx"], fieldMap["JFieldTy"],
                     fieldMap["JFieldTz"]);
 
@@ -213,9 +213,9 @@ private:
     /**
      * This function computes the current field energy component wise:
      */
-    void update_data (const Forms::DeRhamField<Grid::primal, Space::edge>& fieldJ,
-                      const Forms::DeRhamField<Grid::dual, Space::face>& fieldJT,
-                      const amrex::Periodicity& periodicity)
+    void update_data (Forms::DeRhamField<Grid::primal, Space::edge> const& fieldJ,
+                      Forms::DeRhamField<Grid::dual, Space::face> const& fieldJT,
+                      amrex::Periodicity const& periodicity)
     {
         BL_PROFILE("Gempic::Io::CurrentFieldEnergy::update_data()");
         constexpr int noutputs = 3;

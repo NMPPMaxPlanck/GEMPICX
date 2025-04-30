@@ -24,9 +24,9 @@ private:
     ComputationalDomain m_compDom;
 
 public:
-    Diagnostics(const ComputationalDomain& compDom,
-                const std::shared_ptr<Forms::DeRhamComplex> drc,
-                const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>&
+    Diagnostics(ComputationalDomain const& compDom,
+                std::shared_ptr<Forms::DeRhamComplex> const drc,
+                std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const&
                     particles) :
         m_fullDiagn{compDom, drc->m_fieldsDiagnostics, drc->m_fieldsScaling, particles},
         m_redDiagn{drc},
@@ -56,9 +56,9 @@ public:
  */
 template <int xDeg, int yDeg, int zDeg, unsigned int vDim, unsigned int nData>
 Diagnostics<xDeg, yDeg, zDeg, vDim, nData> make_diagnostics (
-    const ComputationalDomain& compDom,
-    const std::shared_ptr<Forms::DeRhamComplex> drc,
-    const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particles)
+    ComputationalDomain const& compDom,
+    std::shared_ptr<Forms::DeRhamComplex> const drc,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles)
 {
     return Diagnostics<xDeg, yDeg, zDeg, vDim, nData>(compDom, drc, particles);
 }

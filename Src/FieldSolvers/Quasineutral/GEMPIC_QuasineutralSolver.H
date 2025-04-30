@@ -213,8 +213,8 @@ public:
                                  HYPRE_Int& ncols,
                                  HYPRE_Int* cols,
                                  HYPRE_Real* mat,
-                                 const amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac,
-                                 const amrex::GpuArray<HYPRE_Real, 3> edgetoface,
+                                 amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> const fac,
+                                 amrex::GpuArray<HYPRE_Real, 3> const edgetoface,
                                  std::map<int, int>& mapCols)
     {
         switch (hodgeDegree)
@@ -316,8 +316,8 @@ public:
                                      HYPRE_Int& ncols,
                                      HYPRE_Int* cols,
                                      HYPRE_Real* mat,
-                                     const amrex::MultiArray4<const amrex::Real>& rhoarrs,
-                                     const amrex::GpuArray<HYPRE_Real, 3> edgetoface,
+                                     amrex::MultiArray4<amrex::Real const> const& rhoarrs,
+                                     amrex::GpuArray<HYPRE_Real, 3> const edgetoface,
                                      std::map<int, int>& mapCols)
     {
         switch (hodgeDegree)
@@ -360,7 +360,7 @@ public:
         HYPRE_Int& ncols,
         HYPRE_Int* cols,
         HYPRE_Real* mat,
-        const std::array<amrex::MultiArray4<amrex::Real>, 3>& eCoeffsArrs,
+        std::array<amrex::MultiArray4<amrex::Real>, 3> const& eCoeffsArrs,
         std::map<int, int>& mapCols)
     {
         // This function contributes (<= nMmCoeffs[ndir]) columns to ncols
@@ -420,7 +420,7 @@ public:
             GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ[xDir][ndir]; ++ii),
                                 for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
                                 for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
-                const amrex::Real sCoeff =
+                amrex::Real const sCoeff =
                     ((ndir == 0)
                          ? (spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk))
                          : ((ndir == 1) ? (spline.template eval_b_spline<Field::DualTwoForm, yDir>(
@@ -461,7 +461,7 @@ public:
         HYPRE_Int& ncols,
         HYPRE_Int* cols,
         HYPRE_Real* mat,
-        const std::array<amrex::MultiArray4<amrex::Real>, 3>& eCoeffsArrs,
+        std::array<amrex::MultiArray4<amrex::Real>, 3> const& eCoeffsArrs,
         std::map<int, int>& mapCols)
     {
         // This function contributes (<= nJcrosscurlCoeffsTotal[ndir]) columns to ncols
@@ -537,7 +537,7 @@ public:
             GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
                                 for (int jj = 0; jj < nWtsXYZ1f[yDir][ndir]; ++jj),
                                 for (int kk = 0; kk < nWtsXYZ1f[zDir][ndir]; ++kk))
-                const amrex::Real sCoeff =
+                amrex::Real const sCoeff =
                     ((ndir == 0)
                          ? (spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk))
                          : ((ndir == 1) ? (spline.template eval_b_spline<Field::DualTwoForm, yDir>(
@@ -651,14 +651,14 @@ public:
 
     void solve_curlcurl_plus_field_charge_e (DeRhamField<Grid::dual, Space::face>& b,
                                              DeRhamField<Grid::primal, Space::edge>& x,
-                                             const DeRhamField<Grid::dual, Space::cell>& rho)
+                                             DeRhamField<Grid::dual, Space::cell> const& rho)
     {
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
         auto const& rhoarrs = (rho.m_data).arrays();
 
-        const auto dxi = m_infra.inv_cell_size_array();
-        const auto dx = m_infra.cell_size_array();
+        auto const dxi = m_infra.inv_cell_size_array();
+        auto const dx = m_infra.cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{
             AMREX_D_DECL(static_cast<HYPRE_Real>(dxi[xDir] * dxi[xDir]),
@@ -727,17 +727,16 @@ public:
             amrex::Real mass = particleSpecies->get_mass();
             amrex::Real chargeSqrByMass = charge * charge / mass;
 
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                 ++pti)
+            for (auto& particleGrid : *particleSpecies)
             {
-                const long np = pti.numParticles();
-                auto* const particles = pti.GetArrayOfStructs()().data();
-                auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+                long const np = particleGrid.numParticles();
+                auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vdim).data();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsARho;
                 for (int cc = 0; cc < vdim; cc++)
                 {
-                    eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[pti].array();
+                    eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[particleGrid].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
@@ -825,17 +824,16 @@ public:
             amrex::Real mass = particleSpecies->get_mass();
             amrex::Real chargeSqrByMass = charge * charge / mass;
 
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                 ++pti)
+            for (auto& particleGrid : *particleSpecies)
             {
-                const long np = pti.numParticles();
-                auto* const particles = pti.GetArrayOfStructs()().data();
-                auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+                long const np = particleGrid.numParticles();
+                auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vdim).data();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsARho;
                 for (int cc = 0; cc < vdim; cc++)
                 {
-                    eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[pti].array();
+                    eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[particleGrid].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
@@ -870,8 +868,8 @@ public:
 
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
-        const auto dxi = m_infra.inv_cell_size_array();
-        const auto dx = m_infra.cell_size_array();
+        auto const dxi = m_infra.inv_cell_size_array();
+        auto const dx = m_infra.cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{
             AMREX_D_DECL(static_cast<HYPRE_Real>(dxi[xDir] * dxi[xDir]),
@@ -931,7 +929,7 @@ public:
         DeRhamField<Grid::dual, Space::face>& b,
         DeRhamField<Grid::primal, Space::edge>& x,
         std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
-        const DeRhamField<Grid::dual, Space::cell>& rho)
+        DeRhamField<Grid::dual, Space::cell> const& rho)
     {
         DeRhamField<Grid::dual, Space::face> eCoeffsJcrosscurl(b.m_deRham,
                                                                s_nJcrosscurlCoeffsArray);
@@ -943,23 +941,22 @@ public:
             amrex::Real mass = particleSpecies->get_mass();
             amrex::Real chargeSqrByMass = charge * charge / mass;
 
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                 ++pti)
+            for (auto& particleGrid : *particleSpecies)
             {
-                const long np = pti.numParticles();
-                auto* const particles = pti.GetArrayOfStructs()().data();
-                auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+                long const np = particleGrid.numParticles();
+                auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vdim).data();
 
-                auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsAJcrosscurl;
 
                 for (int cc = 0; cc < vdim; cc++)
                 {
-                    eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[pti].array();
+                    eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[particleGrid].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
@@ -1000,8 +997,8 @@ public:
 
         auto const& rhoarrs = (rho.m_data).arrays();
 
-        const auto dxi = m_infra.inv_cell_size_array();
-        const auto dx = m_infra.cell_size_array();
+        auto const dxi = m_infra.inv_cell_size_array();
+        auto const dx = m_infra.cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, 3> edgetoface{
             static_cast<HYPRE_Real>(GEMPIC_D_MULT(dxi[xDir], dx[yDir], dx[zDir])),
@@ -1070,22 +1067,21 @@ public:
             amrex::Real mass = particleSpecies->get_mass();
             amrex::Real chargeSqrByMass = charge * charge / mass;
 
-            for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                 ++pti)
+            for (auto& particleGrid : *particleSpecies)
             {
-                const long np = pti.numParticles();
-                auto* const particles = pti.GetArrayOfStructs()().data();
-                auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-                auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                long const np = particleGrid.numParticles();
+                auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vdim).data();
+                auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsARho;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsAJcrosscurl;
                 for (int cc = 0; cc < vdim; cc++)
                 {
-                    eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[pti].array();
-                    eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[pti].array();
+                    eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[particleGrid].array();
+                    eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[particleGrid].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
                 amrex::ParallelFor(
@@ -1124,8 +1120,8 @@ public:
 
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
-        const auto dxi = m_infra.inv_cell_size_array();
-        const auto dx = m_infra.cell_size_array();
+        auto const dxi = m_infra.inv_cell_size_array();
+        auto const dx = m_infra.cell_size_array();
 
         amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{
             AMREX_D_DECL(static_cast<HYPRE_Real>(dxi[xDir] * dxi[xDir]),

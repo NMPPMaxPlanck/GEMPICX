@@ -61,9 +61,9 @@ public:
      * @param plo low end of the problem domain
      * @param dxInverse inverse of the cell size in all three directions x, y and z
      */
-    AMREX_GPU_HOST_DEVICE SplineBase (const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
-                                      const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
-                                      const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse)
+    AMREX_GPU_HOST_DEVICE SplineBase (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& position,
+                                      amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
+                                      amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dxInverse)
     {
         AMREX_D_TERM(
             (update_1d_splines<Direction::xDir>(position[xDir], plo[xDir], dxInverse[xDir]));
@@ -153,9 +153,9 @@ public:
      * @return refOffset
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE amrex::Real init_b_splines_at_positions (const amrex::Real position,
-                                                                   const amrex::Real plo,
-                                                                   const amrex::Real dxInverseDir)
+    AMREX_GPU_HOST_DEVICE amrex::Real init_b_splines_at_positions (amrex::Real const position,
+                                                                   amrex::Real const plo,
+                                                                   amrex::Real const dxInverseDir)
     {
         amrex::Real radius = (s_splineDegrees[dir] + 1.) / 2.;
         amrex::Real normalizedPos = (position - plo) * dxInverseDir;
@@ -178,11 +178,11 @@ public:
      * @param dxInverseDir inverse of the cell size in the given direction
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update_1d_splines (const amrex::Real position,
-                                                  const amrex::Real plo,
-                                                  const amrex::Real dxInverseDir)
+    AMREX_GPU_HOST_DEVICE void update_1d_splines (amrex::Real const position,
+                                                  amrex::Real const plo,
+                                                  amrex::Real const dxInverseDir)
     {
-        const amrex::Real refOffset = init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
+        amrex::Real const refOffset = init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
         constexpr int deg{s_splineDegrees[dir]};
         spline_eval<deg - 1, s_maxDeg>(refOffset, m_cellSplineVals[dir]);
@@ -341,7 +341,7 @@ public:
      */
     template <Field form, unsigned int vDim>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> eval_spline_field (
-        const amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> fieldArray) const
+        amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const fieldArray) const
     {
         static_assert(form == Field::PrimalOneForm || form == Field::PrimalTwoForm,
                       "Attempting smoothing of incorrect field type.");
@@ -358,7 +358,7 @@ public:
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
         GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                             for (int kk = 0; kk <= degZ; ++kk))
-            const amrex::Dim3 cellIndex =
+            amrex::Dim3 const cellIndex =
                 (amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
                                              this->m_firstIndex[Direction::yDir] + jj,
                                              this->m_firstIndex[Direction::zDir] + kk)})
@@ -375,7 +375,7 @@ public:
             }
             if (xCond)
             {
-                const amrex::Real sCoeff =
+                amrex::Real const sCoeff =
                     eval_b_spline<complement_form<form>(), Direction::xDir>(ii, jj, kk);
                 fields[Direction::xDir] += sCoeff * (fieldArray[Direction::xDir])(
                                                         cellIndex.x, cellIndex.y, cellIndex.z, 0);
@@ -394,7 +394,7 @@ public:
                 }
                 if (yCond)
                 {
-                    const amrex::Real sCoeff =
+                    amrex::Real const sCoeff =
                         eval_b_spline<complement_form<form>(), Direction::yDir>(ii, jj, kk);
                     fields[Direction::yDir] +=
                         sCoeff *
@@ -414,7 +414,7 @@ public:
                 }
                 if (zCond)
                 {
-                    const amrex::Real sCoeff =
+                    amrex::Real const sCoeff =
                         eval_b_spline<complement_form<form>(), Direction::zDir>(ii, jj, kk);
                     fields[Direction::zDir] +=
                         sCoeff *
@@ -428,8 +428,8 @@ public:
 
     template <unsigned int nWtsSum>
     AMREX_GPU_HOST_DEVICE void eval_e_field_spline_weights (
-        amrex::GpuArray<amrex::Real, nWtsSum> &eWts,
-        amrex::GpuArray<amrex::IntVect, nWtsSum> &eCells) const
+        amrex::GpuArray<amrex::Real, nWtsSum>& eWts,
+        amrex::GpuArray<amrex::IntVect, nWtsSum>& eCells) const
     {
         constexpr int nWtsXYZ[3][3] = {
             {degX, degX + 1, degX + 1},  // number of 1-form x,y,z-field weights in X-direction
@@ -454,7 +454,7 @@ public:
             GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ[xDir][ndir]; ++ii),
                                 for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
                                 for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
-                const amrex::Real sCoeff =
+                amrex::Real const sCoeff =
                     ((ndir == 0)
                          ? eval_b_spline<complement_form<Field::PrimalOneForm>(), Direction::xDir>(
                                ii, jj, kk)
@@ -476,8 +476,8 @@ public:
 
     template <unsigned int nWtsSum>
     AMREX_GPU_HOST_DEVICE void eval_b_field_spline_weights (
-        amrex::GpuArray<amrex::Real, nWtsSum> &bWts,
-        amrex::GpuArray<amrex::IntVect, nWtsSum> &bCells) const
+        amrex::GpuArray<amrex::Real, nWtsSum>& bWts,
+        amrex::GpuArray<amrex::IntVect, nWtsSum>& bCells) const
     {
         constexpr int nWtsXYZ[3][3] = {
             {(degX + 1), degX, degX},  // number of 2-form x,y,z-field weights in X-direction
@@ -503,7 +503,7 @@ public:
                                 for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
                                 for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
 
-                const amrex::Real sCoeff =
+                amrex::Real const sCoeff =
                     ((ndir == 0)
                          ? eval_b_spline<complement_form<Field::PrimalTwoForm>(), Direction::xDir>(
                                ii, jj, kk)
@@ -537,8 +537,8 @@ public:
      * @param s the array in which the results will be stored
      */
     template <int degree, unsigned int length>
-    AMREX_GPU_HOST_DEVICE constexpr void spline_eval (const amrex::Real xRef,
-                                                      amrex::GpuArray<amrex::Real, length> &s) const
+    AMREX_GPU_HOST_DEVICE constexpr void spline_eval (amrex::Real const xRef,
+                                                      amrex::GpuArray<amrex::Real, length>& s) const
     {
         s = cardinal_b_splines<degree, length>(xRef);
     }
@@ -570,16 +570,16 @@ public:
      * @param dxInverse Inverse of the cell size in all three directions
      */
     AMREX_GPU_HOST_DEVICE SplineWithPrimitive (
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse) :
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& position,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
         m_firstIndexOld = {};
 
         m_primitiveNew = {};
 
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> refOffsets = {
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const refOffsets = {
             AMREX_D_DECL(this->template init_b_splines_at_positions<xDir>(position[xDir], plo[xDir],
                                                                           dxInverse[xDir]),
                          this->template init_b_splines_at_positions<yDir>(position[yDir], plo[yDir],
@@ -638,13 +638,13 @@ public:
      * @param dxInverseDir inverse of the cell size in the given direction
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update_1d_splines (const amrex::Real position,
-                                                  const amrex::Real plo,
-                                                  const amrex::Real dxInverseDir)
+    AMREX_GPU_HOST_DEVICE void update_1d_splines (amrex::Real const position,
+                                                  amrex::Real const plo,
+                                                  amrex::Real const dxInverseDir)
     {
         this->m_firstIndexOld[dir] = std::move(this->m_firstIndex[dir]);
 
-        const amrex::Real refOffset =
+        amrex::Real const refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
@@ -671,7 +671,7 @@ public:
      * @param refOffset Normalized offset position of the particle
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update_1d_primitive (const amrex::Real refOffset)
+    AMREX_GPU_HOST_DEVICE void update_1d_primitive (amrex::Real const refOffset)
     {
         if (this->m_firstIndex[dir] < this->m_firstIndexOld[dir])
         {
@@ -698,9 +698,9 @@ public:
      * @param i, j, k The loop indices, with i the index in @ref compute_primitive_difference
      */
     template <Direction pDir>
-    AMREX_GPU_HOST_DEVICE inline amrex::Dim3 select_primitive_cellindex (const int i,
-                                                                         const int j,
-                                                                         const int k)
+    AMREX_GPU_HOST_DEVICE inline amrex::Dim3 select_primitive_cellindex (int const i,
+                                                                         int const j,
+                                                                         int const k)
     {
         if constexpr (pDir == xDir)
         {
@@ -735,12 +735,12 @@ public:
      */
     template <Direction dir, Impl::PrimitiveDifferenceRegion region>
     AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx, const int index) const
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx, int const index) const
     {
         using namespace Impl; // utility functions for this function
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
-        const int localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
+        int const localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
 
         if (this->m_primitiveOrders[dir] == oldFirst)
         {
@@ -798,11 +798,11 @@ public:
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE inline amrex::Real compute_primitive_difference (
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx, const int index) const
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx, int const index) const
     {
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
-        const int localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
+        int const localSize = std::abs(this->m_firstIndex[dir] - this->m_firstIndexOld[dir]) + deg;
         if (index >= localSize || index < 0)
         {
             return 0;
@@ -839,7 +839,7 @@ public:
      */
     template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE inline constexpr void primitive_eval (
-        const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
+        amrex::Real const xRef, amrex::GpuArray<amrex::Real, length>& s) const
     {
         s = cardinal_b_splines_primitive<degree, length>(xRef);
     }
@@ -872,10 +872,10 @@ public:
      * @param dx Cell size in all three directions x, y and z (It's an array)
      */
     AMREX_GPU_HOST_DEVICE SplineWithFirstDerivative (
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &position,
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &plo,
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dxInverse,
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> &dx) :
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& position,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dxInverse,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
         m_cellSplineFirstDerivs = {};
@@ -919,12 +919,12 @@ public:
      * @param dxDir cell size in the given direction
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (const amrex::Real position,
-                                                           const amrex::Real plo,
-                                                           const amrex::Real dxInverseDir,
-                                                           const amrex::Real dxDir)
+    AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (amrex::Real const position,
+                                                           amrex::Real const plo,
+                                                           amrex::Real const dxInverseDir,
+                                                           amrex::Real const dxDir)
     {
-        const amrex::Real refOffset =
+        amrex::Real const refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);
 
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
@@ -954,7 +954,7 @@ public:
      */
     template <int degree, unsigned int length>
     AMREX_GPU_HOST_DEVICE inline constexpr void first_derivative_eval (
-        const amrex::Real xRef, amrex::GpuArray<amrex::Real, length> &s) const
+        amrex::Real const xRef, amrex::GpuArray<amrex::Real, length>& s) const
     {
         s = cardinal_b_splines_first_derivative<degree>(xRef);
     }

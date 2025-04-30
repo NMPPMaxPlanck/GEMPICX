@@ -19,8 +19,8 @@
 
 namespace Gempic::Utils
 {
-inline amrex::Real gempic_norm (const amrex::MultiFab& multiF,
-                                const ComputationalDomain& ifr,
+inline amrex::Real gempic_norm (amrex::MultiFab const& multiF,
+                                ComputationalDomain const& ifr,
                                 int p)
 {
     BL_PROFILE("Gempic::Utils::gempic_norm()");

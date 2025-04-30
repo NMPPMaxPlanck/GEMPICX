@@ -31,8 +31,8 @@ class ElecFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 public:
     std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
     std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
-    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::edge>> m_constE;
-    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::face>> m_constD;
+    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge> const> m_constE;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face> const> m_constD;
 
     enum class ComputeMethod
     {
@@ -48,10 +48,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    ElecFieldEnergy(const std::string& rdName,
+    ElecFieldEnergy(std::string const& rdName,
                     int& indexNum,
                     bool isLastType,
-                    const std::string& fileName) :
+                    std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy()");
@@ -101,8 +101,8 @@ public:
      * epref_ep0 is the vacuum permittivity
      */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>&) final
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const&) final
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::compute_diags()");
 
@@ -130,16 +130,16 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * compute_missing_fields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
+    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::choose_computation_method()");
         using namespace Forms;
         if (fieldMap.count("Dx") && fieldMap.count("Dy") && fieldMap.count("Dz") &&
             fieldMap.count("Ex") && fieldMap.count("Ey") && fieldMap.count("Ez"))
         {
-            this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+            this->m_constE = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
                 this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
-            this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+            this->m_constD = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
                 this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
             return ComputeMethod::missingNone;
         }
@@ -149,7 +149,7 @@ private:
                 (!fieldMap.count("Dx") || !fieldMap.count("Dy") || !fieldMap.count("Dz")))
             {
                 int nComps{fieldMap["Ex"].nComp()};
-                this->m_constE = std::make_unique<const DeRhamField<Grid::primal, Space::edge>>(
+                this->m_constE = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
                     this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
 
                 this->m_D =
@@ -161,7 +161,7 @@ private:
                      (!fieldMap.count("Ex") || !fieldMap.count("Ey") || !fieldMap.count("Ez")))
             {
                 int nComps{fieldMap["Dx"].nComp()};
-                this->m_constD = std::make_unique<const DeRhamField<Grid::dual, Space::face>>(
+                this->m_constD = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
                     this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
 
                 this->m_E = std::make_unique<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
@@ -192,9 +192,9 @@ private:
      * This function computes the electric field energy (EF) component wise:
      * epref_ep0 is the vacuum permittivity
      */
-    void update_data (const Forms::DeRhamField<Grid::primal, Space::edge>& fieldE,
-                      const Forms::DeRhamField<Grid::dual, Space::face>& fieldD,
-                      const amrex::Periodicity& periodicity)
+    void update_data (Forms::DeRhamField<Grid::primal, Space::edge> const& fieldE,
+                      Forms::DeRhamField<Grid::dual, Space::face> const& fieldD,
+                      amrex::Periodicity const& periodicity)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::update_data()");
 

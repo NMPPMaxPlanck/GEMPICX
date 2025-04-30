@@ -8,8 +8,8 @@
 using namespace Gempic::FieldSolvers;
 using namespace Gempic::Forms;
 
-FFTSolver::FFTSolver(const ComputationalDomain& compDom,
-                     const int hodgeDegree,
+FFTSolver::FFTSolver(ComputationalDomain const& compDom,
+                     int const hodgeDegree,
                      HodgeScheme hodgeScheme) :
     m_compDom{compDom}
 {
@@ -29,9 +29,9 @@ FFTSolver::FFTSolver(const ComputationalDomain& compDom,
 
     //dimensions in x, y and z directions
     GEMPIC_D_EXCL(int Ny = 0;, int Nz = 0;, ) // nvcc issues a warning when using const
-    AMREX_D_TERM(const int Nx = compDom.box().length(xDir);
-                 , const int Ny = compDom.box().length(yDir);
-                 , const int Nz = compDom.box().length(zDir);)
+    AMREX_D_TERM(int const Nx = compDom.box().length(xDir);
+                 , int const Ny = compDom.box().length(yDir);
+                 , int const Nz = compDom.box().length(zDir);)
 
     // sizes in x, y and z directions
     auto dx = compDom.cell_size_array();
@@ -152,7 +152,7 @@ void FFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
 
         auto const& rhoMDataPtr = rho.m_data.array(mfi);
 
-        const amrex::Box& bx = mfi.fabbox();
+        amrex::Box const& bx = mfi.fabbox();
 
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
                            { rhoFftPtr(i, j, k) = rhoMDataPtr(i, j, k); });
@@ -193,7 +193,7 @@ void FFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
 
         auto const& phiMDataPtr = phi.m_data.array(mfi);
 
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
 
         amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
                            { phiMDataPtr(i, j, k) = phiFftPtr(i, j, k); });

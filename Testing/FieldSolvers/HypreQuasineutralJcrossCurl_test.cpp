@@ -41,7 +41,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
     amrex::Array<amrex::Parser, 3> m_parserE;
@@ -55,15 +55,15 @@ public:
     HypreQuasineutralJcrossCurlTest()
     {
 #if AMREX_SPACEDIM == 2
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x+y)", "sin(x)"};
-        const std::string analyticalRho = "4";
-        const amrex::Array<std::string, 3> analyticalRHS = {
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(x+y)", "sin(x)"};
+        std::string const analyticalRho = "4";
+        amrex::Array<std::string, 3> const analyticalRHS = {
             "sin(x)*cos(x+y) + sin(y-x) + 4*sin(y)", "sin(x+y)*(cos(y) - cos(x+y)) + 4*sin(x+y)",
             "-sin(x+y)*cos(x) + 4*sin(x)"};
 #elif AMREX_SPACEDIM == 3
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
-        const std::string analyticalRho = "3";
-        const amrex::Array<std::string, 3> analyticalRHS = {
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
+        std::string const analyticalRho = "3";
+        amrex::Array<std::string, 3> const analyticalRHS = {
             "sin(y-x) + 3*sin(y)", "sin(z-y) + 3*sin(z)", "sin(x-z) + 3*sin(x)"};
 #endif
 
@@ -100,7 +100,7 @@ public:
         Gempic::Io::Parameters parameters{};
 
         // Initialize computational_domain
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize particle groups
@@ -116,14 +116,14 @@ public:
         ions.resize(1);
         ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
 
-        const int numParticles{GEMPIC_D_MULT(n, n, n)};
+        int const numParticles{GEMPIC_D_MULT(n, n, n)};
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
         amrex::Array<amrex::Real, numParticles> weights;
 
         int i{0}, j{0}, k{0};
-        const auto dx{infra.cell_size_array()};
+        auto const dx{infra.cell_size_array()};
 
         GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
                             for (k = 0; k < n; k++))

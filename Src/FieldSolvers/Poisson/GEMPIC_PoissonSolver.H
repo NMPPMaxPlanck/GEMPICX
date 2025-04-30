@@ -28,11 +28,11 @@ namespace Impl
 /// @brief The function used to select a specific poisson solver method
 std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver(
     std::shared_ptr<DeRhamComplex> deRham,
-    const ComputationalDomain& infra,
-    const std::string& solver,
-    const amrex::Real relTol = 1e-10,
-    const amrex::Real absTol = 1e-12,
-    const bool tolGiven = false);
+    ComputationalDomain const& infra,
+    std::string const& solver,
+    amrex::Real const relTol = 1e-10,
+    amrex::Real const absTol = 1e-12,
+    bool const tolGiven = false);
 } // namespace Impl
 
 /**
@@ -42,7 +42,7 @@ std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver(
  * @param infra
  */
 inline std::unique_ptr<PoissonSolverMethod> make_poisson_solver (
-    std::shared_ptr<DeRhamComplex> deRham, const Gempic::ComputationalDomain& infra)
+    std::shared_ptr<DeRhamComplex> deRham, Gempic::ComputationalDomain const& infra)
 {
     Gempic::Io::Parameters params("PoissonSolver", "function make_poisson_solver");
     // Solver defaults:
@@ -87,7 +87,7 @@ class AmrexSolver : public PoissonSolverMethod
     amrex::Real m_absTol;
 
 public:
-    AmrexSolver(const ComputationalDomain& compDom,
+    AmrexSolver(ComputationalDomain const& compDom,
                 int maxCoarseningLevel,
                 int maxIter,
                 int maxFmgIter,
@@ -102,7 +102,7 @@ public:
 };
 
 void subtract_constant_part(DeRhamField<Grid::dual, Space::cell>& rho,
-                            const ComputationalDomain& compDom);
+                            ComputationalDomain const& compDom);
 
 } // namespace Gempic::FieldSolvers
 #endif

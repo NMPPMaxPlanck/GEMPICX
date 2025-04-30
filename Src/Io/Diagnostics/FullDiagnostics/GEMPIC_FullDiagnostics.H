@@ -70,10 +70,10 @@ public:
     }
 
     /** Initialize pointers to main fields and allocate output multifab m_mf_outputs. */
-    void init_data (const ComputationalDomain& compDom,
-                    const std::map<std::string, const amrex::MultiFab>& fieldMap,
-                    const std::map<std::string, const amrex::Real>& fieldsScaling,
-                    const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& ions)
+    void init_data (ComputationalDomain const& compDom,
+                    std::map<std::string, amrex::MultiFab const> const& fieldMap,
+                    std::map<std::string, amrex::Real const> const& fieldsScaling,
+                    std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& ions)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::init_data()");
         // initialize member variables and arrays in base class::Diagnostics
@@ -289,13 +289,13 @@ private:
      * have the identical names.
      */
     DiagnosticType get_diag_type (
-        const std::map<std::string, const amrex::MultiFab>& fieldMap,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& particles)
+        std::map<std::string, amrex::MultiFab const> const& fieldMap,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::get_diag_type()");
         bool particleType{false};
         bool fieldType{false};
-        for (const auto& diagName : m_diagVarnames)
+        for (auto const& diagName : m_diagVarnames)
         {
             if (fieldMap.find(diagName) != fieldMap.end())
             {
@@ -351,10 +351,10 @@ private:
      */
 
     void initialize_field_operators_and_buffer_data (
-        const ComputationalDomain& compDom,
-        const std::map<std::string, const amrex::MultiFab>& fieldMap,
-        const std::map<std::string, const amrex::Real>& fieldsScaling,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& particles)
+        ComputationalDomain const& compDom,
+        std::map<std::string, amrex::MultiFab const> const& fieldMap,
+        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::initialize_field_operators_and_buffer_data()");
         using namespace Impl;

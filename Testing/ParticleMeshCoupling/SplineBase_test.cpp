@@ -24,9 +24,9 @@ template <int degX, int degY, int degZ>
 class MockSpline : public ParticleMeshCoupling::SplineBase<degX, degY, degZ>
 {
 public:
-    MockSpline(amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &position,
-               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &plo,
-               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dxInverse) :
+    MockSpline(amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& position,
+               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
+               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dxInverse) :
         ParticleMeshCoupling::SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
     }
@@ -39,12 +39,12 @@ public:
 };
 
 /* Initialize the infrastructure */
-inline ComputationalDomain get_compdom (const amrex::IntVect &nCell,
-                                        const amrex::IntVect &maxGridSize)
+inline ComputationalDomain get_compdom (amrex::IntVect const& nCell,
+                                        amrex::IntVect const& maxGridSize)
 {
-    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10, 10, 10)};
-    const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10, 10, 10)};
+    amrex::Array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
                                amrex::CoordSys::cartesian);
@@ -57,14 +57,14 @@ class SplineBaseTest : public testing::Test
 {
 protected:
     // Degree of splines in each direction
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
 
-    static const int s_vDim{3};
-    static const int s_numSpec{1};
-    static const int s_spec{0};
-    const int m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
+    static int const s_vDim{3};
+    static int const s_numSpec{1};
+    static int const s_spec{0};
+    int const m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
 
     ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
@@ -102,14 +102,14 @@ class SplineBaseTestCustomInfrastructure : public testing::Test
 protected:
     Io::Parameters m_parameters{};
     // Degree of splines in each direction
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
 
-    static const int s_vDim{3};
-    static const int s_numSpec{1};
-    static const int s_spec{0};
-    const int m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
+    static int const s_vDim{3};
+    static int const s_numSpec{1};
+    static int const s_spec{0};
+    int const m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
     ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
 
@@ -141,7 +141,7 @@ protected:
 TEST_F(SplineBaseTest, SplineConstructorTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -151,12 +151,12 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const auto &particles{pti.GetArrayOfStructs()};
-        const auto *const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
@@ -186,8 +186,8 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
 TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
 {
     /* Initialize the infrastructure */
-    const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
+    amrex::IntVect const nCell{AMREX_D_DECL(8, 4, 2)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 4, 2)};
 
     ComputationalDomain infra = get_compdom(nCell, maxGridSize);
 
@@ -196,7 +196,7 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
     m_particleGroup[0] = std::make_unique<ParticleGroups<s_vDim>>(0, infra);
 
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -205,12 +205,12 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const auto &particles{pti.GetArrayOfStructs()};
-        const auto *const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
@@ -242,7 +242,7 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
 TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -252,12 +252,12 @@ TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const auto &particles{pti.GetArrayOfStructs()};
-        const auto *const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
@@ -291,7 +291,7 @@ TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
 TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -301,12 +301,12 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const auto &particles{pti.GetArrayOfStructs()};
-        const auto *const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
@@ -336,7 +336,7 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
 TEST_F(SplineBaseTest, SplineEvalBSplineTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -346,12 +346,12 @@ TEST_F(SplineBaseTest, SplineEvalBSplineTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const auto &particles{pti.GetArrayOfStructs()};
-        const auto *const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
@@ -387,7 +387,7 @@ TEST_F(SplineBaseTest, SplineEvalBSplineTest)
 TEST_F(SplineBaseTest, SplineSplineEvalTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -397,12 +397,12 @@ TEST_F(SplineBaseTest, SplineSplineEvalTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const auto &particles{pti.GetArrayOfStructs()};
-        const auto *const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)

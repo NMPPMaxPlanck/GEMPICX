@@ -18,7 +18,7 @@
 
 namespace
 {
-const std::string defaultLevelPrefix{"Level_"};
+std::string const defaultLevelPrefix{"Level_"};
 }
 
 /**
@@ -34,15 +34,15 @@ public:
 
     /** Flush fields and particles to plotfile */
     void write_to_file (
-        const amrex::Vector<std::string>& varnames,
-        const amrex::MultiFab& mf,
+        amrex::Vector<std::string> const& varnames,
+        amrex::MultiFab const& mf,
         amrex::Geometry& geom,
-        const int iteration,
-        const double time,
-        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>&
+        int const iteration,
+        double const time,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const&
             particles,
         int nlev,
-        const std::string& prefix,
+        std::string const& prefix,
         int fileMinDigits,
         bool plotParticles,
         int bufferID = 1,
@@ -50,7 +50,7 @@ public:
     {
         BL_PROFILE("FlushFormatPlotfile::write_to_file()");
         std::string filename{amrex::Concatenate(prefix, iteration, fileMinDigits)};
-        const amrex::VisMF::Header::Version currentVersion = amrex::VisMF::GetHeaderVersion();
+        amrex::VisMF::Header::Version const currentVersion = amrex::VisMF::GetHeaderVersion();
 
         amrex::Print() << "Writing plotfile " + filename << "\n";
 
@@ -61,9 +61,9 @@ public:
         if (plotParticles)
         {
             // Particle Info -------------------------------------------------------------
-            const amrex::Vector<int>& writeIntComp = {};
-            const amrex::Vector<std::string>& intCompNames = {};
-            const amrex::Vector<int> writeRealComp(vdim + ndata, 1);
+            amrex::Vector<int> const& writeIntComp = {};
+            amrex::Vector<std::string> const& intCompNames = {};
+            amrex::Vector<int> const writeRealComp(vdim + ndata, 1);
 
             for (auto& particleSpecies : particles)
             {
@@ -80,7 +80,7 @@ public:
     }
 
     /** Write general info of the run into the plotfile */
-    void write_job_info (const std::string& dir, const amrex::Geometry& geom) const
+    void write_job_info (std::string const& dir, amrex::Geometry const& geom) const
     {
         BL_PROFILE("FlushFormatPlotfile::write_job_info()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -89,7 +89,7 @@ public:
             std::ofstream jobInfoFile;
             std::string fullPathJobInfoFile = dir;
 
-            const std::string prettyLine = std::string(78, '=') + "\n";
+            std::string const prettyLine = std::string(78, '=') + "\n";
             //        std::string OtherLine = std::string(78, '-') + "\n";
             //        std::string SkipSpace = std::string(8, ' ') + "\n";
 
@@ -198,7 +198,7 @@ public:
     }
 
     /** Write WarpX-specific plotfile header */
-    void write_warp_x_header (const std::string& name, amrex::Geometry& geom) const
+    void write_warp_x_header (std::string const& name, amrex::Geometry& geom) const
     {
         BL_PROFILE("FlushFormatPlotfile::write_warp_x_header()");
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -206,7 +206,7 @@ public:
             amrex::VisMF::IO_Buffer ioBuffer(amrex::VisMF::IO_Buffer_Size);
             std::ofstream headerFile;
             headerFile.rdbuf()->pubsetbuf(ioBuffer.dataPtr(), ioBuffer.size());
-            const std::string headerFileName(name + "/GEMPICXHeader");
+            std::string const headerFileName(name + "/GEMPICXHeader");
             headerFile.open(headerFileName.c_str(),
                             std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
             if (!headerFile.good())

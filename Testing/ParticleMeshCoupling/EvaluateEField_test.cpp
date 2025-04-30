@@ -24,18 +24,18 @@ namespace
 // execution on GPU and call that function from the unit test because of how GTest creates tests
 // within a TEST_F fixture.
 template <int vDim, int degX, int degY, int degZ>
-void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
+void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
                                   DeRhamField<Grid::primal, Space::edge>& E,
                                   ComputationalDomain& infra)
 {
-    const long np{pti.numParticles()};
-    const auto& particles{pti.GetArrayOfStructs()};
-    const auto partData{particles().data()};
+    long const np{particleGrid.numParticles()};
+    auto const& particles{particleGrid.GetArrayOfStructs()};
+    auto const partData{particles().data()};
     amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> efieldsPtr(2);
     amrex::GpuArray<amrex::Real, vDim>* efields = efieldsPtr.data();
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
-    for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.m_data[cc])[pti].array();
+    for (int cc{0}; cc < vDim; cc++) eArray[cc] = (E.m_data[cc])[particleGrid].array();
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
     amrex::ParallelFor(np,
@@ -66,12 +66,12 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
 }
 
 /* Initialize the infrastructure */
-inline ComputationalDomain get_compdom (const amrex::IntVect& nCell,
-                                        const amrex::IntVect& maxGridSize)
+inline ComputationalDomain get_compdom (amrex::IntVect const& nCell,
+                                        amrex::IntVect const& maxGridSize)
 {
-    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10, 10, 10)};
-    const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10, 10, 10)};
+    amrex::Array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
                                amrex::CoordSys::cartesian);
@@ -81,16 +81,16 @@ inline ComputationalDomain get_compdom (const amrex::IntVect& nCell,
 class EvaluateEFieldTest : public testing::Test
 {
 protected:
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
-    inline static const int s_hodgeDegree{2};
+    inline static int const s_hodgeDegree{2};
 
-    static const int s_numSpec{1};
-    static const int s_vDim{3};
-    static const int s_spec{0};
+    static int const s_numSpec{1};
+    static int const s_vDim{3};
+    static int const s_spec{0};
 
     ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
@@ -125,7 +125,7 @@ protected:
 TEST_F(EvaluateEFieldTest, NullTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -137,9 +137,9 @@ TEST_F(EvaluateEFieldTest, NullTest)
 
     // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"0.0", "0.0", "0.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"0.0", "0.0", "0.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -156,18 +156,18 @@ TEST_F(EvaluateEFieldTest, NullTest)
     // Particle iteration ... over one particle. Hopefully.
 
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         particleLoopRun = true;
 
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
-        const auto& particles{pti.GetArrayOfStructs()};
-        const auto* const partData{particles().data()};
+        auto const& particles{particleGrid.GetArrayOfStructs()};
+        auto const* const partData{particles().data()};
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> eArray;
-        for (int cc{0}; cc < s_vDim; cc++) eArray[cc] = (E.m_data[cc])[pti].array();
+        for (int cc{0}; cc < s_vDim; cc++) eArray[cc] = (E.m_data[cc])[particleGrid].array();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
         for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
@@ -190,7 +190,7 @@ TEST_F(EvaluateEFieldTest, NullTest)
 TEST_F(EvaluateEFieldTest, SingleParticleNode)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     // Particle at position (0,0,0) in box (0,0,0)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(0, 0, 0)}}};
@@ -203,9 +203,9 @@ TEST_F(EvaluateEFieldTest, SingleParticleNode)
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -218,19 +218,19 @@ TEST_F(EvaluateEFieldTest, SingleParticleNode)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, E, m_infra);
+        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, E, m_infra);
     }
 }
 
 TEST_F(EvaluateEFieldTest, SingleParticleMiddle)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -245,9 +245,9 @@ TEST_F(EvaluateEFieldTest, SingleParticleMiddle)
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -260,19 +260,19 @@ TEST_F(EvaluateEFieldTest, SingleParticleMiddle)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[0])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, E, m_infra);
+        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, E, m_infra);
     }
 }
 
 TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -287,9 +287,9 @@ TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -302,18 +302,18 @@ TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[0])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, E, m_infra);
+        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, E, m_infra);
     }
 }
 
 TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
 {
-    const int numParticles{2};
+    int const numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -329,9 +329,9 @@ TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -344,18 +344,18 @@ TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[0])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, E, m_infra);
+        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, E, m_infra);
     }
 }
 
 TEST_F(EvaluateEFieldTest, DoubleParticleOverlap)
 {
-    const int numParticles{2};
+    int const numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -371,9 +371,9 @@ TEST_F(EvaluateEFieldTest, DoubleParticleOverlap)
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -386,12 +386,12 @@ TEST_F(EvaluateEFieldTest, DoubleParticleOverlap)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[0])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, E, m_infra);
+        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, E, m_infra);
     }
 }
 
@@ -405,9 +405,9 @@ TEST_F(EvaluateEFieldTest, Scaling)
     Io::Parameters parameters{};
 
     /* Initialize the infrastructure with cell sizes different from 1*/
-    const amrex::IntVect nCell{AMREX_D_DECL(8, 4, 2)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 4, 2)};
-    const int hodgeDegree{2};
+    amrex::IntVect const nCell{AMREX_D_DECL(8, 4, 2)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 4, 2)};
+    int const hodgeDegree{2};
 
     ComputationalDomain infra = get_compdom(nCell, maxGridSize);
 
@@ -420,7 +420,7 @@ TEST_F(EvaluateEFieldTest, Scaling)
     m_particleGroup[0] = std::make_unique<ParticleGroups<s_vDim>>(0, infra);
 
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     auto dx = infra.geometry().CellSizeArray();
     // Add particle in the middle of final cell to check periodic boundary conditions
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -434,9 +434,9 @@ TEST_F(EvaluateEFieldTest, Scaling)
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
-    const amrex::Array<std::string, 3> analyticalFuncE{"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncE{"1.0", "1.0", "1.0"};
 
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -449,12 +449,12 @@ TEST_F(EvaluateEFieldTest, Scaling)
 
     DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[0])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(pti, E, infra);
+        update_e_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, E, infra);
     }
 }
 } // namespace

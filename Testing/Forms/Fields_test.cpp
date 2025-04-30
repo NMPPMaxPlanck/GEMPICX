@@ -18,10 +18,10 @@ using namespace Forms;
 class FieldsTest : public testing::Test
 {
 protected:
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
 
@@ -29,7 +29,7 @@ protected:
     ComputationalDomain m_infra;
 
     int m_nComps{1};
-    static const int s_gSize{5};
+    static int const s_gSize{5};
 
     FieldsTest() : m_infra{Gempic::Test::Utils::get_compdom(s_gSize)} {}
 };

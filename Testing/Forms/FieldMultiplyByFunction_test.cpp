@@ -19,10 +19,10 @@ class FieldMultiplyByFunctionTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
@@ -31,7 +31,7 @@ protected:
     FieldMultiplyByFunctionTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
     {
         // Not checking particles
-        const int nGhostExtra{0};
+        int const nGhostExtra{0};
 
         m_parameters.set("nGhostExtra", nGhostExtra);
     }
@@ -42,20 +42,20 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
     constexpr int hodgeDegree{2};
 
 #if (AMREX_SPACEDIM == 1)
-    const std::string analyticalWeightFunc = "x";
+    std::string const analyticalWeightFunc = "x";
 #endif
 
 #if (AMREX_SPACEDIM == 2)
-    const std::string analyticalWeightFunc = "x * y";
+    std::string const analyticalWeightFunc = "x * y";
 #endif
 
 #if (AMREX_SPACEDIM == 3)
-    const std::string analyticalWeightFunc = "x * y * z";
+    std::string const analyticalWeightFunc = "x * y * z";
 #endif
 
-    const std::string analyticalOneFunc = "1.0";
+    std::string const analyticalOneFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> weightFunc;
     amrex::ParserExecutor<nVar> oneFunc;
     amrex::Parser weightParser;
@@ -85,7 +85,7 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
     for (amrex::MFIter mfi(A.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
         COMPARE_FIELDS(A.m_data[mfi].array(), aResult.m_data[mfi].array(), bx, m_tol);
     }
     ASSERT_TRUE(loopRun);
@@ -95,7 +95,7 @@ TEST_F(FieldMultiplyByFunctionTest, ZeroThreeForms)
     for (amrex::MFIter mfi(D.m_data); mfi.isValid(); ++mfi)
     {
         loopRun = true;
-        const amrex::Box& bx = mfi.validbox();
+        amrex::Box const& bx = mfi.validbox();
         COMPARE_FIELDS(D.m_data[mfi].array(), dResult.m_data[mfi].array(), bx, m_tol);
     }
     ASSERT_TRUE(loopRun);
@@ -106,8 +106,8 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
     constexpr int hodgeDegree{2};
 
 #if (AMREX_SPACEDIM == 1)
-    const std::string analyticalWeightFunc = "x";
-    const amrex::Array<std::string, 3> analyticalResultFunc = {
+    std::string const analyticalWeightFunc = "x";
+    amrex::Array<std::string, 3> const analyticalResultFunc = {
         "x",
         "x",
         "x",
@@ -115,8 +115,8 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
 #endif
 
 #if (AMREX_SPACEDIM == 2)
-    const std::string analyticalWeightFunc = "x * y";
-    const amrex::Array<std::string, 3> analyticalResultFunc = {
+    std::string const analyticalWeightFunc = "x * y";
+    amrex::Array<std::string, 3> const analyticalResultFunc = {
         "x * y",
         "x * y",
         "x * y",
@@ -124,21 +124,21 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
 #endif
 
 #if (AMREX_SPACEDIM == 3)
-    const std::string analyticalWeightFunc = "x * y * z";
-    const amrex::Array<std::string, 3> analyticalResultFunc = {
+    std::string const analyticalWeightFunc = "x * y * z";
+    amrex::Array<std::string, 3> const analyticalResultFunc = {
         "x * y * z",
         "x * y * z",
         "x * y * z",
     };
 #endif
 
-    const amrex::Array<std::string, 3> analyticalOneFunc = {
+    amrex::Array<std::string, 3> const analyticalOneFunc = {
         "1",
         "1",
         "1",
     };
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> weightFunc;
     amrex::Parser weightParser;
 
@@ -180,7 +180,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         for (amrex::MFIter mfi(B.m_data[comp]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            const amrex::Box& bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS((B.m_data[comp])[mfi].array(), (bResult.m_data[comp])[mfi].array(), bx,
                            m_tol);
         }
@@ -193,7 +193,7 @@ TEST_F(FieldMultiplyByFunctionTest, OneTwoForms)
         for (amrex::MFIter mfi(C.m_data[comp]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            const amrex::Box& bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS((C.m_data[comp])[mfi].array(), (cResult.m_data[comp])[mfi].array(), bx,
                            m_tol);
         }

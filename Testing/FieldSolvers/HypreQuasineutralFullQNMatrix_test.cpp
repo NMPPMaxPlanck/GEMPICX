@@ -40,7 +40,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
     amrex::Array<amrex::Parser, 3> m_parserE;
@@ -50,16 +50,16 @@ public:
 
     HypreQuasineutralFullQNMatrixTest()
     {
-        const std::string analyticalRho = "4";
+        std::string const analyticalRho = "4";
 #if AMREX_SPACEDIM == 2
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(x+y)", "sin(x)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(x+y)", "sin(x)"};
+        amrex::Array<std::string, 3> const analyticalRHS = {
             "-sin(x+y)+(1+4)*sin(y) + (-0.75)*(sin(x)*cos(x+y) + sin(y-x))",
             "(1+4)*sin(x+y) + (-0.75)*sin(x+y)*(cos(y) - cos(x+y))",
             "(1+4)*sin(x) - (-0.75)*sin(x+y)*cos(x)"};
 #elif AMREX_SPACEDIM == 3
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {"(1+4)*sin(y) + (-0.75)*sin(y-x)",
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
+        amrex::Array<std::string, 3> const analyticalRHS = {"(1+4)*sin(y) + (-0.75)*sin(y-x)",
                                                             "(1+4)*sin(z) + (-0.75)*sin(z-y)",
                                                             "(1+4)*sin(x) + (-0.75)*sin(x-z)"};
 #endif
@@ -90,7 +90,7 @@ public:
         // For studies other than convergence, this should be in SetUpTestSuite under Grid
         // parameters
         Gempic::Io::Parameters parameters{};
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         // Initialize computational_domain
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
@@ -107,7 +107,7 @@ public:
         ions.resize(1);
         ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
 
-        const int numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
+        int const numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
@@ -120,7 +120,7 @@ public:
                          {AMREX_D_DECL(0.0, 0.0, 0.5)})};
 
         int i{0}, j{0}, k{0};
-        const auto dx{infra.cell_size_array()};
+        auto const dx{infra.cell_size_array()};
 
         for (int ndir = 0; ndir < AMREX_SPACEDIM; ++ndir)
         {

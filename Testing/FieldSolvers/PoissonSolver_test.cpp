@@ -23,11 +23,11 @@ using namespace FieldSolvers;
 
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(M_PI, M_PI, M_PI)};
-    const amrex::IntVect nCell{AMREX_D_DECL(16, 16, 16)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 8, 8)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(M_PI, M_PI, M_PI)};
+    amrex::IntVect const nCell{AMREX_D_DECL(16, 16, 16)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 8, 8)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -41,36 +41,36 @@ class PoissonSolverTest : public testing::Test
 {
     //protected:
 public:
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
 
     ComputationalDomain m_infra;
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
     PoissonSolverTest() : m_infra{get_compdom()}
     {
         /* Initialize the infrastructure */
-        const int nGhostExtra = 0;
+        int const nGhostExtra = 0;
 
         m_parameters.set("nGhostExtra", nGhostExtra);
 
         // Analytical rho and phi such that -Delta phi = rho
 #if AMREX_SPACEDIM == 1
-        const std::string analyticalRho = "cos(x)";
-        const std::string analyticalPhi = "cos(x)";
+        std::string const analyticalRho = "cos(x)";
+        std::string const analyticalPhi = "cos(x)";
 #elif AMREX_SPACEDIM == 2
-        const std::string analyticalRho = "10*cos(x)*cos(3*y)";
-        const std::string analyticalPhi = "cos(x)*cos(3*y)";
+        std::string const analyticalRho = "10*cos(x)*cos(3*y)";
+        std::string const analyticalPhi = "cos(x)*cos(3*y)";
 #elif AMREX_SPACEDIM == 3
-        const std::string analyticalRho = "3*cos(x)*cos(y)*cos(z)";
-        const std::string analyticalPhi = "cos(x)*cos(y)*cos(z)";
+        std::string const analyticalRho = "3*cos(x)*cos(y)*cos(z)";
+        std::string const analyticalPhi = "cos(x)*cos(y)*cos(z)";
 #endif
 
         m_parserRho.define(analyticalRho);
@@ -84,7 +84,7 @@ public:
 
 TEST_F(PoissonSolverTest, PoissonAMReX)
 {
-    const int hodgeDegree{2};
+    int const hodgeDegree{2};
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
     // Define fields
@@ -104,7 +104,7 @@ TEST_F(PoissonSolverTest, PoissonAMReX)
     amrex::Real tol = 1e-1;
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
@@ -125,13 +125,13 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     deRham->hodge(rho, phiIn);
 
     auto cgHodge{make_conjugate_gradient<CGRhs, CGSol>(
-        deRham, [=] (CGRhs &rhs, CGSol &sol) { deRham->hodge(rhs, sol); })};
+        deRham, [=] (CGRhs& rhs, CGSol& sol) { deRham->hodge(rhs, sol); })};
     cgHodge.solve(phi, rho);
 
     amrex::Real tol = 1e-12;
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(phi.m_data.array(mfi), phiIn.m_data.array(mfi), bx, tol);
     }
 }
@@ -189,7 +189,7 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
     amrex::Real tol = tols[TestFixture::s_hodgeDegree / 2 - 1];
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }
@@ -278,7 +278,7 @@ TYPED_TEST(PoissonSolverTypedTest, AnalyticalLowTolerance)
     amrex::Real tol = 1e-1;
     for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(anPhi.m_data.array(mfi), phi.m_data.array(mfi), bx, tol);
     }
 }

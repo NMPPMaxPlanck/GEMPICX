@@ -21,9 +21,9 @@ using namespace Particle;
 
 void define_expected (amrex::MFIter& mfi,
                       amrex::MultiFab& mfAllDiagExpected,
-                      const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dx)
+                      amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx)
 {
-    const amrex::Box& bx = mfi.tilebox();
+    amrex::Box const& bx = mfi.tilebox();
     amrex::Array4<amrex::Real> const& expected = mfAllDiagExpected[mfi].array();
 
     ParallelFor(
@@ -44,11 +44,11 @@ void define_expected (amrex::MFIter& mfi,
 ComputationalDomain get_compdom ()
 {
     // 2pi(domainHi - domainLo) = k
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::IntVect const nCell{AMREX_D_DECL(8, 8, 8)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -58,13 +58,13 @@ class FullDiagnosticsTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     // particle data
-    static const int s_vdim{3};
-    static const int s_ndata{1};
+    static int const s_vdim{3};
+    static int const s_ndata{1};
 
     ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
@@ -195,36 +195,36 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     // Compare read and expected values
     for (amrex::MFIter mfi(mfAllDiag); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(mfAllDiag[mfi].array(), mfAllDiagExpected[mfi].array(), bx, ncomp);
     }
 }
 
-void create_input_file_to_select_operator (const std::string& operatorId)
+void create_input_file_to_select_operator (std::string const& operatorId)
 {
     // This part belongs in an input file when not doing testing
     Io::Parameters parameters("FullDiagnostics");
-    const std::string groupNames{"field5"};
+    std::string const groupNames{"field5"};
 
     parameters.set("groupNames", groupNames);
-    const std::string saveFolder = {"FullDiagnostics/scalingTest"};
+    std::string const saveFolder = {"FullDiagnostics/scalingTest"};
     parameters.set("saveFolder", saveFolder);
 
-    const std::string varNames{"rho"};
+    std::string const varNames{"rho"};
     parameters.set("field5.varNames", varNames);
     parameters.set("field5.saveInterval", 1);
-    const std::string custom{"Custom"};
+    std::string const custom{"Custom"};
     parameters.set("field5.outputProcessor", custom);
     parameters.set("field5.customID", operatorId);
 }
 
 // create and add lambda, (this one multiplies by a constant and cell centers)
-void add_custom_processor (const std::string& operatorId, double multiplicationFactor)
+void add_custom_processor (std::string const& operatorId, double multiplicationFactor)
 {
     Gempic::Io::add_output_processor(
         operatorId,
         [=] AMREX_GPU_DEVICE(amrex::Array4<amrex::Real> dst,
-                             const amrex::Array4<const amrex::Real> src, int nSrcComp, int i, int j,
+                             amrex::Array4<amrex::Real const> const src, int nSrcComp, int i, int j,
                              int k, double scaling, double ishift, double jshift, double kshift)
         {
             dst(i, j, k) = multiplicationFactor * 0.125 * scaling *
@@ -279,7 +279,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOperatorOutputProcessor)
     // Compare read and expected values
     for (amrex::MFIter mfi(resultMf); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(resultMf[mfi].array(), multipliedBy5Expected[mfi].array(), bx, ncomp);
     }
 }
@@ -290,9 +290,9 @@ class DumbOutputProcessor : public Gempic::Io::CustomOutputProcessor
 public:
     static inline int s_counter{0};
 
-    DumbOutputProcessor(const amrex::MultiFab& mfSrc,
-                        const amrex::Real scaling,
-                        const amrex::IntVect crseRatio) :
+    DumbOutputProcessor(amrex::MultiFab const& mfSrc,
+                        amrex::Real const scaling,
+                        amrex::IntVect const crseRatio) :
         CustomOutputProcessor{mfSrc, scaling, crseRatio}
     {
     }
@@ -304,20 +304,20 @@ public:
     }
 };
 
-void create_input_file_to_select_custom_strategy (const std::string& customId)
+void create_input_file_to_select_custom_strategy (std::string const& customId)
 {
     // This part belongs in an input file when not doing testing
     Io::Parameters parameters{"FullDiagnostics"};
-    const std::string customEmpty{"customEmpty"};
+    std::string const customEmpty{"customEmpty"};
     parameters.set("groupNames", customEmpty);
     std::string saveFolder = {"FullDiagnostics/CustomOutputProcessorTest"};
     parameters.set("saveFolder", saveFolder);
 
-    const std::string varNames{"phi"};
+    std::string const varNames{"phi"};
     parameters.set("customEmpty.varNames", varNames);
     parameters.set("customEmpty.saveInterval", 1);
 
-    const std::string custom{"Custom"};
+    std::string const custom{"Custom"};
     parameters.set("customEmpty.outputProcessor", custom);
     parameters.set("customEmpty.customID", customId);
 }
@@ -365,7 +365,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOutputProcessor)
     // Compare read and expected values
     for (amrex::MFIter mfi(resultMf); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(resultMf[mfi].array(), phi.m_data[mfi].array(), bx, ncomp);
     }
 }

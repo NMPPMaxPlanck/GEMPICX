@@ -9,9 +9,9 @@
 
 namespace Gempic::Io
 {
-CustomOutputProcessor::CustomOutputProcessor(const amrex::MultiFab& mfSrc,
-                                             const amrex::Real scaling,
-                                             const amrex::IntVect crseRatio) :
+CustomOutputProcessor::CustomOutputProcessor(amrex::MultiFab const& mfSrc,
+                                             amrex::Real const scaling,
+                                             amrex::IntVect const crseRatio) :
     ComputeDiagOutputProcessor{mfSrc.nComp(), crseRatio},
     m_mfSrc{amrex::MultiFab(mfSrc, amrex::make_alias, 0, mfSrc.nComp())},
     m_scaling{scaling}
@@ -23,7 +23,7 @@ void CustomOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dcomp*/) c
     amrex::Assert("This operator should be overridden!", __FILE__, __LINE__);
 }
 
-Impl::ConstructorType Impl::match_custom_id (const std::string& key)
+Impl::ConstructorType Impl::match_custom_id (std::string const& key)
 {
     if (CustomOutputProcessor::s_outputProcessorClassMap.find(key) !=
         CustomOutputProcessor::s_outputProcessorClassMap.end())
@@ -33,8 +33,8 @@ Impl::ConstructorType Impl::match_custom_id (const std::string& key)
     else if (CustomOperatorOutputProcessor::s_outputProcessorMap.find(key) !=
              CustomOperatorOutputProcessor::s_outputProcessorMap.end())
     {
-        return [=] (const amrex::MultiFab& mfSrc, const amrex::Real scaling,
-                    const amrex::IntVect crseRatio) -> std::unique_ptr<ComputeDiagOutputProcessor>
+        return [=] (amrex::MultiFab const& mfSrc, amrex::Real const scaling,
+                    amrex::IntVect const crseRatio) -> std::unique_ptr<ComputeDiagOutputProcessor>
         {
             return std::make_unique<CustomOperatorOutputProcessor> (
                 mfSrc, scaling, crseRatio,
@@ -49,7 +49,7 @@ Impl::ConstructorType Impl::match_custom_id (const std::string& key)
     }
 }
 
-void add_output_processor (const std::string& key, const Impl::CustomOperatorType& f)
+void add_output_processor (std::string const& key, Impl::CustomOperatorType const& f)
 {
     if (CustomOperatorOutputProcessor::s_outputProcessorMap.find(key) !=
         CustomOperatorOutputProcessor::s_outputProcessorMap.end())
@@ -63,15 +63,15 @@ void add_output_processor (const std::string& key, const Impl::CustomOperatorTyp
     }
 }
 
-CustomOperatorOutputProcessor::CustomOperatorOutputProcessor(const amrex::MultiFab& mfSrc,
-                                                             const amrex::Real scaling,
-                                                             const amrex::IntVect crseRatio,
-                                                             const CustomOperatorType& f) :
+CustomOperatorOutputProcessor::CustomOperatorOutputProcessor(amrex::MultiFab const& mfSrc,
+                                                             amrex::Real const scaling,
+                                                             amrex::IntVect const crseRatio,
+                                                             CustomOperatorType const& f) :
     CustomOutputProcessor{mfSrc, scaling, crseRatio}, m_f{f}
 {
     BL_PROFILE("CustomOperatorOutputProcessor::CustomOperatorOutputProcessor()");
 
-    const amrex::IntVect indexTypeSrc = mfSrc.boxArray().ixType().toIntVect();
+    amrex::IntVect const indexTypeSrc = mfSrc.boxArray().ixType().toIntVect();
     AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
                  , m_kshift = indexTypeSrc[zDir];)
 }
@@ -83,7 +83,7 @@ void CustomOperatorOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dc
 
     for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         amrex::Array4 dst = mfDst[mfi].array();
         amrex::Array4 const src = m_mfSrc[mfi].array();
 

@@ -18,8 +18,8 @@ int ComputeDiagOutputProcessor::n_comp() const { return m_ncomp; }
 
 namespace Impl
 {
-RawOutputProcessor::RawOutputProcessor(const amrex::MultiFab& mfSrc,
-                                       const amrex::IntVect crseRatio) :
+RawOutputProcessor::RawOutputProcessor(amrex::MultiFab const& mfSrc,
+                                       amrex::IntVect const crseRatio) :
     ComputeDiagOutputProcessor(mfSrc.nComp(), crseRatio),
     m_mfSrc(amrex::MultiFab(mfSrc, amrex::make_alias, 0, mfSrc.nComp()))
 {
@@ -35,15 +35,15 @@ void RawOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
     // mf_dst.ParallelCopy( *m_mf_src, 0, dcomp, m_mf_src->nComp() );
 }
 
-CellCenterOutputProcessor::CellCenterOutputProcessor(const amrex::MultiFab& mfSrc,
+CellCenterOutputProcessor::CellCenterOutputProcessor(amrex::MultiFab const& mfSrc,
                                                      amrex::Real scaling,
-                                                     const amrex::IntVect crseRatio) :
+                                                     amrex::IntVect const crseRatio) :
     ComputeDiagOutputProcessor(mfSrc.nComp(), crseRatio),
     m_mfSrc(amrex::MultiFab(mfSrc, amrex::make_alias, 0, mfSrc.nComp()))
 {
     BL_PROFILE("CellCenterOutputProcessor::CellCenterOutputProcessor()");
     m_scaling = scaling;
-    const amrex::IntVect indexTypeSrc = mfSrc.boxArray().ixType().toIntVect();
+    amrex::IntVect const indexTypeSrc = mfSrc.boxArray().ixType().toIntVect();
     AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
                  , m_kshift = indexTypeSrc[zDir];)
 }
@@ -57,7 +57,7 @@ void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) c
 
     for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         amrex::Array4 dst = mfDst[mfi].array();
         amrex::Array4 const src = m_mfSrc[mfi].array();
 

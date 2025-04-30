@@ -28,11 +28,11 @@ using namespace ParticleMeshCoupling;
 using namespace FieldSolvers;
 using namespace TimeLoop;
 
-void initialize_tensor (amrex::MFIter &mfi,
-                        amrex::MultiFab &mf,
+void initialize_tensor (amrex::MFIter& mfi,
+                        amrex::MultiFab& mf,
                         amrex::GpuArray<amrex::Real, 3> val)
 {
-    const amrex::Box &bx = mfi.tilebox();
+    amrex::Box const& bx = mfi.tilebox();
     amrex::Array4<amrex::Real> tensorArray = mf[mfi].array();
     ParallelFor(bx,
                 [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -43,8 +43,8 @@ void initialize_tensor (amrex::MFIter &mfi,
                 });
 }
 
-void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face> &D,
-                                 DeRhamField<Grid::primal, Space::edge> &E,
+void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face>& D,
+                                 DeRhamField<Grid::primal, Space::edge>& E,
                                  std::shared_ptr<Gempic::Forms::FDDeRhamComplex> deRham,
                                  amrex::Real vAlfven,
                                  amrex::Real somega)
@@ -75,7 +75,7 @@ void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face> &D,
     deRham->hodge_dk(D, E, tensor, deRham->scaling_eto_d()); //get D from E
 }
 
-int main (int argc, char *argv[])
+int main (int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
     BL_PROFILE_VAR("main()", pmain);
@@ -203,7 +203,7 @@ int main (int argc, char *argv[])
                 vAlfven = 1.0 / scalingOmega;
                 if (simType == "DriftKinetic")
                 {
-                    for (auto &particleSpecies : particleGroup)
+                    for (auto& particleSpecies : particleGroup)
                     {
                         if (particleSpecies->get_name() == "ions")
                         {
@@ -238,25 +238,24 @@ int main (int argc, char *argv[])
             {
                 J.m_data[cc].setVal(0.0);
             }
-            for (auto &particleSpecies : particleGroup)
+            for (auto& particleSpecies : particleGroup)
             {
                 amrex::Real charge = particleSpecies->get_charge();
 
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                     ++pti)
+                for (auto& particleGrid : *particleSpecies)
                 {
-                    const long np = pti.numParticles();
-                    auto *const particles = pti.GetArrayOfStructs()().data();
-                    auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-                    auto *const vx = pti.GetStructOfArrays().GetRealData(0).data();
-                    auto *const vy = pti.GetStructOfArrays().GetRealData(1).data();
-                    auto *const vz = pti.GetStructOfArrays().GetRealData(2).data();
+                    long const np = particleGrid.numParticles();
+                    auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                    auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vdim).data();
+                    auto* const vx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                    auto* const vy = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                    auto* const vz = particleGrid.GetStructOfArrays().GetRealData(2).data();
 
-                    amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
+                    amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
                     amrex::GpuArray<amrex::Array4<amrex::Real>, 3> jarr;
                     for (int cc = 0; cc < 3; cc++)
                     {
-                        jarr[cc] = (J.m_data[cc])[pti].array();
+                        jarr[cc] = (J.m_data[cc])[particleGrid].array();
                     }
 
                     auto plo{infra.geometry().ProbLoArray()};

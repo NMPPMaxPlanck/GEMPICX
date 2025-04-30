@@ -19,7 +19,7 @@ void initialize_tensor (amrex::MFIter& mfi,
                         amrex::MultiFab& mf,
                         amrex::GpuArray<amrex::Real, 3> val)
 {
-    const amrex::Box& bx = mfi.tilebox();
+    amrex::Box const& bx = mfi.tilebox();
     amrex::Array4<amrex::Real> tensorArray = mf[mfi].array();
     ParallelFor(bx,
                 [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -32,11 +32,11 @@ void initialize_tensor (amrex::MFIter& mfi,
 
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    const amrex::IntVect nCell{AMREX_D_DECL(2, 2, 2)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(2, 2, 2)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::IntVect const nCell{AMREX_D_DECL(2, 2, 2)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(2, 2, 2)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -46,10 +46,10 @@ class FieldMultiplyByMatrixTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
@@ -101,7 +101,7 @@ TEST_F(FieldMultiplyByMatrixTest, ConstField)
         for (amrex::MFIter mfi(D.m_data[comp]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            const amrex::Box& bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS((eOut.m_data[comp])[mfi].array(), (eResult.m_data[comp])[mfi].array(),
                            bx, m_tol);
         }
@@ -121,7 +121,7 @@ TEST_F(FieldMultiplyByMatrixTest, LinearFieldDiagTensor)
     constexpr int hodgeDegree{2};
 
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> analyticalWeightFunc = {
+    amrex::Array<std::string, 3> const analyticalWeightFunc = {
         "x",
         "x",
         "x",
@@ -129,7 +129,7 @@ TEST_F(FieldMultiplyByMatrixTest, LinearFieldDiagTensor)
 #endif
 
 #if (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> analyticalWeightFunc = {
+    amrex::Array<std::string, 3> const analyticalWeightFunc = {
         "x * y",
         "x * y",
         "x * y",
@@ -137,14 +137,14 @@ TEST_F(FieldMultiplyByMatrixTest, LinearFieldDiagTensor)
 #endif
 
 #if (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> analyticalWeightFunc = {
+    amrex::Array<std::string, 3> const analyticalWeightFunc = {
         "x + y + z",
         "x + y + z",
         "x + y + z",
     };
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<nVar>, 3> weightFunc;
     amrex::Array<amrex::Parser, 3> weightParser;
@@ -197,7 +197,7 @@ TEST_F(FieldMultiplyByMatrixTest, LinearFieldDiagTensor)
         for (amrex::MFIter mfi(C.m_data[comp]); mfi.isValid(); ++mfi)
         {
             loopRun = true;
-            const amrex::Box& bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             COMPARE_FIELDS((cOut.m_data[comp])[mfi].array(), (cResult.m_data[comp])[mfi].array(),
                            bx, m_tol);
         }

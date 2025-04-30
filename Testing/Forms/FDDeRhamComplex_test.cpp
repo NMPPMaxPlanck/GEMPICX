@@ -23,10 +23,10 @@ class FDDeRhamComplexTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
@@ -34,7 +34,7 @@ protected:
     FDDeRhamComplexTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
     {
         // Not checking particles
-        const int nGhostExtra{0};
+        int const nGhostExtra{0};
 
         m_parameters.set("nGhostExtra", nGhostExtra);
     }
@@ -44,9 +44,9 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
 {
     constexpr int hodgeDegree{2};
 
-    const std::string analyticalFunc = "1.0";
+    std::string const analyticalFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -84,9 +84,9 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg2)
 TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg4)
 {
     constexpr int hodgeDegree{4};
-    const std::string analyticalFunc = "1.0";
+    std::string const analyticalFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -125,9 +125,9 @@ TEST_F(FDDeRhamComplexTest, MatrixMultTestDeg6)
 {
     constexpr int hodgeDegree{6};
 
-    const std::string analyticalFunc = "1.0";
+    std::string const analyticalFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -196,9 +196,9 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestII)
 {
     constexpr int hodgeDegree{2};
 
-    const std::string analyticalFunc = "1.0";
+    std::string const analyticalFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -237,9 +237,9 @@ TEST_F(FDDeRhamComplexTest, HodgeFDThreeFormZeroFormTestIII)
 {
     constexpr int hodgeDegree{2};
 
-    const std::string analyticalFunc = "1.0";
+    std::string const analyticalFunc = "1.0";
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 

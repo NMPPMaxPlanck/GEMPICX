@@ -94,7 +94,7 @@ struct DeRhamField
     /**
      * @brief Construct Space::edge / Space::face fields and add name to fieldsDiagnostics map
      */
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar = 1) :
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::string const& diagName, int nVar = 1) :
         DeRhamField{drc} {};
     /**
      * @brief Construct Space::edge / Space::face fields of one variable from function array
@@ -104,7 +104,7 @@ struct DeRhamField
         DeRhamField{drc} {};
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
-                const std::string& diagName) :
+                std::string const& diagName) :
         DeRhamField{drc} {};
     /**
      * @brief Construct Space::edge / Space::face fields of nVar variables from vector of nVar
@@ -112,12 +112,12 @@ struct DeRhamField
      */
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs) :
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs) :
         DeRhamField{drc} {};
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
-        const std::string& diagName) :
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
+        std::string const& diagName) :
         DeRhamField{drc} {};
 
     /**
@@ -128,18 +128,18 @@ struct DeRhamField
         DeRhamField{drc} {};
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
-                const std::string& diagName) :
+                std::string const& diagName) :
         DeRhamField{drc} {};
     /**
      * @brief Construct Space::node / Space::cell fields of nVar variables from vector of nVar
      *        functions
      */
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs) :
+                amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs) :
         DeRhamField{drc} {};
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
-                const std::string& diagName) :
+                amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
+                std::string const& diagName) :
         DeRhamField{drc} {};
 
     void fill_boundary();
@@ -157,8 +157,8 @@ struct FieldTypes
 {
     static constexpr Grid s_gridType{grid};
     static constexpr Space s_spaceType{space};
-    FieldTypes(const DeRhamField<grid, space>&) {};
-    FieldTypes(std::reference_wrapper<const DeRhamField<grid, space>>) {};
+    FieldTypes(DeRhamField<grid, space> const&) {};
+    FieldTypes(std::reference_wrapper<DeRhamField<grid, space> const>) {};
 };
 
 template <Grid grid>
@@ -216,24 +216,24 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::array<int, 3> ncomponents);
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar = 1);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::string const& diagName, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func);
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs);
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
-                const std::string& diagName);
+                std::string const& diagName);
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
-        const std::string& diagName);
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
+        std::string const& diagName);
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::MultiFab& mfIn1,
-                const amrex::MultiFab& mfIn2,
-                const amrex::MultiFab& mfIn3);
+                amrex::MultiFab const& mfIn1,
+                amrex::MultiFab const& mfIn2,
+                amrex::MultiFab const& mfIn3);
 
     void fill_boundary();
     void apply_bc();
@@ -258,19 +258,19 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
         m_bcFunc;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1);
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar = 1);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::string const& diagName, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs);
+                amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
-                const std::string& diagName);
+                std::string const& diagName);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
-                const std::string& diagName);
+                amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
+                std::string const& diagName);
 
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, const amrex::MultiFab& mfIn);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, amrex::MultiFab const& mfIn);
 
     void fill_boundary();
     void apply_bc();
@@ -295,14 +295,14 @@ using anyFieldRef = std::variant<std::reference_wrapper<DeRhamField<Grid::primal
                                  std::reference_wrapper<DeRhamField<Grid::dual, Space::face>>,
                                  std::reference_wrapper<DeRhamField<Grid::dual, Space::cell>>>;
 using anyFieldConstRef =
-    std::variant<std::reference_wrapper<const DeRhamField<Grid::primal, Space::node>>,
-                 std::reference_wrapper<const DeRhamField<Grid::primal, Space::edge>>,
-                 std::reference_wrapper<const DeRhamField<Grid::primal, Space::face>>,
-                 std::reference_wrapper<const DeRhamField<Grid::primal, Space::cell>>,
-                 std::reference_wrapper<const DeRhamField<Grid::dual, Space::node>>,
-                 std::reference_wrapper<const DeRhamField<Grid::dual, Space::edge>>,
-                 std::reference_wrapper<const DeRhamField<Grid::dual, Space::face>>,
-                 std::reference_wrapper<const DeRhamField<Grid::dual, Space::cell>>>;
+    std::variant<std::reference_wrapper<DeRhamField<Grid::primal, Space::node> const>,
+                 std::reference_wrapper<DeRhamField<Grid::primal, Space::edge> const>,
+                 std::reference_wrapper<DeRhamField<Grid::primal, Space::face> const>,
+                 std::reference_wrapper<DeRhamField<Grid::primal, Space::cell> const>,
+                 std::reference_wrapper<DeRhamField<Grid::dual, Space::node> const>,
+                 std::reference_wrapper<DeRhamField<Grid::dual, Space::edge> const>,
+                 std::reference_wrapper<DeRhamField<Grid::dual, Space::face> const>,
+                 std::reference_wrapper<DeRhamField<Grid::dual, Space::cell> const>>;
 
 /**
  * @brief Base class for discrete de Rham Complexes. The member functions with the `inline`
@@ -338,9 +338,9 @@ public:
     /// @param infra The computational domain needed to construct the class correctly
     /// @param hodgeDegree The degree of the Hodge scheme, used for a lower limit of ghost cells
     /// @param maxSplineDegree The degree of the splines, used for a lower limit of ghost cells
-    DeRhamComplex(const ComputationalDomain& infra,
-                  const int hodgeDegree,
-                  const int maxSplineDegree)
+    DeRhamComplex(ComputationalDomain const& infra,
+                  int const hodgeDegree,
+                  int const maxSplineDegree)
     {
         BL_PROFILE("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
         Io::Parameters params("DeRhamComplex");
@@ -420,28 +420,28 @@ public:
     virtual ~DeRhamComplex() {}
 
     /// Getter for the number of ghost cells
-    const amrex::IntVect& get_n_ghost () const { return m_nGhost; }
+    amrex::IntVect const& get_n_ghost () const { return m_nGhost; }
 
     /// Getter for the periodicity
-    const amrex::Periodicity get_periodicity () const { return m_geom.periodicity(); }
+    amrex::Periodicity const get_periodicity () const { return m_geom.periodicity(); }
 
     /// Getter for prob lo
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> get_prob_lo () const
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const get_prob_lo () const
     {
         return m_geom.ProbLoArray();
     }
 
     /// Getter for geom
-    const amrex::Geometry get_geom () const { return m_geom; }
+    amrex::Geometry const get_geom () const { return m_geom; }
 
     /// Getter for hodgeDegree
     int get_hodge_degree () const { return m_hodgeDegree; }
 
     // map of pointers to the field multifabs for the diagnostics
-    std::map<std::string, const amrex::MultiFab> m_fieldsDiagnostics;
+    std::map<std::string, amrex::MultiFab const> m_fieldsDiagnostics;
 
     // map of scaling parameters to go from degrees of freedom to point values for diagnostics
-    std::map<std::string, const amrex::Real> m_fieldsScaling;
+    std::map<std::string, amrex::Real const> m_fieldsScaling;
 
     /// @brief Initializes fields and ties them to the grid.
     ///        Called from the DeRhamField constructors.
@@ -662,26 +662,26 @@ public:
     // exterior derivatives
     //---------------------
     void grad(DeRhamField<Grid::primal, Space::edge>&,
-              const DeRhamField<Grid::primal, Space::node>&);
+              DeRhamField<Grid::primal, Space::node> const&);
     void curl(DeRhamField<Grid::primal, Space::face>&,
-              const DeRhamField<Grid::primal, Space::edge>&);
+              DeRhamField<Grid::primal, Space::edge> const&);
     void div(DeRhamField<Grid::primal, Space::cell>&,
-             const DeRhamField<Grid::primal, Space::face>&);
-    void grad(DeRhamField<Grid::dual, Space::edge>&, const DeRhamField<Grid::dual, Space::node>&);
-    void curl(DeRhamField<Grid::dual, Space::face>&, const DeRhamField<Grid::dual, Space::edge>&);
-    void div(DeRhamField<Grid::dual, Space::cell>&, const DeRhamField<Grid::dual, Space::face>&);
+             DeRhamField<Grid::primal, Space::face> const&);
+    void grad(DeRhamField<Grid::dual, Space::edge>&, DeRhamField<Grid::dual, Space::node> const&);
+    void curl(DeRhamField<Grid::dual, Space::face>&, DeRhamField<Grid::dual, Space::edge> const&);
+    void div(DeRhamField<Grid::dual, Space::cell>&, DeRhamField<Grid::dual, Space::face> const&);
 
     void a_times_grad(DeRhamField<Grid::primal, Space::edge>&,
-                      const DeRhamField<Grid::primal, Space::node>&,
+                      DeRhamField<Grid::primal, Space::node> const&,
                       amrex::Real);
     void a_times_grad(DeRhamField<Grid::dual, Space::edge>&,
-                      const DeRhamField<Grid::dual, Space::node>&,
+                      DeRhamField<Grid::dual, Space::node> const&,
                       amrex::Real);
     void add_dt_curl(DeRhamField<Grid::primal, Space::face>&,
-                     const DeRhamField<Grid::primal, Space::edge>&,
+                     DeRhamField<Grid::primal, Space::edge> const&,
                      amrex::Real dt);
     void add_dt_curl(DeRhamField<Grid::dual, Space::face>&,
-                     const DeRhamField<Grid::dual, Space::edge>&,
+                     DeRhamField<Grid::dual, Space::edge> const&,
                      amrex::Real dt);
 
     //------------
@@ -707,7 +707,7 @@ public:
      * @param field       The field to project to
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    virtual void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::cell>& field,
                             int gaussNodes = 6) = 0;
@@ -715,14 +715,14 @@ public:
     virtual void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::node>& field) = 0;
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    virtual void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::primal, Space::node>& field) = 0;
 
     virtual void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::node>& field) = 0;
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    virtual void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::node>& field) = 0;
 
@@ -730,7 +730,7 @@ public:
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::cell>& field,
                             int gaussNodes = 6) = 0;
-    virtual void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    virtual void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                             amrex::Real t,
                             DeRhamField<Grid::dual, Space::cell>& field,
                             int gaussNodes = 6) = 0;
@@ -757,7 +757,7 @@ public:
      * @param gaussNodes  The number of gaussNodes for the interpolation
      */
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::edge>& field,
         int gaussNodes = 6) = 0;
@@ -767,7 +767,7 @@ public:
                             DeRhamField<Grid::primal, Space::face>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::face>& field,
         int gaussNodes = 6) = 0;
@@ -777,7 +777,7 @@ public:
                             DeRhamField<Grid::primal, Space::edge>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::edge>& field,
         int gaussNodes = 6) = 0;
@@ -787,7 +787,7 @@ public:
                             DeRhamField<Grid::dual, Space::face>& field,
                             int gaussNodes = 6) = 0;
     virtual void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::face>& field,
         int gaussNodes = 6) = 0;
@@ -796,28 +796,28 @@ public:
     // Hodge operators
     //----------------
     virtual void hodge(DeRhamField<Grid::primal, Space::node>& zeroForm,
-                       const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                       DeRhamField<Grid::dual, Space::cell> const& threeForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::dual, Space::node>& zeroForm,
-                       const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                       DeRhamField<Grid::primal, Space::cell> const& threeForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::primal, Space::edge>& oneForm,
-                       const DeRhamField<Grid::dual, Space::face>& twoForm,
+                       DeRhamField<Grid::dual, Space::face> const& twoForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::dual, Space::edge>& oneForm,
-                       const DeRhamField<Grid::primal, Space::face>& twoForm,
+                       DeRhamField<Grid::primal, Space::face> const& twoForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::primal, Space::face>& twoForm,
-                       const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                       DeRhamField<Grid::dual, Space::edge> const& oneForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::dual, Space::face>& twoForm,
-                       const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                       DeRhamField<Grid::primal, Space::edge> const& oneForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::primal, Space::cell>& threeForm,
-                       const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                       DeRhamField<Grid::dual, Space::node> const& zeroForm,
                        amrex::Real weight = 1.) = 0;
     virtual void hodge(DeRhamField<Grid::dual, Space::cell>& threeForm,
-                       const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                       DeRhamField<Grid::primal, Space::node> const& zeroForm,
                        amrex::Real weight = 1.) = 0;
 
     /**
@@ -852,7 +852,7 @@ public:
         // y and z components need to be averaged to midpoint of x edge
         for (amrex::MFIter mfi(formOut.m_data[xDir], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             amrex::Array4<amrex::Real> const& formx = (tempFormOut.m_data[xDir])[mfi].array();
             amrex::Array4<amrex::Real> const& formy = (tempFormOut.m_data[yDir])[mfi].array();
             amrex::Array4<amrex::Real> const& formz = (tempFormOut.m_data[zDir])[mfi].array();
@@ -875,7 +875,7 @@ public:
         // x and z components need to be averaged to midpoint of y edge
         for (amrex::MFIter mfi(formOut.m_data[yDir], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             amrex::Array4<amrex::Real> const& formx = tempFormOut.m_data[xDir][mfi].array();
             amrex::Array4<amrex::Real> const& formy = tempFormOut.m_data[yDir][mfi].array();
             amrex::Array4<amrex::Real> const& formz = tempFormOut.m_data[zDir][mfi].array();
@@ -898,7 +898,7 @@ public:
         // x and y components need to be averaged to midpoint of z edge
         for (amrex::MFIter mfi(formOut.m_data[zDir], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             amrex::Array4<amrex::Real> const& formx = (tempFormOut.m_data[xDir])[mfi].array();
             amrex::Array4<amrex::Real> const& formy = (tempFormOut.m_data[yDir])[mfi].array();
             amrex::Array4<amrex::Real> const& formz = (tempFormOut.m_data[zDir])[mfi].array();
@@ -936,20 +936,20 @@ public:
      *                    var=nVar shift=nEvals
      */
     virtual void eval_form(
-        const DeRhamField<Grid::primal, Space::cell>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::primal, Space::cell> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues) = 0;
     virtual void eval_form(
-        const DeRhamField<Grid::dual, Space::cell>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::dual, Space::cell> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues) = 0;
     virtual void eval_form(
-        const DeRhamField<Grid::primal, Space::node>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::primal, Space::node> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues) = 0;
     virtual void eval_form(
-        const DeRhamField<Grid::dual, Space::node>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::dual, Space::node> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues) = 0;
     /**
      * @brief Evaluation of a 1-/2-form DeRhamField of nVar variables (and three components) in one
@@ -969,23 +969,23 @@ public:
      * @param dir         Direction of field to evaluate
      */
     virtual void eval_form(
-        const DeRhamField<Grid::primal, Space::face>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::primal, Space::face> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
     virtual void eval_form(
-        const DeRhamField<Grid::dual, Space::face>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::dual, Space::face> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
     virtual void eval_form(
-        const DeRhamField<Grid::primal, Space::edge>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::primal, Space::edge> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
     virtual void eval_form(
-        const DeRhamField<Grid::dual, Space::edge>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::dual, Space::edge> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir) = 0;
 
@@ -1005,32 +1005,32 @@ public:
      *                    var=nVar shift=nEvals
      */
     inline void eval_forms (
-        const DeRhamField<Grid::primal, Space::face>& field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        DeRhamField<Grid::primal, Space::face> const& field,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
         eval_form(field, evalShift, *pointValues[yDir], yDir);
         eval_form(field, evalShift, *pointValues[zDir], zDir);
     }
-    void eval_forms (const DeRhamField<Grid::dual, Space::face>& field,
-                     const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_forms (DeRhamField<Grid::dual, Space::face> const& field,
+                     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                      amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
         eval_form(field, evalShift, *pointValues[yDir], yDir);
         eval_form(field, evalShift, *pointValues[zDir], zDir);
     }
-    void eval_forms (const DeRhamField<Grid::primal, Space::edge>& field,
-                     const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_forms (DeRhamField<Grid::primal, Space::edge> const& field,
+                     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                      amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
         eval_form(field, evalShift, *pointValues[yDir], yDir);
         eval_form(field, evalShift, *pointValues[zDir], zDir);
     }
-    void eval_forms (const DeRhamField<Grid::dual, Space::edge>& field,
-                     const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_forms (DeRhamField<Grid::dual, Space::edge> const& field,
+                     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                      amrex::Array<amrex::MultiFab*, 3>& pointValues)
     {
         eval_form(field, evalShift, *pointValues[xDir], xDir);
@@ -1099,7 +1099,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
 
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
-    std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar) :
+    std::shared_ptr<DeRhamComplex> drc, std::string const& diagName, int nVar) :
     DeRhamField{drc, nVar}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,diagName)");
@@ -1151,7 +1151,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
-    std::shared_ptr<DeRhamComplex> drc, const std::string& diagName, int nVar) :
+    std::shared_ptr<DeRhamComplex> drc, std::string const& diagName, int nVar) :
     DeRhamField{drc, nVar}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,diagName)");
@@ -1194,7 +1194,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs) :
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,funcs)");
@@ -1213,7 +1213,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs) :
+    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs)");
@@ -1225,7 +1225,7 @@ template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
     amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
-    const std::string& diagName) :
+    std::string const& diagName) :
     DeRhamField{drc, diagName, 1}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,func,diagName)");
@@ -1235,8 +1235,8 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
-    const std::string& diagName) :
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
+    std::string const& diagName) :
     DeRhamField{drc, diagName, static_cast<int>(funcs.size())}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,funcs,diagName)");
@@ -1246,9 +1246,9 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::MultiFab& mfIn1,
-    const amrex::MultiFab& mfIn2,
-    const amrex::MultiFab& mfIn3) :
+    amrex::MultiFab const& mfIn1,
+    amrex::MultiFab const& mfIn2,
+    amrex::MultiFab const& mfIn3) :
     DeRhamField{drc, mfIn1.nComp()}
 {
     m_data[xDir] = amrex::MultiFab(mfIn1, amrex::make_alias, 0, mfIn1.nComp());
@@ -1260,7 +1260,7 @@ template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
     amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
-    const std::string& diagName) :
+    std::string const& diagName) :
     DeRhamField{drc, diagName, 1}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func,diagName)");
@@ -1270,8 +1270,8 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 template <Grid grid, Space space>
 inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
-    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
-    const std::string& diagName) :
+    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
+    std::string const& diagName) :
     DeRhamField{drc, diagName, static_cast<int>(funcs.size())}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs,diagName)");
@@ -1280,7 +1280,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::DeRhamField(
-    std::shared_ptr<DeRhamComplex> drc, const amrex::MultiFab& mfIn) :
+    std::shared_ptr<DeRhamComplex> drc, amrex::MultiFab const& mfIn) :
     DeRhamField{drc, mfIn.nComp()}
 {
     m_data = amrex::MultiFab(mfIn, amrex::make_alias, 0, mfIn.nComp());
@@ -1381,8 +1381,8 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=(function)");
 
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_deRham->get_prob_lo();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx = m_deRham->m_geom.CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_deRham->get_prob_lo();
 
     int nComps{m_data[xDir].nComp()};
 
@@ -1390,7 +1390,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
     {
         for (amrex::MFIter mfi(m_data[comp], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             amrex::Array4<amrex::Real> const& form = (m_data[comp])[mfi].array();
 
             ParallelFor(
@@ -1430,14 +1430,14 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=(function)");
 
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = m_deRham->m_geom.CellSizeArray();
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_deRham->get_prob_lo();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx = m_deRham->m_geom.CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_deRham->get_prob_lo();
 
     int nComps{m_data.nComp()};
 
     for (amrex::MFIter mfi(m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         amrex::Array4<amrex::Real> const& form = (m_data)[mfi].array();
 
         ParallelFor(bx, nComps,
@@ -1598,7 +1598,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::o
 template <Grid grid, Space space>
 inline void copy (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& fieldOut,
-    const DeRhamField<grid, space>& fieldIn)
+    DeRhamField<grid, space> const& fieldIn)
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::copy");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
@@ -1617,7 +1617,7 @@ inline void copy (
 template <Grid grid, Space space>
 inline void copy (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& fieldOut,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& fieldIn)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& fieldIn)
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::copy(oppositeForm)");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
@@ -1631,7 +1631,7 @@ inline void copy (
 template <Grid grid, Space space>
 inline void copy (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& fieldOut,
-    const DeRhamField<grid, space>& fieldIn)
+    DeRhamField<grid, space> const& fieldIn)
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::copy");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
@@ -1640,7 +1640,7 @@ inline void copy (
 template <Grid grid, Space space>
 inline void copy (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& fieldOut,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& fieldIn)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& fieldIn)
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::copy(oppositeForm)");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
@@ -1661,9 +1661,9 @@ template <Grid grid, Space space>
 inline void linear_combination (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& result,
     amrex::Real a,
-    const DeRhamField<grid, space>& field1,
+    DeRhamField<grid, space> const& field1,
     amrex::Real b,
-    const DeRhamField<grid, space>& field2)
+    DeRhamField<grid, space> const& field2)
 {
     BL_PROFILE("Gempic::Forms::linearCombination()");
     auto nGhost = result.m_deRham->get_n_ghost();
@@ -1684,9 +1684,9 @@ template <Grid grid, Space space>
 inline void linear_combination (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& result,
     amrex::Real a,
-    const DeRhamField<grid, space>& field1,
+    DeRhamField<grid, space> const& field1,
     amrex::Real b,
-    const DeRhamField<grid, space>& field2)
+    DeRhamField<grid, space> const& field2)
 {
     BL_PROFILE("Gempic::Forms::linearCombination()");
     auto nGhost = result.m_deRham->get_n_ghost();
@@ -1710,9 +1710,9 @@ template <Grid grid, Space space>
 inline void linear_combination (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& result,
     amrex::Real a,
-    const DeRhamField<grid, space>& field1,
+    DeRhamField<grid, space> const& field1,
     amrex::Real b,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
     BL_PROFILE("Gempic::Forms::linearCombination()");
     auto nGhost = result.m_deRham->get_n_ghost();
@@ -1733,9 +1733,9 @@ template <Grid grid, Space space>
 inline void linear_combination (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& result,
     amrex::Real a,
-    const DeRhamField<grid, space>& field1,
+    DeRhamField<grid, space> const& field1,
     amrex::Real b,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
     BL_PROFILE("Gempic::Forms::linearCombination()");
     auto nGhost = result.m_deRham->get_n_ghost();
@@ -1761,7 +1761,7 @@ inline void linear_combination (
 template <Grid grid, Space space>
 inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
-    const DeRhamField<grid, space>& field2)
+    DeRhamField<grid, space> const& field2)
 {
     // Compute the dot product by summing the dot product of each component.
     amrex::Real dotProd{0};              // Initialize the dot product to 0.
@@ -1786,7 +1786,7 @@ inline amrex::Real dot_product (
 template <Grid grid, Space space>
 inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
-    const DeRhamField<grid, space>& field2)
+    DeRhamField<grid, space> const& field2)
 {
     amrex::Real dotProd =
         amrex::MultiFab::Dot(field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
@@ -1806,7 +1806,7 @@ inline amrex::Real dot_product (
 template <Grid grid, Space space>
 inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
     amrex::Real result = 0;
     for (int comp = 0; comp < 3; ++comp)
@@ -1831,7 +1831,7 @@ inline amrex::Real dot_product (
 template <Grid grid, Space space>
 inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
     amrex::Real dotProd =
         amrex::MultiFab::Dot(field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);

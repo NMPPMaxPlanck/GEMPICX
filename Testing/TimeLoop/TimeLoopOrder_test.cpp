@@ -33,25 +33,25 @@ public:
     static constexpr int s_degZ{3};
     static constexpr int s_vDim{3};
 
-    inline static const int s_maxSplineDegree{
+    inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
-    inline static const int s_hodgeDegree{2};
+    inline static int const s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
-    ComputationalDomain set_params (Gempic::Io::Parameters& parameters, const amrex::IntVect& nCell)
+    ComputationalDomain set_params (Gempic::Io::Parameters& parameters, amrex::IntVect const& nCell)
     {
         parameters.set("sV", s_sV);
         parameters.set("sOmega", s_sOmega);
 
         /* Initialize the infrastructure */
-        const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        const amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{
+        amrex::Array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        amrex::Array<amrex::Real, AMREX_SPACEDIM> const domainHi{
             AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-        const amrex::IntVect maxGridSize{AMREX_D_DECL(16, 16, 16)};
-        const amrex::Array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        amrex::IntVect const maxGridSize{AMREX_D_DECL(16, 16, 16)};
+        amrex::Array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
         return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
                                    amrex::CoordSys::cartesian);
@@ -65,46 +65,46 @@ public:
     {
         // Analytical solutions in every direction (assuming k=1 in all directions)
 #if (AMREX_SPACEDIM == 1)
-        const amrex::Array<std::string, 3> analyticalD = {
+        amrex::Array<std::string, 3> const analyticalD = {
             "1 / sOmegaSquared * 0.",
             "1 / sOmegaSquared * cos(x - sV * t)",
             "1 / sOmegaSquared * cos(x - sV * t)",
         };
 
-        const amrex::Array<std::string, 3> analyticalB = {
+        amrex::Array<std::string, 3> const analyticalB = {
             "1 / sV * 0.",
             "-1 / sV * cos(x - sV * t)",
             "1 / sV * cos(x - sV * t)",
         };
 #endif
 #if (AMREX_SPACEDIM == 2)
-        const amrex::Array<std::string, 3> analyticalD = {
+        amrex::Array<std::string, 3> const analyticalD = {
             "1 / sOmegaSquared * cos(x + y -sqrt(2.0) * sV * t)",
             "-1 / sOmegaSquared * cos(x + y -sqrt(2.0) * sV * t)",
             "-1 / sOmegaSquared * sqrt(2) * cos(x + y -sqrt(2.0) * sV * t)",
         };
 
-        const amrex::Array<std::string, 3> analyticalB = {
+        amrex::Array<std::string, 3> const analyticalB = {
             "-1 / sV * cos(x + y -sqrt(2.0) * sV * t)",
             "1 / sV * cos(x + y -sqrt(2.0) * sV * t)",
             "-1 / sV * sqrt(2) * cos(x + y -sqrt(2.0) * sV * t)",
         };
 #endif
 #if (AMREX_SPACEDIM == 3)
-        const amrex::Array<std::string, 3> analyticalD = {
+        amrex::Array<std::string, 3> const analyticalD = {
             "1 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
             "-2 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
             "1 / sOmegaSquared * cos(x + y + z -sqrt(3.0) * sV * t)",
         };
 
-        const amrex::Array<std::string, 3> analyticalB = {
+        amrex::Array<std::string, 3> const analyticalB = {
             "1 / sV * sqrt(3) * cos(x + y + z -sqrt(3.0) * sV * t)",
             "1 / sV * 0.0",
             "-1 / sV * sqrt(3) * cos(x + y + z -sqrt(3.0) * sV * t)",
         };
 #endif
         // Initialize computational_domain
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         Gempic::Io::Parameters parameters;
         ComputationalDomain infra = set_params(parameters, nCell);
 
@@ -189,11 +189,11 @@ TEST_F(HamiltonianSplittingOrderTest, MaxwellTest)
     // 3D
     // E = [cos(x+y+z-sqrt(3)*s_v*t), -2*cos(x+y+z-sqrt(3)*s_v*t), cos(x+y+z-sqrt(3)*s_v*t)]
     // B = 1/s_V * [sqrt(3)*cos(x+y+z-sqrt(3)*s_v*t), 0, -sqrt(3)*cos(x+y+z-sqrt(3)*s_v*t)]
-    const int coarse = 30, fine = 60;
+    int const coarse = 30, fine = 60;
     amrex::Real bErrorCoarse, bErrorFine, dErrorCoarse, dErrorFine;
     amrex::Real tol = 0.01;
-    const amrex::Real sOmegaSquared = s_sOmega * s_sOmega;
-    const amrex::Real sV = s_sV;
+    amrex::Real const sOmegaSquared = s_sOmega * s_sOmega;
+    amrex::Real const sV = s_sV;
 
     this->maxwellstrang_error(bErrorCoarse, dErrorCoarse, coarse, sOmegaSquared, sV);
     this->maxwellstrang_error(bErrorFine, dErrorFine, fine, sOmegaSquared, sV);

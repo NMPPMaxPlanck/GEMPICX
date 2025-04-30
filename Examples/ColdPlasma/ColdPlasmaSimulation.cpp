@@ -90,7 +90,7 @@ int main (int argc, char* argv[])
             int comp = 2; //noise only in z-component
             for (amrex::MFIter mfi(E.m_data[comp], true); mfi.isValid(); ++mfi)
             {
-                const amrex::Box& bx = mfi.tilebox();
+                amrex::Box const& bx = mfi.tilebox();
                 amrex::IntVect lo = {bx.smallEnd()};
                 amrex::IntVect hi = {bx.bigEnd()};
 

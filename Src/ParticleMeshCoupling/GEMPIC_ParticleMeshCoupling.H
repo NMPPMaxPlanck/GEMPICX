@@ -10,6 +10,7 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_Config.H"
+#include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_SplineClass.H"
 
@@ -36,9 +37,9 @@ namespace Impl
  */
 template <Direction pDir, int pDir1, int pDir2, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void update_j_component (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
-    SplineType const &spline,
-    amrex::Dim3 const &cellIndex,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
+    SplineType const& spline,
+    amrex::Dim3 const& cellIndex,
     int const j,
     int const k,
     double const chargeWeight,
@@ -69,9 +70,9 @@ AMREX_GPU_HOST_DEVICE inline void update_j_component (
  */
 template <int pDir1, int pDir2, typename SplineType, unsigned int bDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real update_integrated_b_component (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    SplineType const &spline,
-    amrex::Dim3 const &cellIndex,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    SplineType const& spline,
+    amrex::Dim3 const& cellIndex,
     int const j,
     int const k,
     double const primitiveDifference)
@@ -114,12 +115,12 @@ template <Direction pDir,
           unsigned int bDim,
           unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
     int const i)
 {
     for (int j = 0; j <= degP1; ++j)
@@ -154,8 +155,8 @@ template <Direction pDir,
           typename SplineType,
           unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_loop (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
+    SplineType& spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
     int const i)
@@ -193,12 +194,12 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_loop (
  */
 template <Direction pDir, int degP, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
     int const i)
 {
     if constexpr (pDir == xDir)
@@ -260,12 +261,12 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
  */
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
     amrex::Real const chargeWeight,
     amrex::Real const primitiveDifference,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
     int const i)
 {
     amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(i, 0, 0);
@@ -302,12 +303,12 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_loop (
  */
 template <typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
-    amrex::Real const &dtv,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
+    amrex::Real const& dtv,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     using namespace Impl; // utility functions for this function
     fields = {0., 0.};
@@ -352,12 +353,12 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
  */
 template <typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
-    amrex::Real const &dtv,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
+    amrex::Real const& dtv,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     using namespace Impl; // utility functions for this function
     fields = {0., 0.};
@@ -479,12 +480,12 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
 
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
@@ -549,10 +550,10 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
 //time_integrated_j
 template <Direction pDir, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void time_integrated_j (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
+    SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::time_integrated_j()");
     using namespace Impl; // utility functions for this function
@@ -670,12 +671,12 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
  */
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
@@ -845,12 +846,12 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
 
 template <Direction pDir, typename SplineType, unsigned int bDim, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
-    amrex::GpuArray<amrex::Real, 2> &fields,
-    SplineType &spline,
+    amrex::GpuArray<amrex::Real, 2>& fields,
+    SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const &dx,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const &bArray,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &jArray)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
@@ -920,8 +921,8 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * @param chargeWeight Particle weight * charge
  */
 template <int degX, int degY, int degZ>
-AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const &rho,
-                                               SplineBase<degX, degY, degZ> &spline,
+AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const& rho,
+                                               SplineBase<degX, degY, degZ>& spline,
                                                amrex::Real chargeWeight)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_rho()");
@@ -952,9 +953,9 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const 
  */
 template <int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void deposit_j (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &currentDensity,
-    SplineBase<degX, degY, degZ> const &spline,
-    amrex::GpuArray<amrex::Real, vDim> const &vel,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& currentDensity,
+    SplineBase<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real coeff)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_j()")
@@ -1001,10 +1002,10 @@ AMREX_GPU_HOST_DEVICE inline void deposit_j (
 
 template <int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void deposit_jcrossb (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &lorentzForce,
-    SplineBase<degX, degY, degZ> const &spline,
-    amrex::GpuArray<amrex::Real, vDim> const &vel,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &bA,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& lorentzForce,
+    SplineBase<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& vel,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& bA,
     amrex::Real coeff)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_jcrossb()");
@@ -1059,8 +1060,8 @@ AMREX_GPU_HOST_DEVICE inline void deposit_jcrossb (
 
 template <Direction dir, int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_deldot_s_coefficient (
-    SplineWithFirstDerivative<degX, degY, degZ> const &spline,
-    amrex::GpuArray<amrex::Real, vDim> const &vel,
+    SplineWithFirstDerivative<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& vel,
     int ii,
     int jj,
     int kk)
@@ -1092,9 +1093,9 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_deldot_s_coefficient (
 
 template <int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const &delDotS,
-    SplineWithFirstDerivative<degX, degY, degZ> const &spline,
-    amrex::GpuArray<amrex::Real, vDim> const &vel,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& delDotS,
+    SplineWithFirstDerivative<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real massWeight)
 {
     BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_deldot_s()")
@@ -1138,6 +1139,48 @@ AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
     GEMPIC_D_LOOP_END
 }
 
+template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_particle_density (
+    Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& particleDensity,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    bool doSync = true)
+{
+    for (auto const& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+
+        for (auto& particleGrid : *particleSpecies)
+        {
+            long const np = particleGrid.numParticles();
+            auto* const particles = particleGrid.GetArrayOfStructs()().data();
+            auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vDim).data();
+
+            amrex::Array4<amrex::Real> const& pdArr = particleDensity.m_data[particleGrid].array();
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> lowerCorner{
+                compDom.geometry().ProbLoArray()};
+
+            amrex::ParallelFor(np,
+                               [=] AMREX_GPU_DEVICE(long pp)
+                               {
+                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
+                                   {
+                                       positionParticle[d] = particles[pp].pos(d);
+                                   }
+                                   SplineBase<degX, degY, degZ> spline(
+                                       positionParticle, lowerCorner,
+                                       compDom.inv_cell_size_array());
+                                   deposit_rho(pdArr, spline, charge * weight[pp]);
+                               });
+        }
+    }
+
+    if (doSync)
+    {
+        particleDensity.post_particle_loop_sync();
+    }
+}
 } // namespace Gempic::ParticleMeshCoupling
 
 #endif

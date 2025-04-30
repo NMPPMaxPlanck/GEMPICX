@@ -41,7 +41,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{2};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcB;
     amrex::Array<amrex::Parser, 3> m_parserB;
@@ -109,7 +109,7 @@ public:
         Gempic::Io::Parameters parameters{};
 
         // Initialize computational_domain
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         ComputationalDomain infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize particle groups
@@ -128,14 +128,14 @@ public:
             ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
         }
 
-        const int numParticles{GEMPIC_D_MULT(n, n, n)};
+        int const numParticles{GEMPIC_D_MULT(n, n, n)};
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
         amrex::Array<amrex::Real, numParticles> weights;
 
         int i{0}, j{0}, k{0};
-        const auto &dx{infra.cell_size_array()};
+        auto const& dx{infra.cell_size_array()};
         GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
                             for (k = 0; k < n; k++))
 
@@ -167,28 +167,27 @@ public:
         DeRhamField<Grid::dual, Space::face> jcrossBAn(deRham, m_funcJcrossB);
 
         // Deposit initial charge
-        for (auto &particleSpecies : ions)
+        for (auto& particleSpecies : ions)
         {
             amrex::Real charge = particleSpecies->get_charge();
 
-            for (amrex::ParIter<0, 0, s_vdim + s_ndata, 0> pti(*particleSpecies, 0); pti.isValid();
-                 ++pti)
+            for (auto& particleGrid : *particleSpecies)
             {
-                const long np = pti.numParticles();
-                auto *const particles = pti.GetArrayOfStructs()().data();
-                auto *const weight = pti.GetStructOfArrays().GetRealData(s_vdim).data();
+                long const np = particleGrid.numParticles();
+                auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(s_vdim).data();
 
-                auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> bA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> jcrossbA;
 
                 for (int cc = 0; cc < s_vdim; cc++)
                 {
-                    bA[cc] = (B.m_data[cc])[pti].array();
-                    jcrossbA[cc] = (jcrossB.m_data[cc])[pti].array();
+                    bA[cc] = (B.m_data[cc])[particleGrid].array();
+                    jcrossbA[cc] = (jcrossB.m_data[cc])[particleGrid].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 

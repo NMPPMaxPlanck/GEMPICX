@@ -49,8 +49,8 @@ TEST(GaussQuadratureExample, VolumeIntegrals)
 
 TEST_P(GaussQuadrature, LineIntegrals)
 {
-    auto f = [=] (amrex::Real const &x) { return x + 1; };
-    auto fint = [=] (amrex::Real const &min, amrex::Real const &max)
+    auto f = [=] (amrex::Real const& x) { return x + 1; };
+    auto fint = [=] (amrex::Real const& min, amrex::Real const& max)
     { return 1.0 / 2.0 * (max * max - min * min) + max - min; };
     Gempic::GaussQuadrature integrate(GetParam());
     EXPECT_DOUBLE_EQ(integrate.line(2.0, 2.0, f), fint(0.0, 4.0));
@@ -58,8 +58,8 @@ TEST_P(GaussQuadrature, LineIntegrals)
 
 TEST_P(GaussQuadrature, SurfaceIntegrals)
 {
-    auto f = [=] (amrex::Real const &x, amrex::Real const &y) { return x + y + 1; };
-    auto fint = [=] (std::array<amrex::Real, 2> const &min, std::array<amrex::Real, 2> const &max)
+    auto f = [=] (amrex::Real const& x, amrex::Real const& y) { return x + y + 1; };
+    auto fint = [=] (std::array<amrex::Real, 2> const& min, std::array<amrex::Real, 2> const& max)
     {
         amrex::Real a{min[0]}, b{max[0]}, c{min[1]}, d{max[1]};
         return 1.0 / 2.0 * (a - b) * (c - d) * (a + b + c + d + 2);
@@ -72,9 +72,9 @@ TEST_P(GaussQuadrature, SurfaceIntegrals)
 
 TEST_P(GaussQuadrature, VolumeIntegrals)
 {
-    auto f = [=] (amrex::Real const &x, amrex::Real const &y, amrex::Real const &z)
+    auto f = [=] (amrex::Real const& x, amrex::Real const& y, amrex::Real const& z)
     { return x + y + z + 1; };
-    auto fint = [=] (std::array<amrex::Real, 3> const &min, std::array<amrex::Real, 3> const &max)
+    auto fint = [=] (std::array<amrex::Real, 3> const& min, std::array<amrex::Real, 3> const& max)
     {
         amrex::Real a{min[0]}, b{max[0]}, c{min[1]}, d{max[1]}, e{min[2]}, f{max[2]};
         return -1.0 / 2.0 * (a - b) * (c - d) * (e - f) * (a + b + c + d + e + f + 2);

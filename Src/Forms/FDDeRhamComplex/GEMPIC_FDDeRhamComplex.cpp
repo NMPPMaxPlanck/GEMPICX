@@ -8,9 +8,9 @@
 
 using namespace Gempic::Forms;
 
-FDDeRhamComplex::FDDeRhamComplex(const ComputationalDomain& infra,
-                                 const int hodgeDegree,
-                                 const int maxSplineDegree,
+FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& infra,
+                                 int const hodgeDegree,
+                                 int const maxSplineDegree,
                                  HodgeScheme hodgeScheme) :
     DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
 {
@@ -103,7 +103,7 @@ FDDeRhamComplex::~FDDeRhamComplex() {}
  * @param field DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node values
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::primal, Space::node>& field)
 {
@@ -118,12 +118,12 @@ void FDDeRhamComplex::projection (
         amrex::Assert(msg.c_str(), __FILE__, __LINE__);
     }
 
-    const amrex::RealVect dr = m_dr;
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+    amrex::RealVect const dr = m_dr;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox(); //mfi.tilebox();
+        amrex::Box const& bx = mfi.growntilebox(); //mfi.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
         amrex::AsyncArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
@@ -168,7 +168,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::primal, Space::cell>& field,
     int gaussNodes)
@@ -184,16 +184,16 @@ void FDDeRhamComplex::projection (
         amrex::Assert(msg.c_str(), __FILE__, __LINE__);
     }
 
-    const GaussQuadrature integrate{gaussNodes};
+    GaussQuadrature const integrate{gaussNodes};
 
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox(); //projections are done also on ghost cells
+        amrex::Box const& bx = mfi.growntilebox(); //projections are done also on ghost cells
         amrex::Array4<amrex::Real> const& threeForm = (field.m_data)[mfi].array();
 
-        const amrex::RealVect dr = m_dr;
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+        amrex::RealVect const dr = m_dr;
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
         std::array<amrex::Real, 3> drHalf = {
             GEMPIC_D_PAD_ONE(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
@@ -249,7 +249,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
 * @param field DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node values
 */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::dual, Space::node>& field)
 {
@@ -266,11 +266,11 @@ void FDDeRhamComplex::projection (
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox(); //.tilebox();
+        amrex::Box const& bx = mfi.growntilebox(); //.tilebox();
         amrex::Array4<amrex::Real> const& zeroForm = (field.m_data)[mfi].array();
 
-        const amrex::RealVect dr = m_dr;
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+        amrex::RealVect const dr = m_dr;
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
         amrex::AsyncArray<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> funcsGpu(&funcs[0], nComps);
         auto* const funcsGpuPtr = funcsGpu.data();
@@ -317,7 +317,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::dual, Space::cell>& field,
     int gaussNodes)
@@ -338,11 +338,11 @@ void FDDeRhamComplex::projection (
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox(); //projections are done also on ghost cells
+        amrex::Box const& bx = mfi.growntilebox(); //projections are done also on ghost cells
         amrex::Array4<amrex::Real> const& threeForm = (field.m_data)[mfi].array();
 
-        const amrex::RealVect dr = m_dr;
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+        amrex::RealVect const dr = m_dr;
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
         std::array<amrex::Real, 3> drHalf = {
             GEMPIC_D_PAD_ONE(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
@@ -400,7 +400,7 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::dual, Space::edge>& field,
     int gaussNodes)
@@ -428,11 +428,11 @@ void FDDeRhamComplex::projection (
     {
         for (amrex::MFIter mfi(field.m_data[dir], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox(); //projections are done also on ghost cells
+            amrex::Box const& bx = mfi.growntilebox(); //projections are done also on ghost cells
             amrex::Array4<amrex::Real> const& oneForm = (field.m_data[dir])[mfi].array();
 
-            const amrex::RealVect dr = m_dr;
-            const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+            amrex::RealVect const dr = m_dr;
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
             ParallelFor(bx, nComps,
                         [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
@@ -465,7 +465,7 @@ void FDDeRhamComplex::projection (
                                             return 0.0;
                                     };
                                 };
-                                const amrex::Real drHalf = dr[dir] / 2;
+                                amrex::Real const drHalf = dr[dir] / 2;
                                 // Midpoint for the quadrature rule
                                 amrex::Real midpoint = r[dir] - drHalf;
 
@@ -511,7 +511,7 @@ inline void FDDeRhamComplex::projection(
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::primal, Space::face>& field,
     int gaussNodes)
@@ -534,8 +534,8 @@ void FDDeRhamComplex::projection (
 
     GaussQuadrature integrate{gaussNodes};
 
-    const amrex::RealVect dr = m_dr;
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+    amrex::RealVect const dr = m_dr;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
     std::array<amrex::Real, 3> drHalf = {
         GEMPIC_D_PAD_ONE(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
@@ -547,7 +547,7 @@ void FDDeRhamComplex::projection (
     // -> this would allow to use the same Iterator in all directions!
     for (amrex::MFIter mfi(field.m_data[xDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();
+        amrex::Box const& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[xDir])[mfi].array();
 
         ParallelFor(
@@ -571,7 +571,7 @@ void FDDeRhamComplex::projection (
     // y-direction. Plane XZ
     for (amrex::MFIter mfi(field.m_data[yDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();
+        amrex::Box const& bx = mfi.growntilebox();
 
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[yDir])[mfi].array();
 
@@ -598,7 +598,7 @@ void FDDeRhamComplex::projection (
     // z-direction. Plane XY
     for (amrex::MFIter mfi(field.m_data[zDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();
+        amrex::Box const& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[zDir])[mfi].array();
 
         ParallelFor(
@@ -648,7 +648,7 @@ inline void FDDeRhamComplex::projection(
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::primal, Space::edge>& field,
     int gaussNodes)
@@ -676,11 +676,11 @@ void FDDeRhamComplex::projection (
     {
         for (amrex::MFIter mfi(field.m_data[dir], true); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox(); //projections are done also on ghost cells
+            amrex::Box const& bx = mfi.growntilebox(); //projections are done also on ghost cells
             amrex::Array4<amrex::Real> const& oneForm = (field.m_data[dir])[mfi].array();
 
-            const amrex::RealVect dr = m_dr;
-            const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+            amrex::RealVect const dr = m_dr;
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
             ParallelFor(
                 bx, nComps,
@@ -712,7 +712,7 @@ void FDDeRhamComplex::projection (
                                     return 0.0;
                             };
                         };
-                        const amrex::Real drHalf = dr[dir] / 2;
+                        amrex::Real const drHalf = dr[dir] / 2;
                         // Midpoint for the quadrature rule
                         amrex::Real midpoint = r[dir] + drHalf;
 
@@ -759,7 +759,7 @@ inline void FDDeRhamComplex::projection(
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void FDDeRhamComplex::projection (
-    const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
     DeRhamField<Grid::dual, Space::face>& field,
     int gaussNodes)
@@ -782,8 +782,8 @@ void FDDeRhamComplex::projection (
 
     GaussQuadrature integrate{gaussNodes};
 
-    const amrex::RealVect dr = m_dr;
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = m_geom.ProbLoArray();
+    amrex::RealVect const dr = m_dr;
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
 
     std::array<amrex::Real, 3> drHalf{GEMPIC_D_PAD_ONE(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
     for (int i{AMREX_SPACEDIM}; i < 3; i++) drHalf[i] = drHalf[i] / 2.0;
@@ -791,7 +791,7 @@ void FDDeRhamComplex::projection (
     // x-direction. Plane YZ
     for (amrex::MFIter mfi(field.m_data[xDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();
+        amrex::Box const& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[xDir])[mfi].array();
 
         ParallelFor(
@@ -818,7 +818,7 @@ void FDDeRhamComplex::projection (
     // y-direction. Plane XZ
     for (amrex::MFIter mfi(field.m_data[yDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();
+        amrex::Box const& bx = mfi.growntilebox();
 
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[yDir])[mfi].array();
 
@@ -844,7 +844,7 @@ void FDDeRhamComplex::projection (
     // z-direction. Plane XY
     for (amrex::MFIter mfi(field.m_data[zDir], true); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.growntilebox();
+        amrex::Box const& bx = mfi.growntilebox();
         amrex::Array4<amrex::Real> const& twoForm = (field.m_data[zDir])[mfi].array();
 
         ParallelFor(
@@ -894,49 +894,49 @@ void FDDeRhamComplex::hodge_scheme_selector (anyFieldConstRef f1, anyFieldRef f2
 }
 
 void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::node>& zeroForm,
-                            const DeRhamField<Grid::dual, Space::cell>& threeForm,
+                            DeRhamField<Grid::dual, Space::cell> const& threeForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,node,dual,cell,weight)");
     hodge_scheme_selector(threeForm, zeroForm, weight);
 }
 void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::node>& zeroForm,
-                            const DeRhamField<Grid::primal, Space::cell>& threeForm,
+                            DeRhamField<Grid::primal, Space::cell> const& threeForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,node,primal,cell,weight)");
     hodge_scheme_selector(threeForm, zeroForm, weight);
 }
 void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::edge>& oneForm,
-                            const DeRhamField<Grid::dual, Space::face>& twoForm,
+                            DeRhamField<Grid::dual, Space::face> const& twoForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,edge,dual,face,weight)");
     hodge_scheme_selector(twoForm, oneForm, weight);
 }
 void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::edge>& oneForm,
-                            const DeRhamField<Grid::primal, Space::face>& twoForm,
+                            DeRhamField<Grid::primal, Space::face> const& twoForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,edge,primal,face,weight)");
     hodge_scheme_selector(twoForm, oneForm, weight);
 }
 void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::face>& twoForm,
-                            const DeRhamField<Grid::dual, Space::edge>& oneForm,
+                            DeRhamField<Grid::dual, Space::edge> const& oneForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,face,dual,edge,weight)");
     hodge_scheme_selector(oneForm, twoForm, weight);
 }
 void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::face>& twoForm,
-                            const DeRhamField<Grid::primal, Space::edge>& oneForm,
+                            DeRhamField<Grid::primal, Space::edge> const& oneForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,face,primal,edge,weight)");
     hodge_scheme_selector(oneForm, twoForm, weight);
 }
 void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::cell>& threeForm,
-                            const DeRhamField<Grid::dual, Space::node>& zeroForm,
+                            DeRhamField<Grid::dual, Space::node> const& zeroForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(primal,cell,dual,node,weight)");
@@ -944,7 +944,7 @@ void FDDeRhamComplex::hodge (DeRhamField<Grid::primal, Space::cell>& threeForm,
 }
 
 void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::cell>& threeForm,
-                            const DeRhamField<Grid::primal, Space::node>& zeroForm,
+                            DeRhamField<Grid::primal, Space::node> const& zeroForm,
                             amrex::Real weight)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::hodge(dual,cell,primal,node,weight)");
@@ -952,24 +952,24 @@ void FDDeRhamComplex::hodge (DeRhamField<Grid::dual, Space::cell>& threeForm,
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::primal, Space::cell>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::primal, Space::cell> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
     this->eval_form_degree_selector(field, evalShift, pointValues);
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::dual, Space::cell>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::dual, Space::cell> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
     this->eval_form_degree_selector(field, evalShift, pointValues);
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::primal, Space::face>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::primal, Space::face> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues,
     Direction dir)
 {
@@ -977,8 +977,8 @@ void FDDeRhamComplex::eval_form (
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::dual, Space::face>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::dual, Space::face> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues,
     Direction dir)
 {
@@ -986,8 +986,8 @@ void FDDeRhamComplex::eval_form (
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::primal, Space::edge>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::primal, Space::edge> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues,
     Direction dir)
 {
@@ -995,8 +995,8 @@ void FDDeRhamComplex::eval_form (
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::dual, Space::edge>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::dual, Space::edge> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues,
     Direction dir)
 {
@@ -1004,16 +1004,16 @@ void FDDeRhamComplex::eval_form (
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::primal, Space::node>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::primal, Space::node> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
     this->eval_form_degree_selector(field, evalShift, pointValues);
 }
 
 void FDDeRhamComplex::eval_form (
-    const DeRhamField<Grid::dual, Space::node>& field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    DeRhamField<Grid::dual, Space::node> const& field,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
     this->eval_form_degree_selector(field, evalShift, pointValues);
