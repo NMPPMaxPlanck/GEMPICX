@@ -23,7 +23,7 @@ inline std::map<std::string, int> bcTypeMap = {{"Natural", BCType::extrap},
                                                {"PerfectlyConducting", BCType::hom_dir}};
 
 inline std::vector<std::string> read_boundary_condition (int numNonPeriodic,
-                                                         const std::string& diagName)
+                                                         std::string const& diagName)
 {
     Io::Parameters paramsBC("BoundaryCondition");
     std::vector<std::string> bc;
@@ -169,10 +169,10 @@ struct BoundaryConditions
 
     template <Direction direction, DomainEnd domainEnd>
     AMREX_GPU_HOST_DEVICE amrex::Real apply_stencil (amrex::Array4<amrex::Real> const& arr,
-                                                     const int distance,
-                                                     const int i,
-                                                     const int j,
-                                                     const int k) const
+                                                     int const distance,
+                                                     int const i,
+                                                     int const j,
+                                                     int const k) const
     {
         amrex::Real val = 0.0;
         for (int shift = 0; shift <= m_extrapDegree; shift++)
@@ -196,32 +196,32 @@ struct BoundaryConditions
     }
 
     AMREX_GPU_DEVICE
-    void operator()(const amrex::IntVect& iv,
+    void operator()(amrex::IntVect const& iv,
                     amrex::Array4<amrex::Real> const& dest,
-                    const int dcomp,
-                    const int numcomp,
+                    int const dcomp,
+                    int const numcomp,
                     amrex::GeometryData const& geom,
-                    const amrex::Real time,
-                    const amrex::BCRec* bcr,
-                    const int bcomp,
-                    const int origComp) const
+                    amrex::Real const time,
+                    amrex::BCRec const* bcr,
+                    int const bcomp,
+                    int const origComp) const
     {
         amrex::Box const& domainBox = amrex::convert(geom.Domain(), m_idxType);
-        const auto& domainLo = domainBox.loVect();
-        const auto& domainHi = domainBox.hiVect();
-        const amrex::BCRec& bc = bcr[0];
+        auto const& domainLo = domainBox.loVect();
+        auto const& domainHi = domainBox.hiVect();
+        amrex::BCRec const& bc = bcr[0];
 
-        const int i = iv[xDir];
-        const int ilo = domainLo[xDir];
-        const int ihi = domainHi[xDir];
+        int const i = iv[xDir];
+        int const ilo = domainLo[xDir];
+        int const ihi = domainHi[xDir];
 #if AMREX_SPACEDIM >= 2
-        const int j = iv[yDir];
-        const int jlo = domainLo[yDir];
-        const int jhi = domainHi[yDir];
+        int const j = iv[yDir];
+        int const jlo = domainLo[yDir];
+        int const jhi = domainHi[yDir];
 #if AMREX_SPACEDIM == 3
-        const int k = iv[zDir];
-        const int klo = domainLo[zDir];
-        const int khi = domainHi[zDir];
+        int const k = iv[zDir];
+        int const klo = domainLo[zDir];
+        int const khi = domainHi[zDir];
 #endif
 #endif
 

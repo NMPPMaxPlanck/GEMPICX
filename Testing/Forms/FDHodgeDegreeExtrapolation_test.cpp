@@ -30,21 +30,21 @@ using namespace Forms;
 namespace
 {
 /* Initialize the infrastructure */
-ComputationalDomain get_compdom (const amrex::IntVect& nCell)
+ComputationalDomain get_compdom (amrex::IntVect const& nCell)
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.3, 1.6, 1.4)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 6, 9)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.3, 1.6, 1.4)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 6, 9)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
 
 template <int hodgeDegree, Space space>
-double hodge_one_two_error (const int n, int maxSplineDegree = 3)
+double hodge_one_two_error (int const n, int maxSplineDegree = 3)
 {
     // Initialize computational_domain
-    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+    amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
     Gempic::Io::Parameters parameters{};
     ComputationalDomain infra = get_compdom(nCell);
 
@@ -52,21 +52,21 @@ double hodge_one_two_error (const int n, int maxSplineDegree = 3)
                                                     HodgeScheme::FDHodge);
 
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> func = {
+    amrex::Array<std::string, 3> const func = {
         "pi = 3.141592653589793; (cos(2*pi*x) + sin(2*pi*x - 0.2))",
         "pi = 3.141592653589793; (sin(2*pi*x) + cos(2*pi*x - 0.2))",
         "pi = 3.141592653589793; (cos(2*2*pi*x) + sin(2*pi*x - 0.2))",
     };
 #endif
 #if (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> func = {
+    amrex::Array<std::string, 3> const func = {
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; (sin(2*pi*x)*cos(2*pi*y) + cos(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; (cos(2*2*pi*x)*cos(2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
     };
 #endif
 #if (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> func = {
+    amrex::Array<std::string, 3> const func = {
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))",
         "pi = 3.141592653589793; (sin(2*pi*x)*cos(2*pi*y)*cos(2*2*pi*z) + cos(2*pi*x - "
@@ -109,10 +109,10 @@ double hodge_one_two_error (const int n, int maxSplineDegree = 3)
 }
 
 template <int hodgeDegree, Space space>
-double hodge_zero_three_error (const int n, int maxSplineDegree = 3)
+double hodge_zero_three_error (int const n, int maxSplineDegree = 3)
 {
     // Initialize computational_domain
-    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+    amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
     Gempic::Io::Parameters parameters{};
     ComputationalDomain infra = get_compdom(nCell);
 
@@ -120,14 +120,14 @@ double hodge_zero_three_error (const int n, int maxSplineDegree = 3)
                                                     HodgeScheme::FDHodge);
 
 #if (AMREX_SPACEDIM == 1)
-    const std::string func = "pi = 3.141592653589793; (cos(2*pi*x) + sin(2*pi*x - 0.2))";
+    std::string const func = "pi = 3.141592653589793; (cos(2*pi*x) + sin(2*pi*x - 0.2))";
 #endif
 #if (AMREX_SPACEDIM == 2)
-    const std::string func =
+    std::string const func =
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))";
 #endif
 #if (AMREX_SPACEDIM == 3)
-    const std::string func =
+    std::string const func =
         "pi = 3.141592653589793; (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))";
 #endif
@@ -166,7 +166,7 @@ public:
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
 
-    inline static const int s_maxSplineDegree{
+    inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
     static constexpr int s_hodgeDegree{DegreeSpace::s_hodgeDegree};
     static constexpr Space s_space{DegreeSpace::s_space};

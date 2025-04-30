@@ -18,7 +18,7 @@ namespace
 // execution on GPU and call that function from the unit test because of how GTest creates tests
 // within a TEST_F fixture.
 template <Direction pDir, int degX, int degY, int degZ, unsigned int vDim>
-void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& pti,
+void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
                                             DeRhamField<Grid::primal, Space::face>& B,
                                             DeRhamField<Grid::dual, Space::face>& J,
                                             ComputationalDomain& infra,
@@ -26,19 +26,22 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
                                             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
                                             amrex::GpuArray<amrex::Real, 2>& bfields)
 {
-    const long np{pti.numParticles()};
+    long const np{particleGrid.numParticles()};
 
-    const auto& particles{pti.GetArrayOfStructs()};
-    const auto partData{particles().data()};
+    auto const& particles{particleGrid.GetArrayOfStructs()};
+    auto const partData{particles().data()};
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
-    for (int cc = 0; cc < vDim; cc++) jA[cc] = (J.m_data[cc])[pti].array();
+    for (int cc = 0; cc < vDim; cc++) jA[cc] = (J.m_data[cc])[particleGrid].array();
 
     amrex::AsyncArray aaBfields(&bfields, 1);
     auto* bfieldsGPU = aaBfields.data();
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(vDim / 2.5) * 2 + 1> bA;
-    for (int cc = 0; cc < (int(vDim / 2.5) * 2 + 1); cc++) bA[cc] = (B.m_data[cc])[pti].array();
+    for (int cc = 0; cc < (int(vDim / 2.5) * 2 + 1); cc++)
+    {
+        bA[cc] = (B.m_data[cc])[particleGrid].array();
+    }
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
     amrex::ParallelFor(np,
@@ -68,11 +71,11 @@ void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& p
 
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
-    const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
+    amrex::IntVect const nCell{AMREX_D_DECL(10, 10, 10)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -80,15 +83,15 @@ ComputationalDomain get_compdom ()
 class AccumulateJUpdateVC2Test : public testing::Test
 {
 protected:
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
-    inline static const int s_hodgeDegree{2};
-    static const unsigned int s_numSpec{1};
-    static const unsigned int s_vDim{3};
-    static const unsigned int s_spec{0};
+    inline static int const s_hodgeDegree{2};
+    static unsigned int const s_numSpec{1};
+    static unsigned int const s_vDim{3};
+    static unsigned int const s_spec{0};
     Io::Parameters m_parameters{};
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> m_jA;
@@ -98,7 +101,7 @@ protected:
     std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
-    static const Direction s_pDim{yDir};
+    static Direction const s_pDim{yDir};
 
     amrex::Real m_weight = 1.0;
 
@@ -138,7 +141,7 @@ protected:
 TEST_F(AccumulateJUpdateVC2Test, NullTest)
 {
     // Adding particle to one cell
-    const unsigned int numParticles{1};
+    unsigned int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -148,11 +151,11 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
 
-    const amrex::Array<std::string, 3> analyticalFuncB = {"0.0", "0.0", "0.0"};
+    amrex::Array<std::string, 3> const analyticalFuncB = {"0.0", "0.0", "0.0"};
 
-    const amrex::Array<std::string, 3> analyticalFuncJ = {"0.0", "0.0", "0.0"};
+    amrex::Array<std::string, 3> const analyticalFuncJ = {"0.0", "0.0", "0.0"};
 
-    const int nVar{4}; // x, y, z, t
+    int const nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -178,30 +181,30 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
+            particleGrid, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 0
-        CHECK_FIELD((J.m_data[xDir]).array(pti), pti.validbox(), {}, {}, 0);
-        CHECK_FIELD((J.m_data[yDir]).array(pti), pti.validbox(), {}, {}, 0);
-        CHECK_FIELD((J.m_data[zDir]).array(pti), pti.validbox(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[xDir]).array(particleGrid), particleGrid.validbox(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[yDir]).array(particleGrid), particleGrid.validbox(), {}, {}, 0);
+        CHECK_FIELD((J.m_data[zDir]).array(particleGrid), particleGrid.validbox(), {}, {}, 0);
     }
 }
 
 TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.5 * dx[xDir],
@@ -214,11 +217,11 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
 
-    const amrex::Array<std::string, 3> analyticalFuncB = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
-    const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4}; // x, y, z, t
+    int const nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -244,21 +247,21 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
+            particleGrid, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
 
         EXPECT_NEAR(bfields[0], -4.5, 1e-15);
         EXPECT_NEAR(bfields[1], -4.5, 1e-15);
 
         CHECK_FIELD(
-            (J.m_data[s_pDim]).array(pti), pti.validbox(),
+            (J.m_data[s_pDim]).array(particleGrid), particleGrid.validbox(),
             // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
              { return AMREX_D_TERM((a == 4 || a == 5), &&b == 4, &&(c == 4 || c == 5)); },
@@ -268,15 +271,17 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
             {1 - 1. / 8, 1 - 0.25},
             // with the remaining entries being 1
             1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
     }
 }
 
 TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     auto dx = m_infra.geometry().CellSizeArray();
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{AMREX_D_DECL(m_infra.m_geom.ProbHi(xDir) - 5.25 * dx[xDir],
@@ -289,11 +294,11 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
 
-    const amrex::Array<std::string, 3> analyticalFuncB = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
-    const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4}; // x, y, z, t
+    int const nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -319,21 +324,21 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
+            particleGrid, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
 
         EXPECT_NEAR(bfields[0], -4.75, 1e-15);
         EXPECT_NEAR(bfields[1], -4.75, 1e-15);
 
         CHECK_FIELD(
-            (J.m_data[s_pDim]).array(pti), pti.validbox(),
+            (J.m_data[s_pDim]).array(particleGrid), particleGrid.validbox(),
             // Expect the eight nearest nodes (4/5, 4/5, 4/5) to be non-zero
             {[] (AMREX_D_DECL(int a, int b, int c))
              { return AMREX_D_TERM(a == 4, &&b == 4, &&c == 4); },
@@ -354,14 +359,16 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
             //{},{},
             // with the remaining entries being 1
             1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
     }
 }
 
 TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
 {
-    const int numParticles{2};
+    int const numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -376,11 +383,11 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
 
-    const amrex::Array<std::string, 3> analyticalFuncB = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
-    const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4}; // x, y, z, t
+    int const nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -406,29 +413,31 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
+            particleGrid, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 1
-        CHECK_FIELD((J.m_data[s_pDim]).array(pti), pti.validbox(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[s_pDim]).array(particleGrid), particleGrid.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
     }
 }
 
 TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
 {
-    const int numParticles{2};
+    int const numParticles{2};
     auto dx = m_infra.geometry().CellSizeArray();
     // Particles in different cells to check that they don't interfere with each other
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
@@ -443,11 +452,11 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
     // (default) charge correctly transferred from addSingleParticles
     EXPECT_EQ(1, m_particleGroup[0]->get_charge());
 
-    const amrex::Array<std::string, 3> analyticalFuncB = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
-    const amrex::Array<std::string, 3> analyticalFuncJ = {"1.0", "1.0", "1.0"};
+    amrex::Array<std::string, 3> const analyticalFuncJ = {"1.0", "1.0", "1.0"};
 
-    const int nVar{4}; // x, y, z, t
+    int const nVar{4}; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, AMREX_SPACEDIM> funcJ;
     amrex::Array<amrex::Parser, 6> parser;
@@ -473,23 +482,25 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
-        const long np{pti.numParticles()};
+        long const np{particleGrid.numParticles()};
         EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            pti, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
+            particleGrid, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
 
         // Expect all nodes to be 1
-        CHECK_FIELD((J.m_data[s_pDim]).array(pti), pti.validbox(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(pti), pti.validbox(), {}, {}, 1);
-        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(pti), pti.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[s_pDim]).array(particleGrid), particleGrid.validbox(), {}, {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 1) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
+        CHECK_FIELD((J.m_data[(s_pDim + 2) % 3]).array(particleGrid), particleGrid.validbox(), {},
+                    {}, 1);
     }
 }
 

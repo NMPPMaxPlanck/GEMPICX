@@ -56,48 +56,48 @@ public:
     static constexpr int s_degZ{3};
     static constexpr int s_hodgeDegree{Degree()};
 
-    inline static const int s_maxSplineDegree{
+    inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
 };
 
 template <int hodgeDegree, int maxSplineDegree>
-void maxwellstrang_error (double& bError, double& dError, const int n)
+void maxwellstrang_error (double& bError, double& dError, int const n)
 {
     // Analytical solutions in every direction
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> analyticalD = {
+    amrex::Array<std::string, 3> const analyticalD = {
         "0.",
         "cos(x-t)",
         "cos(x-t)",
     };
 
-    const amrex::Array<std::string, 3> analyticalB = {
+    amrex::Array<std::string, 3> const analyticalB = {
         "0.",
         "-cos(x-t)",
         "cos(x-t)",
     };
 #endif
 #if (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> analyticalD = {
+    amrex::Array<std::string, 3> const analyticalD = {
         "cos(x+y-sqrt(2.0)*t)",
         "-cos(x+y-sqrt(2.0)*t)",
         "-sqrt(2)*cos(x+y-sqrt(2.0)*t)",
     };
 
-    const amrex::Array<std::string, 3> analyticalB = {
+    amrex::Array<std::string, 3> const analyticalB = {
         "-cos(x+y-sqrt(2.0)*t)",
         "cos(x+y-sqrt(2.0)*t)",
         "-sqrt(2)*cos(x+y-sqrt(2.0)*t)",
     };
 #endif
 #if (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> analyticalD = {
+    amrex::Array<std::string, 3> const analyticalD = {
         "cos(x+y+z-sqrt(3.0)*t)",
         "-2*cos(x+y+z-sqrt(3.0)*t)",
         "cos(x+y+z-sqrt(3.0)*t)",
     };
 
-    const amrex::Array<std::string, 3> analyticalB = {
+    amrex::Array<std::string, 3> const analyticalB = {
         "sqrt(3)*cos(x+y+z-sqrt(3.0)*t)",
         "0.0",
         "-sqrt(3)*cos(x+y+z-sqrt(3.0)*t)",
@@ -105,7 +105,7 @@ void maxwellstrang_error (double& bError, double& dError, const int n)
 #endif
     // Initialize computational_domain
     Gempic::Io::Parameters parameters{};
-    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+    amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
     auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
     // Project B and D to a primal and dual two form respectively
@@ -140,8 +140,8 @@ void maxwellstrang_error (double& bError, double& dError, const int n)
     DeRhamField<Grid::dual, Space::face> curlH(deRham);
 
     // Advance Maxwell's equations using second-order Hamiltonian Strang splitting
-    const int nt = 10; // number of time steps
-    const amrex::Real dt = 0.0001;
+    int const nt = 10; // number of time steps
+    amrex::Real const dt = 0.0001;
     for (int i = 0; i < nt; ++i)
     {
         // solve Faraday equation for a half step
@@ -185,7 +185,7 @@ TYPED_TEST(MaxwellFDSolverTest, ConvergenceTest)
 {
     constexpr int hodgeDegree{TestFixture::s_hodgeDegree};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
-    const int coarse = 16, fine = 32;
+    int const coarse = 16, fine = 32;
     amrex::Real bErrorCoarse, bErrorFine, dErrorCoarse, dErrorFine;
     amrex::Real tol = 0.05;
 

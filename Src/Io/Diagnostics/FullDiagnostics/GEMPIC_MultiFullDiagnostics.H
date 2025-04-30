@@ -23,10 +23,10 @@ class MultiDiagnostics
 {
 public:
     MultiDiagnostics(
-        const ComputationalDomain& compDom,
-        const std::map<std::string, const amrex::MultiFab>& fieldMap,
-        const std::map<std::string, const amrex::Real>& fieldsScaling,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vDim, nData>>>& particles)
+        ComputationalDomain const& compDom,
+        std::map<std::string, amrex::MultiFab const> const& fieldMap,
+        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vDim, nData>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics()");
         read_parameters();
@@ -60,10 +60,10 @@ public:
     }
     /** \brief Loop over diags in alldiags and call their InitDiags */
     void init_data (
-        const ComputationalDomain& compDom,
-        const std::map<std::string, const amrex::MultiFab>& fieldMap,
-        const std::map<std::string, const amrex::Real>& fieldsScaling,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vDim, nData>>>& particles)
+        ComputationalDomain const& compDom,
+        std::map<std::string, amrex::MultiFab const> const& fieldMap,
+        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vDim, nData>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics::init_data()");
         for (auto& diag : m_alldiags)

@@ -53,7 +53,7 @@ public:
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, mfSrc,
                   to the output diagnostic MultiFab, mfDst.
      */
-    RawOutputProcessor(const amrex::MultiFab& mfSrc, const amrex::IntVect crseRatio);
+    RawOutputProcessor(amrex::MultiFab const& mfSrc, amrex::IntVect const crseRatio);
 
     /** \brief copy m_mfSrc to mfDst.
      *
@@ -64,7 +64,7 @@ public:
 
 private:
     /** Alias of source MultiFab (can be multi-component) */
-    const amrex::MultiFab m_mfSrc;
+    amrex::MultiFab const m_mfSrc;
 };
 
 /**
@@ -80,9 +80,9 @@ public:
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, mfSrc,
                   to the output diagnostic MultiFab, mfDst.
      */
-    CellCenterOutputProcessor(const amrex::MultiFab& mfSrc,
+    CellCenterOutputProcessor(amrex::MultiFab const& mfSrc,
                               amrex::Real scaling,
-                              const amrex::IntVect crseRatio);
+                              amrex::IntVect const crseRatio);
 
     /** \brief Cell-center m_mfSrc and write the result in mfDst.
      *
@@ -97,7 +97,7 @@ public:
 
 private:
     /** Alias of source MultiFab (can be multi-component) */
-    const amrex::MultiFab m_mfSrc;
+    amrex::MultiFab const m_mfSrc;
 
     // Scaling factor
     amrex::Real m_scaling{1.0};

@@ -39,7 +39,7 @@ public:
     std::string m_path;
 
     /// diags name
-    const std::string m_rdName;
+    std::string const m_rdName;
 
     /// is this instance the first type of a group?
     bool m_isFirstType = true;
@@ -69,10 +69,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    ReducedDiagnostics(const std::string& rdName,
+    ReducedDiagnostics(std::string const& rdName,
                        int& indexNum,
                        bool isLastType,
-                       const std::string& fileName) :
+                       std::string const& fileName) :
         m_rdName{rdName}, m_isLastType{isLastType}
     {
         BL_PROFILE("Gempic::Io::ReducedDiagnostics::ReducedDiagnostics()");
@@ -168,8 +168,8 @@ public:
      * function to compute diags
      */
     virtual void compute_diags(
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr) = 0;
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& partGr) = 0;
 
     /**
      * write to file function
@@ -205,7 +205,7 @@ public:
         }
 
         // loop over data size and write
-        for (const auto& item : m_data) ofs << m_sep << item;
+        for (auto const& item : m_data) ofs << m_sep << item;
 
         // end loop over data size
 

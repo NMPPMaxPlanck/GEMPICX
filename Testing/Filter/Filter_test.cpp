@@ -14,9 +14,9 @@ namespace
 using namespace Gempic;
 using namespace Forms;
 
-void set_rho_parallel_for (amrex::Array4<amrex::Real> const &rhoInArr,
-                           amrex::Array4<amrex::Real> const &rhoOutArr,
-                           const amrex::Box &bx)
+void set_rho_parallel_for (amrex::Array4<amrex::Real> const& rhoInArr,
+                           amrex::Array4<amrex::Real> const& rhoOutArr,
+                           amrex::Box const& bx)
 {
     auto smallEnd = bx.smallEnd().dim3();
     ParallelFor(bx,
@@ -73,7 +73,7 @@ public:
 
 TEST_P(BilinearFilterTestParameter, ConstantTest)
 {
-    const int hodgeDegree{2};
+    int const hodgeDegree{2};
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
     // Define fields
@@ -104,14 +104,14 @@ TEST_F(BilinearFilterTest, LinearTest)
     std::vector<int> filterNpass{AMREX_D_DECL(1, 1, 1)};
     m_parameters.set("Filter.nPass", filterNpass);
 
-    const std::string linearRho{AMREX_D_PICK("x", "1 + x + 2 * y + x * y", "x + y + z")};
+    std::string const linearRho{AMREX_D_PICK("x", "1 + x + 2 * y + x * y", "x + y + z")};
     amrex::Parser parserRho;
     parserRho.define(linearRho);
     parserRho.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-    const int nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
     auto funcRho = parserRho.compile<nVar>();
 
-    const int hodgeDegree{4}; // need 1 ghost cell per pass
+    int const hodgeDegree{4}; // need 1 ghost cell per pass
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
     // Define fields
@@ -126,8 +126,8 @@ TEST_F(BilinearFilterTest, LinearTest)
     for (amrex::MFIter mfi(rhoIn.m_data); mfi.isValid(); ++mfi)
     {
         // Expect filter not to change linear function
-        const amrex::Box &bx = mfi.tilebox();
-        const amrex::Box &interiorBox = amrex::grow(bx, -1); // remove boundary terms
+        amrex::Box const& bx = mfi.tilebox();
+        amrex::Box const& interiorBox = amrex::grow(bx, -1); // remove boundary terms
         COMPARE_FIELDS(rhoIn.m_data.array(mfi), rhoOut.m_data.array(mfi), interiorBox, tolerance);
     }
 }
@@ -136,7 +136,7 @@ TEST_F(BilinearFilterTest, NoFilter)
 {
     m_parameters.set("Filter.enable", false);
 
-    const int hodgeDegree{2};
+    int const hodgeDegree{2};
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
     // Define fields
@@ -160,7 +160,7 @@ TEST_F(BilinearFilterTest, NoFilter)
 
 TEST_F(BilinearFilterTest, OneNonZeroValueTest)
 {
-    const int hodgeDegree{2};
+    int const hodgeDegree{2};
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
     // Define fields
@@ -181,9 +181,9 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
-        amrex::Array4<amrex::Real> const &rhoInArr = rhoIn.m_data.array(mfi);
-        amrex::Array4<amrex::Real> const &rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
+        amrex::Box const& bx = mfi.tilebox();
+        amrex::Array4<amrex::Real> const& rhoInArr = rhoIn.m_data.array(mfi);
+        amrex::Array4<amrex::Real> const& rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
 
         set_rho_parallel_for(rhoInArr, rhoOutExpArr, bx);
     }
@@ -192,9 +192,9 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
-        amrex::Array4<amrex::Real> const &rhoOutArr = rhoOut.m_data.array(mfi);
-        amrex::Array4<amrex::Real> const &rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
+        amrex::Box const& bx = mfi.tilebox();
+        amrex::Array4<amrex::Real> const& rhoOutArr = rhoOut.m_data.array(mfi);
+        amrex::Array4<amrex::Real> const& rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
 
         COMPARE_FIELDS(rhoOutArr, rhoOutExpArr, bx);
     }
@@ -203,12 +203,12 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
 TEST_F(BilinearFilterTest, AnalyticalTest)
 {
     // Parse analytical field and initialize parserEval.
-    const std::string analyticalInit{"sin(kvarx*x)"};
+    std::string const analyticalInit{"sin(kvarx*x)"};
     //  One pass bilinear filter is
     //  f(x) + 0.5*(sum_{n=1}^{infty} df^(2n)/d^(2n)x (x) *(dx)^(2n)/(2n)!)
     //  with dx = 1 and f(x) = sin(k*x), this is
     //  f(x) + 0.5*(cos(k) - 1)*f(x) = 0.5*f(x)(1 + cos(k))
-    const std::string analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
+    std::string const analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
 
     m_parameters.set("Function.rhoInit", analyticalInit);
     m_parameters.set("Function.rhoAnal", analyticalSol);
@@ -235,7 +235,7 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
     }
 }
@@ -243,12 +243,12 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
 TEST_F(BilinearFilterTest, CompensatedAnalyticalTest)
 {
     // Parse analytical field and initialize parserEval.
-    const std::string analyticalInit{"sin(kvarx*x)"};
-    const std::string analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
+    std::string const analyticalInit{"sin(kvarx*x)"};
+    std::string const analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
     //  One pass bilinear filter with compensation is
     //  (alpha+(1-alpha)cos(kvarx))*g(x)
     //  where g(x) is the analytical solution without filter
-    const std::string analyticalSolComp{"(0.5 + 0.5*cos(kvarx))*" + analyticalSol};
+    std::string const analyticalSolComp{"(0.5 + 0.5*cos(kvarx))*" + analyticalSol};
 
     m_parameters.set("Function.rhoInit", analyticalInit);
     m_parameters.set("Function.rhoAnal", analyticalSolComp);
@@ -277,7 +277,7 @@ TEST_F(BilinearFilterTest, CompensatedAnalyticalTest)
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
     }
 }

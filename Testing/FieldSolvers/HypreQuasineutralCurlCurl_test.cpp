@@ -34,7 +34,7 @@ public:
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     static constexpr int s_hodgeDegree{HodgeDegreeStruct::value};
 
-    static const int s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Parser m_parserRho;
     amrex::ParserExecutor<s_nVar> m_funcRho;
 
@@ -47,15 +47,15 @@ public:
     HypreQuasineutralCurlCurlTest()
     {
 #if AMREX_SPACEDIM == 2
-        const std::string analyticalRho = "10+cos(x)+cos(2*y)";
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(2*x)", "cos(x)*cos(y)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {"(1+10+cos(x)+cos(2*y))*sin(y)",
+        std::string const analyticalRho = "10+cos(x)+cos(2*y)";
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(2*x)", "cos(x)*cos(y)"};
+        amrex::Array<std::string, 3> const analyticalRHS = {"(1+10+cos(x)+cos(2*y))*sin(y)",
                                                             "(4+10+cos(x)+cos(2*y))*sin(2*x)",
                                                             "(2+10+cos(x)+cos(2*y))*cos(x)*cos(y)"};
 #elif AMREX_SPACEDIM == 3
-        const std::string analyticalRho = "10+cos(x)+cos(2*y)+sin(z)";
-        const amrex::Array<std::string, 3> analyticalE = {"sin(y)", "sin(2*z)", "sin(3*x)"};
-        const amrex::Array<std::string, 3> analyticalRHS = {
+        std::string const analyticalRho = "10+cos(x)+cos(2*y)+sin(z)";
+        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(2*z)", "sin(3*x)"};
+        amrex::Array<std::string, 3> const analyticalRHS = {
             "(1+10+cos(x)+cos(2*y)+sin(z))*sin(y)", "(4+10+cos(x)+cos(2*y)+sin(z))*sin(2*z)",
             "(9+10+cos(x)+cos(2*y)+sin(z))*sin(3*x)"};
 #endif
@@ -80,7 +80,7 @@ public:
     {
         Gempic::Io::Parameters parameters;
         // Initialize computational_domain
-        const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+        amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
         // Initialize the De Rham Complex
@@ -113,7 +113,7 @@ TYPED_TEST_SUITE(HypreQuasineutralCurlCurlTest, MyTypes);
 
 TYPED_TEST(HypreQuasineutralCurlCurlTest, HypreQuasineutralCurlCurlConvergence)
 {
-    const int coarse = 12, fine = 24;
+    int const coarse = 12, fine = 24;
     amrex::Real errorCoarse, errorFine;
     amrex::Real tol = 0.1;
 

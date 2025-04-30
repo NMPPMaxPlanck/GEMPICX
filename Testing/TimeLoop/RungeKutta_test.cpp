@@ -21,11 +21,11 @@ constexpr int hodgeDegree = 2;
 
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(10, 10, 10)};
-    const amrex::IntVect nCell{AMREX_D_DECL(2, 2, 100)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(2, 2, 50)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10, 10, 10)};
+    amrex::IntVect const nCell{AMREX_D_DECL(2, 2, 100)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(2, 2, 50)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -34,18 +34,18 @@ class RungeKuttaTest : public testing::Test
 {
 protected:
     // Degree of splines in each direction
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
     static constexpr unsigned int s_ndata = 10;
     // Number of species (second species only used for DoubleParticleMultipleSpecies)
-    static const int s_numSpec{1};
+    static int const s_numSpec{1};
     // Number of velocity dimensions.
-    static const int s_vDim{3};
+    static int const s_vDim{3};
     // Number of ghost cells in mesh
-    const int m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
-    const amrex::IntVect m_nghosts{AMREX_D_DECL(m_nghost, m_nghost, m_nghost)};
-    const amrex::IntVect m_dstNGhosts{AMREX_D_DECL(0, 0, 0)};
+    int const m_nghost{Gempic::Test::Utils::init_n_ghost(s_degX, s_degY, s_degZ)};
+    amrex::IntVect const m_nghosts{AMREX_D_DECL(m_nghost, m_nghost, m_nghost)};
+    amrex::IntVect const m_dstNGhosts{AMREX_D_DECL(0, 0, 0)};
 
     Io::Parameters m_params{};
 
@@ -55,7 +55,7 @@ protected:
     ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vDim, s_ndata>>> m_particleGroup;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
-    const amrex::Geometry m_geom = m_infra.m_geom;
+    amrex::Geometry const m_geom = m_infra.m_geom;
 
     RungeKuttaTest() : m_infra{get_compdom()}
     {
@@ -77,8 +77,8 @@ protected:
         int fieldSave{1};
         m_params.set("FullDiagnostics.field.saveInterval", fieldSave);
 
-        const int hodgeDegree{2};
-        const int maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+        int const hodgeDegree{2};
+        int const maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
         // Initialize the De Rham Complex
         m_deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, maxSplineDegree);
@@ -101,7 +101,7 @@ void initialize_tensor (amrex::MFIter& mfi,
                         amrex::MultiFab& mf,
                         amrex::GpuArray<amrex::Real, 3> val)
 {
-    const amrex::Box& bx = mfi.tilebox();
+    amrex::Box const& bx = mfi.tilebox();
     amrex::Array4<amrex::Real> tensorArray = mf[mfi].array();
     ParallelFor(bx,
                 [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -118,7 +118,7 @@ TEST_F(RungeKuttaTest, TestConstantRHS)
     // Runge-Kutta solver
     // default stages=5
     RungeKutta rkSolver(m_infra, m_deRham);
-    const int nStage = rkSolver.get_stages();
+    int const nStage = rkSolver.get_stages();
     amrex::Vector<amrex::Real> vect{1, 2, 3};
     amrex::Vector<amrex::Real> s1{0, 0, 0}, s2{0, 0, 0};
     amrex::Real dt{0.5};
@@ -184,7 +184,7 @@ TEST_F(RungeKuttaTest, OneKineticParticle)
     }
     // constexpr int stages = 5;
     RungeKutta rkSolver(m_infra, m_deRham);
-    const int stages = rkSolver.get_stages();
+    int const stages = rkSolver.get_stages();
 
     for (int i = 0; i < nSteps - 1; i++)
     {
@@ -224,7 +224,7 @@ TEST_F(RungeKuttaTest, KineticParticleGroup)
 #else
     // const int stages = 5;
     RungeKutta rkSolver(m_infra, m_deRham);
-    const int stages = rkSolver.get_stages();
+    int const stages = rkSolver.get_stages();
 
     // Initialize the fields
     DeRhamField<Grid::primal, Space::face> B(m_deRham);
@@ -286,10 +286,9 @@ TEST_F(RungeKuttaTest, KineticParticleGroup)
                 m_particleGroup, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
         }
 
-        for (amrex::ParIter<0, 0, s_vDim + s_ndata, 0> pti(*m_particleGroup[0], 0); pti.isValid();
-             ++pti)
+        for (auto& particleGrid : *m_particleGroup[0])
         {
-            auto& particles = pti.GetArrayOfStructs();
+            auto& particles = particleGrid.GetArrayOfStructs();
             auto* partData = particles().data();
 
             for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
@@ -311,7 +310,7 @@ TEST_F(RungeKuttaTest, DriftKineticParticleGroup)
 #else
     // const int stages = 5;
     RungeKutta rkSolver(m_infra, m_deRham);
-    const int stages = rkSolver.get_stages();
+    int const stages = rkSolver.get_stages();
 
     // Initialize the fields
     DeRhamField<Grid::primal, Space::face> B(m_deRham);
@@ -373,13 +372,12 @@ TEST_F(RungeKuttaTest, DriftKineticParticleGroup)
                 m_particleGroup, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
         }
 
-        for (amrex::ParIter<0, 0, s_vDim + s_ndata, 0> pti(*m_particleGroup[0], 0); pti.isValid();
-             ++pti)
+        for (auto& particleGrid : *m_particleGroup[0])
         {
-            auto& particles = pti.GetArrayOfStructs();
+            auto& particles = particleGrid.GetArrayOfStructs();
             auto* partData = particles().data();
 
-            auto& particleAttributes = pti.GetStructOfArrays();
+            auto& particleAttributes = particleGrid.GetStructOfArrays();
             auto* vx = particleAttributes.GetRealData(0).data();
             auto* vy = particleAttributes.GetRealData(1).data();
             auto* vz = particleAttributes.GetRealData(2).data();
@@ -405,10 +403,10 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
 #if AMREX_SPACEDIM != 3
     GTEST_SKIP();
 #else
-    const amrex::Array<std::string, 3> analyticalE = {
+    amrex::Array<std::string, 3> const analyticalE = {
         "cos(3.141592653589793*t-0.2*3.141592653589793*z)", //x component :cos(wt-kz)
         "0", "0"};
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::Parser, 3> parserE;
     for (int i = 0; i < 3; ++i)
@@ -418,7 +416,7 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
         funcE[i] = parserE[i].compile<nVar>();
     }
 
-    const amrex::Array<std::string, 3> analyticalB = {
+    amrex::Array<std::string, 3> const analyticalB = {
         "0",
         "cos(3.141592653589793*t-0.2*3.141592653589793*z)", //y component :cos(wt-kz)
         "0"};
@@ -483,13 +481,13 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
     GTEST_SKIP();
 #else
     // eigen frequency omega=k/sqrt(2)
-    const amrex::Array<std::string, 3> analyticalE = {
+    amrex::Array<std::string, 3> const analyticalE = {
         "cos(0.4442882938158367*t-0.2*3.141592653589793*z)", //x component, cos(wt-kz)
         "0", "0"};
-    const amrex::Array<std::string, 3> analyticalD = {
+    amrex::Array<std::string, 3> const analyticalD = {
         "2*cos(0.4442882938158367*t-0.2*3.141592653589793*z)", //x component, 2cos(wt-kz)
         "0", "0"};
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcE;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcD;
     amrex::Array<amrex::Parser, 3> parserE;
@@ -505,7 +503,7 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
         funcD[i] = parserD[i].compile<nVar>();
     }
 
-    const amrex::Array<std::string, 3> analyticalB = {
+    amrex::Array<std::string, 3> const analyticalB = {
         "0",
         "1.4142135623730951*cos(0.4442882938158367*t-0.2*3.141592653589793*z)", //y component
                                                                                 //sqrt(2)*cos(wt-kz)

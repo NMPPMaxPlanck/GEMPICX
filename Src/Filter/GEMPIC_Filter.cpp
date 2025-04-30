@@ -8,7 +8,7 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Filter.H"
 
-void Gempic::Filter::Filter::do_filter (const amrex::Box& tbx,
+void Gempic::Filter::Filter::do_filter (amrex::Box const& tbx,
                                        amrex::Array4<amrex::Real const> const& src,
                                        amrex::Array4<amrex::Real> const& dst,
                                        int scomp,
@@ -57,11 +57,11 @@ namespace Gempic::Filter::Impl
 // Only needs newS for optimization reasons that are a bit excessive
 void convolve_filter (amrex::Vector<amrex::Real>& oldS,
                       amrex::Vector<amrex::Real>& newS,
-                      const amrex::Real alpha,
-                      const int ipass)
+                      amrex::Real const alpha,
+                      int const ipass)
 {
     BL_PROFILE("Gempic::Filter::Impl::convolve_filter()");
-    const amrex::Real beta{0.5 - 0.5 * alpha};
+    amrex::Real const beta{0.5 - 0.5 * alpha};
 
     // element 0 has to be treated in its own way
     newS[0] = alpha * oldS[0] + (1 - alpha) * oldS[1];
@@ -77,9 +77,9 @@ void convolve_filter (amrex::Vector<amrex::Real>& oldS,
 }
 
 void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
-                      const unsigned int npass,
-                      const amrex::Real alpha,
-                      const bool doCompensation)
+                      unsigned int const npass,
+                      amrex::Real const alpha,
+                      bool const doCompensation)
 {
     BL_PROFILE("Gempic::Filter::Impl::compute_stencil()");
     amrex::Vector<amrex::Real> oldS(1u + npass + static_cast<size_t>(doCompensation), 0.);

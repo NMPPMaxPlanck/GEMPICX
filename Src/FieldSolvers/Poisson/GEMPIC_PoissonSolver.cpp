@@ -37,7 +37,7 @@ private:
     using CGSol = DeRhamField<Grid::dual, Space::face>;
 
     std::shared_ptr<DeRhamComplex> m_deRham;
-    const Gempic::ComputationalDomain m_infra;
+    Gempic::ComputationalDomain const m_infra;
     std::unique_ptr<SolverMethod<CGRhs, CGSol>> m_cgHodge;
 
     // Auxiliary multifabs for Poisson operator
@@ -46,7 +46,7 @@ private:
 
 public:
     PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex> deRham,
-                             const Gempic::ComputationalDomain& infra);
+                             Gempic::ComputationalDomain const& infra);
 
     void operator()(DeRhamField<Grid::dual, Space::cell>& rho,
                     DeRhamField<Grid::primal, Space::node>& phi);
@@ -54,11 +54,11 @@ public:
 
 std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_poisson_solver (
     std::shared_ptr<DeRhamComplex> deRham,
-    const Gempic::ComputationalDomain& infra,
-    const std::string& solver,
-    const amrex::Real relTol,
-    const amrex::Real absTol,
-    const bool tolerancesGiven)
+    Gempic::ComputationalDomain const& infra,
+    std::string const& solver,
+    amrex::Real const relTol,
+    amrex::Real const absTol,
+    bool const tolerancesGiven)
 {
     int maxCoarseningLevel = 10;
     int maxIter = 100;
@@ -171,7 +171,7 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
     exit(1); // Calms the compiler even though we don't technically return anything
 }
 
-AmrexSolver::AmrexSolver(const ComputationalDomain& compDom,
+AmrexSolver::AmrexSolver(ComputationalDomain const& compDom,
                          int maxCoarseningLevel,
                          int maxIter,
                          int maxFmgIter,
@@ -261,7 +261,7 @@ void PoissonApply::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
 }
 
 PoissonApplyInverseHodge::PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex> deRham,
-                                                   const Gempic::ComputationalDomain& infra) :
+                                                   Gempic::ComputationalDomain const& infra) :
     m_deRham{deRham},
     m_infra{infra},
     m_cgHodge{make_conjugate_gradient_unique_ptr<CGRhs, CGSol>(
@@ -296,7 +296,7 @@ void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>&
 
 /// Ensures that the average value of the field is 0 if domain is periodic in all directions
 void Gempic::FieldSolvers::subtract_constant_part (DeRhamField<Grid::dual, Space::cell>& rho,
-                                                  const ComputationalDomain& compDom)
+                                                  ComputationalDomain const& compDom)
 {
     BL_PROFILE("Gempic::FieldSolvers::subtract_constant_part()");
     if (compDom.geometry().isAllPeriodic())

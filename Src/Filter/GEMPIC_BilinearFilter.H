@@ -23,10 +23,10 @@ namespace Gempic::Filter
 namespace Impl
 {
 // Only needs newS for optimization reasons that are a bit excessive
-void convolve_filter(amrex::Vector<amrex::Real> &oldS,
-                     amrex::Vector<amrex::Real> &newS,
-                     const amrex::Real alpha,
-                     const int ipass);
+void convolve_filter(amrex::Vector<amrex::Real>& oldS,
+                     amrex::Vector<amrex::Real>& newS,
+                     amrex::Real const alpha,
+                     int const ipass);
 
 } // namespace Impl
 
@@ -38,7 +38,7 @@ public:
     void compute_stencils();
 
     // Filter parameter (0.5 for bilinear filters)
-    const amrex::Real m_alpha{0.5};
+    amrex::Real const m_alpha{0.5};
 
     // Do a compensation step?
     bool m_compensate{false};

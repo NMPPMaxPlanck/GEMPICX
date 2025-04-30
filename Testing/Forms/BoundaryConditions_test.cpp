@@ -40,11 +40,11 @@ condLambda condZ = func_cond_z;
 ComputationalDomain get_compdom ()
 {
     // Cells of size 1x1x1
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(3.0, 3.0, 3.0)};
-    const amrex::IntVect nCell{AMREX_D_DECL(3, 3, 3)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(3.0, 3.0, 3.0)};
+    amrex::IntVect const nCell{AMREX_D_DECL(3, 3, 3)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -54,19 +54,19 @@ class BoundaryConditionTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
 
     BoundaryConditionTest() : m_infra{get_compdom()}
     {
-        const amrex::Vector<std::string> bcVec(6, "PerfectlyConducting");
+        amrex::Vector<std::string> const bcVec(6, "PerfectlyConducting");
         // Not checking particles
-        const int nGhostExtra{0};
+        int const nGhostExtra{0};
 
         m_parameters.set("nGhostExtra", nGhostExtra);
         m_parameters.set("BoundaryCondition.Default", bcVec);
@@ -77,14 +77,14 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingPrimal)
 {
     constexpr int hodgeDegree{2};
 
-    const std::string oneFuncScalar = "1.0";
-    const amrex::Array<std::string, 3> oneFuncVector = {
+    std::string const oneFuncScalar = "1.0";
+    amrex::Array<std::string, 3> const oneFuncVector = {
         "1.0",
         "1.0",
         "1.0",
     };
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::ParserExecutor<nVar> funcScalar;
     amrex::Parser parserScalar;
@@ -185,14 +185,14 @@ TEST_F(BoundaryConditionTest, PerfectlyConductingDual)
 {
     constexpr int hodgeDegree{2};
 
-    const std::string oneFuncScalar = "1.0";
-    const amrex::Array<std::string, 3> oneFuncVector = {
+    std::string const oneFuncScalar = "1.0";
+    amrex::Array<std::string, 3> const oneFuncVector = {
         "1.0",
         "1.0",
         "1.0",
     };
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
     amrex::ParserExecutor<nVar> funcScalar;
     amrex::Parser parserScalar;

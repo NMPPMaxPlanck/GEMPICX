@@ -62,8 +62,8 @@ inline amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> calculate_random_
 
 template <template <unsigned int> class VInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<int, vDim> get_gauss_ids (
-    const VInit<vDim>& vIniter,
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray)
+    VInit<vDim> const& vIniter,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> const& randomArray)
 {
     amrex::GpuArray<amrex::Real, vDim> gaussChoice;
     amrex::GpuArray<int, vDim> gaussIdx;
@@ -89,11 +89,11 @@ AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<int, vDim> get_gauss_ids (
 
 template <template <unsigned int> class VInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real get_gaussian_velocity (
-    const VInit<vDim>& vIniter,
+    VInit<vDim> const& vIniter,
     int gaussId,
     amrex::Real z0,
     int cc,
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& location)
 {
     amrex::Real vDev;
     if (vIniter.m_vSchemePtr[gaussId] == VelocityInitScheme::constant)
@@ -337,10 +337,10 @@ private:
 
 template <template <unsigned int> class VInit, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void get_velocities (
-    const VInit<vDim>& vIniter,
+    VInit<vDim> const& vIniter,
     amrex::GpuArray<amrex::Real, vDim>& velocities,
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim>& randomArray,
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& location)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM + 3 * vDim> const& randomArray,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& location)
 {
     using namespace Impl;
     auto gaussIdx{get_gauss_ids(vIniter, randomArray)};
@@ -580,7 +580,7 @@ void init_particles_cellwise (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
         {
             amrex::ParticleTile<ParticleType, vDim + nData, 0>& particles =
                 ppg->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
-            const amrex::Box& bx = mfi.validbox();
+            amrex::Box const& bx = mfi.validbox();
             amrex::IntVect lo = {bx.smallEnd()};
             amrex::IntVect hi = {bx.bigEnd()};
 
@@ -663,7 +663,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
 
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect boxSize{bx.size()};
         int npart = nPartPerCell * bx.numPts();
@@ -722,7 +722,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
                     }
                     get_velocities(vInitGpu, velocity, randArray, cellCenter);
 
-                    const double factor = densityEval(
+                    double const factor = densityEval(
                         AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
                     amrex::Real weight = factor / nPartPerCell * dx.product();
                     ParticleType& p = pstruct[localidx];
@@ -788,7 +788,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
     //#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
@@ -818,7 +818,7 @@ void init_particles_full_domain (std::shared_ptr<ParticleGroups<vDim, nData>>& p
                 }
                 get_velocities(vInit, velocity, randArray, cellCenter);
 
-                const double factor =
+                double const factor =
                     densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
                 weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
                 buffer.add_particle(position, velocity, weight);
@@ -875,7 +875,7 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
     //#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         amrex::IntVect lo = {bx.smallEnd()};
         amrex::IntVect hi = {bx.bigEnd()};
 
@@ -924,7 +924,7 @@ void init_particles_full_domain_sobol (std::shared_ptr<ParticleGroups<vDim, nDat
             }
 
             get_velocities(vInit, velocity, randArray, position);
-            const double factor =
+            double const factor =
                 densityEval(AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
             weight = factor / nPartPerCell * infra.geometry().CellSizeArray().product();
             buffer.add_particle(position, velocity, weight);

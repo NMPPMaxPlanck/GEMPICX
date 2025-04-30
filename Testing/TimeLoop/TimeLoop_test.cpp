@@ -21,12 +21,12 @@ namespace
 {
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{
         AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
-    const amrex::IntVect nCell{AMREX_D_DECL(20, 20, 20)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(20, 20, 20)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect const nCell{AMREX_D_DECL(20, 20, 20)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(20, 20, 20)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -38,17 +38,17 @@ class HamiltonianSplittingTest : public testing::Test
 {
 protected:
     // Degree of splines in each direction
-    static const int s_degX{2}; // to match degree 2 in script
-    static const int s_degY{2};
-    static const int s_degZ{2};
+    static int const s_degX{2}; // to match degree 2 in script
+    static int const s_degY{2};
+    static int const s_degZ{2};
 
-    static const int s_vDim{3};
-    static const int s_numSpec{1};
-    static const int s_spec{0};
+    static int const s_vDim{3};
+    static int const s_numSpec{1};
+    static int const s_spec{0};
 
-    inline static const int s_maxSplineDegree{
+    inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
-    inline static const int s_hodgeDegree{2};
+    inline static int const s_hodgeDegree{2};
 
     Gempic::Io::Parameters m_parameters{};
 
@@ -76,7 +76,7 @@ protected:
 TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 {
     // Adding particle to one cell
-    const unsigned int numParticles{1};
+    unsigned int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -103,7 +103,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     DeRhamField<Grid::dual, Space::face> J(deRham);
 
     // TEST FOR X DIRECTION
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -114,8 +114,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -152,7 +152,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     // TEST FOR Y DIRECTION
 #if AMREX_SPACEDIM > 1
     amrex::Real xNodeVal = 0;
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -163,8 +163,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -198,7 +198,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
     // TEST FOR Z DIRECTION
 #if AMREX_SPACEDIM > 2
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -209,8 +209,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -250,7 +250,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -281,7 +281,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     DeRhamField<Grid::dual, Space::face> J(deRham);
 
     // TEST FOR X DIRECTION
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -292,8 +292,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -334,7 +334,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 TEST_F(HamiltonianSplittingTest, GaussTest)
 {
     // Adding a few particles
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -378,7 +378,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 
     // Particle iteration ... over one particle.
     bool particleLoopRun{false};
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[0], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions (positions of particles in particle group never used here)
         // Check if this is OK especially when there are several particle tiles
@@ -387,13 +387,13 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA, jA;
-        amrex::Array4<amrex::Real> const& rhoOldarr = rhoOld.m_data[pti].array();
-        amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[pti].array();
+        amrex::Array4<amrex::Real> const& rhoOldarr = rhoOld.m_data[particleGrid].array();
+        amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         particleLoopRun = true;
@@ -432,7 +432,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     amrex::Real tol = 1e-1;
     for (amrex::MFIter mfi(rhoMinJ.m_data); mfi.isValid(); ++mfi)
     {
-        const amrex::Box& bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(rhoMinJ.m_data.array(mfi), rho.m_data.array(mfi), bx, tol);
     }
 }
@@ -440,7 +440,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -488,7 +488,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     B.m_data[zDir].setVal(Bz * dxdy[2]);
 
     // TEST FOR X DIRECTION
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random initial positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionOld{
@@ -499,8 +499,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -544,7 +544,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 {
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -604,7 +604,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Real Bz{valBz};
     B.m_data[zDir].setVal(Bz * dxdy[2]);
 
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random initial positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionOld{
@@ -615,8 +615,8 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -685,7 +685,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
 
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -734,7 +734,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     B.m_data[zDir].setVal(Bz * dxdy[2]);
 
     // TEST FOR ALL DIRECTIONS
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions and velocities
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -742,8 +742,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[pti].array();
-            bA[cc] = (B.m_data[cc])[pti].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
         }
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
@@ -899,7 +899,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
 
     // Adding particle to one cell
-    const int numParticles{1};
+    int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
@@ -945,15 +945,15 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     E.m_data[zDir].setVal(Ez * dx[2]);
 
     // TEST FOR ALL DIRECTIONS
-    for (amrex::ParIter<0, 0, s_vDim + 1, 0> pti(*m_particleGroup[s_spec], 0); pti.isValid(); ++pti)
+    for (auto& particleGrid : *m_particleGroup[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
 
-        auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-        auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-        auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
         long pp = 0;
 
         velx[0] = v[0] * m_infra.geometry().CellSize(xDir);
@@ -967,7 +967,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 
         for (int cc = 0; cc < 3; cc++)
         {
-            eA[cc] = (E.m_data[cc])[pti].array();
+            eA[cc] = (E.m_data[cc])[particleGrid].array();
         }
         operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass, dt);
 

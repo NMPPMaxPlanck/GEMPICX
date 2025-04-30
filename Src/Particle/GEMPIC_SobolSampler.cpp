@@ -155,7 +155,7 @@ int Gempic::Particle::sobol_bit_lo0 (long long int n)
 }
 //****************************************************************************80
 
-void Gempic::Particle::sobol (int dimNum, long long int *seed, double quasi[])
+void Gempic::Particle::sobol (int dimNum, long long int* seed, double quasi[])
 
 //****************************************************************************80
 //

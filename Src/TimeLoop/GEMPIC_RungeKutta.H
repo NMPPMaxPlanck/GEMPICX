@@ -32,7 +32,7 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_dk_particle (
     amrex::GpuArray<amrex::Real, 3>& V,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& s2R,
     amrex::GpuArray<amrex::Real, 3>& s2V,
-    const amrex::GpuArray<amrex::Real, 3>& velGC,
+    amrex::GpuArray<amrex::Real, 3> const& velGC,
     amrex::Real accGC,
     amrex::Real dt,
     amrex::Real coeffsAStageIndex,
@@ -62,8 +62,8 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_kinetic_particle (
     amrex::GpuArray<amrex::Real, 3>& V,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& s2R,
     amrex::GpuArray<amrex::Real, 3>& s2V,
-    const amrex::GpuArray<amrex::Real, 3>& E,
-    const amrex::GpuArray<amrex::Real, 3>& B,
+    amrex::GpuArray<amrex::Real, 3> const& E,
+    amrex::GpuArray<amrex::Real, 3> const& B,
     amrex::Real qom, // q/m
     amrex::Real dt,
     amrex::Real coeffsAStageIndex,
@@ -103,11 +103,11 @@ template <int degx, int degy, int degz>
 inline AMREX_GPU_HOST_DEVICE void dxvpardt_drift_kinetic (
     amrex::GpuArray<amrex::Real, 3>& velGC,
     amrex::Real& accGC,
-    const amrex::Real qom,
-    const amrex::GpuArray<amrex::Real, 3>& V,
-    const Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz>& spline,
-    const amrex::GpuArray<amrex::Array4<amrex::Real>, 3>& eA,
-    const amrex::GpuArray<amrex::Array4<amrex::Real>, 3>& bA)
+    amrex::Real const qom,
+    amrex::GpuArray<amrex::Real, 3> const& V,
+    Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> const& spline,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& eA,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& bA)
 {
     BL_PROFILE("Gempic::TimeLoop::Impl::dxvpardt_drift_kinetic");
     // grad Bpar = grad Bz is neglected for the moment and B_par^* = Bz (assuming initial B contains
@@ -162,13 +162,13 @@ public:
     inline double get_coeff_b (int stageIndex) const { return m_coeffsB[stageIndex]; }
 
     void lsrk_stage_ampere(Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
-                           const Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-                           const Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+                           Gempic::Forms::DeRhamField<Grid::dual, Space::edge> const& H,
+                           Gempic::Forms::DeRhamField<Grid::dual, Space::face> const& J,
                            amrex::Real dt,
                            int stageIndex);
 
     void lsrk_stage_faraday(Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-                            const Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
+                            Gempic::Forms::DeRhamField<Grid::primal, Space::edge> const& E,
                             amrex::Real dt,
                             int stageIndex);
 
@@ -359,13 +359,13 @@ public:
         amrex::Real charge = particleSpecies->get_charge();
         amrex::Real chargeMass = charge / particleSpecies->get_mass();
 
-        for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid(); ++pti)
+        for (auto& particleGrid : *particleSpecies)
         {
-            const long np = pti.numParticles();
+            long const np = particleGrid.numParticles();
 
-            auto& particles = pti.GetArrayOfStructs();
+            auto& particles = particleGrid.GetArrayOfStructs();
             auto partData = particles().data();
-            auto& particleAttributes = pti.GetStructOfArrays();
+            auto& particleAttributes = particleGrid.GetStructOfArrays();
             auto vx = particleAttributes.GetRealData(0).data();
             auto vy = particleAttributes.GetRealData(1).data();
             auto vz = particleAttributes.GetRealData(2).data();
@@ -383,9 +383,9 @@ public:
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> jarr;
             for (int cc = 0; cc < 3; cc++)
             {
-                eA[cc] = (E.m_data[cc])[pti].array();
-                bA[cc] = (B.m_data[cc])[pti].array();
-                jarr[cc] = (J.m_data[cc])[pti].array();
+                eA[cc] = (E.m_data[cc])[particleGrid].array();
+                bA[cc] = (B.m_data[cc])[particleGrid].array();
+                jarr[cc] = (J.m_data[cc])[particleGrid].array();
             }
 
             // loop over particles: add contribution of old particle position to J and push
@@ -459,13 +459,13 @@ public:
         amrex::Real charge = particleSpecies->get_charge();
         amrex::Real chargeMass = charge / particleSpecies->get_mass();
 
-        for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid(); ++pti)
+        for (auto& particleGrid : *particleSpecies)
         {
-            const long np = pti.numParticles();
+            long const np = particleGrid.numParticles();
 
-            auto& particles = pti.GetArrayOfStructs();
+            auto& particles = particleGrid.GetArrayOfStructs();
             auto partData = particles().data();
-            auto& particleAttributes = pti.GetStructOfArrays();
+            auto& particleAttributes = particleGrid.GetStructOfArrays();
             auto vx = particleAttributes.GetRealData(0).data();
             auto vy = particleAttributes.GetRealData(1).data();
             auto vz = particleAttributes.GetRealData(2).data(); //v_//
@@ -484,9 +484,9 @@ public:
 
             for (int cc = 0; cc < 3; cc++)
             {
-                eA[cc] = (E.m_data[cc])[pti].array();
-                bA[cc] = (B.m_data[cc])[pti].array();
-                jarr[cc] = (J.m_data[cc])[pti].array();
+                eA[cc] = (E.m_data[cc])[particleGrid].array();
+                bA[cc] = (B.m_data[cc])[particleGrid].array();
+                jarr[cc] = (J.m_data[cc])[particleGrid].array();
             }
 
             // loop over particles: add contribution of old particle position to J and push

@@ -18,11 +18,11 @@ namespace
 {
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1, 1, 1)};
-    const amrex::IntVect nCell{AMREX_D_DECL(1, 1, 1)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(1, 1, 1)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect const nCell{AMREX_D_DECL(1, 1, 1)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(1, 1, 1)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -32,10 +32,10 @@ class SplittingColdPlasmaTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
@@ -44,7 +44,7 @@ protected:
     SplittingColdPlasmaTest() : m_infra{get_compdom()}
     {
         // Not checking particles
-        const int nGhostExtra{1};
+        int const nGhostExtra{1};
 
         m_parameters.set("nGhostExtra", nGhostExtra);
     }
@@ -54,17 +54,17 @@ TEST_F(SplittingColdPlasmaTest, RotationZAxis)
 {
     constexpr int hodgeDegree{2};
 
-    const amrex::Array<std::string, 3> analyticalBFunc = {
+    amrex::Array<std::string, 3> const analyticalBFunc = {
         "0",
         "0",
         "1",
     };
-    const amrex::Array<std::string, 3> analyticalJFunc = {
+    amrex::Array<std::string, 3> const analyticalJFunc = {
         "1",
         "0",
         "0",
     };
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcJ;
     amrex::Array<amrex::Parser, 3> parserB;
@@ -117,17 +117,17 @@ TEST_F(SplittingColdPlasmaTest, RotationGeneralAxis)
 {
     constexpr int hodgeDegree{2};
 
-    const amrex::Array<std::string, 3> analyticalBFunc = {
+    amrex::Array<std::string, 3> const analyticalBFunc = {
         "1",
         "1",
         "1",
     };
-    const amrex::Array<std::string, 3> analyticalJFunc = {
+    amrex::Array<std::string, 3> const analyticalJFunc = {
         "1",
         "-1",
         "0",
     };
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::ParserExecutor<nVar>, 3> funcJ;
     amrex::Array<amrex::Parser, 3> parserB;

@@ -26,10 +26,10 @@ namespace Gempic::Forms
  * @return \f$L_{polyIndex} (y)\f$
  */
 template <int degree>
-AMREX_GPU_DEVICE amrex::Real eval_lagrange (const int polyIndex,
-                                            const amrex::Real xk,
-                                            const amrex::Real dx,
-                                            const amrex::Real y)
+AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex,
+                                            amrex::Real const xk,
+                                            amrex::Real const dx,
+                                            amrex::Real const y)
 {
     amrex::GpuArray<amrex::Real, degree> vals;
     amrex::GpuArray<amrex::Real, degree> nodes;
@@ -75,10 +75,10 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (const int polyIndex,
  */
 // NOLINTBEGIN(readability-magic-numbers)
 template <int degree>
-AMREX_GPU_DEVICE amrex::Real eval_edge (const int polyIndex,
-                                        const amrex::Real xk,
-                                        const amrex::Real dx,
-                                        const amrex::Real y)
+AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex,
+                                        amrex::Real const xk,
+                                        amrex::Real const dx,
+                                        amrex::Real const y)
 {
     amrex::Real val = 0;
     amrex::Real diff = y - xk;
@@ -153,10 +153,10 @@ AMREX_GPU_DEVICE amrex::Real eval_edge (const int polyIndex,
 // NOLINTEND(readability-magic-numbers)
 
 template <int degree, Grid grid>
-AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (const int polyIndex,
-                                                               const amrex::Real xk,
-                                                               const amrex::Real dx,
-                                                               const amrex::Real y)
+AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (int const polyIndex,
+                                                               amrex::Real const xk,
+                                                               amrex::Real const dx,
+                                                               amrex::Real const y)
 {
     if constexpr (grid == Grid::primal)
     {
@@ -169,10 +169,10 @@ AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (const int polyInd
 }
 
 template <int degree, Grid grid, Space space, Direction dir, Direction coordinate>
-AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
-                                                 const amrex::Real xk,
-                                                 const amrex::Real dx,
-                                                 const amrex::Real y)
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
+                                                 amrex::Real const xk,
+                                                 amrex::Real const dx,
+                                                 amrex::Real const y)
 {
     static_assert(space == Space::face || space == Space::edge,
                   "Tried to call 1-/2-form choose_eval with a 0-/3-form.\n\tThe 0-/3-form "
@@ -189,10 +189,10 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
 }
 
 template <int degree, Grid grid, Space space>
-AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
-                                                 const amrex::Real xk,
-                                                 const amrex::Real dx,
-                                                 const amrex::Real y)
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
+                                                 amrex::Real const xk,
+                                                 amrex::Real const dx,
+                                                 amrex::Real const y)
 {
     static_assert(space == Space::node || space == Space::cell,
                   "Tried to call 0-/3-form choose_eval with a 1-/2-form.\n\tThe 1-/2-form "
@@ -221,16 +221,16 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (const int polyIndex,
  */
 template <int degree, Grid grid, Space space>
 void eval_form_component (
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> &evalShift,
-    const amrex::MultiFab &data,
-    amrex::MultiFab &values,
-    const amrex::RealVect &dr,
-    const amrex::Geometry &geom)
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
+    amrex::MultiFab const& data,
+    amrex::MultiFab& values,
+    amrex::RealVect const& dr,
+    amrex::Geometry const& geom)
 {
     static_assert(space == Space::cell || space == Space::node,
                   "Tried to call 0-/3-form eval_form_component with a 1-/2-form.\n\tThe 1-/2-form "
                   "eval_form_component function takes a direction template argument.");
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = geom.ProbLoArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = geom.ProbLoArray();
 
     auto nEvals{static_cast<size_t>(evalShift.size())};
     int nComp{data.nComp()};
@@ -250,13 +250,13 @@ void eval_form_component (
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nEvals};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
-    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+    auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
 
     for (amrex::MFIter mfi(values); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
-        amrex::Array4<const amrex::Real> const &funcMF = data[mfi].array();
-        amrex::Array4<amrex::Real> const &valuesMF = values[mfi].array();
+        amrex::Box const& bx = mfi.validbox();
+        amrex::Array4<amrex::Real const> const& funcMF = data[mfi].array();
+        amrex::Array4<amrex::Real> const& valuesMF = values[mfi].array();
 
         /// @todo: Reversing the order of for-loops would obviate the need for a DeviceVector.
         ///        It would, however, start nEvals ParallelFor loops. Is it a good idea?
@@ -326,11 +326,11 @@ void eval_form_component (
  */
 template <int degree, Grid grid, Space space, Direction dir>
 void eval_form_component (
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> &evalShift,
-    const amrex::MultiFab &data,
-    amrex::MultiFab &values,
-    const amrex::RealVect &dr,
-    const amrex::Geometry &geom)
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
+    amrex::MultiFab const& data,
+    amrex::MultiFab& values,
+    amrex::RealVect const& dr,
+    amrex::Geometry const& geom)
 {
     static_assert(space == Space::face || space == Space::edge,
                   "Tried to call 1-/2-form "
@@ -344,7 +344,7 @@ void eval_form_component (
                               "Output MultiFab of eval_form must have enough components to hold "
                               "all evaluations for all field components (in one direction).");
 
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = geom.ProbLoArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = geom.ProbLoArray();
 
     amrex::GpuArray<int, 3> dirShift = {0, 0, 0};
 
@@ -361,13 +361,13 @@ void eval_form_component (
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nEvals};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
-    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+    auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
 
     for (amrex::MFIter mfi(values); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
-        amrex::Array4<const amrex::Real> const &funcMF = data[mfi].array();
-        amrex::Array4<amrex::Real> const &valuesMF = values[mfi].array();
+        amrex::Box const& bx = mfi.validbox();
+        amrex::Array4<amrex::Real const> const& funcMF = data[mfi].array();
+        amrex::Array4<amrex::Real> const& valuesMF = values[mfi].array();
 
         /// @todo: Reversing the order of for-loops would obviate the need for a DeviceVector.
         ///        It would, however, start nEvals ParallelFor loops. Is it a good idea?
@@ -443,8 +443,8 @@ void eval_form_component (
  */
 template <int degree>
 amrex::Real max_error_midpoint (amrex::Geometry geom,
-                                amrex::ParserExecutor<AMREX_SPACEDIM + 1> &func,
-                                amrex::MultiFab &funcH,
+                                amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
+                                amrex::MultiFab& funcH,
                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr,
                                 int form,
                                 bool dual,
@@ -452,20 +452,20 @@ amrex::Real max_error_midpoint (amrex::Geometry geom,
                                 amrex::Real t = 0.)
 {
     BL_PROFILE("Gempic::Forms::max_error_midpoint()");
-    const amrex::BoxArray &ba = funcH.boxArray();
-    const amrex::DistributionMapping &dm = funcH.DistributionMap();
+    amrex::BoxArray const& ba = funcH.boxArray();
+    amrex::DistributionMapping const& dm = funcH.DistributionMap();
     int nghost = funcH.nGrow();
     amrex::MultiFab values(ba, dm, 1, nghost);
 
     for (amrex::MFIter mfi(funcH); mfi.isValid(); ++mfi)
     {
-        const amrex::Box &bx = mfi.validbox();
-        amrex::Array4<amrex::Real> const &funcMF = funcH[mfi].array();
-        amrex::Array4<amrex::Real> const &valuesMF = values[mfi].array();
+        amrex::Box const& bx = mfi.validbox();
+        amrex::Array4<amrex::Real> const& funcMF = funcH[mfi].array();
+        amrex::Array4<amrex::Real> const& valuesMF = values[mfi].array();
 
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = geom.ProbLoArray();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = geom.ProbLoArray();
 
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> drHalf = {
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const drHalf = {
             AMREX_D_DECL(dr[xDir] / 2, dr[yDir] / 2, dr[zDir] / 2)};
 
         ParallelFor(

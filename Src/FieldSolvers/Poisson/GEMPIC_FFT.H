@@ -46,8 +46,8 @@ private:
     amrex::Real* m_eigenvalues0z;
 
 public:
-    FFTSolver(const ComputationalDomain& compDom,
-              const int hodgeDegree,
+    FFTSolver(ComputationalDomain const& compDom,
+              int const hodgeDegree,
               Forms::HodgeScheme hodgeScheme = Forms::HodgeScheme::FDHodge);
 
     void solve(Forms::DeRhamField<Grid::primal, Space::node>& phi,

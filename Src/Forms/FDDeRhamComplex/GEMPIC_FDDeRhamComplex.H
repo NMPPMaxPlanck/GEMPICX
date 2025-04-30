@@ -136,7 +136,7 @@ inline auto get_hodge_stencils ()
 template <Direction direction, int hodgeDegree, unsigned int stencilLength>
 inline void apply_1d_hodge (amrex::Geometry geom,
                             amrex::GpuArray<amrex::Real, stencilLength> stencil,
-                            const amrex::MultiFab& multiInput,
+                            amrex::MultiFab const& multiInput,
                             amrex::MultiFab& multiOutput)
 {
     BL_PROFILE("Gempic::Forms::apply_1d_hodge()");
@@ -236,10 +236,10 @@ public:
     /// @param hodgeDegree
     /// @param maxSplineDegree
     /// @param hodgeScheme
-    FDDeRhamComplex(const ComputationalDomain& infra,
-                    const int hodgeDegree,
-                    const int maxSplineDegree,
-                    const HodgeScheme hodgeScheme = HodgeScheme::FDHodge);
+    FDDeRhamComplex(ComputationalDomain const& infra,
+                    int const hodgeDegree,
+                    int const maxSplineDegree,
+                    HodgeScheme const hodgeScheme = HodgeScheme::FDHodge);
 
     ~FDDeRhamComplex() override;
 
@@ -251,7 +251,7 @@ public:
     void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::node>& field) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::node>& field) override;
 
@@ -259,7 +259,7 @@ public:
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::cell>& field,
                     int gaussNodes = 6) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::primal, Space::cell>& field,
                     int gaussNodes = 6) override;
@@ -267,7 +267,7 @@ public:
     void projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::node>& field) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::node>& field) override;
 
@@ -275,7 +275,7 @@ public:
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::cell>& field,
                     int gaussNodes = 6) override;
-    void projection(const amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>& funcs,
+    void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                     amrex::Real t,
                     DeRhamField<Grid::dual, Space::cell>& field,
                     int gaussNodes = 6) override;
@@ -286,7 +286,7 @@ public:
                     DeRhamField<Grid::dual, Space::edge>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::edge>& field,
         int gaussNodes = 6) override;
@@ -296,7 +296,7 @@ public:
                     DeRhamField<Grid::primal, Space::face>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::face>& field,
         int gaussNodes = 6) override;
@@ -306,7 +306,7 @@ public:
                     DeRhamField<Grid::primal, Space::edge>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::primal, Space::edge>& field,
         int gaussNodes = 6) override;
@@ -316,34 +316,34 @@ public:
                     DeRhamField<Grid::dual, Space::face>& field,
                     int gaussNodes = 6) override;
     void projection(
-        const amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>>& funcs,
+        amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
         amrex::Real t,
         DeRhamField<Grid::dual, Space::face>& field,
         int gaussNodes = 6) override;
 
     void hodge(DeRhamField<Grid::primal, Space::node>& zeroForm,
-               const DeRhamField<Grid::dual, Space::cell>& threeForm,
+               DeRhamField<Grid::dual, Space::cell> const& threeForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::dual, Space::node>& zeroForm,
-               const DeRhamField<Grid::primal, Space::cell>& threeForm,
+               DeRhamField<Grid::primal, Space::cell> const& threeForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::primal, Space::edge>& oneForm,
-               const DeRhamField<Grid::dual, Space::face>& twoForm,
+               DeRhamField<Grid::dual, Space::face> const& twoForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::dual, Space::edge>& oneForm,
-               const DeRhamField<Grid::primal, Space::face>& twoForm,
+               DeRhamField<Grid::primal, Space::face> const& twoForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::primal, Space::face>& twoForm,
-               const DeRhamField<Grid::dual, Space::edge>& oneForm,
+               DeRhamField<Grid::dual, Space::edge> const& oneForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::dual, Space::face>& twoForm,
-               const DeRhamField<Grid::primal, Space::edge>& oneForm,
+               DeRhamField<Grid::primal, Space::edge> const& oneForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::primal, Space::cell>& threeForm,
-               const DeRhamField<Grid::dual, Space::node>& zeroForm,
+               DeRhamField<Grid::dual, Space::node> const& zeroForm,
                amrex::Real weight = 1.) override;
     void hodge(DeRhamField<Grid::dual, Space::cell>& threeForm,
-               const DeRhamField<Grid::primal, Space::node>& zeroForm,
+               DeRhamField<Grid::primal, Space::node> const& zeroForm,
                amrex::Real weight = 1.) override;
 
     /**
@@ -357,33 +357,33 @@ public:
      * @param evalShift amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>, point to be interpolated
      * @param pointValues MultiFab in which to store the interpolated values
      */
-    void eval_form(const DeRhamField<Grid::primal, Space::cell>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::primal, Space::cell> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues) override;
-    void eval_form(const DeRhamField<Grid::dual, Space::cell>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::dual, Space::cell> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues) override;
-    void eval_form(const DeRhamField<Grid::primal, Space::face>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::primal, Space::face> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
-    void eval_form(const DeRhamField<Grid::dual, Space::face>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::dual, Space::face> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
-    void eval_form(const DeRhamField<Grid::primal, Space::edge>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::primal, Space::edge> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
-    void eval_form(const DeRhamField<Grid::dual, Space::edge>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::dual, Space::edge> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues,
                    Direction dir) override;
-    void eval_form(const DeRhamField<Grid::primal, Space::node>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::primal, Space::node> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues) override;
-    void eval_form(const DeRhamField<Grid::dual, Space::node>& field,
-                   const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    void eval_form(DeRhamField<Grid::dual, Space::node> const& field,
+                   amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
                    amrex::MultiFab& pointValues) override;
 
     /**
@@ -432,7 +432,7 @@ private:
      */
     inline void eval_form_direction_selector (
         anyFieldConstRef field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues,
         Direction dir)
     {
@@ -472,39 +472,39 @@ private:
     template <Direction dir = xDir, int hodgeDegreeIdx = 0>
     void eval_form_degree_selector(
         anyFieldConstRef field,
-        const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+        amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
         amrex::MultiFab& pointValues);
 
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::dual, Space::cell>& threeForm,
+    void hodge_operator(DeRhamField<Grid::dual, Space::cell> const& threeForm,
                         DeRhamField<Grid::primal, Space::node>& zeroForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::primal, Space::cell>& threeForm,
+    void hodge_operator(DeRhamField<Grid::primal, Space::cell> const& threeForm,
                         DeRhamField<Grid::dual, Space::node>& zeroForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::dual, Space::face>& twoForm,
+    void hodge_operator(DeRhamField<Grid::dual, Space::face> const& twoForm,
                         DeRhamField<Grid::primal, Space::edge>& oneForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::primal, Space::face>& twoForm,
+    void hodge_operator(DeRhamField<Grid::primal, Space::face> const& twoForm,
                         DeRhamField<Grid::dual, Space::edge>& oneForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::dual, Space::edge>& oneForm,
+    void hodge_operator(DeRhamField<Grid::dual, Space::edge> const& oneForm,
                         DeRhamField<Grid::primal, Space::face>& twoForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::primal, Space::edge>& oneForm,
+    void hodge_operator(DeRhamField<Grid::primal, Space::edge> const& oneForm,
                         DeRhamField<Grid::dual, Space::face>& twoForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::dual, Space::node>& zeroForm,
+    void hodge_operator(DeRhamField<Grid::dual, Space::node> const& zeroForm,
                         DeRhamField<Grid::primal, Space::cell>& threeForm,
                         amrex::Real weight = 1.);
     template <int hodgeDegree, HodgeScheme hodgeScheme>
-    void hodge_operator(const DeRhamField<Grid::primal, Space::node>& zeroForm,
+    void hodge_operator(DeRhamField<Grid::primal, Space::node> const& zeroForm,
                         DeRhamField<Grid::dual, Space::cell>& threeForm,
                         amrex::Real weight = 1.);
 };
@@ -528,7 +528,7 @@ private:
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>& threeForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::dual, Space::cell> const& threeForm,
                                      DeRhamField<Grid::primal, Space::node>& zeroForm,
                                      amrex::Real weight)
 {
@@ -536,8 +536,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
         geom, stencilCellToNode, threeForm.m_data,
@@ -573,7 +573,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::cell>
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cell>& threeForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::primal, Space::cell> const& threeForm,
                                      DeRhamField<Grid::dual, Space::node>& zeroForm,
                                      amrex::Real weight)
 {
@@ -581,8 +581,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
         geom, stencilCellToNode, threeForm.m_data,
@@ -618,7 +618,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::cel
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>& twoForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::dual, Space::face> const& twoForm,
                                      DeRhamField<Grid::primal, Space::edge>& oneForm,
                                      amrex::Real weight)
 {
@@ -626,8 +626,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -683,7 +683,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::face>
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::face>& twoForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::primal, Space::face> const& twoForm,
                                      DeRhamField<Grid::dual, Space::edge>& oneForm,
                                      amrex::Real weight)
 {
@@ -691,8 +691,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
     // select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -747,7 +747,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::fac
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>& oneForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::dual, Space::edge> const& oneForm,
                                      DeRhamField<Grid::primal, Space::face>& twoForm,
                                      amrex::Real weight)
 {
@@ -755,8 +755,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -813,7 +813,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::edge>
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edge>& oneForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::primal, Space::edge> const& oneForm,
                                      DeRhamField<Grid::dual, Space::face>& twoForm,
                                      amrex::Real weight)
 {
@@ -821,8 +821,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -879,7 +879,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::edg
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>& zeroForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::dual, Space::node> const& zeroForm,
                                      DeRhamField<Grid::primal, Space::cell>& threeForm,
                                      amrex::Real weight)
 {
@@ -887,8 +887,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
         geom, stencilNodeToCell, zeroForm.m_data,
@@ -925,7 +925,7 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::dual, Space::node>
  * @param weight Real, constant weight function
  */
 template <int hodgeDegree, HodgeScheme hodgeScheme>
-void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::node>& zeroForm,
+void FDDeRhamComplex::hodge_operator (DeRhamField<Grid::primal, Space::node> const& zeroForm,
                                      DeRhamField<Grid::dual, Space::cell>& threeForm,
                                      amrex::Real weight)
 {
@@ -933,8 +933,8 @@ void FDDeRhamComplex::hodge_operator (const DeRhamField<Grid::primal, Space::nod
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
-    const amrex::RealVect dr = this->m_dr;
-    const amrex::Geometry geom = this->m_geom;
+    amrex::RealVect const dr = this->m_dr;
+    amrex::Geometry const geom = this->m_geom;
 
     AMREX_D_TERM((apply_1d_hodge<xDir, hodgeDegree>(
         geom, stencilNodeToCell, zeroForm.m_data,
@@ -965,7 +965,7 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
             // Iterate over all types in anyFieldRef (all grid/space combinations) and select the
             // correct one.
             std::visit(
-                [this, &validDegreesArray, weight] (const auto& hSrc, auto& hDst)
+                [this, &validDegreesArray, weight] (auto const& hSrc, auto& hDst)
                 {
                     using namespace Impl;
                     using dstFieldTypename = unwrap_ref_decay_t<decltype(hDst)>;
@@ -1007,7 +1007,7 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
 template <Direction dir, int testDegInd>
 void FDDeRhamComplex::eval_form_degree_selector (
     anyFieldConstRef field,
-    const amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>>& evalShift,
+    amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::eval_form_degree_selector()")
@@ -1019,7 +1019,7 @@ void FDDeRhamComplex::eval_form_degree_selector (
             // Iterate over all types in anyFieldConstRef (all grid/space combinations) and select
             // the correct one.
             std::visit(
-                [this, &validDegreesArray, &evalShift, &pointValues] (const auto& fieldArg)
+                [this, &validDegreesArray, &evalShift, &pointValues] (auto const& fieldArg)
                 {
                     using namespace Impl;
                     FieldTypes fieldTypes{fieldArg};
@@ -1030,14 +1030,14 @@ void FDDeRhamComplex::eval_form_degree_selector (
                     if constexpr (fieldTypes.s_spaceType == Space::node ||
                                   fieldTypes.s_spaceType == Space::cell)
                     {
-                        const amrex::MultiFab& data = fieldArg.get().m_data;
+                        amrex::MultiFab const& data = fieldArg.get().m_data;
                         eval_form_component<degree, grid, space>(evalShift, data, pointValues,
                                                                  this->m_dr, this->m_geom);
                     }
                     // 1-/2-form call
                     else
                     {
-                        const amrex::MultiFab& data = fieldArg.get().m_data[dir];
+                        amrex::MultiFab const& data = fieldArg.get().m_data[dir];
                         eval_form_component<degree, grid, space, dir>(evalShift, data, pointValues,
                                                                       this->m_dr, this->m_geom);
                     }

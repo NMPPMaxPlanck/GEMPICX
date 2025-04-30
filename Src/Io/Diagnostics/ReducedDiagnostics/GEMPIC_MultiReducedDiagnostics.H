@@ -110,8 +110,8 @@ public:
 
     /** Loop over all ReducedDiagnostics and call their ComputeDiags */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::compute_diags()");
         if (!m_plotRd)
@@ -155,8 +155,8 @@ public:
     void compute_and_write_to_file (
         int step,
         amrex::Real simTime,
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr,
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr,
         bool forceWrite = false)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::update_and_write_to_file()");
@@ -226,12 +226,12 @@ private:
             std::vector<std::string> rdTypes;
             ppRdName.get("types", rdTypes);
 
-            const size_t numTypes{rdTypes.size()};
+            size_t const numTypes{rdTypes.size()};
             int indexNum{0};
             size_t typeNum{0};
             // loop over all reduced diags and fill m_multi_rd with requested reduced diags
             std::transform(rdTypes.begin(), rdTypes.end(), std::back_inserter(m_multiRds[idx]),
-                           [&] (const auto& rdType)
+                           [&] (auto const& rdType)
                            {
                                bool isLastType{++typeNum == numTypes};
                                return get_diagnostics_type(rdType, m_rdNames[idx], indexNum,
@@ -241,11 +241,11 @@ private:
     }
 
     std::unique_ptr<ReducedDiagnostics<vdim, degx, degy, degz, ndata>> get_diagnostics_type (
-        const std::string& diagType,
-        const std::string& name,
+        std::string const& diagType,
+        std::string const& name,
         int& indexNum,
         bool isLastType,
-        const std::string& fileName)
+        std::string const& fileName)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::get_diagnostics_type()");
         if (diagType == "ElecFieldEnergy")

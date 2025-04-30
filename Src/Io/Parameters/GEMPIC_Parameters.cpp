@@ -12,14 +12,14 @@ namespace Impl
  * To understand the visit-variant connection go to
  * https://en.cppreference.com/w/cpp/utility/variant/visit
  */
-std::ostream& operator<<(std::ostream& os, const parmParseType& val)
+std::ostream& operator<<(std::ostream& os, parmParseType const& val)
 {
     BL_PROFILE("Gempic::Io::Impl::operator(os,parmParseType& val)");
     std::visit([&os] (auto&& arg) { os << arg; }, val);
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const parmParseParameterType& val)
+std::ostream& operator<<(std::ostream& os, parmParseParameterType const& val)
 {
     BL_PROFILE("Gempic::Io::Impl::operator(os,parmParseParameterType& val)");
     std::visit(
@@ -48,27 +48,27 @@ std::ostream& operator<<(std::ostream& os, const parmParseParameterType& val)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const parmParseVectorType& inputVector)
+std::ostream& operator<<(std::ostream& os, parmParseVectorType const& inputVector)
 {
     BL_PROFILE("Gempic::Io::Impl::operator(os,inputVector)");
-    for (const auto& elem : inputVector)
+    for (auto const& elem : inputVector)
     {
         os << elem << " ";
     }
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const parmParseArrayType& inputArray)
+std::ostream& operator<<(std::ostream& os, parmParseArrayType const& inputArray)
 {
     BL_PROFILE("Gempic::Io::Impl::operator(os,inputArray)");
-    for (const auto& elem : inputArray)
+    for (auto const& elem : inputArray)
     {
         os << elem << " ";
     }
     return os;
 }
 
-std::string parm_parse_typename (const parmParseType& val)
+std::string parm_parse_typename (parmParseType const& val)
 {
     std::string typeName;
     std::visit(
@@ -120,7 +120,7 @@ void Parameters::set_print_output (bool printOrNot)
     s_printOutput = printOrNot;
 }
 
-Parameters::Parameters(const std::string& classPrefix, std::string printName) :
+Parameters::Parameters(std::string const& classPrefix, std::string printName) :
     m_classPrefix{classPrefix}
 {
     BL_PROFILE("Gempic::Io::Parameters(class)");
@@ -172,7 +172,7 @@ Parameters::~Parameters()
     else
     {
         print_shared_parameters();
-        for ([[maybe_unused]] const auto& [variableName, variable] : s_sharedParams)
+        for ([[maybe_unused]] auto const& [variableName, variable] : s_sharedParams)
         {
             // Reset parameters in case we want to do a different simulation in a different scope
             // (e.g. for testing)
@@ -221,7 +221,7 @@ void Parameters::print_shared_parameters ()
         ofs << "# Shared parameters:\n";
 
         // Print all shared parameters.
-        for (const auto& [variableName, variable] : s_sharedParams)
+        for (auto const& [variableName, variable] : s_sharedParams)
         {
             if (variable.get()->m_isSet)
             {
@@ -237,7 +237,7 @@ void Parameters::print_shared_parameters ()
     }
 }
 
-bool Parameters::exists (const std::string& variableName)
+bool Parameters::exists (std::string const& variableName)
 {
     BL_PROFILE("Gempic::Io::exists()");
     // Check if variable is a shared parameter (contains is c++20).
@@ -254,7 +254,7 @@ bool Parameters::exists (const std::string& variableName)
     }
 }
 
-bool Parameters::is_in_input_file (const std::string& variableName)
+bool Parameters::is_in_input_file (std::string const& variableName)
 {
     BL_PROFILE("Gempic::Io::is_in_input_file");
     // Check if variable is a shared parameter (contains is c++20).
@@ -271,7 +271,7 @@ bool Parameters::is_in_input_file (const std::string& variableName)
     }
 }
 
-std::string Parameters::has_been_set_by (const std::string& variableName)
+std::string Parameters::has_been_set_by (std::string const& variableName)
 {
     BL_PROFILE("Gempic::Io::has_been_set_by");
     // Check if variable is a shared parameter (contains is c++20).

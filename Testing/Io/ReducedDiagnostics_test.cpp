@@ -19,45 +19,7 @@ using namespace Gempic;
 using namespace Forms;
 using namespace Particle;
 
-template <int vdim, int ndata, int degx, int degy, int degz>
-void update_rho (ComputationalDomain& infra,
-                 const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
-                 DeRhamField<Grid::dual, Space::cell>& rho)
-{
-    rho.m_data.setVal(0.0);
-    // Deposit initial charge
-    for (int spec = 0; spec < partGr.size(); spec++)
-    {
-        amrex::Real charge = partGr[spec]->get_charge();
-
-        for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid(); ++pti)
-        {
-            const long np = pti.numParticles();
-            auto* const particles = pti.GetArrayOfStructs()().data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-
-            amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[pti].array();
-            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
-
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                   {
-                                       positionParticle[d] = particles[pp].pos(d);
-                                   }
-                                   ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
-                                       positionParticle, plo, infra.inv_cell_size_array());
-                                   ParticleMeshCoupling::deposit_rho(rhoarr, spline,
-                                                                     charge * weight[pp]);
-                               });
-        }
-    }
-    rho.post_particle_loop_sync();
-}
-
-void reduced_diagnostics_setup (Io::Parameters& parameters, const ComputationalDomain& compDom)
+void reduced_diagnostics_setup (Io::Parameters& parameters, ComputationalDomain const& compDom)
 {
     // Variables that could come from the input file and are stored by amrex during the whole
     // simulation
@@ -92,8 +54,7 @@ void reduced_diagnostics_setup (Io::Parameters& parameters, const ComputationalD
     parameters.set("Particle.ions.G0.vMean", vMean);
     amrex::Vector<amrex::Real> vThermal{{1.0, 2.0, 3.0}};
     parameters.set("Particle.ions.G0.vThermal", vThermal);
-    // functions defining fields. Variable y, z not available in 1D, variable y not available in
-    // 2D
+    // functions defining fields. Variable y, z not available in 1D, variable y not available in 2D
     std::string Ex = "cos(kvarx * x)";
     std::string Ey = "cos(kvary * y)";
     std::string Ez = "cos(kvarx * x) * cos(kvarz * z)";
@@ -121,11 +82,11 @@ void reduced_diagnostics_setup (Io::Parameters& parameters, const ComputationalD
 ComputationalDomain get_compdom ()
 {
     // 2pi(domainHi - domainLo) = k
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    const amrex::IntVect nCell{AMREX_D_DECL(8, 8, 8)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(4, 4, 4)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::IntVect const nCell{AMREX_D_DECL(8, 8, 8)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -135,12 +96,12 @@ class ReducedDiagnosticsTest : public testing::Test
 protected:
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     // particle data
-    static const int s_vdim{3};
+    static int const s_vdim{3};
 
     //
     ComputationalDomain m_infra;
@@ -148,7 +109,7 @@ protected:
     //
     Io::Parameters m_parameters{};
     //
-    const amrex::Real m_backgroundDensity{-1.0}; // so that \int rho dx = 0
+    amrex::Real const m_backgroundDensity{-1.0}; // so that \int rho dx = 0
 
     // Setup all the tests in the TestSuite
     ReducedDiagnosticsTest() : m_infra{get_compdom()}
@@ -272,17 +233,17 @@ protected:
     static constexpr amrex::Real s_densityFieldFactor{0.5};
 
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     // particle data
-    static const int s_vdim{3};
+    static int const s_vdim{3};
 
     ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
     Io::Parameters m_parameters{};
-    const amrex::Real m_backgroundDensity{-1.0}; // so that \int rho dx = 0
+    amrex::Real const m_backgroundDensity{-1.0}; // so that \int rho dx = 0
 
     ReducedDiagnosticsMissingFieldsTest() : m_infra{get_compdom()}
     {
@@ -394,7 +355,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     ///      It would be better to provide a D such that divD is equal to rho _with_ background.
     DeRhamField<Grid::primal, Space::edge> E(deRham);
     DeRhamField<Grid::primal, Space::node> phi(deRham);
-    update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
+    rho.m_data.setVal(0.0);
+    ParticleMeshCoupling::deposit_particle_density<s_degX, s_degY, s_degZ>(rho, m_particles,
+                                                                           m_infra);
     rho += m_backgroundDensity * m_infra.cell_volume();
 
     auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
@@ -496,7 +459,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     ///todo: This is not a good test because it focuses too much on internals of GEMPIC_GaussError
     ///      It would be better to provide a D such that divD is equal to rho _with_ background.
     DeRhamField<Grid::primal, Space::node> phi(deRham);
-    update_rho<s_vdim, 1, s_degX, s_degY, s_degZ>(m_infra, m_particles, rho);
+    rho.m_data.setVal(0.0);
+    ParticleMeshCoupling::deposit_particle_density<s_degX, s_degY, s_degZ>(rho, m_particles,
+                                                                           m_infra);
     rho += m_backgroundDensity * m_infra.cell_volume();
 
     auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};

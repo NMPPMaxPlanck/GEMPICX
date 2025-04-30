@@ -41,10 +41,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    Particle(const std::string& rdName,
+    Particle(std::string const& rdName,
              int& indexNum,
              bool isLastType,
-             const std::string& fileName) :
+             std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::Particle::Particle()");
@@ -85,8 +85,8 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr)
         final
     {
         BL_PROFILE("Gempic::Io::Particle::compute_diags()");
@@ -102,9 +102,9 @@ public:
                 amrex::ReduceData<amrex::Real, amrex::Real, amrex::Real, amrex::Real>>(
                 *particleSpecies,
                 [=] AMREX_GPU_HOST_DEVICE(
-                    const amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
-                                                       0>& pt,
-                    const int pp)
+                    amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
+                                                 0> const& pt,
+                    int const pp)
                     -> amrex::GpuTuple<amrex::Real, amrex::Real, amrex::Real, amrex::Real>
                 {
                     auto weight = pt.m_rdata[vdim][pp];
@@ -150,10 +150,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    ParticleLinVlasov(const std::string& rdName,
+    ParticleLinVlasov(std::string const& rdName,
                       int& indexNum,
                       bool isLastType,
-                      const std::string& fileName) :
+                      std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         if (amrex::ParallelDescriptor::IOProcessor())
@@ -189,8 +189,8 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr)
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr)
         final
     {
         constexpr int noutputs = 2;
@@ -208,9 +208,9 @@ public:
             auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real, amrex::Real>>(
                 *partGr[spec],
                 [=] AMREX_GPU_HOST_DEVICE(
-                    const amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
-                                                       0>& pt,
-                    const int pp) -> amrex::GpuTuple<amrex::Real, amrex::Real>
+                    amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
+                                                 0> const& pt,
+                    int const pp) -> amrex::GpuTuple<amrex::Real, amrex::Real>
                 {
                     auto weight = pt.m_rdata[vdim][pp];
                     auto s0 = pt.m_rdata[vdim + 1][pp];

@@ -18,17 +18,17 @@ namespace Gempic::Io::Impl
 {
 // ------------------------------- Helpers for CustomOutputProcessor -------------------------------
 using ConstructorType = std::function<std::unique_ptr<ComputeDiagOutputProcessor>(
-    const amrex::MultiFab& mfSrc, const amrex::Real scaling, const amrex::IntVect crseRatio)>;
+    amrex::MultiFab const& mfSrc, amrex::Real const scaling, amrex::IntVect const crseRatio)>;
 
 template <typename T>
-std::unique_ptr<ComputeDiagOutputProcessor> dynamic_convert (const amrex::MultiFab& mfSrc,
-                                                             const amrex::Real scaling,
-                                                             const amrex::IntVect crseRatio)
+std::unique_ptr<ComputeDiagOutputProcessor> dynamic_convert (amrex::MultiFab const& mfSrc,
+                                                             amrex::Real const scaling,
+                                                             amrex::IntVect const crseRatio)
 {
     return std::make_unique<T>(mfSrc, scaling, crseRatio);
 }
 
-ConstructorType match_custom_id(const std::string& key);
+ConstructorType match_custom_id(std::string const& key);
 
 // -------------------- Helpers for CustomOperatorOutputProcessor --------------------
 // Type Erasure helper class a la Iglberger ("C++ Software Design", 2022 O'Reilly Media, Inc.)
@@ -38,9 +38,9 @@ struct OwningModel
 {
     OwningModel(T object) : m_object{std::move(object)} {}
 
-    void operator()(const amrex::Box& bx,
+    void operator()(amrex::Box const& bx,
                     amrex::Array4<amrex::Real> dst,
-                    const amrex::Array4<const amrex::Real> src,
+                    amrex::Array4<amrex::Real const> const src,
                     int nSrcComp,
                     double scaling,
                     double ishift,
@@ -75,9 +75,9 @@ public:
                 }),
         m_calc(
             [] (void* operatorBytes,
-                const amrex::Box& bx,
+                amrex::Box const& bx,
                 amrex::Array4<amrex::Real> dst,
-                const amrex::Array4<const amrex::Real> src,
+                amrex::Array4<amrex::Real const> const src,
                 int nSrcComp,
                 double scaling,
                 double ishift,
@@ -116,9 +116,9 @@ public:
     ~CustomOperatorType() = default;
     CustomOperatorType(CustomOperatorType&&) = default;
     CustomOperatorType& operator=(CustomOperatorType&&) = default;
-    void operator()(const amrex::Box& bx,
+    void operator()(amrex::Box const& bx,
                     amrex::Array4<amrex::Real> dst,
-                    const amrex::Array4<const amrex::Real> src,
+                    amrex::Array4<amrex::Real const> const src,
                     int nSrcComp,
                     double scaling,
                     double ishift,
@@ -131,9 +131,9 @@ public:
 private:
     using DestroyOperation = void(void*);
     using CalcOperation = void(void*,
-                               const amrex::Box& bx,
+                               amrex::Box const& bx,
                                amrex::Array4<amrex::Real> dst,
-                               const amrex::Array4<const amrex::Real> src,
+                               amrex::Array4<amrex::Real const> const src,
                                int nSrcComp,
                                double scaling,
                                double ishift,
@@ -150,7 +150,7 @@ private:
 namespace Gempic::Io
 {
 template <typename T>
-void add_output_processor(const std::string& str);
+void add_output_processor(std::string const& str);
 
 /**
  * \brief OutputProcessor for custom OutputProcessor classes. Inherit from this if you want to
@@ -179,9 +179,9 @@ public:
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, srcMf,
                   to the output diagnostic MultiFab, mfDst.
      */
-    CustomOutputProcessor(const amrex::MultiFab& mfSrc,
-                          const amrex::Real scaling,
-                          const amrex::IntVect crseRatio);
+    CustomOutputProcessor(amrex::MultiFab const& mfSrc,
+                          amrex::Real const scaling,
+                          amrex::IntVect const crseRatio);
 
     /** \brief copy m_mfSrc to mfDst.
      *
@@ -191,23 +191,23 @@ public:
 
 protected:
     /** Alias of source MultiFab (can be multi-component) */
-    const amrex::MultiFab m_mfSrc;
+    amrex::MultiFab const m_mfSrc;
     // Scaling factor
-    const amrex::Real m_scaling{1.0};
+    amrex::Real const m_scaling{1.0};
 
 private:
     /** map of all user-provided outputProcessor classes */
     inline static std::map<std::string, ConstructorType> s_outputProcessorClassMap{};
 
     template <typename T>
-    friend void add_output_processor(const std::string&);
+    friend void add_output_processor(std::string const&);
 
-    friend ConstructorType Impl::match_custom_id(const std::string&);
+    friend ConstructorType Impl::match_custom_id(std::string const&);
 };
 
 // Add custom class to the list along with a key so it can be selected in the input file
 template <typename T>
-void add_output_processor (const std::string& key)
+void add_output_processor (std::string const& key)
 {
     // MUST provide a derived class
     static_assert(std::is_base_of_v<CustomOutputProcessor, T>);
@@ -221,7 +221,7 @@ void add_output_processor (const std::string& key)
 }
 
 // Add custom lamba to the list along with a key so it can be selected in the input file
-void add_output_processor(const std::string& key, const Impl::CustomOperatorType& f);
+void add_output_processor(std::string const& key, Impl::CustomOperatorType const& f);
 
 /**
  * \brief OutputProcessor for customizing only the diagnostics operator
@@ -264,10 +264,10 @@ public:
                   to the output diagnostic MultiFab, mfDst.
      * \param[in] f the constructor of the custom outputProcessor chosen from the input file.
      */
-    CustomOperatorOutputProcessor(const amrex::MultiFab& mfSrc,
-                                  const amrex::Real scaling,
-                                  const amrex::IntVect crseRatio,
-                                  const CustomOperatorType& f);
+    CustomOperatorOutputProcessor(amrex::MultiFab const& mfSrc,
+                                  amrex::Real const scaling,
+                                  amrex::IntVect const crseRatio,
+                                  CustomOperatorType const& f);
 
     /** \brief copy m_mfSrc to mfDst.
      *
@@ -282,8 +282,8 @@ private:
     /** map of all user-provided outputProcessors */
     inline static std::map<std::string, CustomOperatorType> s_outputProcessorMap{};
 
-    friend void add_output_processor(const std::string& key, const CustomOperatorType& f);
-    friend Impl::ConstructorType Impl::match_custom_id(const std::string&);
+    friend void add_output_processor(std::string const& key, CustomOperatorType const& f);
+    friend Impl::ConstructorType Impl::match_custom_id(std::string const&);
 };
 } //namespace Gempic::Io
 

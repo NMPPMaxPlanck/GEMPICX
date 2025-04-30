@@ -12,6 +12,8 @@ MacroBlockEnd: "^GEMPIC_D_LOOP_END$"
 # LambdaBodyIndentation: OuterScope
 BinPackParameters: false
 AllowAllArgumentsOnNextLine: true
+DerivePointerAlignment: false
+QualifierAlignment: Right
 SpaceBeforeParens: Custom
 SpaceBeforeParensOptions:
   AfterControlStatements: true

@@ -23,7 +23,7 @@ void Gempic::TimeLoop::apply_h_j (
     for (amrex::MFIter mfi(J.m_data[xDir], true); mfi.isValid(); ++mfi)
     {
         // Grow box to compute on relevant indices for all components
-        const amrex::Box& bx = mfi.growntilebox(1);
+        amrex::Box const& bx = mfi.growntilebox(1);
 
         amrex::Array4<amrex::Real> const& Dx = (D.m_data[xDir])[mfi].array();
         amrex::Array4<amrex::Real> const& Dy = (D.m_data[yDir])[mfi].array();
@@ -33,9 +33,9 @@ void Gempic::TimeLoop::apply_h_j (
         amrex::Array4<amrex::Real> const& Jy = (J.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real> const& Jz = (J.m_data[zDir])[mfi].array();
 
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx = deRham->m_geom.CellSizeArray();
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = deRham->m_geom.InvCellSizeArray();
-        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = deRham->get_prob_lo();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx = deRham->m_geom.CellSizeArray();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dxi = deRham->m_geom.InvCellSizeArray();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = deRham->get_prob_lo();
 
         ParallelFor(
             bx,
@@ -65,7 +65,7 @@ void Gempic::TimeLoop::apply_h_j (
                 bZero[zDir] = funcBEquilibrium[zDir](AMREX_D_DECL(r[xDir], r[yDir], r[zDir]), 0.);
 
                 // Build rotation matrix with local background magnetic field
-                const amrex::Real bNorm =
+                amrex::Real const bNorm =
                     sqrt(bZero[xDir] * bZero[xDir] + bZero[yDir] * bZero[yDir] +
                          bZero[zDir] * bZero[zDir]);
                 amrex::Array2D<amrex::Real, 0, 2, 0, 2> R; //rotation matrix

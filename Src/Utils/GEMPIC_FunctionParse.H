@@ -23,7 +23,7 @@ namespace Gempic::Utils
  * @return [parseArray, functionArray]
  */
 template <size_t functionNumber>
-auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings,
+auto parse_functions (amrex::Array<std::string, functionNumber> const& variableStrings,
                       Io::Parameters& params)
 {
     BL_PROFILE("Gempic::Utils::parse_functions(variableStrings,params)");
@@ -71,7 +71,7 @@ auto parse_functions (const amrex::Array<std::string, functionNumber>& variableS
  * @return [parseArray, functionArray]
  */
 template <size_t functionNumber>
-auto parse_functions (const amrex::Array<std::string, functionNumber>& variableStrings)
+auto parse_functions (amrex::Array<std::string, functionNumber> const& variableStrings)
 {
     BL_PROFILE("Gempic::Utils::parse_functions(variableStrings)");
     Io::Parameters params{"Function", "function parse_functions"};
@@ -117,7 +117,7 @@ auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
  *
  * @return [parser, function]
  */
-inline auto parse_function (const std::string& variableString, Io::Parameters& params)
+inline auto parse_function (std::string const& variableString, Io::Parameters& params)
 {
     BL_PROFILE("Gempic::Utils::parse_function(variableString,params)");
     auto [parser, eval] = parse_functions<1>({variableString}, params);
@@ -136,7 +136,7 @@ inline auto parse_function (const std::string& variableString, Io::Parameters& p
  *
  * @return [parser, function]
  */
-inline auto parse_function (const std::string& variableString)
+inline auto parse_function (std::string const& variableString)
 {
     BL_PROFILE("Gempic::Utils::parse_function(variableString)");
     Io::Parameters params{"Function", "function parseFunction"};

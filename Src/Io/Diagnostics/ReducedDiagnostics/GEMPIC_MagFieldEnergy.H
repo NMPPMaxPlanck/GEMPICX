@@ -31,8 +31,8 @@ class MagFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 public:
     std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::face>> m_B;
     std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::edge>> m_H;
-    std::unique_ptr<const Forms::DeRhamField<Grid::primal, Space::face>> m_constB;
-    std::unique_ptr<const Forms::DeRhamField<Grid::dual, Space::edge>> m_constH;
+    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::face> const> m_constB;
+    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::edge> const> m_constH;
 
     enum class ComputeMethod
     {
@@ -47,10 +47,10 @@ public:
      * @param[in] isLastType is this the last type in the group?
      * @param[in] fileName default file name suggested by MultiReducedDiagnostics
      */
-    MagFieldEnergy(const std::string& rdName,
+    MagFieldEnergy(std::string const& rdName,
                    int& indexNum,
                    bool isLastType,
-                   const std::string& fileName) :
+                   std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::MagFieldEnergy()");
@@ -99,8 +99,8 @@ public:
      * This function computes the magnetic energy (EF) component wise
      */
     void compute_diags (
-        const ComputationalDomain& infra,
-        const std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>>&) final
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const&) final
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::compute_diags()");
 
@@ -128,7 +128,7 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * computeMissingFields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, const amrex::MultiFab>& fieldMap)
+    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::choose_computation_method()");
         using namespace Forms;
@@ -189,9 +189,9 @@ private:
     /**
      * This function computes the magnetic energy (EF) component wise
      */
-    void update_data (const Forms::DeRhamField<Grid::primal, Space::face>& fieldB,
-                      const Forms::DeRhamField<Grid::dual, Space::edge>& fieldH,
-                      const amrex::Periodicity& periodicity)
+    void update_data (Forms::DeRhamField<Grid::primal, Space::face> const& fieldB,
+                      Forms::DeRhamField<Grid::dual, Space::edge> const& fieldH,
+                      amrex::Periodicity const& periodicity)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::update_data()");
 

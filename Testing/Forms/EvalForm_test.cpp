@@ -62,18 +62,18 @@ namespace
 {
 // Calculate the analytical point values of rho: func(x,y,z)
 void compute_analytical_scalar_function_parallel_for (
-    amrex::MFIter &mfi,
-    ComputationalDomain &mInfra,
-    amrex::ParserExecutor<AMREX_SPACEDIM + 1> &func,
-    amrex::MultiFab &analyticalPointValues,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> *const evalShiftGpuPtr,
+    amrex::MFIter& mfi,
+    ComputationalDomain& mInfra,
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
+    amrex::MultiFab& analyticalPointValues,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>* const evalShiftGpuPtr,
     size_t nValues)
 {
-    const amrex::Box &bx = mfi.validbox();
-    amrex::Array4<amrex::Real> const &analyticalPointValuesMF = analyticalPointValues[mfi].array();
+    amrex::Box const& bx = mfi.validbox();
+    amrex::Array4<amrex::Real> const& analyticalPointValuesMF = analyticalPointValues[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr = mInfra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = mInfra.m_geom.ProbLoArray();
 
     ParallelFor(bx, nValues,
                 [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
@@ -94,19 +94,19 @@ void compute_analytical_scalar_function_parallel_for (
 
 // Calculate the analytical point values of a vector valued function: func(x,y,z)
 void compute_analytical_vector_function_parallel_for (
-    amrex::MFIter &mfi,
-    ComputationalDomain &mInfra,
-    amrex::ParserExecutor<AMREX_SPACEDIM + 1> *const funcPtr,
-    amrex::MultiFab &analyticalPointValues,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> *const evalShiftGpuPtr,
+    amrex::MFIter& mfi,
+    ComputationalDomain& mInfra,
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1>* const funcPtr,
+    amrex::MultiFab& analyticalPointValues,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>* const evalShiftGpuPtr,
     size_t nEvals,
     int nComp)
 {
-    const amrex::Box &bx = mfi.validbox();
-    amrex::Array4<amrex::Real> const &analyticalPointValuesMF = analyticalPointValues[mfi].array();
+    amrex::Box const& bx = mfi.validbox();
+    amrex::Array4<amrex::Real> const& analyticalPointValuesMF = analyticalPointValues[mfi].array();
 
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dr = mInfra.geometry().CellSizeArray();
-    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0 = mInfra.m_geom.ProbLoArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr = mInfra.geometry().CellSizeArray();
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = mInfra.m_geom.ProbLoArray();
 
     ParallelFor(
         bx, nComp,
@@ -133,11 +133,11 @@ void compute_analytical_vector_function_parallel_for (
 //@todo: These tests should work with the default ComputationDomain, but don't. Why?
 ComputationalDomain get_compdom ()
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    const amrex::IntVect nCell{AMREX_D_DECL(10, 10, 10)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::IntVect const nCell{AMREX_D_DECL(10, 10, 10)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
@@ -151,21 +151,21 @@ protected:
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
-    static const int s_degX{1};
-    static const int s_degY{1};
-    static const int s_degZ{1};
-    inline static const int s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
+    static int const s_degX{1};
+    static int const s_degY{1};
+    static int const s_degZ{1};
+    inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
 
     int m_gaussNodes = 6;
-    const amrex::Real m_tol = 1e-13;
+    amrex::Real const m_tol = 1e-13;
 
     FDDeRhamComplexEvalFormTest() : m_infra{get_compdom()}
     {
         // Not checking particles
-        const int nGhostExtra{1}; //{-s_maxSplineDegree};
+        int const nGhostExtra{1}; //{-s_maxSplineDegree};
 
         m_parameters.set("nGhostExtra", nGhostExtra);
     }
@@ -189,14 +189,14 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham);
 
 #if (AMREX_SPACEDIM == 1)
-    const std::string analyticalForm = "x";
+    std::string const analyticalForm = "x";
 #elif (AMREX_SPACEDIM == 2)
-    const std::string analyticalForm = "x + y";
+    std::string const analyticalForm = "x + y";
 #elif (AMREX_SPACEDIM == 3)
-    const std::string analyticalForm = "x + y + z";
+    std::string const analyticalForm = "x + y + z";
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::ParserExecutor<nVar> func;
     amrex::Parser parser;
 
@@ -215,8 +215,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
                            this->m_gaussNodes); // Projection of func to the discrete 3-form
     }
 
-    const amrex::BoxArray &ba = form.m_data.boxArray();
-    const amrex::DistributionMapping &dm = form.m_data.DistributionMap();
+    amrex::BoxArray const& ba = form.m_data.boxArray();
+    amrex::DistributionMapping const& dm = form.m_data.DistributionMap();
     int nghost = form.m_data.nGrow();
 
     // test with 2 interpolation points
@@ -236,7 +236,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
-    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+    auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
 
     // Calculate func in evalShift
     for (amrex::MFIter mfi(form.m_data); mfi.isValid(); ++mfi)
@@ -251,7 +251,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     {
         loopRun = true;
 
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(pointValues[mfi].array(), analyticalPointValues[mfi].array(), bx);
     }
     ASSERT_TRUE(loopRun);
@@ -270,23 +270,23 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham, nComp);
 
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Vector<std::string> analyticalform = {
+    amrex::Vector<std::string> const analyticalform = {
         "x",
         "-x",
     };
 #elif (AMREX_SPACEDIM == 2)
-    const amrex::Vector<std::string> analyticalform = {
+    amrex::Vector<std::string> const analyticalform = {
         "x + y",
         "-x - y",
     };
 #elif (AMREX_SPACEDIM == 3)
-    const amrex::Vector<std::string> analyticalform = {
+    amrex::Vector<std::string> const analyticalform = {
         "x + y + z",
         "-x - y - z",
     };
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Vector<amrex::ParserExecutor<nVar>> funcs(nComp);
     amrex::Vector<amrex::Parser> parser(nComp);
 
@@ -308,8 +308,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
                            this->m_gaussNodes); // Projection of func to the discrete 3-form
     }
 
-    const amrex::BoxArray &ba = form.m_data.boxArray();
-    const amrex::DistributionMapping &dm = form.m_data.DistributionMap();
+    amrex::BoxArray const& ba = form.m_data.boxArray();
+    amrex::DistributionMapping const& dm = form.m_data.DistributionMap();
     int nghost = form.m_data.nGrow();
 
     // test with 2 interpolation points
@@ -329,10 +329,10 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
-    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+    auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
     amrex::Gpu::DeviceVector<amrex::ParserExecutor<nVar>> funcsGpu{static_cast<size_t>(nComp)};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
-    auto *const funcsGpuPtr = funcsGpu.dataPtr();
+    auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
     // Calculate func in evalShift
     for (amrex::MFIter mfi(form.m_data); mfi.isValid(); ++mfi)
@@ -348,7 +348,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     {
         loopRun = true;
 
-        const amrex::Box &bx = mfi.tilebox();
+        amrex::Box const& bx = mfi.tilebox();
         COMPARE_FIELDS(pointValues[mfi].array(), analyticalPointValues[mfi].array(), bx);
     }
     ASSERT_TRUE(loopRun);
@@ -376,26 +376,26 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham);
 
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> analyticalform = {
+    amrex::Array<std::string, 3> const analyticalform = {
         "x",
         "x",
         "x",
     };
 #elif (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> analyticalform = {
+    amrex::Array<std::string, 3> const analyticalform = {
         "x + y",
         "x + y",
         "x + y",
     };
 #elif (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> analyticalform = {
+    amrex::Array<std::string, 3> const analyticalform = {
         "x + y + z",
         "x + y + z",
         "x + y + z",
     };
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Array<amrex::ParserExecutor<nVar>, 3> func;
     amrex::Array<amrex::Parser, 3> parser;
 
@@ -410,9 +410,9 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     deRham->projection(func, 0.0, form,
                        this->m_gaussNodes); // Projection of func to the discrete form
 
-    const amrex::BoxArray &ba =
+    amrex::BoxArray const& ba =
         amrex::convert(form.m_data[xDir].boxArray(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)));
-    const amrex::DistributionMapping &dm = form.m_data[xDir].DistributionMap();
+    amrex::DistributionMapping const& dm = form.m_data[xDir].DistributionMap();
     int nghost = form.m_data[xDir].nGrow();
     // test with 2 interpolation points
     size_t nValues = 2;
@@ -422,8 +422,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     amrex::MultiFab analyticalPointValuesY(ba, dm, nValues, nghost);
     amrex::MultiFab pointValuesZ(ba, dm, nValues, nghost);
     amrex::MultiFab analyticalPointValuesZ(ba, dm, nValues, nghost);
-    amrex::Array<amrex::MultiFab *, 3> pointValues{&pointValuesX, &pointValuesY, &pointValuesZ};
-    amrex::Array<amrex::MultiFab *, 3> analyticalPointValues{
+    amrex::Array<amrex::MultiFab*, 3> pointValues{&pointValuesX, &pointValuesY, &pointValuesZ};
+    amrex::Array<amrex::MultiFab*, 3> analyticalPointValues{
         &analyticalPointValuesX,
         &analyticalPointValuesY,
         &analyticalPointValuesZ,
@@ -439,7 +439,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
-    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+    auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
 
     for (int comp{0}; comp < 3; ++comp)
     {
@@ -464,7 +464,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
         {
             loopRun = true;
 
-            const amrex::Box &bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
@@ -480,7 +480,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     {
         for (amrex::MFIter mfi(*analyticalPointValues[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
@@ -500,23 +500,23 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     DeRhamField<TestFixture::s_grid, TestFixture::s_space> form(deRham, nComp);
 
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Vector<amrex::Array<std::string, 3>> analyticalform{{
+    amrex::Vector<amrex::Array<std::string, 3>> const analyticalform{{
         {"x", "x", "x"},
         {"-x", "-x", "-x"},
     }};
 #elif (AMREX_SPACEDIM == 2)
-    const amrex::Vector<amrex::Array<std::string, 3>> analyticalform{{
+    amrex::Vector<amrex::Array<std::string, 3>> const analyticalform{{
         {"x + y", "x + y", "x + y"},
         {"-x  - y", "-x  - y", "-x  - y"},
     }};
 #elif (AMREX_SPACEDIM == 3)
-    const amrex::Vector<amrex::Array<std::string, 3>> analyticalform{{
+    amrex::Vector<amrex::Array<std::string, 3>> const analyticalform{{
         {"x + y + z", "x + y + z", "x + y + z"},
         {"-x  - y - z", "-x  - y - z", "-x  - y - z"},
     }};
 #endif
 
-    const int nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+    int const nVar = AMREX_SPACEDIM + 1; // x, y, z, t
     amrex::Vector<amrex::Array<amrex::ParserExecutor<nVar>, 3>> funcs(nComp);
     amrex::Vector<amrex::Array<amrex::Parser, 3>> parser(nComp);
 
@@ -534,9 +534,9 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     deRham->projection(funcs, 0.0, form,
                        this->m_gaussNodes); // Projection of func to the discrete form
 
-    const amrex::BoxArray &ba =
+    amrex::BoxArray const& ba =
         amrex::convert(form.m_data[xDir].boxArray(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)));
-    const amrex::DistributionMapping &dm = form.m_data[xDir].DistributionMap();
+    amrex::DistributionMapping const& dm = form.m_data[xDir].DistributionMap();
     int nghost = form.m_data[xDir].nGrow();
     // test with 2 interpolation points
     size_t nValues = 2;
@@ -546,8 +546,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     amrex::MultiFab analyticalPointValuesY(ba, dm, nValues * nComp, nghost);
     amrex::MultiFab pointValuesZ(ba, dm, nValues * nComp, nghost);
     amrex::MultiFab analyticalPointValuesZ(ba, dm, nValues * nComp, nghost);
-    amrex::Array<amrex::MultiFab *, 3> pointValues{&pointValuesX, &pointValuesY, &pointValuesZ};
-    amrex::Array<amrex::MultiFab *, 3> analyticalPointValues{
+    amrex::Array<amrex::MultiFab*, 3> pointValues{&pointValuesX, &pointValuesY, &pointValuesZ};
+    amrex::Array<amrex::MultiFab*, 3> analyticalPointValues{
         &analyticalPointValuesX,
         &analyticalPointValuesY,
         &analyticalPointValuesZ,
@@ -563,7 +563,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
-    auto *const evalShiftGpuPtr = evalShiftGpu.dataPtr();
+    auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
 
     for (int comp{0}; comp < 3; ++comp)
     {
@@ -577,7 +577,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
         amrex::Gpu::DeviceVector<amrex::ParserExecutor<nVar>> funcsGpu{static_cast<size_t>(nComp)};
         amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, compFuncs.begin(), compFuncs.end(),
                               funcsGpu.begin());
-        auto *const funcsGpuPtr = funcsGpu.dataPtr();
+        auto* const funcsGpuPtr = funcsGpu.dataPtr();
         // Calculate func in evalShift
         for (amrex::MFIter mfi(*analyticalPointValues[comp]); mfi.isValid(); ++mfi)
         {
@@ -599,7 +599,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
         {
             loopRun = true;
 
-            const amrex::Box &bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }
@@ -615,7 +615,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     {
         for (amrex::MFIter mfi(*analyticalPointValues[comp]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box &bx = mfi.tilebox();
+            amrex::Box const& bx = mfi.tilebox();
             COMPARE_FIELDS((*pointValues[comp])[mfi].array(),
                            (*analyticalPointValues[comp])[mfi].array(), bx);
         }

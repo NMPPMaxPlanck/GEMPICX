@@ -121,7 +121,7 @@ public:
     // @todo amrex::Geometry is not accessible on GPU. Therefore, we provide
     // the geometry_data() function as an intermediate solution to access
     // geometry data on GPU.
-    AMREX_GPU_HOST_DEVICE amrex::GeometryData const& geometry_data () const { return m_geomData; }
+    AMREX_GPU_HOST_DEVICE const amrex::GeometryData& geometry_data () const { return m_geomData; }
     amrex::Box const& box () const { return m_geom.Domain(); }
     AMREX_GPU_HOST_DEVICE amrex::Real cell_volume () const
     {
@@ -145,11 +145,11 @@ public:
                               1.0 / m_geomData.CellSize(zDir))}};
     }
 
-    ComputationalDomain(const std::array<amrex::Real, AMREX_SPACEDIM>& domainLo,
-                        const std::array<amrex::Real, AMREX_SPACEDIM>& domainHi,
-                        const amrex::IntVect& nCell,
-                        const amrex::IntVect& maxGridSize,
-                        const std::array<int, AMREX_SPACEDIM>& isPeriodic,
+    ComputationalDomain(std::array<amrex::Real, AMREX_SPACEDIM> const& domainLo,
+                        std::array<amrex::Real, AMREX_SPACEDIM> const& domainHi,
+                        amrex::IntVect const& nCell,
+                        amrex::IntVect const& maxGridSize,
+                        std::array<int, AMREX_SPACEDIM> const& isPeriodic,
                         amrex::CoordSys::CoordType coordType = amrex::CoordSys::cartesian);
 
     ComputationalDomain();

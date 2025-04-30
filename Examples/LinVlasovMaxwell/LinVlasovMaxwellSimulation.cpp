@@ -29,7 +29,7 @@ using namespace ParticleMeshCoupling;
 using namespace TimeLoop;
 using namespace Utils;
 
-int main (int argc, char *argv[])
+int main (int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
 
@@ -100,7 +100,7 @@ int main (int argc, char *argv[])
             auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, partGr);
 
             // Deposit initial charge and compute s0
-            for (auto &particleSpecies : partGrLinVlasov)
+            for (auto& particleSpecies : partGrLinVlasov)
             {
                 amrex::Real charge = particleSpecies->get_charge();
 
@@ -128,19 +128,18 @@ int main (int argc, char *argv[])
 
                 amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
 
-                for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid();
-                     ++pti)
+                for (auto& particleGrid : *particleSpecies)
                 {
-                    const long np = pti.numParticles();
-                    auto *const particles = pti.GetArrayOfStructs()().data();
-                    auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                    auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                    auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                    auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
-                    auto *const s0 = pti.GetStructOfArrays().GetRealData(4).data();
-                    auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
+                    long const np = particleGrid.numParticles();
+                    auto* const particles = particleGrid.GetArrayOfStructs()().data();
+                    auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                    auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                    auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                    auto* const weight = particleGrid.GetStructOfArrays().GetRealData(3).data();
+                    auto* const s0 = particleGrid.GetStructOfArrays().GetRealData(4).data();
+                    auto* const sqrtf0 = particleGrid.GetStructOfArrays().GetRealData(5).data();
 
-                    amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
+                    amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
                         infra.geometry().ProbLoArray()};
 
@@ -206,24 +205,23 @@ int main (int argc, char *argv[])
                     J.m_data[comp].setVal(0.0);
                 }
 
-                for (auto &particleSpecies : partGrLinVlasov)
+                for (auto& particleSpecies : partGrLinVlasov)
                 {
                     amrex::Real charge = particleSpecies->get_charge();
                     amrex::Real chargeMass = charge / particleSpecies->get_mass();
                     amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
                     amrex::Real vThermalBackground2 = vThermalBackground * vThermalBackground;
 
-                    for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0);
-                         pti.isValid(); ++pti)
+                    for (auto& pti : *particleSpecies)
                     {
-                        const long np = pti.numParticles();
-                        const auto &particles = pti.GetArrayOfStructs()().data();
-                        auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                        auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                        auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
-                        auto *const s0 = pti.GetStructOfArrays().GetRealData(4).data();
-                        auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
+                        long const np = pti.numParticles();
+                        auto const& particles = pti.GetArrayOfStructs()().data();
+                        auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
+                        auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
+                        auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                        auto* const weight = pti.GetStructOfArrays().GetRealData(3).data();
+                        auto* const s0 = pti.GetStructOfArrays().GetRealData(4).data();
+                        auto* const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
                         for (int cc = 0; cc < 3; cc++)
@@ -294,24 +292,23 @@ int main (int argc, char *argv[])
                 deRham->hodge(E, D);
 
                 // He,particle
-                for (auto &particleSpecies : partGrLinVlasov)
+                for (auto& particleSpecies : partGrLinVlasov)
                 {
                     amrex::Real charge = particleSpecies->get_charge();
                     amrex::Real chargeMass = charge / particleSpecies->get_mass();
                     amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
                     amrex::Real vThermalBackground2 = vThermalBackground * vThermalBackground;
 
-                    for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0);
-                         pti.isValid(); ++pti)
+                    for (auto& pti : *particleSpecies)
                     {
-                        const long np = pti.numParticles();
-                        const auto &particles = pti.GetArrayOfStructs()().data();
-                        auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                        auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                        auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(3).data();
-                        auto *const s0 = pti.GetStructOfArrays().GetRealData(4).data();
-                        auto *const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
+                        long const np = pti.numParticles();
+                        auto const& particles = pti.GetArrayOfStructs()().data();
+                        auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
+                        auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
+                        auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                        auto* const weight = pti.GetStructOfArrays().GetRealData(3).data();
+                        auto* const s0 = pti.GetStructOfArrays().GetRealData(4).data();
+                        auto* const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
                         for (int cc = 0; cc < 3; cc++)

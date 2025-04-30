@@ -27,7 +27,7 @@ class Filter
 public:
     Filter() = default;
 
-    void do_filter(const amrex::Box& tbx,
+    void do_filter(amrex::Box const& tbx,
                    amrex::Array4<amrex::Real const> const& src,
                    amrex::Array4<amrex::Real> const& dst,
                    int scomp,
@@ -37,7 +37,7 @@ public:
     /// @cond DOXYGEN_IGNORE
     template <Grid grid, Space space, std::enable_if_t<Forms::isZeroOrThreeForm<space>, int> = 0>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
-                        const Gempic::Forms::DeRhamField<grid, space>& srcField,
+                        Gempic::Forms::DeRhamField<grid, space> const& srcField,
                         int scomp = 0,
                         int dcomp = 0,
                         int ncomp = std::numeric_limits<int>::max())
@@ -54,8 +54,8 @@ public:
 
         for (amrex::MFIter mfi(dstField.m_data); mfi.isValid(); ++mfi)
         {
-            const auto& srcfab = srcField.m_data.array(mfi);
-            const auto& dstfab = dstField.m_data.array(mfi);
+            auto const& srcfab = srcField.m_data.array(mfi);
+            auto const& dstfab = dstField.m_data.array(mfi);
 
             do_filter(mfi.validbox(), srcfab, dstfab, 0, dcomp, ncomp);
         }
@@ -64,7 +64,7 @@ public:
 
     template <Grid grid, Space space, std::enable_if_t<Forms::isOneOrTwoForm<space>, int> = 0>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
-                        const Gempic::Forms::DeRhamField<grid, space>& srcField,
+                        Gempic::Forms::DeRhamField<grid, space> const& srcField,
                         int scomp = 0,
                         int dcomp = 0,
                         int ncomp = std::numeric_limits<int>::max())
@@ -84,8 +84,8 @@ public:
 
             for (amrex::MFIter mfi(dstField.m_data[d]); mfi.isValid(); ++mfi)
             {
-                const auto& srcfab = srcField.m_data[d].array(mfi);
-                const auto& dstfab = dstField.m_data[d].array(mfi);
+                auto const& srcfab = srcField.m_data[d].array(mfi);
+                auto const& dstfab = dstField.m_data[d].array(mfi);
 
                 do_filter(mfi.validbox(), srcfab, dstfab, 0, dcomp, ncomp);
             }

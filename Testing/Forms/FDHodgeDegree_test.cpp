@@ -31,44 +31,44 @@ using namespace Forms;
 namespace
 {
 /* Initialize the infrastructure */
-ComputationalDomain get_compdom (const amrex::IntVect &nCell)
+ComputationalDomain get_compdom (amrex::IntVect const& nCell)
 {
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
-    const std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.3, 1.6, 1.4)};
-    const amrex::IntVect maxGridSize{AMREX_D_DECL(8, 6, 9)};
-    const std::array<int, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.3, 0.6, 0.4)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.3, 1.6, 1.4)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 6, 9)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
 
 template <int hodgeDegree, Space space>
-void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegree = 3)
+void hodge_one_two_error (double& e1, double& e2, int const n, int maxSplineDegree = 3)
 {
     // Initialize computational_domain
-    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+    amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
     Gempic::Io::Parameters parameters{};
     ComputationalDomain infra = get_compdom(nCell);
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const amrex::Real weight = 3. / 2.;
+    amrex::Real const weight = 3. / 2.;
 #if (AMREX_SPACEDIM == 1)
-    const amrex::Array<std::string, 3> func = {
+    amrex::Array<std::string, 3> const func = {
         "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))",
         "pi = 3.141592653589793; w * (sin(2*pi*x) + cos(2*pi*x - 0.2))",
         "pi = 3.141592653589793; w * (cos(2*2*pi*x) + sin(2*pi*x - 0.2))",
     };
 #endif
 #if (AMREX_SPACEDIM == 2)
-    const amrex::Array<std::string, 3> func = {
+    amrex::Array<std::string, 3> const func = {
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; w * (sin(2*pi*x)*cos(2*pi*y) + cos(2*pi*x - 0.2)*sin(2*pi*y))",
         "pi = 3.141592653589793; w * (cos(2*2*pi*x)*cos(2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))",
     };
 #endif
 #if (AMREX_SPACEDIM == 3)
-    const amrex::Array<std::string, 3> func = {
+    amrex::Array<std::string, 3> const func = {
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))",
         "pi = 3.141592653589793; w * (sin(2*pi*x)*cos(2*pi*y)*cos(2*2*pi*z) + cos(2*pi*x - "
@@ -122,26 +122,26 @@ void hodge_one_two_error (double &e1, double &e2, const int n, int maxSplineDegr
 }
 
 template <int hodgeDegree, Space space>
-void hodge_zero_three_error (double &e1, double &e2, const int n, int maxSplineDegree = 3)
+void hodge_zero_three_error (double& e1, double& e2, int const n, int maxSplineDegree = 3)
 {
     // Initialize computational_domain
-    const amrex::IntVect nCell{AMREX_D_DECL(n, n, n)};
+    amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
     Gempic::Io::Parameters parameters{};
     ComputationalDomain infra = get_compdom(nCell);
 
     auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                     HodgeScheme::FDHodge);
 
-    const amrex::Real weight = 3. / 2.;
+    amrex::Real const weight = 3. / 2.;
 #if (AMREX_SPACEDIM == 1)
-    const std::string func = "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))";
+    std::string const func = "pi = 3.141592653589793; w * (cos(2*pi*x) + sin(2*pi*x - 0.2))";
 #endif
 #if (AMREX_SPACEDIM == 2)
-    const std::string func =
+    std::string const func =
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y) + sin(2*pi*x - 0.2)*sin(2*pi*y))";
 #endif
 #if (AMREX_SPACEDIM == 3)
-    const std::string func =
+    std::string const func =
         "pi = 3.141592653589793; w * (cos(2*pi*x)*sin(2*2*pi*y)*cos(2*pi*z) + sin(2*pi*x - "
         "0.2)*sin(2*pi*y)*sin(2*2*pi*z + 1.3))";
 #endif
@@ -188,7 +188,7 @@ public:
     static constexpr int s_degY{3};
     static constexpr int s_degZ{3};
 
-    inline static const int s_maxSplineDegree{
+    inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
 
     static constexpr int s_hodgeDegree{DegreeSpace::s_hodgeDegree};
@@ -251,7 +251,7 @@ TYPED_TEST_SUITE(FDHodgeDegreeTest2, OneTwoForms, NameGenerator);
 
 TYPED_TEST(FDHodgeDegreeTest, PrimalDualZeroThreeTest)
 {
-    const int coarse = 16, fine = 32;
+    int const coarse = 16, fine = 32;
     constexpr int hodgeDegree{TestFixture::s_hodgeDegree};
     constexpr Space space{TestFixture::s_space};
     amrex::Real errorPrimalFormCoarse, errorDualFormCoarse, errorPrimalFormFine, errorDualFormFine;
@@ -287,7 +287,7 @@ TYPED_TEST(FDHodgeDegreeTest, PrimalDualZeroThreeTest)
 
 TYPED_TEST(FDHodgeDegreeTest2, PrimalDualOneTwoTest)
 {
-    const int coarse = 16, fine = 32;
+    int const coarse = 16, fine = 32;
     constexpr int hodgeDegree{TestFixture::s_hodgeDegree};
     constexpr Space space{TestFixture::s_space};
     amrex::Real errorPrimalFormCoarse, errorDualFormCoarse, errorPrimalFormFine, errorDualFormFine;

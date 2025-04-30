@@ -27,13 +27,11 @@ using namespace Particle;
 using namespace ParticleMeshCoupling;
 using namespace FieldSolvers;
 
-int main (int argc, char *argv[])
+int main (int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
 
     constexpr int vdim{3};
-    constexpr int numspec{1};
-    constexpr int ndata{1};
 
     // Node spline degrees (smoothing spline degree is one less in each direction)
     constexpr int degx{1};
@@ -94,39 +92,7 @@ int main (int argc, char *argv[])
             // Deposit initial charge
             rho.m_data.setVal(0.0);
 
-            for (int spec = 0; spec < numspec; spec++)
-            {
-                amrex::Real charge = partGr[spec]->get_charge();
-                partGr[spec]->reset_total_weight(infra.geometry().ProbSize());
-                for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid();
-                     ++pti)
-                {
-                    const long np = pti.numParticles();
-                    auto *const particles = pti.GetArrayOfStructs()().data();
-                    auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-
-                    amrex::Array4<amrex::Real> const &rhoarr = rho.m_data[pti].array();
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
-                        infra.geometry().ProbLoArray()};
-
-                    amrex::ParallelFor(
-                        np,
-                        [=] AMREX_GPU_DEVICE(long pp)
-                        {
-                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                            {
-                                positionParticle[d] = particles[pp].pos(d);
-                            }
-                            SplineBase<degx, degy, degz> spline(positionParticle, plo,
-                                                                infra.inv_cell_size_array());
-                            // Needs at least max(degx, degy, degz) ghost cells
-                            deposit_rho(rhoarr, spline, charge * weight[pp]);
-                        });
-                }
-            }
-
-            rho.post_particle_loop_sync();
+            deposit_particle_density<degx, degy, degx>(rho, partGr, infra);
 
             // Add background charge (needs to be done after post_particle_loop_sync)
             rho += rhoBackground * infra.cell_volume();
@@ -169,20 +135,20 @@ int main (int argc, char *argv[])
                     J.m_data[comp].setVal(0.0);
                 }
 
-                for (int spec = 0; spec < numspec; spec++)
+                for (auto const& particleSpecies : partGr)
                 {
-                    amrex::Real charge = partGr[spec]->get_charge();
-                    amrex::Real chargeOverMass = charge / partGr[spec]->get_mass();
+                    amrex::Real charge = particleSpecies->get_charge();
+                    amrex::Real chargeOverMass = charge / particleSpecies->get_mass();
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid();
-                         ++pti)
+                    for (auto& particleGrid : *particleSpecies)
                     {
-                        const long np = pti.numParticles();
-                        const auto &particles = pti.GetArrayOfStructs()().data();
-                        auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                        auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                        auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+                        long const np = particleGrid.numParticles();
+                        auto const& particles = particleGrid.GetArrayOfStructs()().data();
+                        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                        auto* const weight =
+                            particleGrid.GetStructOfArrays().GetRealData(vdim).data();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
@@ -190,9 +156,10 @@ int main (int argc, char *argv[])
 
                         for (int cc = 0; cc < vdim; cc++)
                         {
-                            jA[cc] = (J.m_data[cc])[pti].array();
-                            eA[cc] = (eFiltered.m_data[cc])[pti].array(); // Filtered E for pushing
-                            bA[cc] = (B.m_data[cc])[pti].array();
+                            jA[cc] = (J.m_data[cc])[particleGrid].array();
+                            eA[cc] = (eFiltered.m_data[cc])[particleGrid]
+                                         .array(); // Filtered E for pushing
+                            bA[cc] = (B.m_data[cc])[particleGrid].array();
                         }
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
                             infra.geometry().ProbLoArray()};
@@ -233,7 +200,7 @@ int main (int argc, char *argv[])
                                                velz[pp] = vel[zDir];
                                            });
                     }
-                    partGr[spec]->Redistribute();
+                    particleSpecies->Redistribute();
                 }
                 J.post_particle_loop_sync();
 
@@ -247,28 +214,28 @@ int main (int argc, char *argv[])
                 biFilter->apply_stencil(eFiltered, E);
 
                 // Second particle loop for particle part from H_E
-                for (int spec = 0; spec < numspec; spec++)
+                for (auto const& particleSpecies : partGr)
                 {
-                    amrex::Real charge = partGr[spec]->get_charge();
-                    amrex::Real chargeOverMass = charge / partGr[spec]->get_mass();
+                    amrex::Real charge = particleSpecies->get_charge();
+                    amrex::Real chargeOverMass = charge / particleSpecies->get_mass();
 
-                    for (amrex::ParIter<0, 0, vdim + ndata, 0> pti(*partGr[spec], 0); pti.isValid();
-                         ++pti)
+                    for (auto& particleGrid : *particleSpecies)
                     {
-                        const long np = pti.numParticles();
-                        const auto &particles = pti.GetArrayOfStructs()().data();
-                        auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                        auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                        auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto *const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+                        long const np = particleGrid.numParticles();
+                        auto const& particles = particleGrid.GetArrayOfStructs()().data();
+                        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+                        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
+                        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                        auto* const weight =
+                            particleGrid.GetStructOfArrays().GetRealData(vdim).data();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
                         amrex::Array4<amrex::Real> rhoarr;
 
-                        rhoarr = rho.m_data[pti].array();
+                        rhoarr = rho.m_data[particleGrid].array();
                         for (int cc = 0; cc < vdim; cc++)
                         {
-                            eA[cc] = (eFiltered.m_data[cc])[pti].array();
+                            eA[cc] = (eFiltered.m_data[cc])[particleGrid].array();
                         }
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
                             infra.geometry().ProbLoArray()};
@@ -301,7 +268,7 @@ int main (int argc, char *argv[])
                                                deposit_rho(rhoarr, spline, charge * weight[pp]);
                                            });
                     }
-                    partGr[spec]->Redistribute();
+                    particleSpecies->Redistribute();
                 }
                 // end treat particles
                 rho.post_particle_loop_sync();

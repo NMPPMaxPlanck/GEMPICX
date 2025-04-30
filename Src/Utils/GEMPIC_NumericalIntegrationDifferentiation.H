@@ -40,9 +40,9 @@ public:
      */
     // clang-format on
     template <typename Function1D>
-    inline AMREX_GPU_HOST_DEVICE amrex::Real line (amrex::Real const &midpoint,
-                                                   amrex::Real const &halfWidth,
-                                                   Function1D const &f) const
+    inline AMREX_GPU_HOST_DEVICE amrex::Real line (amrex::Real const& midpoint,
+                                                   amrex::Real const& halfWidth,
+                                                   Function1D const& f) const
     {
         static_assert(
             std::is_invocable_r_v<amrex::Real, Function1D, amrex::Real>,
@@ -74,9 +74,9 @@ public:
      */
     // clang-format on
     template <typename Function2D>
-    inline AMREX_GPU_HOST_DEVICE amrex::Real surface (std::array<amrex::Real, 2> const &midpoint,
-                                                      std::array<amrex::Real, 2> const &halfWidth,
-                                                      Function2D const &f) const
+    inline AMREX_GPU_HOST_DEVICE amrex::Real surface (std::array<amrex::Real, 2> const& midpoint,
+                                                      std::array<amrex::Real, 2> const& halfWidth,
+                                                      Function2D const& f) const
     {
         static_assert(std::is_invocable_r_v<amrex::Real, Function2D, amrex::Real, amrex::Real>,
                       "'Function2D const &f' has no callable interface matching "
@@ -112,9 +112,9 @@ public:
      */
     // clang-format on
     template <typename Function3D>
-    inline AMREX_GPU_HOST_DEVICE amrex::Real volume (std::array<amrex::Real, 3> const &midpoint,
-                                                     std::array<amrex::Real, 3> const &halfWidth,
-                                                     Function3D const &f) const
+    inline AMREX_GPU_HOST_DEVICE amrex::Real volume (std::array<amrex::Real, 3> const& midpoint,
+                                                     std::array<amrex::Real, 3> const& halfWidth,
+                                                     Function3D const& f) const
     {
         static_assert(
             std::is_invocable_r_v<amrex::Real, Function3D, amrex::Real, amrex::Real, amrex::Real>,
@@ -146,8 +146,8 @@ public:
 private:
     int m_points{};
     static constexpr int s_nGaussFormulas{s_maxPoints - s_minPoints + 1};
-    const std::array<amrex::Real, s_maxPoints> m_location;
-    const std::array<amrex::Real, s_maxPoints> m_weights;
+    std::array<amrex::Real, s_maxPoints> const m_location;
+    std::array<amrex::Real, s_maxPoints> const m_weights;
     static std::array<amrex::Real, s_maxPoints> location(int points);
     static std::array<amrex::Real, s_maxPoints> weights(int points);
 };
