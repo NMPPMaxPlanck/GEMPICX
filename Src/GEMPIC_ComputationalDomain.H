@@ -139,10 +139,29 @@ public:
                               m_geomData.CellSize(zDir))}};
     }
     // @todo Place holder until we can replace by AMReX Geometry member function
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, 3> cell_size_3darray () const
+    {
+        return {{GEMPIC_D_PAD_ONE(m_geomData.CellSize(xDir), m_geomData.CellSize(yDir),
+                                  m_geomData.CellSize(zDir))}};
+    }
+    // @todo Place holder until we can replace by AMReX Geometry member function
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inv_cell_size_array () const
     {
         return {{AMREX_D_DECL(1.0 / m_geomData.CellSize(xDir), 1.0 / m_geomData.CellSize(yDir),
                               1.0 / m_geomData.CellSize(zDir))}};
+    }
+    // @todo Place holder until we can replace by AMReX Geometry member function
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, 3> inv_cell_size_3darray () const
+    {
+        return {{GEMPIC_D_PAD_ONE(1.0 / m_geomData.CellSize(xDir), 1.0 / m_geomData.CellSize(yDir),
+                                  1.0 / m_geomData.CellSize(zDir))}};
+    }
+    // @todo Place holder until we can replace by AMReX Geometry member function
+    AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, 3> prob_low_3darray () const
+    {
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0Tmp{
+            AMREX_D_DECL(m_geomData.ProbLo(0), m_geomData.ProbLo(1), m_geomData.ProbLo(2))};
+        return {{GEMPIC_D_PAD_ONE(r0Tmp[xDir], r0Tmp[yDir], r0Tmp[zDir])}};
     }
 
     ComputationalDomain(const std::array<amrex::Real, AMREX_SPACEDIM>& domainLo,

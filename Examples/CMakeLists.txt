@@ -1,6 +1,7 @@
 add_subdirectory(ColdPlasma)
 add_subdirectory(Electrostatic)
 add_subdirectory(LinVlasovMaxwell)
+add_subdirectory(Maxwell)
 add_subdirectory(VlasovMaxwell)
 if (AMReX_SPACEDIM EQUAL 3)
   add_subdirectory(LSRK)

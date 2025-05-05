@@ -42,6 +42,16 @@
             }
         },
         {
+            "name": "impi-compiler",
+            "displayName": "Intel MPI Compiler",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "mpiicpx",
+                "CMAKE_C_COMPILER": "mpiicx",
+                "CMAKE_CUDA_HOST_COMPILER": "mpiicpx"
+            }
+        },
+        {
             "name": "mpcdf-gpu-3D",
             "displayName": "GPU settings for Raven 3D",
             "binaryDir": "${sourceDir}/build/${presetName}",
@@ -104,6 +114,20 @@
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "AMReX_SPACEDIM": "2",
+                "GEMPIC_USE_LTO": "OFF"
+            }
+        },
+        {
+            "name": "intel-cpu-debug-2D",
+            "displayName": "intel-CPU debug 2D settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "gempic-cpu-cache-vars",
+                "impi-compiler"
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",

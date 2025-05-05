@@ -13,6 +13,8 @@ enum class HodgeScheme
 {
     FDHodge,
     GalerkinHodge,
+    GDECHodge,     // Galerkin Differences. No dual grid is used.
+    GDECLumpHodge, // with Mass lumping
 };
 
 /**
@@ -115,6 +117,144 @@ inline auto get_hodge_stencils ()
 
         return std::make_tuple(stencilNodeToCell, stencilCellToNode);
     }
+    if constexpr (scheme == HodgeScheme::GDECHodge)
+    {
+        constexpr unsigned int order{
+            degree}; // the so called degree is actually the order of accuracy (=degree+1) =>
+        constexpr unsigned int stencilLength{2 * order - 1};
+        amrex::GpuArray<amrex::Real, stencilLength>
+            stencilHodgeV0; // V0 or V1 refer to the 1D complex V0 --dx--> V1
+        amrex::GpuArray<amrex::Real, stencilLength>
+            stencilHodgeV1; // V0 or V1 refer to the 1D complex V0 --dx--> V1
+
+        switch (order)
+        {
+            case 2:
+                stencilHodgeV0[0] = 1. / 6.;
+                stencilHodgeV0[1] = 2. / 3.;
+                stencilHodgeV0[2] = 1. / 6.;
+                stencilHodgeV1[0] = 0.;
+                stencilHodgeV1[1] = 1.;
+                stencilHodgeV1[2] = 0.;
+                break;
+            case 4:
+                stencilHodgeV0[0] = 31. / 15120.;
+                stencilHodgeV0[1] = -3. / 70.;
+                stencilHodgeV0[2] = 257. / 1680.;
+                stencilHodgeV0[3] = 733. / 945.;
+                stencilHodgeV0[4] = 257. / 1680.;
+                stencilHodgeV0[5] = -3. / 70.;
+                stencilHodgeV0[6] = 31. / 15120.;
+
+                stencilHodgeV1[0] = 0.;
+                stencilHodgeV1[1] = -7. / 360.;
+                stencilHodgeV1[2] = -1. / 180.;
+                stencilHodgeV1[3] = 21. / 20.;
+                stencilHodgeV1[4] = -1. / 180.;
+                stencilHodgeV1[5] = -7. / 360.;
+                stencilHodgeV1[6] = 0.;
+                break;
+            case 6:
+                stencilHodgeV0[0] = 313. / 4435200.;
+                stencilHodgeV0[1] = -3937. / 3326400.;
+                stencilHodgeV0[2] = 59053. / 4435200.;
+                stencilHodgeV0[3] = -12421. / 207900.;
+                stencilHodgeV0[4] = 906919. / 6652800.;
+                stencilHodgeV0[5] = 455963. / 554400.;
+                stencilHodgeV0[6] = 906919. / 6652800.;
+                stencilHodgeV0[7] = -12421. / 207900.;
+                stencilHodgeV0[8] = 59053. / 4435200.;
+                stencilHodgeV0[9] = -3937. / 3326400.;
+                stencilHodgeV0[10] = 313. / 4435200.;
+
+                stencilHodgeV1[0] = 0.;
+                stencilHodgeV1[1] = -89. / 129600.;
+                stencilHodgeV1[2] = 4547. / 453600.;
+                stencilHodgeV1[3] = -4003. / 113400.;
+                stencilHodgeV1[4] = -9691. / 453600.;
+                stencilHodgeV1[5] = 99307. / 90720.;
+                stencilHodgeV1[6] = -9691. / 453600.;
+                stencilHodgeV1[7] = -4003. / 113400.;
+                stencilHodgeV1[8] = 4547. / 453600.;
+                stencilHodgeV1[9] = -89. / 129600.;
+                stencilHodgeV1[10] = 0.;
+                break;
+            default:
+                AMREX_ASSERT("order not implemented");
+                break;
+        }
+
+        return std::make_tuple(stencilHodgeV0, stencilHodgeV1);
+    }
+    if constexpr (scheme == HodgeScheme::GDECLumpHodge)
+    {
+        constexpr unsigned int order{
+            degree}; // the so called degree is actually the order of accuracy (=degree+1) =>
+        constexpr unsigned int stencilLength{2 * order - 1};
+        amrex::GpuArray<amrex::Real, stencilLength>
+            stencilHodgeV0; // V0 or V1 refer to the 1D complex V0 --dx--> V1
+        amrex::GpuArray<amrex::Real, stencilLength>
+            stencilHodgeV1; // V0 or V1 refer to the 1D complex V0 --dx--> V1
+
+        switch (order)
+        {
+            case 2:
+                stencilHodgeV0[0] = 0.;
+                stencilHodgeV0[1] = 1.;
+                stencilHodgeV0[2] = 0.;
+                stencilHodgeV1[0] = 0.;
+                stencilHodgeV1[1] = 1.;
+                stencilHodgeV1[2] = 0.;
+                break;
+            case 4:
+                stencilHodgeV0[0] = 0.;
+                stencilHodgeV0[1] = 0.;
+                stencilHodgeV0[2] = 0.;
+                stencilHodgeV0[3] = 1.;
+                stencilHodgeV0[4] = 0.;
+                stencilHodgeV0[5] = 0.;
+                stencilHodgeV0[6] = 0.;
+
+                stencilHodgeV1[0] = 0.;
+                stencilHodgeV1[1] = -7. / 360.;
+                stencilHodgeV1[2] = -1. / 180.;
+                stencilHodgeV1[3] = 21. / 20.;
+                stencilHodgeV1[4] = -1. / 180.;
+                stencilHodgeV1[5] = -7. / 360.;
+                stencilHodgeV1[6] = 0.;
+                break;
+            case 6:
+                stencilHodgeV0[0] = 0.;
+                stencilHodgeV0[1] = 0.;
+                stencilHodgeV0[2] = 0.;
+                stencilHodgeV0[3] = 0.;
+                stencilHodgeV0[4] = 0.;
+                stencilHodgeV0[5] = 1.;
+                stencilHodgeV0[6] = 0.;
+                stencilHodgeV0[7] = 0.;
+                stencilHodgeV0[8] = 0.;
+                stencilHodgeV0[9] = 0.;
+                stencilHodgeV0[10] = 0.;
+
+                stencilHodgeV1[0] = 0.;
+                stencilHodgeV1[1] = -89. / 129600.;
+                stencilHodgeV1[2] = 4547. / 453600.;
+                stencilHodgeV1[3] = -4003. / 113400.;
+                stencilHodgeV1[4] = -9691. / 453600.;
+                stencilHodgeV1[5] = 99307. / 90720.;
+                stencilHodgeV1[6] = -9691. / 453600.;
+                stencilHodgeV1[7] = -4003. / 113400.;
+                stencilHodgeV1[8] = 4547. / 453600.;
+                stencilHodgeV1[9] = -89. / 129600.;
+                stencilHodgeV1[10] = 0.;
+                break;
+            default:
+                AMREX_ASSERT("order not implemented");
+                break;
+        }
+
+        return std::make_tuple(stencilHodgeV0, stencilHodgeV1);
+    }
 }
 // NOLINTEND(readability-magic-numbers)
 
@@ -194,6 +334,8 @@ class FDDeRhamComplex : public DeRhamComplex
 private:
     static constexpr std::array<int, 3> s_validDegreesFDHodge{2, 4, 6};
     static constexpr std::array<int, 3> s_validDegreesGalerkinHodge{2, 4, 6};
+    static constexpr std::array<int, 3> s_validDegreesGDECHodge{2, 4, 6};
+    static constexpr std::array<int, 3> s_validDegreesGDECLumpHodge{2, 4, 6};
 
     template <HodgeScheme hodgeScheme>
     static constexpr auto valid_degrees ()
@@ -205,6 +347,14 @@ private:
         else if constexpr (hodgeScheme == HodgeScheme::GalerkinHodge)
         {
             return s_validDegreesGalerkinHodge;
+        }
+        else if constexpr (hodgeScheme == HodgeScheme::GDECHodge)
+        {
+            return s_validDegreesGDECHodge;
+        }
+        else if constexpr (hodgeScheme == HodgeScheme::GDECLumpHodge)
+        {
+            return s_validDegreesGDECLumpHodge;
         }
         else
         {
