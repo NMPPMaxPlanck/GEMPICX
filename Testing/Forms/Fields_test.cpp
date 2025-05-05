@@ -52,11 +52,7 @@ TEST_F(FieldsTest, OperatorsHodge2)
     dualCellOther.m_data.setVal(3);
 
     amrex::Real dotProd = dot_product(primalNode, dualCellOther);
-    EXPECT_NEAR(
-        dotProd,
-        2 * 3 *
-            GEMPIC_D_MULT(m_infra.m_nCell[0] + 1, m_infra.m_nCell[1] + 1, m_infra.m_nCell[2] + 1),
-        1e-14);
+    EXPECT_NEAR(dotProd, 2 * 3 * m_infra.box().numPts(), 1e-14);
 
     for (int comp = 0; comp < 3; comp++)
     {
@@ -64,12 +60,7 @@ TEST_F(FieldsTest, OperatorsHodge2)
         dualFaceOther.m_data[comp].setVal(3);
     }
     dotProd = dot_product(primalEdge, dualFaceOther);
-    EXPECT_NEAR(
-        dotProd,
-        3 * (GEMPIC_D_MULT(m_infra.m_nCell[0], m_infra.m_nCell[1] + 1, m_infra.m_nCell[2] + 1) +
-             GEMPIC_D_MULT(m_infra.m_nCell[0] + 1, m_infra.m_nCell[1], m_infra.m_nCell[2] + 1) +
-             GEMPIC_D_MULT(m_infra.m_nCell[0] + 1, m_infra.m_nCell[1] + 1, m_infra.m_nCell[2])),
-        1e-14);
+    EXPECT_NEAR(dotProd, 3 * 3 * m_infra.box().numPts(), 1e-14);
 }
 
 TEST_F(FieldsTest, LinearCombination)

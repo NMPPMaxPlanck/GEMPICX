@@ -887,9 +887,13 @@ void FDDeRhamComplex::hodge_scheme_selector (anyFieldConstRef f1, anyFieldRef f2
     {
         hodge_degree_selector<HodgeScheme::FDHodge>(f1, f2, weight);
     }
-    else if (m_hodgeScheme == HodgeScheme::FDHodge)
+    else if (m_hodgeScheme == HodgeScheme::GDECHodge)
     {
-        hodge_degree_selector<HodgeScheme::FDHodge>(f1, f2, weight);
+        hodge_degree_selector<HodgeScheme::GDECHodge>(f1, f2, weight);
+    }
+    else if (m_hodgeScheme == HodgeScheme::GDECLumpHodge)
+    {
+        hodge_degree_selector<HodgeScheme::GDECLumpHodge>(f1, f2, weight);
     }
 }
 

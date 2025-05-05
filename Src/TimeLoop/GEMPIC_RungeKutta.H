@@ -547,5 +547,454 @@ public:
         particleSpecies->Redistribute();
     }
 }; //class RungeKutta
+
+/**
+ * Runge Kutta Butcher Tableau handler
+ *
+ * @param nDof : number of stages (dof).
+ */
+template <int nDof>
+struct RkButcherTableau
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, nDof>, nDof> m_a;
+    amrex::GpuArray<amrex::Real, nDof> m_b;
+    amrex::GpuArray<amrex::Real, nDof> m_c;
+
+    int get_stages () { return nDof; }
+};
+
+/**
+ * Implicit Runge Kutta Butcher Tableau:
+ * first order (backward) implicit Euler method
+ */
+struct ImplicitEulerRkButcherTableau : RkButcherTableau<1>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 1>, 1> m_a = {{{1}}};
+    amrex::GpuArray<amrex::Real, 1> m_b = {1.0};
+    amrex::GpuArray<amrex::Real, 1> m_c = {1.0};
+};
+
+/**
+ * Explicit Runge Kutta Butcher Tableau:
+ * first order (forward) explicit Euler method
+ */
+struct ExplicitEulerRkButcherTableau : RkButcherTableau<1>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 1>, 1> m_a = {{{0.0}}};
+    amrex::GpuArray<amrex::Real, 1> m_b = {1.0};
+    amrex::GpuArray<amrex::Real, 1> m_c = {0.0};
+};
+
+/**
+ * Explicit Runge Kutta Butcher Tableau:
+ * second order method
+ */
+struct RK2ButcherTableau : RkButcherTableau<2>
+{
+    //amrex::GpuArray<amrex::GpuArray<amrex::Real, 2>, 2> a = {{{{0.0, 0.0}}, {{0.5, 0.0}}}};
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 2>, 2> m_a = {{{{0.0, 0.0}}, {{0.5, 0.0}}}};
+    amrex::GpuArray<amrex::Real, 2> m_b = {0.0, 1.0};
+    amrex::GpuArray<amrex::Real, 2> m_c = {0.0, 0.5};
+};
+
+/**
+ * Explicit Runge Kutta Butcher Tableau:
+ * third order RK3 method
+ */
+struct RK3ButcherTableau : RkButcherTableau<3>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 3>, 3> m_a = {
+        {{{0.0, 0.0, 0.0}}, {{0.5, 0.0, 0.0}}, {{-1.0, 2.0, 0.0}}}};
+    amrex::GpuArray<amrex::Real, 3> m_b = {{1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0}};
+    amrex::GpuArray<amrex::Real, 3> m_c = {{0.0, 0.5, 1.0}};
+};
+
+/**
+ * Explicit Runge Kutta Butcher Tableau:
+ * third order SSP RK3 (Strong Stability Preserving)
+ */
+struct SspRK3ButcherTableau : RkButcherTableau<3>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 3>, 3> m_a = {
+        {{{0.0, 0.0, 0.0}}, {{1.0, 0.0, 0.0}}, {{0.25, 0.25, 0.0}}}};
+    amrex::GpuArray<amrex::Real, 3> m_b = {{1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0}};
+    amrex::GpuArray<amrex::Real, 3> m_c = {{0.0, 1.0, 0.5}};
+};
+
+/**
+ * Explicit Runge Kutta Butcher Tableau:
+ * fourth order RK4 SSP
+ */
+struct RK4ButcherTableau : RkButcherTableau<4>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 4>, 4> m_a = {{{{0.0, 0.0, 0.0, 0.0}},
+                                                                {{0.5, 0.0, 0.0, 0.0}},
+                                                                {{0.0, 0.5, 0.0, 0.0}},
+                                                                {{0.0, 0.0, 1.0, 0.0}}}};
+    amrex::GpuArray<amrex::Real, 4> m_b = {{1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0}};
+    amrex::GpuArray<amrex::Real, 4> m_c = {{0.0, 0.5, 0.5, 1.0}};
+};
+
+/**
+ * Implicit-Explicit (IMEX) Runge Kutta Butcher Tableau handler
+ */
+template <int nDof>
+struct ImexRkButcherTableau
+{
+    RkButcherTableau<nDof> m_implicitRkButcherTableau;
+    RkButcherTableau<nDof> m_explicitRkButcherTableau;
+};
+
+/**
+ * Implicit-Explicit (IMEX) Runge Kutta Butcher Tableau:
+ * first order Euler method
+ */
+struct ImexEulerRkButcherTableau
+{
+    ImplicitEulerRkButcherTableau m_implicitRkButcherTableau;
+    ExplicitEulerRkButcherTableau m_explicitRkButcherTableau;
+};
+
+/**
+ * Explicit Runge Kutta Butcher Tableau for the IMEX
+ * 2nd order Stiffly Accurate and Stability Preserving (Boscheri,Tavelli,Pareschi)
+ */
+struct SaspExplicitRK3ButcherTableau : RkButcherTableau<3>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 3>, 3> m_a = {
+        {{{0.0, 0.0, 0.0}}, {{0.5, 0.0, 0.0}}, {{0.5, 0.5, 0.0}}}};
+    amrex::GpuArray<amrex::Real, 3> m_b = {{1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0}};
+    amrex::GpuArray<amrex::Real, 3> m_c = {{0.0, 0.5, 1.0}};
+};
+/**
+ * Implicit Runge Kutta Butcher Tableau for the IMEX
+ * 2nd order Stiffly Accurate and Stability Preserving (Boscheri,Tavelli,Pareschi)
+ */
+struct SaspImplicitRK3ButcherTableau : RkButcherTableau<3>
+{
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, 3>, 3> m_a = {
+        {{{0.25, 0.0, 0.0}}, {{0.0, 0.25, 0.0}}, {{1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0}}}};
+    amrex::GpuArray<amrex::Real, 3> m_b = {{1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0}};
+    amrex::GpuArray<amrex::Real, 3> m_c = {{0.25, 0.25, 1.0}};
+};
+
+/**
+ * Implicit-Explicit (IMEX) Runge Kutta Butcher Tableau:
+ * 2nd order Stiffly Accurate and Stability Preserving (Boscheri,Tavelli,Pareschi)
+ */
+struct SaspImexRK3ButcherTableau
+{
+    SaspImplicitRK3ButcherTableau m_implicitRkButcherTableau;
+    SaspExplicitRK3ButcherTableau m_explicitRkButcherTableau;
+};
+
+/**
+ * Type Selector for the Runge Kutta Butcher Tableau for RK_ButcherTableau
+ *
+ * @param int N: number of stages
+ *
+ * @param int TimeIntegration:  0 = Explicit; 1 = Implicit; 2 = ImEx.
+ */
+template <int n, int timeIntegration>
+struct RKTypeSelector;
+
+template <>
+struct RKTypeSelector<1, 0>
+{
+    using selected_RK_ButcherTableau = ExplicitEulerRkButcherTableau;
+};
+
+template <>
+struct RKTypeSelector<2, 0>
+{
+    using selected_RK_ButcherTableau = RK2ButcherTableau;
+};
+
+template <>
+struct RKTypeSelector<3, 0>
+{
+    //using selected_RK_ButcherTableau = RK3_ButcherTableau;
+    using selected_RK_ButcherTableau = SspRK3ButcherTableau;
+};
+
+template <>
+struct RKTypeSelector<4, 0>
+{
+    using selected_RK_ButcherTableau = RK4ButcherTableau;
+};
+
+template <>
+struct RKTypeSelector<1, 2>
+{
+    using selected_RK_ButcherTableau = ImexEulerRkButcherTableau;
+};
+
+template <>
+struct RKTypeSelector<3, 2>
+{
+    using selected_RK_ButcherTableau = SaspImexRK3ButcherTableau;
+};
+
+/**
+ * Explicit Runkge Kutta Class.
+ *
+ * @param FieldsHandler: physical state handler
+ *
+ * @param nRKstages: number of RK stages
+ */
+template <class FieldsHandler, int nRKstages>
+class ExplicitRK
+{
+public:
+    using selectedRK_Tableau = typename RKTypeSelector<nRKstages, 0>::selected_RK_ButcherTableau;
+    using RKStagesArray = typename std::array<std::shared_ptr<FieldsHandler>, nRKstages>;
+    // Create an instance of the selected type
+    RkButcherTableau<nRKstages> m_rkTableau;
+
+    void integrate_step(const amrex::Real time, const amrex::Real dt);
+
+    void one_step_solve_dqdt_explicit();
+
+    void finalize_rk(const amrex::Real dt,
+                     std::shared_ptr<FieldsHandler>& dst,
+                     const RKStagesArray& srcArray);
+
+    ExplicitRK(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
+               std::shared_ptr<FieldsHandler>& solutionTmpExplicitSrc,
+               std::shared_ptr<FieldsHandler>& mTimeDerivativeSrc,
+               NumericalScheme& numSchemeSrc,
+               std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
+               const selectedRK_Tableau& rKreference) :
+        m_solutionInOut(solutionInOutSrc),
+        m_solutionTmpExplicit(solutionTmpExplicitSrc), // this is the one used in NumScheme to
+                                                       // compute dQdt_ex (by reference!)
+        m_timeDerivativeExplicit(mTimeDerivativeSrc),  // this is dQdt_ex (by reference!)
+        m_scheme(numSchemeSrc)
+
+    {
+        for (int i = 0; i < nRKstages; ++i)
+        {
+            m_timeDerivativeStages[i] = std::make_unique<FieldsHandler>(drc, m_scheme.get_ncomp());
+            *(m_timeDerivativeStages[i]) = *m_timeDerivativeExplicit;
+        }
+
+        for (int i = 0; i < nRKstages; ++i)
+        {
+            m_rkTableau.m_b[i] = rKreference.m_b[i];
+            m_rkTableau.m_c[i] = rKreference.m_c[i];
+            for (int j = 0; j < nRKstages; ++j)
+            {
+                m_rkTableau.m_a[i][j] = rKreference.m_a[i][j];
+            }
+        }
+    }
+
+private:
+    std::shared_ptr<FieldsHandler> m_solutionInOut; // initial and final solution handler
+    std::shared_ptr<FieldsHandler>
+        m_solutionTmpExplicit; // this is the solution handler used in m_numScheme (to compute the
+                               // timeDerivative)
+    std::shared_ptr<FieldsHandler> m_timeDerivativeExplicit; // this is the timeDerivative
+    NumericalScheme& m_scheme;
+    RKStagesArray m_timeDerivativeStages{};
+};
+
+/**
+ * ExplicitRK: one_step solve for the time derivative
+ */
+template <class FieldsHandler, int myRKstages>
+void ExplicitRK<FieldsHandler, myRKstages>::one_step_solve_dqdt_explicit ()
+{
+    m_scheme.one_step_solve_dqdt_explicit();
+}
+
+/**
+ * ExplicitRK: finalize RK stages
+ */
+template <class FieldsHandler, int myRKstages>
+void ExplicitRK<FieldsHandler, myRKstages>::finalize_rk (const amrex::Real dt,
+                                                        std::shared_ptr<FieldsHandler>& dst,
+                                                        const RKStagesArray& srcArray)
+{
+    for (int r = 0; r < myRKstages; r++)
+    {
+        amrex::Real const coeff = m_rkTableau.b[r] * dt;
+        dst->mult_and_add(coeff, srcArray[r]);
+    }
+}
+
+/**
+ * ExplicitRK: run RK stages
+ */
+template <class FieldsHandler, int myRKstages>
+void ExplicitRK<FieldsHandler, myRKstages>::integrate_step (const amrex::Real time,
+                                                           const amrex::Real dt)
+{
+    amrex::Print() << "time = " << time << ",  dt = " << dt << std::endl;
+    for (int s = 0; s < myRKstages; s++)
+    {
+        *m_solutionTmpExplicit = *m_solutionInOut;
+        for (int r = 0; r < s; r++)
+        {
+            amrex::Real const coeff = m_rkTableau.a[s][r] * dt;
+            m_solutionTmpExplicit->mult_and_add(coeff, m_timeDerivativeStages[r]);
+        }
+        one_step_solve_dqdt_explicit(); // this will use m_solutionTmpExplicit as initial state to
+                                        // compute m_timeDerivative_Explicit
+        *(m_timeDerivativeStages[s]) = *m_timeDerivativeExplicit;
+    }
+    finalize_rk(dt, m_solutionInOut, m_timeDerivativeStages);
+    // we don't need fill boundary. it's done in one_step_solve_dqdt_explicit.
+}
+
+/**
+ * Implicit-Explicit Runkge Kutta Class.
+ *
+ * @param FieldsHandler: physical state handler
+ *
+ * @param nRKstages: number of RK stages
+ */
+template <class FieldsHandler, int nRKstages>
+class ImexRk
+{
+public:
+    using selectedRK_Tableau = typename RKTypeSelector<nRKstages, 2>::selected_RK_ButcherTableau;
+    using RKStagesArray = typename std::array<std::shared_ptr<FieldsHandler>, nRKstages>;
+    // Create an instance of the selected type
+    ImexRkButcherTableau<nRKstages> m_rkTableau;
+
+    void integrate_step(const amrex::Real time, const amrex::Real dt);
+
+    void one_step_solve_dqdt_semiimplicit(amrex::Real dtLoc);
+
+    void finalize_rk(const amrex::Real dt,
+                     std::shared_ptr<FieldsHandler>& dst,
+                     const RKStagesArray& srcArray);
+
+    ImexRk(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
+           std::shared_ptr<FieldsHandler>& solutionTmpExplicitSrc,
+           std::shared_ptr<FieldsHandler>& solutionTmpImplicitSrc,
+           std::shared_ptr<FieldsHandler>& timeDerivativeExplicitSrc,
+           std::shared_ptr<FieldsHandler>& mTimeDerivativeSrc,
+           NumericalScheme& numSchemeSrc,
+           std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
+           const selectedRK_Tableau& rKreference) :
+        m_solutionInOut(solutionInOutSrc), // initial and final solution handler
+        m_solutionTmpExplicit(
+            solutionTmpExplicitSrc), // this is the solution handler used in m_numScheme (to
+                                     // compute the "explicit" timeDerivative)
+        m_solutionTmpImplicit(
+            solutionTmpImplicitSrc), // this is the solution handler used in m_numScheme (to
+                                     // compute the final timeDerivative)
+        m_timeDerivativeExplicit(timeDerivativeExplicitSrc), // this is the timeDerivativeExplicit
+        m_timeDerivative(mTimeDerivativeSrc),                // this is the timeDerivative
+        m_scheme(numSchemeSrc)
+
+    {
+        for (int i = 0; i < nRKstages; ++i)
+        {
+            m_timeDerivativeStages[i] = std::make_shared<FieldsHandler>(drc, m_scheme.get_ncomp());
+            *m_timeDerivativeStages[i] = *m_timeDerivativeExplicit;
+        }
+        for (int i = 0; i < nRKstages; ++i)
+        {
+            m_rkTableau.m_explicitRkButcherTableau.m_b[i] =
+                rKreference.m_explicitRkButcherTableau.m_b[i];
+            m_rkTableau.m_explicitRkButcherTableau.m_c[i] =
+                rKreference.m_explicitRkButcherTableau.m_c[i];
+            for (int j = 0; j < nRKstages; ++j)
+            {
+                m_rkTableau.m_explicitRkButcherTableau.m_a[i][j] =
+                    rKreference.m_explicitRkButcherTableau.m_a[i][j];
+            }
+            m_rkTableau.m_implicitRkButcherTableau.m_b[i] =
+                rKreference.m_implicitRkButcherTableau.m_b[i];
+            m_rkTableau.m_implicitRkButcherTableau.m_c[i] =
+                rKreference.m_implicitRkButcherTableau.m_c[i];
+            for (int j = 0; j < nRKstages; ++j)
+            {
+                m_rkTableau.m_implicitRkButcherTableau.m_a[i][j] =
+                    rKreference.m_implicitRkButcherTableau.m_a[i][j];
+                if (Gempic::Utils::Verbosity::level() > 0)
+                {
+                    amrex::Print()
+                        << "(i,j) = (" << i << "," << j
+                        << ");  b_i, a_ij = " << m_rkTableau.m_implicitRkButcherTableau.m_b[i]
+                        << ", " << m_rkTableau.m_implicitRkButcherTableau.m_a[i][j] << std::endl;
+                }
+            }
+        }
+    }
+
+private:
+    std::shared_ptr<FieldsHandler>
+        m_solutionInOut; // this is the initial and final state (by reference)
+    std::shared_ptr<FieldsHandler> m_solutionTmpExplicit;
+    std::shared_ptr<FieldsHandler> m_solutionTmpImplicit;
+    std::shared_ptr<FieldsHandler> m_timeDerivativeExplicit;
+    std::shared_ptr<FieldsHandler> m_timeDerivative;
+    NumericalScheme& m_scheme;
+    RKStagesArray m_timeDerivativeStages{};
+};
+
+/**
+ * ImExRK: one_step_solve for the time-derivative of the semi-implicit step
+ */
+template <class FieldsHandler, int myRKstages>
+void ImexRk<FieldsHandler, myRKstages>::one_step_solve_dqdt_semiimplicit (amrex::Real dtLoc)
+{
+    m_scheme.one_step_solve_dqdt_semiimplicit(dtLoc);
+}
+
+/**
+ * ImExRK: finalize ImEx RK stages
+ */
+template <class FieldsHandler, int myRKstages>
+void ImexRk<FieldsHandler, myRKstages>::finalize_rk (const amrex::Real dt,
+                                                    std::shared_ptr<FieldsHandler>& dst,
+                                                    const RKStagesArray& srcArray)
+{
+    for (int r = 0; r < myRKstages; r++)
+    {
+        amrex::Real const coeff = m_rkTableau.m_implicitRkButcherTableau.m_b[r] * dt;
+        dst->mult_and_add(coeff, srcArray[r]);
+    }
+}
+
+/**
+ * ImExRK: run ImEx RK stages
+ */
+template <class FieldsHandler, int myRKstages>
+void ImexRk<FieldsHandler, myRKstages>::integrate_step (const amrex::Real time, const amrex::Real dt)
+{
+    // use  the multi components to cast the multi-stage vectors;
+    if (Gempic::Utils::Verbosity::level() > 0)
+    {
+        amrex::Print() << "time = " << time << ",  dt = " << dt << std::endl;
+    }
+    for (int s = 0; s < myRKstages; s++)
+    {
+        *m_solutionTmpExplicit = *m_solutionInOut;
+        for (int r = 0; r < s; r++)
+        {
+            amrex::Real const coeff = m_rkTableau.m_explicitRkButcherTableau.m_a[s][r] * dt;
+            m_solutionTmpExplicit->mult_and_add(coeff, m_timeDerivativeStages[r]);
+        }
+        *m_solutionTmpImplicit = *m_solutionInOut;
+        for (int r = 0; r < s; r++)
+        {
+            amrex::Real const coeff = m_rkTableau.m_implicitRkButcherTableau.m_a[s][r] * dt;
+            m_solutionTmpImplicit->mult_and_add(coeff, m_timeDerivativeStages[r]);
+        }
+        amrex::Real dtTmp{m_rkTableau.m_implicitRkButcherTableau.m_a[s][s] * dt};
+        one_step_solve_dqdt_semiimplicit(
+            dtTmp); // this is a semi-implicit solver for a time-step
+                    // a_ii*dt, ending with a value for the time derivative.
+        *(m_timeDerivativeStages[s]) = *m_timeDerivative;
+    }
+    finalize_rk(dt, m_solutionInOut, m_timeDerivativeStages);
+    // we don't need fill boundary. it's done in one_step_solve_dqdt_explicit.
+}
+
 } // namespace Gempic::TimeLoop
 #endif

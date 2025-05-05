@@ -29,7 +29,6 @@ template <class Rhs,
 class ConjugateGradient : public SolverMethod<Rhs, Sol>
 {
 private:
-    Operation m_operator;
     PreconditionOp m_precondOp;
     AverageB0Op m_avgB0Op;
     Rhs m_residual, m_ap;
@@ -37,8 +36,12 @@ private:
     amrex::Real m_relTol, m_absTol;
     amrex::Real m_maxiter{1000};
     int m_verbose;
+    int m_convergedAtIter;
+    amrex::Real m_convergedWithTol;
 
 public:
+    Operation m_operator;
+
     ConjugateGradient(std::shared_ptr<Forms::DeRhamComplex> drc,
                       Operation&& matMultOp,
                       PreconditionOp&& precondOp = nullptr,
@@ -46,7 +49,6 @@ public:
                       amrex::Real relTol = 1e-10,
                       amrex::Real absTol = 1e-12,
                       int verbose = 0) :
-        m_operator{std::move(matMultOp)},
         m_precondOp{std::move(precondOp)},
         m_avgB0Op{std::move(avgB0Op)},
         m_residual(drc),
@@ -54,7 +56,8 @@ public:
         m_p(drc),
         m_z(drc),
         m_relTol{relTol},
-        m_absTol{absTol}
+        m_absTol{absTol},
+        m_operator{std::move(matMultOp)}
 
     {
         m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
@@ -94,6 +97,8 @@ public:
         if ((sqrt(normResSquareOld) < m_relTol * sqrt(normbSquare)) ||
             sqrt(normResSquareOld) < m_absTol)
         {
+            m_convergedAtIter = 0;
+            m_convergedWithTol = sqrt(normResSquareOld);
             return;
         }
         copy(m_p, m_residual); // copy residual into p
@@ -105,6 +110,7 @@ public:
         }
 
         bool hasConverged{false};
+        m_convergedAtIter = m_maxiter;
         for (int iter = 0; iter < m_maxiter; iter++)
         {
             cg_mat_mul(m_ap, m_p);
@@ -123,6 +129,8 @@ public:
                                    << sqrt(normResSquareNew / normbSquare) << '\n';
                 }
                 hasConverged = true;
+                m_convergedAtIter = iter;
+                m_convergedWithTol = sqrt(normResSquareNew);
                 break;
             }
             beta = normResSquareNew / normResSquareOld;
@@ -139,6 +147,12 @@ public:
             amrex::Print(amrex::ErrorStream())
                 << "WARNING: CG has not converged after " << m_maxiter << " iterations "
                 << sqrt(normResSquareOld / normbSquare) << std::endl;
+        }
+        if (!hasConverged)
+        {
+            m_convergedAtIter = m_maxiter;
+            m_convergedWithTol = sqrt(normResSquareNew);
+            ;
         }
         x.fill_boundary();
     }
@@ -200,6 +214,8 @@ public:
                     amrex::Print() << "CG final iteration residual " << iter << " "
                                    << sqrt(normResSquare / normbSquare) << '\n';
                 }
+                m_convergedAtIter = iter;
+                m_convergedWithTol = sqrt(normResSquare);
                 hasConverged = true;
                 break;
             }
@@ -219,6 +235,11 @@ public:
             amrex::Print(amrex::ErrorStream())
                 << "WARNING: CG has not converged after " << m_maxiter << " iterations "
                 << sqrt(normResSquare / normbSquare) << std::endl;
+        }
+        if (!hasConverged)
+        {
+            m_convergedAtIter = m_maxiter;
+            m_convergedWithTol = sqrt(normResSquare);
         }
         x.fill_boundary();
     }
@@ -244,6 +265,10 @@ public:
             m_avgB0Op(b);
         }
     }
+
+    inline amrex::Real get_tol () { return m_convergedWithTol; }
+
+    inline amrex::Real get_iter () { return m_convergedAtIter; }
 };
 
 /// Helper function for template deduction. Allows you to specify Rhs and Sol explicitly, but have

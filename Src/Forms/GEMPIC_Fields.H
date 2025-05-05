@@ -25,6 +25,7 @@
 #include "GEMPIC_BoundaryConditions.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_NumTools.H"
 #include "GEMPIC_Parameters.H"
 
 namespace Gempic::Forms
@@ -143,6 +144,8 @@ struct DeRhamField
         DeRhamField{drc} {};
 
     void fill_boundary();
+    void fill_boundary_nowait();
+    void fill_boundary_finish();
     void apply_bc();
 
     /**
@@ -236,6 +239,8 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
                 amrex::MultiFab const& mfIn3);
 
     void fill_boundary();
+    void fill_boundary_nowait();
+    void fill_boundary_finish();
     void apply_bc();
 
     void post_particle_loop_sync();
@@ -273,6 +278,8 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, amrex::MultiFab const& mfIn);
 
     void fill_boundary();
+    void fill_boundary_nowait();
+    void fill_boundary_finish();
     void apply_bc();
 
     void post_particle_loop_sync();
@@ -612,6 +619,47 @@ public:
     {
         BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary(field)");
         field.m_data.FillBoundary(m_geom.periodicity());
+    }
+    /// @endcond
+
+    /// Function overloads for FillBoundary_nowait. Exists for 1-/2-forms and 0-/3-forms
+    // fillBoundary_nowait for One- or Two-forms
+    template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
+    void fill_boundary_nowait (DeRhamField<grid, space>& field)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary_nowait(field)");
+        field.m_data[xDir].FillBoundary_nowait(m_geom.periodicity());
+        field.m_data[yDir].FillBoundary_nowait(m_geom.periodicity());
+        field.m_data[zDir].FillBoundary_nowait(m_geom.periodicity());
+    }
+
+    /// @cond DOXYGEN_IGNORE
+    // fillBoundary_nowait for Zero- or Three-forms
+    template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
+    void fill_boundary_nowait (DeRhamField<grid, space>& field)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary_nowait(field)");
+        field.m_data.FillBoundary_nowait(m_geom.periodicity());
+    }
+    /// @endcond
+    /// Function overloads for FillBoundary_nowait. Exists for 1-/2-forms and 0-/3-forms
+    // fillBoundary_nowait for One- or Two-forms
+    template <Grid grid, Space space, typename std::enable_if_t<isOneOrTwoForm<space>, int> = 0>
+    void fill_boundary_finish (DeRhamField<grid, space>& field)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary_finish()");
+        field.m_data[xDir].FillBoundary_finish();
+        field.m_data[yDir].FillBoundary_finish();
+        field.m_data[zDir].FillBoundary_finish();
+    }
+
+    /// @cond DOXYGEN_IGNORE
+    // fillBoundary_nowait for Zero- or Three-forms
+    template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
+    void fill_boundary_finish (DeRhamField<grid, space>& field)
+    {
+        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary_finish()");
+        field.m_data.FillBoundary_finish();
     }
     /// @endcond
 
@@ -1335,6 +1383,40 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::f
     m_deRham->fill_boundary(*this);
 }
 
+// FillBoundary_nowait of DeRhamFields following the same logic as above
+template <Grid grid, Space space>
+inline void
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary_nowait()
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary_nowait()");
+    m_deRham->fill_boundary_nowait(*this);
+}
+
+template <Grid grid, Space space>
+inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::
+    fill_boundary_nowait()
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
+    m_deRham->fill_boundary_nowait(*this);
+}
+
+// FillBoundary_finish of DeRhamFields following the same logic as above
+template <Grid grid, Space space>
+inline void
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary_finish()
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary_finish()");
+    m_deRham->fill_boundary_finish(*this);
+}
+
+template <Grid grid, Space space>
+inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::
+    fill_boundary_finish()
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary_finish()");
+    m_deRham->fill_boundary_finish(*this);
+}
+
 // ApplyBC of DeRhamFields
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::apply_bc()
@@ -1746,6 +1828,86 @@ inline void linear_combination (
     }
 }
 
+// multiply and add for fields
+/**
+ * Multiply and add for operation on two DeRhamField objects for one or two forms.
+ *
+ * @param field1 The destination DeRhamField object.
+ * @param a The scaling factor for the second field.
+ * @param field2 The second DeRhamField object.
+ */
+template <Grid grid, Space space>
+inline void multiply_and_add (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
+    amrex::Real a,
+    const DeRhamField<grid, space>& field2)
+{
+    BL_PROFILE("Gempic::Forms::multiply_and_add()");
+    auto nGhost = field1.m_deRham->get_n_ghost();
+    mult_and_add(field1.m_data, a, field2.m_data, 0, 0, field2.m_data.nComp(), nGhost);
+}
+
+/**
+ * Multiply and add for operation on two DeRhamField objects for one or two forms.
+ *
+ * @param field1 The destination DeRhamField object.
+ * @param a The scaling factor for the second field.
+ * @param field2 The second DeRhamField object.
+ */
+template <Grid grid, Space space>
+inline void multiply_and_add (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
+    amrex::Real a,
+    const DeRhamField<grid, space>& field2)
+{
+    BL_PROFILE("Gempic::Forms::multiply_and_add()");
+    auto nGhost = field1.m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        mult_and_add(field1.m_data[comp], a, field2.m_data[comp], 0, 0, field2.m_data[comp].nComp(),
+                     nGhost);
+    }
+}
+
+/**
+ * Multiply and add for operation on two DeRhamField objects for one or two forms.
+ *
+ * @param field1 The destination DeRhamField object.
+ * @param a The scaling factor for the second field.
+ * @param field2 The second DeRhamField object.
+ */
+template <Grid grid, Space space>
+inline void multiply_and_add (
+    DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
+    amrex::Real a,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+{
+    BL_PROFILE("Gempic::Forms::multiply_and_add()");
+    auto nGhost = field1.m_deRham->get_n_ghost();
+    mult_and_add(field1.m_data, a, field2.m_data, 0, 0, field2.m_data.nComp(), nGhost);
+}
+
+/**
+ * Multiply and add for operation on two DeRhamField objects for one or two forms.
+ *
+ * @param field1 The destination DeRhamField object.
+ * @param a The scaling factor for the second field.
+ * @param field2 The second DeRhamField object.
+ */
+template <Grid grid, Space space>
+inline void multiply_and_add (
+    DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
+    amrex::Real a,
+    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+{
+    BL_PROFILE("Gempic::Forms::linearCombination()");
+    auto nGhost = field1.m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        mult_and_add(field1.m_data[comp], a, field2.m_data[comp], 0, 0, field2.m_data[comp].nComp(),
+                     nGhost);
+    }
+}
 /**
  * @brief Computes the dot product of two fields on the same grid.
  *
@@ -1763,13 +1925,16 @@ inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
     DeRhamField<grid, space> const& field2)
 {
+    const bool skipMpiCommTrue = true;
     // Compute the dot product by summing the dot product of each component.
     amrex::Real dotProd{0};              // Initialize the dot product to 0.
     for (int comp = 0; comp < 3; ++comp) // Loop over each component.
     {
-        dotProd += amrex::MultiFab::Dot(field1.m_data[comp], 0, field2.m_data[comp], 0,
-                                        field1.m_data[comp].nComp(), 0);
+        auto mask = amrex::OwnerMask(field1.m_data[comp], field1.m_deRham->get_periodicity());
+        dotProd += amrex::MultiFab::Dot(*mask, field1.m_data[comp], 0, field2.m_data[comp], 0,
+                                        field1.m_data[comp].nComp(), 0, skipMpiCommTrue);
     }
+    amrex::ParallelAllReduce::Sum(dotProd, amrex::ParallelContext::CommunicatorSub());
     return dotProd; // Return the computed dot product.
 }
 
@@ -1788,8 +1953,9 @@ inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
     DeRhamField<grid, space> const& field2)
 {
+    auto mask = amrex::OwnerMask(field1.m_data, field1.m_deRham->get_periodicity());
     amrex::Real dotProd =
-        amrex::MultiFab::Dot(field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
+        amrex::MultiFab::Dot(*mask, field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
     return dotProd;
 }
 
@@ -1808,12 +1974,15 @@ inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
     DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
+    const bool skipMpiCommTrue = true;
     amrex::Real result = 0;
     for (int comp = 0; comp < 3; ++comp)
     {
-        result += amrex::MultiFab::Dot(field1.m_data[comp], 0, field2.m_data[comp], 0,
-                                       field1.m_data[comp].nComp(), 0);
+        auto mask = amrex::OwnerMask(field1.m_data[comp], field1.m_deRham->get_periodicity());
+        result += amrex::MultiFab::Dot(*mask, field1.m_data[comp], 0, field2.m_data[comp], 0,
+                                       field1.m_data[comp].nComp(), 0, skipMpiCommTrue);
     }
+    amrex::ParallelAllReduce::Sum(result, amrex::ParallelContext::CommunicatorSub());
     return result;
 }
 
@@ -1833,8 +2002,9 @@ inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
     DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
+    auto mask = amrex::OwnerMask(field1.m_data, field1.m_deRham->get_periodicity());
     amrex::Real dotProd =
-        amrex::MultiFab::Dot(field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
+        amrex::MultiFab::Dot(*mask, field1.m_data, 0, field2.m_data, 0, field1.m_data.nComp(), 0);
     return dotProd;
 }
 
