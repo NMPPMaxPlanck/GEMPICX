@@ -18,23 +18,23 @@
 //#include "GEMPIC_FDDeRhamComplex.H"
 
 std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask(amrex::MultiFab& thisMF,
-                                                     const amrex::Periodicity& period);
+                                                     amrex::Periodicity const& period);
 
-void sum_boundary_sync(amrex::MultiFab& thisMF, const amrex::Periodicity& period);
+void sum_boundary_sync(amrex::MultiFab& thisMF, amrex::Periodicity const& period);
 
 /**
  * a modified sum_boundary
  * the FabArray may have multi components but also local dof...
  * **/
 template <typename MFA, int locDof>
-void sum_boundary_sync_fab (MFA& thisMF, const amrex::Periodicity& period)
+void sum_boundary_sync_fab (MFA& thisMF, amrex::Periodicity const& period)
 {
     if (thisMF.ixType().cellCentered())
     {
         return;
     }
 
-    const int ncomp = thisMF.nComp();
+    int const ncomp = thisMF.nComp();
 
     MFA tmpmf(thisMF.boxArray(), thisMF.DistributionMap(), ncomp, 0, amrex::MFInfo(),
               thisMF.Factory());
@@ -55,7 +55,7 @@ void mult_and_add(amrex::Real const dstVal,
                   int srccomp,
                   int dstcomp,
                   int numcomp,
-                  const amrex::IntVect& nghost);
+                  amrex::IntVect const& nghost);
 
 void mult_and_add(amrex::MultiFab& dst,
                   amrex::Real const srcVal,
@@ -63,7 +63,7 @@ void mult_and_add(amrex::MultiFab& dst,
                   int srccomp,
                   int dstcomp,
                   int numcomp,
-                  const amrex::IntVect& nghost);
+                  amrex::IntVect const& nghost);
 
 // from
 // template <typename FAB, std::enable_if_t<IsBaseFab<FAB>::value, int> FOO = 0>
@@ -98,18 +98,18 @@ typename FAB::value_type wgt_dot(amrex::FabArray<FAB> const& wgt,
 
 // from Real MultiFab::Dot( const MultiFab& x, int xcomp, const MultiFab& y, int ycomp, int numcomp,
 // int nghost, bool local)
-amrex::Real multi_fab_wgt_dot(const amrex::MultiFab& wgt,
-                              const amrex::MultiFab& x,
+amrex::Real multi_fab_wgt_dot(amrex::MultiFab const& wgt,
+                              amrex::MultiFab const& x,
                               int xcomp,
-                              const amrex::MultiFab& y,
+                              amrex::MultiFab const& y,
                               int ycomp,
                               int numcomp,
                               int nghost,
                               bool local);
 
 // from Real MultiFab::Dot(const MultiFab& x, int xcomp, int numcomp, int nghost, bool local)
-amrex::Real multi_fab_wgt_dot(const amrex::MultiFab& wgt,
-                              const amrex::MultiFab& x,
+amrex::Real multi_fab_wgt_dot(amrex::MultiFab const& wgt,
+                              amrex::MultiFab const& x,
                               int xcomp,
                               int numcomp,
                               int nghost,

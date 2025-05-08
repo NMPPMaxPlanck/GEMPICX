@@ -44,7 +44,7 @@ public:
         //  B = Bold - dt curl E
         //  M1 E  - dt curlT M2 B = M1 Eold
         //  M1 E + dt^2 curlT M2 curl E = M1 Eold +dt curlT M2 Bold
-        const amrex::Real dt{dtin};
+        amrex::Real const dt{dtin};
         m_drc->hodge(m_bstar, B);
         m_drc->hodge(rhs, E); // ... todo
         m_drc->add_dt_curl(rhs, m_bstar, dt);
@@ -61,7 +61,7 @@ public:
      */
     void update_b (V1field& E, V2field& B, amrex::Real dtin)
     {
-        const amrex::Real mdt{-dtin};
+        amrex::Real const mdt{-dtin};
         m_drc->add_dt_curl(B, E, mdt);
     }
 
@@ -221,7 +221,7 @@ public:
             for (amrex::MFIter mfi(m_disc.m_myfieldsDtIm->m_b.m_data[idir], true); mfi.isValid();
                  ++mfi)
             {
-                const amrex::Box& bx = mfi.tilebox(); // OPENMP valid box is for real cells.
+                amrex::Box const& bx = mfi.tilebox(); // OPENMP valid box is for real cells.
                 // creating pointer to data for GPU:
                 amrex::Array4<amrex::Real> const& dBdt =
                     (m_disc.m_myfieldsDtIm->m_b.m_data[idir])[mfi].array();
@@ -238,7 +238,7 @@ public:
             for (amrex::MFIter mfi(m_disc.m_myfieldsDtIm->m_e.m_data[idir], true); mfi.isValid();
                  ++mfi)
             {
-                const amrex::Box& bx = mfi.tilebox(); // OPENMP valid box is for real cells.
+                amrex::Box const& bx = mfi.tilebox(); // OPENMP valid box is for real cells.
                 // creating pointer to data for GPU:
                 amrex::Array4<amrex::Real> const& dEdt =
                     (m_disc.m_myfieldsDtIm->m_e.m_data[idir])[mfi].array();

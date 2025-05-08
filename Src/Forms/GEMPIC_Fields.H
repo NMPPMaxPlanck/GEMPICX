@@ -1840,7 +1840,7 @@ template <Grid grid, Space space>
 inline void multiply_and_add (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
     amrex::Real a,
-    const DeRhamField<grid, space>& field2)
+    DeRhamField<grid, space> const& field2)
 {
     BL_PROFILE("Gempic::Forms::multiply_and_add()");
     auto nGhost = field1.m_deRham->get_n_ghost();
@@ -1858,7 +1858,7 @@ template <Grid grid, Space space>
 inline void multiply_and_add (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
     amrex::Real a,
-    const DeRhamField<grid, space>& field2)
+    DeRhamField<grid, space> const& field2)
 {
     BL_PROFILE("Gempic::Forms::multiply_and_add()");
     auto nGhost = field1.m_deRham->get_n_ghost();
@@ -1880,7 +1880,7 @@ template <Grid grid, Space space>
 inline void multiply_and_add (
     DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>& field1,
     amrex::Real a,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
     BL_PROFILE("Gempic::Forms::multiply_and_add()");
     auto nGhost = field1.m_deRham->get_n_ghost();
@@ -1898,7 +1898,7 @@ template <Grid grid, Space space>
 inline void multiply_and_add (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
     amrex::Real a,
-    const DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& field2)
+    DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
     BL_PROFILE("Gempic::Forms::linearCombination()");
     auto nGhost = field1.m_deRham->get_n_ghost();
@@ -1925,7 +1925,7 @@ inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
     DeRhamField<grid, space> const& field2)
 {
-    const bool skipMpiCommTrue = true;
+    bool const skipMpiCommTrue = true;
     // Compute the dot product by summing the dot product of each component.
     amrex::Real dotProd{0};              // Initialize the dot product to 0.
     for (int comp = 0; comp < 3; ++comp) // Loop over each component.
@@ -1974,7 +1974,7 @@ inline amrex::Real dot_product (
     DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>& field1,
     DeRhamField<oppositeGrid<grid>, oppositeSpace<space>> const& field2)
 {
-    const bool skipMpiCommTrue = true;
+    bool const skipMpiCommTrue = true;
     amrex::Real result = 0;
     for (int comp = 0; comp < 3; ++comp)
     {

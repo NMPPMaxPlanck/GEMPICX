@@ -122,9 +122,9 @@ int main (int argc, char* argv[])
                 amrex::Vector<amrex::Real> vMean;
                 params.get("G0.vMean", vMean);
                 params.get("G0.vThermal", vThermal);
-                amrex::GpuArray<amrex::Real, vDim> vThermalGPU{vThermal[xDir], vThermal[yDir],
-                                                               vThermal[zDir]};
-                amrex::GpuArray<amrex::Real, vDim> vMeanGPU{vMean[xDir], vMean[yDir], vMean[zDir]};
+                std::array<amrex::Real, vDim> vThermalGPU{vThermal[xDir], vThermal[yDir],
+                                                          vThermal[zDir]};
+                std::array<amrex::Real, vDim> vMeanGPU{vMean[xDir], vMean[yDir], vMean[zDir]};
 
                 amrex::Real vThermalBackground = particleSpecies->get_v_thermal_background();
 
@@ -152,7 +152,7 @@ int main (int argc, char* argv[])
                         [=] AMREX_GPU_DEVICE(long pp)
                         {
                             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                            amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
+                            std::array<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
 
                             for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                             {
@@ -328,8 +328,7 @@ int main (int argc, char* argv[])
                             {
                                 // Local arrays for particle position and velocities
                                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                                amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
-                                                                       velz[pp]};
+                                std::array<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
 
                                 for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
                                 {
